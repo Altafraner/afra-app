@@ -1,0 +1,6 @@
+﻿services:
+  afra-app:
+    image: afra-app
+    build:
+      context: .
+      dockerfile: Afra-App/Dockerfile
