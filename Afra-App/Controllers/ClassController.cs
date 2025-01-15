@@ -1,4 +1,4 @@
-﻿using Afra_App.Models;
+using Afra_App.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Afra_App.Controllers;
@@ -10,6 +10,7 @@ public class ClassController (AfraAppContext dbContext) : ControllerBase
     /// <summary>
     /// Get all Classes
     /// </summary>
+    [HttpGet]
     public IEnumerable<Class> GetClasses()
     {
         return dbContext.Classes;

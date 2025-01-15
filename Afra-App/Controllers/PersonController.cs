@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 using Afra_App.Models;
 using Afra_App.Models.Json;
 using Microsoft.AspNetCore.Mvc;
@@ -17,6 +17,7 @@ public class PersonController : ControllerBase
         _dbContext = dbContext;
     }
 
+    [HttpGet]
     public IEnumerable<Person> GetPeople()
     {
         return _dbContext.People.Include(p => p.Class);

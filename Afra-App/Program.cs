@@ -4,6 +4,9 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
 // Add services to the container.
 
 builder.Services.AddControllers()
@@ -25,6 +28,12 @@ if (app.Environment.IsDevelopment())
 {
     app.UseCors();
     app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+        {
+            c.SwaggerEndpoint("/swagger/v1/swagger.json", "Afra-App API");
+        }
+    );
 }
 
 app.UseHttpsRedirection();
