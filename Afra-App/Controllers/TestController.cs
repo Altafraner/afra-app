@@ -4,6 +4,7 @@ using Afra_App.Models.Json;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Afra_App.Controllers;
 
@@ -15,7 +16,7 @@ public class TestController(AfraAppContext dbContext) : ControllerBase
     public ActionResult ResetDb()
     {
         dbContext.Database.EnsureDeleted();
-        dbContext.Database.EnsureCreated();
+        dbContext.Database.Migrate();
 
         return Ok("Die Datenbank wurde erfolgreich zurückgesetzt.");
     }
