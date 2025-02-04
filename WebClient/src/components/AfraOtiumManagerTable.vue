@@ -1,0 +1,33 @@
+﻿<script setup>
+import {defineProps, ref} from 'vue';
+import {DataTable, Column, Button} from "primevue";
+
+const props = defineProps({
+  managers: Array,
+})
+
+const formatTutor = tutor => tutor.last_name + ", " + tutor.given_name
+
+const managers = ref(props.managers)
+</script>
+
+<template>
+  <DataTable :value="managers">
+    <Column field="last_name" header="Nachname" />
+    <Column field="given_name" header="Vorname" />
+    <Column class="afra-col-action">
+      <template #header>
+        <Button aria-label="Person hinzufügen" size="small" icon="pi pi-plus"></Button>
+      </template>
+      <template #body>
+        <span class="inline-flex gap-1">
+          <Button aria-label="Zugriff entfernen" severity="danger" size="small" variant="text" icon="pi pi-times"></Button>
+        </span>
+      </template>
+    </Column>
+  </DataTable>
+</template>
+
+<style scoped>
+
+</style>
