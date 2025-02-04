@@ -1,4 +1,8 @@
-﻿using Afra_App.Models;
+﻿using Afra_App.Authentication;
+using Afra_App.Models;
+using Afra_App.Models.Json;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Afra_App.Controllers;
@@ -7,7 +11,6 @@ namespace Afra_App.Controllers;
 [Route("/api/[controller]")]
 public class TestController(AfraAppContext dbContext) : ControllerBase
 {
-    // GET
     [HttpGet("reset")]
     public ActionResult ResetDb()
     {
@@ -108,5 +111,28 @@ public class TestController(AfraAppContext dbContext) : ControllerBase
         dbContext.SaveChanges();
 
         return Ok("Die Datenbank wurde erfolgreich befüllt.");
+    }
+
+    [Route("authenticate/{id:guid}")]
+    public async Task<ActionResult> AuthenticateAs(Guid id)
+    {
+        var user = await dbContext.People.FindAsync(id);
+        if (user is null) return NotFound("No User with the given GUID could be found");
+        await HttpContext.SignInAsync(user.ToClaimsPrincipalAsync());
+        return Ok("Logged in");
+    }
+    
+    [Route("authenticate/logout")]
+    public async Task<ActionResult> AuthenticateAs()
+    {
+        await HttpContext.SignOutAsync();
+        return Ok("Logged out");
+    }
+
+    [Route("authenticate")]
+    [Authorize]
+    public ActionResult<PersonJsonInfo> PrintAuthentication()
+    {
+        return new PersonJsonInfo(HttpContext.GetPerson(dbContext));
     }
 }

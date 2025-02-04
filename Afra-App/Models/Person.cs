@@ -1,4 +1,7 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Security.Claims;
+using System.Text.Json.Serialization;
+using Afra_App.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace Afra_App.Models;
 
@@ -30,4 +33,19 @@ public class Person
     public IEnumerable<Permission> Permissions => Roles.SelectMany(r => r.Permissions).Distinct();
 
     public override string ToString() => $"{FirstName} {LastName}";
+    
+    
+    public ClaimsPrincipal ToClaimsPrincipalAsync()
+    {
+        var claims = new List<Claim>
+        {
+            new(AfraAppClaimTypes.Id, Id.ToString()),
+            new(AfraAppClaimTypes.GivenName, FirstName),
+            new(AfraAppClaimTypes.LastName, LastName)
+        };
+
+        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+        return new ClaimsPrincipal(identity);
+    }
 }

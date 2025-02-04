@@ -1,5 +1,7 @@
 using System.Text.Json.Serialization;
 using Afra_App;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.DataProtection;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +19,11 @@ builder.Services.AddCors(options =>
     options.DefaultPolicyName = "default";
     options.AddPolicy("default", corsPolicyBuilder => corsPolicyBuilder.AllowAnyMethod().AllowAnyOrigin().AllowAnyHeader());
 });
+
+// TODO Add login service
+builder.Services.AddAuthentication()
+    .AddCookie();
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
