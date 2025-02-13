@@ -1,4 +1,5 @@
-﻿using Afra_App.Models;
+﻿using Afra_App.Data;
+using Afra_App.Data.People;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Afra_App.Controllers;
@@ -20,73 +21,35 @@ public class TestController(AfraAppContext dbContext) : ControllerBase
     [HttpGet("seed")]
     public ActionResult SeedDb()
     {
-        var klassen = dbContext.Classes;
-
-        var klasse1 = new Class
-            {
-                Level = 7,
-                Appendix = "a"
-            };
-        klassen.AddRange(
-            klasse1, new Class
-            {
-                Level = 8,
-                Appendix = "a"
-            }, new Class
-            {
-                Level = 9,
-                Appendix = "a"
-            }, new Class
-            {
-                Level = 9,
-                Appendix = "b"
-            }, new Class
-            {
-                Level = 9,
-                Appendix = "c"
-            }, new Class
-            {
-                Level = 10,
-                Appendix = "a"
-            }, new Class
-            {
-                Level = 10,
-                Appendix = "b"
-            }, new Class
-            {
-                Level = 10,
-                Appendix = "c"
-            });
-
-        var schueler = dbContext.People;
+        var schueler = dbContext.Personen;
         var schueler1 = new Person
         {
-            FirstName = "Schueler1",
-            LastName = "ZTest",
+            Vorname = "Schueler1",
+            Nachname = "ZTest",
             Email = "test1@test.te"
         };
         var lehrer1 = new Person
         {
-            FirstName = "Lehrer2",
-            LastName = "CCTest",
+            Vorname = "Lehrer2",
+            Nachname = "CCTest",
             Email = "test2@test.te"
         };
         var lehrer2 = new Person
         {
-            FirstName = "Lehrer1",
-            LastName = "CTest",
+            Vorname = "Lehrer1",
+            Nachname = "CTest",
             Email = "test3@test.te"
         };
         var schueler2 = new Person
         {
-            FirstName = "Schueler2",
-            LastName = "BTest",
+            Vorname = "Schueler2",
+            Nachname = "BTest",
             Email = "test4@test.te"
         };
         var schueler3 = new Person
         {
-            FirstName = "Schueler3",
-            LastName = "ATest",
+            Vorname = "Schueler3",
+            Nachname = "ATest",
             Email = "test5@test.te"
         };
         schueler.AddRange(
@@ -96,11 +59,6 @@ public class TestController(AfraAppContext dbContext) : ControllerBase
             schueler2,
             schueler3
         );
-        
-        klasse1.Tutor = lehrer1;
-        klasse1.Students.Add(schueler1);
-        klasse1.Students.Add(schueler2);
-        klasse1.Students.Add(schueler3);
         lehrer1.Mentees.Add(schueler1);
         lehrer2.Mentees.Add(schueler2);
         lehrer2.Mentees.Add(schueler3);

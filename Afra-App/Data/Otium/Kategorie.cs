@@ -1,13 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using Microsoft.EntityFrameworkCore;
 
-namespace Afra_App.Models;
+namespace Afra_App.Data.Otium;
 
-public class OtiumsKategory
+public class Kategorie
 {
     [Key]
     [MaxLength(50)]
-    public required string Designation { get; set; }
+    public required string Bezeichnung { get; set; }
     
     public ICollection<Otium> Otia { get; init; } = new List<Otium>();
 }

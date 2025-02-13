@@ -1,9 +1,9 @@
-﻿namespace Afra_App.Models;
+﻿namespace Afra_App.Data.People;
 
 /// <summary>
 /// Permissions are irreducible. Therefore, permissions cannot be inherited. To distribute permissions, roles must be used.
 /// </summary>
-public enum Permission
+public enum Berechtigung
 {
     /// <summary>
     /// Permission to assign roles

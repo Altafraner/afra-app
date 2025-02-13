@@ -1,4 +1,4 @@
-﻿namespace Afra_App.Models.Json;
+﻿namespace Afra_App.Data.Json;
 
 public record Pagination<T>
 {

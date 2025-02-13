@@ -1,6 +1,7 @@
-﻿using System.Text.Json.Serialization;
-using Afra_App.Models;
-using Afra_App.Models.Json;
+using System.Text.Json.Serialization;
+using Afra_App.Data;
+using Afra_App.Data.Json;
+using Afra_App.Data.People;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,16 +18,16 @@ public class PersonController : ControllerBase
         _dbContext = dbContext;
     }
 
+    [HttpGet]
     public IEnumerable<Person> GetPeople()
     {
-        return _dbContext.People.Include(p => p.Class);
+        return _dbContext.Personen;
     }
 
     public record struct PeopleRequestFilter
     {
-        [JsonPropertyName("firstName")] public string? FirstName { get; init; }
-        [JsonPropertyName("lastName")] public string? LastName { get; init; }
-        [JsonPropertyName("classes")] public IEnumerable<Guid?> Classes { get; init; }
+        [JsonPropertyName("vorname")] public string? Vorname { get; init; }
+        [JsonPropertyName("nachname")] public string? Nachname { get; init; }
     }
 
     [HttpPost("page")]
@@ -34,35 +35,23 @@ public class PersonController : ControllerBase
         [FromQuery] int page,
         [FromQuery] int pageSize,
         [FromBody] PeopleRequestFilter filter,
-        [FromQuery] string sort = "last_name",
+        [FromQuery] string sort = "nachname",
         [FromQuery] string sortDirection = "asc")
     {
-        IQueryable<Person> query = _dbContext.People
-            .Include(e => e.Class);
+        IQueryable<Person> query = _dbContext.Personen;
 
-        if (!string.IsNullOrWhiteSpace(filter.FirstName))
-            query = query.Where(p => EF.Functions.Like(p.FirstName, $"{filter.FirstName.ToLower()}%"));
+        if (!string.IsNullOrWhiteSpace(filter.Vorname))
+            query = query.Where(p => EF.Functions.Like(p.Vorname, $"{filter.Vorname.ToLower()}%"));
         
-        if (!string.IsNullOrWhiteSpace(filter.LastName))
-            query = query.Where(p => EF.Functions.Like(p.LastName, $"{filter.LastName.ToLower()}%"));
-        
-        if (filter.Classes.Any())
-            query = !filter.Classes.Contains(null)
-                ? query.Where(p => p.Class != null && filter.Classes.Contains(p.Class.Id))
-                : query.Where(p => p.Class == null || filter.Classes.Contains(p.Class.Id));
+        if (!string.IsNullOrWhiteSpace(filter.Nachname))
+            query = query.Where(p => EF.Functions.Like(p.Nachname, $"{filter.Nachname.ToLower()}%"));
 
         query = (sort, sortDirection) switch
         {
-            ("lastName", "asc") => query.OrderBy(e => e.LastName),
-            ("lastName", "desc") => query.OrderByDescending(e => e.LastName),
-            ("firstName", "asc") => query.OrderBy(e => e.FirstName),
-            ("firstName", "desc") => query.OrderByDescending(e => e.FirstName),
-            ("class.name", "asc") => query
-                .OrderBy(e => e.Class == null ? 0 : e.Class.Level)
-                .ThenBy(e => e.Class == null ? "" : e.Class.Appendix),
-            ("class.name", "desc") => query
-                .OrderByDescending(e => e.Class == null ? 0 : e.Class.Level)
-                .ThenByDescending(e => e.Class == null ? "" : e.Class.Appendix),
+            ("nachname", "asc") => query.OrderBy(e => e.Nachname),
+            ("nachname", "desc") => query.OrderByDescending(e => e.Nachname),
+            ("vorname", "asc") => query.OrderBy(e => e.Vorname),
+            ("vorname", "desc") => query.OrderByDescending(e => e.Vorname),
             _ => query
         };
 
@@ -75,73 +64,23 @@ public class PersonController : ControllerBase
     [HttpGet("{id:guid}")]
     public ActionResult<PersonJsonInfo> GetPerson(Guid id)
     {
-        var person = _dbContext.People.Find(id);
+        var person = _dbContext.Personen.Find(id);
         if (person == null)
-        {
             return NotFound();
-        }
 
         return new PersonJsonInfo(person);
-    }
-
-    public record struct PersonCreationData()
-    {
-        [JsonPropertyName("firstName")] public string FirstName { get; set; }
-
-        [JsonPropertyName("lastName")] public string LastName { get; set; }
-
-        [JsonPropertyName("email")] public string EMail { get; set; }
-
-        [JsonPropertyName("classId")] public Guid? ClassId { get; set; }
-    }
-
-    [HttpPost]
-    public ActionResult<Person> PostPerson(PersonCreationData personData)
-    {
-        var person = new Person
-        {
-            Email = personData.EMail,
-            FirstName = personData.FirstName,
-            LastName = personData.LastName,
-        };
-
-        if (personData.ClassId != null)
-        {
-            var classElement = _dbContext.Classes.Find(personData.ClassId);
-            if (classElement is null)
-                return NotFound("Die angeforderte Klasse konnte nicht gefunden werden!");
-            person.Class = classElement;
-        }
-
-        _dbContext.People.Add(person);
-        _dbContext.SaveChanges();
-        return CreatedAtAction(nameof(GetPerson), new { id = person.Id }, person);
-    }
-
-    [HttpDelete("{id:guid}")]
-    public ActionResult<Person> DeletePerson(Guid id)
-    {
-        var person = _dbContext.People.Find(id);
-        if (person == null)
-        {
-            return NotFound();
-        }
-
-        _dbContext.People.Remove(person);
-        _dbContext.SaveChanges();
-        return person;
     }
 
     [HttpGet("{id:guid}/mentor")]
     public ActionResult<Person> GetMentor(Guid id)
     {
-        var person = _dbContext.People
+        var person = _dbContext.Personen
             .Find(id);
 
         if (person == null)
             return NotFound();
 
-        _dbContext.People.Entry(person)
+        _dbContext.Personen.Entry(person)
             .Reference(p => p.Mentor)
             .Load();
 
@@ -154,35 +93,13 @@ public class PersonController : ControllerBase
     [HttpGet("{id:guid}/mentees")]
     public ActionResult<IEnumerable<Person>> GetMentees(Guid id)
     {
-        var mentor = _dbContext.People.Find(id);
+        var mentor = _dbContext.Personen.Find(id);
         if (mentor == null)
-        {
             return NotFound();
-        }
 
-        _dbContext.People.Entry(mentor)
+        _dbContext.Personen.Entry(mentor)
             .Collection(p => p.Mentees)
             .Load();
         return mentor.Mentees.ToList();
-    }
-
-    [HttpPut("{mentorId:guid}/mentees/{menteeId:guid}")]
-    public ActionResult<Person> PutMentor(Guid menteeId, Guid mentorId)
-    {
-        var person = _dbContext.People.Find(menteeId);
-        if (person == null)
-        {
-            return NotFound();
-        }
-
-        var mentor = _dbContext.People.Find(mentorId);
-        if (mentor == null)
-        {
-            return NotFound();
-        }
-
-        person.Mentor = mentor;
-        _dbContext.SaveChanges();
-        return person;
     }
 }
