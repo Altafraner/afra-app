@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json.Serialization;
 using Afra_App;
+using Afra_App.Services;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,19 +22,14 @@ builder.Services.AddCors(options =>
     options.AddPolicy("default", corsPolicyBuilder => corsPolicyBuilder.AllowAnyMethod().AllowAnyOrigin().AllowAnyHeader());
 });
 
-// TODO Add login service
 builder.Services.AddAuthentication()
     .AddCookie();
 builder.Services.AddAuthorization();
+builder.Services.AddSingleton<SamlService>();
 
 try
 {
-    var dataProtectionCertPath = builder.Configuration["Security:DataProtectionCertPath"] ?? "cert.pem";
-    Console.WriteLine(dataProtectionCertPath);
-    var dataProtectionCertKey = builder.Configuration["Security:DataProtectionCertKey"];
-    var dataProtectionCert = dataProtectionCertKey is null ? 
-        X509Certificate2.CreateFromPemFile(dataProtectionCertPath) : 
-        X509Certificate2.CreateFromEncryptedPemFile(dataProtectionCertPath, dataProtectionCertKey);
+    var dataProtectionCert = CertificateHelper.LoadX509CertificateAndKey(builder.Configuration, "DataProtection");
     builder.Services.AddDataProtection()
         .SetApplicationName("Afra-App")
         .PersistKeysToDbContext<AfraAppContext>()
