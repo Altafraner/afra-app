@@ -1,7 +1,5 @@
 using System.Text.Json.Serialization;
-using Afra_App;
 using Afra_App.Data;
-using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -1,6 +1,5 @@
 ﻿using Afra_App.Data;
 using Afra_App.Data.Otium;
-using Afra_App.Data.People;
 using Bogus;
 using Microsoft.AspNetCore.Mvc;
 using Person = Afra_App.Data.People.Person;

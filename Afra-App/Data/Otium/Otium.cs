@@ -70,7 +70,7 @@ public class Otium
             Tutor = wiederholung.Tutor,
             Datum = DateOnly.FromDateTime(start.Date),
             Block = wiederholung.Block,
-            Ort = wiederholung.Location,
+            Ort = wiederholung.Ort,
             Wiederholung = wiederholung
         };
 

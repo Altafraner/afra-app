@@ -58,7 +58,7 @@ public class OtiumService(AfraAppContext dbContext)
             Tutor = tutor,
             Wochentag = wochentag,
             Block = block,
-            Location = location
+            Ort = location
         };
 
         dbContext.OtiaWiederholungen.Add(wiederholung);
@@ -183,13 +183,13 @@ public class OtiumService(AfraAppContext dbContext)
             }
         }
 
-        if (entry.Location != update.Location)
+        if (entry.Ort != update.Ort)
         {
-            entry.Location = update.Location;
+            entry.Ort = update.Ort;
             foreach (var termin in termine)
             {
                 // TODO: Notify the students already enrolled
-                termin.Ort = update.Location;
+                termin.Ort = update.Ort;
             }
         }
 
