@@ -51,6 +51,10 @@ main{
     align-items: center;
 }
 
+.align-baseline{
+    align-items: baseline;
+}
+
 .justify-between{
     justify-content: space-between;
 }

@@ -18,6 +18,12 @@ const items = ref([
     label: "Test",
     route: "/test",
     icon: "pi pi-code"
+  },
+
+  {
+    label: "Aufsicht",
+    route: "/Supervision",
+    icon: "pi pi-eye"
   }
 ]);
 </script>

@@ -10,7 +10,7 @@ const routes = [
   {
     path: "/katalog",
     name: "Katalog",
-    component: () => import('@/views/Katalog.vue')
+    component: () => import('@/views/Katalog/Index.vue')
   },
   {
     path: "/test",
@@ -18,10 +18,15 @@ const routes = [
     component: () => import('@/views/Test.vue')
   },
   {
-    path: "/dynamic/:title/:content",
-    name: "Dynamic",
-    component:  () => import('@/views/DynamicRoute.vue'),
-    props: true,
+    path: "/supervision",
+    name: "Aufsicht",
+    component:  () => import('@/views/Supervision.vue'),
+  },
+  {
+    path: "/katalog/:kategorie",
+    name: "Katalog-Kategorie",
+    component: () => import('@/views/Katalog/Kategorie.vue'),
+    props: true
   }
 ]
 

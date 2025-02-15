@@ -78,7 +78,7 @@ const instance = ref({
         given_name: "Maggie",
         last_name: "Simpson"
       },
-      verified: false
+      verified: 1
     },
     {
       start: new Date(0,0,0,12,0),
@@ -87,7 +87,7 @@ const instance = ref({
         given_name: "Maggie",
         last_name: "Simpson"
       },
-      verified: true
+      verified: 0
     }
   ]
 })
