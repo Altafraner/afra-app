@@ -1,6 +1,7 @@
 ﻿<script setup>
 import {defineProps, ref} from 'vue';
 import {DataTable, Column, Button} from "primevue";
+import {formatTutor} from "@/helpers/formatters.js";
 
 const props = defineProps({
   regs: Array,
@@ -8,18 +9,16 @@ const props = defineProps({
   allowEdit: Boolean
 })
 
-const formatTutor = tutor => tutor.last_name + ", " + tutor.given_name
-
 const regs = ref(props.regs)
 </script>
 
 <template>
   <DataTable :value="regs" size="medium">
 
-    <Column field="week_type" header="Woche" />
-    <Column field="day_of_week" header="Tag" />
+    <Column field="wochentyp" header="Woche" />
+    <Column field="wochentag" header="Tag" />
     <Column field="start" header="Anfang" />
-    <Column field="end" header="Ende" />
+    <Column field="ende" header="Ende" />
     <Column field="tutor" header="Tutor">
       <template #body="slotProps">
         {{formatTutor(slotProps.data.tutor)}}

@@ -2,30 +2,30 @@
 
 import {ref} from "vue";
 import {Button} from "primevue";
-import AfraOtiumSupervisionView from "@/components/AfraOtiumSupervisionView.vue";
+import AfraOtiumSupervisionView from "@/components/Otium/AfraOtiumSupervisionView.vue";
 
 const status = ref(false)
 
 const rooms=ref([{
   id: "1",
-  title: "Studienzeit Mathematik",
-  location: "110",
-  enrollments: [
+  bezeichnung: "Studienzeit Mathematik",
+  ort: "110",
+  einschreibungen: [
     {
       start: new Date(0,0,0,12,0),
-      end: new Date(0,0,0,12,20),
+      ende: new Date(0,0,0,12,20),
       student: {
-        given_name: "Homer",
-        last_name: "Simpson"
+        vorname: "Homer",
+        nachname: "Simpson"
       },
       verified: 1
     },
     {
       start: new Date(0,0,0,12,0),
-      end: new Date(0,0,0,12,20),
+      ende: new Date(0,0,0,12,20),
       student: {
-        given_name: "Maggie",
-        last_name: "Simpson"
+        vorname: "Maggie",
+        nachname: "Simpson"
       },
       verified: 0
     }
@@ -50,7 +50,7 @@ function stop(){
 
   <div v-if="!status">
     <p>Um ihre Aufsicht zu starten, drücken Sie auf Start.</p>
-    <p>Mit dem drücken auf Start bestätigen Sie, dass sie eingeteilte Aufsicht für den laufenden Otiums-Slot sind. Alle Änderungen die Sie vornehmen, werden Namentlich und Zeitlich protokolliert.</p>
+    <p>Mit dem Drücken auf Start bestätigen Sie, dass sie eingeteilte Aufsicht für den laufenden Otiums-Slot sind. Alle Änderungen, die Sie vornehmen, werden protokolliert.</p>
   </div>
   <div v-else>
     <afra-otium-supervision-view :rooms="rooms" />

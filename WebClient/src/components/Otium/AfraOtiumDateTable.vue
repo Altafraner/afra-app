@@ -1,6 +1,7 @@
 ﻿<script setup>
 import {defineProps, ref} from 'vue';
 import {DataTable, Column, Button} from "primevue";
+import {formatDate, formatTutor} from "@/helpers/formatters.js";
 
 const props = defineProps({
   dates: Array,
@@ -8,26 +9,18 @@ const props = defineProps({
   allowEdit: Boolean
 })
 
-const formatDate = date => date.toLocaleDateString('de-DE', {
-  weekday: "short",
-  day: "2-digit",
-  month: "short"
-});
-
-const formatTutor = tutor => tutor.last_name + ", " + tutor.given_name
-
 const dates = ref(props.dates)
 </script>
 
 <template>
   <DataTable :value="dates" size="small">
-    <Column field="date" header="Datum" >
+    <Column header="Datum" >
       <template #body="slotProps">
-        {{formatDate(slotProps.data.date)}}
+        {{formatDate(slotProps.data.datum)}}
       </template>
     </Column>
     <Column field="start" header="Anfang" />
-    <Column field="end" header="Ende" />
+    <Column field="ende" header="Ende" />
     <Column field="tutor" header="Tutor" >
       <template #body="slotProps">
         {{formatTutor(slotProps.data.tutor)}}

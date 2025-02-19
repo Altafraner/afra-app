@@ -1,5 +1,5 @@
 ﻿<script setup>
-import AfraOtiumEnrollmentTable from "@/components/AfraOtiumEnrollmentTable.vue";
+import AfraOtiumEnrollmentTable from "@/components/Otium/AfraOtiumEnrollmentTable.vue";
 import {Accordion, AccordionPanel, AccordionHeader, AccordionContent} from "primevue";
 
 const props = defineProps({
@@ -11,13 +11,13 @@ const props = defineProps({
   <accordion>
     <accordion-panel v-for="room of props.rooms" :key="room.id" :value="room.id">
       <accordion-header>
-        {{room.location}} - {{room.title}}
+        {{room.ort}} - {{room.bezeichnung}}
       </accordion-header>
       <accordion-content>
-        <p v-if="room.enrollments.length===0">
+        <p v-if="room.einschreibungen.length===0">
           Keine Einschreibungen
         </p>
-        <afra-otium-enrollment-table v-else :enrollments="room.enrollments" may-edit-attendance />
+        <afra-otium-enrollment-table v-else :enrollments="room.einschreibungen" may-edit-attendance />
       </accordion-content>
     </accordion-panel>
   </accordion>

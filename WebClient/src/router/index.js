@@ -23,9 +23,9 @@ const routes = [
     component:  () => import('@/views/Supervision.vue'),
   },
   {
-    path: "/katalog/:kategorie",
+    path: "/katalog/:date/:block/:otiumId",
     name: "Katalog-Kategorie",
-    component: () => import('@/views/Katalog/Kategorie.vue'),
+    component: () => import('@/views/Katalog/Termin.vue'),
     props: true
   }
 ]

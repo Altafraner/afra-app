@@ -16,11 +16,12 @@ import {
   AccordionHeader,
   Panel
 } from "primevue";
-import AfraOtiumDateTable from "@/components/AfraOtiumDateTable.vue";
-import AfraOtiumRegTable from "@/components/AfraOtiumRegTable.vue";
+import AfraOtiumDateTable from "@/components/Otium/AfraOtiumDateTable.vue";
+import AfraOtiumRegTable from "@/components/Otium/AfraOtiumRegTable.vue";
 import {Form} from '@primevue/forms';
-import IftaLabel from "primevue/iftalabel";
-import AfraOtiumManagerTable from "@/components/AfraOtiumManagerTable.vue";
+import AfraOtiumManagerTable from "@/components/Otium/AfraOtiumManagerTable.vue";
+import AfraKategorySelector from "@/components/Form/AfraKategorySelector.vue";
+import {kategorien} from "@/helpers/testdata.js";
 
 const props = defineProps({
   otium: Object,
@@ -41,61 +42,51 @@ function toggleEdit() {
 }
 
 const initialValues = reactive({
-  designation: otium.value.designation,
-  description: otium.value.description,
-  tags: otium.value.tags,
-  isCataloged: otium.value.isCataloged
+  bezeichnung: otium.value.bezeichnung,
+  beschreibung: otium.value.beschreibung,
+  kategorien: otium.value.kategorien,
 })
 
-const tagsAvailable = ref([
-  "Studienzeit",
-  "Mathe",
-  "Deutsch",
-  "Physik",
-  "Schüler:innen unterrichten Schüler:innen",
-  "Wettbewerb"
-])
+const kategorieOptionsTree = ref(kategorien)
 </script>
 
 <template>
   <Card>
     <template #title>
       <span class="flex justify-between align-center">
-        {{ otium.designation }}
+        {{ otium.bezeichnung }}
         <Button v-if="mayEdit && !isEditing" icon="pi pi-pencil"
                 @click="toggleEdit"></Button>
       </span>
     </template>
     <template #subtitle v-if="!isEditing">
       <span class="inline-flex gap-1">
-        <Tag v-if="mayEdit && otium.isCataloged" value="Im Katalog" severity="success"/>
-        <Tag v-if="mayEdit && !otium.isCataloged" value="Nicht Katalogisiert" severity="danger"/>
-        <Tag v-for="tag in otium.tags" :value="tag" severity="secondary"></Tag>
+        <Tag v-for="tag in otium.kategorien" :value="tag" severity="secondary"></Tag>
       </span>
     </template>
     <template #content v-if="!isEditing">
-      <p v-if="!props.minimal" v-for="desc in otium.description.split('\n').filter(desc => desc)">
-        {{ desc }}</p>
+      <p v-if="!props.minimal" v-for="beschreibung in otium.beschreibung.split('\n').filter(desc => desc)">
+        {{ beschreibung }}</p>
 
       <Accordion v-if="!props.minimal" multiple value="">
         <AccordionPanel value="0">
           <AccordionHeader>Termine</AccordionHeader>
           <AccordionContent>
-            <afra-otium-date-table v-if="!props.hideDates" :dates="otium.dates"
+            <afra-otium-date-table v-if="!props.hideDates" :dates="otium.termine"
                                    :allow-enrollment="mayEnroll" :allowEdit="mayEdit"/>
           </AccordionContent>
         </AccordionPanel>
         <AccordionPanel value="1">
           <AccordionHeader>Regelmäßigkeiten</AccordionHeader>
           <AccordionContent>
-            <afra-otium-reg-table v-if="!props.hideRegularities" :regs="otium.regularities"
+            <afra-otium-reg-table v-if="!props.hideRegularities" :regs="otium.wiederholungen"
                                   :allowEdit="mayEdit"/>
           </AccordionContent>
         </AccordionPanel>
         <AccordionPanel value="2" v-if="mayEdit">
           <AccordionHeader>Verwaltende</AccordionHeader>
           <AccordionContent>
-            <afra-otium-manager-table v-if="!props.hideRegularities" :managers="otium.managers"/>
+            <afra-otium-manager-table v-if="!props.hideRegularities" :managers="otium.verwaltende"/>
           </AccordionContent>
         </AccordionPanel>
       </Accordion>
@@ -109,35 +100,23 @@ const tagsAvailable = ref([
 
         <div class="font-bold text-xl">Eigenschaften</div>
         <div class="flex flex-col gap-2">
-          <div class="flex justify-between">
-            <label for="ot-katalog">Otium im Katalog anzeigen</label>
-            <ToggleSwitch name="isCataloged"/>
-          </div>
-          <Message size="small" severity="warn" variant="simple" icon="pi pi-exclamation-triangle"
-                   v-if="$form['isCataloged'] && !$form['isCataloged'].value">
-            Wenn du das Otium nicht katalogisierst, können die Schüler:innen sich nicht selbst
-            einschreiben.
-          </Message>
-        </div>
-        <div class="flex flex-col gap-2">
           <label for="ot-designation">Bezeichnung</label>
-          <InputText name="designation" id="ot-designation"></InputText>
+          <InputText name="bezeichnung" id="ot-designation"></InputText>
           <Message size="small" severity="secondary" variant="simple">
             So wird das Otium in allen Listen bezeichnet.
           </Message>
         </div>
         <div class="flex flex-col gap-2">
           <label for="ot-description">Beschreibung</label>
-          <Textarea name="description" id="ot-description" rows="5" class="resize-none"
+          <Textarea name="beschreibung" id="ot-description" rows="5" class="resize-none"
                     auto-resize></Textarea>
           <Message size="small" severity="secondary" variant="simple">
             Die Beschreibung gibt den Schüler:innen mehr Infos.
           </Message>
         </div>
         <div class="flex flex-col gap-2">
-          <label for="ot-tags">Tags</label>
-          <MultiSelect name="tags" :options="tagsAvailable" id="ot-tags" filter placeholder="Tags"
-                       display="chip"></MultiSelect>
+          <label for="ot-tags">Kategorie</label>
+          <AfraKategorySelector name="kategorien" :options="kategorieOptionsTree" id="ot-tags" hide-clear></AfraKategorySelector>
           <Message size="small" severity="secondary" variant="simple">
             Gib Tags an, um den Schüler:innen zu helfen, dein Otium zu finden.
           </Message>
@@ -161,7 +140,7 @@ const tagsAvailable = ref([
           <p>
             <strong>Bitte beachte, dass du ein Otium nur dann Löschen kannst, wenn es keine (auch
               vergangenen) Termine mehr zu diesem Otium gibt.</strong> Versuche alternativ
-            das Otium aus dem Katalog zu nehmen.</p>
+            alle kommenden Termine zu löschen.</p>
           <Button severity="danger" label="Löschen" icon="pi pi-trash" variant="outlined"/>
         </Panel>
       </Form>

@@ -1,91 +1,90 @@
 ﻿<script setup>
 import {ref} from "vue";
-import AfraOtium from "@/components/AfraOtium.vue";
-import AfraOtiumInstance from "@/components/AfraOtiumInstance.vue";
+import AfraOtium from "@/components/Otium/AfraOtium.vue";
+import AfraOtiumInstance from "@/components/Otium/AfraOtiumInstance.vue";
 
 const otium = ref({
-  isCataloged: true,
-  designation: "Studienzeit Mathematik",
-  tags: ["Studienzeit", "Mathe"],
-  description: "Dieses Angebot erlaubt den Schüler:innen und Schülern Hilfe zu mathematischen Aufgabenstellungen zu erhalten. \n\n Es ist ein freiwilliges Angebot, dass alle Schüler:innen und Schüler wahrnehmen können.",
-  dates: [
+  bezeichnung: "Studienzeit Mathematik",
+  kategorien: ["Studienzeit", "Mathe"],
+  beschreibung: "Dieses Angebot erlaubt den Schüler:innen und Schülern Hilfe zu mathematischen Aufgabenstellungen zu erhalten. \n\n Es ist ein freiwilliges Angebot, dass alle Schüler:innen und Schüler wahrnehmen können.",
+  termine: [
     {
-      date: new Date(),
+      datum: new Date(),
       start: "11:50",
-      end: "12:30",
+      ende: "12:30",
       tutor: {
-        given_name: "Homer",
-        last_name: "Simpson",
+        vorname: "Homer",
+        nachname: "Simpson",
       },
     },
     {
-      date: new Date(),
+      datum: new Date(),
       start: "11:50",
-      end: "12:30",
+      ende: "12:30",
       tutor: {
-        given_name: "Homer",
-        last_name: "Simpson",
+        vorname: "Homer",
+        nachname: "Simpson",
       },
     }],
-  regularities: [
+  wiederholungen: [
     {
-      week_type: "N",
-      day_of_week: "Dienstag",
+      wochentyp: "N",
+      wochentag: "Dienstag",
       start: "11:50",
-      end: "12:30",
+      ende: "12:30",
       tutor: {
-        given_name: "Homer",
-        last_name: "Simpson"
+        vorname: "Homer",
+        nachname: "Simpson"
       }
     },
     {
-      week_type: "N",
-      day_of_week: "Donnerstag",
+      wochentyp: "N",
+      wochentag: "Donnerstag",
       start: "10:20",
-      end: "13:00",
+      ende: "13:00",
       tutor: {
-        given_name: "Marge",
-        last_name: "Simpson"
+        vorname: "Marge",
+        nachname: "Simpson"
       }
     }
   ],
-  managers: [
+  verwaltende: [
     {
-      given_name: "Marge",
-      last_name: "Simpson"
+      vorname: "Marge",
+      nachname: "Simpson"
     },
     {
-      given_name: "Homer",
-      last_name: "Simpson"
+      vorname: "Homer",
+      nachname: "Simpson"
     }
   ]
 })
 
 const instance = ref({
-  title: "Mathe Studienzeit",
+  bezeichnung: "Mathe Studienzeit",
   start: "11:50",
-  end: "12:30",
-  date: new Date(),
+  ende: "12:30",
+  datum: new Date(),
   tutor: {
-    given_name: "Homer",
-    last_name: "Simpson"
+    vorname: "Homer",
+    nachname: "Simpson"
   },
-  enrollments: [
+  einschreibungen: [
     {
       start: new Date(0,0,0,12,0),
-      end: new Date(0,0,0,12,20),
+      ende: new Date(0,0,0,12,20),
       student: {
-        given_name: "Maggie",
-        last_name: "Simpson"
+        vorname: "Maggie",
+        nachname: "Simpson"
       },
       verified: 1
     },
     {
       start: new Date(0,0,0,12,0),
-      end: new Date(0,0,0,12,20),
+      ende: new Date(0,0,0,12,20),
       student: {
-        given_name: "Maggie",
-        last_name: "Simpson"
+        vorname: "Maggie",
+        nachname: "Simpson"
       },
       verified: 0
     }
@@ -97,7 +96,7 @@ const instance = ref({
   <div class="flex justify-center">
     <div class="this_container">
       <h1>Otium</h1>
-      <afra-otium :otium="otium" may-enroll/>
+      <afra-otium :otium="otium" may-enroll may-edit/>
       <afra-otium-instance :otium="instance" />
     </div>
   </div>

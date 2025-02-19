@@ -13,8 +13,8 @@ const managers = ref(props.managers)
 
 <template>
   <DataTable :value="managers">
-    <Column field="last_name" header="Nachname" />
-    <Column field="given_name" header="Vorname" />
+    <Column field="vorname" header="Nachname" />
+    <Column field="nachname" header="Vorname" />
     <Column class="afra-col-action">
       <template #header>
         <Button aria-label="Person hinzufügen" size="small" icon="pi pi-plus"></Button>
