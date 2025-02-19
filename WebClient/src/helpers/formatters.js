@@ -1,5 +1,5 @@
 ﻿const padString = (text, n) => String(text).padStart(n, '0')
-export const formatTutor = tutor => tutor ? tutor.vorname + ", " + tutor.nachname : ''
+export const formatTutor = tutor => tutor ? tutor.nachname + ", " + tutor.vorname : ''
 
 export const formatStudent = student => student.vorname + " " + student.nachname
 

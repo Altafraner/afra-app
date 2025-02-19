@@ -3,6 +3,8 @@ import Menubar from 'primevue/menubar';
 import {ref} from "vue";
 import {Image} from "primevue";
 
+import wappen from '/Vereinswappen.jpg?url'
+
 const items = ref([
   {
     label: "Dashboard",
@@ -31,7 +33,7 @@ const items = ref([
 <template>
   <Menubar :model="items">
     <template #start>
-      <Image src="/Vereinswappen.jpg" height="50"></Image>
+      <Image :src="wappen" height="50"></Image>
     </template>
     <template #item="{item, props, hasSubmenu}">
       <router-link v-if="item.route" v-slot="{ href, navigate }" :to="item.route" custom>

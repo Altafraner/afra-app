@@ -20,6 +20,7 @@ import {Form} from '@primevue/forms';
 import AfraOtiumManagerTable from "@/components/Otium/AfraOtiumManagerTable.vue";
 import AfraKategorySelector from "@/components/Form/AfraKategorySelector.vue";
 import {kategorien} from "@/helpers/testdata.js";
+import AfraKategorieTag from "@/components/Otium/AfraKategorieTag.vue";
 
 const props = defineProps({
   otium: Object,
@@ -45,6 +46,20 @@ const initialValues = reactive({
   kategorien: otium.value.kategorien,
 })
 
+function findKategorie(id, kategorien){
+  const index = kategorien.findIndex((e) => e.id === id);
+  if (index!==-1) {
+    return kategorien[index]
+  }
+
+  for (const kategorie of kategorien ?? []) {
+    const childResult = findKategorie(id, kategorie.children)
+    if (childResult != null) return childResult
+  }
+
+  return null
+}
+
 const kategorieOptionsTree = ref(kategorien)
 </script>
 
@@ -59,7 +74,7 @@ const kategorieOptionsTree = ref(kategorien)
     </template>
     <template #subtitle v-if="!isEditing">
       <span class="inline-flex gap-1">
-        <Tag v-for="tag in otium.kategorien" :value="tag" severity="secondary"></Tag>
+        <AfraKategorieTag v-for="tag in otium.kategorien" :value="findKategorie(tag, kategorien)" severity="secondary"></AfraKategorieTag>
       </span>
     </template>
     <template #content v-if="!isEditing">

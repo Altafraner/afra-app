@@ -13,8 +13,10 @@ const instance = ref(terminEinschreibungsDetails)
   <div class="flex justify-center">
     <div class="this_container">
       <h1>Otium</h1>
-      <afra-otium :otium="otium" may-enroll may-edit/>
-      <afra-otium-instance :otium="instance" />
+      <div class="flex flex-col gap-5">
+        <afra-otium :otium="otium" may-edit/>
+        <afra-otium-instance :otium="instance" />
+      </div>
     </div>
   </div>
 </template>

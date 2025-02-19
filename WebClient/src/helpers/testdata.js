@@ -23,6 +23,14 @@ const teacher2 = {
   nachname: "Simpson"
 }
 
+const studienzeitBase = {
+  bezeichnung: "Studienzeit Mathematik",
+  kategorien: ["0", "0-1"],
+  beschreibung: "Dieses Angebot erlaubt den Schüler:innen und Schülern Hilfe zu mathematischen Aufgabenstellungen zu erhalten. \n\n Es ist ein freiwilliges Angebot, dass alle Schüler:innen und Schüler wahrnehmen können.",
+  tutor: teacher1,
+  ort: "110",
+}
+
 export const kategorien = [
   {
     name: "Akademisches",
@@ -78,10 +86,7 @@ export const kategorien = [
   }
 ]
 
-export const otium = {
-  bezeichnung: "Studienzeit Mathematik",
-  kategorien: ["0", "0-1"],
-  beschreibung: "Dieses Angebot erlaubt den Schüler:innen und Schülern Hilfe zu mathematischen Aufgabenstellungen zu erhalten. \n\n Es ist ein freiwilliges Angebot, dass alle Schüler:innen und Schüler wahrnehmen können.",
+export const otium = Object.assign({
   termine: [
     {
       datum: new Date(),
@@ -114,11 +119,9 @@ export const otium = {
     teacher1,
     teacher2
   ]
-}
+}, studienzeitBase)
 
-export const termin = {
-  bezeichnung: "Studienzeit Mathematik",
-  beschreibung: "Dieses Angebot erlaubt den Schüler:innen und Schülern Hilfe zu mathematischen Aufgabenstellungen zu erhalten. \n\n Es ist ein freiwilliges Angebot, dass alle Schüler:innen und Schüler wahrnehmen können.",
+export const termin = Object.assign({
   auslastung: 0.5,
   maxEinschreibungen: 7,
   einschreibungen: [
@@ -147,11 +150,8 @@ export const termin = {
       eingeschrieben: false,
       kannBearbeiten: false
     }],
-  tutor: teacher1,
-  ort: "110",
-  kategorien: ["0", "0-1"],
   id: "1"
-}
+}, studienzeitBase)
 
 export const blockzeiten = [
   '13:30',
@@ -162,47 +162,73 @@ export const blockzeiten = [
   '14:45'
 ]
 
-export const terminEinschreibungsDetails = {
-  bezeichnung: "Studienzeit Mathematik",
+const terminEinschreibungsDetailsBase = {
   block: 1,
   datum: new Date(),
   tutor: teacher1,
   einschreibungen: [
     {
-      start: new Date(0, 0, 0, 12, 0),
-      ende: new Date(0, 0, 0, 12, 20),
-      student: student3,
+      start: new Date(0, 0, 0, 13, 30),
+      ende: new Date(0, 0, 0, 14, 15),
+      student: student1,
       verified: 1
     },
     {
-      start: new Date(0, 0, 0, 12, 0),
-      ende: new Date(0, 0, 0, 12, 20),
-      student: student1,
+      start: new Date(0, 0, 0, 13, 45),
+      ende: new Date(0, 0, 0, 14, 30),
+      student: student2,
       verified: 0
+    },
+    {
+      start: new Date(0, 0, 0, 13, 30),
+      ende: new Date(0, 0, 0, 14, 45),
+      student: student3,
+      verified: 2
     }
   ]
 }
 
+export const terminEinschreibungsDetails = Object.assign({
+  id: "1",
+}, terminEinschreibungsDetailsBase, studienzeitBase)
+
 export const supervisionDetails = [
-  {
-    id: "1",
-    bezeichnung: "Studienzeit Mathematik",
-    ort: "110",
-    einschreibungen: [
-      {
-        start: new Date(0, 0, 0, 12, 0),
-        ende: new Date(0, 0, 0, 12, 20),
-        student: student3,
-        verified: 1
-      },
-      {
-        start: new Date(0, 0, 0, 12, 0),
-        ende: new Date(0, 0, 0, 12, 20),
-        student: student1,
-        verified: 0
-      }
-    ]
-  }
+  Object.assign({
+    id: "0",
+    bezeichnung: "Nicht eingeschrieben",
+    ort: "FEHLEND"
+  }, terminEinschreibungsDetailsBase),
+  terminEinschreibungsDetails,
+  Object.assign({
+    id: "2",
+    bezeichnung: "Schüler unterrichten Schüler",
+    ort: "109"
+  }, terminEinschreibungsDetailsBase),
+  Object.assign({
+    id: "3",
+    bezeichnung: "Studienberatung",
+    ort: "108"
+  }, terminEinschreibungsDetailsBase),
+  Object.assign({
+    id: "4",
+    bezeichnung: "Ruheraum",
+    ort: "106"
+  }, terminEinschreibungsDetailsBase),
+  Object.assign({
+    id: "5",
+    bezeichnung: "Nachschreiben",
+    ort: "105"
+  }, terminEinschreibungsDetailsBase),
+  Object.assign({
+    id: "6",
+    bezeichnung: "Yoga",
+    ort: "104"
+  }, terminEinschreibungsDetailsBase),
+  Object.assign({
+    id: "103",
+    bezeichnung: "Schreibwerkstatt",
+    ort: "102"
+  }, terminEinschreibungsDetailsBase)
 ]
 
 export const otiaDates = [
@@ -249,7 +275,7 @@ export const otia = [
     bezeichnung: "Schüler unterrichten Schüler",
     auslastung: 0.8,
     maxEinschreibungen: 5,
-    tutor: teacher2,
+    tutor: student2,
     ort: "109",
     kategorien: ["0", "0-2"],
     id: "2"
@@ -264,16 +290,16 @@ export const otia = [
     id: "3"
   },
   {
-    bezeichnung: "Test",
+    bezeichnung: "Ruheraum",
     auslastung: 0,
     maxEinschreibungen: 0,
-    tutor: teacher1,
+    tutor: null,
     id: "4",
     kategorien: ["3"],
   },
   {
-    bezeichnung: "Test",
-    auslastung: 0.5,
+    bezeichnung: "Nachschreiben",
+    auslastung: 1,
     maxEinschreibungen: 0,
     tutor: teacher2,
     id: "5",
