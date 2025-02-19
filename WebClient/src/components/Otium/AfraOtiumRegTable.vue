@@ -17,8 +17,7 @@ const regs = ref(props.regs)
 
     <Column field="wochentyp" header="Woche" />
     <Column field="wochentag" header="Tag" />
-    <Column field="start" header="Anfang" />
-    <Column field="ende" header="Ende" />
+    <Column field="block" header="Block" />
     <Column field="tutor" header="Tutor">
       <template #body="slotProps">
         {{formatTutor(slotProps.data.tutor)}}

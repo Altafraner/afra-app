@@ -1,9 +1,9 @@
 ﻿<script setup>
-import {Tag, DataTable, Column, Badge, MeterGroup, Button} from "primevue";
+import {DataTable, Column, Badge, MeterGroup, Button} from "primevue";
 import {ref} from "vue";
-import {kategorien} from "@/helpers/testdata.js";
+import {blockzeiten, kategorien, termin} from "@/helpers/testdata.js";
 import AfraKategorieTag from "@/components/Otium/AfraKategorieTag.vue";
-import {formatDate} from "../../helpers/formatters.js";
+import {formatDate} from "@/helpers/formatters.js";
 
 const props = defineProps({
   otiumId: String,
@@ -11,14 +11,8 @@ const props = defineProps({
   block: Number
 })
 
-const times = ref([
-  '13:30',
-  '13:45',
-  '14:00',
-  '14:15',
-  '14:30',
-  '14:45'
-])
+const times = ref(blockzeiten)
+const otium = ref(termin)
 
 function findKategorie(id, kategorien){
   const index = kategorien.findIndex((e) => e.id === id);
@@ -34,45 +28,6 @@ function findKategorie(id, kategorien){
   return null
 }
 
-const otium = ref({
-  bezeichnung: "Studienzeit Mathematik",
-  beschreibung: "Dieses Angebot erlaubt den Schüler:innen und Schülern Hilfe zu mathematischen Aufgabenstellungen zu erhalten. \n\n Es ist ein freiwilliges Angebot, dass alle Schüler:innen und Schüler wahrnehmen können.",
-  auslastung: 0.5,
-  maxEinschreibungen: 7,
-  einschreibungen: [
-    {
-      anzahl: 5,
-      eingeschrieben: false,
-      kannBearbeiten: true
-    },
-    {
-      anzahl: 4,
-      eingeschrieben: true,
-      kannBearbeiten: true
-    },
-    {
-      anzahl: 5,
-      eingeschrieben: true,
-      kannBearbeiten: true
-    },
-    {
-      anzahl: 3,
-      eingeschrieben: false,
-      kannBearbeiten: true
-    },
-    {
-      anzahl: 7,
-      eingeschrieben: false,
-      kannBearbeiten: false
-    }],
-  tutor: {
-    vorname: "Angela",
-    nachname: "Merkel"
-  },
-  ort: "110",
-  kategorien: ["0", "0-1"],
-  id: "1"
-})
 
 const chooseColor = (now, max) => {
   if (max===0 || now <= 0.7) return 'var(--p-button-success-background)'

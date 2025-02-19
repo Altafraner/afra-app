@@ -11,3 +11,8 @@ export const formatDate = date => date.toLocaleDateString('de-DE', {
 
 export const formatTime = date => padString(date.getHours(), 2) + ":" + padString(date.getMinutes(), 2);
 
+export const chooseColor = (now, max) => {
+  if (max===0 || now <= 0.7) return 'var(--p-button-success-background)'
+  if (now < 1) return 'var(--p-button-warn-background)'
+  return 'var(--p-button-danger-background)'
+}

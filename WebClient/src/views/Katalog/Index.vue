@@ -4,99 +4,12 @@ import {Select} from "primevue";
 import AfraDateSelector from "@/components/Form/AfraDateSelector.vue";
 import AfraKategorySelector from "@/components/Form/AfraKategorySelector.vue";
 import AfraOtiumKatalogView from "@/components/Otium/AfraOtiumKatalogView.vue";
-import {kategorien} from "@/helpers/testdata.js";
+import {kategorien, otiaDates, blockOptions as testBlockOptions, otia as testOtia} from "@/helpers/testdata.js";
 
-const datesAvailable = ref([
-  {
-    label: "Montag, 10.02.2025 | H-Woche",
-    code: "2025-02-10",
-    disabled: false,
-  },
-  {
-    label: "2025 KW 08 (H): Freitag",
-    code: "2025-02-14",
-    disabled: true,
-  },
-  {
-    label: "2025 KW 09 (H): Freitag",
-    code: "2025-02-19",
-    disabled: false,
-  }
-])
-const blockOptions = ref([
-  {
-    label: "13:30 - 14:45",
-    block: 1
-  },
-  {
-    label: "15:00 - 16:15",
-    block: 2
-  }
-])
+const datesAvailable = ref(otiaDates)
+const blockOptions = ref(testBlockOptions)
 const kategorieOptionsTree = ref(kategorien)
-const otia = ref([
-  {
-    bezeichnung: "Studienzeit Mathematik",
-    beschreibung: "Hallo Welt",
-    auslastung: 0.5,
-    maxEinschreibungen: 10,
-    einschreibungen: [5,4,6,3,7],
-    tutor: {
-      vorname: "Angela",
-      nachname: "Merkel"
-    },
-    ort: "110",
-    kategorien: ["0", "0-1"],
-    id: "1"
-  },
-  {
-    bezeichnung: "Schüler unterrichten Schüler",
-    auslastung: 0.8,
-    maxEinschreibungen: 5,
-    einschreibungen: [5,4,6,3,7],
-    tutor: {
-      vorname: "Greta",
-      nachname: "Thunberg"
-    },
-    ort: "109",
-    kategorien: ["0", "0-2"],
-    id: "2"
-  },
-  {
-    bezeichnung: "Übungsraum Musik",
-    auslastung: 0.5,
-    maxEinschreibungen: 10,
-    einschreibungen: [5,4,6,3,7],
-    tutor: null,
-    ort: '323',
-    kategorien: ["4"],
-    id: "3"
-  },
-  {
-    bezeichnung: "Test",
-    auslastung: 0.5,
-    maxEinschreibungen: 0,
-    einschreibungen: [5,4,6,3,7],
-    tutor: {
-      vorname: "Angela",
-      nachname: "Merkel"
-    },
-    id: "4",
-    kategorien: ["3"],
-  },
-  {
-    bezeichnung: "Test",
-    auslastung: 0.5,
-    maxEinschreibungen: 0,
-    einschreibungen: [5,4,6,3,7],
-    tutor: {
-      vorname: "Angela",
-      nachname: "Merkel"
-    },
-    id: "5",
-    kategorien: ["7"],
-  }
-])
+const otia = ref(testOtia)
 const date = ref(datesAvailable.value[0]);
 const kategorie = ref(null);
 const block = ref(blockOptions.value[0].block)

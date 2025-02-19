@@ -1,7 +1,6 @@
 ﻿<script setup>
-import {Card, DataTable, Column, Button, DatePicker} from "primevue";
+import {Card} from "primevue";
 import {ref, defineProps} from "vue";
-import AfraOtiumAnwesenheit from "@/components/Otium/AfraOtiumAnwesenheit.vue";
 import AfraOtiumEnrollmentTable from "@/components/Otium/AfraOtiumEnrollmentTable.vue";
 import {formatDate, formatTutor} from "@/helpers/formatters.js";
 
@@ -12,8 +11,6 @@ const props = defineProps({
 const otium = ref(props.otium)
 const isEditing = ref(false)
 
-const padString = (text) => String(text).padStart(2, '0')
-
 </script>
 
 <template>
@@ -22,7 +19,7 @@ const padString = (text) => String(text).padStart(2, '0')
       {{ otium.bezeichnung }}
     </template>
     <template #subtitle>
-      {{ formatDate(otium.datum) }}, {{ otium.start }} Uhr bis {{ otium.ende }} Uhr
+      {{ formatDate(otium.datum) }}, {{ otium.block }}. Block
     </template>
     <template #content v-if="!isEditing">
       <p>

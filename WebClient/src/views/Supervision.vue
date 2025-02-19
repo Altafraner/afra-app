@@ -3,34 +3,11 @@
 import {ref} from "vue";
 import {Button} from "primevue";
 import AfraOtiumSupervisionView from "@/components/Otium/AfraOtiumSupervisionView.vue";
+import {supervisionDetails} from "@/helpers/testdata.js";
 
 const status = ref(false)
 
-const rooms=ref([{
-  id: "1",
-  bezeichnung: "Studienzeit Mathematik",
-  ort: "110",
-  einschreibungen: [
-    {
-      start: new Date(0,0,0,12,0),
-      ende: new Date(0,0,0,12,20),
-      student: {
-        vorname: "Homer",
-        nachname: "Simpson"
-      },
-      verified: 1
-    },
-    {
-      start: new Date(0,0,0,12,0),
-      ende: new Date(0,0,0,12,20),
-      student: {
-        vorname: "Maggie",
-        nachname: "Simpson"
-      },
-      verified: 0
-    }
-  ]
-}])
+const rooms=ref(supervisionDetails)
 
 function start(){
   status.value = true

@@ -2,20 +2,12 @@
 
 import {DataTable, Column, Button, Badge} from "primevue";
 import MeterGroup from "primevue/metergroup";
-import {formatTutor} from "@/helpers/formatters.js"
+import {chooseColor, formatTutor} from "@/helpers/formatters.js"
 
 const props = defineProps({
   otia: Array,
   linkGenerator: Function
 })
-
-const chooseColor = (now, max) => {
-  if (max===0 || now <= 0.7) return 'var(--p-button-success-background)'
-  if (now < 1) return 'var(--p-button-warn-background)'
-  return 'var(--p-button-danger-background)'
-}
-
-console.log(props.otia)
 
 </script>
 

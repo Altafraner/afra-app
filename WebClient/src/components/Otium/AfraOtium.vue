@@ -1,5 +1,5 @@
 ﻿<script setup>
-import {ref, defineProps, reactive} from "vue";
+import {ref, reactive} from "vue";
 import {
   Card,
   Divider,
@@ -8,8 +8,6 @@ import {
   InputText,
   Message,
   Textarea,
-  MultiSelect,
-  ToggleSwitch,
   Accordion,
   AccordionContent,
   AccordionPanel,

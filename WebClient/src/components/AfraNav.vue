@@ -5,8 +5,8 @@ import {Image} from "primevue";
 
 const items = ref([
   {
-    label: "Mein Tag",
-    route: "/me",
+    label: "Dashboard",
+    route: "/",
     icon: "pi pi-user"
   },
   {
@@ -22,7 +22,7 @@ const items = ref([
 
   {
     label: "Aufsicht",
-    route: "/Supervision",
+    route: "/aufsicht",
     icon: "pi pi-eye"
   }
 ]);

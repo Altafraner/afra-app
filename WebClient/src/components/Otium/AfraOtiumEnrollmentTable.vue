@@ -1,6 +1,6 @@
 ﻿<script setup>
 
-import {Column, DataTable, DatePicker} from "primevue";
+import {Column, DataTable} from "primevue";
 import AfraOtiumAnwesenheit from "@/components/Otium/AfraOtiumAnwesenheit.vue";
 import {formatStudent, formatTime} from "@/helpers/formatters.js";
 const props = defineProps({

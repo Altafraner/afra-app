@@ -19,8 +19,7 @@ const dates = ref(props.dates)
         {{formatDate(slotProps.data.datum)}}
       </template>
     </Column>
-    <Column field="start" header="Anfang" />
-    <Column field="ende" header="Ende" />
+    <Column field="block" header="Block" />
     <Column field="tutor" header="Tutor" >
       <template #body="slotProps">
         {{formatTutor(slotProps.data.tutor)}}

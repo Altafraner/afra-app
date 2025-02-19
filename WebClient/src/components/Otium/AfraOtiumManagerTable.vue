@@ -6,8 +6,6 @@ const props = defineProps({
   managers: Array,
 })
 
-const formatTutor = tutor => tutor.last_name + ", " + tutor.given_name
-
 const managers = ref(props.managers)
 </script>
 
