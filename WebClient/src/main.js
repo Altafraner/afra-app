@@ -5,6 +5,7 @@ import PrimeVue from 'primevue/config';
 import Aura from '@primevue/themes/aura';
 import locale from 'primelocale/de.json'
 import {definePreset} from "@primevue/themes";
+import {createPinia} from "pinia";
 
 const AfraAppPreset = definePreset(Aura, {
   semantic: {
@@ -24,8 +25,10 @@ const AfraAppPreset = definePreset(Aura, {
   }
 })
 
+const pinia = createPinia()
 const app = createApp(App)
 
+app.use(pinia)
 app.use(router)
 app.use(PrimeVue, {
   theme: {

@@ -1,8 +1,8 @@
 ﻿<script setup>
 
-import {DataTable, Column, Button, Badge} from "primevue";
+import {DataTable, Column, Button, Tag} from "primevue";
 import MeterGroup from "primevue/metergroup";
-import {chooseColor, formatTutor} from "@/helpers/formatters.js"
+import {chooseColor, chooseSeverity, formatTutor} from "@/helpers/formatters.js"
 
 const props = defineProps({
   otia: Array,
@@ -26,20 +26,12 @@ const props = defineProps({
     </Column>
     <Column header="Auslastung">
       <template #body="{data}">
-        <div class="enrollmentGrid align-center gap-3">
-          <Badge v-if="data.maxEinschreibungen !== 0" severity="secondary" :value="`${data.auslastung*100} %`" />
-          <span v-else></span>
-          <MeterGroup :value="[{value: data.auslastung, color: chooseColor(data.auslastung, data.maxEinschreibungen), label: null}]" :max="data.maxEinschreibungen === 0 ? 0 : 1" label-position="none" />
-        </div>
+          <Tag class="width-fill" v-if="data.maxEinschreibungen !== 0" :severity="chooseSeverity(data.auslastung, data.maxEinschreibungen)" >{{data.auslastung*100}} %</Tag>
+          <Tag class="width-fill" v-else severity="success">&infin;</Tag>
       </template>
     </Column>
   </DataTable>
 </template>
 
 <style scoped>
-  .enrollmentGrid{
-    display: grid;
-    grid-template-columns: 3.5rem 7rem;
-    justify-content: center;
-  }
 </style>

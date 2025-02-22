@@ -26,7 +26,7 @@ const props = defineProps({
     </Column>
     <Column header="Anwesenheit" v-if="props.showAttendance || props.mayEditAttendance">
       <template #body="slotProps">
-        <afra-otium-anwesenheit :initial-status="slotProps.data.verified" :mayEdit="props.mayEditAttendance"/>
+        <afra-otium-anwesenheit v-model="slotProps.data.verified" :mayEdit="props.mayEditAttendance"/>
       </template>
     </Column>
   </DataTable>

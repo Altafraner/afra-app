@@ -9,6 +9,8 @@ export const formatDate = date => date.toLocaleDateString('de-DE', {
   month: "short"
 });
 
+const formatMachineDate = date => date.toISOString().split('T')[0]
+
 export const formatTime = date => padString(date.getHours(), 2) + ":" + padString(date.getMinutes(), 2);
 
 export const chooseColor = (now, max) => {
@@ -16,3 +18,11 @@ export const chooseColor = (now, max) => {
   if (now < 1) return 'var(--p-button-warn-background)'
   return 'var(--p-button-danger-background)'
 }
+
+export const chooseSeverity = (now, max) => {
+  if (max===0 || now <= 0.7) return 'success'
+  if (now < 1) return 'warn'
+  return 'danger'
+}
+
+export const otiumKatalogLinkGenerator = (otiumId, date, blockId) => `/katalog/${formatMachineDate(date)}/${blockId}/${otiumId}`

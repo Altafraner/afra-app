@@ -22,7 +22,7 @@ function stop(){
   <div class="flex justify-between align-center">
     <h1>Aufsicht</h1>
     <Button v-if="!status" @click="start" icon="pi pi-play" label="Start"/>
-    <Button v-else @click="stop" severity="danger" icon="pi pi-stop" label="Stop"/>
+    <!--Button v-else @click="stop" severity="danger" icon="pi pi-stop" label="Stop"/-->
   </div>
 
   <div v-if="!status">

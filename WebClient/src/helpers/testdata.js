@@ -166,6 +166,7 @@ const terminEinschreibungsDetailsBase = {
   block: 1,
   datum: new Date(),
   tutor: teacher1,
+  kontrolliert: false,
   einschreibungen: [
     {
       start: new Date(0, 0, 0, 13, 30),
@@ -304,5 +305,19 @@ export const otia = [
     tutor: teacher2,
     id: "5",
     kategorien: ["7"],
+  }
+]
+
+export const personalOtiaEnrollments = [
+  {
+    okay: true,
+    datum: new Date(),
+    einschreibungen: [
+      Object.assign({
+        otiumId: "1",
+        start: new Date(0, 0, 0, 13, 45),
+        ende: new Date(0, 0, 0, 14, 15),
+      }, studienzeitBase)
+    ]
   }
 ]

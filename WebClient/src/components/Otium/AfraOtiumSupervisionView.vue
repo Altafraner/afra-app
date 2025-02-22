@@ -1,17 +1,27 @@
 ﻿<script setup>
 import AfraOtiumEnrollmentTable from "@/components/Otium/AfraOtiumEnrollmentTable.vue";
-import {Accordion, AccordionPanel, AccordionHeader, AccordionContent} from "primevue";
+import {Accordion, AccordionPanel, AccordionHeader, AccordionContent, Button} from "primevue";
 
 const props = defineProps({
   rooms: Array
 })
+
+const roomToggleDone = (evt, room) => {
+  evt.stopPropagation();
+  room.kontrolliert = !room.kontrolliert
+}
 </script>
 
 <template>
   <accordion>
     <accordion-panel v-for="room of props.rooms" :key="room.id" :value="room.id">
       <accordion-header>
-        {{room.ort}} - {{room.bezeichnung}}
+        <div class="flex justify-between width-fill align-center" style="margin-right: 1rem">
+          <span>
+            {{room.ort}} - {{room.bezeichnung}}
+          </span>
+          <Button :severity="room.kontrolliert ? 'success' : 'danger'" :label="room.kontrolliert ? 'Fertig' : 'Ausstehend'" size="small" class="confirm-button" @click="(evt) => roomToggleDone(evt, room)"/>
+        </div>
       </accordion-header>
       <accordion-content>
         <p v-if="room.einschreibungen.length===0">
@@ -24,5 +34,7 @@ const props = defineProps({
 </template>
 
 <style scoped>
-
+.confirm-button{
+  width: 7rem;
+}
 </style>

@@ -3,12 +3,12 @@ import {DataTable, Column, Badge, MeterGroup, Button} from "primevue";
 import {ref} from "vue";
 import {blockzeiten, kategorien, termin} from "@/helpers/testdata.js";
 import AfraKategorieTag from "@/components/Otium/AfraKategorieTag.vue";
-import {formatDate} from "@/helpers/formatters.js";
+import {chooseColor, formatDate} from "@/helpers/formatters.js";
 
 const props = defineProps({
   otiumId: String,
   date: String,
-  block: Number
+  block: String
 })
 
 const times = ref(blockzeiten)
@@ -29,11 +29,6 @@ function findKategorie(id, kategorien){
 }
 
 
-const chooseColor = (now, max) => {
-  if (max===0 || now <= 0.7) return 'var(--p-button-success-background)'
-  if (now < 1) return 'var(--p-button-warn-background)'
-  return 'var(--p-button-danger-background)'
-}
 </script>
 
 <template>
@@ -50,7 +45,7 @@ const chooseColor = (now, max) => {
         {{times[index]}}
       </template>
     </Column>
-    <Column header="Auslastung">
+    <Column header="Einschreibungen">
       <template #body="{data}">
         <div class="enrollmentGrid align-center gap-3">
           <Badge severity="secondary" :value="data.anzahl" />
