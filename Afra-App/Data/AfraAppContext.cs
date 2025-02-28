@@ -19,17 +19,15 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
     // This is used for the Data Protection API from .NET, used for example for securing auth cookies.
     public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }
     
-    private readonly string _dbPath;
+    private readonly string _connectionString;
     
-    public AfraAppContext()
+    public AfraAppContext(IConfiguration configuration)
     {
-        const Environment.SpecialFolder folder = Environment.SpecialFolder.LocalApplicationData;
-        var path = Environment.GetFolderPath(folder);
-        _dbPath = Path.Combine(path, "afra-app.db");
+        _connectionString = configuration.GetConnectionString("DefaultConnection")!;
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => 
-        optionsBuilder.UseSqlite($"Data Source={_dbPath}");
+        optionsBuilder.UseNpgsql(_connectionString);
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

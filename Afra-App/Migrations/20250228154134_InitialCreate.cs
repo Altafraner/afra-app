@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
@@ -12,10 +13,24 @@ namespace Afra_App.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "DataProtectionKeys",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    FriendlyName = table.Column<string>(type: "text", nullable: true),
+                    Xml = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DataProtectionKeys", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "OtiaKategorien",
                 columns: table => new
                 {
-                    Bezeichnung = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false)
+                    Bezeichnung = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -26,11 +41,11 @@ namespace Afra_App.Migrations
                 name: "Personen",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Vorname = table.Column<string>(type: "TEXT", nullable: false),
-                    Nachname = table.Column<string>(type: "TEXT", nullable: false),
-                    Email = table.Column<string>(type: "TEXT", nullable: false),
-                    MentorId = table.Column<Guid>(type: "TEXT", nullable: true)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Vorname = table.Column<string>(type: "text", nullable: false),
+                    Nachname = table.Column<string>(type: "text", nullable: false),
+                    Email = table.Column<string>(type: "text", nullable: false),
+                    MentorId = table.Column<Guid>(type: "uuid", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -46,9 +61,9 @@ namespace Afra_App.Migrations
                 name: "Rollen",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", nullable: false),
-                    Permissions = table.Column<string>(type: "TEXT", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    Permissions = table.Column<int[]>(type: "integer[]", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -59,10 +74,10 @@ namespace Afra_App.Migrations
                 name: "Otia",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Bezeichnung = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    Beschreibung = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
-                    KategorieBezeichnung = table.Column<string>(type: "TEXT", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Bezeichnung = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Beschreibung = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    KategorieBezeichnung = table.Column<string>(type: "character varying(50)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -79,8 +94,8 @@ namespace Afra_App.Migrations
                 name: "PersonRolle",
                 columns: table => new
                 {
-                    PersonId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    RollenId = table.Column<Guid>(type: "TEXT", nullable: false)
+                    PersonId = table.Column<Guid>(type: "uuid", nullable: false),
+                    RollenId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -103,12 +118,12 @@ namespace Afra_App.Migrations
                 name: "OtiaWiederholungen",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Wochentag = table.Column<int>(type: "INTEGER", nullable: false),
-                    OtiumId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    TutorId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Block = table.Column<byte>(type: "INTEGER", nullable: false),
-                    Ort = table.Column<string>(type: "TEXT", maxLength: 10, nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Wochentag = table.Column<int>(type: "integer", nullable: false),
+                    OtiumId = table.Column<Guid>(type: "uuid", nullable: false),
+                    TutorId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Block = table.Column<byte>(type: "smallint", nullable: false),
+                    Ort = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -131,8 +146,8 @@ namespace Afra_App.Migrations
                 name: "OtiumPerson",
                 columns: table => new
                 {
-                    VerantwortlicheId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    VerwalteteOtiaId = table.Column<Guid>(type: "TEXT", nullable: false)
+                    VerantwortlicheId = table.Column<Guid>(type: "uuid", nullable: false),
+                    VerwalteteOtiaId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -155,14 +170,14 @@ namespace Afra_App.Migrations
                 name: "OtiaTermine",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Datum = table.Column<DateOnly>(type: "TEXT", nullable: false),
-                    WiederholungId = table.Column<Guid>(type: "TEXT", nullable: true),
-                    IstAbgesagt = table.Column<bool>(type: "INTEGER", nullable: false),
-                    OtiumId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    TutorId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Block = table.Column<byte>(type: "INTEGER", nullable: false),
-                    Ort = table.Column<string>(type: "TEXT", maxLength: 10, nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Datum = table.Column<DateOnly>(type: "date", nullable: false),
+                    WiederholungId = table.Column<Guid>(type: "uuid", nullable: true),
+                    IstAbgesagt = table.Column<bool>(type: "boolean", nullable: false),
+                    OtiumId = table.Column<Guid>(type: "uuid", nullable: false),
+                    TutorId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Block = table.Column<byte>(type: "smallint", nullable: false),
+                    Ort = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -191,11 +206,11 @@ namespace Afra_App.Migrations
                 name: "OtiaEinschreibungen",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    TerminId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    BetroffenePersonId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Start = table.Column<TimeOnly>(type: "TEXT", nullable: false),
-                    Ende = table.Column<TimeOnly>(type: "TEXT", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    TerminId = table.Column<Guid>(type: "uuid", nullable: false),
+                    BetroffenePersonId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Start = table.Column<TimeOnly>(type: "time without time zone", nullable: false),
+                    Ende = table.Column<TimeOnly>(type: "time without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -273,6 +288,9 @@ namespace Afra_App.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "DataProtectionKeys");
+
             migrationBuilder.DropTable(
                 name: "OtiaEinschreibungen");
 

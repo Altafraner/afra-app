@@ -4,4 +4,11 @@ services:
     env_file: idp.env
     ports: 
       - "4000:4000"
-
+  db:
+    image: postgres:alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: "AfraAppUser"
+      POSTGRES_PASSWORD: "AfraAppPassword"
+      POSTGRES_DB: "afra-app"
