@@ -6,6 +6,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using Afra_App.Authentication.SamlMetadata;
 using Microsoft.AspNetCore.Mvc;
+using KeyInfo = Afra_App.Authentication.SamlMetadata.KeyInfo;
 
 namespace Afra_App.Services;
 
@@ -17,24 +18,17 @@ public class SamlService
         Failed
     }
 
-    public record SamlValidationResponse(
-        SamlValidationStatus Status,
-        string? Message = null,
-        IEnumerable<SamlUserAttribute>? UserInfo = null);
-
-    public record SamlUserAttribute(string AttributeName, string AttributeValue);
-
     private const string SamlAssertionNamespace = "urn:oasis:names:tc:SAML:2.0:assertion";
     private const string SamlAssertionLocalName = "Assertion";
-
-    private readonly string _samlServiceProviderId;
-    private readonly string _samlIdentityProviderId;
     private readonly X509Certificate2 _idPCertificate;
+
+    private readonly ILogger<SamlService> _logger;
 
     // This is a weird .NET thing as there is no ConcurrentHashSet.
     private readonly ConcurrentDictionary<string, DateTime> _responseIds = [];
+    private readonly string _samlIdentityProviderId;
 
-    private readonly ILogger<SamlService> _logger;
+    private readonly string _samlServiceProviderId;
 
     public SamlService(ILogger<SamlService> logger, IConfiguration configuration)
     {
@@ -181,9 +175,9 @@ public class SamlService
         var assertionId = assertion.GetAttribute("ID");
         return _responseIds.TryAdd(assertionId, DateTime.Now);
     }
-    
+
     /// <summary>
-    /// Removes outdated response ids from the cache.
+    ///     Removes outdated response ids from the cache.
     /// </summary>
     public void CleanUp()
     {
@@ -193,7 +187,7 @@ public class SamlService
             .Select(e => e.Key);
         foreach (var id in outdated) _responseIds.TryRemove(id, out _);
     }
-    
+
     public async Task<string> GenerateMetadata(IConfiguration configuration, IUrlHelper urlHelper)
     {
         var certificate = CertificateHelper.LoadX509CertificateAndKey(configuration, "SamlServiceProvider");
@@ -205,9 +199,11 @@ public class SamlService
         {
             SpSsoDescriptor = new SpSsoDescriptor
             {
+                WantAssertionsSigned = true,
+                AuthnRequestsSigned = true,
                 KeyDescriptor = new KeyDescriptor
                 {
-                    KeyInfo = new Authentication.SamlMetadata.KeyInfo()
+                    KeyInfo = new KeyInfo
                     {
                         X509Data = new X509Data
                         {
@@ -226,7 +222,9 @@ public class SamlService
                 {
                     UiInfo = new UiInfo
                     {
-                        DisplayName = [new DisplayName
+                        DisplayName =
+                        [
+                            new DisplayName
                             {
                                 Lang = "de",
                                 Text = samlConfiguration["UiInfo:DisplayNameDe"]!
@@ -234,11 +232,13 @@ public class SamlService
                             new DisplayName
                             {
                                 Lang = "en",
-                                Text = samlConfiguration["UiInfo:DisplayNameEn"] ?? samlConfiguration["UiInfo:DisplayNameDe"]!
+                                Text = samlConfiguration["UiInfo:DisplayNameEn"] ??
+                                       samlConfiguration["UiInfo:DisplayNameDe"]!
                             }
                         ],
-                        Description = [
-                        new Description
+                        Description =
+                        [
+                            new Description
                             {
                                 Lang = "de",
                                 Text = samlConfiguration["UiInfo:DescriptionDe"]!
@@ -246,7 +246,8 @@ public class SamlService
                             new Description
                             {
                                 Lang = "en",
-                                Text = samlConfiguration["UiInfo:DescriptionEn"] ?? samlConfiguration["UiInfo:DescriptionDe"]!
+                                Text = samlConfiguration["UiInfo:DescriptionEn"] ??
+                                       samlConfiguration["UiInfo:DescriptionDe"]!
                             }
                         ],
                         Logo = new Logo
@@ -257,7 +258,7 @@ public class SamlService
                         }
                     }
                 },
-                ProtocolSupportEnumeration = "urn:oasis:names:tc:SAML:2.0:protocol",
+                ProtocolSupportEnumeration = "urn:oasis:names:tc:SAML:2.0:protocol"
             },
             Organization = new Organization
             {
@@ -277,7 +278,9 @@ public class SamlService
                     Text = samlConfiguration["Organization:Url"]!
                 }
             },
-            ContactPerson = [new ContactPerson
+            ContactPerson =
+            [
+                new ContactPerson
                 {
                     GivenName = samlConfiguration["TechnicalContact:GivenName"]!,
                     SurName = samlConfiguration["TechnicalContact:SurName"]!,
@@ -295,13 +298,6 @@ public class SamlService
             EntityId = samlConfiguration["ServiceProviderId"]!
         };
 
-        var xmlSettings = new XmlWriterSettings
-        {
-            Encoding = new UTF8Encoding(false),
-            OmitXmlDeclaration = false,
-            Indent = true
-        };
-        
         var namespaces = new XmlSerializerNamespaces();
         namespaces.Add("md", "urn:oasis:names:tc:SAML:2.0:metadata");
         namespaces.Add("mdui", "urn:oasis:names:tc:SAML:metadata:ui");
@@ -313,13 +309,13 @@ public class SamlService
         serializer.Serialize(xmlWriter, metadata, namespaces);
         xmlWriter.Flush();
         xmlWriter.Close();
-        
+
         // Sign doc with certificate
         var signedXml = new SignedXml(doc)
         {
-            SigningKey = certificate.GetRSAPrivateKey(),
+            SigningKey = certificate.GetRSAPrivateKey()
         };
-        
+
         var reference = new Reference
         {
             Uri = ""
@@ -327,15 +323,22 @@ public class SamlService
         reference.AddTransform(new XmlDsigEnvelopedSignatureTransform());
         signedXml.AddReference(reference);
         signedXml.ComputeSignature();
-        
+
         var xmlDigitalSignature = signedXml.GetXml();
         doc.DocumentElement!.AppendChild(doc.ImportNode(xmlDigitalSignature, true));
 
         var stringWriter = new StringWriter();
-        
+
         doc.InsertBefore(doc.CreateXmlDeclaration("1.0", "utf-8", null), doc.DocumentElement);
         doc.Save(stringWriter);
         await stringWriter.FlushAsync();
         return stringWriter.ToString();
     }
+
+    public record SamlValidationResponse(
+        SamlValidationStatus Status,
+        string? Message = null,
+        IEnumerable<SamlUserAttribute>? UserInfo = null);
+
+    public record SamlUserAttribute(string AttributeName, string AttributeValue);
 }
