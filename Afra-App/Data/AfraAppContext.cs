@@ -1,10 +1,11 @@
 ﻿using Afra_App.Data.Otium;
 using Afra_App.Data.People;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace Afra_App.Data;
 
-public class AfraAppContext : DbContext
+public class AfraAppContext : DbContext, IDataProtectionKeyContext
 {
     public DbSet<Person> Personen { get; set; }
     public DbSet<Rolle> Rollen { get; set; }
@@ -14,6 +15,9 @@ public class AfraAppContext : DbContext
     public DbSet<Wiederholung> OtiaWiederholungen { get; set; }
     public DbSet<Kategorie> OtiaKategorien { get; set; }
     public DbSet<Einschreibung> OtiaEinschreibungen { get; set; }
+    
+    // This is used for the Data Protection API from .NET, used for example for securing auth cookies.
+    public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }
     
     private readonly string _dbPath;
     

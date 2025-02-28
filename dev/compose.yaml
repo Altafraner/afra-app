@@ -1,0 +1,7 @@
+services:
+  idp:
+    image: boxyhq/mock-saml
+    env_file: idp.env
+    ports: 
+      - "4000:4000"
+

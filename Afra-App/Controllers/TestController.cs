@@ -1,21 +1,26 @@
-﻿using Afra_App.Data;
+using Afra_App.Data;
 using Afra_App.Data.Otium;
 using Bogus;
+using Afra_App.Authentication;
+using Afra_App.Data.Json;
+using Afra_App.Services;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Person = Afra_App.Data.People.Person;
+using Microsoft.EntityFrameworkCore;
 
 namespace Afra_App.Controllers;
 
 [ApiController]
 [Route("/api/[controller]")]
-public class TestController(AfraAppContext dbContext) : ControllerBase
+public class TestController(AfraAppContext dbContext, UserService userService) : ControllerBase
 {
-    // GET
     [HttpGet("reset")]
     public ActionResult ResetDb()
     {
         dbContext.Database.EnsureDeleted();
-        dbContext.Database.EnsureCreated();
+        dbContext.Database.Migrate();
 
         return Ok("Die Datenbank wurde erfolgreich zurückgesetzt.");
     }
@@ -76,5 +81,33 @@ public class TestController(AfraAppContext dbContext) : ControllerBase
         dbContext.SaveChanges();
         
         return Ok("Die Datenbank wurde erfolgreich befüllt.");
+    }
+
+    [Route("authenticate/{id:guid}")]
+    public async Task<ActionResult> AuthenticateAs(Guid id)
+    {
+        try
+        {
+            await userService.SignInAsync(id, HttpContext);
+        }
+        catch (InvalidOperationException e)
+        {
+            return BadRequest(e.Message);
+        }
+        return Ok("Logged in");
+    }
+    
+    [Route("authenticate/logout")]
+    public async Task<ActionResult> AuthenticateAs()
+    {
+        await HttpContext.SignOutAsync();
+        return Ok("Logged out");
+    }
+
+    [Route("authenticate")]
+    [Authorize]
+    public ActionResult<PersonJsonInfo> PrintAuthentication()
+    {
+        return new PersonJsonInfo(HttpContext.GetPerson(dbContext));
     }
 }
