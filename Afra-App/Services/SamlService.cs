@@ -1,7 +1,11 @@
 ﻿using System.Collections.Concurrent;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography.Xml;
+using System.Text;
 using System.Xml;
+using System.Xml.Serialization;
+using Afra_App.Authentication.SamlMetadata;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Afra_App.Services;
 
@@ -188,5 +192,150 @@ public class SamlService
             .Where(e => e.Value < threshold)
             .Select(e => e.Key);
         foreach (var id in outdated) _responseIds.TryRemove(id, out _);
+    }
+    
+    public async Task<string> GenerateMetadata(IConfiguration configuration, IUrlHelper urlHelper)
+    {
+        var certificate = CertificateHelper.LoadX509CertificateAndKey(configuration, "SamlServiceProvider");
+        // I know, this is very ugly, but that is a problem with the protocol, that requires the already base64 encoded
+        //  certificate to be base64 encoded again
+        var certificateText = Convert.ToBase64String(Encoding.UTF8.GetBytes(certificate.ExportCertificatePem()));
+        var samlConfiguration = configuration.GetSection("Saml");
+        var metadata = new EntityDescriptor
+        {
+            SpSsoDescriptor = new SpSsoDescriptor
+            {
+                KeyDescriptor = new KeyDescriptor
+                {
+                    KeyInfo = new Authentication.SamlMetadata.KeyInfo()
+                    {
+                        X509Data = new X509Data
+                        {
+                            X509Certificate = certificateText
+                        }
+                    },
+                    Use = "signing"
+                },
+                AssertionConsumerService = new AssertionConsumerService
+                {
+                    Index = 0,
+                    Binding = "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST",
+                    Location = urlHelper.RouteUrl("SamlController.Post") ?? ""
+                },
+                Extensions = new Extensions
+                {
+                    UiInfo = new UiInfo
+                    {
+                        DisplayName = [new DisplayName
+                            {
+                                Lang = "de",
+                                Text = samlConfiguration["UiInfo:DisplayNameDe"]!
+                            },
+                            new DisplayName
+                            {
+                                Lang = "en",
+                                Text = samlConfiguration["UiInfo:DisplayNameEn"] ?? samlConfiguration["UiInfo:DisplayNameDe"]!
+                            }
+                        ],
+                        Description = [
+                        new Description
+                            {
+                                Lang = "de",
+                                Text = samlConfiguration["UiInfo:DescriptionDe"]!
+                            },
+                            new Description
+                            {
+                                Lang = "en",
+                                Text = samlConfiguration["UiInfo:DescriptionEn"] ?? samlConfiguration["UiInfo:DescriptionDe"]!
+                            }
+                        ],
+                        Logo = new Logo
+                        {
+                            Height = 100,
+                            Width = 100,
+                            Text = samlConfiguration["UiInfo:LogoUrl"]!
+                        }
+                    }
+                },
+                ProtocolSupportEnumeration = "urn:oasis:names:tc:SAML:2.0:protocol",
+            },
+            Organization = new Organization
+            {
+                OrganizationName = new OrganizationName
+                {
+                    Lang = "de",
+                    Text = samlConfiguration["Organization:Name"]!
+                },
+                OrganizationDisplayName = new OrganizationDisplayName
+                {
+                    Lang = "de",
+                    Text = samlConfiguration["Organization:DisplayName"] ?? samlConfiguration["Organization:Name"]!
+                },
+                OrganizationURL = new OrganizationUrl
+                {
+                    Lang = "de",
+                    Text = samlConfiguration["Organization:Url"]!
+                }
+            },
+            ContactPerson = [new ContactPerson
+                {
+                    GivenName = samlConfiguration["TechnicalContact:GivenName"]!,
+                    SurName = samlConfiguration["TechnicalContact:SurName"]!,
+                    EmailAddress = samlConfiguration["TechnicalContact:Email"]!,
+                    ContactType = "technical"
+                },
+                new ContactPerson
+                {
+                    GivenName = samlConfiguration["AdministrativeContact:GivenName"]!,
+                    SurName = samlConfiguration["AdministrativeContact:SurName"]!,
+                    EmailAddress = samlConfiguration["AdministrativeContact:Email"]!,
+                    ContactType = "administrative"
+                }
+            ],
+            EntityId = samlConfiguration["ServiceProviderId"]!
+        };
+
+        var xmlSettings = new XmlWriterSettings
+        {
+            Encoding = new UTF8Encoding(false),
+            OmitXmlDeclaration = false,
+            Indent = true
+        };
+        
+        var namespaces = new XmlSerializerNamespaces();
+        namespaces.Add("md", "urn:oasis:names:tc:SAML:2.0:metadata");
+        namespaces.Add("mdui", "urn:oasis:names:tc:SAML:metadata:ui");
+        namespaces.Add("ds", "http://www.w3.org/2000/09/xmldsig#");
+        var doc = new XmlDocument();
+        var navigator = doc.CreateNavigator()!;
+        var xmlWriter = navigator.AppendChild();
+        var serializer = new XmlSerializer(typeof(EntityDescriptor));
+        serializer.Serialize(xmlWriter, metadata, namespaces);
+        xmlWriter.Flush();
+        xmlWriter.Close();
+        
+        // Sign doc with certificate
+        var signedXml = new SignedXml(doc)
+        {
+            SigningKey = certificate.GetRSAPrivateKey(),
+        };
+        
+        var reference = new Reference
+        {
+            Uri = ""
+        };
+        reference.AddTransform(new XmlDsigEnvelopedSignatureTransform());
+        signedXml.AddReference(reference);
+        signedXml.ComputeSignature();
+        
+        var xmlDigitalSignature = signedXml.GetXml();
+        doc.DocumentElement!.AppendChild(doc.ImportNode(xmlDigitalSignature, true));
+
+        var stringWriter = new StringWriter();
+        
+        doc.InsertBefore(doc.CreateXmlDeclaration("1.0", "utf-8", null), doc.DocumentElement);
+        doc.Save(stringWriter);
+        await stringWriter.FlushAsync();
+        return stringWriter.ToString();
     }
 }

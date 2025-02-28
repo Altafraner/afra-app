@@ -26,7 +26,6 @@ builder.Services.AddAuthentication()
     .AddCookie(options =>
     {
         options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
-        options.Cookie.Expiration = options.ExpireTimeSpan;
         options.LoginPath = "/SAML/LoginRedirect";
         options.AccessDeniedPath = "/AccessDenied";
         options.Cookie.SameSite = SameSiteMode.Strict;

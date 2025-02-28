@@ -1,6 +1,4 @@
-﻿using System.Security.Cryptography.X509Certificates;
-using System.Security.Cryptography.Xml;
-using System.Text;
+﻿using System.Text;
 using System.Xml;
 using Afra_App.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -49,6 +47,16 @@ public class SamlController : ControllerBase
         await userService.SignInAsync(new Guid(user), HttpContext);
 
         return LocalRedirect(string.IsNullOrWhiteSpace(relayState) || relayState=="undefined" ? "/" : relayState);
+    }
+
+    [HttpGet("Metadata")]
+    public async Task<ActionResult<string>> Metadata(
+        [FromServices] SamlService samlService,
+        [FromServices] IConfiguration config)
+    {
+        return Content(
+            await samlService.GenerateMetadata(config, Url),
+            "application/xml");
     }
 
     
