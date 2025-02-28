@@ -1,6 +1,7 @@
 ﻿using Afra_App.Authentication;
 using Afra_App.Models;
 using Afra_App.Models.Json;
+using Afra_App.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +11,7 @@ namespace Afra_App.Controllers;
 
 [ApiController]
 [Route("/api/[controller]")]
-public class TestController(AfraAppContext dbContext) : ControllerBase
+public class TestController(AfraAppContext dbContext, UserService userService) : ControllerBase
 {
     [HttpGet("reset")]
     public ActionResult ResetDb()
@@ -117,9 +118,14 @@ public class TestController(AfraAppContext dbContext) : ControllerBase
     [Route("authenticate/{id:guid}")]
     public async Task<ActionResult> AuthenticateAs(Guid id)
     {
-        var user = await dbContext.People.FindAsync(id);
-        if (user is null) return NotFound("No User with the given GUID could be found");
-        await HttpContext.SignInAsync(user.ToClaimsPrincipalAsync());
+        try
+        {
+            await userService.SignInAsync(id, HttpContext);
+        }
+        catch (InvalidOperationException e)
+        {
+            return BadRequest(e.Message);
+        }
         return Ok("Logged in");
     }
     

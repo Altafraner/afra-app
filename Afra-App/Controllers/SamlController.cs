@@ -11,10 +11,12 @@ namespace Afra_App.Controllers;
 public class SamlController : ControllerBase
 {
     [HttpPost("POST")]
-    public ActionResult<SamlService.SamlValidationResponse> Post(
+    public async Task<ActionResult> Post(
         [FromForm(Name = "SAMLResponse")] string response,
         [FromForm(Name = "RelayState")] string? relayState, 
-        [FromServices] SamlService samlService)
+        [FromServices] SamlService samlService,
+        [FromServices] UserService userService,
+        [FromServices] ILogger<SamlController> logger)
     {
         var responseXml = new XmlDocument();
         try
@@ -31,7 +33,22 @@ public class SamlController : ControllerBase
             return BadRequest("The SAML-String was not valid XML");
         }
 
-        return samlService.Handle(responseXml);
+        var validationResult = samlService.Handle(responseXml);
+        
+        if (validationResult.Status == SamlService.SamlValidationStatus.Failed)
+            return Unauthorized(validationResult.Message);
+
+        var user = validationResult.UserInfo?
+            .FirstOrDefault(i => i.AttributeName == "firstName")?.AttributeValue;
+
+        if (user == null)
+            return Unauthorized("The SAML Response did not contain a valid user");
+        
+        logger.LogInformation("Signing in User: {userId}", user);
+
+        await userService.SignInAsync(new Guid(user), HttpContext);
+
+        return LocalRedirect(string.IsNullOrWhiteSpace(relayState) || relayState=="undefined" ? "/" : relayState);
     }
 
     

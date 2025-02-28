@@ -1,5 +1,4 @@
 using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
 using System.Text.Json.Serialization;
 using Afra_App;
 using Afra_App.Services;
@@ -19,13 +18,23 @@ builder.Services.AddOpenApi();
 builder.Services.AddCors(options =>
 {
     options.DefaultPolicyName = "default";
-    options.AddPolicy("default", corsPolicyBuilder => corsPolicyBuilder.AllowAnyMethod().AllowAnyOrigin().AllowAnyHeader());
+    options.AddPolicy("default",
+        corsPolicyBuilder => corsPolicyBuilder.AllowAnyMethod().AllowAnyOrigin().AllowAnyHeader());
 });
 
 builder.Services.AddAuthentication()
-    .AddCookie();
+    .AddCookie(options =>
+    {
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+        options.Cookie.Expiration = options.ExpireTimeSpan;
+        options.LoginPath = "/SAML/LoginRedirect";
+        options.AccessDeniedPath = "/AccessDenied";
+        options.Cookie.SameSite = SameSiteMode.Strict;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    });
 builder.Services.AddAuthorization();
 builder.Services.AddSingleton<SamlService>();
+builder.Services.AddScoped<UserService>();
 
 try
 {
@@ -49,7 +58,7 @@ if (app.Environment.IsDevelopment())
     using var scope = app.Services.CreateScope();
     using var context = scope.ServiceProvider.GetService<AfraAppContext>();
     context?.Database.Migrate();
-    
+
     app.UseCors();
     app.MapOpenApi();
 }
