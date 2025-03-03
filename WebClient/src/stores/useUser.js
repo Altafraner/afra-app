@@ -1,13 +1,31 @@
 ﻿import {defineStore} from "pinia";
+import {mande} from "mande";
 
 export const useUser = defineStore('user', {
   state: () => ({
-    loggedIn: true,
-    user: {
-      id: 0,
-      vorname: 'Homer',
-      nachname: 'Simpson',
-      role: 'teacher'
+    loading: true,
+    loggedIn: false,
+    user: null
+  }),
+  actions: {
+    async update(){
+      const fetchUser = mande('/api/user');
+
+      const userPromise = fetchUser.get();
+      try {
+        this.user = await userPromise;
+        this.loggedIn = true;
+      }catch (error) {
+        if (error.response.status === 401) {
+            this.loggedIn = false;
+            this.user = null;
+            console.info("Not logged in")
+        } else {
+            console.error("Error fetching user", error);
+        }
+      } finally {
+        this.loading = false;
+      }
     }
-  })
+  }
 })

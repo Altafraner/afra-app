@@ -13,7 +13,11 @@ builder.Services.AddSwaggerGen();
 // Add services to the container.
 
 builder.Services.AddControllers()
-    .AddJsonOptions(options => { options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles; });
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddDbContext<AfraAppContext>();
@@ -59,7 +63,7 @@ if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
     using var context = scope.ServiceProvider.GetService<AfraAppContext>();
-    context?.Database.Migrate();
+    context!.Database.Migrate();
 
     app.UseCors();
     app.MapOpenApi();

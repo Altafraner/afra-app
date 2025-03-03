@@ -15,15 +15,12 @@ public class Person
 
     [JsonIgnore]
     public ICollection<Person> Mentees { get; set; } = new List<Person>();
-    [JsonIgnore]
-    public ICollection<Rolle> Rollen { get; set; } = new List<Rolle>();
+    
+    public required Rolle Rolle { get; set; }
     [JsonIgnore]
     public ICollection<Otium.Otium> VerwalteteOtia { get; set; } = new List<Otium.Otium>();
     [JsonIgnore]
     public ICollection<Einschreibung> OtiaEinschreibungen { get; set; } = new List<Einschreibung>();
-    
-    [JsonIgnore]
-    public IEnumerable<Berechtigung> Permissions => Rollen.SelectMany(r => r.Permissions).Distinct();
 
     public override string ToString() => $"{Vorname} {Nachname}";
 }

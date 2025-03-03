@@ -1,10 +1,12 @@
 ﻿<script setup>
 import {Button} from "primevue";
+import {useUser} from "@/stores/useUser.js";
+const user = useUser()
 </script>
 
 <template>
   <h1>Dashboard</h1>
-  <p>Hallo, schön, dass du hier her gefunden hast. </p>
+  <p>Hallo {{user.user.name}}, schön, dass du hier her gefunden hast. </p>
   <p>Du siehst hier eine erste Testversion der Otiumsverwaltung. Aktuell ist nur ein Teil der Oberfläche sichtbar. Es werden nur Testdaten verwendet, wundere dich daher bitte nicht, wenn Änderungen nicht gespeichert werden oder alle Links zum gleichen Otium führen.</p>
   <h2>Arbeitsstand</h2>
   <p>Du kannst aktuell den <RouterLink to="/Katalog">Katalog</RouterLink> betrachteten, wie ihn ein:e Schüler:in sehen würde. Außerdem ist die <RouterLink to="/aufsicht">Aufsichtsansicht</RouterLink> wie eine Lehrer:in sie sehen würde verfügbar. Unter <RouterLink to="/test">Test</RouterLink> findest du außerdem einige Komponenten, wie sie Lehrer:innen sehen werden.</p>

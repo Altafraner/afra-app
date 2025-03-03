@@ -17,7 +17,7 @@ namespace Afra_App.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.1")
+                .HasAnnotation("ProductVersion", "9.0.2")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -51,11 +51,34 @@ namespace Afra_App.Migrations
 
             modelBuilder.Entity("Afra_App.Data.Otium.Kategorie", b =>
                 {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Bezeichnung")
+                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.HasKey("Bezeichnung");
+                    b.Property<string>("CssColor")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Icon")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<Guid?>("OtiumId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ParentId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OtiumId");
+
+                    b.HasIndex("ParentId");
 
                     b.ToTable("OtiaKategorien");
                 });
@@ -76,13 +99,12 @@ namespace Afra_App.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<string>("KategorieBezeichnung")
-                        .IsRequired()
-                        .HasColumnType("character varying(50)");
+                    b.Property<Guid>("KategorieId")
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("KategorieBezeichnung");
+                    b.HasIndex("KategorieId");
 
                     b.ToTable("Otia");
                 });
@@ -96,11 +118,11 @@ namespace Afra_App.Migrations
                     b.Property<byte>("Block")
                         .HasColumnType("smallint");
 
-                    b.Property<DateOnly>("Datum")
-                        .HasColumnType("date");
-
                     b.Property<bool>("IstAbgesagt")
                         .HasColumnType("boolean");
+
+                    b.Property<int?>("MaxEinschreibungen")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Ort")
                         .IsRequired()
@@ -109,6 +131,9 @@ namespace Afra_App.Migrations
 
                     b.Property<Guid>("OtiumId")
                         .HasColumnType("uuid");
+
+                    b.Property<DateOnly>("SchultagDatum")
+                        .HasColumnType("date");
 
                     b.Property<Guid>("TutorId")
                         .HasColumnType("uuid");
@@ -119,6 +144,8 @@ namespace Afra_App.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("OtiumId");
+
+                    b.HasIndex("SchultagDatum");
 
                     b.HasIndex("TutorId");
 
@@ -150,6 +177,9 @@ namespace Afra_App.Migrations
                     b.Property<int>("Wochentag")
                         .HasColumnType("integer");
 
+                    b.Property<int>("Wochentyp")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("OtiumId");
@@ -176,6 +206,9 @@ namespace Afra_App.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("Rolle")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Vorname")
                         .IsRequired()
                         .HasColumnType("text");
@@ -187,23 +220,21 @@ namespace Afra_App.Migrations
                     b.ToTable("Personen");
                 });
 
-            modelBuilder.Entity("Afra_App.Data.People.Rolle", b =>
+            modelBuilder.Entity("Afra_App.Data.Schuljahr.Schultag", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                    b.Property<DateOnly>("Datum")
+                        .HasColumnType("date");
 
-                    b.Property<string>("Name")
+                    b.PrimitiveCollection<bool[]>("OtiumsBlock")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("boolean[]");
 
-                    b.PrimitiveCollection<int[]>("Permissions")
-                        .IsRequired()
-                        .HasColumnType("integer[]");
+                    b.Property<int>("Wochentyp")
+                        .HasColumnType("integer");
 
-                    b.HasKey("Id");
+                    b.HasKey("Datum");
 
-                    b.ToTable("Rollen");
+                    b.ToTable("Schultage");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.DataProtection.EntityFrameworkCore.DataProtectionKey", b =>
@@ -240,21 +271,6 @@ namespace Afra_App.Migrations
                     b.ToTable("OtiumPerson");
                 });
 
-            modelBuilder.Entity("PersonRolle", b =>
-                {
-                    b.Property<Guid>("PersonId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("RollenId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("PersonId", "RollenId");
-
-                    b.HasIndex("RollenId");
-
-                    b.ToTable("PersonRolle");
-                });
-
             modelBuilder.Entity("Afra_App.Data.Otium.Einschreibung", b =>
                 {
                     b.HasOne("Afra_App.Data.People.Person", "BetroffenePerson")
@@ -274,11 +290,24 @@ namespace Afra_App.Migrations
                     b.Navigation("Termin");
                 });
 
+            modelBuilder.Entity("Afra_App.Data.Otium.Kategorie", b =>
+                {
+                    b.HasOne("Afra_App.Data.Otium.Otium", null)
+                        .WithMany("Kategorien")
+                        .HasForeignKey("OtiumId");
+
+                    b.HasOne("Afra_App.Data.Otium.Kategorie", "Parent")
+                        .WithMany("Children")
+                        .HasForeignKey("ParentId");
+
+                    b.Navigation("Parent");
+                });
+
             modelBuilder.Entity("Afra_App.Data.Otium.Otium", b =>
                 {
                     b.HasOne("Afra_App.Data.Otium.Kategorie", "Kategorie")
                         .WithMany("Otia")
-                        .HasForeignKey("KategorieBezeichnung")
+                        .HasForeignKey("KategorieId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -290,6 +319,12 @@ namespace Afra_App.Migrations
                     b.HasOne("Afra_App.Data.Otium.Otium", "Otium")
                         .WithMany("Termine")
                         .HasForeignKey("OtiumId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Afra_App.Data.Schuljahr.Schultag", "Schultag")
+                        .WithMany()
+                        .HasForeignKey("SchultagDatum")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -305,6 +340,8 @@ namespace Afra_App.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Otium");
+
+                    b.Navigation("Schultag");
 
                     b.Navigation("Tutor");
 
@@ -354,28 +391,17 @@ namespace Afra_App.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("PersonRolle", b =>
-                {
-                    b.HasOne("Afra_App.Data.People.Person", null)
-                        .WithMany()
-                        .HasForeignKey("PersonId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Afra_App.Data.People.Rolle", null)
-                        .WithMany()
-                        .HasForeignKey("RollenId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Afra_App.Data.Otium.Kategorie", b =>
                 {
+                    b.Navigation("Children");
+
                     b.Navigation("Otia");
                 });
 
             modelBuilder.Entity("Afra_App.Data.Otium.Otium", b =>
                 {
+                    b.Navigation("Kategorien");
+
                     b.Navigation("Termine");
 
                     b.Navigation("Wiederholungen");

@@ -33,55 +33,55 @@ const studienzeitBase = {
 
 export const kategorien = [
   {
-    name: "Akademisches",
+    bezeichnung: "Akademisches",
     id: "0",
     icon: "pi pi-graduation-cap",
-    color: "var(--p-blue-500)",
+    cssColor: "var(--p-blue-500)",
     children: [
       {
-        name: "Studienzeit",
+        bezeichnung: "Studienzeit",
         id: "0-1"
       },
       {
-        name: "Schüler unterrichten Schüler",
+        bezeichnung: "Schüler unterrichten Schüler",
         id: "0-2"
       },
       {
-        name: "Wettbewerbe",
+        bezeichnung: "Wettbewerbe",
         id: "0-3"
       },
       {
-        name: "Sonstiges",
+        bezeichnung: "Sonstiges",
         id: "0-4"
       }
     ]
   },
   {
-    name: "Bewegung",
+    bezeichnung: "Bewegung",
     id: "3",
     icon: "pi pi-heart",
-    color: "var(--p-teal-500)"
+    cssColor: "var(--p-teal-500)"
   },
   {
-    name: "Musik",
+    bezeichnung: "Musik",
     id: "4",
     icon: "pi pi-headphones",
-    color: "var(--p-orange-500)"
+    cssColor: "var(--p-orange-500)"
   },
   {
-    name: "Besinnung",
+    bezeichnung: "Besinnung",
     id: "5",
     icon: "pi pi-hourglass",
-    color: "var(--p-yellow-500)"
+    cssColor: "var(--p-yellow-500)"
   },
   {
-    name: "Beratung",
+    bezeichnung: "Beratung",
     id: "6",
     icon: "pi pi-user",
-    color: "var(--p-purple-500)"
+    cssColor: "var(--p-purple-500)"
   },
   {
-    name: "Teamräume",
+    bezeichnung: "Teamräume",
     id: "7"
   }
 ]

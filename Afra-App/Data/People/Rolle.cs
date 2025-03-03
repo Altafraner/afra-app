@@ -1,14 +1,11 @@
-﻿namespace Afra_App.Data.People;
+﻿using System.Text.Json.Serialization;
 
-public class Rolle
+namespace Afra_App.Data.People;
+
+public enum Rolle
 {
-    public Guid Id { get; set; }
-    public required string Name { get; set; }
-
-    public ICollection<Berechtigung> Permissions { get; set; } = new List<Berechtigung>();
-    
-    public Rolle(string name)
-    {
-        Name = name;
-    }
+    [JsonStringEnumMemberName("Tutor")]
+    Tutor,
+    [JsonStringEnumMemberName("Student")]
+    Student
 }
