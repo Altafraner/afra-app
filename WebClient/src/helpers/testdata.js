@@ -321,3 +321,20 @@ export const personalOtiaEnrollments = [
     ]
   }
 ]
+
+export const teacherOtiaView = [
+  Object.assign({
+    id: "1",
+    block: 1,
+    datum: new Date(),
+  }, studienzeitBase)
+]
+
+export const mentees = [
+  {
+    student: Object.assign({id: 1}, student1),
+    letzte: 0,
+    diese: 1,
+    naechste: 2
+  }
+]

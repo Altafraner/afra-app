@@ -1,5 +1,5 @@
 ﻿<script setup>
-import {defineProps, ref} from 'vue';
+import {ref} from 'vue';
 import {DataTable, Column, Button} from "primevue";
 
 const props = defineProps({

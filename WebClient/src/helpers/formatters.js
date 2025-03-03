@@ -25,4 +25,6 @@ export const chooseSeverity = (now, max) => {
   return 'danger'
 }
 
-export const otiumKatalogLinkGenerator = (otiumId, date, blockId) => `/katalog/${formatMachineDate(date)}/${blockId}/${otiumId}`
+const otiumLinkGenerator = (otiumId, date, blockId) => `${formatMachineDate(date)}/${blockId}/${otiumId}`
+export const otiumKatalogLinkGenerator = (otiumId, date, blockId) => `/katalog/${otiumLinkGenerator(otiumId, date, blockId)}`
+export const otiumTutorLinkGenerator = (otiumId, date, blockId) => `/tutor/${otiumLinkGenerator(otiumId, date, blockId)}`

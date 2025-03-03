@@ -3,13 +3,24 @@ import '@/assets/main.css'
 import 'primeicons/primeicons.css'
 
 import AfraNav from "@/components/AfraNav.vue";
+import {useUser} from "@/stores/useUser.js";
+import wappen from '/favicon.svg?url'
+import {Image} from "primevue";
+const user = useUser();
 </script>
 
 <template>
-  <afra-nav />
+  <afra-nav v-if="user.loggedIn"/>
   <main class="flex justify-center">
-    <div class="container">
+    <div v-if="user.loggedIn" class="container">
       <RouterView></RouterView>
+    </div>
+    <div class="min-container" v-else>
+      <div class="flex justify-center">
+        <Image :src="wappen" height="200"></Image>
+      </div>
+      <h1>Willkommen bei der Otiumsverwaltung</h1>
+      <p>Bitte logge dich über das zentrale Portal ein, um die Otiumsverwaltung zu nutzen.</p>
     </div>
   </main>
   <footer>
@@ -18,13 +29,17 @@ import AfraNav from "@/components/AfraNav.vue";
 </template>
 
 <style scoped>
+  .min-container{
+    max-width: min(95%, 50rem);
+    margin-top: 5rem;
+  }
   .container{
     width: 50rem;
   }
 
   @media screen and (width < 55rem) {
     .container{
-      width: 100%;
+      width: 95%;
     }
   }
 </style>

@@ -71,6 +71,10 @@ main{
     flex-direction: column;
 }
 
+.flex-wrap{
+    flex-wrap: wrap;
+}
+
 .text-xl{
     font-size: 1.2rem;
 }

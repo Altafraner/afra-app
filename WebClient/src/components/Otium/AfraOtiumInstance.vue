@@ -1,6 +1,6 @@
 ﻿<script setup>
 import {Card} from "primevue";
-import {ref, defineProps} from "vue";
+import {ref} from "vue";
 import AfraOtiumEnrollmentTable from "@/components/Otium/AfraOtiumEnrollmentTable.vue";
 import {formatDate, formatTutor} from "@/helpers/formatters.js";
 
