@@ -1,0 +1,129 @@
+﻿:root{
+    font-family: 'Inter', "Segoe UI", 'Helvetica', 'Arial', sans-serif;
+}
+
+body{
+    margin: 0
+}
+
+footer{
+    background: var(--p-primary-500);
+    color: #eee;
+    margin: 2rem 0 0 0;
+    padding: 1rem;
+    text-align: center;
+    word-spacing: 0.2rem;
+}
+
+footer p{
+    height: 1.2em;
+}
+
+footer a{
+    display: inline-block;
+    color: #eee;
+    text-decoration: none;
+    transition: color 250ms ease-out, font-size 250ms ease-out;
+}
+
+footer a:hover, footer a:focus{
+    color: #fff;
+    font-size: 1.1em;
+}
+
+footer i{
+    font-size: 0.8rem;
+}
+
+main{
+    min-height: 90vh;
+}
+
+.flex{
+    display: flex;
+}
+
+.inline-flex{
+    display: inline-flex;
+}
+
+.align-center{
+    align-items: center;
+}
+
+.align-baseline{
+    align-items: baseline;
+}
+
+.justify-between{
+    justify-content: space-between;
+}
+
+.justify-center{
+    justify-content: center;
+}
+
+.justify-stretch{
+    justify-content: stretch;
+}
+
+.flex-col{
+    flex-direction: column;
+}
+
+.flex-wrap{
+    flex-wrap: wrap;
+}
+
+.text-xl{
+    font-size: 1.2rem;
+}
+
+.font-bold{
+    font-weight: 600;
+}
+
+.gap-1{
+    gap: 0.2rem
+}
+
+.gap-2{
+    gap: 0.4rem
+}
+
+.gap-3{
+    gap: 0.6rem
+}
+
+.gap-4{
+    gap: 0.8rem
+}
+
+.gap-5{
+    gap: 1rem
+}
+
+.resize-vertical{
+    resize: vertical;
+}
+
+.resize-none{
+    resize: none;
+}
+
+.width-fill{
+    box-sizing: border-box;
+    width: 100%;
+}
+
+th.afra-col-action .p-datatable-column-header-content{
+    justify-content: flex-end;
+}
+
+td.afra-col-action{
+    text-align: right;
+}
+
+.danger{
+    color: var(--p-button-text-danger-color);
+}

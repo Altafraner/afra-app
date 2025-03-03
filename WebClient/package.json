@@ -1,26 +1,30 @@
 {
-  "name": "WebClient",
+  "name": "webclient",
+  "version": "0.0.0",
   "private": true,
   "type": "module",
-  "version": "0.0.0",
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "eslint . --fix"
   },
   "dependencies": {
-    "@mdi/font": "7.4.47",
-    "roboto-fontface": "*",
-    "vue": "^3.4.31",
-    "vuetify": "^3.6.14"
+    "@primevue/forms": "^4.2.5",
+    "@primevue/themes": "^4.2.5",
+    "pinia": "^3.0.1",
+    "primeicons": "^7.0.0",
+    "primelocale": "^1.4.0",
+    "primevue": "^4.2.5",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^5.0.5",
-    "sass": "1.77.8",
-    "sass-embedded": "^1.77.8",
-    "unplugin-fonts": "^1.1.1",
-    "unplugin-vue-components": "^0.27.2",
-    "vite": "^5.4.0",
-    "vite-plugin-vuetify": "^2.0.3"
+    "@eslint/js": "^9.18.0",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "eslint": "^9.18.0",
+    "eslint-plugin-vue": "^9.32.0",
+    "vite": "^6.0.11",
+    "vite-plugin-vue-devtools": "^7.7.0"
   }
 }
