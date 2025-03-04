@@ -6,6 +6,8 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <RootNamespace>Afra_App</RootNamespace>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+        <!-- Include Docfile so compiler warns if there is a not documentet public method -->
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
     </PropertyGroup>
 
     <ItemGroup>

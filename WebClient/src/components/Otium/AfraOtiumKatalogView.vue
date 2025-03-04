@@ -9,13 +9,15 @@ const props = defineProps({
   linkGenerator: Function
 })
 
+console.log(props.otia)
+
 </script>
 
 <template>
   <DataTable :value="props.otia">
     <Column header="Bezeichnung">
       <template #body="{data}">
-        <Button variant="link" as="RouterLink" :to="linkGenerator(data)" :label="data.bezeichnung" />
+        <Button variant="link" as="RouterLink" :to="linkGenerator(data)" :label="data.otium" />
       </template>
     </Column>
     <Column header="Raum" field="ort" />
@@ -26,10 +28,15 @@ const props = defineProps({
     </Column>
     <Column header="Auslastung">
       <template #body="{data}">
-          <Tag class="width-fill" v-if="data.maxEinschreibungen !== 0" :severity="chooseSeverity(data.auslastung, data.maxEinschreibungen)" >{{data.auslastung*100}} %</Tag>
+          <Tag class="width-fill" v-if="data.maxEinschreibungen && data.maxEinschreibungen !== 0" :severity="chooseSeverity(data.auslastung, data.maxEinschreibungen)" >{{data.auslastung*100}} %</Tag>
           <Tag class="width-fill" v-else severity="success">&infin;</Tag>
       </template>
     </Column>
+    <template #empty>
+      <div class="flex justify-center">
+        Keine Angebote verfügbar.
+      </div>
+    </template>
   </DataTable>
 </template>
 

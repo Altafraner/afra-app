@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Afra_App.Data.People;
+using Afra_App.Data.TimeInterval;
 
 namespace Afra_App.Data.Otium;
 
@@ -9,6 +10,5 @@ public class Einschreibung
     public Guid Id { get; set; }
     public required Termin Termin { get; set; }
     public required Person BetroffenePerson { get; set; }
-    public required TimeOnly Start { get; set; }
-    public required TimeOnly Ende { get; set; }
+    public required TimeOnlyInterval Interval { get; set; }
 }

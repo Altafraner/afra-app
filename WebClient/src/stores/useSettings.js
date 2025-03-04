@@ -6,12 +6,12 @@ export const useSettings = defineStore('settings', {
             {
                 startTime: new Date(0, 0, 0, 13, 30),
                 endTime: new Date(0, 0, 0, 14, 45),
-                id: 1
+                id: 0
             },
             {
                 startTime: new Date(0, 0, 0, 15, 0),
-                endTime: new Date(0, 0, 0, 15, 15),
-                id: 2
+                endTime: new Date(0, 0, 0, 16, 15),
+                id: 1
             }
         ]
     })

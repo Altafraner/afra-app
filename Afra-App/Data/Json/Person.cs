@@ -33,13 +33,15 @@ public record struct PersonJsonInfo
 
 public record struct PersonJsonInfoMinimal
 {
-    public string Name { get; set; }
+    public string Vorname { get; set; }
+    public string Nachname { get; set; }
     public Guid Id { get; set; }
     public Rolle Rolle { get; set; }
 
     public PersonJsonInfoMinimal(Person person)
     {
-        Name = $"{person.Vorname} {person.Nachname}";
+        Vorname = person.Vorname;
+        Nachname = person.Nachname;
         Id = person.Id;
         Rolle = person.Rolle;
     }

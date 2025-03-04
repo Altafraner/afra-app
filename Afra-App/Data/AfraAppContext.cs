@@ -18,17 +18,11 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
     
     // This is used for the Data Protection API from .NET, used for example for securing auth cookies.
     public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }
-    
-    private readonly string _connectionString;
-    
-    public AfraAppContext(IConfiguration configuration)
+
+    public AfraAppContext(DbContextOptions<AfraAppContext> options) : base(options)
     {
-        _connectionString = configuration.GetConnectionString("DefaultConnection")!;
     }
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => 
-        optionsBuilder.UseNpgsql(_connectionString);
-
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Person>()
@@ -63,5 +57,9 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
             .HasMany(or => or.Termine)
             .WithOne(or => or.Wiederholung)
             .OnDelete(DeleteBehavior.SetNull);
+
+        // Have to do this here because the [ComplexType] annotation is not valid on record structs.
+        modelBuilder.Entity<Einschreibung>()
+            .ComplexProperty(e => e.Interval);
     }
 }

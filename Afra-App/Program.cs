@@ -20,7 +20,7 @@ builder.Services.AddControllers()
     });
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddDbContext<AfraAppContext>();
+builder.Services.AddDbContext<AfraAppContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddOpenApi();
 builder.Services.AddCors(options =>
 {

@@ -13,21 +13,4 @@ public class Termin : OtiumsInstanz
     public ICollection<Einschreibung> Enrollments { get; set; } = new List<Einschreibung>();
     public bool IstAbgesagt { get; set; }
     public int? MaxEinschreibungen { get; set; }
-
-    public Einschreibung Einschreiben(Person betroffenePerson, TimeOnly start, TimeOnly end)
-    {
-        if (IstAbgesagt)
-            throw new InvalidOperationException("The installment has been canceled.");
-        
-        var einschreibung = new Einschreibung
-        {
-            Termin = this,
-            BetroffenePerson = betroffenePerson,
-            Start = start,
-            Ende = end
-        };
-        
-        Enrollments.Add(einschreibung);
-        return einschreibung;
-    }
 }

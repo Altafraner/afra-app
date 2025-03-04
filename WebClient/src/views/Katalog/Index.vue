@@ -4,7 +4,7 @@ import {Select, Skeleton, DataTable, Column} from "primevue";
 import AfraDateSelector from "@/components/Form/AfraDateSelector.vue";
 import AfraKategorySelector from "@/components/Form/AfraKategorySelector.vue";
 import AfraOtiumKatalogView from "@/components/Otium/AfraOtiumKatalogView.vue";
-import {kategorien, otia as testOtia} from "@/helpers/testdata.js";
+import {kategorien} from "@/helpers/testdata.js";
 import {useSettings} from "@/stores/useSettings.js";
 import {formatTime} from "@/helpers/formatters.js";
 import {mande} from "mande";
@@ -16,16 +16,18 @@ const settings = useSettings();
 const datesAvailable = ref([])
 const blockOptions = ref(settings.blocks)
 const kategorieOptionsTree = ref(kategorien)
-const otia = ref(testOtia)
+const otia = ref([])
 const date = ref(null);
 const kategorie = ref(null);
 const block = ref(settings.blocks[0])
 const categoryChanged = () => console.info("Kategorie Changed:", kategorie.value)
 const selectedOtia = ref(otia.value)
 
-const linkGenerator = otium => `/katalog/${date.value.code}/${block.value.id}/${otium.id}`
+const linkGenerator = otium => `/katalog/${otium.id}`
 
-watch(kategorie, () => {
+watch(kategorie, filterOtiaByKategorie)
+
+function filterOtiaByKategorie(){
   if (kategorie.value==null || Object.keys(kategorie.value).length===0){
     selectedOtia.value = otia.value
     return
@@ -33,7 +35,7 @@ watch(kategorie, () => {
   const kategorieId = Object.keys(kategorie.value)[0]
   console.log(kategorieId)
   selectedOtia.value = otia.value.filter(e => e.kategorien.includes(kategorieId))
-})
+}
 
 function filterBlockOptions(){
   const filtered = [];
@@ -55,6 +57,7 @@ async function startup(){
   try {
     await terminePromise;
     await kategoriesPromise;
+    await dateChanged()
   } catch (error) {
     console.log(error)
     await user.update()
@@ -69,13 +72,20 @@ async function getTermine(){
   date.value = datesAvailable.value[0]
 }
 
+async function getAngebote(){
+  const angeboteGetter = mande("/api/otium")
+  otia.value = await angeboteGetter.get(`${date.value.datum}/${block.value.id}`);
+  filterOtiaByKategorie()
+}
+
 async function getKategories() {
   const kategoriesGetter = mande("/api/otium/kategorie")
   kategorieOptionsTree.value = await kategoriesGetter.get();
 }
 
-function dateChanged(){
+async function dateChanged(){
   filterBlockOptions()
+  await getAngebote()
 }
 
 startup()
@@ -89,7 +99,7 @@ startup()
     <template v-if="!loading">
       <div class="flex gap-3">
         <AfraDateSelector v-model="date" :options="datesAvailable" @dateChanged="dateChanged"/>
-        <Select v-model="block" :options="blockOptions">
+        <Select v-model="block" :options="blockOptions" @change="dateChanged">
           <template #option="{option}">
             {{formatTime(option.startTime)}} - {{formatTime(option.endTime)}}
           </template>
