@@ -1,9 +1,10 @@
 using System.Text.Json.Serialization;
 using Afra_App.Data;
-using Afra_App.Data.Json;
+using Afra_App.Data.DTO;
 using Afra_App.Data.People;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Person = Afra_App.Data.DTO.Person;
 
 namespace Afra_App.Controllers;
 
@@ -19,7 +20,7 @@ public class PersonController : ControllerBase
     }
 
     [HttpGet]
-    public IEnumerable<Person> GetPeople()
+    public IEnumerable<Data.People.Person> GetPeople()
     {
         return _dbContext.Personen;
     }
@@ -38,7 +39,7 @@ public class PersonController : ControllerBase
         [FromQuery] string sort = "nachname",
         [FromQuery] string sortDirection = "asc")
     {
-        IQueryable<Person> query = _dbContext.Personen;
+        IQueryable<Data.People.Person> query = _dbContext.Personen;
 
         if (!string.IsNullOrWhiteSpace(filter.Vorname))
             query = query.Where(p => EF.Functions.Like(p.Vorname, $"{filter.Vorname.ToLower()}%"));
@@ -55,24 +56,24 @@ public class PersonController : ControllerBase
             _ => query
         };
 
-        return new Pagination<PersonJsonInfo>(
+        return new Pagination<Person>(
             query.Count(),
-            query.Skip((page - 1) * pageSize).Take(pageSize).Select(person => new PersonJsonInfo(person))
+            query.Skip((page - 1) * pageSize).Take(pageSize).Select(person => new Person(person))
         );
     }
 
     [HttpGet("{id:guid}")]
-    public ActionResult<PersonJsonInfo> GetPerson(Guid id)
+    public ActionResult<Person> GetPerson(Guid id)
     {
         var person = _dbContext.Personen.Find(id);
         if (person == null)
             return NotFound();
 
-        return new PersonJsonInfo(person);
+        return new Person(person);
     }
 
     [HttpGet("{id:guid}/mentor")]
-    public ActionResult<Person> GetMentor(Guid id)
+    public ActionResult<Data.People.Person> GetMentor(Guid id)
     {
         var person = _dbContext.Personen
             .Find(id);
@@ -91,7 +92,7 @@ public class PersonController : ControllerBase
     }
 
     [HttpGet("{id:guid}/mentees")]
-    public ActionResult<IEnumerable<Person>> GetMentees(Guid id)
+    public ActionResult<IEnumerable<Data.People.Person>> GetMentees(Guid id)
     {
         var mentor = _dbContext.Personen.Find(id);
         if (mentor == null)

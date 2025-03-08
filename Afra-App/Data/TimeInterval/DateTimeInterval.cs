@@ -46,7 +46,7 @@ public record struct DateTimeInterval(DateTime Start, TimeSpan Duration) : ITime
     /// </summary>
     /// <param name="other">The other DateTimeInterval to intersect with.</param>
     /// <returns>A new DateTimeInterval representing the intersection, or null if there is no intersection.</returns>
-    public ITimeInterval<DateTime> Intersection(ITimeInterval<DateTime> other)
+    public ITimeInterval<DateTime>? Intersection(ITimeInterval<DateTime> other)
     {
         if (!Intersects(other)) return null;
 

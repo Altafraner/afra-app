@@ -8,7 +8,8 @@ const props = defineProps({
   options: Array
 })
 
-const emit = defineEmits(["dateChanged"])
+const emit = defineEmits(["dateChanged", "today"])
+const emitToday = () => emit("today")
 
 const date = defineModel()
 
@@ -47,6 +48,9 @@ function date_to_label (data) {
       <template #value="{value}">{{formatDate(date_to_label(value))}} | {{value.wochentyp}}</template>
       <template #option="{option}">{{formatDate(date_to_label(option))}} | {{option.wochentyp}}</template>
     </Select>
+    <input-group-addon>
+      <Button severity="secondary" rounded icon="pi pi-calendar-times" variant="text" aria-label="Heute"  @click="emitToday"/>
+    </input-group-addon>
     <input-group-addon>
       <Button severity="secondary" rounded icon="pi pi-chevron-right" variant="text"
               @click="increment_date"/>

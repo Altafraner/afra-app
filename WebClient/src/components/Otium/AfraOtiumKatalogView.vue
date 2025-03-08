@@ -21,7 +21,7 @@ console.log(props.otia)
       </template>
     </Column>
     <Column header="Raum" field="ort" />
-    <Column header="Leher:in">
+    <Column header="Lehrer:in">
       <template #body="{data}">
         {{formatTutor(data.tutor)}}
       </template>

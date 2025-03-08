@@ -1,19 +1,23 @@
 ﻿<script setup>
 import {DataTable, Column, Badge, MeterGroup, Button, Skeleton} from "primevue";
 import {ref} from "vue";
-import {kategorien} from "@/helpers/testdata.js";
 import AfraKategorieTag from "@/components/Otium/AfraKategorieTag.vue";
 import {chooseColor, formatDate} from "@/helpers/formatters.js";
 import {mande} from "mande";
 import {useUser} from "@/stores/useUser.js";
+import {useSettings} from "@/stores/useSettings.js";
+import {kategorien} from "@/helpers/testdata.js";
 
+const settings = useSettings();
 const props = defineProps({
   terminId: String,
 })
 
 const loading = ref(true)
+const buttonLoading = ref(true)
 const times = ref(null)
 const otium = ref(null)
+const connection = ref(null)
 function findKategorie(id, kategorien){
   const index = kategorien.findIndex((e) => e.id === id);
   if (index!==-1) {
@@ -29,18 +33,56 @@ function findKategorie(id, kategorien){
 }
 
 async function loadTermin(){
-  loading.value = true
+  buttonLoading.value = true
   try {
-    const terminGetter = mande("/api/otium/" + props.terminId)
-    otium.value = await terminGetter.get();
-    console.log(otium.value);
-    loading.value = false
+    otium.value = await connection.value.get();
+    buttonLoading.value = false
   } catch (error) {
     await useUser().update()
   }
 }
 
-loadTermin();
+async function unenroll(start, evt){
+  buttonLoading.value = true
+  try {
+    otium.value = await connection.value.delete(start.toString())
+    buttonLoading.value = false
+  }
+  catch (error) {
+    // TODO Notify user
+    console.error(error)
+  }
+}
+
+async function enroll(start, evt){
+  buttonLoading.value = true
+  try {
+    otium.value = await connection.value.put(start.toString())
+    buttonLoading.value = false
+  }
+  catch (error) {
+    // TODO Notify user
+    console.error(error)
+  }
+}
+
+async function loadKategorien(){
+  await settings.updateKategorien()
+  kategorien.value = settings.kategorien;
+}
+
+function setup(){
+  connection.value = mande("/api/otium/" + props.terminId)
+  loading.value = true
+  const terminPromise = loadTermin();
+  const kategorienPromise = loadKategorien();
+
+  Promise.all([terminPromise, kategorienPromise]).then(() => {
+    loading.value = false
+  })
+}
+
+setup();
 
 </script>
 
@@ -69,8 +111,8 @@ loadTermin();
       </Column>
       <Column>
         <template #body="{data}">
-          <Button v-if="data.eingeschrieben" icon="pi pi-times" severity="danger" size="small" variant="text" label="Austragen" :disabled="!data.kannBearbeiten"/>
-          <Button v-else icon="pi pi-plus" size="small" variant="text" label="Einschreiben" :disabled="!data.kannBearbeiten"/>
+          <Button v-if="data.eingeschrieben" icon="pi pi-times" severity="danger" size="small" variant="text" label="Austragen" :disabled="!data.kannBearbeiten || buttonLoading" @click="(evt) => unenroll(data.interval.start, evt)" :loading="buttonLoading"/>
+          <Button v-else icon="pi pi-plus" size="small" variant="text" label="Einschreiben" :disabled="!data.kannBearbeiten || buttonLoading" @click="(evt) => enroll(data.interval.start, evt)" :loading="buttonLoading"/>
         </template>
       </Column>
     </DataTable>

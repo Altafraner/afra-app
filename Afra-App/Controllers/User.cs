@@ -1,11 +1,14 @@
 ﻿using Afra_App.Authentication;
 using Afra_App.Data;
-using Afra_App.Data.Json;
+using Afra_App.Data.DTO;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Afra_App.Controllers;
 
+/// <summary>
+/// Controller for getting information about the current user.
+/// </summary>
 [Route("api/[controller]")]
 public class User : ControllerBase
 {
@@ -24,7 +27,7 @@ public class User : ControllerBase
         {
             // Retrieve the Person associated with the current user and return it
             var person = HttpContext.GetPerson(dbContext);
-            return Ok(new PersonJsonInfoMinimal(person));
+            return Ok(new PersonInfoMinimal(person));
         }
         catch (Exception e) when (e is InvalidOperationException or KeyNotFoundException)
         {

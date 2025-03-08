@@ -14,6 +14,7 @@ const loading = ref(true)
 const user = useUser();
 const settings = useSettings();
 const datesAvailable = ref([])
+const dateDefault = ref(null)
 const blockOptions = ref(settings.blocks)
 const kategorieOptionsTree = ref(kategorien)
 const otia = ref([])
@@ -68,8 +69,10 @@ async function startup(){
 async function getTermine(){
   loading.value = true
   const termineGetter = mande("/api/schuljahr")
-  datesAvailable.value = await termineGetter.get();
-  date.value = datesAvailable.value[0]
+  const termine = await termineGetter.get();
+  datesAvailable.value = termine.schultage
+  dateDefault.value = termine.standard
+  date.value = termine.standard
 }
 
 async function getAngebote(){
@@ -88,6 +91,12 @@ async function dateChanged(){
   await getAngebote()
 }
 
+function selectToday(){
+  date.value = dateDefault.value
+  console.log(date.value)
+  dateChanged()
+}
+
 startup()
 
 </script>
@@ -98,7 +107,7 @@ startup()
   <div class="flex gap-3 flex-col">
     <template v-if="!loading">
       <div class="flex gap-3">
-        <AfraDateSelector v-model="date" :options="datesAvailable" @dateChanged="dateChanged"/>
+        <AfraDateSelector v-model="date" :options="datesAvailable" @dateChanged="dateChanged"  @today="selectToday"/>
         <Select v-model="block" :options="blockOptions" @change="dateChanged">
           <template #option="{option}">
             {{formatTime(option.startTime)}} - {{formatTime(option.endTime)}}

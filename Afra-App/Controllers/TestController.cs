@@ -2,11 +2,9 @@
 using Afra_App.Data.Otium;
 using Bogus;
 using Afra_App.Authentication;
-using Afra_App.Data.Json;
 using Afra_App.Data.People;
 using Afra_App.Data.Schuljahr;
 using Afra_App.Services;
-using Bogus.DataSets;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -54,8 +52,10 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
         var nextMonday = today.AddDays((int) DayOfWeek.Monday - (int) today.DayOfWeek);
         var nextFriday = today.AddDays((int) DayOfWeek.Friday - (int) today.DayOfWeek);
 
+        List<bool[]> possibleOtiaBlocks = [[true, true], [true, false], [false, true]];
+        
         var schultagGenerator = new Faker<Schultag>()
-            .RuleFor(s => s.OtiumsBlock, f => [f.Random.Bool(), f.Random.Bool()])
+            .RuleFor(s => s.OtiumsBlock, f => f.PickRandom(possibleOtiaBlocks))
             .RuleFor(s => s.Datum,
                 f => DateOnly.FromDateTime(f.PickRandomParam(nextMonday, nextFriday)).AddDays(f.IndexFaker * 7))
             .RuleFor(s => s.Wochentyp, f => f.PickRandom<Wochentyp>());
@@ -63,7 +63,7 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
         dbContext.Schultage.AddRange(schultage);
 
         var akademisches = new Kategorie
-            { Bezeichnung = "Akademisches", Icon = "pi pi-graduation-cap", CssColor = "var(--p-blue-500)" };
+            { Bezeichnung = "Akademisches", Icon = "pi pi-graduation-cap", CssColor = "var(--p-blue-500)", Required = true};
         var otiumsKategorien = new List<Kategorie>
         {
             akademisches,
@@ -100,7 +100,7 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
             .RuleFor(t => t.Schultag, f => f.PickRandom(schultage));
 
         dbContext.OtiaTermine.AddRange(
-            otiumTerminGenerator.Generate(50));
+            otiumTerminGenerator.Generate(200).ToList());
 
         await dbContext.SaveChangesAsync();
         
@@ -130,8 +130,8 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
 
     [Route("authenticate")]
     [Authorize]
-    public ActionResult<PersonJsonInfo> PrintAuthentication()
+    public ActionResult<Data.DTO.Person> PrintAuthentication()
     {
-        return new PersonJsonInfo(HttpContext.GetPerson(dbContext));
+        return new Data.DTO.Person(HttpContext.GetPerson(dbContext));
     }
 }
