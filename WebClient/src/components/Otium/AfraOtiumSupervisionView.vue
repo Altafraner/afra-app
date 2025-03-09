@@ -16,7 +16,7 @@ const roomToggleDone = (evt, room) => {
   <accordion>
     <accordion-panel v-for="room of props.rooms" :key="room.id" :value="room.id">
       <accordion-header>
-        <div class="flex justify-between width-fill align-center" style="margin-right: 1rem">
+        <div class="flex justify-between w-full items-center" style="margin-right: 1rem">
           <span>
             {{room.ort}} - {{room.bezeichnung}}
           </span>

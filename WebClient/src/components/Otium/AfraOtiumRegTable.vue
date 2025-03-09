@@ -23,7 +23,7 @@ const regs = ref(props.regs)
         {{formatTutor(slotProps.data.tutor)}}
       </template>
     </Column>
-    <Column v-if="allowEdit" class="afra-col-action">
+    <Column v-if="allowEdit" class="text-right afra-col-action">
       <template #header>
         <Button aria-label="Neue Regelmäßigkeit" icon="pi pi-plus" size="small"></Button>
       </template>

@@ -35,7 +35,7 @@ function treeMappingFunction(element) {
 <template>
   <TreeSelect :name="props.name" placeholder="Kategorie" :options="optionsTree" v-model="kategorie" @change="() => emit('change')" :show-clear="!props.hideClear">
     <template #option="slotProps" >
-      <div class="flex gap-1 align-center">
+      <div class="flex gap-1 items-center">
         <span v-if="slotProps.node.afra_icon" :class="`ot-angebot-icon p-tree-node-icon ${slotProps.node.color ? 'ot-angebot-white' : ''}`" :style="`background-color: ${slotProps.node.color ?? 'unset'}`">
           <i :class="slotProps.node.afra_icon"/>
         </span>

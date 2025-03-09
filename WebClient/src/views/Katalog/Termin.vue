@@ -103,7 +103,7 @@ setup();
       </Column>
       <Column header="Einschreibungen">
         <template #body="{data}">
-          <div class="enrollmentGrid align-center gap-3">
+          <div class="inline-grid grid-cols-[auto_7rem] justify-center items-center gap-3">
             <Badge severity="secondary" :value="data.anzahl" />
             <MeterGroup v-if="otium.maxEinschreibungen!==0" :value="[{value: data.anzahl, color: chooseColor(data.anzahl / otium.maxEinschreibungen, otium.maxEinschreibungen), label: null}]" :max="otium.maxEinschreibungen" label-position="none" />
           </div>
@@ -157,6 +157,7 @@ setup();
 </template>
 
 <style scoped>
+
 .enrollmentGrid{
   display: inline-grid;
   grid-template-columns: auto 7rem;

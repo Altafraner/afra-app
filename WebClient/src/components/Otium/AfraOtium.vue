@@ -66,7 +66,7 @@ const kategorieOptionsTree = ref(kategorien)
 <template>
   <Card>
     <template #title>
-      <span class="flex justify-between align-center">
+      <span class="flex justify-between items-center">
         {{ otium.bezeichnung }}
         <Button v-if="mayEdit && !isEditing" icon="pi pi-pencil"
                 @click="toggleEdit"></Button>
@@ -136,7 +136,7 @@ const kategorieOptionsTree = ref(kategorien)
         </div>
         <Divider/>
 
-        <div class="flex gap-2 width-fill justify-stretch">
+        <div class="flex gap-2 w-full justify-stretch">
           <Button type="submit" label="Speichern" fluid/>
           <Button severity="secondary" label="Abbrechen" @click="toggleEdit"/>
         </div>

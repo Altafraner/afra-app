@@ -13,7 +13,7 @@ import {Button} from "primevue";
 <template>
   <Button :aria-label="props.label" :icon="props.icon" variant="outlined" severity="contrast"
           style="width: 100%; text-decoration: none" as="router-link" :to="props.to">
-    <div class="flex gap-2 align-center">
+    <div class="flex gap-2 items-center">
       <span class="ot-angebot-icon" :style="`background-color: ${props.color}`">
         <i :class="props.icon"/>
       </span>

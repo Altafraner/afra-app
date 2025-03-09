@@ -25,12 +25,12 @@ const dates = ref(props.dates)
         {{formatTutor(slotProps.data.tutor)}}
       </template>
     </Column>
-    <Column v-if="allowEnrollment" class="afra-col-action">
+    <Column v-if="allowEnrollment" class="text-right afra-col-action">
       <template #body>
         <Button aria-label="Einschreiben" severity="primary" size="small" variant="text" icon="pi pi-plus"></Button>
       </template>
     </Column>
-    <Column v-if="allowEdit" class="afra-col-action">
+    <Column v-if="allowEdit" class="text-right afra-col-action">
       <template #header v-if="allowEdit">
         <Button aria-label="Neuer Termin" icon="pi pi-plus" size="small"></Button>
       </template>

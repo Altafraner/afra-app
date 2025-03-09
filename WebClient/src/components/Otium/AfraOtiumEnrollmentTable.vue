@@ -24,7 +24,7 @@ const props = defineProps({
         {{formatTime(data[field])}}
       </template>
     </Column>
-    <Column header="Anwesenheit" v-if="props.showAttendance || props.mayEditAttendance">
+    <Column header="Anwesenheit" v-if="props.showAttendance || props.mayEditAttendance" :class="props.mayEditAttendance ? 'text-right afra-col-action' : ''">
       <template #body="slotProps">
         <afra-otium-anwesenheit v-model="slotProps.data.verified" :mayEdit="props.mayEditAttendance"/>
       </template>

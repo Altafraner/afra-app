@@ -28,8 +28,8 @@ console.log(props.otia)
     </Column>
     <Column header="Auslastung">
       <template #body="{data}">
-          <Tag class="width-fill" v-if="data.maxEinschreibungen && data.maxEinschreibungen !== 0" :severity="chooseSeverity(data.auslastung, data.maxEinschreibungen)" >{{data.auslastung*100}} %</Tag>
-          <Tag class="width-fill" v-else severity="success">&infin;</Tag>
+          <Tag class="w-full" v-if="data.maxEinschreibungen && data.maxEinschreibungen !== 0" :severity="chooseSeverity(data.auslastung, data.maxEinschreibungen)" >{{data.auslastung*100}} %</Tag>
+          <Tag class="w-full" v-else severity="success">&infin;</Tag>
       </template>
     </Column>
     <template #empty>

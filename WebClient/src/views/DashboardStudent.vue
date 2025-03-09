@@ -19,14 +19,14 @@ const findBlock = startTime => {
 <template>
   <h1>Dashboard</h1>
   <!-- TODO: Introduce view for students that are tutors of otia. -->
-  <div class="flex justify-between align-center">
+  <div class="flex justify-between items-center">
     <h2>Nächste Veranstaltungen</h2>
     <Button as="RouterLink" to="/katalog" label="Katalog"/>
   </div>
   <Accordion>
     <AccordionPanel v-for="termin in termine" :key="termin.datum">
       <AccordionHeader>
-        <div class="flex width-fill justify-between" style="margin-right: 1rem">
+        <div class="flex w-full justify-between" style="margin-right: 1rem">
           <span>
             {{ formatDate(termin.datum) }}
           </span>
