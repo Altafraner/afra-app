@@ -9,7 +9,21 @@ import {useSettings} from "@/stores/useSettings.js";
 import {formatTime} from "@/helpers/formatters.js";
 import {mande} from "mande";
 import {useUser} from "@/stores/useUser.js";
+import {useRouter} from "vue-router";
 
+const props = defineProps({
+  datum: {
+    type: String,
+    required: false,
+    default: ""
+  },
+  block: {
+    type: String,
+    required: false,
+    default: null
+  }
+})
+const router = useRouter();
 const loading = ref(true)
 const user = useUser();
 const settings = useSettings();
@@ -24,7 +38,7 @@ const block = ref(settings.blocks[0])
 const categoryChanged = () => console.info("Kategorie Changed:", kategorie.value)
 const selectedOtia = ref(otia.value)
 
-const linkGenerator = otium => `/katalog/${otium.id}`
+const linkGenerator = otium => `/termin/${otium.id}`
 
 watch(kategorie, filterOtiaByKategorie)
 
@@ -57,6 +71,17 @@ async function startup(){
   const kategoriesPromise = getKategories()
   try {
     await terminePromise;
+    if (props.datum && props.datum !== ""){
+      const propDate = datesAvailable.value.find(e => e.datum === props.datum)
+      if (propDate !== undefined) date.value = datesAvailable.value.find(e => e.datum === props.datum)
+      else {
+        date.value = dateDefault.value
+        await router.replace('/katalog')
+      }
+    }
+    if (props.block != null && blockOptions.value != null && blockOptions.value.length >= props.block*1){
+      block.value = blockOptions.value[1*props.block]
+    }
     await kategoriesPromise;
     await dateChanged()
   } catch (error) {
@@ -88,7 +113,13 @@ async function getKategories() {
 
 async function dateChanged(){
   filterBlockOptions()
-  await getAngebote()
+  try {
+    await getAngebote()
+  } catch (error) {
+    console.error(error)
+    await router.push("/katalog")
+    await dateChanged()
+  }
 }
 
 function selectToday(){
@@ -96,6 +127,10 @@ function selectToday(){
   console.log(date.value)
   dateChanged()
 }
+
+watch([date, block], () => {
+  if(!loading.value && date.value!=null && block.value!=null) router.push('/katalog/' + date.value.datum + '/' + block.value.id)
+})
 
 startup()
 

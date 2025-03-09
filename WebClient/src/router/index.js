@@ -13,6 +13,18 @@ const routes = [
     component: () => import('@/views/Katalog/Index.vue')
   },
   {
+    path: "/katalog/:datum",
+    name: "Katalog-datum",
+    component: () => import('@/views/Katalog/Index.vue'),
+    props: true,
+  },
+  {
+    path: "/katalog/:datum/:block",
+    name: "Katalog-datum-block",
+    component: () => import('@/views/Katalog/Index.vue'),
+    props: true,
+  },
+  {
     path: "/dashboard",
     name: "Dashboard",
     component: () => import('@/views/DashboardStudent.vue')
@@ -30,11 +42,11 @@ const routes = [
   {
     path: "/aufsicht",
     name: "Aufsicht",
-    component:  () => import('@/views/Supervision.vue'),
+    component:  () => import('@/views/Aufsicht.vue'),
   },
   {
-    path: "/katalog/:terminId",
-    name: "Katalog-Kategorie",
+    path: "/termin/:terminId",
+    name: "Termin",
     component: () => import('@/views/Katalog/Termin.vue'),
     props: true
   }

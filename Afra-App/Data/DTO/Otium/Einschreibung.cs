@@ -12,8 +12,15 @@ public record Einschreibung : IMinimalTermin
     /// </summary>
     public ITimeInterval<TimeOnly> Interval { get; set; }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// The ID of the enrollment
+    /// </summary>
     public Guid Id { get; set; }
+    
+    /// <summary>
+    /// The ID of the termin the enrollment is for
+    /// </summary>
+    public Guid TerminId { get; set; }
 
     /// <inheritdoc />
     public string Otium { get; set; }
@@ -31,6 +38,7 @@ public record Einschreibung : IMinimalTermin
     public Einschreibung(Data.Otium.Einschreibung einschreibung)
     {
         Id = einschreibung.Id;
+        TerminId = einschreibung.Termin.Id;
         Interval = einschreibung.Interval;
         Otium = einschreibung.Termin.Otium.Bezeichnung;
         Ort = einschreibung.Termin.Ort;

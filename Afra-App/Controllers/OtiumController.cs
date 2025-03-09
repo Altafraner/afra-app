@@ -298,7 +298,9 @@ public class OtiumController(AfraAppContext context, ILogger<OtiumController> lo
             .Where(t => t.BetroffenePerson == user)
             .ToListAsync();
         
-        var allSchoolDays = await context.Schultage.AsNoTracking().ToListAsync();
+        var allSchoolDays = await context.Schultage.AsNoTracking()
+            .OrderBy(s => s.Datum)
+            .ToListAsync();
         
         var kategorieRuleByWeek = await CheckAllKategoriesInWeeks(allEinschreibungen);
         var allEnrolledRuleByDay = new Dictionary<DateOnly, bool>();
@@ -328,7 +330,9 @@ public class OtiumController(AfraAppContext context, ILogger<OtiumController> lo
                 einschreibungenByDay
                 .FirstOrDefault(t => t.Key.Datum == schultag.Datum)
                 .Value
-                .Select(e => new Data.DTO.Otium.Einschreibung(e)) : [];
+                .OrderBy(e => e.Interval.Start)
+                .Select(e => new Data.DTO.Otium.Einschreibung(e))
+                : [];
             var tag = new Tag(schultag.Datum, 
                 vollstaendig, 
                 localKategorienErfuellt, 

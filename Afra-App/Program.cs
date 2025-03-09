@@ -17,6 +17,7 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        options.JsonSerializerOptions.Converters.Add(new TimeOnlyJsonConverter());
     });
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
