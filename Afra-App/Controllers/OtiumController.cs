@@ -1,4 +1,5 @@
-﻿using Afra_App.Authentication;
+﻿using System.Collections.Concurrent;
+using Afra_App.Authentication;
 using Afra_App.Data;
 using Afra_App.Data.DTO.Otium;
 using Afra_App.Data.Otium;
@@ -8,6 +9,7 @@ using Afra_App.Data.TimeInterval;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Einschreibung = Afra_App.Data.Otium.Einschreibung;
 using Termin = Afra_App.Data.Otium.Termin;
 
 namespace Afra_App.Controllers;
@@ -235,7 +237,7 @@ public class OtiumController(AfraAppContext context, ILogger<OtiumController> lo
         }
         
         await context.SaveChangesAsync();
-        return Ok(GetTerminPreview(termin, user));;
+        return Ok(GetTerminPreview(termin, user));
     }
     
     private async IAsyncEnumerable<EinschreibungsPreview> GetEinschreibungsPreviews(Person user, Termin termin)
@@ -258,6 +260,134 @@ public class OtiumController(AfraAppContext context, ILogger<OtiumController> lo
                 mayEdit = await MayEnroll(user, termin, subBlock, countEnrolled);
             yield return new EinschreibungsPreview(countEnrolled, mayEdit, userEnrolled, subBlock.Interval);
         }
+    }
+
+    /// <summary>
+    /// Gets the dashboard-information for a user
+    /// </summary>
+    [HttpGet("dashboard")]
+    public async IAsyncEnumerable<Tag> Dashboard()
+    {
+        /*
+         * Requirements:
+         * - per Day: Is the user enrolled in all non-optional subblocks?
+         * - per Week: Is the user enrolled in all required kategories?
+         *
+         * Return:
+         * [
+         *   {
+         *     "day": "YY-MM-DD",
+         *     "fullyEnrolled": boolean,
+         *     "requiredKategories": boolean
+         *     "enrollments": [DTO.Einschreibung]
+         *   }
+         * ]
+         */
+        var user = await HttpContext.GetPersonAsync(context);
+
+        // Okay, this looks heavy. Enumerate to List as we need to access the elements multiple times.
+        var allEinschreibungen = await context.OtiaEinschreibungen.AsNoTrackingWithIdentityResolution()
+            .Include(e => e.Termin)
+            .ThenInclude(t => t.Schultag)
+            .Include(e => e.Termin)
+            .ThenInclude(t => t.Tutor)
+            .Include(e => e.Termin)
+            .ThenInclude(t => t.Otium)
+            .ThenInclude(o => o.Kategorie)
+            .ThenInclude(k => k.Parent)
+            .Where(t => t.BetroffenePerson == user)
+            .ToListAsync();
+        
+        var allSchoolDays = await context.Schultage.AsNoTracking().ToListAsync();
+        
+        var kategorieRuleByWeek = await CheckAllKategoriesInWeeks(allEinschreibungen);
+        var allEnrolledRuleByDay = new Dictionary<DateOnly, bool>();
+        // Check if the user is enrolled in all non-optional subblocks
+        var einschreibungenByDay = allEinschreibungen.GroupBy(e => e.Termin.Schultag)
+            .ToDictionary(g => g.Key, g => g.ToList());
+        foreach (var (schultag, einschreibungen) in einschreibungenByDay)
+        {
+            var timeline = new Timeline<TimeOnly>();
+            for (var i = 0; i < _blocks.Count; i++)
+            {
+                if (!schultag.OtiumsBlock[i]) continue;
+                foreach (var subBlock in _blocks[i].Where(b => !b.Optional)) timeline.Add(subBlock.Interval);
+            }
+
+            foreach (var einschreibung in einschreibungen) timeline.Remove(einschreibung.Interval);
+            
+            var allNonOptionalBlocksEnrolled = timeline.GetIntervals().Count == 0;
+            allEnrolledRuleByDay[schultag.Datum] = allNonOptionalBlocksEnrolled;
+        }
+        
+        foreach (var schultag in allSchoolDays)
+        {
+            var localKategorienErfuellt = kategorieRuleByWeek.FirstOrDefault(e => e.Key.Contains(schultag.Datum.ToDateTime(new TimeOnly()))).Value;
+            var vollstaendig = allEnrolledRuleByDay.ContainsKey(schultag.Datum) && allEnrolledRuleByDay[schultag.Datum];
+            var einschreibungen = einschreibungenByDay.Keys.Any(k => k.Datum == schultag.Datum) ?
+                einschreibungenByDay
+                .FirstOrDefault(t => t.Key.Datum == schultag.Datum)
+                .Value
+                .Select(e => new Data.DTO.Otium.Einschreibung(e)) : [];
+            var tag = new Tag(schultag.Datum, 
+                vollstaendig, 
+                localKategorienErfuellt, 
+                einschreibungen
+                );
+            
+            yield return tag;
+        }
+    }
+
+    private async Task<Dictionary<DateTimeInterval, bool>> CheckAllKategoriesInWeeks(List<Einschreibung> allEinschreibungen)
+    {
+        // This is also used to load all kategories so we do not have to lazy load them later. One query is better than many.
+        var kategories = await context.OtiaKategorien.AsNoTrackingWithIdentityResolution()
+            .Include(k => k.Children)
+            .ToListAsync();
+        var requiredKategories = kategories.Where(k => k.Required).ToList();
+        
+        
+        // Looping asynchronously can do strange things, so lets use ConcurrentDictionary in hopes we don't need it.
+        var einschreibungenByWeek = new ConcurrentDictionary<DateTimeInterval, ConcurrentBag<Einschreibung>>();
+
+        foreach (var einschreibung in allEinschreibungen)
+        {
+            var entry = einschreibungenByWeek.FirstOrDefault(e =>
+                e.Key.Contains(einschreibung.Termin.Schultag.Datum.ToDateTime(einschreibung.Interval.Start)));
+            var key = entry.Key;
+            if (entry.Value is null)
+            {
+                var datum = einschreibung.Termin.Schultag.Datum.ToDateTime(new TimeOnly(0, 0));
+                datum = datum.AddDays(-(int)datum.DayOfWeek + 1);
+                key = new DateTimeInterval(datum, TimeSpan.FromDays(7));
+                einschreibungenByWeek.TryAdd(key, []);
+            }
+            
+            einschreibungenByWeek[key].Add(einschreibung);
+        }
+
+        var resultByWeek = new Dictionary<DateTimeInterval, bool>();
+        foreach (var (week, weekEinschreibungen) in einschreibungenByWeek)
+        {
+            // Check if the user is enrolled in all required kategories
+            var localRequiredKategories = requiredKategories.ToList();
+            foreach (var einschreibung in weekEinschreibungen)
+            {
+                var currentKategorie = einschreibung.Termin.Otium.Kategorie;
+                while (currentKategorie != null && localRequiredKategories.Count != 0)
+                {
+                    if (localRequiredKategories.Any(k => k.Id == currentKategorie.Id))
+                        localRequiredKategories.Remove(localRequiredKategories.First(k => k.Id == currentKategorie.Id));
+                    currentKategorie = currentKategorie.Parent;
+                }
+            }
+            
+            var kategorieRuleFulfilled = localRequiredKategories.Count == 0;
+            resultByWeek[week] = kategorieRuleFulfilled;
+        }
+        
+        return resultByWeek;
     }
 
     /// <summary>
