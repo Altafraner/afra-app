@@ -2,6 +2,7 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
 import PrimeVue from 'primevue/config';
+import ToastService from 'primevue/toastservice';
 import Aura from '@primevue/themes/aura';
 import locale from 'primelocale/de.json'
 import {definePreset} from "@primevue/themes";
@@ -43,4 +44,5 @@ app.use(PrimeVue, {
     locale
   }
 })
+app.use(ToastService)
 app.mount('#app')

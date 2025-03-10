@@ -5,12 +5,17 @@ import 'primeicons/primeicons.css'
 import AfraNav from "@/components/AfraNav.vue";
 import {useUser} from "@/stores/useUser.js";
 import wappen from '/favicon.svg?url'
-import {Image, Skeleton} from "primevue";
+import {Image, Skeleton, Toast, useToast} from "primevue";
+import Login from "@/components/Login.vue";
 const user = useUser();
-user.update()
+const toast = useToast();
+user.update().catch(() => {
+  toast.add({severity: "error", summary: "Fehler", detail: "Ein unerwarteter Fehler ist beim Laden der Nutzerdaten aufgetreten"});
+})
 </script>
 
 <template>
+  <Toast />
   <template v-if="!user.loading">
     <afra-nav v-if="user.loggedIn"/>
     <main class="flex justify-center min-h-[90vh] mt-4">
@@ -22,7 +27,8 @@ user.update()
           <Image :src="wappen" height="200"></Image>
         </div>
         <h1>Willkommen bei der Otiumsverwaltung</h1>
-        <p>Bitte logge dich über das zentrale Portal ein, um die Otiumsverwaltung zu nutzen.</p>
+        <p>Bitte logge dich ein, um die Otiumsverwaltung zu nutzen.</p>
+        <Login></Login>
       </div>
     </main>
   </template>

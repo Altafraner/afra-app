@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text.Json.Serialization;
 using Afra_App.Authentication;
 using Afra_App.Data;
+using Afra_App.Endpoints;
 using Afra_App.Services;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -87,6 +88,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+app.MapUserEndpoints();
 if (app.Configuration.GetValue<bool>("Saml:Enabled")) app.MapSaml();
 
 app.Run();

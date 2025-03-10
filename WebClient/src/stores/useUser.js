@@ -1,5 +1,7 @@
 ﻿import {defineStore} from "pinia";
 import {mande} from "mande";
+import {useToast} from "primevue";
+
 
 export const useUser = defineStore('user', {
   state: () => ({
@@ -22,10 +24,18 @@ export const useUser = defineStore('user', {
             console.info("Not logged in")
         } else {
             console.error("Error fetching user", error);
+            throw error;
         }
       } finally {
         this.loading = false;
       }
+    },
+
+    async logout(){
+      const logoutUser = mande('/api/user/logout');
+      await logoutUser.get();
+      this.loggedIn = false;
+      this.user = null;
     }
   }
 })
