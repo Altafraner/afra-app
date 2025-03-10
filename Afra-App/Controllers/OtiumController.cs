@@ -94,8 +94,9 @@ public class OtiumController(AfraAppContext context, ILogger<OtiumController> lo
     public async Task<ActionResult<Data.DTO.Otium.Termin>> GetTermin(Guid terminId)
     {
         var termin = await context.OtiaTermine
-            .Include(termin => termin.Otium)
             .Include(termin => termin.Tutor)
+            .Include(termin => termin.Otium)
+            .ThenInclude(otium => otium.Kategorie)
             .Include(termin => termin.Schultag)
             .FirstOrDefaultAsync(t => t.Id == terminId);
         if (termin == null) return NotFound();
@@ -109,7 +110,7 @@ public class OtiumController(AfraAppContext context, ILogger<OtiumController> lo
     private Data.DTO.Otium.Termin GetTerminPreview(Termin termin, Person user)
     {
         return new Data.DTO.Otium.Termin(termin, GetEinschreibungsPreviews(user, termin),
-            GetOtiaKategories(termin.Otium));
+            GetOtiaKategories(termin.Otium), _blocks[termin.Block].First().Interval.Start);
     }
 
     /// <summary>
@@ -125,6 +126,7 @@ public class OtiumController(AfraAppContext context, ILogger<OtiumController> lo
         var termin = await context.OtiaTermine
             .Include(termin => termin.Schultag)
             .Include(termin => termin.Otium)
+            .ThenInclude(otium => otium.Kategorie)
             .Include(termin => termin.Tutor)
             .FirstOrDefaultAsync(t => t.Id == terminId);
         
@@ -188,6 +190,7 @@ public class OtiumController(AfraAppContext context, ILogger<OtiumController> lo
         var termin = await context.OtiaTermine
             .Include(termin => termin.Schultag)
             .Include(termin => termin.Otium)
+            .ThenInclude(otium => otium.Kategorie)
             .Include(termin => termin.Tutor)
             .FirstOrDefaultAsync(t => t.Id == terminId);
         
@@ -608,6 +611,7 @@ public class OtiumController(AfraAppContext context, ILogger<OtiumController> lo
 
         while (currentCategory is not null)
         {
+            logger.LogInformation("Fetching Kategorie: {kategorie}", currentCategory.Id);
             yield return currentCategory.Id;
             await context.Entry(currentCategory).Reference(c => c.Parent).LoadAsync();
             currentCategory = currentCategory.Parent;

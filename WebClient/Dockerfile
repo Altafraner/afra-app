@@ -1,12 +1,12 @@
-FROM node:lts
+FROM node:alpine as build
 WORKDIR /app
 
-COPY WebClient .
-
-RUN yarn install
-
-RUN yarn build
+COPY ./ .
 
 RUN npm install
+RUN npm run build
 
-ENTRYPOINT [ "npm", "run", "dev"]
+FROM docker.io/nginx:alpine
+
+COPY --from=build /app/dist /app
+COPY nginx.conf /etc/nginx/conf.d/default.conf

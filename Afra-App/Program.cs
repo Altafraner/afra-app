@@ -1,8 +1,10 @@
 using System.Security.Cryptography;
 using System.Text.Json.Serialization;
+using Afra_App.Authentication;
 using Afra_App.Data;
 using Afra_App.Services;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -40,7 +42,7 @@ builder.Services.AddAuthentication()
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
     });
 builder.Services.AddAuthorization();
-builder.Services.AddSingleton<SamlService>();
+if (builder.Configuration.GetValue<bool>("Saml:Enabled")) builder.Services.AddSingleton<SamlService>();
 builder.Services.AddScoped<UserService>();
 
 try
@@ -59,6 +61,11 @@ catch (CryptographicException exception)
 
 var app = builder.Build();
 
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -76,10 +83,10 @@ if (app.Environment.IsDevelopment())
     );
 }
 
-app.UseHttpsRedirection();
-
 app.UseAuthorization();
 
 app.MapControllers();
+
+if (app.Configuration.GetValue<bool>("Saml:Enabled")) app.MapSaml();
 
 app.Run();

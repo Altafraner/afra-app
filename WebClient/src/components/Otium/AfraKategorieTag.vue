@@ -11,12 +11,12 @@ console.log(props.value)
 <template>
   <Tag severity="secondary">
     <span v-if="props.value.icon"
-      :class="`ot-angebot-icon ${props.value.color ? 'ot-angebot-white' : ''}`"
-      :style="`background-color: ${props.value.color ?? 'unset'}`">
+      :class="`ot-angebot-icon ${props.value.cssColor ? 'ot-angebot-white' : ''}`"
+      :style="`background-color: ${props.value.cssColor ?? 'unset'}`">
       <i :class="props.value.icon"/>
     </span>
     <span>
-      {{ props.value.name }}
+      {{ props.value.bezeichnung }}
     </span>
   </Tag>
 </template>

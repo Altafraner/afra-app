@@ -26,6 +26,11 @@ public record Termin : ITermin
     public int? MaxEinschreibungen { get; set; }
     
     /// <summary>
+    /// The start date and time for the termin
+    /// </summary>
+    public DateTime Datum { get; set; }
+    
+    /// <summary>
     /// A list of all available timeslots for the termin
     /// </summary>
     public IAsyncEnumerable<EinschreibungsPreview> Einschreibungen { get; set; }
@@ -36,7 +41,7 @@ public record Termin : ITermin
     /// <param name="termin">The termins DB entry</param>
     /// <param name="einschreibungen">A list of all available timeslots for the termin</param>
     /// <param name="kategorien">All categories the Otium is in</param>
-    public Termin(Data.Otium.Termin termin, IAsyncEnumerable<EinschreibungsPreview> einschreibungen, IAsyncEnumerable<Guid> kategorien)
+    public Termin(Data.Otium.Termin termin, IAsyncEnumerable<EinschreibungsPreview> einschreibungen, IAsyncEnumerable<Guid> kategorien, TimeOnly startTime)
     {
         Id = termin.Id;
         Otium = termin.Otium.Bezeichnung;
@@ -45,6 +50,7 @@ public record Termin : ITermin
         Tutor = new PersonInfoMinimal(termin.Tutor);
         MaxEinschreibungen = termin.MaxEinschreibungen;
         Einschreibungen = einschreibungen;
+        Datum = termin.Schultag.Datum.ToDateTime(startTime);
     }
 
 }

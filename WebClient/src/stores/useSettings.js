@@ -19,7 +19,7 @@ export const useSettings = defineStore('settings', {
   }),
   actions: {
     async updateKategorien() {
-      if (this.kategorien === null) return;
+      if (this.kategorien) return;
       const kategorieGetter = mande('/api/Otium/kategorie');
 
       try {
