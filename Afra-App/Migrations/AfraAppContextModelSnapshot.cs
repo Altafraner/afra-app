@@ -137,7 +137,7 @@ namespace Afra_App.Migrations
                     b.Property<DateOnly>("SchultagDatum")
                         .HasColumnType("date");
 
-                    b.Property<Guid>("TutorId")
+                    b.Property<Guid?>("TutorId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid?>("WiederholungId")
@@ -173,7 +173,7 @@ namespace Afra_App.Migrations
                     b.Property<Guid>("OtiumId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("TutorId")
+                    b.Property<Guid?>("TutorId")
                         .HasColumnType("uuid");
 
                     b.Property<int>("Wochentag")
@@ -328,9 +328,7 @@ namespace Afra_App.Migrations
 
                     b.HasOne("Afra_App.Data.People.Person", "Tutor")
                         .WithMany()
-                        .HasForeignKey("TutorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("TutorId");
 
                     b.HasOne("Afra_App.Data.Otium.Wiederholung", "Wiederholung")
                         .WithMany("Termine")
@@ -356,9 +354,7 @@ namespace Afra_App.Migrations
 
                     b.HasOne("Afra_App.Data.People.Person", "Tutor")
                         .WithMany()
-                        .HasForeignKey("TutorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("TutorId");
 
                     b.Navigation("Otium");
 

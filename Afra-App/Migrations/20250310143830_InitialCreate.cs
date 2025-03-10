@@ -30,11 +30,21 @@ namespace Afra_App.Migrations
                 name: "OtiaKategorien",
                 columns: table => new
                 {
-                    Bezeichnung = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Bezeichnung = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Icon = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
+                    CssColor = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
+                    Required = table.Column<bool>(type: "boolean", nullable: false),
+                    ParentId = table.Column<Guid>(type: "uuid", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_OtiaKategorien", x => x.Bezeichnung);
+                    table.PrimaryKey("PK_OtiaKategorien", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_OtiaKategorien_OtiaKategorien_ParentId",
+                        column: x => x.ParentId,
+                        principalTable: "OtiaKategorien",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -45,7 +55,8 @@ namespace Afra_App.Migrations
                     Vorname = table.Column<string>(type: "text", nullable: false),
                     Nachname = table.Column<string>(type: "text", nullable: false),
                     Email = table.Column<string>(type: "text", nullable: false),
-                    MentorId = table.Column<Guid>(type: "uuid", nullable: true)
+                    MentorId = table.Column<Guid>(type: "uuid", nullable: true),
+                    Rolle = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -58,16 +69,16 @@ namespace Afra_App.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Rollen",
+                name: "Schultage",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "text", nullable: false),
-                    Permissions = table.Column<int[]>(type: "integer[]", nullable: false)
+                    Datum = table.Column<DateOnly>(type: "date", nullable: false),
+                    Wochentyp = table.Column<int>(type: "integer", nullable: false),
+                    OtiumsBlock = table.Column<bool[]>(type: "boolean[]", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Rollen", x => x.Id);
+                    table.PrimaryKey("PK_Schultage", x => x.Datum);
                 });
 
             migrationBuilder.CreateTable(
@@ -77,39 +88,15 @@ namespace Afra_App.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Bezeichnung = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     Beschreibung = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
-                    KategorieBezeichnung = table.Column<string>(type: "character varying(50)", nullable: false)
+                    KategorieId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Otia", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Otia_OtiaKategorien_KategorieBezeichnung",
-                        column: x => x.KategorieBezeichnung,
+                        name: "FK_Otia_OtiaKategorien_KategorieId",
+                        column: x => x.KategorieId,
                         principalTable: "OtiaKategorien",
-                        principalColumn: "Bezeichnung",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "PersonRolle",
-                columns: table => new
-                {
-                    PersonId = table.Column<Guid>(type: "uuid", nullable: false),
-                    RollenId = table.Column<Guid>(type: "uuid", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_PersonRolle", x => new { x.PersonId, x.RollenId });
-                    table.ForeignKey(
-                        name: "FK_PersonRolle_Personen_PersonId",
-                        column: x => x.PersonId,
-                        principalTable: "Personen",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_PersonRolle_Rollen_RollenId",
-                        column: x => x.RollenId,
-                        principalTable: "Rollen",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -120,8 +107,9 @@ namespace Afra_App.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Wochentag = table.Column<int>(type: "integer", nullable: false),
+                    Wochentyp = table.Column<int>(type: "integer", nullable: false),
                     OtiumId = table.Column<Guid>(type: "uuid", nullable: false),
-                    TutorId = table.Column<Guid>(type: "uuid", nullable: false),
+                    TutorId = table.Column<Guid>(type: "uuid", nullable: true),
                     Block = table.Column<byte>(type: "smallint", nullable: false),
                     Ort = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false)
                 },
@@ -138,8 +126,7 @@ namespace Afra_App.Migrations
                         name: "FK_OtiaWiederholungen_Personen_TutorId",
                         column: x => x.TutorId,
                         principalTable: "Personen",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -171,11 +158,12 @@ namespace Afra_App.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Datum = table.Column<DateOnly>(type: "date", nullable: false),
                     WiederholungId = table.Column<Guid>(type: "uuid", nullable: true),
+                    SchultagDatum = table.Column<DateOnly>(type: "date", nullable: false),
                     IstAbgesagt = table.Column<bool>(type: "boolean", nullable: false),
+                    MaxEinschreibungen = table.Column<int>(type: "integer", nullable: true),
                     OtiumId = table.Column<Guid>(type: "uuid", nullable: false),
-                    TutorId = table.Column<Guid>(type: "uuid", nullable: false),
+                    TutorId = table.Column<Guid>(type: "uuid", nullable: true),
                     Block = table.Column<byte>(type: "smallint", nullable: false),
                     Ort = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false)
                 },
@@ -198,7 +186,12 @@ namespace Afra_App.Migrations
                         name: "FK_OtiaTermine_Personen_TutorId",
                         column: x => x.TutorId,
                         principalTable: "Personen",
-                        principalColumn: "Id",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_OtiaTermine_Schultage_SchultagDatum",
+                        column: x => x.SchultagDatum,
+                        principalTable: "Schultage",
+                        principalColumn: "Datum",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -209,8 +202,8 @@ namespace Afra_App.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     TerminId = table.Column<Guid>(type: "uuid", nullable: false),
                     BetroffenePersonId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Start = table.Column<TimeOnly>(type: "time without time zone", nullable: false),
-                    Ende = table.Column<TimeOnly>(type: "time without time zone", nullable: false)
+                    Interval_Duration = table.Column<TimeSpan>(type: "interval", nullable: false),
+                    Interval_Start = table.Column<TimeOnly>(type: "time without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -230,9 +223,9 @@ namespace Afra_App.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Otia_KategorieBezeichnung",
+                name: "IX_Otia_KategorieId",
                 table: "Otia",
-                column: "KategorieBezeichnung");
+                column: "KategorieId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_OtiaEinschreibungen_BetroffenePersonId",
@@ -245,9 +238,19 @@ namespace Afra_App.Migrations
                 column: "TerminId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_OtiaKategorien_ParentId",
+                table: "OtiaKategorien",
+                column: "ParentId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_OtiaTermine_OtiumId",
                 table: "OtiaTermine",
                 column: "OtiumId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OtiaTermine_SchultagDatum",
+                table: "OtiaTermine",
+                column: "SchultagDatum");
 
             migrationBuilder.CreateIndex(
                 name: "IX_OtiaTermine_TutorId",
@@ -278,11 +281,6 @@ namespace Afra_App.Migrations
                 name: "IX_Personen_MentorId",
                 table: "Personen",
                 column: "MentorId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_PersonRolle_RollenId",
-                table: "PersonRolle",
-                column: "RollenId");
         }
 
         /// <inheritdoc />
@@ -298,16 +296,13 @@ namespace Afra_App.Migrations
                 name: "OtiumPerson");
 
             migrationBuilder.DropTable(
-                name: "PersonRolle");
-
-            migrationBuilder.DropTable(
                 name: "OtiaTermine");
 
             migrationBuilder.DropTable(
-                name: "Rollen");
+                name: "OtiaWiederholungen");
 
             migrationBuilder.DropTable(
-                name: "OtiaWiederholungen");
+                name: "Schultage");
 
             migrationBuilder.DropTable(
                 name: "Otia");
