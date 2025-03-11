@@ -1,15 +1,12 @@
 ﻿<script setup>
 
 import {DataTable, Column, Button, Tag} from "primevue";
-import MeterGroup from "primevue/metergroup";
-import {chooseColor, chooseSeverity, formatTutor} from "@/helpers/formatters.js"
+import {chooseSeverity, formatTutor} from "@/helpers/formatters.js"
 
 const props = defineProps({
   otia: Array,
   linkGenerator: Function
 })
-
-console.log(props.otia)
 
 </script>
 
@@ -17,7 +14,8 @@ console.log(props.otia)
   <DataTable :value="props.otia">
     <Column header="Bezeichnung">
       <template #body="{data}">
-        <Button variant="link" as="RouterLink" :to="linkGenerator(data)" :label="data.otium" />
+        <Button v-if="data.istAbgesagt" variant="link" :label="data.otium" disabled/>
+        <Button v-else variant="link" as="RouterLink" :to="linkGenerator(data)" :label="data.otium" :disabled="data.istAbgesagt"/>
       </template>
     </Column>
     <Column header="Raum" field="ort" />
@@ -28,7 +26,8 @@ console.log(props.otia)
     </Column>
     <Column header="Auslastung">
       <template #body="{data}">
-          <Tag class="w-full" v-if="data.maxEinschreibungen && data.maxEinschreibungen !== 0" :severity="chooseSeverity(data.auslastung, data.maxEinschreibungen)" >{{data.auslastung*100}} %</Tag>
+          <Tag class="w-full" v-if="data.istAbgesagt" severity="danger">Abgesagt</Tag>
+          <Tag class="w-full" v-else-if="data.maxEinschreibungen && data.maxEinschreibungen !== 0" :severity="chooseSeverity(data.auslastung, data.maxEinschreibungen)" >{{data.auslastung*100}} %</Tag>
           <Tag class="w-full" v-else severity="success">&infin;</Tag>
       </template>
     </Column>

@@ -23,5 +23,5 @@ public interface IMinimalTermin
     /// <summary>
     /// The tutor handling the termin (optional)
     /// </summary>
-    public PersonInfoMinimal Tutor { get; set; }
+    public PersonInfoMinimal? Tutor { get; set; }
 }

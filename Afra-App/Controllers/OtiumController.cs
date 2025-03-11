@@ -75,6 +75,8 @@ public class OtiumController(AfraAppContext context, ILogger<OtiumController> lo
             .Include(t => t.Otium)
             .ThenInclude(o => o.Kategorie)
             .Include(t => t.Tutor)
+            .OrderBy(t => t.IstAbgesagt)
+            .ThenBy(t => t.Otium.Bezeichnung)
             .ToListAsync();
 
         logger.LogInformation("Termine: {termine}", termine.Count);
@@ -136,8 +138,8 @@ public class OtiumController(AfraAppContext context, ILogger<OtiumController> lo
         var subBlock = _blocks[termin.Block].FirstOrDefault(b => b.Interval.Start == start);
         if (subBlock == null) return BadRequest();
         
-        var mayEnroll = await MayEnroll(user, termin, subBlock);
-        if (!mayEnroll) return BadRequest("You may not enroll in this termin.");
+        var (mayEnroll, reason) = await MayEnroll(user, termin, subBlock);
+        if (!mayEnroll) return BadRequest(reason);
         
         var enrollments = await context.OtiaEinschreibungen
             .Where(e => e.Termin == termin && e.BetroffenePerson == user)
@@ -202,8 +204,8 @@ public class OtiumController(AfraAppContext context, ILogger<OtiumController> lo
 
         try
         {
-            var mayUnenroll = await MayUnenroll(user, termin, subBlock);
-            if (!mayUnenroll) return BadRequest("You may not unenroll from this termin.");
+            var (mayUnenroll, reason) = await MayUnenroll(user, termin, subBlock);
+            if (!mayUnenroll) return BadRequest(reason);
         }
         catch (InvalidOperationException)
         {
@@ -257,11 +259,12 @@ public class OtiumController(AfraAppContext context, ILogger<OtiumController> lo
                     .ToListAsync())
                 .Any(e => e.Interval.Intersects(subBlock.Interval));
             bool mayEdit;
+            string? reason;
             if (userEnrolled)
-                mayEdit = await MayUnenroll(user, termin, subBlock);
+                (mayEdit, reason) = await MayUnenroll(user, termin, subBlock);
             else
-                mayEdit = await MayEnroll(user, termin, subBlock, countEnrolled);
-            yield return new EinschreibungsPreview(countEnrolled, mayEdit, userEnrolled, subBlock.Interval);
+                (mayEdit, reason) = await MayEnroll(user, termin, subBlock, countEnrolled);
+            yield return new EinschreibungsPreview(countEnrolled, mayEdit, reason, userEnrolled, subBlock.Interval);
         }
     }
 
@@ -405,9 +408,10 @@ public class OtiumController(AfraAppContext context, ILogger<OtiumController> lo
     /// <param name="subBlock">The subblock during which the user wants to unenroll</param>
     /// <exception cref="InvalidOperationException">The user is not enrolled for the Termin during the SubBlock</exception>
     /// <returns>True, if the user may unenroll; Otherwise, false.</returns>
-    private async Task<bool> MayUnenroll(Person user, Termin termin, SubBlock subBlock)
+    private async Task<(bool, string?)> MayUnenroll(Person user, Termin termin, SubBlock subBlock)
     {
-        if (!CommonMayUnEnroll(user, termin, subBlock)) return false;
+        var common = CommonMayUnEnroll(user, termin, subBlock);
+        if (!common.Item1) return common;
 
         var parallelEnrollment = (await context.OtiaEinschreibungen
                 .Include(e => e.Termin)
@@ -416,12 +420,13 @@ public class OtiumController(AfraAppContext context, ILogger<OtiumController> lo
             .First(e => e.Interval.Intersects(subBlock.Interval));
 
         var (before, after) = parallelEnrollment.Interval.Difference(subBlock.Interval);
-        return (after is null || after.Duration >= TimeSpan.FromMinutes(30)) &&
+        var mayUnenroll = (after is null || after.Duration >= TimeSpan.FromMinutes(30)) &&
                (before is null || before.Duration >= TimeSpan.FromMinutes(30));
+        return mayUnenroll ? (true, null) : (false, "Durch das Austragen entsteht eine Einschreibung kürzer als die Mindestzeit.");
     }
 
     /// <inheritdoc cref="MayEnroll(Afra_App.Data.People.Person,Termin,SubBlock,int)"/>
-    private async Task<bool> MayEnroll(Person user, Termin termin, SubBlock subBlock)
+    private async Task<(bool, string?)> MayEnroll(Person user, Termin termin, SubBlock subBlock)
     {
         var countEnrolled = (await context.OtiaEinschreibungen.AsNoTracking()
                 .Where(e => e.Termin == termin)
@@ -449,18 +454,19 @@ public class OtiumController(AfraAppContext context, ILogger<OtiumController> lo
     ///         If called for different SubBlocks of the same Termin, this will make the same SQL-Query multiple times.
     ///     </para>
     /// </remarks>
-    private async Task<bool> MayEnroll(Person user, Termin termin, SubBlock subBlock, int countEnrolled)
+    private async Task<(bool, string?)> MayEnroll(Person user, Termin termin, SubBlock subBlock, int countEnrolled)
     {
+        var common = CommonMayUnEnroll(user, termin, subBlock);
         // Check common conditions with unenrollment
-        if (!CommonMayUnEnroll(user, termin, subBlock)) return false;
+        if (!common.Item1) return common;
 
         // Check if canceled
         if (termin.IstAbgesagt)
-            return false;
+            return (false, "Der Termin wurde abgesagt.");
 
         // Check if the termin is already full
         if (termin.MaxEinschreibungen is not null && countEnrolled >= termin.MaxEinschreibungen)
-            return false;
+            return (false, "Der Termin ist bereits vollständig belegt.");
 
         // Get enrollments for the same block
         var blockEnrollments = await context.OtiaEinschreibungen
@@ -473,27 +479,27 @@ public class OtiumController(AfraAppContext context, ILogger<OtiumController> lo
         var parallelEnrollment = blockEnrollments
             .Any(e => e.Termin.Id != termin.Id && e.Interval.Intersects(subBlock.Interval));
         if (parallelEnrollment)
-            return false;
+            return (false, "Sie sind bereits zur selben Zeit eingeschrieben");
 
         // Check if the user is enrolling for a timeframe smaller than 30 minutes
         if (subBlock.Interval.Duration < TimeSpan.FromMinutes(30) && !blockEnrollments
                 .Any(e => e.Termin == termin &&
                           e.Interval.IsAdjacent(subBlock.Interval)))
-            return false;
+            return (false, "Die Einschreibung überdauert nicht die erforderliche Mindestzeit.");
 
         // Check if the user is adhering to the required categories
         var lastAvailableBlockRuleFulfilled = await LastAvailableBlockRuleFulfilled(user, termin, subBlock);
-        return lastAvailableBlockRuleFulfilled;
+        return lastAvailableBlockRuleFulfilled ? (true, null) : (false, "Sie sind nicht in allen erforderlichen Kategorien eingeschrieben. Durch diese Einschreibung wäre das nicht mehr möglich.");
     }
 
-    private static bool CommonMayUnEnroll(Person user, Termin termin, SubBlock subBlock)
+    private static (bool, string?) CommonMayUnEnroll(Person user, Termin termin, SubBlock subBlock)
     {
         var startDateTime = new DateTime(termin.Schultag.Datum, subBlock.Interval.Start);
-        if (startDateTime <= DateTime.Now) return false;
+        if (startDateTime <= DateTime.Now) return (false, "Der Termin hat bereits begonnen.");
         
-        if (user.Rolle != Rolle.Student) return false;
+        if (user.Rolle != Rolle.Student) return (false, "Nur Schüler:innen können sich einschreiben.");
         
-        return true;
+        return (true, null);
     }
 
     // Come here for some hideous shit; Optimizing this is a problem for future me.
@@ -562,7 +568,7 @@ public class OtiumController(AfraAppContext context, ILogger<OtiumController> lo
             timeline.Remove(enrollment.Interval.ToDateTimeInterval(enrollment.Termin.Schultag.Datum));
         var num30MinBlockAvailable = timeline.GetIntervals().Sum(i => (int)(i.Duration / TimeSpan.FromMinutes(30)));
 
-        return num30MinBlockAvailable > notEnrolled.Count;
+        return num30MinBlockAvailable >= notEnrolled.Count;
     }
 
     private async Task<bool> IsEnrolledInKategorie(Kategorie kategorie,

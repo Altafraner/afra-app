@@ -14,4 +14,9 @@ public interface ITermin : IMinimalTermin
     /// The maximum number of people that can be at the termin concurrently
     /// </summary>
     public int? MaxEinschreibungen { get; set; }
+    
+    /// <summary>
+    /// Whether the termin is cancelled
+    /// </summary>
+    public bool IstAbgesagt { get; set; }
 }

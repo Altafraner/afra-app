@@ -4,7 +4,6 @@ import {Select, Skeleton, DataTable, Column} from "primevue";
 import AfraDateSelector from "@/components/Form/AfraDateSelector.vue";
 import AfraKategorySelector from "@/components/Form/AfraKategorySelector.vue";
 import AfraOtiumKatalogView from "@/components/Otium/AfraOtiumKatalogView.vue";
-import {kategorien} from "@/helpers/testdata.js";
 import {useSettings} from "@/stores/useSettings.js";
 import {formatTime} from "@/helpers/formatters.js";
 import {mande} from "mande";
@@ -30,7 +29,7 @@ const settings = useSettings();
 const datesAvailable = ref([])
 const dateDefault = ref(null)
 const blockOptions = ref(settings.blocks)
-const kategorieOptionsTree = ref(kategorien)
+const kategorieOptionsTree = ref()
 const otia = ref([])
 const date = ref(null);
 const kategorie = ref(null);

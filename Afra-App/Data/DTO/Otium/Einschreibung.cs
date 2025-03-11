@@ -29,7 +29,7 @@ public record Einschreibung : IMinimalTermin
     public string Ort { get; set; }
 
     /// <inheritdoc />
-    public PersonInfoMinimal Tutor { get; set; }
+    public PersonInfoMinimal? Tutor { get; set; }
 
     /// <summary>
     /// Creates a new DTO from a einschreibung entry
@@ -42,6 +42,6 @@ public record Einschreibung : IMinimalTermin
         Interval = einschreibung.Interval;
         Otium = einschreibung.Termin.Otium.Bezeichnung;
         Ort = einschreibung.Termin.Ort;
-        Tutor = new PersonInfoMinimal(einschreibung.Termin.Tutor);
+        Tutor = einschreibung.Termin.Tutor is not null ? new PersonInfoMinimal(einschreibung.Termin.Tutor) : null;
     }
 }

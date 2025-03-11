@@ -28,7 +28,7 @@ public record TerminPreview : ITermin
     /// <summary>
     /// The tutor handling the termin (optional)
     /// </summary>
-    public PersonInfoMinimal Tutor { get; set; }
+    public PersonInfoMinimal? Tutor { get; set; }
     
     /// <summary>
     /// If the termin has <see cref="MaxEinschreibungen"/> the current load-factor of the termin; otherwise null.
@@ -43,6 +43,9 @@ public record TerminPreview : ITermin
     /// </summary>
     public int? MaxEinschreibungen { get; set; }
     
+    /// <inheritdoc />
+    public bool IstAbgesagt { get; set; }
+
     /// <summary>
     /// Constructs a new TerminPreview DTO from a Termin entity
     /// </summary>
@@ -55,7 +58,8 @@ public record TerminPreview : ITermin
         Otium = termin.Otium.Bezeichnung;
         Ort = termin.Ort;
         Kategorien = kategorien;
-        Tutor = new PersonInfoMinimal(termin.Tutor);
+        IstAbgesagt = termin.IstAbgesagt;
+        Tutor = termin.Tutor is null ? null : new PersonInfoMinimal(termin.Tutor);
         Auslastung = auslastung;
         MaxEinschreibungen = termin.MaxEinschreibungen;
     }

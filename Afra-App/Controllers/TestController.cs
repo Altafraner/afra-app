@@ -30,6 +30,46 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
     [HttpGet("seed")]
     public async Task<ActionResult> SeedDb()
     {
+        
+        var akademisches = new Kategorie
+            { Bezeichnung = "Akademisches", Icon = "pi pi-graduation-cap", CssColor = "var(--p-blue-500)", Required = true};
+        var otiumsKategorien = new List<Kategorie>
+        {
+            akademisches,
+            new() { Bezeichnung = "Bewegung", Icon = "pi pi-heart", CssColor = "var(--p-teal-500)"},
+            new() { Bezeichnung = "Musik", Icon = "pi pi-headphones", CssColor = "var(--p-orange-500)"},
+            new() { Bezeichnung = "Besinnung", Icon = "pi pi-hourglass", CssColor = "var(--p-yellow-500)"},
+            new() { Bezeichnung = "Beratung", Icon = "pi pi-user", CssColor = "var(--p-purple-500)"},
+            new() { Bezeichnung = "Teamräume"},
+            new() { Parent = akademisches, Bezeichnung = "Studienzeit"},
+            new() { Parent = akademisches, Bezeichnung = "Schüler:innen unterrichten Schüler:innen"},
+            new() { Parent = akademisches, Bezeichnung = "Wettbewerbe"},
+            new() { Parent = akademisches, Bezeichnung = "Sonstige"}
+        };
+        List<bool[]> possibleOtiaBlocks = [[true, true], [true, true], [true, false], [false, true]];
+        List<string> rooms = ["102", "103", "104", "105", "106", "108", "109", "110", "202", "203", "204", "205", "206",
+            "207", "208", "209", "211", "212", "213", "214", "215", "216", "217", "301", "307", "308"];
+
+        List<(string, Kategorie)> possibleOtia = [
+            ("Schreibwerkstatt", otiumsKategorien[6]),
+            ("Studienzeit Mathematik", otiumsKategorien[6]),
+            ("Studienzeit Physik", otiumsKategorien[6]),
+            ("Studienzeit Griechisch", otiumsKategorien[6]),
+            ("Studienzeit Französisch", otiumsKategorien[6]),
+            ("Schülerlabor", otiumsKategorien[9]),
+            ("Bibliothek", otiumsKategorien[9]),
+            ("Informatik / Pyhsik / Mathe mit Richard", otiumsKategorien[7]),
+            ("Buchclub", otiumsKategorien[9]),
+            ("F1inSchools", otiumsKategorien[8]),
+            ("Kraftraum", otiumsKategorien[1]),
+            ("Yoga", otiumsKategorien[1]),
+            ("Übungsraum Musik", otiumsKategorien[2]),
+            ("Ruheraum", otiumsKategorien[3]),
+            ("Handarbeit", otiumsKategorien[3]),
+            ("Lernen Lernen", otiumsKategorien[5]),
+        ];
+        
+        
         var personFaker = new Faker<Person>(locale: "de")
             .RuleFor(p => p.Nachname, f => f.Person.LastName)
             .RuleFor(p => p.Vorname, f => f.Person.FirstName)
@@ -52,7 +92,6 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
         var nextMonday = today.AddDays((int) DayOfWeek.Monday - (int) today.DayOfWeek);
         var nextFriday = today.AddDays((int) DayOfWeek.Friday - (int) today.DayOfWeek);
 
-        List<bool[]> possibleOtiaBlocks = [[true, true], [true, false], [false, true]];
         
         var schultagGenerator = new Faker<Schultag>()
             .RuleFor(s => s.OtiumsBlock, f => f.PickRandom(possibleOtiaBlocks))
@@ -62,31 +101,17 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
         var schultage = schultagGenerator.Generate(20);
         dbContext.Schultage.AddRange(schultage);
 
-        var akademisches = new Kategorie
-            { Bezeichnung = "Akademisches", Icon = "pi pi-graduation-cap", CssColor = "var(--p-blue-500)", Required = true};
-        var otiumsKategorien = new List<Kategorie>
-        {
-            akademisches,
-            new() { Bezeichnung = "Bewegung", Icon = "pi pi-heart", CssColor = "var(--p-teal-500)"},
-            new() { Bezeichnung = "Musik", Icon = "pi pi-headphones", CssColor = "var(--p-orange-500)"},
-            new() { Bezeichnung = "Besinnung", Icon = "pi pi-hourglass", CssColor = "var(--p-yellow-500)"},
-            new() { Bezeichnung = "Beratung", Icon = "pi pi-user", CssColor = "var(--p-purple-500)"},
-            new() { Bezeichnung = "Teamräume"},
-            new() { Parent = akademisches, Bezeichnung = "Studienzeit"},
-            new() { Parent = akademisches, Bezeichnung = "Schüler:innen unterrichten Schüler:innen"},
-            new() { Parent = akademisches, Bezeichnung = "Wettbewerbe"},
-            new() { Parent = akademisches, Bezeichnung = "Sonstige"}
-        };
+        
         dbContext.OtiaKategorien.AddRange(otiumsKategorien);
         await dbContext.SaveChangesAsync();
 
         var otiumGenerator = new Faker<Otium>(locale: "de")
-            .RuleFor(o => o.Bezeichnung, f => f.Hacker.Noun())
-            .RuleFor(o => o.Beschreibung, f => f.Rant.Review())
-            .RuleFor(o => o.Verantwortliche, f => [f.PickRandom(mentoren)])
-            .RuleFor(o => o.Kategorie, f => f.PickRandom(otiumsKategorien));
+            .RuleFor(o => o.Bezeichnung, f => possibleOtia[f.IndexFaker].Item1)
+            .RuleFor(o => o.Beschreibung, f => f.Commerce.ProductDescription())
+            .RuleFor(o => o.Verantwortliche, f => f.Random.Bool(0.7f) ? [f.PickRandom(mentoren)] : [])
+            .RuleFor(o => o.Kategorie, f => possibleOtia[f.IndexFaker].Item2);
 
-        var otia = otiumGenerator.Generate(30);
+        var otia = otiumGenerator.Generate(possibleOtia.Count);
         dbContext.AddRange(otia);
 
         await dbContext.SaveChangesAsync();
@@ -95,12 +120,12 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
             .RuleFor(t => t.Otium, f => f.PickRandom(otia))
             .RuleFor(t => t.Tutor, (_, t) => t.Otium.Verantwortliche.FirstOrDefault())
             .RuleFor(t => t.IstAbgesagt, f => f.Random.Bool(0.1f))
-            .RuleFor(t => t.Ort, f => f.Hacker.Abbreviation())
+            .RuleFor(t => t.Ort, f => f.PickRandom(rooms))
             .RuleFor(t => t.Block, f => f.Random.Byte(0,1))
             .RuleFor(t => t.Schultag, f => f.PickRandom(schultage));
 
         dbContext.OtiaTermine.AddRange(
-            otiumTerminGenerator.Generate(200).ToList());
+            otiumTerminGenerator.Generate(300).ToList());
 
         await dbContext.SaveChangesAsync();
         
