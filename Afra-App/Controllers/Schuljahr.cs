@@ -1,22 +1,22 @@
 ﻿using Afra_App.Data;
-using Afra_App.Data.Schuljahr;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Afra_App.Controllers;
 
+/// <summary>
+/// A controller for managing the school year.
+/// </summary>
 [Authorize]
 [Route("api/[controller]")]
 public class Schuljahr(AfraAppContext dbContext) : ControllerBase
 {
     private AfraAppContext _dbContext = dbContext;
-    
-    private IAsyncEnumerable<Schultag> GetSchultage()
-    {
-        return _dbContext.Schultage.AsAsyncEnumerable();
-    }
 
+    /// <summary>
+    /// Retrieves all school days in the database.
+    /// </summary>
     [HttpGet]
     public async Task<IActionResult> GetSchuljahr()
     {

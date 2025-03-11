@@ -3,6 +3,9 @@ using Afra_App.Data.People;
 
 namespace Afra_App.Authentication;
 
+/// <summary>
+/// Contains a extension method for <see cref="HttpContext"/> to retrieve the <see cref="Person"/> associated with the current authenticated user.
+/// </summary>
 public static class AfraAppHttpContextGetPersonExtension
 {
     /// <summary>

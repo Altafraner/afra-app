@@ -157,7 +157,7 @@ public class Organization {
 	public required OrganizationDisplayName OrganizationDisplayName; 
 
 	[XmlElement(ElementName="OrganizationURL", Namespace="urn:oasis:names:tc:SAML:2.0:metadata")] 
-	public required OrganizationUrl OrganizationURL; 
+	public required OrganizationUrl OrganizationUrl; 
 }
 
 [XmlRoot(ElementName="ContactPerson", Namespace="urn:oasis:names:tc:SAML:2.0:metadata")]

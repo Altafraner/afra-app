@@ -268,11 +268,21 @@ public class OtiumController(AfraAppContext context, ILogger<OtiumController> lo
         }
     }
 
+
+    /// <summary>
+    /// Gets the dashboard-information for a user containig all available days.
+    /// </summary>
+    [HttpGet("dashboard/all")]
+    public IAsyncEnumerable<Tag> DashboardAll()
+    {
+        return Dashboard(true);
+    }
+
     /// <summary>
     /// Gets the dashboard-information for a user
     /// </summary>
     [HttpGet("dashboard")]
-    public async IAsyncEnumerable<Tag> Dashboard()
+    public async IAsyncEnumerable<Tag> Dashboard(bool all = false)
     {
         /*
          * Requirements:
@@ -291,6 +301,11 @@ public class OtiumController(AfraAppContext context, ILogger<OtiumController> lo
          */
         var user = await HttpContext.GetPersonAsync(context);
 
+        // Get Monday of the current week
+        var startDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek + 1));
+        var endDate = startDate.AddDays(7*3);
+        
+        
         // Okay, this looks heavy. Enumerate to List as we need to access the elements multiple times.
         var allEinschreibungen = await context.OtiaEinschreibungen.AsNoTrackingWithIdentityResolution()
             .Include(e => e.Termin)
@@ -302,9 +317,11 @@ public class OtiumController(AfraAppContext context, ILogger<OtiumController> lo
             .ThenInclude(o => o.Kategorie)
             .ThenInclude(k => k.Parent)
             .Where(t => t.BetroffenePerson == user)
+            .Where(t => all || t.Termin.Schultag.Datum >= startDate && t.Termin.Schultag.Datum < endDate)
             .ToListAsync();
         
         var allSchoolDays = await context.Schultage.AsNoTracking()
+            .Where(t => all || t.Datum >= startDate && t.Datum < endDate)
             .OrderBy(s => s.Datum)
             .ToListAsync();
         

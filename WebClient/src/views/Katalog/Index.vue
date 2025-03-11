@@ -3,7 +3,7 @@ import {ref, watch} from "vue";
 import {Select, Skeleton, DataTable, Column, useToast} from "primevue";
 import AfraDateSelector from "@/components/Form/AfraDateSelector.vue";
 import AfraKategorySelector from "@/components/Form/AfraKategorySelector.vue";
-import AfraOtiumKatalogView from "@/components/Otium/AfraOtiumKatalogView.vue";
+import AfraOtiumKatalogView from "@/components/Otium/Katalog/AfraOtiumKatalogView.vue";
 import {useSettings} from "@/stores/useSettings.js";
 import {formatTime} from "@/helpers/formatters.js";
 import {mande} from "mande";

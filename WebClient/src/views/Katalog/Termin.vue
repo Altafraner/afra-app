@@ -11,7 +11,7 @@ import {
   useToast
 } from "primevue";
 import {nextTick, ref} from "vue";
-import AfraKategorieTag from "@/components/Otium/AfraKategorieTag.vue";
+import AfraKategorieTag from "@/components/Otium/Shared/AfraKategorieTag.vue";
 import {chooseColor, formatDate, formatTime, formatTutor} from "@/helpers/formatters.js";
 import {mande} from "mande";
 import {useUser} from "@/stores/useUser.js";

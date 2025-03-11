@@ -11,6 +11,8 @@ using Microsoft.AspNetCore.Mvc;
 using Person = Afra_App.Data.People.Person;
 using Microsoft.EntityFrameworkCore;
 using Termin = Afra_App.Data.Otium.Termin;
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+// Sorry, this is a test controller, not worth the effort.
 
 namespace Afra_App.Controllers;
 

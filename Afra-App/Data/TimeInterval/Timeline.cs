@@ -31,15 +31,16 @@ public class Timeline<T> where T : struct
     /// <param name="interval">The interval to add</param>
     public void Add(ITimeInterval<T> interval)
     {
-        var intersection = _intervals.Where(i => i.IntersectsOrIsAdjacent(interval));
+        var intersection = _intervals.Where(interval.IntersectsOrIsAdjacent);
 
+        var current = interval;
         foreach (var item in intersection.ToList())
         {
-            interval = interval.Union(item);
+            current = current.Union(item);
             _intervals.Remove(item);
         }
         
-        _intervals.Add(interval);
+        _intervals.Add(current);
     }
     
     /// <summary>

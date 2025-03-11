@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using Afra_App.Data.People;
 
 namespace Afra_App.Data.DTO;
@@ -73,10 +74,11 @@ public record struct PersonInfoMinimal
     /// <inheritdoc cref="Person.Vorname"/>
     public string Vorname { get; set; }
     
-    /// /// <inheritdoc cref="Person.Nachname"/>
+    /// <inheritdoc cref="Person.Nachname"/>
     public string Nachname { get; set; }
     
-    /// /// <inheritdoc cref="Person.Rolle"/>
+    /// <inheritdoc cref="Person.Rolle"/>
+    [JsonConverter(typeof(JsonStringEnumConverter<Rolle>))]
     public Rolle Rolle { get; set; }
 
     /// <summary>

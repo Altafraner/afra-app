@@ -2,7 +2,7 @@
 
 import {ref} from "vue";
 import {Button} from "primevue";
-import AfraOtiumSupervisionView from "@/components/Otium/AfraOtiumSupervisionView.vue";
+import AfraOtiumSupervisionView from "@/components/Otium/Supervision/AfraOtiumSupervisionView.vue";
 import {supervisionDetails} from "@/helpers/testdata.js";
 
 const status = ref(false)

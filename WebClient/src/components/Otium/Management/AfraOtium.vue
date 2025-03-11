@@ -14,13 +14,13 @@ import {
   AccordionHeader,
   Panel
 } from "primevue";
-import AfraOtiumDateTable from "@/components/Otium/AfraOtiumDateTable.vue";
-import AfraOtiumRegTable from "@/components/Otium/AfraOtiumRegTable.vue";
+import AfraOtiumDateTable from "@/components/Otium/Management/AfraOtiumDateTable.vue";
+import AfraOtiumRegTable from "@/components/Otium/Management/AfraOtiumRegTable.vue";
 import {Form} from '@primevue/forms';
-import AfraOtiumManagerTable from "@/components/Otium/AfraOtiumManagerTable.vue";
+import AfraOtiumManagerTable from "@/components/Otium/Management/AfraOtiumManagerTable.vue";
 import AfraKategorySelector from "@/components/Form/AfraKategorySelector.vue";
 import {kategorien} from "@/helpers/testdata.js";
-import AfraKategorieTag from "@/components/Otium/AfraKategorieTag.vue";
+import AfraKategorieTag from "@/components/Otium/Shared/AfraKategorieTag.vue";
 
 const props = defineProps({
   otium: Object,

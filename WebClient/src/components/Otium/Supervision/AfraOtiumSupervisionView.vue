@@ -1,5 +1,5 @@
 ﻿<script setup>
-import AfraOtiumEnrollmentTable from "@/components/Otium/AfraOtiumEnrollmentTable.vue";
+import AfraOtiumEnrollmentTable from "@/components/Otium/Management/AfraOtiumEnrollmentTable.vue";
 import {Accordion, AccordionPanel, AccordionHeader, AccordionContent, Button} from "primevue";
 
 const props = defineProps({

@@ -1,26 +1,63 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.ComponentModel.DataAnnotations;
 using Afra_App.Data.Otium;
 
 namespace Afra_App.Data.People;
 
+/// <summary>
+/// A record representing a person using the application.
+/// </summary>
+/// <remarks>Usually provided by an external directory service and cached for performance and convenience.</remarks>
 public class Person
 {
+    /// <summary>
+    /// The unique identifier of the person.
+    /// </summary>
     public Guid Id { get; set; }
+    
+    /// <summary>
+    /// The first name of the person.
+    /// </summary>
+    [MaxLength(50)]
     public required string Vorname { get; set; }
+    
+    /// <summary>
+    /// The last name of the person.
+    /// </summary>
+    [MaxLength(50)]
     public required string Nachname { get; set; }
+    
+    /// <summary>
+    /// The email address of the person. Used for communication.
+    /// </summary>
+    [EmailAddress]
+    [MaxLength(150)]
     public required string Email { get; set; }
     
-    [JsonIgnore]
+    /// <summary>
+    /// The mentor of the person. Only used if the person is a student.
+    /// </summary>
     public Person? Mentor { get; set; }
-
-    [JsonIgnore]
+    
+    /// <summary>
+    /// A collection of the mentees of the person. Only used if the person is a teacher.
+    /// </summary>
     public ICollection<Person> Mentees { get; set; } = new List<Person>();
     
+    /// <summary>
+    /// The role of the person.
+    /// </summary>
     public required Rolle Rolle { get; set; }
-    [JsonIgnore]
+    
+    /// <summary>
+    /// A list of all Otia the person is responsible for.
+    /// </summary>
     public ICollection<Otium.Otium> VerwalteteOtia { get; set; } = new List<Otium.Otium>();
-    [JsonIgnore]
+    
+    /// <summary>
+    /// A list of all Otia the person is enrolled in.
+    /// </summary>
     public ICollection<Einschreibung> OtiaEinschreibungen { get; set; } = new List<Einschreibung>();
 
+    /// <inheritdoc />
     public override string ToString() => $"{Vorname} {Nachname}";
 }

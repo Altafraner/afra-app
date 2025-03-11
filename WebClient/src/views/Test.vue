@@ -1,7 +1,7 @@
 ﻿<script setup>
 import {ref} from "vue";
-import AfraOtium from "@/components/Otium/AfraOtium.vue";
-import AfraOtiumInstance from "@/components/Otium/AfraOtiumInstance.vue";
+import AfraOtium from "@/components/Otium/Management/AfraOtium.vue";
+import AfraOtiumInstance from "@/components/Otium/Management/AfraOtiumInstance.vue";
 import {otium as testOtium, terminEinschreibungsDetails} from "@/helpers/testdata.js";
 
 const otium = ref(testOtium)

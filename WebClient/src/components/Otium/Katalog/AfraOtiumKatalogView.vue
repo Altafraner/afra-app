@@ -1,7 +1,7 @@
 ﻿<script setup>
 
 import {DataTable, Column, Button, Tag} from "primevue";
-import {chooseSeverity, formatTutor} from "@/helpers/formatters.js"
+import {chooseSeverity, formatPerson, formatTutor} from "@/helpers/formatters.js"
 
 const props = defineProps({
   otia: Array,
@@ -21,7 +21,7 @@ const props = defineProps({
     <Column header="Raum" field="ort" />
     <Column header="Lehrer:in">
       <template #body="{data}">
-        {{formatTutor(data.tutor)}}
+        {{data.tutor ? formatPerson(data.tutor) : ''}}
       </template>
     </Column>
     <Column header="Auslastung">
