@@ -1,6 +1,6 @@
 ﻿<script setup>
 import {ref, watch} from "vue";
-import {Select, Skeleton, DataTable, Column} from "primevue";
+import {Select, Skeleton, DataTable, Column, useToast} from "primevue";
 import AfraDateSelector from "@/components/Form/AfraDateSelector.vue";
 import AfraKategorySelector from "@/components/Form/AfraKategorySelector.vue";
 import AfraOtiumKatalogView from "@/components/Otium/AfraOtiumKatalogView.vue";
@@ -23,6 +23,7 @@ const props = defineProps({
   }
 })
 const router = useRouter();
+const toast = useToast();
 const loading = ref(true)
 const user = useUser();
 const settings = useSettings();
@@ -34,7 +35,7 @@ const otia = ref([])
 const date = ref(null);
 const kategorie = ref(null);
 const block = ref(settings.blocks[0])
-const categoryChanged = () => console.info("Kategorie Changed:", kategorie.value)
+const categoryChanged = () => {}
 const selectedOtia = ref(otia.value)
 
 const linkGenerator = otium => `/termin/${otium.id}`
@@ -47,7 +48,6 @@ function filterOtiaByKategorie(){
     return
   }
   const kategorieId = Object.keys(kategorie.value)[0]
-  console.log(kategorieId)
   selectedOtia.value = otia.value.filter(e => e.kategorien.includes(kategorieId))
 }
 
@@ -84,7 +84,8 @@ async function startup(){
     await kategoriesPromise;
     await dateChanged()
   } catch (error) {
-    console.log(error)
+    console.error(error)
+    toast.add({severity: "error", summary: "Fehler", detail: "Ein unerwarteter Fehler ist beim Laden der Daten aufgetreten"})
     await user.update()
   }
   loading.value = false
@@ -123,7 +124,6 @@ async function dateChanged(){
 
 function selectToday(){
   date.value = dateDefault.value
-  console.log(date.value)
   dateChanged()
 }
 

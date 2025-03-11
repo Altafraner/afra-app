@@ -5,7 +5,6 @@ const props = defineProps({
   value: Object
 })
 
-console.log(props.value)
 </script>
 
 <template>

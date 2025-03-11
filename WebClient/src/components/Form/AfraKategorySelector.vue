@@ -11,9 +11,7 @@ const props = defineProps({
 const emit = defineEmits(["change"])
 
 const kategorie = defineModel()
-console.log(props.options)
 const optionsTree = ref(convertToTreeSelectOptions(props.options))
-console.log(optionsTree.value)
 
 
 function convertToTreeSelectOptions(options) {
@@ -21,7 +19,6 @@ function convertToTreeSelectOptions(options) {
 }
 
 function treeMappingFunction(element) {
-  console.log(element)
   return {
     key: element.id,
     label: element.bezeichnung,

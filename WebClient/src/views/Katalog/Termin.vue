@@ -1,14 +1,27 @@
 ﻿<script setup>
-import {DataTable, Column, Badge, MeterGroup, Button, Skeleton, Tag, Popover} from "primevue";
+import {
+  DataTable,
+  Column,
+  Badge,
+  MeterGroup,
+  Button,
+  Skeleton,
+  Tag,
+  Popover,
+  useToast
+} from "primevue";
 import {nextTick, ref} from "vue";
 import AfraKategorieTag from "@/components/Otium/AfraKategorieTag.vue";
 import {chooseColor, formatDate, formatTime, formatTutor} from "@/helpers/formatters.js";
 import {mande} from "mande";
 import {useUser} from "@/stores/useUser.js";
 import {useSettings} from "@/stores/useSettings.js";
+import {useRouter} from "vue-router";
 
 const settings = useSettings();
 const user = useUser();
+const toast = useToast();
+const router = useRouter();
 const props = defineProps({
   terminId: String,
 })
@@ -22,7 +35,7 @@ const poprev = ref()
 const grund = ref("")
 
 function showReason(evt, reason) {
-  poprev.value.hide;
+  poprev.value.hide();
   grund.value = reason;
   nextTick(() => poprev.value.show(evt))
 }
@@ -47,7 +60,9 @@ async function loadTermin() {
     otium.value = await connection.value.get();
     buttonLoading.value = false
   } catch (error) {
-    await useUser().update()
+    toast.add({severity: "error", summary: "Fehler", detail: "Es ist ein Fehler beim Laden aufgetreten."})
+    await router.push('/katalog')
+    await user.update()
   }
 }
 
@@ -57,8 +72,7 @@ async function unenroll(start, evt) {
     otium.value = await connection.value.delete(start.toString())
     buttonLoading.value = false
   } catch (error) {
-    // TODO Notify user
-    console.error(error)
+    toast.add({severity: "error", summary: "Fehler", detail: "Es ist ein Fehler beim Austragen aufgetreten."})
   }
 }
 
@@ -68,14 +82,12 @@ async function enroll(start, evt) {
     otium.value = await connection.value.put(start.toString())
     buttonLoading.value = false
   } catch (error) {
-    // TODO Notify user
-    console.error(error)
+    toast.add({severity: "error", summary: "Fehler", detail: "Es ist ein Fehler beim Einschreiben aufgetreten."})
   }
 }
 
 async function loadKategorien() {
   await settings.updateKategorien()
-  console.log(settings.kategorien)
   kategorien.value = settings.kategorien;
 }
 
@@ -122,6 +134,11 @@ setup();
           {{ data.interval.start }}
         </template>
       </Column>
+      <Column header="Ende">
+        <template #body="{data}">
+          {{ data.interval.end }}
+        </template>
+      </Column>
       <Column header="Einschreibungen">
         <template #body="{data}">
           <div class="inline-grid grid-cols-[auto_7rem] justify-center items-center gap-3">
@@ -158,7 +175,7 @@ setup();
     <p>
       <Skeleton width="40%"/>
     </p>
-    <h3 style="margin-top: 3rem">
+    <h3 class="mt-[3rem]">
       <Skeleton height="2rem" width="55%"/>
     </h3>
     <DataTable :value="new Array(3)">
@@ -192,9 +209,4 @@ setup();
 
 <style scoped>
 
-.enrollmentGrid {
-  display: inline-grid;
-  grid-template-columns: auto 7rem;
-  justify-content: center;
-}
 </style>
