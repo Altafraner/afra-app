@@ -52,9 +52,9 @@ namespace Afra_App.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Vorname = table.Column<string>(type: "text", nullable: false),
-                    Nachname = table.Column<string>(type: "text", nullable: false),
-                    Email = table.Column<string>(type: "text", nullable: false),
+                    Vorname = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Nachname = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Email = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
                     MentorId = table.Column<Guid>(type: "uuid", nullable: true),
                     Rolle = table.Column<int>(type: "integer", nullable: false)
                 },

@@ -27,12 +27,12 @@ const routes = [
   {
     path: "/dashboard",
     name: "Dashboard",
-    component: () => import('@/views/DashboardStudent.vue')
+    component: () => import('@/views/Dashboard/Student.vue')
   },
   {
     path: "/teacher",
     name: "Teacher",
-    component: () => import('@/views/DashboardTeacher.vue')
+    component: () => import('@/views/Dashboard/Teacher.vue')
   },
   {
     path: "/test",
@@ -49,6 +49,11 @@ const routes = [
     name: "Termin",
     component: () => import('@/views/Katalog/Termin.vue'),
     props: true
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    name: "NotFound",
+    component: () => import('@/views/NotFound.vue')
   }
 ]
 

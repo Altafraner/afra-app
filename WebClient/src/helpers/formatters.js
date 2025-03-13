@@ -21,8 +21,8 @@ export const chooseColor = (now, max) => {
   return 'var(--p-button-danger-background)'
 }
 
-export const chooseSeverity = (now, max) => {
-  if (max===0 || now <= 0.7) return 'success'
+export const chooseSeverity = (now) => {
+  if (now <= 0.7) return 'success'
   if (now < 1) return 'warn'
   return 'danger'
 }

@@ -2,6 +2,7 @@
 
 import {DataTable, Column, Button, Tag} from "primevue";
 import {chooseSeverity, formatPerson, formatTutor} from "@/helpers/formatters.js"
+import AuslastungsTag from "@/components/Otium/Shared/AuslastungsTag.vue";
 
 const props = defineProps({
   otia: Array,
@@ -26,9 +27,7 @@ const props = defineProps({
     </Column>
     <Column header="Auslastung">
       <template #body="{data}">
-          <Tag class="w-full" v-if="data.istAbgesagt" severity="danger">Abgesagt</Tag>
-          <Tag class="w-full" v-else-if="data.maxEinschreibungen && data.maxEinschreibungen !== 0" :severity="chooseSeverity(data.auslastung, data.maxEinschreibungen)" >{{data.auslastung*100}} %</Tag>
-          <Tag class="w-full" v-else severity="success">&infin;</Tag>
+          <AuslastungsTag :ist-abgesagt="data.istAbgesagt" :auslastung="data.auslastung"/>
       </template>
     </Column>
     <template #empty>

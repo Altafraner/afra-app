@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using Afra_App.Authentication;
 using Afra_App.Data;
+using Afra_App.Data.DTO;
 using Afra_App.Data.DTO.Otium;
 using Afra_App.Data.Otium;
 using Afra_App.Data.People;
@@ -10,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Einschreibung = Afra_App.Data.Otium.Einschreibung;
+using Person = Afra_App.Data.People.Person;
 using Termin = Afra_App.Data.Otium.Termin;
 
 namespace Afra_App.Controllers;
@@ -332,17 +334,7 @@ public class OtiumController(AfraAppContext context, ILogger<OtiumController> lo
             .ToDictionary(g => g.Key, g => g.ToList());
         foreach (var (schultag, einschreibungen) in einschreibungenByDay)
         {
-            var timeline = new Timeline<TimeOnly>();
-            for (var i = 0; i < _blocks.Count; i++)
-            {
-                if (!schultag.OtiumsBlock[i]) continue;
-                foreach (var subBlock in _blocks[i].Where(b => !b.Optional)) timeline.Add(subBlock.Interval);
-            }
-
-            foreach (var einschreibung in einschreibungen) timeline.Remove(einschreibung.Interval);
-            
-            var allNonOptionalBlocksEnrolled = timeline.GetIntervals().Count == 0;
-            allEnrolledRuleByDay[schultag.Datum] = allNonOptionalBlocksEnrolled;
+            allEnrolledRuleByDay[schultag.Datum] = AreAllNonOptionalBlocksEnrolled(schultag, einschreibungen);
         }
         
         foreach (var schultag in allSchoolDays)
@@ -363,6 +355,104 @@ public class OtiumController(AfraAppContext context, ILogger<OtiumController> lo
                 );
             
             yield return tag;
+        }
+    }
+
+    private bool AreAllNonOptionalBlocksEnrolled(Schultag schultag, List<Einschreibung> einschreibungen)
+    {
+        var timeline = new Timeline<TimeOnly>();
+        for (var i = 0; i < _blocks.Count; i++)
+        {
+            if (!schultag.OtiumsBlock[i]) continue;
+            foreach (var subBlock in _blocks[i].Where(b => !b.Optional)) timeline.Add(subBlock.Interval);
+        }
+
+        foreach (var einschreibung in einschreibungen) timeline.Remove(einschreibung.Interval);
+            
+        var allNonOptionalBlocksEnrolled = timeline.GetIntervals().Count == 0;
+        return allNonOptionalBlocksEnrolled;
+    }
+
+    /// <summary>
+    ///     Returns an overview of termine and mentees for a teacher.
+    /// </summary>
+    /// <exception cref="UnauthorizedAccessException">The user is not a teacher.</exception>
+    [HttpGet("dashboard/teacher")]
+    public async Task<LehrerUebersicht> GetTeacherDashboard()
+    {
+        var user = await HttpContext.GetPersonAsync(context);
+        if (user.Rolle != Rolle.Tutor) throw new UnauthorizedAccessException("Only teachers may access this endpoint.");
+        
+        var startDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek + 1));
+        var endDate = startDate.AddDays(21);
+
+        var mentees = await context.Personen
+            .Where(p => p.Mentor != null && p.Mentor.Id == user.Id)
+            .Include(p => p.OtiaEinschreibungen
+                .Where(e => e.Termin.Schultag.Datum >= startDate && e.Termin.Schultag.Datum < endDate))
+            .ThenInclude(p => p.Termin)
+            .ThenInclude(p => p.Schultag)
+            .OrderBy(p => p.Vorname)
+            .ThenBy(p => p.Nachname)
+            .ToListAsync();
+        
+        var schultage = context.Schultage.Where(s => s.Datum >= startDate && s.Datum < endDate);
+
+        List<MenteePreview> menteePreviews = [];
+        
+        foreach (var mentee in mentees)
+        {
+            menteePreviews.Add(await GenerateMenteePreview(mentee, schultage, startDate));
+        }
+        
+        List<LehrerTerminPreview> terminPreviews = [];
+
+        var termine = await context.OtiaTermine
+            .Include(t => t.Otium)
+            .Include(t => t.Schultag)
+            .OrderBy(t => t.Schultag.Datum)
+            .ThenBy(t => t.Block)
+            .Where(t => !t.IstAbgesagt && (t.Tutor != null && t.Tutor.Id == user.Id) &&
+                        t.Schultag.Datum >= DateOnly.FromDateTime(DateTime.Today) && t.Schultag.Datum < endDate)
+            .ToListAsync();
+
+        foreach (var termin in termine)
+        {
+            terminPreviews.Add(
+                new LehrerTerminPreview(termin.Id, termin.Otium.Bezeichnung, termin.Ort, await CalculateLoad(termin), termin.Schultag.Datum, termin.Block)
+                );
+        }
+
+        return new LehrerUebersicht(terminPreviews, menteePreviews);
+    }
+
+    private async Task<MenteePreview> GenerateMenteePreview(Person mentee, IEnumerable<Schultag> schulage, DateOnly startDate)
+    {
+        var lastWeekInterval = new DateTimeInterval(startDate.ToDateTime(new TimeOnly(0, 0)), TimeSpan.FromDays(7));
+        var thisWeekInterval = new DateTimeInterval(lastWeekInterval.End, TimeSpan.FromDays(7));
+        var nextWeekInterval = new DateTimeInterval(thisWeekInterval.End, TimeSpan.FromDays(7));
+        
+        var enrollmentsPerDay = mentee.OtiaEinschreibungen.GroupBy(e => e.Termin.Schultag).ToDictionary(g => g.Key, g => g.ToList());
+        var isFullyEnrolledPerDay = new Dictionary<DateOnly, bool>();
+        
+        foreach (var schultag in schulage)
+        {
+            isFullyEnrolledPerDay[schultag.Datum] = AreAllNonOptionalBlocksEnrolled(schultag, enrollmentsPerDay.TryGetValue(schultag, out var value) ? value : []);
+        }
+        
+        var kategorieRuleByWeek = await CheckAllKategoriesInWeeks(mentee.OtiaEinschreibungen.ToList());
+
+        return new MenteePreview(new PersonInfoMinimal(mentee),
+            IsWeekOkay(lastWeekInterval) ? MenteePreviewStatus.Okay : MenteePreviewStatus.Auffaellig,
+            IsWeekOkay(thisWeekInterval) ? MenteePreviewStatus.Okay : MenteePreviewStatus.Auffaellig,
+            IsWeekOkay(nextWeekInterval) ? MenteePreviewStatus.Okay : MenteePreviewStatus.Auffaellig
+            );
+
+        bool IsWeekOkay(DateTimeInterval week)
+        {
+            return isFullyEnrolledPerDay.All(group =>
+                       !week.Contains(group.Key.ToDateTime(TimeOnly.MinValue)) || group.Value) &&
+                   kategorieRuleByWeek[week];
         }
     }
 

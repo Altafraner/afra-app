@@ -13,7 +13,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Afra_App.Migrations
 {
     [DbContext(typeof(AfraAppContext))]
-    [Migration("20250310143830_InitialCreate")]
+    [Migration("20250313165258_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -202,21 +202,24 @@ namespace Afra_App.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
 
                     b.Property<Guid?>("MentorId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Nachname")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<int>("Rolle")
                         .HasColumnType("integer");
 
                     b.Property<string>("Vorname")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.HasKey("Id");
 
