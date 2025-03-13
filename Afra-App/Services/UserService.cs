@@ -4,6 +4,7 @@ using Afra_App.Data;
 using Afra_App.Data.DTO;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.EntityFrameworkCore;
 using Person = Afra_App.Data.People.Person;
 
 namespace Afra_App.Services;
@@ -63,14 +64,14 @@ public class UserService
         return Results.Ok();
     }
 
-    private Task<bool> CheckPasswordAsync(Person? user, string password)
+    private Task<bool> CheckPasswordAsync(Person user, string password)
     {
         return Task.FromResult(true);
     }
 
     private async Task<Person?> FindUserWithUsernameAsync(string username)
     {
-        return await _context.Personen.FindAsync(new Guid(username));
+        return await _context.Personen.FirstOrDefaultAsync(u => u.Email == username);
     }
 
     private static async Task SignInAsync(Person user, HttpContext httpContext)
