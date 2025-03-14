@@ -39,10 +39,10 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
         {
             akademisches,
             new() { Bezeichnung = "Bewegung", Icon = "pi pi-heart", CssColor = "var(--p-teal-500)"},
-            new() { Bezeichnung = "Musik", Icon = "pi pi-headphones", CssColor = "var(--p-orange-500)"},
+            new() { Bezeichnung = "Muße", Icon = "pi pi-headphones", CssColor = "var(--p-orange-500)"},
             new() { Bezeichnung = "Besinnung", Icon = "pi pi-hourglass", CssColor = "var(--p-yellow-500)"},
             new() { Bezeichnung = "Beratung", Icon = "pi pi-user", CssColor = "var(--p-purple-500)"},
-            new() { Bezeichnung = "Teamräume"},
+            new() { Bezeichnung = "Teamräume", Icon = "pi pi-home", CssColor = "var(--p-red-500)"},
             new() { Parent = akademisches, Bezeichnung = "Studienzeit"},
             new() { Parent = akademisches, Bezeichnung = "Schüler:innen unterrichten Schüler:innen"},
             new() { Parent = akademisches, Bezeichnung = "Wettbewerbe"},
@@ -66,6 +66,7 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
             ("Kraftraum", otiumsKategorien[1]),
             ("Yoga", otiumsKategorien[1]),
             ("Übungsraum Musik", otiumsKategorien[2]),
+            ("Offenes Atelier", otiumsKategorien[2]),
             ("Ruheraum", otiumsKategorien[3]),
             ("Handarbeit", otiumsKategorien[3]),
             ("Lernen Lernen", otiumsKategorien[5]),
@@ -123,8 +124,9 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
             .RuleFor(t => t.Tutor, (_, t) => t.Otium.Verantwortliche.FirstOrDefault())
             .RuleFor(t => t.IstAbgesagt, f => f.Random.Bool(0.1f))
             .RuleFor(t => t.Ort, f => f.PickRandom(rooms))
-            .RuleFor(t => t.Block, f => f.Random.Byte(0,1))
-            .RuleFor(t => t.Schultag, f => f.PickRandom(schultage));
+            .RuleFor(t => t.Block, f => f.Random.Byte(0, 1))
+            .RuleFor(t => t.Schultag, f => f.PickRandom(schultage))
+            .RuleFor(t => t.MaxEinschreibungen, f => f.Random.Bool() ? null : f.Random.Int(2, 20));
 
         dbContext.OtiaTermine.AddRange(
             otiumTerminGenerator.Generate(300).ToList());

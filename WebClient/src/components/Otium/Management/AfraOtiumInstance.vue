@@ -13,7 +13,7 @@ const otium = ref(props.otium)
 
 <template>
     <h1>
-      {{ otium.bezeichnung }}
+      {{ otium.otium }}
     </h1>
     <p>
       {{ formatDate(new Date(otium.datum)) }}, {{ otium.block }}. Block

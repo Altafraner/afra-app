@@ -5,10 +5,11 @@ import {Image, Button, useToast, Toast} from "primevue";
 
 import wappen from '/Vereinswappen.jpg?url'
 import {useUser} from "@/stores/useUser.js";
+import {useRouter} from "vue-router";
 
 const items = ref([
   {
-    label: "Dashboard",
+    label: "Übersicht",
     route: "/",
     icon: "pi pi-user"
   },
@@ -29,11 +30,13 @@ const items = ref([
   }
 ]);
 const toast = useToast();
+const router = useRouter();
 
 const logout = async () => {
   const user = useUser();
   try {
     await user.logout();
+    await router.push("/");
     toast.add({severity: "success", summary: "Abgemeldet!", detail: "Sie wurden erfolgreich abgemeldet.", life: 3000});
   } catch (error) {
     toast.add({severity: "error", summary: "Fehler!", detail: "Sie konnten nicht abgemeldet werden."});

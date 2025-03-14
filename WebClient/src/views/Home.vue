@@ -1,5 +1,4 @@
 ﻿<script setup>
-import {Button} from "primevue";
 import {useUser} from "@/stores/useUser.js";
 import Student from "@/views/Dashboard/Student.vue";
 import Teacher from "@/views/Dashboard/Teacher.vue";

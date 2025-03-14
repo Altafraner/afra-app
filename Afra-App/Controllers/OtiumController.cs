@@ -434,10 +434,10 @@ public class OtiumController(AfraAppContext context, ILogger<OtiumController> lo
     /// </summary>
     /// <exception cref="UnauthorizedAccessException">The user is not a teacher.</exception>
     [HttpGet("dashboard/teacher")]
-    public async Task<LehrerUebersicht> GetTeacherDashboard()
+    public async Task<ActionResult<LehrerUebersicht>> GetTeacherDashboard()
     {
         var user = await HttpContext.GetPersonAsync(context);
-        if (user.Rolle != Rolle.Tutor) throw new UnauthorizedAccessException("Only teachers may access this endpoint.");
+        if (user.Rolle != Rolle.Tutor) return Unauthorized("Only teachers may access this endpoint.");
         
         var startDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek + 1));
         var endDate = startDate.AddDays(21);
@@ -448,6 +448,10 @@ public class OtiumController(AfraAppContext context, ILogger<OtiumController> lo
                 .Where(e => e.Termin.Schultag.Datum >= startDate && e.Termin.Schultag.Datum < endDate))
             .ThenInclude(p => p.Termin)
             .ThenInclude(p => p.Schultag)
+            .Include(p => p.OtiaEinschreibungen)
+            .ThenInclude(e => e.Termin)
+            .ThenInclude(t => t.Otium)
+            .ThenInclude(o => o.Kategorie)
             .OrderBy(p => p.Vorname)
             .ThenBy(p => p.Nachname)
             .ToListAsync();
@@ -488,12 +492,12 @@ public class OtiumController(AfraAppContext context, ILogger<OtiumController> lo
         var thisWeekInterval = new DateTimeInterval(lastWeekInterval.End, TimeSpan.FromDays(7));
         var nextWeekInterval = new DateTimeInterval(thisWeekInterval.End, TimeSpan.FromDays(7));
         
-        var enrollmentsPerDay = mentee.OtiaEinschreibungen.GroupBy(e => e.Termin.Schultag).ToDictionary(g => g.Key, g => g.ToList());
+        var enrollmentsPerDay = mentee.OtiaEinschreibungen.GroupBy(e => e.Termin.Schultag.Datum).ToDictionary(g => g.Key, g => g.ToList());
         var isFullyEnrolledPerDay = new Dictionary<DateOnly, bool>();
         
         foreach (var schultag in schulage)
         {
-            isFullyEnrolledPerDay[schultag.Datum] = AreAllNonOptionalBlocksEnrolled(schultag, enrollmentsPerDay.TryGetValue(schultag, out var value) ? value : []);
+            isFullyEnrolledPerDay[schultag.Datum] = AreAllNonOptionalBlocksEnrolled(schultag, enrollmentsPerDay.TryGetValue(schultag.Datum, out var value) ? value : []);
         }
         
         var kategorieRuleByWeek = await CheckAllKategoriesInWeeks(mentee.OtiaEinschreibungen.ToList());
@@ -506,8 +510,9 @@ public class OtiumController(AfraAppContext context, ILogger<OtiumController> lo
 
         bool IsWeekOkay(DateTimeInterval week)
         {
-            return isFullyEnrolledPerDay.All(group =>
-                       !week.Contains(group.Key.ToDateTime(TimeOnly.MinValue)) || group.Value) &&
+            return isFullyEnrolledPerDay
+                       .Where(group => week.Contains(group.Key.ToDateTime(TimeOnly.MinValue)))
+                       .All(group => group.Value) &&
                    kategorieRuleByWeek[week];
         }
     }
@@ -517,6 +522,7 @@ public class OtiumController(AfraAppContext context, ILogger<OtiumController> lo
         // This is also used to load all kategories so we do not have to lazy load them later. One query is better than many.
         var kategories = await context.OtiaKategorien.AsNoTrackingWithIdentityResolution()
             .Include(k => k.Children)
+            .Include(kategorie => kategorie.Parent)
             .ToListAsync();
         var requiredKategories = kategories.Where(k => k.Required).ToList();
         
@@ -547,7 +553,7 @@ public class OtiumController(AfraAppContext context, ILogger<OtiumController> lo
             var localRequiredKategories = requiredKategories.ToList();
             foreach (var einschreibung in weekEinschreibungen)
             {
-                var currentKategorie = einschreibung.Termin.Otium.Kategorie;
+                var currentKategorie = kategories.First(k => k.Id == einschreibung.Termin.Otium.Kategorie.Id);
                 while (currentKategorie != null && localRequiredKategories.Count != 0)
                 {
                     if (localRequiredKategories.Any(k => k.Id == currentKategorie.Id))
@@ -679,8 +685,9 @@ public class OtiumController(AfraAppContext context, ILogger<OtiumController> lo
                 .Where(e => e.BetroffenePerson == user)
                 .Include(e => e.Termin)
                 .ThenInclude(e => e.Otium)
-                .ThenInclude(e => e.Kategorie).Include(einschreibung => einschreibung.Termin)
-                .ThenInclude(e => e.Schultag)
+                .ThenInclude(e => e.Kategorie)
+                .Include(e => e.Termin)
+                .ThenInclude(t => t.Schultag)
                 .ToListAsync())
             .Where(e => weekInterval.Contains(new DateTime(e.Termin.Schultag.Datum, TimeOnly.MinValue)))
             .ToList();

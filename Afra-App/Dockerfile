@@ -20,5 +20,4 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 COPY ["Afra-App/appsettings.json", "./"]
-COPY ["Afra-App/appsettings.Production.json", "./"]
 ENTRYPOINT ["dotnet", "Afra-App.dll"]
