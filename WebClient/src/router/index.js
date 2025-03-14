@@ -25,16 +25,6 @@ const routes = [
     props: true,
   },
   {
-    path: "/dashboard",
-    name: "Dashboard",
-    component: () => import('@/views/Dashboard/Student.vue')
-  },
-  {
-    path: "/teacher",
-    name: "Teacher",
-    component: () => import('@/views/Dashboard/Teacher.vue')
-  },
-  {
     path: "/test",
     name: "Test",
     component: () => import('@/views/Test.vue')
@@ -48,6 +38,12 @@ const routes = [
     path: "/termin/:terminId",
     name: "Termin",
     component: () => import('@/views/Katalog/Termin.vue'),
+    props: true
+  },
+  {
+    path: "/student/:studentId",
+    name: "Termin",
+    component: () => import('@/views/Teacher/Mentee.vue'),
     props: true
   },
   {

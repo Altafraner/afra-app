@@ -9,6 +9,10 @@ export const useUser = defineStore('user', {
     loggedIn: false,
     user: null
   }),
+  getters: {
+    isStudent: (state) => state.user.rolle === "Student",
+    isTeacher: (state) => state.user.rolle === "Tutor"
+  },
   actions: {
     async update(){
       const fetchUser = mande('/api/user');

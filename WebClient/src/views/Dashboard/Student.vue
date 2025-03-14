@@ -4,13 +4,11 @@ import {
   useToast
 } from "primevue";
 import {ref} from "vue";
-import {useSettings} from "@/stores/useSettings.js";
 import {mande} from "mande";
 import {useUser} from "@/stores/useUser.js";
 import StudentOverview from "@/components/Otium/Overview/StudentOverview.vue";
 
 const loading = ref(true);
-const settings = useSettings()
 const user = useUser()
 const toast = useToast()
 const termine = ref(null);

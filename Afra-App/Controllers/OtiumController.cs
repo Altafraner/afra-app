@@ -118,7 +118,7 @@ public class OtiumController(AfraAppContext context, ILogger<OtiumController> lo
     }
 
     /// <summary>
-    /// A API-Endpoint to enroll in a termin.
+    /// An API-Endpoint to enroll in a termin.
     /// </summary>
     /// <param name="terminId">The id of the termin</param>
     /// <param name="start">the start time of the subblock to enroll in</param>
@@ -147,7 +147,7 @@ public class OtiumController(AfraAppContext context, ILogger<OtiumController> lo
             .Where(e => e.Termin == termin && e.BetroffenePerson == user)
             .ToListAsync();
 
-        // this parsing is just dumb..
+        // this parsing is just dumb...
         var timeline = new Timeline<TimeOnly>(enrollments.Select(e => (ITimeInterval<TimeOnly>) e.Interval));
         timeline.Add(subBlock.Interval);
 
@@ -182,7 +182,7 @@ public class OtiumController(AfraAppContext context, ILogger<OtiumController> lo
     }
 
     /// <summary>
-    /// A API-Endpoint to unenroll in a termin.
+    /// An API-Endpoint to unenroll in a termin.
     /// </summary>
     /// <param name="terminId">The id of the termin</param>
     /// <param name="start">the start time of the subblock to unenroll of</param>
@@ -275,7 +275,7 @@ public class OtiumController(AfraAppContext context, ILogger<OtiumController> lo
     /// Gets the dashboard-information for a user containig all available days.
     /// </summary>
     [HttpGet("dashboard/all")]
-    public IAsyncEnumerable<Tag> DashboardAll()
+    public Task<ActionResult<IAsyncEnumerable<Tag>>> DashboardAll()
     {
         return Dashboard(true);
     }
@@ -284,25 +284,47 @@ public class OtiumController(AfraAppContext context, ILogger<OtiumController> lo
     /// Gets the dashboard-information for a user
     /// </summary>
     [HttpGet("dashboard")]
-    public async IAsyncEnumerable<Tag> Dashboard(bool all = false)
+    public async Task<ActionResult<IAsyncEnumerable<Tag>>> Dashboard(bool all = false)
     {
-        /*
-         * Requirements:
-         * - per Day: Is the user enrolled in all non-optional subblocks?
-         * - per Week: Is the user enrolled in all required kategories?
-         *
-         * Return:
-         * [
-         *   {
-         *     "day": "YY-MM-DD",
-         *     "fullyEnrolled": boolean,
-         *     "requiredKategories": boolean
-         *     "enrollments": [DTO.Einschreibung]
-         *   }
-         * ]
-         */
         var user = await HttpContext.GetPersonAsync(context);
 
+        return Ok(GenerateDashboardAsync(user, all));
+    }
+
+    /// <summary>
+    /// Get the information about a mentee for a teacher loading all known Termine.
+    /// </summary>
+    /// <param name="studentId">The ID of the mentee</param>
+    [HttpGet("student/{studentId}/all")]
+    public Task<ActionResult<LehrerMenteeView>> GetMenteeAll(Guid studentId)
+    {
+        return GetMentee(studentId, true);
+    }
+    
+    /// <summary>
+    /// Gets the information about a mentee for a teacher.
+    /// </summary>
+    /// <param name="studentId">The ID of the Mentee</param>
+    /// <param name="all">If true, loads all known Termine</param>
+    [HttpGet("student/{studentId}")]
+    public async Task<ActionResult<LehrerMenteeView>> GetMentee(Guid studentId, bool all = false)
+    {
+        var user = await HttpContext.GetPersonAsync(context);
+        if (user.Rolle != Rolle.Tutor) return Unauthorized();
+        var student = context.Personen
+            .Include(p => p.Mentor)
+            .FirstOrDefault(p => p.Id == studentId);
+        
+        if (student?.Mentor is null) return NotFound();
+
+        if (student.Mentor.Id != user.Id)
+            return Unauthorized();
+        
+        return new LehrerMenteeView(GenerateDashboardAsync(student, all), new PersonInfoMinimal(student));
+    }
+
+    private async IAsyncEnumerable<Tag> GenerateDashboardAsync(Person user, bool all)
+    {
         // Get Monday of the current week
         var startDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek + 1));
         var endDate = startDate.AddDays(7*3);
@@ -343,16 +365,16 @@ public class OtiumController(AfraAppContext context, ILogger<OtiumController> lo
             var vollstaendig = allEnrolledRuleByDay.ContainsKey(schultag.Datum) && allEnrolledRuleByDay[schultag.Datum];
             var einschreibungen = einschreibungenByDay.Keys.Any(k => k.Datum == schultag.Datum) ?
                 einschreibungenByDay
-                .FirstOrDefault(t => t.Key.Datum == schultag.Datum)
-                .Value
-                .OrderBy(e => e.Interval.Start)
-                .Select(e => new Data.DTO.Otium.Einschreibung(e))
+                    .FirstOrDefault(t => t.Key.Datum == schultag.Datum)
+                    .Value
+                    .OrderBy(e => e.Interval.Start)
+                    .Select(e => new Data.DTO.Otium.Einschreibung(e))
                 : [];
             var tag = new Tag(schultag.Datum, 
                 vollstaendig, 
                 localKategorienErfuellt, 
                 einschreibungen
-                );
+            );
             
             yield return tag;
         }
@@ -552,8 +574,8 @@ public class OtiumController(AfraAppContext context, ILogger<OtiumController> lo
     ///             <item>The termin hasn't already started</item>
     ///             <item>The user isn't enrolling in a timeframe smaller than 30 minutes</item>
     ///             <item>
-    ///                 The user isn't enrolling in the last available subBlock >= 30 min for a given week, the the Otium
-    ///                 does not have the academic category and the user is not enrolled in a academic Otium in the given week
+    ///                 The user isn't enrolling in the last available subBlock >= 30 min for a given week, the Otium
+    ///                 does not have the academic category and the user is not enrolled in an academic Otium in the given week
     ///             </item>
     ///         </list>
     ///     </para>
