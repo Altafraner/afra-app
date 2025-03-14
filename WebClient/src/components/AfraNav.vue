@@ -17,12 +17,11 @@ const items = ref([
     route: "/katalog",
     icon: "pi pi-list"
   },
-  {
+  /*{
     label: "Test",
     route: "/test",
     icon: "pi pi-code"
-  },
-
+  },*/
   {
     label: "Aufsicht",
     route: "/aufsicht",

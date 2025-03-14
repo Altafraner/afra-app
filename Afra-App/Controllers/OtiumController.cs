@@ -323,6 +323,40 @@ public class OtiumController(AfraAppContext context, ILogger<OtiumController> lo
         return new LehrerMenteeView(GenerateDashboardAsync(student, all), new PersonInfoMinimal(student));
     }
 
+    /// <summary>
+    /// Returns the detailed information about a termin for a teacher.
+    /// </summary>
+    /// <param name="terminId"></param>
+    /// <returns></returns>
+    [HttpGet("management/termin/{terminId:guid}")]
+    public async Task<ActionResult<LehrerTermin>> GetTeacherTermin(Guid terminId)
+    {
+        var user = await HttpContext.GetPersonAsync(context);
+        
+        var termin = await context.OtiaTermine
+            .Include(t => t.Tutor)
+            .Include(t => t.Schultag)
+            .Include(t => t.Otium)
+            .Include(t => t.Enrollments)
+            .ThenInclude(e => e.BetroffenePerson)
+            .Where(t => !t.IstAbgesagt)
+            .FirstOrDefaultAsync(t => t.Id == terminId);
+        
+        if (termin is null) return NotFound();
+        if (termin.Tutor is null || termin.Tutor.Id != user.Id) return Unauthorized();
+
+        return Ok(new LehrerTermin
+        {
+            Id = termin.Id,
+            Ort = termin.Ort,
+            Otium = termin.Otium.Bezeichnung,
+            Block = termin.Block,
+            Datum = termin.Schultag.Datum,
+            Tutor = new PersonInfoMinimal(termin.Tutor),
+            Einschreibungen = termin.Enrollments.Select(e => new LehrerEinschreibung(new PersonInfoMinimal(e.BetroffenePerson), e.Interval, AnwesenheitsStatus.Anwesend))
+        });
+    }
+
     private async IAsyncEnumerable<Tag> GenerateDashboardAsync(Person user, bool all)
     {
         // Get Monday of the current week

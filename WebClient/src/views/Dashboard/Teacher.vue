@@ -62,7 +62,7 @@ update();
     <Column header="Otium">
       <template #body="{data}">
         <Button variant="text" as="RouterLink"
-                :to="'/manage/termin/' + data.id" :label="data.otium" />
+                :to="'/management/termin/' + data.id" :label="data.otium" />
       </template>
     </Column>
     <Column header="Datum">

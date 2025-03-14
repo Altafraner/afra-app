@@ -42,8 +42,14 @@ const routes = [
   },
   {
     path: "/student/:studentId",
-    name: "Termin",
+    name: "Mentee",
     component: () => import('@/views/Teacher/Mentee.vue'),
+    props: true
+  },
+  {
+    path: "/management/termin/:terminId",
+    name: "Lehrer-Termin",
+    component: () => import('@/views/Teacher/Termin.vue'),
     props: true
   },
   {
