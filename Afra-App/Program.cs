@@ -1,4 +1,4 @@
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text.Json.Serialization;
 using Afra_App.Data;
 using Afra_App.Data.Configuration;
