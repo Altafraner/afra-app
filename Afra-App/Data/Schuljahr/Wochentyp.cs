@@ -10,12 +10,10 @@ public enum Wochentyp
     /// <summary>
     /// A week usually containing the start or end of a holiday
     /// </summary>
-    [JsonStringEnumMemberName("H-Woche")]
-    H,
-    
+    [JsonStringEnumMemberName("H-Woche")] H,
+
     /// <summary>
     /// A normal week
     /// </summary>
-    [JsonStringEnumMemberName("N-Woche")]
-    N
+    [JsonStringEnumMemberName("N-Woche")] N
 }

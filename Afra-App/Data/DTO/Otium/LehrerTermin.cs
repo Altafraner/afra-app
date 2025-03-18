@@ -13,4 +13,7 @@ public record LehrerTermin : IMinimalTermin
     public byte Block { get; set; }
 }
 
-public record LehrerEinschreibung(PersonInfoMinimal? Student, TimeOnlyInterval Interval, AnwesenheitsStatus Anwesenheit);
+public record LehrerEinschreibung(
+    PersonInfoMinimal? Student,
+    TimeOnlyInterval Interval,
+    AnwesenheitsStatus Anwesenheit);

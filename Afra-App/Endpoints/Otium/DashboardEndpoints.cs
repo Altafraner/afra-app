@@ -17,22 +17,22 @@ public static class DashboardEndpoints
     public static void MapDashboardEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapGet("/student", GetStudentDashboard);
-        app.MapGet("/student/all", 
-            (OtiumEndpointService service, HttpContext httpContext, AfraAppContext context) => 
+        app.MapGet("/student/all",
+            (OtiumEndpointService service, HttpContext httpContext, AfraAppContext context) =>
                 GetStudentDashboard(service, httpContext, context, true));
-        
+
         app.MapGet("/student/{studentId:guid}", GetStudentDashboardForTeacher);
-        app.MapGet("/student/{studentId:guid}/all", 
+        app.MapGet("/student/{studentId:guid}/all",
             (OtiumEndpointService service,
-                HttpContext httpContext, AfraAppContext context, Guid studentId) => 
+                    HttpContext httpContext, AfraAppContext context, Guid studentId) =>
                 GetStudentDashboardForTeacher(service, httpContext, context, studentId, true));
-        
+
         app.MapGet("/teacher", GetTeacherDashboard);
     }
 
-    private static async Task<IResult> GetStudentDashboard(OtiumEndpointService service, 
-        HttpContext httpContext, 
-        AfraAppContext context, 
+    private static async Task<IResult> GetStudentDashboard(OtiumEndpointService service,
+        HttpContext httpContext,
+        AfraAppContext context,
         bool all = false)
     {
         var user = await httpContext.GetPersonAsync(context);
@@ -42,26 +42,26 @@ public static class DashboardEndpoints
     }
 
     private static async Task<IResult> GetStudentDashboardForTeacher(OtiumEndpointService service,
-        HttpContext httpContext, 
-        AfraAppContext context, 
-        Guid studentId, 
+        HttpContext httpContext,
+        AfraAppContext context,
+        Guid studentId,
         bool all = false)
     {
         var user = await httpContext.GetPersonAsync(context);
         if (user.Rolle != Rolle.Tutor) return Results.Unauthorized();
-        
+
         var student = context.Personen
             .Include(p => p.Mentor)
             .FirstOrDefault(p => p.Id == studentId);
-        
+
         if (student is null) return Results.NotFound();
         if (student.Mentor is null || student.Mentor.Id != user.Id) return Results.Unauthorized();
 
         return Results.Ok(service.GetStudentDashboardForTeacher(student, all));
     }
-    
-    private static async Task<IResult> GetTeacherDashboard(OtiumEndpointService service, 
-        HttpContext httpContext, 
+
+    private static async Task<IResult> GetTeacherDashboard(OtiumEndpointService service,
+        HttpContext httpContext,
         AfraAppContext context)
     {
         var user = await httpContext.GetPersonAsync(context);

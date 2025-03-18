@@ -24,15 +24,16 @@ builder.Services.AddOptions<OtiumConfiguration>()
 // Add services to the container.
 
 builder.Services.ConfigureHttpJsonOptions(options =>
-    {
-        options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-        options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
-        options.SerializerOptions.Converters.Add(new TimeOnlyJsonConverter());
-    });
+{
+    options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    options.SerializerOptions.Converters.Add(new TimeOnlyJsonConverter());
+});
 builder.Services.AddControllers();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddDbContext<AfraAppContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<AfraAppContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddOpenApi();
 builder.Services.AddCors(options =>
 {
@@ -88,10 +89,7 @@ if (app.Environment.IsDevelopment())
     app.UseCors();
     app.MapOpenApi();
     app.UseSwagger();
-    app.UseSwaggerUI(c =>
-        {
-            c.SwaggerEndpoint("/swagger/v1/swagger.json", "Afra-App API");
-        }
+    app.UseSwaggerUI(c => { c.SwaggerEndpoint("/swagger/v1/swagger.json", "Afra-App API"); }
     );
 }
 

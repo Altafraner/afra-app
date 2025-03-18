@@ -26,25 +26,28 @@ public static class KatalogEndpoints
         return Results.Ok(service.GetKatalogForDayAndBlock(date, block));
     }
 
-    private static async Task<IResult> GetTermin(OtiumEndpointService service, Guid terminId, HttpContext httpContext, AfraAppContext context)
+    private static async Task<IResult> GetTermin(OtiumEndpointService service, Guid terminId, HttpContext httpContext,
+        AfraAppContext context)
     {
         var user = await httpContext.GetPersonAsync(context);
 
         var termin = await service.GetTerminAsync(terminId, user);
         if (termin == null) return Results.NotFound();
-        
+
         return Results.Ok(termin);
     }
 
-    private static async Task<IResult> EnrollAsync(OtiumEndpointService service, EnrollmentService enrollmentService, HttpContext httpContext, AfraAppContext context, Guid terminId, TimeOnly start)
+    private static async Task<IResult> EnrollAsync(OtiumEndpointService service, EnrollmentService enrollmentService,
+        HttpContext httpContext, AfraAppContext context, Guid terminId, TimeOnly start)
     {
         var user = await httpContext.GetPersonAsync(context);
 
         var termin = await enrollmentService.EnrollAsync(terminId, user, start);
         return termin is null ? Results.BadRequest() : Results.Ok(await service.GetTerminAsync(terminId, user));
     }
-    
-    private static async Task<IResult> UnenrollAsync(OtiumEndpointService service, EnrollmentService enrollmentService, HttpContext httpContext, AfraAppContext context, Guid terminId, TimeOnly start)
+
+    private static async Task<IResult> UnenrollAsync(OtiumEndpointService service, EnrollmentService enrollmentService,
+        HttpContext httpContext, AfraAppContext context, Guid terminId, TimeOnly start)
     {
         var user = await httpContext.GetPersonAsync(context);
 

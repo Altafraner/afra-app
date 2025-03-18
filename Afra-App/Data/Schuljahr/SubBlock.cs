@@ -18,8 +18,10 @@ public record SubBlock
         this.Interval = Interval;
         this.Optional = Optional;
     }
-    
-    public SubBlock () {}
+
+    public SubBlock()
+    {
+    }
 
     public TimeOnlyInterval Interval { get; init; }
     public bool Optional { get; init; }

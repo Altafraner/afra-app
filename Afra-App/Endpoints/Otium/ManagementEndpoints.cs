@@ -18,12 +18,13 @@ public static class ManagementEndpoints
     {
         app.MapGet("/management/termin/{terminId:guid}", GetTerminForTeacher);
     }
-    
-    private static async Task<IResult> GetTerminForTeacher(OtiumEndpointService service, HttpContext httpContext, AfraAppContext context, Guid terminId)
+
+    private static async Task<IResult> GetTerminForTeacher(OtiumEndpointService service, HttpContext httpContext,
+        AfraAppContext context, Guid terminId)
     {
         var user = await httpContext.GetPersonAsync(context);
         if (user.Rolle != Rolle.Tutor) return Results.Unauthorized();
-        
+
         return Results.Ok(service.GetTerminForTeacher(terminId, user));
     }
 }

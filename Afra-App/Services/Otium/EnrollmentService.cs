@@ -28,14 +28,15 @@ public class EnrollmentService
     /// <param name="logger"></param>
     /// <param name="context"></param>
     /// <param name="kategorieService"></param>
-    public EnrollmentService(ILogger<EnrollmentService> logger, AfraAppContext context, KategorieService kategorieService, IOptions<OtiumConfiguration> configuration)
+    public EnrollmentService(ILogger<EnrollmentService> logger, AfraAppContext context,
+        KategorieService kategorieService, IOptions<OtiumConfiguration> configuration)
     {
         _logger = logger;
         _context = context;
         _kategorieService = kategorieService;
         _configuration = configuration.Value;
     }
-    
+
     /// <summary>
     /// Enrolls a user in a termin for the subblock starting at a given time.
     /// </summary>
@@ -51,25 +52,25 @@ public class EnrollmentService
             .ThenInclude(otium => otium.Kategorie)
             .Include(termin => termin.Tutor)
             .FirstOrDefaultAsync(t => t.Id == terminId);
-        
+
         if (termin == null) return null;
 
         var subBlock = _configuration.Blocks[termin.Block].FirstOrDefault(b => b.Interval.Start == start);
         if (subBlock == null) return null;
-        
+
         var (mayEnroll, _) = await MayEnroll(student, termin, subBlock);
         if (!mayEnroll) return null;
-        
+
         var enrollments = await _context.OtiaEinschreibungen
             .Where(e => e.Termin == termin && e.BetroffenePerson == student)
             .ToListAsync();
 
         // this parsing is just dumb...
-        var timeline = new Timeline<TimeOnly>(enrollments.Select(e => (ITimeInterval<TimeOnly>) e.Interval));
+        var timeline = new Timeline<TimeOnly>(enrollments.Select(e => (ITimeInterval<TimeOnly>)e.Interval));
         timeline.Add(subBlock.Interval);
 
         var intervals = timeline.GetIntervals();
-        
+
         for (var i = 0; i < int.Min(enrollments.Count, intervals.Count); i++)
         {
             var interval = intervals[i];
@@ -79,7 +80,7 @@ public class EnrollmentService
         if (intervals.Count == enrollments.Count + 1)
         {
             var interval = intervals[enrollments.Count];
-            
+
             var einschreibung = new Einschreibung
             {
                 Termin = termin,
@@ -92,12 +93,13 @@ public class EnrollmentService
             return termin;
         }
 
-        if (intervals.Count < enrollments.Count) _context.OtiaEinschreibungen.RemoveRange(enrollments.Skip(intervals.Count));
+        if (intervals.Count < enrollments.Count)
+            _context.OtiaEinschreibungen.RemoveRange(enrollments.Skip(intervals.Count));
         await _context.SaveChangesAsync();
 
         return termin;
     }
-    
+
     /// <summary>
     /// Unenrolls a user from a termin for the subblock starting at a given time.
     /// </summary>
@@ -113,7 +115,7 @@ public class EnrollmentService
             .ThenInclude(otium => otium.Kategorie)
             .Include(termin => termin.Tutor)
             .FirstOrDefaultAsync(t => t.Id == terminId);
-        
+
         if (termin == null) return null;
 
         var subBlock = _configuration.Blocks[termin.Block].FirstOrDefault(b => b.Interval.Start == start);
@@ -128,13 +130,13 @@ public class EnrollmentService
         {
             return null;
         }
-        
+
         var einschreibungen = (await _context.OtiaEinschreibungen
-            .Where(e => e.Termin == termin && e.BetroffenePerson == student)
-            .ToListAsync())
+                .Where(e => e.Termin == termin && e.BetroffenePerson == student)
+                .ToListAsync())
             .Where(e => e.Interval.Intersects(subBlock.Interval));
 
-        
+
         // Normally, there should be only one einschreibung, but we will handle multiple for safety.
         foreach (var einschreibung in einschreibungen)
         {
@@ -154,14 +156,14 @@ public class EnrollmentService
             {
                 Termin = termin,
                 BetroffenePerson = student,
-                Interval = new TimeOnlyInterval(after.Start, after.Duration),
+                Interval = new TimeOnlyInterval(after.Start, after.Duration)
             });
         }
-        
+
         await _context.SaveChangesAsync();
         return termin;
     }
-    
+
     /// <summary>
     /// Checks if a set of einschreibungen covers all non-optional blocks of a schultag.
     /// </summary>
@@ -178,11 +180,11 @@ public class EnrollmentService
         }
 
         foreach (var einschreibung in einschreibungen) timeline.Remove(einschreibung.Interval);
-            
+
         var allNonOptionalBlocksEnrolled = timeline.GetIntervals().Count == 0;
         return allNonOptionalBlocksEnrolled;
     }
-    
+
     /// <summary>
     /// Checks if a set of einschreibungen fulfills the required kategories for each week.
     /// </summary>
@@ -191,12 +193,13 @@ public class EnrollmentService
     ///   A <see cref="Dictionary{TKey,TValue}"/> with <see cref="DateTimeInterval"/>s representing the weeks as keys
     ///   and a boolean value that is true iff the rule is fulfilled
     /// </returns>
-    public async Task<Dictionary<DateTimeInterval, bool>> CheckAllKategoriesInWeeks(List<Einschreibung> allEinschreibungen)
+    public async Task<Dictionary<DateTimeInterval, bool>> CheckAllKategoriesInWeeks(
+        List<Einschreibung> allEinschreibungen)
     {
         // This is also used to load all kategories so we do not have to lazy load them later. One query is better than many.
         var kategories = await _kategorieService.GetKategorienAsync();
         var requiredKategories = kategories.Where(k => k.Required).ToList();
-        
+
         var einschreibungenByWeek = new Dictionary<DateTimeInterval, List<Einschreibung>>();
         foreach (var einschreibung in allEinschreibungen)
         {
@@ -210,7 +213,7 @@ public class EnrollmentService
                 key = new DateTimeInterval(datum, TimeSpan.FromDays(7));
                 einschreibungenByWeek.TryAdd(key, []);
             }
-            
+
             einschreibungenByWeek[key].Add(einschreibung);
         }
 
@@ -229,14 +232,14 @@ public class EnrollmentService
                     currentKategorie = currentKategorie.Parent;
                 }
             }
-            
+
             var kategorieRuleFulfilled = localRequiredKategories.Count == 0;
             resultByWeek[week] = kategorieRuleFulfilled;
         }
-        
+
         return resultByWeek;
     }
-    
+
     /// <summary>
     /// Checks if a user may enroll in a termin for all subblocks in a termin.
     /// </summary>
@@ -265,7 +268,7 @@ public class EnrollmentService
             yield return new EinschreibungsPreview(countEnrolled, mayEdit, reason, userEnrolled, subBlock.Interval);
         }
     }
-    
+
     /// <summary>
     ///     Calculates the load for a given termin.
     /// </summary>
@@ -280,19 +283,19 @@ public class EnrollmentService
             .Where(e => e.Termin == termin)
             .SumAsync(e => e.Interval.Duration.TotalMinutes);
 
-        return (int) Math.Round(minutesSum / (75 * (termin.MaxEinschreibungen ?? 1)) * 100);
+        return (int)Math.Round(minutesSum / (75 * (termin.MaxEinschreibungen ?? 1)) * 100);
     }
-    
+
     private static (bool, string?) CommonMayUnEnroll(Person user, Termin termin, SubBlock subBlock)
     {
         var startDateTime = new DateTime(termin.Schultag.Datum, subBlock.Interval.Start);
         if (startDateTime <= DateTime.Now) return (false, "Der Termin hat bereits begonnen.");
-        
+
         if (user.Rolle != Rolle.Student) return (false, "Nur Schüler:innen können sich einschreiben.");
-        
+
         return (true, null);
     }
-    
+
     private async Task<(bool, string?)> MayUnenroll(Person user, Termin termin, SubBlock subBlock)
     {
         var common = CommonMayUnEnroll(user, termin, subBlock);
@@ -307,19 +310,21 @@ public class EnrollmentService
         var (before, after) = parallelEnrollment.Interval.Difference(subBlock.Interval);
         var mayUnenroll = (after is null || after.Duration >= TimeSpan.FromMinutes(30)) &&
                           (before is null || before.Duration >= TimeSpan.FromMinutes(30));
-        return mayUnenroll ? (true, null) : (false, "Durch das Austragen entsteht eine Einschreibung kürzer als die Mindestzeit.");
+        return mayUnenroll
+            ? (true, null)
+            : (false, "Durch das Austragen entsteht eine Einschreibung kürzer als die Mindestzeit.");
     }
-    
+
     private async Task<(bool, string?)> MayEnroll(Person user, Termin termin, SubBlock subBlock)
     {
         var countEnrolled = (await _context.OtiaEinschreibungen.AsNoTracking()
                 .Where(e => e.Termin == termin)
                 .ToListAsync())
             .Count(e => e.Interval.Intersects(subBlock.Interval));
-        
+
         return await MayEnroll(user, termin, subBlock, countEnrolled);
     }
-    
+
     /// <remarks>
     ///     This is quite an annoying Problem. I try to maintain compatability with changing Block sizes and durations.
     ///     <para>
@@ -373,9 +378,12 @@ public class EnrollmentService
 
         // Check if the user is adhering to the required categories
         var lastAvailableBlockRuleFulfilled = await LastAvailableBlockRuleFulfilled(user, termin, subBlock);
-        return lastAvailableBlockRuleFulfilled ? (true, null) : (false, "Sie sind nicht in allen erforderlichen Kategorien eingeschrieben. Durch diese Einschreibung wäre das nicht mehr möglich.");
+        return lastAvailableBlockRuleFulfilled
+            ? (true, null)
+            : (false,
+                "Sie sind nicht in allen erforderlichen Kategorien eingeschrieben. Durch diese Einschreibung wäre das nicht mehr möglich.");
     }
-    
+
     // Come here for some hideous shit; Optimizing this is a problem for future me.
     // This currently needs three separate SQL-Queries + loading all categories.
     private async Task<bool> LastAvailableBlockRuleFulfilled(Person user, Termin termin, SubBlock subBlock)
@@ -419,10 +427,8 @@ public class EnrollmentService
         var transitiveKategories = _kategorieService.GetTransitiveKategoriesAsyncEnumerable(termin.Otium.Kategorie);
 
         await foreach (var kategorie in transitiveKategories)
-        {
             if (notEnrolled.Contains(kategorie))
                 return true;
-        }
 
         // Find num all free blocks >= 30 min in the week -> num30MinBlockAvailable
         var schultage = await _context.Schultage

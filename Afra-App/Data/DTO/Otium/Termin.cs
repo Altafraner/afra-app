@@ -18,7 +18,7 @@ public record Termin : ITermin
 
     /// <inheritdoc />
     public IAsyncEnumerable<Guid> Kategorien { get; set; }
-    
+
     /// <inheritdoc />
     public PersonInfoMinimal? Tutor { get; set; }
 
@@ -32,7 +32,7 @@ public record Termin : ITermin
     /// The start date and time for the termin
     /// </summary>
     public DateTime Datum { get; set; }
-    
+
     /// <summary>
     /// A list of all available timeslots for the termin
     /// </summary>
@@ -45,7 +45,8 @@ public record Termin : ITermin
     /// <param name="einschreibungen">A list of all available timeslots for the termin</param>
     /// <param name="kategorien">All categories the Otium is in</param>
     /// <param name="startTime">The time the termin starts at</param>
-    public Termin(Data.Otium.Termin termin, IAsyncEnumerable<EinschreibungsPreview> einschreibungen, IAsyncEnumerable<Guid> kategorien, TimeOnly startTime)
+    public Termin(Data.Otium.Termin termin, IAsyncEnumerable<EinschreibungsPreview> einschreibungen,
+        IAsyncEnumerable<Guid> kategorien, TimeOnly startTime)
     {
         Id = termin.Id;
         Otium = termin.Otium.Bezeichnung;
@@ -57,5 +58,4 @@ public record Termin : ITermin
         Einschreibungen = einschreibungen;
         Datum = termin.Schultag.Datum.ToDateTime(startTime);
     }
-
 }

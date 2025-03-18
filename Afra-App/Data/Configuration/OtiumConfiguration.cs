@@ -15,7 +15,7 @@ public class OtiumConfiguration
         if (config.Blocks.Any(list => list.Length == 0)) return false;
         if (config.Blocks.SelectMany(list => list).Any(sb => sb.Interval.Duration == TimeSpan.Zero))
             return false;
-        
+
         return true;
     }
 }

@@ -4,7 +4,11 @@ public record LehrerUebersicht(IEnumerable<LehrerTerminPreview> termine, IEnumer
 
 public record LehrerTerminPreview(Guid Id, string Otium, string Ort, int? Auslastung, DateOnly Datum, byte block);
 
-public record MenteePreview(PersonInfoMinimal mentee, MenteePreviewStatus letzteWoche, MenteePreviewStatus dieseWoche, MenteePreviewStatus nächsteWoche);
+public record MenteePreview(
+    PersonInfoMinimal mentee,
+    MenteePreviewStatus letzteWoche,
+    MenteePreviewStatus dieseWoche,
+    MenteePreviewStatus nächsteWoche);
 
 public enum MenteePreviewStatus
 {

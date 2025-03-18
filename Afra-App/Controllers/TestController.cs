@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using Person = Afra_App.Data.People.Person;
 using Microsoft.EntityFrameworkCore;
 using Termin = Afra_App.Data.Otium.Termin;
+
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 // Sorry, this is a test controller, not worth the effort.
 
@@ -32,27 +33,32 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
     [HttpGet("seed")]
     public async Task<ActionResult> SeedDb()
     {
-        
         var akademisches = new Kategorie
-            { Bezeichnung = "Akademisches", Icon = "pi pi-graduation-cap", CssColor = "var(--p-blue-500)", Required = true};
+        {
+            Bezeichnung = "Akademisches", Icon = "pi pi-graduation-cap", CssColor = "var(--p-blue-500)", Required = true
+        };
         var otiumsKategorien = new List<Kategorie>
         {
             akademisches,
-            new() { Bezeichnung = "Bewegung", Icon = "pi pi-heart", CssColor = "var(--p-teal-500)"},
-            new() { Bezeichnung = "Muße", Icon = "pi pi-headphones", CssColor = "var(--p-orange-500)"},
-            new() { Bezeichnung = "Besinnung", Icon = "pi pi-hourglass", CssColor = "var(--p-yellow-500)"},
-            new() { Bezeichnung = "Beratung", Icon = "pi pi-user", CssColor = "var(--p-purple-500)"},
-            new() { Bezeichnung = "Teamräume", Icon = "pi pi-home", CssColor = "var(--p-red-500)"},
-            new() { Parent = akademisches, Bezeichnung = "Studienzeit"},
-            new() { Parent = akademisches, Bezeichnung = "Schüler:innen unterrichten Schüler:innen"},
-            new() { Parent = akademisches, Bezeichnung = "Wettbewerbe"},
-            new() { Parent = akademisches, Bezeichnung = "Sonstige"}
+            new() { Bezeichnung = "Bewegung", Icon = "pi pi-heart", CssColor = "var(--p-teal-500)" },
+            new() { Bezeichnung = "Muße", Icon = "pi pi-headphones", CssColor = "var(--p-orange-500)" },
+            new() { Bezeichnung = "Besinnung", Icon = "pi pi-hourglass", CssColor = "var(--p-yellow-500)" },
+            new() { Bezeichnung = "Beratung", Icon = "pi pi-user", CssColor = "var(--p-purple-500)" },
+            new() { Bezeichnung = "Teamräume", Icon = "pi pi-home", CssColor = "var(--p-red-500)" },
+            new() { Parent = akademisches, Bezeichnung = "Studienzeit" },
+            new() { Parent = akademisches, Bezeichnung = "Schüler:innen unterrichten Schüler:innen" },
+            new() { Parent = akademisches, Bezeichnung = "Wettbewerbe" },
+            new() { Parent = akademisches, Bezeichnung = "Sonstige" }
         };
         List<bool[]> possibleOtiaBlocks = [[true, true], [true, true], [true, false], [false, true]];
-        List<string> rooms = ["102", "103", "104", "105", "106", "108", "109", "110", "202", "203", "204", "205", "206",
-            "207", "208", "209", "211", "212", "213", "214", "215", "216", "217", "301", "307", "308"];
+        List<string> rooms =
+        [
+            "102", "103", "104", "105", "106", "108", "109", "110", "202", "203", "204", "205", "206",
+            "207", "208", "209", "211", "212", "213", "214", "215", "216", "217", "301", "307", "308"
+        ];
 
-        List<(string, Kategorie)> possibleOtia = [
+        List<(string, Kategorie)> possibleOtia =
+        [
             ("Schreibwerkstatt", otiumsKategorien[6]),
             ("Studienzeit Mathematik", otiumsKategorien[6]),
             ("Studienzeit Physik", otiumsKategorien[6]),
@@ -69,11 +75,11 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
             ("Offenes Atelier", otiumsKategorien[2]),
             ("Ruheraum", otiumsKategorien[3]),
             ("Handarbeit", otiumsKategorien[3]),
-            ("Lernen Lernen", otiumsKategorien[5]),
+            ("Lernen Lernen", otiumsKategorien[5])
         ];
-        
-        
-        var personFaker = new Faker<Person>(locale: "de")
+
+
+        var personFaker = new Faker<Person>("de")
             .RuleFor(p => p.Nachname, f => f.Person.LastName)
             .RuleFor(p => p.Vorname, f => f.Person.FirstName)
             .RuleFor(p => p.Email, (_, p)
@@ -92,10 +98,10 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
         dbContext.Personen.AddRange(students);
 
         var today = DateTime.Today;
-        var nextMonday = today.AddDays((int) DayOfWeek.Monday - (int) today.DayOfWeek);
-        var nextFriday = today.AddDays((int) DayOfWeek.Friday - (int) today.DayOfWeek);
+        var nextMonday = today.AddDays((int)DayOfWeek.Monday - (int)today.DayOfWeek);
+        var nextFriday = today.AddDays((int)DayOfWeek.Friday - (int)today.DayOfWeek);
 
-        
+
         var schultagGenerator = new Faker<Schultag>()
             .RuleFor(s => s.OtiumsBlock, f => f.PickRandom(possibleOtiaBlocks))
             .RuleFor(s => s.Datum,
@@ -104,11 +110,11 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
         var schultage = schultagGenerator.Generate(20);
         dbContext.Schultage.AddRange(schultage);
 
-        
+
         dbContext.OtiaKategorien.AddRange(otiumsKategorien);
         await dbContext.SaveChangesAsync();
 
-        var otiumGenerator = new Faker<Otium>(locale: "de")
+        var otiumGenerator = new Faker<Otium>("de")
             .RuleFor(o => o.Bezeichnung, f => possibleOtia[f.IndexFaker].Item1)
             .RuleFor(o => o.Beschreibung, f => f.Commerce.ProductDescription())
             .RuleFor(o => o.Verantwortliche, f => f.Random.Bool(0.7f) ? [f.PickRandom(mentoren)] : [])
@@ -119,7 +125,7 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
 
         await dbContext.SaveChangesAsync();
 
-        var otiumTerminGenerator = new Faker<Termin>(locale: "de")
+        var otiumTerminGenerator = new Faker<Termin>("de")
             .RuleFor(t => t.Otium, f => f.PickRandom(otia))
             .RuleFor(t => t.Tutor, (_, t) => t.Otium.Verantwortliche.FirstOrDefault())
             .RuleFor(t => t.IstAbgesagt, f => f.Random.Bool(0.1f))
@@ -132,7 +138,7 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
             otiumTerminGenerator.Generate(300).ToList());
 
         await dbContext.SaveChangesAsync();
-        
+
         return Ok("Die Datenbank wurde erfolgreich befüllt.");
     }
 
@@ -147,9 +153,10 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
         {
             return BadRequest(e.Message);
         }
+
         return Ok("Logged in");
     }
-    
+
     [Route("authenticate/logout")]
     public async Task<ActionResult> AuthenticateAs()
     {

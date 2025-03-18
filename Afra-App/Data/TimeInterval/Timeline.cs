@@ -7,11 +7,13 @@
 public class Timeline<T> where T : struct
 {
     private readonly ICollection<ITimeInterval<T>> _intervals = [];
-    
+
     /// <summary>
     /// Creates a new empty timeline.
     /// </summary>
-    public Timeline () {}
+    public Timeline()
+    {
+    }
 
     /// <summary>
     /// Creates a new timeline containing the given intervals.
@@ -39,10 +41,10 @@ public class Timeline<T> where T : struct
             current = current.Union(item);
             _intervals.Remove(item);
         }
-        
+
         _intervals.Add(current);
     }
-    
+
     /// <summary>
     /// Remove an interval from the timeline. If the interval intersects with existing intervals, the existing intervals might be split.
     /// </summary>

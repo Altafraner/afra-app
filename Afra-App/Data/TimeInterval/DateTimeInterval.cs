@@ -64,7 +64,7 @@ public record struct DateTimeInterval(DateTime Start, TimeSpan Duration) : ITime
     {
         return Start <= other.Start && End >= other.End;
     }
-    
+
     /// <summary>
     ///     Determines whether this interval contains a specific DateTime.
     /// </summary>
@@ -111,5 +111,8 @@ public record struct DateTimeInterval(DateTime Start, TimeSpan Duration) : ITime
     /// <summary>
     /// Converts the DateTimeInterval to a TimeOnlyInterval losing the date information.
     /// </summary>
-    public TimeOnlyInterval ToTimeOnlyInterval() => new TimeOnlyInterval(TimeOnly.FromDateTime(Start), Duration);
+    public TimeOnlyInterval ToTimeOnlyInterval()
+    {
+        return new TimeOnlyInterval(TimeOnly.FromDateTime(Start), Duration);
+    }
 }

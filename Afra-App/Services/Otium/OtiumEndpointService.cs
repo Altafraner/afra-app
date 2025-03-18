@@ -23,7 +23,8 @@ public class OtiumEndpointService
     /// <summary>
     /// Constructor for the OtiumEndpointService. Usually called by the DI container.
     /// </summary>
-    public OtiumEndpointService(AfraAppContext context, KategorieService kategorieService, IOptions<OtiumConfiguration> otiumConfiguration, EnrollmentService enrollmentService)
+    public OtiumEndpointService(AfraAppContext context, KategorieService kategorieService,
+        IOptions<OtiumConfiguration> otiumConfiguration, EnrollmentService enrollmentService)
     {
         _context = context;
         _kategorieService = kategorieService;
@@ -62,8 +63,8 @@ public class OtiumEndpointService
 
         // Calculate the load for each termin and cast it to a json object
         foreach (var termin in termine)
-            yield return new TerminPreview(termin, 
-                await _enrollmentService.GetLoadPercent(termin), 
+            yield return new TerminPreview(termin,
+                await _enrollmentService.GetLoadPercent(termin),
                 _kategorieService.GetTransitiveKategoriesIdsAsyncEnumerable(termin.Otium.Kategorie));
     }
 
@@ -82,12 +83,12 @@ public class OtiumEndpointService
             .FirstOrDefaultAsync(t => t.Id == terminId);
         if (termin == null) return null;
 
-        return new Termin(termin, 
+        return new Termin(termin,
             _enrollmentService.GetEnrolmentPreviews(user, termin),
-            _kategorieService.GetTransitiveKategoriesIdsAsyncEnumerable(termin.Otium.Kategorie), 
+            _kategorieService.GetTransitiveKategoriesIdsAsyncEnumerable(termin.Otium.Kategorie),
             _otiumConfiguration.Blocks[termin.Block].First().Interval.Start);
     }
-    
+
     /// <summary>
     /// Generates the dashboard for a student.
     /// </summary>
@@ -97,9 +98,9 @@ public class OtiumEndpointService
     {
         // Get Monday of the current week
         var startDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek + 1));
-        var endDate = startDate.AddDays(7*3);
-        
-        
+        var endDate = startDate.AddDays(7 * 3);
+
+
         // Okay, this looks heavy. Enumerate to List as we need to access the elements multiple times.
         var allEinschreibungen = await _context.OtiaEinschreibungen.AsNoTrackingWithIdentityResolution()
             .Include(e => e.Termin)
@@ -111,52 +112,51 @@ public class OtiumEndpointService
             .ThenInclude(o => o.Kategorie)
             .ThenInclude(k => k.Parent)
             .Where(t => t.BetroffenePerson == user)
-            .Where(t => all || t.Termin.Schultag.Datum >= startDate && t.Termin.Schultag.Datum < endDate)
+            .Where(t => all || (t.Termin.Schultag.Datum >= startDate && t.Termin.Schultag.Datum < endDate))
             .ToListAsync();
-        
+
         var allSchoolDays = await _context.Schultage.AsNoTracking()
-            .Where(t => all || t.Datum >= startDate && t.Datum < endDate)
+            .Where(t => all || (t.Datum >= startDate && t.Datum < endDate))
             .OrderBy(s => s.Datum)
             .ToListAsync();
-        
+
         var kategorieRuleByWeek = await _enrollmentService.CheckAllKategoriesInWeeks(allEinschreibungen);
         var allEnrolledRuleByDay = new Dictionary<DateOnly, bool>();
-        
+
         // Check if the user is enrolled in all non-optional subblocks
         var einschreibungenByDay = allEinschreibungen.GroupBy(e => e.Termin.Schultag)
             .ToDictionary(g => g.Key, g => g.ToList());
         foreach (var (schultag, einschreibungen) in einschreibungenByDay)
-        {
-            allEnrolledRuleByDay[schultag.Datum] = _enrollmentService.AreAllNonOptionalBlocksEnrolled(schultag, einschreibungen);
-        }
-        
+            allEnrolledRuleByDay[schultag.Datum] =
+                _enrollmentService.AreAllNonOptionalBlocksEnrolled(schultag, einschreibungen);
+
         foreach (var schultag in allSchoolDays)
         {
-            var localKategorienErfuellt = kategorieRuleByWeek.FirstOrDefault(e => e.Key.Contains(schultag.Datum.ToDateTime(new TimeOnly()))).Value;
+            var localKategorienErfuellt = kategorieRuleByWeek
+                .FirstOrDefault(e => e.Key.Contains(schultag.Datum.ToDateTime(new TimeOnly()))).Value;
             var vollstaendig = allEnrolledRuleByDay.ContainsKey(schultag.Datum) && allEnrolledRuleByDay[schultag.Datum];
-            var einschreibungen = einschreibungenByDay.Keys.Any(k => k.Datum == schultag.Datum) ?
-                einschreibungenByDay
+            var einschreibungen = einschreibungenByDay.Keys.Any(k => k.Datum == schultag.Datum)
+                ? einschreibungenByDay
                     .FirstOrDefault(t => t.Key.Datum == schultag.Datum)
                     .Value
                     .OrderBy(e => e.Interval.Start)
                     .Select(e => new Einschreibung(e))
                 : [];
-            var tag = new Tag(schultag.Datum, 
-                vollstaendig, 
-                localKategorienErfuellt, 
+            var tag = new Tag(schultag.Datum,
+                vollstaendig,
+                localKategorienErfuellt,
                 einschreibungen
             );
-            
+
             yield return tag;
         }
     }
-    
+
     /// <summary>
     ///     Returns an overview of termine and mentees for a teacher.
     /// </summary>
     public async Task<LehrerUebersicht> GetTeacherDashboardAsync(Person user)
     {
-        
         var startDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek - 6));
         var endDate = startDate.AddDays(21);
 
@@ -173,20 +173,17 @@ public class OtiumEndpointService
             .OrderBy(p => p.Vorname)
             .ThenBy(p => p.Nachname)
             .ToListAsync();
-        
+
         var schultage = _context.Schultage.Where(s => s.Datum >= startDate && s.Datum < endDate);
 
         List<MenteePreview> menteePreviews = [];
-        
+
         var lastWeekInterval = new DateTimeInterval(startDate.ToDateTime(new TimeOnly(0, 0)), TimeSpan.FromDays(7));
         var thisWeekInterval = new DateTimeInterval(lastWeekInterval.End, TimeSpan.FromDays(7));
         var nextWeekInterval = new DateTimeInterval(thisWeekInterval.End, TimeSpan.FromDays(7));
-        
-        foreach (var mentee in mentees)
-        {
-            menteePreviews.Add(await GenerateMenteePreview(mentee, schultage));
-        }
-        
+
+        foreach (var mentee in mentees) menteePreviews.Add(await GenerateMenteePreview(mentee, schultage));
+
         List<LehrerTerminPreview> terminPreviews = [];
 
         var termine = await _context.OtiaTermine
@@ -194,31 +191,31 @@ public class OtiumEndpointService
             .Include(t => t.Schultag)
             .OrderBy(t => t.Schultag.Datum)
             .ThenBy(t => t.Block)
-            .Where(t => !t.IstAbgesagt && (t.Tutor != null && t.Tutor.Id == user.Id) &&
+            .Where(t => !t.IstAbgesagt && t.Tutor != null && t.Tutor.Id == user.Id &&
                         t.Schultag.Datum >= DateOnly.FromDateTime(DateTime.Today) && t.Schultag.Datum < endDate)
             .ToListAsync();
 
         foreach (var termin in termine)
-        {
             terminPreviews.Add(
-                new LehrerTerminPreview(termin.Id, termin.Otium.Bezeichnung, termin.Ort, await _enrollmentService.GetLoadPercent(termin), termin.Schultag.Datum, termin.Block)
-                );
-        }
+                new LehrerTerminPreview(termin.Id, termin.Otium.Bezeichnung, termin.Ort,
+                    await _enrollmentService.GetLoadPercent(termin), termin.Schultag.Datum, termin.Block)
+            );
 
         return new LehrerUebersicht(terminPreviews, menteePreviews);
-        
-        
+
+
         async Task<MenteePreview> GenerateMenteePreview(Person mentee, IEnumerable<Schultag> schulage)
         {
-            var enrollmentsPerDay = mentee.OtiaEinschreibungen.GroupBy(e => e.Termin.Schultag.Datum).ToDictionary(g => g.Key, g => g.ToList());
+            var enrollmentsPerDay = mentee.OtiaEinschreibungen.GroupBy(e => e.Termin.Schultag.Datum)
+                .ToDictionary(g => g.Key, g => g.ToList());
             var isFullyEnrolledPerDay = new Dictionary<DateOnly, bool>();
-        
+
             foreach (var schultag in schulage)
-            {
-                isFullyEnrolledPerDay[schultag.Datum] = _enrollmentService.AreAllNonOptionalBlocksEnrolled(schultag, enrollmentsPerDay.TryGetValue(schultag.Datum, out var value) ? value : []);
-            }
-        
-            var kategorieRuleByWeek = await _enrollmentService.CheckAllKategoriesInWeeks(mentee.OtiaEinschreibungen.ToList());
+                isFullyEnrolledPerDay[schultag.Datum] = _enrollmentService.AreAllNonOptionalBlocksEnrolled(schultag,
+                    enrollmentsPerDay.TryGetValue(schultag.Datum, out var value) ? value : []);
+
+            var kategorieRuleByWeek =
+                await _enrollmentService.CheckAllKategoriesInWeeks(mentee.OtiaEinschreibungen.ToList());
 
             return new MenteePreview(new PersonInfoMinimal(mentee),
                 IsWeekOkay(lastWeekInterval) ? MenteePreviewStatus.Okay : MenteePreviewStatus.Auffaellig,

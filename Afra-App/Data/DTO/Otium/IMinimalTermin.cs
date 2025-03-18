@@ -9,17 +9,17 @@ public interface IMinimalTermin
     /// The unique identifier for the termin
     /// </summary>
     public Guid Id { get; set; }
-    
+
     /// <summary>
     /// The designation of the otium for which the termin is
     /// </summary>
     public string Otium { get; set; }
-    
+
     /// <summary>
     /// The location where the termin takes place
     /// </summary>
     public string Ort { get; set; }
-    
+
     /// <summary>
     /// The tutor handling the termin (optional)
     /// </summary>

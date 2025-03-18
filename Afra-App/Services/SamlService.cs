@@ -24,6 +24,7 @@ public class SamlService
         /// The validation was successful.
         /// </summary>
         Success,
+
         /// <summary>
         /// The validation failed.
         /// </summary>

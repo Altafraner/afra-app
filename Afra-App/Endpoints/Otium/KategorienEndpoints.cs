@@ -13,6 +13,7 @@ public static class KategorienEndpoints
     /// <param name="app"></param>
     public static void MapKategorienEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/kategorie", (KategorieService kategorienService) => kategorienService.GetKategorienTreeAsyncEnumerable());
+        app.MapGet("/kategorie",
+            (KategorieService kategorienService) => kategorienService.GetKategorienTreeAsyncEnumerable());
     }
 }

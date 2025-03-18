@@ -10,12 +10,10 @@ public enum Rolle
     /// <summary>
     /// The person is in a tutoring role, most commonly a teacher
     /// </summary>
-    [JsonStringEnumMemberName("Tutor")]
-    Tutor,
-    
+    [JsonStringEnumMemberName("Tutor")] Tutor,
+
     /// <summary>
     /// The person is a student
     /// </summary>
-    [JsonStringEnumMemberName("Student")]
-    Student
+    [JsonStringEnumMemberName("Student")] Student
 }

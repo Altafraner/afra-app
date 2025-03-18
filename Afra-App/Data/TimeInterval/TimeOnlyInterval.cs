@@ -24,11 +24,13 @@ public record struct TimeOnlyInterval : ITimeInterval<TimeOnly>
         this.Start = Start;
         this.Duration = Duration;
     }
-    
+
     /// <summary>
     /// A default constructor for the configuration binding
     /// </summary>
-    public TimeOnlyInterval() {}
+    public TimeOnlyInterval()
+    {
+    }
 
     /// <summary>
     ///     Gets the ending Date and Time for the TimeOnlyInterval.
@@ -61,7 +63,7 @@ public record struct TimeOnlyInterval : ITimeInterval<TimeOnly>
     {
         return Start <= other.End && End >= other.Start;
     }
-    
+
     /// <summary>
     ///     Determines whether this interval is adjacent to another interval.
     /// </summary>
@@ -95,7 +97,7 @@ public record struct TimeOnlyInterval : ITimeInterval<TimeOnly>
     {
         return Start <= other.Start && End >= other.End;
     }
-    
+
     /// <summary>
     ///     Determines whether this interval contains a specific TimeOnly.
     /// </summary>
@@ -142,7 +144,10 @@ public record struct TimeOnlyInterval : ITimeInterval<TimeOnly>
     /// <summary>
     /// Converts the TimeOnlyInterval to a <see cref="DateTimeInterval" /> using the specified <see cref="DateOnly"/> as Date component while maintaining Time and Duratation.
     /// </summary>
-    public DateTimeInterval ToDateTimeInterval(DateOnly date) => new(new DateTime(date, Start), Duration);
+    public DateTimeInterval ToDateTimeInterval(DateOnly date)
+    {
+        return new DateTimeInterval(new DateTime(date, Start), Duration);
+    }
 
     public readonly void Deconstruct(out TimeOnly Start, out TimeSpan Duration)
     {

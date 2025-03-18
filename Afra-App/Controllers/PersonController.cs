@@ -39,11 +39,14 @@ public class PersonController : ControllerBase
         /// <summary>
         /// The first name of the person
         /// </summary>
-        [JsonPropertyName("vorname")] public string? Vorname { get; init; }
+        [JsonPropertyName("vorname")]
+        public string? Vorname { get; init; }
+
         /// <summary>
         /// The last name of the person
         /// </summary>
-        [JsonPropertyName("nachname")] public string? Nachname { get; init; }
+        [JsonPropertyName("nachname")]
+        public string? Nachname { get; init; }
     }
 
     /// <summary>
@@ -67,7 +70,7 @@ public class PersonController : ControllerBase
 
         if (!string.IsNullOrWhiteSpace(filter.Vorname))
             query = query.Where(p => EF.Functions.Like(p.Vorname, $"{filter.Vorname.ToLower()}%"));
-        
+
         if (!string.IsNullOrWhiteSpace(filter.Nachname))
             query = query.Where(p => EF.Functions.Like(p.Nachname, $"{filter.Nachname.ToLower()}%"));
 
@@ -127,10 +130,10 @@ public class PersonController : ControllerBase
         var mentor = await _dbContext.Personen
             .Include(p => p.Mentees)
             .FirstOrDefaultAsync(p => p.Id == id);
-        
+
         if (mentor == null)
             return NotFound();
-        
+
         return Ok(mentor.Mentees
             .Select(p => new PersonInfoMinimal(p)));
     }

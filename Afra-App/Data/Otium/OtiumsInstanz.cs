@@ -12,17 +12,17 @@ public abstract class OtiumsInstanz
     /// A reference to the Otium this instance is for.
     /// </summary>
     public required Otium Otium { get; set; }
-    
+
     /// <summary>
     /// A reference to the tutor of the Otium. Could be a student or a teacher.
     /// </summary>
     public required Person? Tutor { get; set; }
-    
+
     /// <summary>
     /// The block the Otium is in.
     /// </summary>
     public required byte Block { get; set; }
-    
+
     /// <summary>
     /// The location for the Otium.
     /// </summary>

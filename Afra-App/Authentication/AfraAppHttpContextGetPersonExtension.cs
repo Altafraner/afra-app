@@ -32,7 +32,7 @@ public static class AfraAppHttpContextGetPersonExtension
 
         return user;
     }
-    
+
     /// <inheritdoc cref="GetPerson"/>
     public static async Task<Person> GetPersonAsync(this HttpContext httpContext, AfraAppContext dbContext)
     {
