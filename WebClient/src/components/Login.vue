@@ -1,5 +1,5 @@
 ﻿<script setup>
-import { Form } from '@primevue/forms';
+import {Form} from '@primevue/forms';
 import {InputText, FloatLabel, Password, Button, useToast} from "primevue";
 import {ref} from "vue";
 import {mande} from "mande";
@@ -21,11 +21,21 @@ const submit = async (evt) => {
       password: password
     }, {responseAs: "response"});
     await user.update();
-  } catch(error) {
+  } catch (error) {
     if (error.response.status === 410) {
-      toast.add({severity: "error", summary: "Fehler", detail: "Falsche E-Mail oder Passwort", life: 5000});
+      toast.add({
+        severity: "error",
+        summary: "Fehler",
+        detail: "Falsche E-Mail oder Passwort",
+        life: 5000
+      });
     } else {
-      toast.add({severity: "error", summary: "Fehler", detail: "Ein unbekannter Fehler ist aufgetreten", life: 5000});
+      toast.add({
+        severity: "error",
+        summary: "Fehler",
+        detail: "Ein unbekannter Fehler ist aufgetreten",
+        life: 5000
+      });
     }
   } finally {
     loading.value = false;

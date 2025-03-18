@@ -47,17 +47,24 @@ fetchData()
 
 <template>
   <template v-if="!loading">
-    <h1>{{formatStudent(mentee)}}</h1>
+    <h1>{{ formatStudent(mentee) }}</h1>
     <h2 v-if="!all">Nächste Veranstaltungen</h2>
     <p v-if="!all">Gezeigt werden die Veranstaltungen der nächsten drei Wochen.</p>
     <h2 v-if="all">Alle Veranstaltungen</h2>
     <StudentOverview :termine="termine"/>
-    <Button v-if="!all" class="mt-4" @click="fetchData(true)" label="Alle anzeigen" severity="secondary" :loading="loading"/>
+    <Button v-if="!all" class="mt-4" @click="fetchData(true)" label="Alle anzeigen"
+            severity="secondary" :loading="loading"/>
   </template>
   <div class="flex gap-3" v-else>
-    <h1><Skeleton /></h1>
-    <h2><Skeleton /></h2>
-    <p><Skeleton /></p>
+    <h1>
+      <Skeleton/>
+    </h1>
+    <h2>
+      <Skeleton/>
+    </h2>
+    <p>
+      <Skeleton/>
+    </p>
   </div>
 </template>
 

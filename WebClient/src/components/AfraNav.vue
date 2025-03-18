@@ -1,7 +1,7 @@
 ﻿<script setup>
 import Menubar from 'primevue/menubar';
 import {ref} from "vue";
-import {Image, Button, useToast, Toast} from "primevue";
+import {Image, Button, useToast} from "primevue";
 
 import wappen from '/Vereinswappen.jpg?url'
 import {useUser} from "@/stores/useUser.js";
@@ -37,9 +37,18 @@ const logout = async () => {
   try {
     await user.logout();
     await router.push("/");
-    toast.add({severity: "success", summary: "Abgemeldet!", detail: "Sie wurden erfolgreich abgemeldet.", life: 3000});
+    toast.add({
+      severity: "success",
+      summary: "Abgemeldet!",
+      detail: "Sie wurden erfolgreich abgemeldet.",
+      life: 3000
+    });
   } catch (error) {
-    toast.add({severity: "error", summary: "Fehler!", detail: "Sie konnten nicht abgemeldet werden."});
+    toast.add({
+      severity: "error",
+      summary: "Fehler!",
+      detail: "Sie konnten nicht abgemeldet werden."
+    });
   }
 }
 </script>
@@ -64,7 +73,8 @@ const logout = async () => {
       </a>
     </template>
     <template #end>
-      <Button label="Logout" icon="pi pi-power-off" @click="logout" variant="text" severity="secondary"/>
+      <Button label="Logout" icon="pi pi-power-off" @click="logout" variant="text"
+              severity="secondary"/>
     </template>
   </Menubar>
 </template>

@@ -1,19 +1,17 @@
 ﻿<script setup>
-
 import {ref} from "vue";
 import {Button} from "primevue";
 import AfraOtiumSupervisionView from "@/components/Otium/Supervision/AfraOtiumSupervisionView.vue";
 import {supervisionDetails} from "@/helpers/testdata.js";
 
 const status = ref(false)
+const rooms = ref(supervisionDetails)
 
-const rooms=ref(supervisionDetails)
-
-function start(){
+function start() {
   status.value = true
 }
 
-function stop(){
+function stop() {
   status.value = false
 }
 </script>
@@ -27,10 +25,11 @@ function stop(){
 
   <div v-if="!status">
     <p>Um ihre Aufsicht zu starten, drücken Sie auf Start.</p>
-    <p>Mit dem Drücken auf Start bestätigen Sie, dass sie eingeteilte Aufsicht für den laufenden Otiums-Slot sind. Alle Änderungen, die Sie vornehmen, werden protokolliert.</p>
+    <p>Mit dem Drücken auf Start bestätigen Sie, dass sie eingeteilte Aufsicht für den laufenden
+      Otiums-Slot sind. Alle Änderungen, die Sie vornehmen, werden protokolliert.</p>
   </div>
   <div v-else>
-    <afra-otium-supervision-view :rooms="rooms" />
+    <afra-otium-supervision-view :rooms="rooms"/>
   </div>
 </template>
 

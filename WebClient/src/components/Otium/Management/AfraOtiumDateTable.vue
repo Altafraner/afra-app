@@ -14,20 +14,21 @@ const dates = ref(props.dates)
 
 <template>
   <DataTable :value="dates" size="small">
-    <Column header="Datum" >
+    <Column header="Datum">
       <template #body="slotProps">
-        {{formatDate(slotProps.data.datum)}}
+        {{ formatDate(slotProps.data.datum) }}
       </template>
     </Column>
-    <Column field="block" header="Block" />
-    <Column field="tutor" header="Tutor" >
+    <Column field="block" header="Block"/>
+    <Column field="tutor" header="Tutor">
       <template #body="slotProps">
-        {{formatTutor(slotProps.data.tutor)}}
+        {{ formatTutor(slotProps.data.tutor) }}
       </template>
     </Column>
     <Column v-if="allowEnrollment" class="text-right afra-col-action">
       <template #body>
-        <Button aria-label="Einschreiben" severity="primary" size="small" variant="text" icon="pi pi-plus"></Button>
+        <Button aria-label="Einschreiben" severity="primary" size="small" variant="text"
+                icon="pi pi-plus"></Button>
       </template>
     </Column>
     <Column v-if="allowEdit" class="text-right afra-col-action">
@@ -36,8 +37,10 @@ const dates = ref(props.dates)
       </template>
       <template #body>
         <span class="inline-flex gap-1">
-          <Button aria-label="Ansehen" severity="primary" size="small" variant="text" icon="pi pi-eye"></Button>
-          <Button aria-label="Bearbeiten" severity="secondary" variant="text" size="small" icon="pi pi-pencil"></Button>
+          <Button aria-label="Ansehen" severity="primary" size="small" variant="text"
+                  icon="pi pi-eye"></Button>
+          <Button aria-label="Bearbeiten" severity="secondary" variant="text" size="small"
+                  icon="pi pi-pencil"></Button>
         </span>
       </template>
     </Column>

@@ -18,23 +18,26 @@ const roomToggleDone = (evt, room) => {
       <accordion-header>
         <div class="flex justify-between w-full items-center" style="margin-right: 1rem">
           <span>
-            {{room.ort}} - {{room.bezeichnung}}
+            {{ room.ort }} - {{ room.bezeichnung }}
           </span>
-          <Button :severity="room.kontrolliert ? 'success' : 'danger'" :label="room.kontrolliert ? 'Fertig' : 'Ausstehend'" size="small" class="confirm-button" @click="(evt) => roomToggleDone(evt, room)"/>
+          <Button :severity="room.kontrolliert ? 'success' : 'danger'"
+                  :label="room.kontrolliert ? 'Fertig' : 'Ausstehend'" size="small"
+                  class="confirm-button" @click="(evt) => roomToggleDone(evt, room)"/>
         </div>
       </accordion-header>
       <accordion-content>
         <p v-if="room.einschreibungen.length===0">
           Keine Einschreibungen
         </p>
-        <afra-otium-enrollment-table v-else :enrollments="room.einschreibungen" may-edit-attendance />
+        <afra-otium-enrollment-table v-else :enrollments="room.einschreibungen"
+                                     may-edit-attendance/>
       </accordion-content>
     </accordion-panel>
   </accordion>
 </template>
 
 <style scoped>
-.confirm-button{
+.confirm-button {
   width: 7rem;
 }
 </style>

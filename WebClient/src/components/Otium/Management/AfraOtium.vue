@@ -46,9 +46,9 @@ const initialValues = reactive({
   kategorien: otium.value.kategorien,
 })
 
-function findKategorie(id, kategorien){
+function findKategorie(id, kategorien) {
   const index = kategorien.findIndex((e) => e.id === id);
-  if (index!==-1) {
+  if (index !== -1) {
     return kategorien[index]
   }
 
@@ -74,11 +74,13 @@ const kategorieOptionsTree = ref(kategorien)
     </template>
     <template #subtitle v-if="!isEditing">
       <span class="inline-flex gap-1">
-        <AfraKategorieTag v-for="tag in otium.kategorien" :value="findKategorie(tag, kategorien)" severity="secondary"></AfraKategorieTag>
+        <AfraKategorieTag v-for="tag in otium.kategorien" :value="findKategorie(tag, kategorien)"
+                          severity="secondary"></AfraKategorieTag>
       </span>
     </template>
     <template #content v-if="!isEditing">
-      <p v-if="!props.minimal" v-for="beschreibung in otium.beschreibung.split('\n').filter(desc => desc)">
+      <p v-if="!props.minimal"
+         v-for="beschreibung in otium.beschreibung.split('\n').filter(desc => desc)">
         {{ beschreibung }}</p>
 
       <Accordion v-if="!props.minimal" multiple value="">
@@ -129,7 +131,8 @@ const kategorieOptionsTree = ref(kategorien)
         </div>
         <div class="flex flex-col gap-2">
           <label for="ot-tags">Kategorie</label>
-          <AfraKategorySelector name="kategorien" :options="kategorieOptionsTree" id="ot-tags" hide-clear></AfraKategorySelector>
+          <AfraKategorySelector name="kategorien" :options="kategorieOptionsTree" id="ot-tags"
+                                hide-clear></AfraKategorySelector>
           <Message size="small" severity="secondary" variant="simple">
             Gib Tags an, um den Schüler:innen zu helfen, dein Otium zu finden.
           </Message>

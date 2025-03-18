@@ -12,14 +12,14 @@ const otium = ref(props.otium)
 </script>
 
 <template>
-    <h1>
-      {{ otium.otium }}
-    </h1>
-    <p>
-      {{ formatDate(new Date(otium.datum)) }}, {{ otium.block }}. Block
-    </p>
-    <h2>Einschreibungen</h2>
-    <AfraOtiumEnrollmentTable :enrollments="otium.einschreibungen" show-attendance />
+  <h1>
+    {{ otium.otium }}
+  </h1>
+  <p>
+    {{ formatDate(new Date(otium.datum)) }}, {{ otium.block }}. Block
+  </p>
+  <h2>Einschreibungen</h2>
+  <AfraOtiumEnrollmentTable :enrollments="otium.einschreibungen" show-attendance/>
 </template>
 
 <style scoped>

@@ -15,12 +15,12 @@ const regs = ref(props.regs)
 <template>
   <DataTable :value="regs" size="medium">
 
-    <Column field="wochentyp" header="Woche" />
-    <Column field="wochentag" header="Tag" />
-    <Column field="block" header="Block" />
+    <Column field="wochentyp" header="Woche"/>
+    <Column field="wochentag" header="Tag"/>
+    <Column field="block" header="Block"/>
     <Column field="tutor" header="Tutor">
       <template #body="slotProps">
-        {{formatTutor(slotProps.data.tutor)}}
+        {{ formatTutor(slotProps.data.tutor) }}
       </template>
     </Column>
     <Column v-if="allowEdit" class="text-right afra-col-action">
@@ -29,8 +29,10 @@ const regs = ref(props.regs)
       </template>
       <template #body>
         <span class="inline-flex gap-1">
-          <Button aria-label="Ansehen" severity="primary" size="small" variant="text" icon="pi pi-eye"></Button>
-          <Button aria-label="Bearbeiten" severity="secondary" variant="text" size="small" icon="pi pi-pencil"></Button>
+          <Button aria-label="Ansehen" severity="primary" size="small" variant="text"
+                  icon="pi pi-eye"></Button>
+          <Button aria-label="Bearbeiten" severity="secondary" variant="text" size="small"
+                  icon="pi pi-pencil"></Button>
         </span>
       </template>
     </Column>

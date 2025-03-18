@@ -1,10 +1,4 @@
 ﻿<script setup>
-
-const props = defineProps({
-  termine: Array,
-  showKatalog: Boolean
-})
-
 import {formatDate} from "@/helpers/formatters.js";
 import {
   Accordion,
@@ -15,6 +9,12 @@ import {
   Column,
   DataTable
 } from "primevue";
+
+const props = defineProps({
+  termine: Array,
+  showKatalog: Boolean
+})
+
 </script>
 
 <template>
@@ -26,8 +26,10 @@ import {
             {{ formatDate(new Date(termin.datum)) }}
           </span>
           <span class="flex flex-row gap-3">
-            <Badge class="w-[8rem]" v-if="termin.vollstaendig && termin.kategorienErfuellt" severity="secondary">Ok</Badge>
-            <Badge class="w-[8rem]" v-else-if="termin.vollstaendig && !termin.kategorienErfuellt" severity="warn">Kategorien fehlen</Badge>
+            <Badge class="w-[8rem]" v-if="termin.vollstaendig && termin.kategorienErfuellt"
+                   severity="secondary">Ok</Badge>
+            <Badge class="w-[8rem]" v-else-if="termin.vollstaendig && !termin.kategorienErfuellt"
+                   severity="warn">Kategorien fehlen</Badge>
             <Badge class="w-[8rem]" v-else severity="danger">Nicht Ok</Badge>
           </span>
         </div>
@@ -36,12 +38,13 @@ import {
         <DataTable :value="termin.einschreibungen">
           <Column header="Otium">
             <template #body="{data}">
-              <Button class="w-[8rem]" :label="data.otium" variant="link" as="RouterLink" :to="`/termin/${data.terminId}`"/>
+              <Button class="w-[8rem]" :label="data.otium" variant="link" as="RouterLink"
+                      :to="`/termin/${data.terminId}`"/>
             </template>
           </Column>
-          <Column field="ort" header="Ort" />
-          <Column field="interval.start" header="Start" />
-          <Column field="interval.duration" header="Dauer" />
+          <Column field="ort" header="Ort"/>
+          <Column field="interval.start" header="Start"/>
+          <Column field="interval.duration" header="Dauer"/>
           <template #empty>
             <div class="flex justify-center">
               Keine Einträge
@@ -49,11 +52,13 @@ import {
           </template>
           <template #footer>
             <div class="flex flex-row justify-between items-center">
-              <Button v-if="props.showKatalog" class="w-[8rem]" size="small" as="RouterLink" :to="'/katalog/' + termin.datum" label="Katalog" />
-              <span v-else />
+              <Button v-if="props.showKatalog" class="w-[8rem]" size="small" as="RouterLink"
+                      :to="'/katalog/' + termin.datum" label="Katalog"/>
+              <span v-else/>
               <span class="flex flex-row gap-3 mr-[var(--p-icon-size)] flex-wrap justify-end">
                 <Badge class="w-[8rem]" v-if="!termin.kategorienErfuellt" severity="warn">Kategorien fehlen</Badge>
-                <Badge class="w-[8rem]" v-if="!termin.vollstaendig" severity="danger">Unvollständig</Badge>
+                <Badge class="w-[8rem]" v-if="!termin.vollstaendig"
+                       severity="danger">Unvollständig</Badge>
               </span>
             </div>
           </template>

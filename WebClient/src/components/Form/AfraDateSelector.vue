@@ -32,7 +32,7 @@ function change_date(next) {
 const increment_date = () => change_date((n) => n + 1);
 const decrement_date = () => change_date((n) => n - 1);
 
-function date_to_label (data) {
+function date_to_label(data) {
   return new Date(data.datum)
 }
 </script>
@@ -44,12 +44,16 @@ function date_to_label (data) {
               @click="decrement_date"/>
     </input-group-addon>
     <Select filter v-model="date" option-label="datum" option-disabled="disabled"
-            :options="datesAvailable" @change="() => emit('dateChanged')" >
-      <template #value="{value}">{{formatDate(date_to_label(value))}} | {{value.wochentyp}}</template>
-      <template #option="{option}">{{formatDate(date_to_label(option))}} | {{option.wochentyp}}</template>
+            :options="datesAvailable" @change="() => emit('dateChanged')">
+      <template #value="{value}">{{ formatDate(date_to_label(value)) }} | {{ value.wochentyp }}
+      </template>
+      <template #option="{option}">{{ formatDate(date_to_label(option)) }} |
+        {{ option.wochentyp }}
+      </template>
     </Select>
     <input-group-addon>
-      <Button severity="secondary" rounded icon="pi pi-calendar-times" variant="text" aria-label="Heute"  @click="emitToday"/>
+      <Button severity="secondary" rounded icon="pi pi-calendar-times" variant="text"
+              aria-label="Heute" @click="emitToday"/>
     </input-group-addon>
     <input-group-addon>
       <Button severity="secondary" rounded icon="pi pi-chevron-right" variant="text"

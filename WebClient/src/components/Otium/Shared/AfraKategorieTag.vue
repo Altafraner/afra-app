@@ -10,8 +10,8 @@ const props = defineProps({
 <template>
   <Tag severity="secondary">
     <span v-if="props.value.icon"
-      :class="`ot-angebot-icon ${props.value.cssColor ? 'ot-angebot-white' : ''}`"
-      :style="`background-color: ${props.value.cssColor ?? 'unset'}`">
+          :class="`ot-angebot-icon ${props.value.cssColor ? 'ot-angebot-white' : ''}`"
+          :style="`background-color: ${props.value.cssColor ?? 'unset'}`">
       <i :class="props.value.icon"/>
     </span>
     <span>
@@ -32,11 +32,11 @@ const props = defineProps({
   text-align: center;
 }
 
-.ot-angebot-icon i{
+.ot-angebot-icon i {
   font-size: 1.1em;
 }
 
-.ot-angebot-white{
+.ot-angebot-white {
   color: #fff;
 }
 </style>

@@ -9,39 +9,39 @@
     h2 {
         @apply text-2xl font-bold my-3;
     }
-    
-    p{
+
+    p {
         @apply my-2;
     }
 
-    footer{
+    footer {
         word-spacing: 0.2rem;
     }
 
-    footer i{
+    footer i {
         font-size: 0.8rem;
     }
 
-    .p-menubar-start img{
+    .p-menubar-start img {
         @apply h-[3rem];
     }
 }
 
-:root{
+:root {
     font-family: 'Inter', "Segoe UI", 'Helvetica', 'Arial', sans-serif;
 }
 
-@layer theme{
+@layer theme {
     th.afra-col-action .p-datatable-column-header-content,
-    td.afra-col-action .p-inputgroup{
+    td.afra-col-action .p-inputgroup {
         justify-content: flex-end;
     }
 
-    td.afra-col-action{
+    td.afra-col-action {
         text-align: right;
     }
 
-    .danger{
+    .danger {
         color: var(--p-button-text-danger-color);
     }
 }

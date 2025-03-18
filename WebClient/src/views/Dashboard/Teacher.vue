@@ -1,6 +1,6 @@
 ﻿<script setup>
 import {Button, DataTable, Column, Tag, useToast, Skeleton} from "primevue";
-import {formatDate, formatStudent, otiumTutorLinkGenerator} from "@/helpers/formatters.js";
+import {formatDate, formatStudent} from "@/helpers/formatters.js";
 import {ref} from "vue";
 import {useSettings} from "@/stores/useSettings.js";
 import {mande} from "mande";
@@ -56,24 +56,24 @@ update();
 </script>
 
 <template>
-  <h1>Guten Tag {{formatStudent(user.user)}}</h1>
+  <h1>Guten Tag {{ formatStudent(user.user) }}</h1>
   <h2>Betreute Otia</h2>
   <DataTable :value="termine" v-if="!loading">
     <Column header="Otium">
       <template #body="{data}">
         <Button variant="text" as="RouterLink"
-                :to="'/management/termin/' + data.id" :label="data.otium" />
+                :to="'/management/termin/' + data.id" :label="data.otium"/>
       </template>
     </Column>
     <Column header="Datum">
       <template #body="{data}">
-        {{formatDate(new Date(data.datum))}}
+        {{ formatDate(new Date(data.datum)) }}
       </template>
     </Column>
-    <Column header="Block" field="block" />
+    <Column header="Block" field="block"/>
     <Column header="Auslastung">
       <template #body="{data}">
-        <auslastungs-tag :auslastung="data.auslastung" />
+        <auslastungs-tag :auslastung="data.auslastung"/>
       </template>
     </Column>
     <template #empty>
@@ -90,7 +90,7 @@ update();
     </Column>
     <Column header="Datum">
       <template #body>
-        <Skeleton />
+        <Skeleton/>
       </template>
     </Column>
     <Column header="Auslastung">
@@ -112,7 +112,9 @@ update();
       v-for="field in [{field: 'letzteWoche', header: 'Letzte'}, {field: 'dieseWoche', header: 'Diese'}, {field: 'nächsteWoche', header: 'Nächste'}]"
       :key="field.field" :header="field.header">
       <template #body="{data}">
-        <Tag :severity="severity[data[field.field]].severity">{{severity[data[field.field]].label}}</Tag>
+        <Tag :severity="severity[data[field.field]].severity">
+          {{ severity[data[field.field]].label }}
+        </Tag>
       </template>
     </Column>
     <template #empty>

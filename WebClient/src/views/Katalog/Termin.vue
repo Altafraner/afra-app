@@ -60,7 +60,11 @@ async function loadTermin() {
     otium.value = await connection.value.get();
     buttonLoading.value = false
   } catch (error) {
-    toast.add({severity: "error", summary: "Fehler", detail: "Es ist ein Fehler beim Laden aufgetreten."})
+    toast.add({
+      severity: "error",
+      summary: "Fehler",
+      detail: "Es ist ein Fehler beim Laden aufgetreten."
+    })
     await router.push('/katalog')
     await user.update()
   }
@@ -72,7 +76,11 @@ async function unenroll(start, evt) {
     otium.value = await connection.value.delete(start.toString())
     buttonLoading.value = false
   } catch (error) {
-    toast.add({severity: "error", summary: "Fehler", detail: "Es ist ein Fehler beim Austragen aufgetreten."})
+    toast.add({
+      severity: "error",
+      summary: "Fehler",
+      detail: "Es ist ein Fehler beim Austragen aufgetreten."
+    })
   }
 }
 
@@ -82,7 +90,11 @@ async function enroll(start, evt) {
     otium.value = await connection.value.put(start.toString())
     buttonLoading.value = false
   } catch (error) {
-    toast.add({severity: "error", summary: "Fehler", detail: "Es ist ein Fehler beim Einschreiben aufgetreten."})
+    toast.add({
+      severity: "error",
+      summary: "Fehler",
+      detail: "Es ist ein Fehler beim Einschreiben aufgetreten."
+    })
   }
 }
 
@@ -110,7 +122,8 @@ setup();
   <template v-if="!loading">
     <h1 class="mb-2">{{ otium.otium }}</h1>
     <span class="inline-flex gap-1 mb-4 text-sm">
-      <Tag v-if="otium.istAbgesagt" severity="danger" icon="pi pi-exclamation-triangle">Abgesagt</Tag>
+      <Tag v-if="otium.istAbgesagt" severity="danger"
+           icon="pi pi-exclamation-triangle">Abgesagt</Tag>
       <AfraKategorieTag v-for="tag in otium.kategorien" :value="findKategorie(tag, kategorien)"/>
     </span>
     <p class="flex flex-row gap-4 ml-2">
@@ -151,21 +164,23 @@ setup();
       </Column>
       <Column class="text-right afra-col-action">
         <template #body="{data}">
-            <Button v-if="!data.kannBearbeiten && !buttonLoading && data.grund" icon="pi pi-question" size="small" variant="text" severity="secondary"
-            @click="(evt) => showReason(evt, data.grund)"/>
-            <Button v-if="otium.istAbgesagt" severity="danger" disabled variant="text" size="small" icon="pi pi-exclamation-triangle" label="Abgesagt"/>
-            <Button v-else-if="data.eingeschrieben" icon="pi pi-times" severity="danger" size="small"
-                    variant="text" label="Austragen" :disabled="!data.kannBearbeiten || buttonLoading"
-                    @click="(evt) => unenroll(data.interval.start, evt)" :loading="buttonLoading"/>
-            <Button v-else icon="pi pi-plus" size="small" variant="text" label="Einschreiben"
-                    :disabled="!data.kannBearbeiten || buttonLoading"
-                    @click="(evt) => enroll(data.interval.start, evt)" :loading="buttonLoading"/>
+          <Button v-if="!data.kannBearbeiten && !buttonLoading && data.grund" icon="pi pi-question"
+                  size="small" variant="text" severity="secondary"
+                  @click="(evt) => showReason(evt, data.grund)"/>
+          <Button v-if="otium.istAbgesagt" severity="danger" disabled variant="text" size="small"
+                  icon="pi pi-exclamation-triangle" label="Abgesagt"/>
+          <Button v-else-if="data.eingeschrieben" icon="pi pi-times" severity="danger" size="small"
+                  variant="text" label="Austragen" :disabled="!data.kannBearbeiten || buttonLoading"
+                  @click="(evt) => unenroll(data.interval.start, evt)" :loading="buttonLoading"/>
+          <Button v-else icon="pi pi-plus" size="small" variant="text" label="Einschreiben"
+                  :disabled="!data.kannBearbeiten || buttonLoading"
+                  @click="(evt) => enroll(data.interval.start, evt)" :loading="buttonLoading"/>
         </template>
       </Column>
     </DataTable>
 
     <Popover ref="poprev">
-      {{grund}}
+      {{ grund }}
     </Popover>
   </template>
   <div v-else>
