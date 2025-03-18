@@ -16,7 +16,7 @@ const all = ref(false);
 
 async function fetchData(getAll = false) {
   loading.value = true;
-  const dataGetter = mande("/api/otium/dashboard")
+  const dataGetter = mande("/api/otium/student")
   try {
     termine.value = await (getAll ? dataGetter.get("all") : dataGetter.get());
     all.value = getAll;

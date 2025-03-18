@@ -22,8 +22,8 @@ export const chooseColor = (now, max) => {
 }
 
 export const chooseSeverity = (now) => {
-  if (now <= 0.7) return 'success'
-  if (now < 1) return 'warn'
+  if (now <= 70) return 'success'
+  if (now < 100) return 'warn'
   return 'danger'
 }
 

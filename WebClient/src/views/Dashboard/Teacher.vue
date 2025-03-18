@@ -34,7 +34,7 @@ const severity = {
 }
 
 async function update() {
-  const getter = mande("/api/otium/dashboard/teacher");
+  const getter = mande("/api/otium/teacher");
   loading.value = true;
   try {
     const result = await getter.get();

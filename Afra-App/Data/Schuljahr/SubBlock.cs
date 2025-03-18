@@ -2,7 +2,7 @@
 
 namespace Afra_App.Data.Schuljahr;
 
-internal record SubBlock(TimeOnlyInterval Interval, bool Optional)
+public record SubBlock
 {
     public SubBlock(TimeOnly start, TimeOnly end, bool Optional) : this(new TimeOnlyInterval(start, end), Optional)
     {
@@ -11,5 +11,22 @@ internal record SubBlock(TimeOnlyInterval Interval, bool Optional)
     public SubBlock(TimeOnly start, int dauerMinuten, bool Optional) : this(start, start.AddMinutes(dauerMinuten),
         Optional)
     {
+    }
+
+    public SubBlock(TimeOnlyInterval Interval, bool Optional)
+    {
+        this.Interval = Interval;
+        this.Optional = Optional;
+    }
+    
+    public SubBlock () {}
+
+    public TimeOnlyInterval Interval { get; init; }
+    public bool Optional { get; init; }
+
+    public void Deconstruct(out TimeOnlyInterval Interval, out bool Optional)
+    {
+        Interval = this.Interval;
+        Optional = this.Optional;
     }
 }

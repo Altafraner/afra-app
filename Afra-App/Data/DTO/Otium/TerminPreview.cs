@@ -36,7 +36,7 @@ public record TerminPreview : ITermin
     /// <remarks>
     /// Currently implemented in <see cref="Controllers.OtiumController.GetOtium"/> by summing up the number of minutes in all einschreibungen and dividing by the total number of minutes available for the termin.
     /// </remarks>
-    public double? Auslastung { get; set; }
+    public int? Auslastung { get; set; }
     
     /// <summary>
     /// The maximum number of people that can be at the termin concurrently
@@ -52,7 +52,7 @@ public record TerminPreview : ITermin
     /// <param name="termin">The termins DB entry</param>
     /// <param name="auslastung">The load of the termin</param>
     /// <param name="kategorien">A list of all categories the otium for the termin is in.</param>
-    public TerminPreview(Afra_App.Data.Otium.Termin termin, double? auslastung, IAsyncEnumerable<Guid> kategorien)
+    public TerminPreview(Afra_App.Data.Otium.Termin termin, int? auslastung, IAsyncEnumerable<Guid> kategorien)
     {
         Id = termin.Id;
         Otium = termin.Otium.Bezeichnung;

@@ -3,9 +3,7 @@
 /// <summary>
 ///     Represents a time interval with a start <see cref="TimeOnly" /> and a duration.
 /// </summary>
-/// <param name="Start">The starting Date and Time for the TimeOnlyInterval</param>
-/// <param name="Duration">The duration of the interval</param>
-public record struct TimeOnlyInterval(TimeOnly Start, TimeSpan Duration) : ITimeInterval<TimeOnly>
+public record struct TimeOnlyInterval : ITimeInterval<TimeOnly>
 {
     /// <summary>
     ///     Represents a time interval with a start <see cref="TimeOnly" /> and a duration.
@@ -17,9 +15,31 @@ public record struct TimeOnlyInterval(TimeOnly Start, TimeSpan Duration) : ITime
     }
 
     /// <summary>
+    ///     Represents a time interval with a start <see cref="TimeOnly" /> and a duration.
+    /// </summary>
+    /// <param name="Start">The starting Date and Time for the TimeOnlyInterval</param>
+    /// <param name="Duration">The duration of the interval</param>
+    public TimeOnlyInterval(TimeOnly Start, TimeSpan Duration)
+    {
+        this.Start = Start;
+        this.Duration = Duration;
+    }
+    
+    /// <summary>
+    /// A default constructor for the configuration binding
+    /// </summary>
+    public TimeOnlyInterval() {}
+
+    /// <summary>
     ///     Gets the ending Date and Time for the TimeOnlyInterval.
     /// </summary>
     public TimeOnly End => Start.Add(Duration);
+
+    /// <summary>The starting Date and Time for the TimeOnlyInterval</summary>
+    public TimeOnly Start { get; set; }
+
+    /// <summary>The duration of the interval</summary>
+    public TimeSpan Duration { get; set; }
 
     /// <summary>
     ///     Determines whether this interval intersects with another interval.
@@ -123,4 +143,10 @@ public record struct TimeOnlyInterval(TimeOnly Start, TimeSpan Duration) : ITime
     /// Converts the TimeOnlyInterval to a <see cref="DateTimeInterval" /> using the specified <see cref="DateOnly"/> as Date component while maintaining Time and Duratation.
     /// </summary>
     public DateTimeInterval ToDateTimeInterval(DateOnly date) => new(new DateTime(date, Start), Duration);
+
+    public readonly void Deconstruct(out TimeOnly Start, out TimeSpan Duration)
+    {
+        Start = this.Start;
+        Duration = this.Duration;
+    }
 }

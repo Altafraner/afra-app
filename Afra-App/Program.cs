@@ -1,8 +1,10 @@
 using System.Security.Cryptography;
 using System.Text.Json.Serialization;
 using Afra_App.Data;
+using Afra_App.Data.Configuration;
 using Afra_App.Endpoints;
 using Afra_App.Services;
+using Afra_App.Services.Otium;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
@@ -12,15 +14,22 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Configuration binding
+
+builder.Services.AddOptions<OtiumConfiguration>()
+    .Bind(builder.Configuration.GetSection("Otium"))
+    .Validate(OtiumConfiguration.Validate)
+    .ValidateOnStart();
+
 // Add services to the container.
 
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
+builder.Services.ConfigureHttpJsonOptions(options =>
     {
-        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-        options.JsonSerializerOptions.Converters.Add(new TimeOnlyJsonConverter());
+        options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        options.SerializerOptions.Converters.Add(new TimeOnlyJsonConverter());
     });
+builder.Services.AddControllers();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddDbContext<AfraAppContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -44,6 +53,9 @@ builder.Services.AddAuthentication()
 builder.Services.AddAuthorization();
 if (builder.Configuration.GetValue<bool>("Saml:Enabled")) builder.Services.AddSingleton<SamlService>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<KategorieService>();
+builder.Services.AddScoped<OtiumEndpointService>();
+builder.Services.AddScoped<EnrollmentService>();
 
 try
 {
@@ -55,7 +67,7 @@ try
 }
 catch (CryptographicException exception)
 {
-    Console.WriteLine($"Could not load Certificate for Data Protection {exception.Message}");
+    Console.WriteLine($"Could not load certificate for Data Protection {exception.Message}");
     Environment.Exit(1);
 }
 
@@ -85,9 +97,11 @@ if (app.Environment.IsDevelopment())
 
 app.UseAuthorization();
 
-app.MapControllers();
-
+app.MapOtium();
+app.MapSchuljahr();
 app.MapUserEndpoints();
 if (app.Configuration.GetValue<bool>("Saml:Enabled")) app.MapSaml();
+
+if (app.Environment.IsDevelopment()) app.MapControllers();
 
 app.Run();
