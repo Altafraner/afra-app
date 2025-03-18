@@ -16,7 +16,7 @@ public record Einschreibung : IMinimalTermin
     /// The ID of the enrollment
     /// </summary>
     public Guid Id { get; set; }
-    
+
     /// <summary>
     /// The ID of the termin the enrollment is for
     /// </summary>

@@ -6,7 +6,7 @@ public record Pagination<T>
 {
     public int Total { get; init; }
     public IEnumerable<T> Items { get; init; }
-    
+
     public Pagination(int Total, IEnumerable<T> Items)
     {
         this.Total = Total;

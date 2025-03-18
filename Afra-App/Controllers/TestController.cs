@@ -1,15 +1,15 @@
-﻿using Afra_App.Data;
+﻿using Afra_App.Authentication;
+using Afra_App.Data;
 using Afra_App.Data.Otium;
-using Bogus;
-using Afra_App.Authentication;
 using Afra_App.Data.People;
 using Afra_App.Data.Schuljahr;
 using Afra_App.Services;
+using Bogus;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Person = Afra_App.Data.People.Person;
 using Microsoft.EntityFrameworkCore;
+using Person = Afra_App.Data.People.Person;
 using Termin = Afra_App.Data.Otium.Termin;
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 // Sorry, this is a test controller, not worth the effort.
@@ -32,9 +32,9 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
     [HttpGet("seed")]
     public async Task<ActionResult> SeedDb()
     {
-        
+
         var akademisches = new Kategorie
-            { Bezeichnung = "Akademisches", Icon = "pi pi-graduation-cap", CssColor = "var(--p-blue-500)", Required = true};
+        { Bezeichnung = "Akademisches", Icon = "pi pi-graduation-cap", CssColor = "var(--p-blue-500)", Required = true };
         var otiumsKategorien = new List<Kategorie>
         {
             akademisches,
@@ -71,8 +71,8 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
             ("Handarbeit", otiumsKategorien[3]),
             ("Lernen Lernen", otiumsKategorien[5]),
         ];
-        
-        
+
+
         var personFaker = new Faker<Person>(locale: "de")
             .RuleFor(p => p.Nachname, f => f.Person.LastName)
             .RuleFor(p => p.Vorname, f => f.Person.FirstName)
@@ -92,10 +92,10 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
         dbContext.Personen.AddRange(students);
 
         var today = DateTime.Today;
-        var nextMonday = today.AddDays((int) DayOfWeek.Monday - (int) today.DayOfWeek);
-        var nextFriday = today.AddDays((int) DayOfWeek.Friday - (int) today.DayOfWeek);
+        var nextMonday = today.AddDays((int)DayOfWeek.Monday - (int)today.DayOfWeek);
+        var nextFriday = today.AddDays((int)DayOfWeek.Friday - (int)today.DayOfWeek);
 
-        
+
         var schultagGenerator = new Faker<Schultag>()
             .RuleFor(s => s.OtiumsBlock, f => f.PickRandom(possibleOtiaBlocks))
             .RuleFor(s => s.Datum,
@@ -104,7 +104,7 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
         var schultage = schultagGenerator.Generate(20);
         dbContext.Schultage.AddRange(schultage);
 
-        
+
         dbContext.OtiaKategorien.AddRange(otiumsKategorien);
         await dbContext.SaveChangesAsync();
 
@@ -132,7 +132,7 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
             otiumTerminGenerator.Generate(300).ToList());
 
         await dbContext.SaveChangesAsync();
-        
+
         return Ok("Die Datenbank wurde erfolgreich befüllt.");
     }
 
@@ -149,7 +149,7 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
         }
         return Ok("Logged in");
     }
-    
+
     [Route("authenticate/logout")]
     public async Task<ActionResult> AuthenticateAs()
     {

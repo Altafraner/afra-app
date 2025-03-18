@@ -11,7 +11,7 @@ public interface ITimeInterval<T> where T : struct
     ///     Gets the starting point for a time-interval
     /// </summary>
     public T Start { get; }
-    
+
     /// <summary>
     ///     Gets the duration of the time-interval
     /// </summary>

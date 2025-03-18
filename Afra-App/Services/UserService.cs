@@ -36,7 +36,7 @@ public class UserService
         if (user is null) throw new InvalidOperationException("The user does not exist");
         await SignInAsync(user, httpContext);
     }
-    
+
     /// <summary>
     ///     Signs out the current user.
     /// </summary>

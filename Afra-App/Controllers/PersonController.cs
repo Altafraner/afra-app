@@ -1,4 +1,4 @@
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using Afra_App.Data;
 using Afra_App.Data.DTO;
 using Microsoft.AspNetCore.Mvc;
@@ -67,7 +67,7 @@ public class PersonController : ControllerBase
 
         if (!string.IsNullOrWhiteSpace(filter.Vorname))
             query = query.Where(p => EF.Functions.Like(p.Vorname, $"{filter.Vorname.ToLower()}%"));
-        
+
         if (!string.IsNullOrWhiteSpace(filter.Nachname))
             query = query.Where(p => EF.Functions.Like(p.Nachname, $"{filter.Nachname.ToLower()}%"));
 
@@ -127,10 +127,10 @@ public class PersonController : ControllerBase
         var mentor = await _dbContext.Personen
             .Include(p => p.Mentees)
             .FirstOrDefaultAsync(p => p.Id == id);
-        
+
         if (mentor == null)
             return NotFound();
-        
+
         return Ok(mentor.Mentees
             .Select(p => new PersonInfoMinimal(p)));
     }

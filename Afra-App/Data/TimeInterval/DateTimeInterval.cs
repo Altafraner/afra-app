@@ -64,7 +64,7 @@ public record struct DateTimeInterval(DateTime Start, TimeSpan Duration) : ITime
     {
         return Start <= other.Start && End >= other.End;
     }
-    
+
     /// <summary>
     ///     Determines whether this interval contains a specific DateTime.
     /// </summary>

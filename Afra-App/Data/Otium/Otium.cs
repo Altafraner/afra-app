@@ -12,17 +12,17 @@ public class Otium
     /// A unique identifier for the Otium
     /// </summary>
     public Guid Id { get; set; }
-    
+
     /// <summary>
     /// A name for the Otium
     /// </summary>
     [MaxLength(50)] public required string Bezeichnung { get; set; }
-    
+
     /// <summary>
     /// A description for the Otium. May contain multiple lines.
     /// </summary>
     [MaxLength(500)] public required string Beschreibung { get; set; }
-    
+
     /// <summary>
     /// A reference to the category of the Otium. Categories are transitive.
     /// </summary>

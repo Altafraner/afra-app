@@ -12,7 +12,7 @@ public enum Wochentyp
     /// </summary>
     [JsonStringEnumMemberName("H-Woche")]
     H,
-    
+
     /// <summary>
     /// A normal week
     /// </summary>

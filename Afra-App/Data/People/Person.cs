@@ -13,46 +13,46 @@ public class Person
     /// The unique identifier of the person.
     /// </summary>
     public Guid Id { get; set; }
-    
+
     /// <summary>
     /// The first name of the person.
     /// </summary>
     [MaxLength(50)]
     public required string Vorname { get; set; }
-    
+
     /// <summary>
     /// The last name of the person.
     /// </summary>
     [MaxLength(50)]
     public required string Nachname { get; set; }
-    
+
     /// <summary>
     /// The email address of the person. Used for communication.
     /// </summary>
     [EmailAddress]
     [MaxLength(150)]
     public required string Email { get; set; }
-    
+
     /// <summary>
     /// The mentor of the person. Only used if the person is a student.
     /// </summary>
     public Person? Mentor { get; set; }
-    
+
     /// <summary>
     /// A collection of the mentees of the person. Only used if the person is a teacher.
     /// </summary>
     public ICollection<Person> Mentees { get; set; } = new List<Person>();
-    
+
     /// <summary>
     /// The role of the person.
     /// </summary>
     public required Rolle Rolle { get; set; }
-    
+
     /// <summary>
     /// A list of all Otia the person is responsible for.
     /// </summary>
     public ICollection<Otium.Otium> VerwalteteOtia { get; set; } = new List<Otium.Otium>();
-    
+
     /// <summary>
     /// A list of all Otia the person is enrolled in.
     /// </summary>

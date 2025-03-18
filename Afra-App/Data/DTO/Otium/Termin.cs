@@ -18,7 +18,7 @@ public record Termin : ITermin
 
     /// <inheritdoc />
     public IAsyncEnumerable<Guid> Kategorien { get; set; }
-    
+
     /// <inheritdoc />
     public PersonInfoMinimal? Tutor { get; set; }
 
@@ -32,7 +32,7 @@ public record Termin : ITermin
     /// The start date and time for the termin
     /// </summary>
     public DateTime Datum { get; set; }
-    
+
     /// <summary>
     /// A list of all available timeslots for the termin
     /// </summary>

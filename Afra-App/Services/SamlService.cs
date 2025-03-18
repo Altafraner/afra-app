@@ -103,7 +103,7 @@ public class SamlService
             .Select(id => signedResponseXml.GetIdElement(responseXml, id))
             .OfType<XmlElement>()
             .Where(assertion => assertion is
-                { NamespaceURI: SamlAssertionNamespace, LocalName: SamlAssertionLocalName });
+            { NamespaceURI: SamlAssertionNamespace, LocalName: SamlAssertionLocalName });
 
         var signedAssertionsArray = signedAssertions as XmlElement[] ?? signedAssertions.ToArray();
 

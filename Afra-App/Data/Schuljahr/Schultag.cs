@@ -12,12 +12,12 @@ public class Schultag
     /// </summary>
     [Key]
     public DateOnly Datum { get; set; }
-    
+
     /// <summary>
     /// The type of week the school day is in
     /// </summary>
     public Wochentyp Wochentyp { get; set; }
-    
+
     /// <summary>
     /// A boolean array representing the Otia-blocks of the day. True, if the block is planned; Otherwise, false.
     /// </summary>

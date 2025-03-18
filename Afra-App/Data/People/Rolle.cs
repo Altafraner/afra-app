@@ -12,7 +12,7 @@ public enum Rolle
     /// </summary>
     [JsonStringEnumMemberName("Tutor")]
     Tutor,
-    
+
     /// <summary>
     /// The person is a student
     /// </summary>

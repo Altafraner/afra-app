@@ -7,7 +7,7 @@ namespace Afra_App.Endpoints;
 /// </summary>
 public static class UserExtension
 {
-    
+
     /// <summary>
     /// Maps the user endpoints to the given <see cref="IEndpointRouteBuilder" />.
     /// </summary>
@@ -19,7 +19,7 @@ public static class UserExtension
 
         app.MapGet("/api/user",
             async (UserService userService, HttpContext context) => await userService.IsAuthorized(context));
-        
+
         app.MapGet("/api/user/logout",
             async (UserService userService, HttpContext context) => await userService.SignOutAsync(context));
     }

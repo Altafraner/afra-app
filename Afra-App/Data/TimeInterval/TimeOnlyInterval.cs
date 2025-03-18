@@ -41,7 +41,7 @@ public record struct TimeOnlyInterval(TimeOnly Start, TimeSpan Duration) : ITime
     {
         return Start <= other.End && End >= other.Start;
     }
-    
+
     /// <summary>
     ///     Determines whether this interval is adjacent to another interval.
     /// </summary>
@@ -75,7 +75,7 @@ public record struct TimeOnlyInterval(TimeOnly Start, TimeSpan Duration) : ITime
     {
         return Start <= other.Start && End >= other.End;
     }
-    
+
     /// <summary>
     ///     Determines whether this interval contains a specific TimeOnly.
     /// </summary>
