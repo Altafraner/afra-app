@@ -109,7 +109,7 @@ public record struct DateTimeInterval(DateTime Start, TimeSpan Duration) : ITime
     }
 
     /// <summary>
-    /// Converts the DateTimeInterval to a TimeOnlyInterval losing the date information.
+    ///     Converts the DateTimeInterval to a TimeOnlyInterval losing the date information.
     /// </summary>
     public TimeOnlyInterval ToTimeOnlyInterval()
     {

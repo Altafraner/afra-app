@@ -7,12 +7,12 @@ using Microsoft.EntityFrameworkCore;
 namespace Afra_App.Endpoints.Otium;
 
 /// <summary>
-/// A class containing the endpoints for the dashboard.
+///     A class containing the endpoints for the dashboard.
 /// </summary>
 public static class DashboardEndpoints
 {
     /// <summary>
-    /// Maps the dashboard endpoints to the given <see cref="IEndpointRouteBuilder" />.
+    ///     Maps the dashboard endpoints to the given <see cref="IEndpointRouteBuilder" />.
     /// </summary>
     public static void MapDashboardEndpoints(this IEndpointRouteBuilder app)
     {

@@ -1,12 +1,43 @@
 ﻿namespace Afra_App.Data.DTO.Otium;
 
 /// <summary>
-/// A DTO for the detailed view of a termin
+///     A DTO for the detailed view of a termin
 /// </summary>
 public record Termin : ITermin
 {
     /// <summary>
-    /// The unique ID for the Termin
+    ///     Constructs a new DTO from a termin entry
+    /// </summary>
+    /// <param name="termin">The termins DB entry</param>
+    /// <param name="einschreibungen">A list of all available timeslots for the termin</param>
+    /// <param name="kategorien">All categories the Otium is in</param>
+    /// <param name="startTime">The time the termin starts at</param>
+    public Termin(Data.Otium.Termin termin, IAsyncEnumerable<EinschreibungsPreview> einschreibungen,
+        IAsyncEnumerable<Guid> kategorien, TimeOnly startTime)
+    {
+        Id = termin.Id;
+        Otium = termin.Otium.Bezeichnung;
+        Ort = termin.Ort;
+        Kategorien = kategorien;
+        IstAbgesagt = termin.IstAbgesagt;
+        Tutor = termin.Tutor is not null ? new PersonInfoMinimal(termin.Tutor) : null;
+        MaxEinschreibungen = termin.MaxEinschreibungen;
+        Einschreibungen = einschreibungen;
+        Datum = termin.Schultag.Datum.ToDateTime(startTime);
+    }
+
+    /// <summary>
+    ///     The start date and time for the termin
+    /// </summary>
+    public DateTime Datum { get; set; }
+
+    /// <summary>
+    ///     A list of all available timeslots for the termin
+    /// </summary>
+    public IAsyncEnumerable<EinschreibungsPreview> Einschreibungen { get; set; }
+
+    /// <summary>
+    ///     The unique ID for the Termin
     /// </summary>
     public Guid Id { get; set; }
 
@@ -27,35 +58,4 @@ public record Termin : ITermin
 
     /// <inheritdoc />
     public bool IstAbgesagt { get; set; }
-
-    /// <summary>
-    /// The start date and time for the termin
-    /// </summary>
-    public DateTime Datum { get; set; }
-
-    /// <summary>
-    /// A list of all available timeslots for the termin
-    /// </summary>
-    public IAsyncEnumerable<EinschreibungsPreview> Einschreibungen { get; set; }
-
-    /// <summary>
-    /// Constructs a new DTO from a termin entry
-    /// </summary>
-    /// <param name="termin">The termins DB entry</param>
-    /// <param name="einschreibungen">A list of all available timeslots for the termin</param>
-    /// <param name="kategorien">All categories the Otium is in</param>
-    /// <param name="startTime">The time the termin starts at</param>
-    public Termin(Data.Otium.Termin termin, IAsyncEnumerable<EinschreibungsPreview> einschreibungen,
-        IAsyncEnumerable<Guid> kategorien, TimeOnly startTime)
-    {
-        Id = termin.Id;
-        Otium = termin.Otium.Bezeichnung;
-        Ort = termin.Ort;
-        Kategorien = kategorien;
-        IstAbgesagt = termin.IstAbgesagt;
-        Tutor = termin.Tutor is not null ? new PersonInfoMinimal(termin.Tutor) : null;
-        MaxEinschreibungen = termin.MaxEinschreibungen;
-        Einschreibungen = einschreibungen;
-        Datum = termin.Schultag.Datum.ToDateTime(startTime);
-    }
 }

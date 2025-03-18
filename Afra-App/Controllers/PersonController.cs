@@ -3,11 +3,12 @@ using Afra_App.Data;
 using Afra_App.Data.DTO;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Person = Afra_App.Data.People.Person;
 
 namespace Afra_App.Controllers;
 
 /// <summary>
-/// A controller for managing people. Currently, not really in use.
+///     A controller for managing people. Currently, not really in use.
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
@@ -22,7 +23,7 @@ public class PersonController : ControllerBase
     }
 
     /// <summary>
-    /// Gets all people in the database.
+    ///     Gets all people in the database.
     /// </summary>
     /// <returns>A list of all people.</returns>
     [HttpGet]
@@ -32,25 +33,7 @@ public class PersonController : ControllerBase
     }
 
     /// <summary>
-    /// A filter for the <see cref="GetPeoplePaginated"/> method.
-    /// </summary>
-    public record struct PeopleRequestFilter
-    {
-        /// <summary>
-        /// The first name of the person
-        /// </summary>
-        [JsonPropertyName("vorname")]
-        public string? Vorname { get; init; }
-
-        /// <summary>
-        /// The last name of the person
-        /// </summary>
-        [JsonPropertyName("nachname")]
-        public string? Nachname { get; init; }
-    }
-
-    /// <summary>
-    /// Gets a paginated list of people.
+    ///     Gets a paginated list of people.
     /// </summary>
     /// <param name="page">The number of the current page</param>
     /// <param name="pageSize">The number of people per page</param>
@@ -66,7 +49,7 @@ public class PersonController : ControllerBase
         [FromQuery] string sort = "nachname",
         [FromQuery] string sortDirection = "asc")
     {
-        IQueryable<Data.People.Person> query = _dbContext.Personen;
+        IQueryable<Person> query = _dbContext.Personen;
 
         if (!string.IsNullOrWhiteSpace(filter.Vorname))
             query = query.Where(p => EF.Functions.Like(p.Vorname, $"{filter.Vorname.ToLower()}%"));
@@ -90,7 +73,7 @@ public class PersonController : ControllerBase
     }
 
     /// <summary>
-    /// Finds the person with the specified id.
+    ///     Finds the person with the specified id.
     /// </summary>
     [HttpGet("{id:guid}")]
     public ActionResult<PersonInfoMinimal> GetPerson(Guid id)
@@ -103,7 +86,7 @@ public class PersonController : ControllerBase
     }
 
     /// <summary>
-    /// Finds the mentor of the person with the specified id.
+    ///     Finds the mentor of the person with the specified id.
     /// </summary>
     [HttpGet("{id:guid}/mentor")]
     public async Task<ActionResult<PersonInfoMinimal>> GetMentor(Guid id)
@@ -122,7 +105,7 @@ public class PersonController : ControllerBase
     }
 
     /// <summary>
-    /// Get a list of all mentees of the person with the specified id.
+    ///     Get a list of all mentees of the person with the specified id.
     /// </summary>
     [HttpGet("{id:guid}/mentees")]
     public async Task<ActionResult<IEnumerable<PersonInfoMinimal>>> GetMentees(Guid id)
@@ -136,5 +119,23 @@ public class PersonController : ControllerBase
 
         return Ok(mentor.Mentees
             .Select(p => new PersonInfoMinimal(p)));
+    }
+
+    /// <summary>
+    ///     A filter for the <see cref="GetPeoplePaginated" /> method.
+    /// </summary>
+    public record struct PeopleRequestFilter
+    {
+        /// <summary>
+        ///     The first name of the person
+        /// </summary>
+        [JsonPropertyName("vorname")]
+        public string? Vorname { get; init; }
+
+        /// <summary>
+        ///     The last name of the person
+        /// </summary>
+        [JsonPropertyName("nachname")]
+        public string? Nachname { get; init; }
     }
 }

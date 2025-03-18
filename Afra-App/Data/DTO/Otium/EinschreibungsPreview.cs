@@ -3,7 +3,7 @@
 namespace Afra_App.Data.DTO.Otium;
 
 /// <summary>
-/// A DTO for previewing a time-slot
+///     A DTO for previewing a time-slot
 /// </summary>
 /// <param name="Anzahl">the amount of einschreibungen for this sub-slot</param>
 /// <param name="KannBearbeiten">whether the user may edit his enrollment status</param>

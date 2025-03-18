@@ -11,8 +11,8 @@ services:
       - './dev/certs:/certs:ro'
   web:
     build:
-        context: ./WebClient
-        dockerfile: Dockerfile
+      context: ./WebClient
+      dockerfile: Dockerfile
     ports:
       - "8080:80"
     links:

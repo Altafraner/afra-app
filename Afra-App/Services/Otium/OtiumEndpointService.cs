@@ -11,17 +11,17 @@ using Person = Afra_App.Data.People.Person;
 namespace Afra_App.Services.Otium;
 
 /// <summary>
-/// A Service for handling requests to the Otium endpoint.
+///     A Service for handling requests to the Otium endpoint.
 /// </summary>
 public class OtiumEndpointService
 {
     private readonly AfraAppContext _context;
+    private readonly EnrollmentService _enrollmentService;
     private readonly KategorieService _kategorieService;
     private readonly OtiumConfiguration _otiumConfiguration;
-    private readonly EnrollmentService _enrollmentService;
 
     /// <summary>
-    /// Constructor for the OtiumEndpointService. Usually called by the DI container.
+    ///     Constructor for the OtiumEndpointService. Usually called by the DI container.
     /// </summary>
     public OtiumEndpointService(AfraAppContext context, KategorieService kategorieService,
         IOptions<OtiumConfiguration> otiumConfiguration, EnrollmentService enrollmentService)
@@ -90,7 +90,7 @@ public class OtiumEndpointService
     }
 
     /// <summary>
-    /// Generates the dashboard for a student.
+    ///     Generates the dashboard for a student.
     /// </summary>
     /// <param name="user">The student to generate the dashboard for</param>
     /// <param name="all">Iff true, all available school-days are included. Otherwise just the current and next two weeks.</param>
@@ -234,7 +234,7 @@ public class OtiumEndpointService
     }
 
     /// <summary>
-    /// Generates the dashboard view as a mentee would see it and adds information about the mentee
+    ///     Generates the dashboard view as a mentee would see it and adds information about the mentee
     /// </summary>
     public LehrerMenteeView GetStudentDashboardForTeacher(Person student, bool all = false)
     {
@@ -244,7 +244,7 @@ public class OtiumEndpointService
     }
 
     /// <summary>
-    /// Gets the detailed information about a termin for a teacher.
+    ///     Gets the detailed information about a termin for a teacher.
     /// </summary>
     public async Task<LehrerTermin?> GetTerminForTeacher(Guid terminId, Person teacher)
     {

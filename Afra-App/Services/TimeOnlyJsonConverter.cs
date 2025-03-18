@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 namespace Afra_App.Services;
 
 /// <summary>
-/// Converts a TimeOnly object to and from a string using the "t" format.
+///     Converts a TimeOnly object to and from a string using the "t" format.
 /// </summary>
 /// <remarks>I hope they somewhen implement native support for this. Until then, this will do.</remarks>
 public class TimeOnlyJsonConverter : JsonConverter<TimeOnly>

@@ -3,7 +3,7 @@
 namespace Afra_App.Data.Configuration;
 
 /// <summary>
-/// A configuration object containing the blocks in a
+///     A configuration object containing the blocks in a
 /// </summary>
 public class OtiumConfiguration
 {

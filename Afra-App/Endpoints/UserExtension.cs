@@ -3,12 +3,12 @@
 namespace Afra_App.Endpoints;
 
 /// <summary>
-/// Extension Methods for the <see cref="UserService" /> class.
+///     Extension Methods for the <see cref="UserService" /> class.
 /// </summary>
 public static class UserExtension
 {
     /// <summary>
-    /// Maps the user endpoints to the given <see cref="IEndpointRouteBuilder" />.
+    ///     Maps the user endpoints to the given <see cref="IEndpointRouteBuilder" />.
     /// </summary>
     public static void MapUserEndpoints(this IEndpointRouteBuilder app)
     {

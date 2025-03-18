@@ -1,17 +1,16 @@
 ﻿using Afra_App.Authentication;
 using Afra_App.Data;
-using Afra_App.Data.DTO.Otium;
 using Afra_App.Services.Otium;
 
 namespace Afra_App.Endpoints.Otium;
 
 /// <summary>
-/// Contains endpoints for managing kategories.
+///     Contains endpoints for managing kategories.
 /// </summary>
 public static class KatalogEndpoints
 {
     /// <summary>
-    /// Maps the kategorie endpoints to the given <see cref="IEndpointRouteBuilder" />.
+    ///     Maps the kategorie endpoints to the given <see cref="IEndpointRouteBuilder" />.
     /// </summary>
     public static void MapKatalogEndpoints(this IEndpointRouteBuilder app)
     {

@@ -26,7 +26,7 @@ public record struct TimeOnlyInterval : ITimeInterval<TimeOnly>
     }
 
     /// <summary>
-    /// A default constructor for the configuration binding
+    ///     A default constructor for the configuration binding
     /// </summary>
     public TimeOnlyInterval()
     {
@@ -62,16 +62,6 @@ public record struct TimeOnlyInterval : ITimeInterval<TimeOnly>
     public bool IntersectsOrIsAdjacent(ITimeInterval<TimeOnly> other)
     {
         return Start <= other.End && End >= other.Start;
-    }
-
-    /// <summary>
-    ///     Determines whether this interval is adjacent to another interval.
-    /// </summary>
-    /// <param name="other">The other TimeOnlyInterval to check for  adjacency</param>
-    /// <returns>True if the intervals are adjacent; otherwise, false.</returns>
-    public bool IsAdjacent(ITimeInterval<TimeOnly> other)
-    {
-        return Start == other.End || End == other.Start;
     }
 
     /// <summary>
@@ -142,7 +132,18 @@ public record struct TimeOnlyInterval : ITimeInterval<TimeOnly>
     }
 
     /// <summary>
-    /// Converts the TimeOnlyInterval to a <see cref="DateTimeInterval" /> using the specified <see cref="DateOnly"/> as Date component while maintaining Time and Duratation.
+    ///     Determines whether this interval is adjacent to another interval.
+    /// </summary>
+    /// <param name="other">The other TimeOnlyInterval to check for  adjacency</param>
+    /// <returns>True if the intervals are adjacent; otherwise, false.</returns>
+    public bool IsAdjacent(ITimeInterval<TimeOnly> other)
+    {
+        return Start == other.End || End == other.Start;
+    }
+
+    /// <summary>
+    ///     Converts the TimeOnlyInterval to a <see cref="DateTimeInterval" /> using the specified <see cref="DateOnly" /> as
+    ///     Date component while maintaining Time and Duratation.
     /// </summary>
     public DateTimeInterval ToDateTimeInterval(DateOnly date)
     {

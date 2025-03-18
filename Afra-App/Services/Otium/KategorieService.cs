@@ -5,15 +5,15 @@ using Microsoft.EntityFrameworkCore;
 namespace Afra_App.Services.Otium;
 
 /// <summary>
-/// A service for handling categories.
+///     A service for handling categories.
 /// </summary>
 public class KategorieService
 {
-    private AfraAppContext _context;
-    private ILogger _logger;
+    private readonly AfraAppContext _context;
+    private readonly ILogger _logger;
 
     /// <summary>
-    /// Constructor for the KategorieService. Usually called by the DI container.
+    ///     Constructor for the KategorieService. Usually called by the DI container.
     /// </summary>
     public KategorieService(AfraAppContext context, ILogger<KategorieService> logger)
     {
@@ -22,7 +22,7 @@ public class KategorieService
     }
 
     /// <summary>
-    /// Return all categories.
+    ///     Return all categories.
     /// </summary>
     public async Task<List<Kategorie>> GetKategorienAsync(bool onlyRequired = false)
     {
@@ -32,7 +32,7 @@ public class KategorieService
     }
 
     /// <summary>
-    /// Return all categories.
+    ///     Return all categories.
     /// </summary>
     public async Task<List<Kategorie>> GetKategorienTrackingAsync(bool onlyRequired = false)
     {
@@ -41,7 +41,7 @@ public class KategorieService
     }
 
     /// <summary>
-    /// Return all categories as an async enumerable.
+    ///     Return all categories as an async enumerable.
     /// </summary>
     public IAsyncEnumerable<Kategorie> GetKategorienAsyncEnumerable(bool onlyRequired = false)
     {
@@ -59,7 +59,7 @@ public class KategorieService
     }
 
     /// <summary>
-    /// Return all categories in a tree as an async enumerable.
+    ///     Return all categories in a tree as an async enumerable.
     /// </summary>
     public IAsyncEnumerable<Kategorie> GetKategorienTreeAsyncEnumerable()
     {
@@ -70,7 +70,7 @@ public class KategorieService
     }
 
     /// <summary>
-    /// Checks if a category or any of its parents is in a list of categories.
+    ///     Checks if a category or any of its parents is in a list of categories.
     /// </summary>
     /// <param name="kategorie">The category to check</param>
     /// <param name="availableKategorien">The list of kategories to check against</param>
@@ -92,10 +92,10 @@ public class KategorieService
     }
 
     /// <summary>
-    /// Gets a list of all transitive categories of a category.
+    ///     Gets a list of all transitive categories of a category.
     /// </summary>
     /// <param name="kategorie">The kategorie to find all parents for.</param>
-    /// <param name="tracking">Whether the <see cref="Kategorie"/> entry is tracking.</param>
+    /// <param name="tracking">Whether the <see cref="Kategorie" /> entry is tracking.</param>
     /// <returns>An Async Enumerable containing a kategorie and all its parents.</returns>
     public async IAsyncEnumerable<Guid> GetTransitiveKategoriesIdsAsyncEnumerable(Kategorie kategorie,
         bool tracking = true)
@@ -106,10 +106,10 @@ public class KategorieService
     }
 
     /// <summary>
-    /// Gets a list of all transitive categories of a category.
+    ///     Gets a list of all transitive categories of a category.
     /// </summary>
     /// <param name="kategorie">The kategorie to find all parents for.</param>
-    /// <param name="tracking">Whether the <see cref="Kategorie"/> entry is tracking.</param>
+    /// <param name="tracking">Whether the <see cref="Kategorie" /> entry is tracking.</param>
     /// <returns>An Async Enumerable containing a kategorie and all its parents.</returns>
     public async IAsyncEnumerable<Kategorie> GetTransitiveKategoriesAsyncEnumerable(Kategorie kategorie,
         bool tracking = true)

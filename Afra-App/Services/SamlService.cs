@@ -11,22 +11,22 @@ using KeyInfo = Afra_App.Authentication.SamlMetadata.KeyInfo;
 namespace Afra_App.Services;
 
 /// <summary>
-/// A service for handling all SAML SP related tasks.
+///     A service for handling all SAML SP related tasks.
 /// </summary>
 public class SamlService
 {
     /// <summary>
-    /// The status of the validation process for a SAML Response.
+    ///     The status of the validation process for a SAML Response.
     /// </summary>
     public enum SamlValidationStatus
     {
         /// <summary>
-        /// The validation was successful.
+        ///     The validation was successful.
         /// </summary>
         Success,
 
         /// <summary>
-        /// The validation failed.
+        ///     The validation failed.
         /// </summary>
         Failed
     }
@@ -44,7 +44,7 @@ public class SamlService
     private readonly string _samlServiceProviderId;
 
     /// <summary>
-    /// Constructs a new <see cref="SamlService"/>.
+    ///     Constructs a new <see cref="SamlService" />.
     /// </summary>
     public SamlService(ILogger<SamlService> logger, IConfiguration configuration)
     {
@@ -59,7 +59,7 @@ public class SamlService
     }
 
     /// <summary>
-    /// Handles a SAML Response.
+    ///     Handles a SAML Response.
     /// </summary>
     /// <param name="responseXml">The XML Representation of the SAML Response</param>
     public SamlValidationResponse Handle(XmlDocument responseXml)
@@ -209,7 +209,7 @@ public class SamlService
     }
 
     /// <summary>
-    /// Generates the SAML Metadata for the Service Provider.
+    ///     Generates the SAML Metadata for the Service Provider.
     /// </summary>
     /// <param name="configuration">The current configuration provider</param>
     /// <param name="urlHelper">The UrlHelper of a controller</param>
@@ -362,9 +362,9 @@ public class SamlService
     }
 
     /// <summary>
-    /// A record containing information about the validation of a SAML Response.
+    ///     A record containing information about the validation of a SAML Response.
     /// </summary>
-    /// <param name="Status"><see cref="SamlValidationStatus.Success"/> if the assertions and response where valid</param>
+    /// <param name="Status"><see cref="SamlValidationStatus.Success" /> if the assertions and response where valid</param>
     /// <param name="Message">A message containing a reason for a failed validation</param>
     /// <param name="UserInfo">Information about the validated user</param>
     public record SamlValidationResponse(
@@ -373,7 +373,7 @@ public class SamlService
         IEnumerable<SamlUserAttribute>? UserInfo = null);
 
     /// <summary>
-    /// Represents a user attribute transmitted in a SAML assertion
+    ///     Represents a user attribute transmitted in a SAML assertion
     /// </summary>
     /// <param name="AttributeName">The attribute name from the Assertion</param>
     /// <param name="AttributeValue">The attribute value from the assertion.</param>

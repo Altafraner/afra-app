@@ -1,10 +1,13 @@
 ﻿namespace Afra_App.Data.TimeInterval;
 
 /// <summary>
-/// A time-interval with a start and end point.
+///     A time-interval with a start and end point.
 /// </summary>
 /// <typeparam name="T">The time-like parameter for the starting point</typeparam>
-/// <remarks>This is mostly here to enforce consistency between <see cref="DateTimeInterval" /> and <see cref="TimeOnlyInterval"/></remarks>
+/// <remarks>
+///     This is mostly here to enforce consistency between <see cref="DateTimeInterval" /> and
+///     <see cref="TimeOnlyInterval" />
+/// </remarks>
 public interface ITimeInterval<T> where T : struct
 {
     /// <summary>
@@ -62,7 +65,10 @@ public interface ITimeInterval<T> where T : struct
     /// </summary>
     /// <param name="other">The other DateTimeInterval to union with.</param>
     /// <returns>A new DateTimeInterval representing the union of the two intervals.</returns>
-    /// <exception cref="InvalidOperationException">Thrown if the intervals do not intersect or are not intersecting or adjacent.</exception>
+    /// <exception cref="InvalidOperationException">
+    ///     Thrown if the intervals do not intersect or are not intersecting or
+    ///     adjacent.
+    /// </exception>
     public ITimeInterval<T> Union(ITimeInterval<T> other);
 
     /// <summary>

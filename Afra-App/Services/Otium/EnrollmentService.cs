@@ -13,17 +13,17 @@ using Termin = Afra_App.Data.Otium.Termin;
 namespace Afra_App.Services.Otium;
 
 /// <summary>
-/// A service for handling enrollments.
+///     A service for handling enrollments.
 /// </summary>
 public class EnrollmentService
 {
-    private ILogger _logger;
-    private AfraAppContext _context;
-    private KategorieService _kategorieService;
-    private OtiumConfiguration _configuration;
+    private readonly OtiumConfiguration _configuration;
+    private readonly AfraAppContext _context;
+    private readonly KategorieService _kategorieService;
+    private readonly ILogger _logger;
 
     /// <summary>
-    /// Constructs the EnrollmentService. Usually called by the DI container.
+    ///     Constructs the EnrollmentService. Usually called by the DI container.
     /// </summary>
     /// <param name="logger"></param>
     /// <param name="context"></param>
@@ -38,7 +38,7 @@ public class EnrollmentService
     }
 
     /// <summary>
-    /// Enrolls a user in a termin for the subblock starting at a given time.
+    ///     Enrolls a user in a termin for the subblock starting at a given time.
     /// </summary>
     /// <param name="terminId">The is of the termin entity to enroll to</param>
     /// <param name="student">The student wanting to enroll</param>
@@ -101,7 +101,7 @@ public class EnrollmentService
     }
 
     /// <summary>
-    /// Unenrolls a user from a termin for the subblock starting at a given time.
+    ///     Unenrolls a user from a termin for the subblock starting at a given time.
     /// </summary>
     /// <param name="terminId">the id of the termin entity</param>
     /// <param name="student">the student wanting to enroll</param>
@@ -165,7 +165,7 @@ public class EnrollmentService
     }
 
     /// <summary>
-    /// Checks if a set of einschreibungen covers all non-optional blocks of a schultag.
+    ///     Checks if a set of einschreibungen covers all non-optional blocks of a schultag.
     /// </summary>
     /// <param name="schultag">The day to check for</param>
     /// <param name="einschreibungen">The set of enrollments to aggregate the intervals from</param>
@@ -186,12 +186,12 @@ public class EnrollmentService
     }
 
     /// <summary>
-    /// Checks if a set of einschreibungen fulfills the required kategories for each week.
+    ///     Checks if a set of einschreibungen fulfills the required kategories for each week.
     /// </summary>
     /// <param name="allEinschreibungen">A list of einschreibungen to check if it fulfils the required Kategorien</param>
     /// <returns>
-    ///   A <see cref="Dictionary{TKey,TValue}"/> with <see cref="DateTimeInterval"/>s representing the weeks as keys
-    ///   and a boolean value that is true iff the rule is fulfilled
+    ///     A <see cref="Dictionary{TKey,TValue}" /> with <see cref="DateTimeInterval" />s representing the weeks as keys
+    ///     and a boolean value that is true iff the rule is fulfilled
     /// </returns>
     public async Task<Dictionary<DateTimeInterval, bool>> CheckAllKategoriesInWeeks(
         List<Einschreibung> allEinschreibungen)
@@ -241,7 +241,7 @@ public class EnrollmentService
     }
 
     /// <summary>
-    /// Checks if a user may enroll in a termin for all subblocks in a termin.
+    ///     Checks if a user may enroll in a termin for all subblocks in a termin.
     /// </summary>
     /// <param name="user">The user to check for</param>
     /// <param name="termin">The termin to check in</param>

@@ -4,9 +4,6 @@ namespace Afra_App.Data.DTO;
 
 public record Pagination<T>
 {
-    public int Total { get; init; }
-    public IEnumerable<T> Items { get; init; }
-
     public Pagination(int Total, IEnumerable<T> Items)
     {
         this.Total = Total;
@@ -18,4 +15,7 @@ public record Pagination<T>
         Total = queryItems.Count();
         Items = queryItems.Skip((page - 1) * pageSize).Take(pageSize);
     }
+
+    public int Total { get; init; }
+    public IEnumerable<T> Items { get; init; }
 }

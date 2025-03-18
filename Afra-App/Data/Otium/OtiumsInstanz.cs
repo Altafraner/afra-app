@@ -4,27 +4,28 @@ using Afra_App.Data.People;
 namespace Afra_App.Data.Otium;
 
 /// <summary>
-/// An abstract class representing the basic structure of an instance for an Otium. Here to ensure consistency between recurrent and single instances.
+///     An abstract class representing the basic structure of an instance for an Otium. Here to ensure consistency between
+///     recurrent and single instances.
 /// </summary>
 public abstract class OtiumsInstanz
 {
     /// <summary>
-    /// A reference to the Otium this instance is for.
+    ///     A reference to the Otium this instance is for.
     /// </summary>
     public required Otium Otium { get; set; }
 
     /// <summary>
-    /// A reference to the tutor of the Otium. Could be a student or a teacher.
+    ///     A reference to the tutor of the Otium. Could be a student or a teacher.
     /// </summary>
     public required Person? Tutor { get; set; }
 
     /// <summary>
-    /// The block the Otium is in.
+    ///     The block the Otium is in.
     /// </summary>
     public required byte Block { get; set; }
 
     /// <summary>
-    /// The location for the Otium.
+    ///     The location for the Otium.
     /// </summary>
     [MaxLength(10)]
     public required string Ort { get; set; }

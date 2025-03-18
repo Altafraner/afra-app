@@ -1,15 +1,16 @@
 ﻿using Afra_App.Data;
+using Afra_App.Data.DTO;
 using Microsoft.EntityFrameworkCore;
 
 namespace Afra_App.Endpoints;
 
 /// <summary>
-/// A class containing extension methods for the school year endpoint.
+///     A class containing extension methods for the school year endpoint.
 /// </summary>
 public static class SchuljahrExtensions
 {
     /// <summary>
-    /// Maps the school year endpoint to the given <see cref="IEndpointRouteBuilder" />.
+    ///     Maps the school year endpoint to the given <see cref="IEndpointRouteBuilder" />.
     /// </summary>
     /// <param name="app"></param>
     public static void MapSchuljahr(this IEndpointRouteBuilder app)
@@ -23,6 +24,6 @@ public static class SchuljahrExtensions
         var schultage = await context.Schultage.OrderBy(s => s.Datum).ToListAsync();
         var next = schultage.FirstOrDefault(s => s.Datum >= DateOnly.FromDateTime(DateTime.Now)) ?? schultage.Last();
 
-        return Results.Ok(new Data.DTO.Schuljahr(next, schultage));
+        return Results.Ok(new Schuljahr(next, schultage));
     }
 }

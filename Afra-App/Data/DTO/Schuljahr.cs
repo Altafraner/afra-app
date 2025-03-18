@@ -3,7 +3,7 @@
 namespace Afra_App.Data.DTO;
 
 /// <summary>
-/// A DTO for sending schooldays to the client.
+///     A DTO for sending schooldays to the client.
 /// </summary>
 /// <param name="Standard">The schoolday that should be displayed by default</param>
 /// <param name="Schultage">A list of all schooldays</param>

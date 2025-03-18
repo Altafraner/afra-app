@@ -6,12 +6,12 @@ using Afra_App.Services.Otium;
 namespace Afra_App.Endpoints.Otium;
 
 /// <summary>
-/// A class containing the endpoints for the management of otia.
+///     A class containing the endpoints for the management of otia.
 /// </summary>
 public static class ManagementEndpoints
 {
     /// <summary>
-    /// Maps the management endpoints to the given <see cref="IEndpointRouteBuilder" />.
+    ///     Maps the management endpoints to the given <see cref="IEndpointRouteBuilder" />.
     /// </summary>
     /// <param name="app"></param>
     public static void MapManagementEndpoints(this IEndpointRouteBuilder app)

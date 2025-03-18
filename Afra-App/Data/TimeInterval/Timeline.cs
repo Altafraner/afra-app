@@ -1,26 +1,30 @@
 ﻿namespace Afra_App.Data.TimeInterval;
 
 /// <summary>
-/// A collection of DateTimeIntervals where removing an interval can split existing intervals.
+///     A collection of DateTimeIntervals where removing an interval can split existing intervals.
 /// </summary>
-/// <remarks>With some work, this could implement <see cref="ICollection{T}"/> or <see cref="IList{T}"/> mit <c>T</c> als <see cref="ITimeInterval{T}"/></remarks>
+/// <remarks>
+///     With some work, this could implement <see cref="ICollection{T}" /> or <see cref="IList{T}" /> mit <c>T</c> als
+///     <see cref="ITimeInterval{T}" />
+/// </remarks>
 public class Timeline<T> where T : struct
 {
     private readonly ICollection<ITimeInterval<T>> _intervals = [];
 
     /// <summary>
-    /// Creates a new empty timeline.
+    ///     Creates a new empty timeline.
     /// </summary>
     public Timeline()
     {
     }
 
     /// <summary>
-    /// Creates a new timeline containing the given intervals.
+    ///     Creates a new timeline containing the given intervals.
     /// </summary>
     /// <param name="intervals">The intervals to prefill with</param>
     /// <remarks>
-    /// Be careful when adding intervals that overlap with or are adjacent with another. The timeline will not merge overlapping or adjacent intervals in the constructor.
+    ///     Be careful when adding intervals that overlap with or are adjacent with another. The timeline will not merge
+    ///     overlapping or adjacent intervals in the constructor.
     /// </remarks>
     public Timeline(IEnumerable<ITimeInterval<T>> intervals)
     {
@@ -28,7 +32,7 @@ public class Timeline<T> where T : struct
     }
 
     /// <summary>
-    /// Add a new interval to the timeline.
+    ///     Add a new interval to the timeline.
     /// </summary>
     /// <param name="interval">The interval to add</param>
     public void Add(ITimeInterval<T> interval)
@@ -46,7 +50,8 @@ public class Timeline<T> where T : struct
     }
 
     /// <summary>
-    /// Remove an interval from the timeline. If the interval intersects with existing intervals, the existing intervals might be split.
+    ///     Remove an interval from the timeline. If the interval intersects with existing intervals, the existing intervals
+    ///     might be split.
     /// </summary>
     /// <param name="interval">The interval to remove</param>
     public void Remove(ITimeInterval<T> interval)
@@ -61,7 +66,7 @@ public class Timeline<T> where T : struct
     }
 
     /// <summary>
-    /// Get a list of all intervals in the timeline.
+    ///     Get a list of all intervals in the timeline.
     /// </summary>
     /// <returns>A list of all intervals in the timeline</returns>
     public List<ITimeInterval<T>> GetIntervals()
