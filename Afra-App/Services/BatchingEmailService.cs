@@ -14,7 +14,7 @@ public interface IBatchingEmailService
     /// <summary>
     ///     Schedule a notification for delivery in a batch within the specified timeframe
     /// </summary>
-    public Task ScheduleEmail(Person recipient, string subject, string body, TimeSpan deadline);
+    public Task ScheduleEmailAsync(Person recipient, string subject, string body, TimeSpan deadline);
 }
 
 /// <summary>
@@ -43,9 +43,9 @@ public class BatchingEmailService : IBatchingEmailService
     /// <param name="subject">The subject of the notification (Not the Subject of the actual Email)</param>
     /// <param name="body">The body of the notification</param>
     /// <param name="deadline">The TimeSpan within which to send the email containing the notification</param>
-    public async Task ScheduleEmail(Person recipient, string subject, string body, TimeSpan deadline)
+    public async Task ScheduleEmailAsync(Person recipient, string subject, string body, TimeSpan deadline)
     {
-        var absDeadLine = DateTimeOffset.UtcNow + deadline;
+        var absDeadLine = DateTime.UtcNow + deadline;
         var mailId = Guid.CreateVersion7();
         _context.ScheduledEmails.Add(
             new ScheduledEmail
@@ -107,9 +107,19 @@ internal class FlushEmailsJob : IJob
             // Flush jobs might be pending that were set by already sent notifications.
             // Do not send empty batches caused by this condition
             if (emailsForUser.Count == 0)
+            {
                 return;
+            }
 
-            var userEmail = (await _dbContext.Personen.FindAsync(userId))!.Email;
+            var user = await _dbContext.Personen.FindAsync(userId);
+
+            // Drop message if user was deleted after scheduling email
+            if (user is null)
+            {
+                return;
+            }
+
+            var userEmail = user.Email;
 
             await Console.Out.WriteLineAsync($"Flush for {userEmail}");
 
@@ -125,7 +135,7 @@ internal class FlushEmailsJob : IJob
             }
 
             _logger.LogInformation("Flushing E-Mail: {batchText}", batchText);
-            await _emailService.SendEmail(userEmail, batchSubject, batchText);
+            await _emailService.SendEmailAsync(userEmail, batchSubject, batchText);
 
             _dbContext.RemoveRange(emailsForUser);
             await _dbContext.SaveChangesAsync();

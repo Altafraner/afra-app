@@ -11,7 +11,7 @@ public interface IEmailService
     /// <summary>
     ///     Sends an Email
     /// </summary>
-    public Task SendEmail(string to, string subject, string body);
+    public Task SendEmailAsync(string to, string subject, string body);
 }
 
 /// <summary>
@@ -33,7 +33,7 @@ public class EmailService : IEmailService
     ///     Schedule an Email for ASAP delivery.
     ///     Might batch multiple messages into a single SMTP session in the future.
     /// </summary>
-    public Task SendEmail(string toAddress, string subject, string body)
+    public Task SendEmailAsync(string toAddress, string subject, string body)
     {
         var jobName = $"mail-{toAddress}-{Guid.NewGuid()}";
         var key = new JobKey(jobName, "mailjobs");
@@ -47,7 +47,7 @@ public class EmailService : IEmailService
 
         var trigger = TriggerBuilder.Create()
             .ForJob(key)
-            .StartAt(DateTimeOffset.UtcNow + TimeSpan.FromSeconds(15))
+            .StartAt(DateTime.UtcNow + TimeSpan.FromSeconds(15))
             .Build();
 
         return _scheduler.ScheduleJob(job, trigger);

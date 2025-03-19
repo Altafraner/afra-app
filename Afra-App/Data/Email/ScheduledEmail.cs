@@ -32,5 +32,5 @@ public class ScheduledEmail
     /// <summary>
     /// A point in time by which the email should have been sent
     /// </summary>
-    public required DateTimeOffset Deadline { get; set; }
+    public required DateTime Deadline { get; set; }
 }
