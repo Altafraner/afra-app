@@ -1,10 +1,10 @@
-namespace Afra_App.Services;
-
 using Afra_App.Data;
 using Afra_App.Data.Email;
 using Afra_App.Data.People;
 using Microsoft.EntityFrameworkCore;
 using Quartz;
+
+namespace Afra_App.Services;
 
 /// <summary>
 ///     An interface representing a batching email notification sender
@@ -36,7 +36,8 @@ public class BatchingEmailService : IBatchingEmailService
     }
 
     /// <summary>
-    ///     Inserts an email into the database and schedules flushing all mails for the respective user when the deadline passes.
+    ///     Inserts an email into the database and schedules flushing all mails for the respective user when the deadline
+    ///     passes.
     /// </summary>
     /// <param name="recipient">The Person to receive the email</param>
     /// <param name="subject">The subject of the notification (Not the Subject of the actual Email)</param>
@@ -44,28 +45,28 @@ public class BatchingEmailService : IBatchingEmailService
     /// <param name="deadline">The TimeSpan within which to send the email containing the notification</param>
     public async Task ScheduleEmail(Person recipient, string subject, string body, TimeSpan deadline)
     {
-
-        DateTimeOffset absDeadLine = DateTimeOffset.UtcNow + deadline;
+        var absDeadLine = DateTimeOffset.UtcNow + deadline;
+        var mailId = Guid.CreateVersion7();
         _context.ScheduledEmails.Add(
-                new ScheduledEmail
-                {
-                    Id = new Guid(),
-                    Recipient = recipient,
-                    Subject = subject,
-                    Body = body,
-                    Deadline = absDeadLine,
-                }
+            new ScheduledEmail
+            {
+                Id = mailId,
+                Recipient = recipient,
+                Subject = subject,
+                Body = body,
+                Deadline = absDeadLine
+            }
         );
         await _context.SaveChangesAsync();
 
-        JobKey key = new JobKey($"mail-flush-{recipient}-{Guid.NewGuid()}", "flush-email");
+        var key = new JobKey($"mail-flush-{recipient}-{mailId}", "flush-email");
 
         // Create a job to flush all notifications to this recipient after the deadline passes
-        IJobDetail job = JobBuilder.Create<FlushEmailsJob>()
+        var job = JobBuilder.Create<FlushEmailsJob>()
             .WithIdentity(key)
             .UsingJobData("user_id", recipient.Id)
             .Build();
-        ITrigger trigger = TriggerBuilder.Create()
+        var trigger = TriggerBuilder.Create()
             .ForJob(key)
             .StartAt(absDeadLine)
             .Build();
@@ -77,62 +78,61 @@ public class BatchingEmailService : IBatchingEmailService
 /// <summary>
 ///     A Job that sends a batched email with all pending notifications for a single User
 /// </summary>
-class FlushEmailsJob : IJob
+internal class FlushEmailsJob : IJob
 {
     private readonly AfraAppContext _dbContext;
     private readonly IEmailService _emailService;
+    private readonly ILogger _logger;
 
-    public FlushEmailsJob(AfraAppContext context, IEmailService emailService)
+    public FlushEmailsJob(AfraAppContext context, IEmailService emailService, ILogger<FlushEmailsJob> logger)
     {
         _dbContext = context;
         _emailService = emailService;
+        _logger = logger;
     }
 
     public async Task Execute(IJobExecutionContext jobContext)
     {
         try
         {
-            JobDataMap dataMap = jobContext.JobDetail.JobDataMap;
-            Guid user_id = dataMap.GetGuidValueFromString("user_id");
+            var dataMap = jobContext.JobDetail.JobDataMap;
+            var userId = dataMap.GetGuidValueFromString("user_id");
 
             var emailsForUser = _dbContext.ScheduledEmails
                 .Include(x => x.Recipient)
-                .Where(x => x.Recipient.Id == user_id)
+                .Where(x => x.Recipient.Id == userId)
                 .OrderBy(x => x.Deadline) // Short notices are probably more important
                 .ToList();
 
             // Flush jobs might be pending that were set by already sent notifications.
             // Do not send empty batches caused by this condition
-            if (!emailsForUser.Any())
+            if (emailsForUser.Count == 0)
                 return;
 
-            var user_email = _dbContext.Personen.Find(user_id)!.Email;
+            var userEmail = (await _dbContext.Personen.FindAsync(userId))!.Email;
 
-            await Console.Out.WriteLineAsync($"Flush for {user_email}");
+            await Console.Out.WriteLineAsync($"Flush for {userEmail}");
 
             const string batchSubject = "Neue Benachrichtigungen";
-            string batchText = "";
+            var batchText = "";
 
 
             foreach (var (em, i) in emailsForUser.Select((x, i) => (x, i)))
             {
-                string notificationHeading = $"{(i + 1),3}. {em.Subject}";
-                string notificationText = $"     {em.Body}";
+                var notificationHeading = $"{i + 1,3}. {em.Subject}";
+                var notificationText = $"     {em.Body}";
                 batchText += $"{notificationHeading}\n{notificationText}\n";
             }
 
-            await Console.Out.WriteLineAsync(batchText);
-
-            await _emailService.SendEmail(user_email, batchSubject, batchText);
+            _logger.LogInformation("Flushing E-Mail: {batchText}", batchText);
+            await _emailService.SendEmail(userEmail, batchSubject, batchText);
 
             _dbContext.RemoveRange(emailsForUser);
-
             await _dbContext.SaveChangesAsync();
-
         }
         catch (Exception e)
         {
-            throw new JobExecutionException(e, refireImmediately: false);
+            throw new JobExecutionException(e, false);
         }
     }
 }

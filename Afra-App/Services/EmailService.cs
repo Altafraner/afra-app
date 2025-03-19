@@ -1,8 +1,7 @@
-namespace Afra_App.Services;
-
 using System.Net.Mail;
 using Quartz;
 
+namespace Afra_App.Services;
 
 /// <summary>
 ///     An interface representing a email sender
@@ -21,15 +20,13 @@ public interface IEmailService
 public class EmailService : IEmailService
 {
     private readonly IScheduler _scheduler;
-    private readonly SmtpClient _smtpClient;
 
     /// <summary>
     ///     Constructs the EmailService. Usually called by the DI container.
     /// </summary>
-    public EmailService(ISchedulerFactory schedulerFactory, SmtpClient smtpClient)
+    public EmailService(ISchedulerFactory schedulerFactory)
     {
         _scheduler = schedulerFactory.GetScheduler().GetAwaiter().GetResult();
-        _smtpClient = smtpClient;
     }
 
     /// <summary>
@@ -38,18 +35,17 @@ public class EmailService : IEmailService
     /// </summary>
     public Task SendEmail(string toAddress, string subject, string body)
     {
+        var jobName = $"mail-{toAddress}-{Guid.NewGuid()}";
+        var key = new JobKey(jobName, "mailjobs");
 
-        string jobName = $"mail-{toAddress}-{Guid.NewGuid()}";
-        JobKey key = new JobKey(jobName, "mailjobs");
-
-        IJobDetail job = JobBuilder.Create<MailJob>()
+        var job = JobBuilder.Create<MailJob>()
             .WithIdentity(key)
             .UsingJobData("address_to", toAddress)
             .UsingJobData("subject", subject)
             .UsingJobData("body", body)
             .Build();
 
-        ITrigger trigger = TriggerBuilder.Create()
+        var trigger = TriggerBuilder.Create()
             .ForJob(key)
             .StartAt(DateTimeOffset.UtcNow + TimeSpan.FromSeconds(15))
             .Build();
@@ -58,10 +54,9 @@ public class EmailService : IEmailService
     }
 }
 
-
-class MailJob : IJob
+internal class MailJob : IJob
 {
-    private SmtpClient _smtpClient;
+    private readonly SmtpClient _smtpClient;
 
     public MailJob(SmtpClient smtpClient)
     {
@@ -72,22 +67,22 @@ class MailJob : IJob
     {
         try
         {
-            JobDataMap dataMap = context.JobDetail.JobDataMap;
-            MailAddress to = new MailAddress(dataMap.GetString("address_to")!);
-            string subject = dataMap.GetString("subject")!;
-            string body = dataMap.GetString("body")!;
+            var dataMap = context.JobDetail.JobDataMap;
+            var to = new MailAddress(dataMap.GetString("address_to")!);
+            var subject = dataMap.GetString("subject")!;
+            var body = dataMap.GetString("body")!;
 
             var message = new MailMessage(new MailAddress("noreply@localhost"), to)
             {
                 Subject = subject,
-                Body = body,
+                Body = body
             };
 
-            await _smtpClient.SendAsync(message);
+            await _smtpClient.SendMailAsync(message);
         }
         catch (Exception e)
         {
-            throw new JobExecutionException(e, refireImmediately: false);
+            throw new JobExecutionException(e, false);
         }
     }
 }

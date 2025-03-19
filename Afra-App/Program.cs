@@ -10,7 +10,6 @@ using Afra_App.Services.Otium;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Quartz;
 using Quartz.AspNetCore;
 
@@ -90,19 +89,15 @@ builder.Services.AddQuartz(q =>
         );
     }
 );
-builder.Services.AddQuartzServer(options =>
-{
-    options.WaitForJobsToComplete = true;
-});
+builder.Services.AddQuartzServer(options => { options.WaitForJobsToComplete = true; });
 
-builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 
-builder.Services.AddSingleton<SmtpClient>(sp =>
+builder.Services.AddSingleton<SmtpClient>(_ =>
 {
-    var smtpSettings = sp.GetRequiredService<IOptions<SmtpSettings>>().Value;
-    return new SmtpClient(smtpSettings.Host, smtpSettings.Port)
+    var config = builder.Configuration.GetSection("SmtpSettings");
+    return new SmtpClient(config["Host"], Convert.ToInt32(config["Port"]))
     {
-        Credentials = new NetworkCredential(smtpSettings.Username, smtpSettings.Password),
+        Credentials = new NetworkCredential(config["Username"], config["Password"]),
         EnableSsl = true
     };
 });
