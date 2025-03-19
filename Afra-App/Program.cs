@@ -1,3 +1,5 @@
+using System.Net;
+using System.Net.Mail;
 using System.Security.Cryptography;
 using System.Text.Json.Serialization;
 using Afra_App.Data;
@@ -8,6 +10,7 @@ using Afra_App.Services.Otium;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Quartz;
 using Quartz.AspNetCore;
 
@@ -91,6 +94,21 @@ builder.Services.AddQuartzServer(options =>
 {
     options.WaitForJobsToComplete = true;
 });
+
+builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
+
+builder.Services.AddSingleton<SmtpClient>(sp =>
+{
+    var smtpSettings = sp.GetRequiredService<IOptions<SmtpSettings>>().Value;
+    return new SmtpClient(smtpSettings.Host, smtpSettings.Port)
+    {
+        Credentials = new NetworkCredential(smtpSettings.Username, smtpSettings.Password),
+        EnableSsl = true
+    };
+});
+
+builder.Services.AddTransient<IEmailService, EmailService>();
+builder.Services.AddTransient<IBatchingEmailService, BatchingEmailService>();
 
 var app = builder.Build();
 

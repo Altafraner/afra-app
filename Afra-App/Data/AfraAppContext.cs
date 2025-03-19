@@ -1,3 +1,4 @@
+using Afra_App.Data.Email;
 using Afra_App.Data.Otium;
 using Afra_App.Data.People;
 using Afra_App.Data.Schuljahr;
@@ -56,6 +57,11 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
     /// </summary>
     public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }
 
+    /// <summary>
+    /// The Emails scheduled by the Application
+    /// </summary>
+    public DbSet<ScheduledEmail> ScheduledEmails { get; set; }
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -91,6 +97,9 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
             .HasMany(or => or.Termine)
             .WithOne(or => or.Wiederholung)
             .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<ScheduledEmail>()
+            .HasOne(e => e.Recipient);
 
         // Have to do this here because the [ComplexType] annotation is not valid on record structs.
         modelBuilder.Entity<Einschreibung>()
