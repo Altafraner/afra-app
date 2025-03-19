@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography.Xml;
 using System.Text;
@@ -104,7 +104,7 @@ public class SamlService
             .Select(id => signedResponseXml.GetIdElement(responseXml, id))
             .OfType<XmlElement>()
             .Where(assertion => assertion is
-                { NamespaceURI: SamlAssertionNamespace, LocalName: SamlAssertionLocalName });
+            { NamespaceURI: SamlAssertionNamespace, LocalName: SamlAssertionLocalName });
 
         var signedAssertionsArray = signedAssertions as XmlElement[] ?? signedAssertions.ToArray();
 

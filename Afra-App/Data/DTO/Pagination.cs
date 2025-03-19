@@ -1,4 +1,4 @@
-﻿#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 // Currenty not needed. Therefore, documentation has no priority. I know i'm gonna regret this later.
 namespace Afra_App.Data.DTO;
 

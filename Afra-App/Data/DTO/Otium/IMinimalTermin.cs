@@ -1,4 +1,4 @@
-﻿namespace Afra_App.Data.DTO.Otium;
+namespace Afra_App.Data.DTO.Otium;
 
 /// <summary>
 ///     A interface representing the minimal basic structure of a DTO for a termin

@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 using Afra_App.Data;
 using Afra_App.Data.DTO;
 using Microsoft.AspNetCore.Mvc;

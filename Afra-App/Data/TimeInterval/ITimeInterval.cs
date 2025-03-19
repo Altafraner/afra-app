@@ -1,4 +1,4 @@
-﻿namespace Afra_App.Data.TimeInterval;
+namespace Afra_App.Data.TimeInterval;
 
 /// <summary>
 ///     A time-interval with a start and end point.

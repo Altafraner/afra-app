@@ -1,4 +1,4 @@
-﻿using Afra_App.Data.Otium;
+using Afra_App.Data.Otium;
 using Afra_App.Data.People;
 using Afra_App.Data.Schuljahr;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;

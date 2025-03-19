@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using Afra_App.Data.People;
 
 namespace Afra_App.Data.Otium;

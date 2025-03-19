@@ -1,4 +1,4 @@
-﻿using Afra_App.Data.Schuljahr;
+using Afra_App.Data.Schuljahr;
 
 namespace Afra_App.Data.Configuration;
 

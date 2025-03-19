@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using System.Xml;
 using Afra_App.Services;
 using Microsoft.AspNetCore.Mvc;

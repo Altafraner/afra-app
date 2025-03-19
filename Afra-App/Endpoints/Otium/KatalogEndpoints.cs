@@ -1,4 +1,4 @@
-﻿using Afra_App.Authentication;
+using Afra_App.Authentication;
 using Afra_App.Data;
 using Afra_App.Services.Otium;
 

@@ -1,4 +1,4 @@
-﻿using Afra_App.Endpoints.Otium;
+using Afra_App.Endpoints.Otium;
 
 namespace Afra_App.Endpoints;
 

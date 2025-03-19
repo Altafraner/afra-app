@@ -1,4 +1,4 @@
-﻿using Afra_App.Data;
+using Afra_App.Data;
 using Afra_App.Data.Otium;
 using Microsoft.EntityFrameworkCore;
 

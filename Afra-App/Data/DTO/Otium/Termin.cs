@@ -1,4 +1,4 @@
-﻿namespace Afra_App.Data.DTO.Otium;
+namespace Afra_App.Data.DTO.Otium;
 
 /// <summary>
 ///     A DTO for the detailed view of a termin

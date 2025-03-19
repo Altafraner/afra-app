@@ -1,4 +1,4 @@
-﻿using Afra_App.Data;
+using Afra_App.Data;
 using Afra_App.Data.People;
 
 namespace Afra_App.Authentication;

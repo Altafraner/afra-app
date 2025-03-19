@@ -1,4 +1,4 @@
-﻿namespace Afra_App.Data.DTO.Otium;
+namespace Afra_App.Data.DTO.Otium;
 
 public enum AnwesenheitsStatus
 {

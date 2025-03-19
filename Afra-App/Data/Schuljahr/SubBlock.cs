@@ -1,4 +1,4 @@
-﻿using Afra_App.Data.TimeInterval;
+using Afra_App.Data.TimeInterval;
 
 namespace Afra_App.Data.Schuljahr;
 

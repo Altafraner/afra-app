@@ -1,4 +1,4 @@
-﻿namespace Afra_App.Data.TimeInterval;
+namespace Afra_App.Data.TimeInterval;
 
 /// <summary>
 ///     A collection of DateTimeIntervals where removing an interval can split existing intervals.

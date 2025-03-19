@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using Afra_App.Authentication;
 using Afra_App.Data;
 using Afra_App.Data.DTO;

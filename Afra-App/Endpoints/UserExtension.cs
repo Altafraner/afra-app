@@ -1,4 +1,4 @@
-﻿using Afra_App.Services;
+using Afra_App.Services;
 
 namespace Afra_App.Endpoints;
 
