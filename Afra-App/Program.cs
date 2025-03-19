@@ -8,6 +8,8 @@ using Afra_App.Services.Otium;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
+using Quartz;
+using Quartz.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -71,6 +73,24 @@ catch (CryptographicException exception)
     Console.WriteLine($"Could not load certificate for Data Protection {exception.Message}");
     Environment.Exit(1);
 }
+
+builder.Services.AddQuartz(q =>
+    {
+        q.UsePersistentStore(x =>
+            {
+                string conString = builder.Configuration.GetConnectionString("DefaultConnection")!;
+                x.UsePostgres(x =>
+                    x.ConnectionString = conString
+                );
+                x.UseSystemTextJsonSerializer();
+            }
+        );
+    }
+);
+builder.Services.AddQuartzServer(options =>
+{
+    options.WaitForJobsToComplete = true;
+});
 
 var app = builder.Build();
 
