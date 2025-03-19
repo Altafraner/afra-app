@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -97,6 +97,27 @@ namespace Afra_App.Migrations
                         name: "FK_Otia_OtiaKategorien_KategorieId",
                         column: x => x.KategorieId,
                         principalTable: "OtiaKategorien",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ScheduledEmails",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    RecipientId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Subject = table.Column<string>(type: "text", nullable: false),
+                    Body = table.Column<string>(type: "text", nullable: false),
+                    Deadline = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ScheduledEmails", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ScheduledEmails_Personen_RecipientId",
+                        column: x => x.RecipientId,
+                        principalTable: "Personen",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -281,6 +302,11 @@ namespace Afra_App.Migrations
                 name: "IX_Personen_MentorId",
                 table: "Personen",
                 column: "MentorId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ScheduledEmails_RecipientId",
+                table: "ScheduledEmails",
+                column: "RecipientId");
         }
 
         /// <inheritdoc />
@@ -294,6 +320,9 @@ namespace Afra_App.Migrations
 
             migrationBuilder.DropTable(
                 name: "OtiumPerson");
+
+            migrationBuilder.DropTable(
+                name: "ScheduledEmails");
 
             migrationBuilder.DropTable(
                 name: "OtiaTermine");

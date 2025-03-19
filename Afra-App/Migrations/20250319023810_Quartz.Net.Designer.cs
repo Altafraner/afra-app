@@ -13,8 +13,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Afra_App.Migrations
 {
     [DbContext(typeof(AfraAppContext))]
-    [Migration("20250313165258_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250319023810_Quartz.Net")]
+    partial class QuartzNet
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,6 +25,33 @@ namespace Afra_App.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("Afra_App.Data.Email.ScheduledEmail", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("Deadline")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("RecipientId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecipientId");
+
+                    b.ToTable("ScheduledEmails");
+                });
 
             modelBuilder.Entity("Afra_App.Data.Otium.Einschreibung", b =>
                 {
@@ -277,6 +304,17 @@ namespace Afra_App.Migrations
                     b.HasIndex("VerwalteteOtiaId");
 
                     b.ToTable("OtiumPerson");
+                });
+
+            modelBuilder.Entity("Afra_App.Data.Email.ScheduledEmail", b =>
+                {
+                    b.HasOne("Afra_App.Data.People.Person", "Recipient")
+                        .WithMany()
+                        .HasForeignKey("RecipientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Recipient");
                 });
 
             modelBuilder.Entity("Afra_App.Data.Otium.Einschreibung", b =>
