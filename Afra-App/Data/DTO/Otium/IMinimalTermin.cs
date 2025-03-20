@@ -21,6 +21,11 @@ public interface IMinimalTermin
     public string Ort { get; set; }
 
     /// <summary>
+    ///     The number of the block the termin is in
+    /// </summary>
+    public sbyte Block { get; set; }
+
+    /// <summary>
     ///     The tutor handling the termin (optional)
     /// </summary>
     public PersonInfoMinimal? Tutor { get; set; }

@@ -1,7 +1,7 @@
 ﻿<script setup>
 
-import {DataTable, Column, Button, Tag} from "primevue";
-import {chooseSeverity, formatPerson, formatTutor} from "@/helpers/formatters.js"
+import {Button, Column, DataTable} from "primevue";
+import {formatPerson} from "@/helpers/formatters.js"
 import AuslastungsTag from "@/components/Otium/Shared/AuslastungsTag.vue";
 
 const props = defineProps({
@@ -20,8 +20,13 @@ const props = defineProps({
                 :disabled="data.istAbgesagt"/>
       </template>
     </Column>
+    <Column header="Block">
+      <template #body="{data}">
+        {{ data.block + 1 }}
+      </template>
+    </Column>
     <Column header="Raum" field="ort"/>
-    <Column header="Lehrer:in">
+    <Column header="Betreuer:in">
       <template #body="{data}">
         {{ data.tutor ? formatPerson(data.tutor) : '' }}
       </template>

@@ -23,7 +23,8 @@ public record Termin : ITermin
         Tutor = termin.Tutor is not null ? new PersonInfoMinimal(termin.Tutor) : null;
         MaxEinschreibungen = termin.MaxEinschreibungen;
         Einschreibungen = einschreibungen;
-        Datum = termin.Schultag.Datum.ToDateTime(startTime);
+        Block = termin.Block.Nummer;
+        Datum = termin.Block.Schultag.Datum.ToDateTime(startTime);
     }
 
     /// <summary>
@@ -46,6 +47,9 @@ public record Termin : ITermin
 
     /// <inheritdoc />
     public string Ort { get; set; }
+
+    /// <inheritdoc />
+    public sbyte Block { get; set; }
 
     /// <inheritdoc />
     public IAsyncEnumerable<Guid> Kategorien { get; set; }

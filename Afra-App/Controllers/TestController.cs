@@ -50,13 +50,11 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
             new() { Parent = akademisches, Bezeichnung = "Wettbewerbe" },
             new() { Parent = akademisches, Bezeichnung = "Sonstige" }
         };
-        List<bool[]> possibleOtiaBlocks = [[true, true], [true, true], [true, false], [false, true]];
         List<string> rooms =
         [
             "102", "103", "104", "105", "106", "108", "109", "110", "202", "203", "204", "205", "206",
             "207", "208", "209", "211", "212", "213", "214", "215", "216", "217", "301", "307", "308"
         ];
-
         List<(string, Kategorie)> possibleOtia =
         [
             ("Schreibwerkstatt", otiumsKategorien[6]),
@@ -78,7 +76,6 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
             ("Lernen Lernen", otiumsKategorien[5])
         ];
 
-
         var personFaker = new Faker<Person>("de")
             .RuleFor(p => p.Nachname, f => f.Person.LastName)
             .RuleFor(p => p.Vorname, f => f.Person.FirstName)
@@ -88,31 +85,37 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
             .RuleFor(p => p.Rolle, Rolle.Tutor);
 
         var mentoren = personFaker.Generate(60);
-        dbContext.Personen.AddRange(mentoren);
 
         var studentsFaker = personFaker
             .RuleFor(p => p.Mentor, f => f.PickRandom(mentoren))
             .RuleFor(p => p.Rolle, Rolle.Student);
 
         var students = studentsFaker.Generate(250);
-        dbContext.Personen.AddRange(students);
 
         var today = DateTime.Today;
         var nextMonday = today.AddDays((int)DayOfWeek.Monday - (int)today.DayOfWeek);
         var nextFriday = today.AddDays((int)DayOfWeek.Friday - (int)today.DayOfWeek);
 
-
         var schultagGenerator = new Faker<Schultag>()
-            .RuleFor(s => s.OtiumsBlock, f => f.PickRandom(possibleOtiaBlocks))
             .RuleFor(s => s.Datum,
                 f => DateOnly.FromDateTime(f.PickRandomParam(nextMonday, nextFriday)).AddDays(f.IndexFaker * 7))
             .RuleFor(s => s.Wochentyp, f => f.PickRandom<Wochentyp>());
         var schultage = schultagGenerator.Generate(20);
-        dbContext.Schultage.AddRange(schultage);
 
-
-        dbContext.OtiaKategorien.AddRange(otiumsKategorien);
-        await dbContext.SaveChangesAsync();
+        List<Block> blocks = [];
+        foreach (var schultag in schultage)
+        {
+            blocks.Add(new Block
+            {
+                Nummer = 0,
+                Schultag = schultag
+            });
+            blocks.Add(new Block
+            {
+                Nummer = 1,
+                Schultag = schultag
+            });
+        }
 
         var otiumGenerator = new Faker<Otium>("de")
             .RuleFor(o => o.Bezeichnung, f => possibleOtia[f.IndexFaker].Item1)
@@ -121,19 +124,21 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
             .RuleFor(o => o.Kategorie, f => possibleOtia[f.IndexFaker].Item2);
 
         var otia = otiumGenerator.Generate(possibleOtia.Count);
-        dbContext.AddRange(otia);
-
-        await dbContext.SaveChangesAsync();
 
         var otiumTerminGenerator = new Faker<Termin>("de")
             .RuleFor(t => t.Otium, f => f.PickRandom(otia))
             .RuleFor(t => t.Tutor, (_, t) => t.Otium.Verantwortliche.FirstOrDefault())
             .RuleFor(t => t.IstAbgesagt, f => f.Random.Bool(0.1f))
             .RuleFor(t => t.Ort, f => f.PickRandom(rooms))
-            .RuleFor(t => t.Block, f => f.Random.Byte(0, 1))
-            .RuleFor(t => t.Schultag, f => f.PickRandom(schultage))
+            .RuleFor(t => t.Block, f => f.PickRandom(blocks))
             .RuleFor(t => t.MaxEinschreibungen, f => f.Random.Bool() ? null : f.Random.Int(2, 20));
 
+        dbContext.Personen.AddRange(mentoren);
+        dbContext.Personen.AddRange(students);
+        dbContext.Schultage.AddRange(schultage);
+        dbContext.Blocks.AddRange(blocks);
+        dbContext.OtiaKategorien.AddRange(otiumsKategorien);
+        dbContext.AddRange(otia);
         dbContext.OtiaTermine.AddRange(
             otiumTerminGenerator.Generate(300).ToList());
 

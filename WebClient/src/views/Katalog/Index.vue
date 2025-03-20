@@ -1,40 +1,31 @@
 ﻿<script setup>
 import {ref, watch} from "vue";
-import {Select, Skeleton, DataTable, Column, useToast} from "primevue";
+import {Column, DataTable, Skeleton, useToast} from "primevue";
 import AfraDateSelector from "@/components/Form/AfraDateSelector.vue";
 import AfraKategorySelector from "@/components/Form/AfraKategorySelector.vue";
 import AfraOtiumKatalogView from "@/components/Otium/Katalog/AfraOtiumKatalogView.vue";
-import {useSettings} from "@/stores/useSettings.js";
-import {formatTime} from "@/helpers/formatters.js";
 import {mande} from "mande";
 import {useUser} from "@/stores/useUser.js";
-import {useRouter} from "vue-router";
+import {useRoute, useRouter} from "vue-router";
 
 const props = defineProps({
   datum: {
     type: String,
     required: false,
     default: ""
-  },
-  block: {
-    type: String,
-    required: false,
-    default: null
   }
 })
 const router = useRouter();
+const location = useRoute();
 const toast = useToast();
 const loading = ref(true)
 const user = useUser();
-const settings = useSettings();
 const datesAvailable = ref([])
 const dateDefault = ref(null)
-const blockOptions = ref(settings.blocks)
 const kategorieOptionsTree = ref()
 const otia = ref([])
 const date = ref(null);
 const kategorie = ref(null);
-const block = ref(settings.blocks[0])
 const categoryChanged = () => {
 }
 const selectedOtia = ref(otia.value)
@@ -52,19 +43,6 @@ function filterOtiaByKategorie() {
   selectedOtia.value = otia.value.filter(e => e.kategorien.includes(kategorieId))
 }
 
-function filterBlockOptions() {
-  const filtered = [];
-  for (let k in date.value.otiumsBlock) {
-    if (date.value.otiumsBlock[k]) {
-      filtered.push(settings.blocks[k]);
-    }
-  }
-  if (!filtered.includes(block.value)) {
-    block.value = filtered[0]
-  }
-  blockOptions.value = filtered;
-}
-
 async function startup() {
   loading.value = true
   const terminePromise = getTermine()
@@ -78,9 +56,6 @@ async function startup() {
         date.value = dateDefault.value
         await router.replace('/katalog')
       }
-    }
-    if (props.block != null && blockOptions.value != null && blockOptions.value.length >= props.block * 1) {
-      block.value = blockOptions.value[1 * props.block]
     }
     await kategoriesPromise;
     await dateChanged()
@@ -107,7 +82,7 @@ async function getTermine() {
 
 async function getAngebote() {
   const angeboteGetter = mande("/api/otium")
-  otia.value = await angeboteGetter.get(`${date.value.datum}/${block.value.id}`);
+  otia.value = await angeboteGetter.get(`${date.value.datum}`);
   filterOtiaByKategorie()
 }
 
@@ -117,13 +92,18 @@ async function getKategories() {
 }
 
 async function dateChanged() {
-  filterBlockOptions()
   try {
     await getAngebote()
   } catch (error) {
-    console.error(error)
-    await router.push("/katalog")
-    await dateChanged()
+    toast.add({
+      severity: "error",
+      summary: "Fehler",
+      detail: "Ein unerwarteter Fehler ist beim Laden der Daten aufgetreten"
+    });
+    if (location.fullPath !== "/katalog") {
+      await router.push("/katalog")
+      await dateChanged()
+    }
   }
 }
 
@@ -132,8 +112,8 @@ function selectToday() {
   dateChanged()
 }
 
-watch([date, block], () => {
-  if (!loading.value && date.value != null && block.value != null) router.push('/katalog/' + date.value.datum + '/' + block.value.id)
+watch([date], () => {
+  if (!loading.value && date.value != null) router.push('/katalog/' + date.value.datum)
 })
 
 startup()
@@ -148,17 +128,6 @@ startup()
       <div class="flex gap-3">
         <AfraDateSelector v-model="date" :options="datesAvailable" @dateChanged="dateChanged"
                           @today="selectToday"/>
-        <Select v-model="block" :options="blockOptions" @change="dateChanged">
-          <template #option="{option}">
-            {{ formatTime(option.startTime) }} - {{ formatTime(option.endTime) }}
-          </template>
-          <template #value="{value}">
-            <div v-if="value!=null">{{ formatTime(value.startTime) }} -
-              {{ formatTime(value.endTime) }}
-            </div>
-            <div v-else>Block</div>
-          </template>
-        </Select>
       </div>
       <AfraKategorySelector v-model="kategorie" :options="kategorieOptionsTree"
                             @change="categoryChanged"/>

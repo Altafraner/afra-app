@@ -23,6 +23,11 @@ public class Wiederholung : OtiumsInstanz
     public required Wochentyp Wochentyp { get; set; }
 
     /// <summary>
+    ///     The block the Otium is in.
+    /// </summary>
+    public required sbyte Block { get; set; }
+
+    /// <summary>
     ///     A list of all instances of the recurrence rule. Useful for bulk operations.
     /// </summary>
     public ICollection<Termin> Termine { get; init; } = new List<Termin>();

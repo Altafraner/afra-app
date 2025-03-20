@@ -20,11 +20,6 @@ public abstract class OtiumsInstanz
     public required Person? Tutor { get; set; }
 
     /// <summary>
-    ///     The block the Otium is in.
-    /// </summary>
-    public required byte Block { get; set; }
-
-    /// <summary>
     ///     The location for the Otium.
     /// </summary>
     [MaxLength(10)]

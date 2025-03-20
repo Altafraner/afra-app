@@ -2,7 +2,6 @@ using Afra_App.Data;
 using Afra_App.Data.Configuration;
 using Afra_App.Data.DTO;
 using Afra_App.Data.DTO.Otium;
-using Afra_App.Data.Schuljahr;
 using Afra_App.Data.TimeInterval;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -36,27 +35,27 @@ public class OtiumEndpointService
     ///     Retrieves the Otium data for a given date and block.
     /// </summary>
     /// <param name="date">The date for which to retrieve the Otium data.</param>
-    /// <param name="block">The block number for which to retrieve the Otium data.</param>
     /// <returns>A List of all Otia happening at that time.</returns>
-    public async IAsyncEnumerable<TerminPreview> GetKatalogForDayAndBlock(DateOnly date, byte block)
+    public async IAsyncEnumerable<TerminPreview> GetKatalogForDay(DateOnly date)
     {
         // Get the schultag for the given date and block
-        var schultag = await _context.Schultage
-            .AsNoTracking()
-            .FirstOrDefaultAsync(s => s.Datum == date && s.OtiumsBlock[block]);
+        var blocks = await _context.Blocks
+            .Where(b => b.Schultag.Datum == date)
+            .ToListAsync();
 
 
-        if (schultag == null) yield break;
+        if (blocks.Count == 0) yield break;
 
         // Get all termine for the given schultag and block
         // Note: This needs to be materialized before the foreach loop as EF Core does not support multiple active queries.
         // Note: This needs to be a tracking query as we need to load the related entities at a later point.
         var termine = await _context.OtiaTermine
-            .Where(t => t.Schultag == schultag && t.Block == block)
+            .Where(t => blocks.Contains(t.Block))
             .Include(t => t.Otium)
             .ThenInclude(o => o.Kategorie)
             .Include(t => t.Tutor)
             .OrderBy(t => t.IstAbgesagt)
+            .ThenBy(t => t.Block.Nummer)
             .ThenBy(t => t.Otium.Bezeichnung)
             .ToListAsync();
 
@@ -79,14 +78,15 @@ public class OtiumEndpointService
             .Include(termin => termin.Tutor)
             .Include(termin => termin.Otium)
             .ThenInclude(otium => otium.Kategorie)
-            .Include(termin => termin.Schultag)
+            .Include(termin => termin.Block)
+            .ThenInclude(block => block.Schultag)
             .FirstOrDefaultAsync(t => t.Id == terminId);
         if (termin == null) return null;
 
         return new Termin(termin,
             _enrollmentService.GetEnrolmentPreviews(user, termin),
             _kategorieService.GetTransitiveKategoriesIdsAsyncEnumerable(termin.Otium.Kategorie),
-            _otiumConfiguration.Blocks[termin.Block].First().Interval.Start);
+            _otiumConfiguration.Blocks[termin.Block.Nummer].First().Interval.Start);
     }
 
     /// <summary>
@@ -104,7 +104,8 @@ public class OtiumEndpointService
         // Okay, this looks heavy. Enumerate to List as we need to access the elements multiple times.
         var allEinschreibungen = await _context.OtiaEinschreibungen.AsNoTrackingWithIdentityResolution()
             .Include(e => e.Termin)
-            .ThenInclude(t => t.Schultag)
+            .ThenInclude(t => t.Block)
+            .ThenInclude(b => b.Schultag)
             .Include(e => e.Termin)
             .ThenInclude(t => t.Tutor)
             .Include(e => e.Termin)
@@ -112,7 +113,7 @@ public class OtiumEndpointService
             .ThenInclude(o => o.Kategorie)
             .ThenInclude(k => k.Parent)
             .Where(t => t.BetroffenePerson == user)
-            .Where(t => all || (t.Termin.Schultag.Datum >= startDate && t.Termin.Schultag.Datum < endDate))
+            .Where(t => all || (t.Termin.Block.Schultag.Datum >= startDate && t.Termin.Block.Schultag.Datum < endDate))
             .ToListAsync();
 
         var allSchoolDays = await _context.Schultage.AsNoTracking()
@@ -124,7 +125,7 @@ public class OtiumEndpointService
         var allEnrolledRuleByDay = new Dictionary<DateOnly, bool>();
 
         // Check if the user is enrolled in all non-optional subblocks
-        var einschreibungenByDay = allEinschreibungen.GroupBy(e => e.Termin.Schultag)
+        var einschreibungenByDay = allEinschreibungen.GroupBy(e => e.Termin.Block.Schultag)
             .ToDictionary(g => g.Key, g => g.ToList());
         foreach (var (schultag, einschreibungen) in einschreibungenByDay)
             allEnrolledRuleByDay[schultag.Datum] =
@@ -163,9 +164,10 @@ public class OtiumEndpointService
         var mentees = await _context.Personen
             .Where(p => p.Mentor != null && p.Mentor.Id == user.Id)
             .Include(p => p.OtiaEinschreibungen
-                .Where(e => e.Termin.Schultag.Datum >= startDate && e.Termin.Schultag.Datum < endDate))
+                .Where(e => e.Termin.Block.Schultag.Datum >= startDate && e.Termin.Block.Schultag.Datum < endDate))
             .ThenInclude(p => p.Termin)
-            .ThenInclude(p => p.Schultag)
+            .ThenInclude(p => p.Block)
+            .ThenInclude(b => b.Schultag)
             .Include(p => p.OtiaEinschreibungen)
             .ThenInclude(e => e.Termin)
             .ThenInclude(t => t.Otium)
@@ -182,35 +184,37 @@ public class OtiumEndpointService
         var thisWeekInterval = new DateTimeInterval(lastWeekInterval.End, TimeSpan.FromDays(7));
         var nextWeekInterval = new DateTimeInterval(thisWeekInterval.End, TimeSpan.FromDays(7));
 
-        foreach (var mentee in mentees) menteePreviews.Add(await GenerateMenteePreview(mentee, schultage));
+        foreach (var mentee in mentees) menteePreviews.Add(await GenerateMenteePreview(mentee));
 
         List<LehrerTerminPreview> terminPreviews = [];
 
         var termine = await _context.OtiaTermine
             .Include(t => t.Otium)
-            .Include(t => t.Schultag)
-            .OrderBy(t => t.Schultag.Datum)
-            .ThenBy(t => t.Block)
+            .Include(t => t.Block)
+            .ThenInclude(b => b.Schultag)
+            .OrderBy(t => t.Block.Schultag.Datum)
+            .ThenBy(t => t.Block.Nummer)
             .Where(t => !t.IstAbgesagt && t.Tutor != null && t.Tutor.Id == user.Id &&
-                        t.Schultag.Datum >= DateOnly.FromDateTime(DateTime.Today) && t.Schultag.Datum < endDate)
+                        t.Block.Schultag.Datum >= DateOnly.FromDateTime(DateTime.Today) &&
+                        t.Block.Schultag.Datum < endDate)
             .ToListAsync();
 
         foreach (var termin in termine)
             terminPreviews.Add(
                 new LehrerTerminPreview(termin.Id, termin.Otium.Bezeichnung, termin.Ort,
-                    await _enrollmentService.GetLoadPercent(termin), termin.Schultag.Datum, termin.Block)
+                    await _enrollmentService.GetLoadPercent(termin), termin.Block.Schultag.Datum, termin.Block.Nummer)
             );
 
         return new LehrerUebersicht(terminPreviews, menteePreviews);
 
 
-        async Task<MenteePreview> GenerateMenteePreview(Person mentee, IEnumerable<Schultag> schulage)
+        async Task<MenteePreview> GenerateMenteePreview(Person mentee)
         {
-            var enrollmentsPerDay = mentee.OtiaEinschreibungen.GroupBy(e => e.Termin.Schultag.Datum)
+            var enrollmentsPerDay = mentee.OtiaEinschreibungen.GroupBy(e => e.Termin.Block.Schultag.Datum)
                 .ToDictionary(g => g.Key, g => g.ToList());
             var isFullyEnrolledPerDay = new Dictionary<DateOnly, bool>();
 
-            foreach (var schultag in schulage)
+            foreach (var schultag in schultage)
                 isFullyEnrolledPerDay[schultag.Datum] = _enrollmentService.AreAllNonOptionalBlocksEnrolled(schultag,
                     enrollmentsPerDay.TryGetValue(schultag.Datum, out var value) ? value : []);
 
@@ -228,7 +232,7 @@ public class OtiumEndpointService
                 return isFullyEnrolledPerDay
                            .Where(group => week.Contains(group.Key.ToDateTime(TimeOnly.MinValue)))
                            .All(group => group.Value) &&
-                       kategorieRuleByWeek[week];
+                       kategorieRuleByWeek.ContainsKey(week) && kategorieRuleByWeek[week];
             }
         }
     }
@@ -250,7 +254,8 @@ public class OtiumEndpointService
     {
         var termin = await _context.OtiaTermine
             .Include(t => t.Tutor)
-            .Include(t => t.Schultag)
+            .Include(t => t.Block)
+            .ThenInclude(b => b.Schultag)
             .Include(t => t.Otium)
             .Include(t => t.Enrollments)
             .ThenInclude(e => e.BetroffenePerson)
@@ -264,8 +269,8 @@ public class OtiumEndpointService
             Id = termin.Id,
             Ort = termin.Ort,
             Otium = termin.Otium.Bezeichnung,
-            Block = termin.Block,
-            Datum = termin.Schultag.Datum,
+            Block = termin.Block.Nummer,
+            Datum = termin.Block.Schultag.Datum,
             Tutor = new PersonInfoMinimal(termin.Tutor),
             Einschreibungen = termin.Enrollments.Select(e =>
                 new LehrerEinschreibung(new PersonInfoMinimal(e.BetroffenePerson), e.Interval,

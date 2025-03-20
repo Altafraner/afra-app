@@ -4,6 +4,7 @@ using Afra_App.Data.People;
 using Afra_App.Data.Schuljahr;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure;
 
 namespace Afra_App.Data;
 
@@ -53,14 +54,27 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
     public DbSet<Schultag> Schultage { get; set; }
 
     /// <summary>
+    ///     All blocks on school days
+    /// </summary>
+    public DbSet<Block> Blocks { get; set; }
+
+    /// <summary>
+    ///     The Emails scheduled by the Application
+    /// </summary>
+    public DbSet<ScheduledEmail> ScheduledEmails { get; set; }
+
+    /// <summary>
+    ///     Configures the npgsql specific options for the context
+    /// </summary>
+    internal static Action<NpgsqlDbContextOptionsBuilder> ConfigureNpgsql =>
+        builder => builder
+            .MapEnum<Rolle>("person_rolle")
+            .MapEnum<Wochentyp>("wochentyp");
+
+    /// <summary>
     ///     The keys used by the ASP.NET Core Data Protection API.
     /// </summary>
     public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }
-
-    /// <summary>
-    /// The Emails scheduled by the Application
-    /// </summary>
-    public DbSet<ScheduledEmail> ScheduledEmails { get; set; }
 
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -100,6 +114,15 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
 
         modelBuilder.Entity<ScheduledEmail>()
             .HasOne(e => e.Recipient);
+
+        modelBuilder.Entity<Block>()
+            .HasOne(b => b.Schultag)
+            .WithMany(b => b.Blocks)
+            .HasForeignKey(b => b.SchultagKey);
+
+        modelBuilder.Entity<Block>()
+            .HasIndex(b => new { b.SchultagKey, b.Nummer })
+            .IsUnique();
 
         // Have to do this here because the [ComplexType] annotation is not valid on record structs.
         modelBuilder.Entity<Einschreibung>()

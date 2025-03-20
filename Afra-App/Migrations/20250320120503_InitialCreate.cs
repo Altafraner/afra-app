@@ -1,4 +1,6 @@
 ﻿using System;
+using Afra_App.Data.People;
+using Afra_App.Data.Schuljahr;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,6 +14,10 @@ namespace Afra_App.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.AlterDatabase()
+                .Annotation("Npgsql:Enum:person_rolle", "student,tutor")
+                .Annotation("Npgsql:Enum:wochentyp", "h,n");
+
             migrationBuilder.CreateTable(
                 name: "DataProtectionKeys",
                 columns: table => new
@@ -56,7 +62,7 @@ namespace Afra_App.Migrations
                     Nachname = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     Email = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
                     MentorId = table.Column<Guid>(type: "uuid", nullable: true),
-                    Rolle = table.Column<int>(type: "integer", nullable: false)
+                    Rolle = table.Column<Rolle>(type: "person_rolle", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -73,8 +79,7 @@ namespace Afra_App.Migrations
                 columns: table => new
                 {
                     Datum = table.Column<DateOnly>(type: "date", nullable: false),
-                    Wochentyp = table.Column<int>(type: "integer", nullable: false),
-                    OtiumsBlock = table.Column<bool[]>(type: "boolean[]", nullable: false)
+                    Wochentyp = table.Column<Wochentyp>(type: "wochentyp", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -109,7 +114,7 @@ namespace Afra_App.Migrations
                     RecipientId = table.Column<Guid>(type: "uuid", nullable: false),
                     Subject = table.Column<string>(type: "text", nullable: false),
                     Body = table.Column<string>(type: "text", nullable: false),
-                    Deadline = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                    Deadline = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -123,15 +128,34 @@ namespace Afra_App.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Blocks",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    SchultagKey = table.Column<DateOnly>(type: "date", nullable: false),
+                    Nummer = table.Column<short>(type: "smallint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Blocks", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Blocks_Schultage_SchultagKey",
+                        column: x => x.SchultagKey,
+                        principalTable: "Schultage",
+                        principalColumn: "Datum",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "OtiaWiederholungen",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Wochentag = table.Column<int>(type: "integer", nullable: false),
-                    Wochentyp = table.Column<int>(type: "integer", nullable: false),
+                    Wochentyp = table.Column<Wochentyp>(type: "wochentyp", nullable: false),
+                    Block = table.Column<short>(type: "smallint", nullable: false),
                     OtiumId = table.Column<Guid>(type: "uuid", nullable: false),
                     TutorId = table.Column<Guid>(type: "uuid", nullable: true),
-                    Block = table.Column<byte>(type: "smallint", nullable: false),
                     Ort = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false)
                 },
                 constraints: table =>
@@ -180,17 +204,22 @@ namespace Afra_App.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     WiederholungId = table.Column<Guid>(type: "uuid", nullable: true),
-                    SchultagDatum = table.Column<DateOnly>(type: "date", nullable: false),
+                    BlockId = table.Column<Guid>(type: "uuid", nullable: false),
                     IstAbgesagt = table.Column<bool>(type: "boolean", nullable: false),
                     MaxEinschreibungen = table.Column<int>(type: "integer", nullable: true),
                     OtiumId = table.Column<Guid>(type: "uuid", nullable: false),
                     TutorId = table.Column<Guid>(type: "uuid", nullable: true),
-                    Block = table.Column<byte>(type: "smallint", nullable: false),
                     Ort = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_OtiaTermine", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_OtiaTermine_Blocks_BlockId",
+                        column: x => x.BlockId,
+                        principalTable: "Blocks",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_OtiaTermine_OtiaWiederholungen_WiederholungId",
                         column: x => x.WiederholungId,
@@ -208,12 +237,6 @@ namespace Afra_App.Migrations
                         column: x => x.TutorId,
                         principalTable: "Personen",
                         principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_OtiaTermine_Schultage_SchultagDatum",
-                        column: x => x.SchultagDatum,
-                        principalTable: "Schultage",
-                        principalColumn: "Datum",
-                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -244,6 +267,12 @@ namespace Afra_App.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_Blocks_SchultagKey_Nummer",
+                table: "Blocks",
+                columns: new[] { "SchultagKey", "Nummer" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Otia_KategorieId",
                 table: "Otia",
                 column: "KategorieId");
@@ -264,14 +293,14 @@ namespace Afra_App.Migrations
                 column: "ParentId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_OtiaTermine_BlockId",
+                table: "OtiaTermine",
+                column: "BlockId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_OtiaTermine_OtiumId",
                 table: "OtiaTermine",
                 column: "OtiumId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_OtiaTermine_SchultagDatum",
-                table: "OtiaTermine",
-                column: "SchultagDatum");
 
             migrationBuilder.CreateIndex(
                 name: "IX_OtiaTermine_TutorId",
@@ -326,6 +355,9 @@ namespace Afra_App.Migrations
 
             migrationBuilder.DropTable(
                 name: "OtiaTermine");
+
+            migrationBuilder.DropTable(
+                name: "Blocks");
 
             migrationBuilder.DropTable(
                 name: "OtiaWiederholungen");

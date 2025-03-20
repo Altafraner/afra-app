@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Afra_App.Data.Schuljahr;
 
@@ -19,10 +20,8 @@ public class Schultag
     public Wochentyp Wochentyp { get; set; }
 
     /// <summary>
-    ///     A boolean array representing the Otia-blocks of the day. True, if the block is planned; Otherwise, false.
+    ///     The blocks of the school day
     /// </summary>
-    /// <remarks>
-    ///     There would be more elegant ways to represent this, i just haven't invested the time to implement them jet.
-    /// </remarks>
-    public bool[] OtiumsBlock { get; set; } = new bool[2];
+    [JsonIgnore]
+    public ICollection<Block> Blocks { get; set; } = [];
 }

@@ -16,6 +16,7 @@ public record TerminPreview : ITermin
         Id = termin.Id;
         Otium = termin.Otium.Bezeichnung;
         Ort = termin.Ort;
+        Block = termin.Block.Nummer;
         Kategorien = kategorien;
         IstAbgesagt = termin.IstAbgesagt;
         Tutor = termin.Tutor is null ? null : new PersonInfoMinimal(termin.Tutor);
@@ -27,8 +28,8 @@ public record TerminPreview : ITermin
     ///     If the termin has <see cref="MaxEinschreibungen" /> the current load-factor of the termin; otherwise null.
     /// </summary>
     /// <remarks>
-    ///     Currently implemented in <see cref="Controllers.OtiumController.GetOtium" /> by summing up the number of minutes in
-    ///     all einschreibungen and dividing by the total number of minutes available for the termin.
+    ///     Currently implemented by summing up the number of minutes in all einschreibungen and dividing by the total number
+    ///     of minutes available for the termin.
     /// </remarks>
     public int? Auslastung { get; set; }
 
@@ -46,6 +47,9 @@ public record TerminPreview : ITermin
     ///     The location where the termin takes place
     /// </summary>
     public string Ort { get; set; }
+
+    /// <inheritdoc />
+    public sbyte Block { get; set; }
 
     /// <summary>
     ///     A list of all categories the termin is in

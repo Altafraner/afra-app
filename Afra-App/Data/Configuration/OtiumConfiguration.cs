@@ -7,8 +7,15 @@ namespace Afra_App.Data.Configuration;
 /// </summary>
 public class OtiumConfiguration
 {
-    public SubBlock[][] Blocks { get; set; }
+    /// <summary>
+    ///     A 2d array containing the subblocks of each block
+    /// </summary>
+    public required SubBlock[][] Blocks { get; set; }
 
+    /// <summary>
+    ///     A static method to validate the configuration
+    /// </summary>
+    /// <returns>True, iff the configuration looks valid</returns>
     public static bool Validate(OtiumConfiguration config)
     {
         if (config.Blocks.Length == 0) return false;

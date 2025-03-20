@@ -14,15 +14,15 @@ public static class KatalogEndpoints
     /// </summary>
     public static void MapKatalogEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/{date}/{block:int}", GetDay);
+        app.MapGet("/{date}", GetDay);
         app.MapGet("/{terminId:guid}", GetTermin);
         app.MapPut("/{terminId:guid}/{start}", EnrollAsync);
         app.MapDelete("/{terminId:guid}/{start}", UnenrollAsync);
     }
 
-    private static IResult GetDay(OtiumEndpointService service, DateOnly date, byte block)
+    private static IResult GetDay(OtiumEndpointService service, DateOnly date)
     {
-        return Results.Ok(service.GetKatalogForDayAndBlock(date, block));
+        return Results.Ok(service.GetKatalogForDay(date));
     }
 
     private static async Task<IResult> GetTermin(OtiumEndpointService service, Guid terminId, HttpContext httpContext,

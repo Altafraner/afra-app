@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using Afra_App.Data;
+using Afra_App.Data.People;
+using Afra_App.Data.Schuljahr;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -13,7 +15,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Afra_App.Migrations
 {
     [DbContext(typeof(AfraAppContext))]
-    [Migration("20250319023810_Quartz.Net")]
+    [Migration("20250320120517_Quartz.Net")]
     partial class QuartzNet
     {
         /// <inheritdoc />
@@ -24,6 +26,8 @@ namespace Afra_App.Migrations
                 .HasAnnotation("ProductVersion", "9.0.2")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
+            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "person_rolle", new[] { "student", "tutor" });
+            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "wochentyp", new[] { "h", "n" });
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("Afra_App.Data.Email.ScheduledEmail", b =>
@@ -36,7 +40,7 @@ namespace Afra_App.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateTimeOffset>("Deadline")
+                    b.Property<DateTime>("Deadline")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("RecipientId")
@@ -147,8 +151,8 @@ namespace Afra_App.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<byte>("Block")
-                        .HasColumnType("smallint");
+                    b.Property<Guid>("BlockId")
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("IstAbgesagt")
                         .HasColumnType("boolean");
@@ -164,9 +168,6 @@ namespace Afra_App.Migrations
                     b.Property<Guid>("OtiumId")
                         .HasColumnType("uuid");
 
-                    b.Property<DateOnly>("SchultagDatum")
-                        .HasColumnType("date");
-
                     b.Property<Guid?>("TutorId")
                         .HasColumnType("uuid");
 
@@ -175,9 +176,9 @@ namespace Afra_App.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("OtiumId");
+                    b.HasIndex("BlockId");
 
-                    b.HasIndex("SchultagDatum");
+                    b.HasIndex("OtiumId");
 
                     b.HasIndex("TutorId");
 
@@ -192,7 +193,7 @@ namespace Afra_App.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<byte>("Block")
+                    b.Property<short>("Block")
                         .HasColumnType("smallint");
 
                     b.Property<string>("Ort")
@@ -209,8 +210,8 @@ namespace Afra_App.Migrations
                     b.Property<int>("Wochentag")
                         .HasColumnType("integer");
 
-                    b.Property<int>("Wochentyp")
-                        .HasColumnType("integer");
+                    b.Property<Wochentyp>("Wochentyp")
+                        .HasColumnType("wochentyp");
 
                     b.HasKey("Id");
 
@@ -240,8 +241,8 @@ namespace Afra_App.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<int>("Rolle")
-                        .HasColumnType("integer");
+                    b.Property<Rolle>("Rolle")
+                        .HasColumnType("person_rolle");
 
                     b.Property<string>("Vorname")
                         .IsRequired()
@@ -255,17 +256,33 @@ namespace Afra_App.Migrations
                     b.ToTable("Personen");
                 });
 
+            modelBuilder.Entity("Afra_App.Data.Schuljahr.Block", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<short>("Nummer")
+                        .HasColumnType("smallint");
+
+                    b.Property<DateOnly>("SchultagKey")
+                        .HasColumnType("date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SchultagKey", "Nummer")
+                        .IsUnique();
+
+                    b.ToTable("Blocks");
+                });
+
             modelBuilder.Entity("Afra_App.Data.Schuljahr.Schultag", b =>
                 {
                     b.Property<DateOnly>("Datum")
                         .HasColumnType("date");
 
-                    b.PrimitiveCollection<bool[]>("OtiumsBlock")
-                        .IsRequired()
-                        .HasColumnType("boolean[]");
-
-                    b.Property<int>("Wochentyp")
-                        .HasColumnType("integer");
+                    b.Property<Wochentyp>("Wochentyp")
+                        .HasColumnType("wochentyp");
 
                     b.HasKey("Datum");
 
@@ -358,15 +375,15 @@ namespace Afra_App.Migrations
 
             modelBuilder.Entity("Afra_App.Data.Otium.Termin", b =>
                 {
-                    b.HasOne("Afra_App.Data.Otium.Otium", "Otium")
-                        .WithMany("Termine")
-                        .HasForeignKey("OtiumId")
+                    b.HasOne("Afra_App.Data.Schuljahr.Block", "Block")
+                        .WithMany()
+                        .HasForeignKey("BlockId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Afra_App.Data.Schuljahr.Schultag", "Schultag")
-                        .WithMany()
-                        .HasForeignKey("SchultagDatum")
+                    b.HasOne("Afra_App.Data.Otium.Otium", "Otium")
+                        .WithMany("Termine")
+                        .HasForeignKey("OtiumId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -379,9 +396,9 @@ namespace Afra_App.Migrations
                         .HasForeignKey("WiederholungId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("Otium");
+                    b.Navigation("Block");
 
-                    b.Navigation("Schultag");
+                    b.Navigation("Otium");
 
                     b.Navigation("Tutor");
 
@@ -412,6 +429,17 @@ namespace Afra_App.Migrations
                         .HasForeignKey("MentorId");
 
                     b.Navigation("Mentor");
+                });
+
+            modelBuilder.Entity("Afra_App.Data.Schuljahr.Block", b =>
+                {
+                    b.HasOne("Afra_App.Data.Schuljahr.Schultag", "Schultag")
+                        .WithMany("Blocks")
+                        .HasForeignKey("SchultagKey")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Schultag");
                 });
 
             modelBuilder.Entity("OtiumPerson", b =>
@@ -458,6 +486,11 @@ namespace Afra_App.Migrations
                     b.Navigation("Mentees");
 
                     b.Navigation("OtiaEinschreibungen");
+                });
+
+            modelBuilder.Entity("Afra_App.Data.Schuljahr.Schultag", b =>
+                {
+                    b.Navigation("Blocks");
                 });
 #pragma warning restore 612, 618
         }

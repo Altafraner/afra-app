@@ -25,9 +25,6 @@ public class EnrollmentService
     /// <summary>
     ///     Constructs the EnrollmentService. Usually called by the DI container.
     /// </summary>
-    /// <param name="logger"></param>
-    /// <param name="context"></param>
-    /// <param name="kategorieService"></param>
     public EnrollmentService(ILogger<EnrollmentService> logger, AfraAppContext context,
         KategorieService kategorieService, IOptions<OtiumConfiguration> configuration)
     {
@@ -47,7 +44,8 @@ public class EnrollmentService
     public async Task<Termin?> EnrollAsync(Guid terminId, Person student, TimeOnly start)
     {
         var termin = await _context.OtiaTermine
-            .Include(termin => termin.Schultag)
+            .Include(termin => termin.Block)
+            .ThenInclude(block => block.Schultag)
             .Include(termin => termin.Otium)
             .ThenInclude(otium => otium.Kategorie)
             .Include(termin => termin.Tutor)
@@ -55,7 +53,7 @@ public class EnrollmentService
 
         if (termin == null) return null;
 
-        var subBlock = _configuration.Blocks[termin.Block].FirstOrDefault(b => b.Interval.Start == start);
+        var subBlock = _configuration.Blocks[termin.Block.Nummer].FirstOrDefault(b => b.Interval.Start == start);
         if (subBlock == null) return null;
 
         var (mayEnroll, _) = await MayEnroll(student, termin, subBlock);
@@ -110,7 +108,8 @@ public class EnrollmentService
     public async Task<Termin?> UnenrollAsync(Guid terminId, Person student, TimeOnly start)
     {
         var termin = await _context.OtiaTermine
-            .Include(termin => termin.Schultag)
+            .Include(termin => termin.Block)
+            .ThenInclude(block => block.Schultag)
             .Include(termin => termin.Otium)
             .ThenInclude(otium => otium.Kategorie)
             .Include(termin => termin.Tutor)
@@ -118,7 +117,7 @@ public class EnrollmentService
 
         if (termin == null) return null;
 
-        var subBlock = _configuration.Blocks[termin.Block].FirstOrDefault(b => b.Interval.Start == start);
+        var subBlock = _configuration.Blocks[termin.Block.Nummer].FirstOrDefault(b => b.Interval.Start == start);
         if (subBlock == null) return null;
 
         try
@@ -173,11 +172,9 @@ public class EnrollmentService
     public bool AreAllNonOptionalBlocksEnrolled(Schultag schultag, IEnumerable<Einschreibung> einschreibungen)
     {
         var timeline = new Timeline<TimeOnly>();
-        for (var i = 0; i < _configuration.Blocks.Length; i++)
-        {
-            if (!schultag.OtiumsBlock[i]) continue;
-            foreach (var subBlock in _configuration.Blocks[i].Where(b => !b.Optional)) timeline.Add(subBlock.Interval);
-        }
+        foreach (var block in schultag.Blocks)
+        foreach (var subBlock in _configuration.Blocks[block.Nummer].Where(b => b.Mandatory))
+            timeline.Add(subBlock.Interval);
 
         foreach (var einschreibung in einschreibungen) timeline.Remove(einschreibung.Interval);
 
@@ -204,11 +201,11 @@ public class EnrollmentService
         foreach (var einschreibung in allEinschreibungen)
         {
             var entry = einschreibungenByWeek.FirstOrDefault(e =>
-                e.Key.Contains(einschreibung.Termin.Schultag.Datum.ToDateTime(einschreibung.Interval.Start)));
+                e.Key.Contains(einschreibung.Termin.Block.Schultag.Datum.ToDateTime(einschreibung.Interval.Start)));
             var key = entry.Key;
             if (entry.Value is null)
             {
-                var datum = einschreibung.Termin.Schultag.Datum.ToDateTime(new TimeOnly(0, 0));
+                var datum = einschreibung.Termin.Block.Schultag.Datum.ToDateTime(new TimeOnly(0, 0));
                 datum = datum.AddDays(-(int)datum.DayOfWeek + 1);
                 key = new DateTimeInterval(datum, TimeSpan.FromDays(7));
                 einschreibungenByWeek.TryAdd(key, []);
@@ -252,7 +249,7 @@ public class EnrollmentService
             .Where(e => e.Termin == termin)
             .ToListAsync();
 
-        foreach (var subBlock in _configuration.Blocks[termin.Block])
+        foreach (var subBlock in _configuration.Blocks[termin.Block.Nummer])
         {
             var countEnrolled = terminEinschreibungen.Count(e => e.Interval.Intersects(subBlock.Interval));
             var userEnrolled = (await _context.OtiaEinschreibungen
@@ -288,7 +285,7 @@ public class EnrollmentService
 
     private static (bool, string?) CommonMayUnEnroll(Person user, Termin termin, SubBlock subBlock)
     {
-        var startDateTime = new DateTime(termin.Schultag.Datum, subBlock.Interval.Start);
+        var startDateTime = new DateTime(termin.Block.Schultag.Datum, subBlock.Interval.Start);
         if (startDateTime <= DateTime.Now) return (false, "Der Termin hat bereits begonnen.");
 
         if (user.Rolle != Rolle.Student) return (false, "Nur Schüler:innen können sich einschreiben.");
@@ -360,8 +357,7 @@ public class EnrollmentService
         // Get enrollments for the same block
         var blockEnrollments = await _context.OtiaEinschreibungen
             .Include(e => e.Termin)
-            .Where(e => e.BetroffenePerson == user && e.Termin.Schultag == termin.Schultag &&
-                        e.Termin.Block == termin.Block)
+            .Where(e => e.BetroffenePerson == user && e.Termin.Block.Id == termin.Block.Id)
             .ToListAsync();
 
         // Check if the user is enrolled in another termin at the same time
@@ -389,24 +385,24 @@ public class EnrollmentService
     private async Task<bool> LastAvailableBlockRuleFulfilled(Person user, Termin termin, SubBlock subBlock)
     {
         // Find all required kategories the user is not enrolled to. -> notEnrolled[]
-        var firstDayOfWeek = termin.Schultag.Datum.AddDays(-(int)termin.Schultag.Datum.DayOfWeek + 1);
+        var firstDayOfWeek = termin.Block.Schultag.Datum.AddDays(-(int)termin.Block.Schultag.Datum.DayOfWeek + 1);
         var lastDayOfWeek = firstDayOfWeek.AddDays(7);
         var weekInterval = new DateTimeInterval(new DateTime(firstDayOfWeek, TimeOnly.MinValue),
             TimeSpan.FromDays(7));
 
-        var usersEnrollmentsInWeek = (await _context.OtiaEinschreibungen
-                .Where(e => e.BetroffenePerson == user)
-                .Include(e => e.Termin)
-                .ThenInclude(t => t.Schultag)
-                .Include(e => e.Termin)
-                .ThenInclude(e => e.Otium)
-                .ThenInclude(e => e.Kategorie)
-                .ToListAsync())
-            .Where(e => weekInterval.Contains(new DateTime(e.Termin.Schultag.Datum, TimeOnly.MinValue)))
-            .ToList();
+        var usersEnrollmentsInWeek = await _context.OtiaEinschreibungen
+            .Where(e => e.BetroffenePerson == user)
+            .Include(e => e.Termin)
+            .ThenInclude(t => t.Block)
+            .ThenInclude(b => b.Schultag)
+            .Include(e => e.Termin)
+            .ThenInclude(e => e.Otium)
+            .ThenInclude(e => e.Kategorie)
+            .Where(e => DateOnly.FromDateTime(weekInterval.Start) <= e.Termin.Block.Schultag.Datum &&
+                        e.Termin.Block.Schultag.Datum < DateOnly.FromDateTime(weekInterval.End))
+            .ToListAsync();
 
         var userKategoriesInWeek = usersEnrollmentsInWeek
-            .AsEnumerable()
             .Select(e => e.Termin.Otium.Kategorie)
             .Distinct()
             .ToList();
@@ -431,21 +427,20 @@ public class EnrollmentService
                 return true;
 
         // Find num all free blocks >= 30 min in the week -> num30MinBlockAvailable
-        var schultage = await _context.Schultage
-            .Where(s => s.Datum >= firstDayOfWeek && s.Datum < lastDayOfWeek)
+        var blocks = await _context.Blocks
+            .Where(b => b.Schultag.Datum >= firstDayOfWeek && b.Schultag.Datum < lastDayOfWeek)
+            .Include(b => b.Schultag)
             .ToListAsync();
         var timeline = new Timeline<DateTime>();
 
-        foreach (var schultag in schultage) /* I know this is ugly, but copilot has no better idea too... */
-            for (var i = 0; i < _configuration.Blocks.Length; i++)
-                if (schultag.OtiumsBlock[i])
-                    timeline.Add(_configuration.Blocks[i].Skip(1)
-                        .Aggregate(_configuration.Blocks[i].First().Interval,
-                            (interval, current) => (TimeOnlyInterval)interval.Union(current.Interval))
-                        .ToDateTimeInterval(schultag.Datum));
-        timeline.Remove(subBlock.Interval.ToDateTimeInterval(termin.Schultag.Datum));
+        foreach (var block in blocks)
+            timeline.Add(_configuration.Blocks[block.Nummer].Skip(1)
+                .Aggregate(_configuration.Blocks[block.Nummer].First().Interval,
+                    (interval, current) => (TimeOnlyInterval)interval.Union(current.Interval))
+                .ToDateTimeInterval(block.Schultag.Datum));
+        timeline.Remove(subBlock.Interval.ToDateTimeInterval(termin.Block.Schultag.Datum));
         foreach (var enrollment in usersEnrollmentsInWeek)
-            timeline.Remove(enrollment.Interval.ToDateTimeInterval(enrollment.Termin.Schultag.Datum));
+            timeline.Remove(enrollment.Interval.ToDateTimeInterval(enrollment.Termin.Block.Schultag.Datum));
         var num30MinBlockAvailable = timeline.GetIntervals().Sum(i => (int)(i.Duration / TimeSpan.FromMinutes(30)));
 
         return num30MinBlockAvailable >= notEnrolled.Count;

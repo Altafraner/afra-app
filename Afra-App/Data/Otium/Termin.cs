@@ -18,9 +18,9 @@ public class Termin : OtiumsInstanz
     public Wiederholung? Wiederholung { get; set; }
 
     /// <summary>
-    ///     A reference to the Schultag the Termin is on.
+    ///     A reference to the Block the Termin is on.
     /// </summary>
-    public required Schultag Schultag { get; set; }
+    public required Block Block { get; set; }
 
     /// <summary>
     ///     A reference to all enrollments for the Termin.

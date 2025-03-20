@@ -37,7 +37,8 @@ builder.Services.AddControllers();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddDbContext<AfraAppContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"),
+        AfraAppContext.ConfigureNpgsql));
 builder.Services.AddOpenApi();
 builder.Services.AddCors(options =>
 {
@@ -80,7 +81,7 @@ builder.Services.AddQuartz(q =>
     {
         q.UsePersistentStore(x =>
             {
-                string conString = builder.Configuration.GetConnectionString("DefaultConnection")!;
+                var conString = builder.Configuration.GetConnectionString("DefaultConnection")!;
                 x.UsePostgres(x =>
                     x.ConnectionString = conString
                 );
