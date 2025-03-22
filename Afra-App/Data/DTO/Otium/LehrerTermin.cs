@@ -1,3 +1,4 @@
+using Afra_App.Data.Otium;
 using Afra_App.Data.TimeInterval;
 
 namespace Afra_App.Data.DTO.Otium;

@@ -49,6 +49,11 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
     public DbSet<Einschreibung> OtiaEinschreibungen { get; set; }
 
     /// <summary>
+    ///     All attendances for Otia
+    /// </summary>
+    public DbSet<Anwesenheit> OtiaAnwesenheiten { get; set; }
+
+    /// <summary>
     ///     All school days
     /// </summary>
     public DbSet<Schultag> Schultage { get; set; }
