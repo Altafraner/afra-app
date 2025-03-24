@@ -1,3 +1,4 @@
+using System.Text;
 using Afra_App.Data;
 using Afra_App.Data.Email;
 using Afra_App.Data.People;
@@ -121,20 +122,27 @@ internal class FlushEmailsJob : IJob
 
             var userEmail = user.Email;
 
-            await Console.Out.WriteLineAsync($"Flush for {userEmail}");
-
             const string batchSubject = "Neue Benachrichtigungen";
             var batchText = "";
 
-
             foreach (var (em, i) in emailsForUser.Select((x, i) => (x, i)))
             {
-                var notificationHeading = $"{i + 1,3}. {em.Subject}";
-                var notificationText = $"     {em.Body}";
-                batchText += $"{notificationHeading}\n{notificationText}\n";
+                // Notification format:
+                //  1. Title
+                //     Notification text over
+                //     multiple lines
+                //  2. Other Title
+                //     Notification text
+                //  ...
+                var notificationHeading = $"{i + 1,2}. {em.Subject}";
+                var notificationText = em.Body
+                    .Split(Environment.NewLine)
+                    .Select(s => "    " + s)
+                    .Aggregate(new StringBuilder(), (a, b) => a.AppendLine(b));
+                batchText += $"{notificationHeading}\n{notificationText}";
             }
 
-            _logger.LogInformation("Flushing E-Mail: {batchText}", batchText);
+            _logger.LogInformation("Flushing E-Mail Notifications for {}", userEmail);
             await _emailService.SendEmailAsync(userEmail, batchSubject, batchText);
 
             _dbContext.RemoveRange(emailsForUser);
