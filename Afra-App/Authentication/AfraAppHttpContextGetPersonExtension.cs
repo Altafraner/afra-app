@@ -1,5 +1,7 @@
+using System.Security.Claims;
 using Afra_App.Data;
 using Afra_App.Data.People;
+using Microsoft.AspNetCore.SignalR;
 
 namespace Afra_App.Authentication;
 
@@ -22,13 +24,41 @@ public static class AfraAppHttpContextGetPersonExtension
     /// <exception cref="KeyNotFoundException">Thrown if the specified user does not exist in the database.</exception>
     public static Person GetPerson(this HttpContext httpContext, AfraAppContext dbContext)
     {
-        if (!httpContext.User.Identity?.IsAuthenticated ?? true)
+        return GetPerson(httpContext.User, dbContext);
+    }
+
+    /// <inheritdoc cref="GetPerson" />
+    public static Task<Person> GetPersonAsync(this HttpContext httpContext, AfraAppContext dbContext)
+    {
+        return GetPersonAsync(httpContext.User, dbContext);
+    }
+
+    /// <summary>
+    /// Retrieves the Person associated with the current authenticated user from the database.
+    /// </summary>
+    /// <param name="hubContext">The current hub context</param>
+    /// <param name="dbContext">The current dbContext</param>
+    /// <returns>The user in the database</returns>
+    public static Task<Person> GetPersonAsync(this HubCallerContext hubContext, AfraAppContext dbContext)
+    {
+        return GetPersonAsync(hubContext.User!, dbContext);
+    }
+
+    /// <inheritdoc cref="GetPersonAsync(Microsoft.AspNetCore.SignalR.HubCallerContext,Afra_App.Data.AfraAppContext)"/>
+    public static Person GetPerson(this HubCallerContext hubContext, AfraAppContext dbContext)
+    {
+        return GetPerson(hubContext.User!, dbContext);
+    }
+
+    private static async Task<Person> GetPersonAsync(ClaimsPrincipal principal, AfraAppContext dbContext)
+    {
+        if (principal.Identity?.IsAuthenticated ?? true)
             throw new InvalidOperationException("The user is not logged in!");
 
-        if (!httpContext.User.HasClaim(claim => claim.Type == AfraAppClaimTypes.Id))
+        if (!principal.HasClaim(claim => claim.Type == AfraAppClaimTypes.Id))
             throw new InvalidOperationException($"The user does not have a {AfraAppClaimTypes.Id} claim");
 
-        var user = dbContext.Personen.Find(new Guid(httpContext.User.Claims
+        var user = await dbContext.Personen.FindAsync(new Guid(principal.Claims
             .First(claim => claim.Type == AfraAppClaimTypes.Id).Value));
 
         if (user is null)
@@ -37,16 +67,15 @@ public static class AfraAppHttpContextGetPersonExtension
         return user;
     }
 
-    /// <inheritdoc cref="GetPerson" />
-    public static async Task<Person> GetPersonAsync(this HttpContext httpContext, AfraAppContext dbContext)
+    private static Person GetPerson(ClaimsPrincipal principal, AfraAppContext dbContext)
     {
-        if (!httpContext.User.Identity?.IsAuthenticated ?? true)
+        if (principal.Identity?.IsAuthenticated ?? true)
             throw new InvalidOperationException("The user is not logged in!");
 
-        if (!httpContext.User.HasClaim(claim => claim.Type == AfraAppClaimTypes.Id))
+        if (!principal.HasClaim(claim => claim.Type == AfraAppClaimTypes.Id))
             throw new InvalidOperationException($"The user does not have a {AfraAppClaimTypes.Id} claim");
 
-        var user = await dbContext.Personen.FindAsync(new Guid(httpContext.User.Claims
+        var user = dbContext.Personen.Find(new Guid(principal.Claims
             .First(claim => claim.Type == AfraAppClaimTypes.Id).Value));
 
         if (user is null)
