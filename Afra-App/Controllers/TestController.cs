@@ -148,6 +148,7 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
     }
 
     [Route("authenticate/{id:guid}")]
+    [HttpGet]
     public async Task<ActionResult> AuthenticateAs(Guid id)
     {
         try
@@ -163,6 +164,7 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
     }
 
     [Route("authenticate/logout")]
+    [HttpGet]
     public async Task<ActionResult> AuthenticateAs()
     {
         await HttpContext.SignOutAsync();
@@ -171,6 +173,7 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
 
     [Route("authenticate")]
     [Authorize]
+    [HttpGet]
     public ActionResult<Data.DTO.Person> PrintAuthentication()
     {
         return new Data.DTO.Person(HttpContext.GetPerson(dbContext));
