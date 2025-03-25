@@ -24,7 +24,9 @@ builder.Services.AddOptions<OtiumConfiguration>()
     .ValidateOnStart();
 
 builder.Services.AddOptions<EmailConfiguration>()
-    .Bind(builder.Configuration.GetSection("SMTP"));
+    .Bind(builder.Configuration.GetSection("SMTP"))
+    .Validate(EmailConfiguration.Validate)
+    .ValidateOnStart();
 
 // Add services to the container.
 
@@ -94,7 +96,7 @@ builder.Services.AddQuartz(q =>
 builder.Services.AddQuartzServer(options => { options.WaitForJobsToComplete = true; });
 
 
-builder.Services.AddTransient<IEmailService, MockEmailService>();
+builder.Services.AddTransient<IEmailService, EmailService>();
 builder.Services.AddTransient<IBatchingEmailService, BatchingEmailService>();
 
 var app = builder.Build();

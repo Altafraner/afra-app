@@ -48,7 +48,10 @@ public class EmailService : IEmailService
         {
             smtp.Connect(_emailConfiguration.Host, _emailConfiguration.Port,
                     _emailConfiguration.SecureSocketOptions);
-            smtp.Authenticate(_emailConfiguration.Username, _emailConfiguration.Password);
+            if (_emailConfiguration.Username is not null)
+            {
+                smtp.Authenticate(_emailConfiguration.Username, _emailConfiguration.Password);
+            }
             await smtp.SendAsync(email);
             smtp.Disconnect(true);
         }

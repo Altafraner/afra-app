@@ -12,3 +12,9 @@ services:
       POSTGRES_USER: "AfraAppUser"
       POSTGRES_PASSWORD: "AfraAppPassword"
       POSTGRES_DB: "afra-app"
+  mailcatcher:
+    build:
+      context: mock-smtp-server
+      dockerfile: Dockerfile
+    ports:
+      - "8090:1080"
