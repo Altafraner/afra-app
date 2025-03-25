@@ -1,5 +1,3 @@
-using System.Net;
-using System.Net.Mail;
 using System.Security.Cryptography;
 using System.Text.Json.Serialization;
 using Afra_App.Data;
@@ -24,6 +22,9 @@ builder.Services.AddOptions<OtiumConfiguration>()
     .Bind(builder.Configuration.GetSection("Otium"))
     .Validate(OtiumConfiguration.Validate)
     .ValidateOnStart();
+
+builder.Services.AddOptions<EmailConfiguration>()
+    .Bind(builder.Configuration.GetSection("SMTP"));
 
 // Add services to the container.
 
@@ -93,17 +94,7 @@ builder.Services.AddQuartz(q =>
 builder.Services.AddQuartzServer(options => { options.WaitForJobsToComplete = true; });
 
 
-builder.Services.AddSingleton<SmtpClient>(_ =>
-{
-    var config = builder.Configuration.GetSection("SmtpSettings");
-    return new SmtpClient(config["Host"], Convert.ToInt32(config["Port"]))
-    {
-        Credentials = new NetworkCredential(config["Username"], config["Password"]),
-        EnableSsl = true
-    };
-});
-
-builder.Services.AddTransient<IEmailService, EmailService>();
+builder.Services.AddTransient<IEmailService, MockEmailService>();
 builder.Services.AddTransient<IBatchingEmailService, BatchingEmailService>();
 
 var app = builder.Build();

@@ -1,5 +1,7 @@
-using System.Net.Mail;
-using Quartz;
+using Afra_App.Data.Configuration;
+using Microsoft.Extensions.Options;
+using MimeKit;
+using MailKit.Net.Smtp;
 
 namespace Afra_App.Services;
 
@@ -19,14 +21,53 @@ public interface IEmailService
 /// </summary>
 public class EmailService : IEmailService
 {
-    private readonly IScheduler _scheduler;
+    private readonly EmailConfiguration _emailConfiguration;
 
     /// <summary>
     ///     Constructs the EmailService. Usually called by the DI container.
     /// </summary>
-    public EmailService(ISchedulerFactory schedulerFactory)
+    public EmailService(IOptions<EmailConfiguration> emailConfiguration)
     {
-        _scheduler = schedulerFactory.GetScheduler().GetAwaiter().GetResult();
+        _emailConfiguration = emailConfiguration.Value;
+    }
+
+    /// <summary>
+    ///     Schedule an Email for ASAP delivery.
+    ///     Might batch multiple messages into a single SMTP session in the future.
+    /// </summary>
+    public async Task SendEmailAsync(string toAddress, string subject, string body)
+    {
+        var email = new MimeMessage();
+        email.Sender = MailboxAddress.Parse(_emailConfiguration.SenderEmail);
+        email.Sender.Name = _emailConfiguration.SenderName;
+        email.From.Add(email.Sender);
+        email.To.Add(MailboxAddress.Parse(toAddress));
+        email.Subject = subject;
+        email.Body = new TextPart(MimeKit.Text.TextFormat.Plain) { Text = body };
+        using (var smtp = new SmtpClient())
+        {
+            smtp.Connect(_emailConfiguration.Host, _emailConfiguration.Port,
+                    _emailConfiguration.SecureSocketOptions);
+            smtp.Authenticate(_emailConfiguration.Username, _emailConfiguration.Password);
+            await smtp.SendAsync(email);
+            smtp.Disconnect(true);
+        }
+    }
+}
+
+/// <summary>
+///     An email sending service for debugging that logs any emails to the console unsent
+/// </summary>
+public class MockEmailService : IEmailService
+{
+    private readonly ILogger _logger;
+
+    /// <summary>
+    ///     Constructs the EmailService. Usually called by the DI container.
+    /// </summary>
+    public MockEmailService(ILogger<MockEmailService> logger)
+    {
+        _logger = logger;
     }
 
     /// <summary>
@@ -35,54 +76,7 @@ public class EmailService : IEmailService
     /// </summary>
     public Task SendEmailAsync(string toAddress, string subject, string body)
     {
-        var jobName = $"mail-{toAddress}-{Guid.NewGuid()}";
-        var key = new JobKey(jobName, "mailjobs");
-
-        var job = JobBuilder.Create<MailJob>()
-            .WithIdentity(key)
-            .UsingJobData("address_to", toAddress)
-            .UsingJobData("subject", subject)
-            .UsingJobData("body", body)
-            .Build();
-
-        var trigger = TriggerBuilder.Create()
-            .ForJob(key)
-            .StartAt(DateTime.UtcNow + TimeSpan.FromSeconds(15))
-            .Build();
-
-        return _scheduler.ScheduleJob(job, trigger);
-    }
-}
-
-internal class MailJob : IJob
-{
-    private readonly SmtpClient _smtpClient;
-
-    public MailJob(SmtpClient smtpClient)
-    {
-        _smtpClient = smtpClient;
-    }
-
-    public async Task Execute(IJobExecutionContext context)
-    {
-        try
-        {
-            var dataMap = context.JobDetail.JobDataMap;
-            var to = new MailAddress(dataMap.GetString("address_to")!);
-            var subject = dataMap.GetString("subject")!;
-            var body = dataMap.GetString("body")!;
-
-            var message = new MailMessage(new MailAddress("noreply@localhost"), to)
-            {
-                Subject = subject,
-                Body = body
-            };
-
-            await _smtpClient.SendMailAsync(message);
-        }
-        catch (Exception e)
-        {
-            throw new JobExecutionException(e, false);
-        }
+        _logger.LogInformation("Sending Mail for {}, subject: {}, body:\n{}", toAddress, subject, body);
+        return Task.CompletedTask;
     }
 }
