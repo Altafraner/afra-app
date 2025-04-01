@@ -1,6 +1,6 @@
 ﻿<script setup>
 import {Form} from '@primevue/forms';
-import {InputText, FloatLabel, Password, Button, useToast} from "primevue";
+import {Button, FloatLabel, InputText, Password, useToast} from "primevue";
 import {ref} from "vue";
 import {mande} from "mande";
 import {useUser} from "@/stores/useUser.js";
@@ -22,11 +22,11 @@ const submit = async (evt) => {
     }, {responseAs: "response"});
     await user.update();
   } catch (error) {
-    if (error.response.status === 410) {
+    if (error.response.status === 401) {
       toast.add({
         severity: "error",
         summary: "Fehler",
-        detail: "Falsche E-Mail oder Passwort",
+        detail: "Fehlerhafte Anmeldedaten",
         life: 5000
       });
     } else {
@@ -46,8 +46,8 @@ const submit = async (evt) => {
 <template>
   <Form @submit="submit" class="flex flex-col gap-6 mt-8">
     <FloatLabel variant="on">
-      <InputText name="username" type="text" fluid id="eMail"/>
-      <label for="eMail">E-Mail Adresse</label>
+      <InputText id="username" fluid name="username" type="text"/>
+      <label for="username">Nutzername</label>
     </FloatLabel>
     <FloatLabel variant="on">
       <Password name="password" :feedback="false" fluid toggle-mask input-id="password"/>

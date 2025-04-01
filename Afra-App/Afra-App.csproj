@@ -11,7 +11,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="MailKit" Version="4.11.0" />
+        <PackageReference Include="MailKit" Version="4.11.0"/>
         <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="9.0.2"/>
         <PackageReference Include="Bogus" Version="35.6.2"/>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.2"/>
@@ -25,6 +25,7 @@
         <PackageReference Include="Quartz.Serialization.SystemTextJson" Version="3.14.0"/>
         <PackageReference Include="Scalar.AspNetCore" Version="1.2.72"/>
         <PackageReference Include="Swashbuckle.AspNetCore" Version="7.3.1"/>
+        <PackageReference Include="System.DirectoryServices.Protocols" Version="9.0.3"/>
     </ItemGroup>
 
     <ItemGroup>

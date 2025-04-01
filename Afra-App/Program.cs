@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text.Json.Serialization;
+using Afra_App.Authentication.Ldap;
 using Afra_App.Data;
 using Afra_App.Data.Configuration;
 using Afra_App.Endpoints;
@@ -26,6 +27,11 @@ builder.Services.AddOptions<OtiumConfiguration>()
 builder.Services.AddOptions<EmailConfiguration>()
     .Bind(builder.Configuration.GetSection("SMTP"))
     .Validate(EmailConfiguration.Validate)
+    .ValidateOnStart();
+
+builder.Services.AddOptions<LdapConfiguration>()
+    .Bind(builder.Configuration.GetSection("LDAP"))
+    .Validate(LdapConfiguration.Validate)
     .ValidateOnStart();
 
 // Add services to the container.
@@ -65,6 +71,7 @@ builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<KategorieService>();
 builder.Services.AddScoped<OtiumEndpointService>();
 builder.Services.AddScoped<EnrollmentService>();
+builder.Services.AddScoped<LdapService>();
 
 try
 {
