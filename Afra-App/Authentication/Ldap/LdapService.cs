@@ -42,7 +42,7 @@ public class LdapService
         if (!_configuration.Enabled)
             throw new InvalidOperationException("Ldap is not enabled");
 
-        _logger.LogInformation("Starting LDAP synchronization");
+        _logger.LogInformation("LDAP synchronization started");
         using var connection = LdapHelper.BuildConnection(_configuration);
         var syncTime = DateTime.UtcNow;
         var dbUsers = await _context.Personen.Where(p => p.LdapObjectId != null).ToListAsync();
@@ -78,9 +78,10 @@ public class LdapService
         var unsyncedUsers = await _context.Personen
             .Where(p => p.LdapObjectId != null && p.LdapSyncTime < syncTime)
             .ToListAsync();
-
         if (unsyncedUsers.Count != 0)
             _logger.LogWarning("There are {count} users that could not be synchronized", unsyncedUsers.Count);
+
+        _logger.LogInformation("LDAP synchronization finished");
     }
 
     /// <summary>
