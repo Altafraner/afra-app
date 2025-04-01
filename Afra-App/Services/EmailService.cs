@@ -1,7 +1,8 @@
 using Afra_App.Data.Configuration;
+using MailKit.Net.Smtp;
 using Microsoft.Extensions.Options;
 using MimeKit;
-using MailKit.Net.Smtp;
+using MimeKit.Text;
 
 namespace Afra_App.Services;
 
@@ -43,18 +44,17 @@ public class EmailService : IEmailService
         email.From.Add(email.Sender);
         email.To.Add(MailboxAddress.Parse(toAddress));
         email.Subject = subject;
-        email.Body = new TextPart(MimeKit.Text.TextFormat.Plain) { Text = body };
-        using (var smtp = new SmtpClient())
-        {
-            smtp.Connect(_emailConfiguration.Host, _emailConfiguration.Port,
-                    _emailConfiguration.SecureSocketOptions);
-            if (_emailConfiguration.Username is not null)
-            {
-                smtp.Authenticate(_emailConfiguration.Username, _emailConfiguration.Password);
-            }
-            await smtp.SendAsync(email);
-            smtp.Disconnect(true);
-        }
+        email.Body = new TextPart(TextFormat.Plain) { Text = body };
+
+        using var smtp = new SmtpClient();
+        await smtp.ConnectAsync(_emailConfiguration.Host, _emailConfiguration.Port,
+            _emailConfiguration.SecureSocketOptions);
+
+        if (_emailConfiguration.Username is not null)
+            await smtp.AuthenticateAsync(_emailConfiguration.Username, _emailConfiguration.Password);
+
+        await smtp.SendAsync(email);
+        await smtp.DisconnectAsync(true);
     }
 }
 
@@ -79,7 +79,7 @@ public class MockEmailService : IEmailService
     /// </summary>
     public Task SendEmailAsync(string toAddress, string subject, string body)
     {
-        _logger.LogInformation("Sending Mail for {}, subject: {}, body:\n{}", toAddress, subject, body);
+        _logger.LogInformation("Sending Mail for {to}, subject: {subject}, body:\n{body}", toAddress, subject, body);
         return Task.CompletedTask;
     }
 }
