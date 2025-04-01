@@ -30,8 +30,14 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
         return Ok("Die Datenbank wurde erfolgreich zurückgesetzt.");
     }
 
+    [HttpGet("seed/users")]
+    public Task<ActionResult> SeedDbWithUsers()
+    {
+        return SeedDb(true);
+    }
+
     [HttpGet("seed")]
-    public async Task<ActionResult> SeedDb()
+    public async Task<ActionResult> SeedDb(bool seedUsers = false)
     {
         var akademisches = new Kategorie
         {
@@ -84,13 +90,18 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
             )
             .RuleFor(p => p.Rolle, Rolle.Tutor);
 
-        var mentoren = personFaker.Generate(60);
+        var mentoren = seedUsers
+            ? personFaker.Generate(60)
+            : await dbContext.Personen.Where(p => p.Rolle == Rolle.Tutor).ToListAsync();
 
         var studentsFaker = personFaker
             .RuleFor(p => p.Mentor, f => f.PickRandom(mentoren))
             .RuleFor(p => p.Rolle, Rolle.Student);
 
-        var students = studentsFaker.Generate(250);
+
+        var students = seedUsers
+            ? studentsFaker.Generate(250)
+            : await dbContext.Personen.Where(p => p.Rolle == Rolle.Student).ToListAsync();
 
         var today = DateTime.Today;
         var nextMonday = today.AddDays((int)DayOfWeek.Monday - (int)today.DayOfWeek);
@@ -133,8 +144,12 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
             .RuleFor(t => t.Block, f => f.PickRandom(blocks))
             .RuleFor(t => t.MaxEinschreibungen, f => f.Random.Bool() ? null : f.Random.Int(2, 20));
 
-        dbContext.Personen.AddRange(mentoren);
-        dbContext.Personen.AddRange(students);
+        if (seedUsers)
+        {
+            dbContext.Personen.AddRange(mentoren);
+            dbContext.Personen.AddRange(students);
+        }
+
         dbContext.Schultage.AddRange(schultage);
         dbContext.Blocks.AddRange(blocks);
         dbContext.OtiaKategorien.AddRange(otiumsKategorien);
