@@ -24,10 +24,11 @@ public static class LdapHelper
             {
                 ProtocolVersion = 3,
                 SecureSocketLayer = true,
-                VerifyServerCertificate = (_, _) => true
             },
             AuthType = AuthType.Basic
         };
+        if (!configuration.ValidateCertificate) connection.SessionOptions.VerifyServerCertificate = (_, _) => true;
+
         connection.Bind();
 
         return connection;

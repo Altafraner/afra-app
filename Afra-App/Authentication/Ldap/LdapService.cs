@@ -28,11 +28,20 @@ public class LdapService
     }
 
     /// <summary>
+    /// Checks whether the LDAP service is enabled.
+    /// </summary>
+    public bool IsEnabled => _configuration.Enabled;
+
+    /// <summary>
     ///     Synchronizes the database with the LDAP server.
     /// </summary>
     /// <exception cref="LdapException">The LDAP Server did not respond</exception>
+    /// <exception cref="InvalidOperationException">The LDAP Service is not enabled. Check with <see cref="IsEnabled"/>.</exception>
     public async Task SynchronizeAsync()
     {
+        if (!_configuration.Enabled)
+            throw new InvalidOperationException("Ldap is not enabled");
+
         _logger.LogInformation("Starting LDAP synchronization");
         using var connection = LdapHelper.BuildConnection(_configuration);
         var syncTime = DateTime.UtcNow;
@@ -80,9 +89,13 @@ public class LdapService
     /// <param name="username">The users username</param>
     /// <param name="password">The users (secret) password</param>
     /// <param name="shouldRetry">Whether to retry if the user exists in LDAP but not in DB</param>
-    /// <returns></returns>
+    /// <returns>The user authenticated by <see cref="username"/> and <see cref="password"/> if the credentials are valid; Otherwise, null</returns>
+    /// <exception cref="InvalidOperationException">The LDAP Service is not enabled. Check with <see cref="IsEnabled"/>.</exception>
     public async Task<Person?> VerifyUserAsync(string username, string password, bool shouldRetry = true)
     {
+        if (!_configuration.Enabled)
+            throw new InvalidOperationException("Ldap is not enabled");
+
         using var connection = LdapHelper.BuildConnection(_configuration);
         var request = new SearchRequest(_configuration.BaseDn, $"(sAMAccountName={LdapHelper.Sanitize(username)})",
             SearchScope.Subtree);

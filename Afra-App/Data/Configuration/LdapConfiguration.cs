@@ -1,5 +1,5 @@
 ﻿using System.DirectoryServices.Protocols;
-using System.Net;
+using Afra_App.Authentication.Ldap;
 
 namespace Afra_App.Data.Configuration;
 
@@ -8,6 +8,16 @@ namespace Afra_App.Data.Configuration;
 /// </summary>
 public class LdapConfiguration
 {
+    /// <summary>
+    /// Whether the LDAP authentication is enabled
+    /// </summary>
+    public required bool Enabled { get; set; }
+
+    /// <summary>
+    /// Whether to validate the certificate of the LDAP server
+    /// </summary>
+    public bool ValidateCertificate { get; set; }
+
     /// <summary>
     /// The host of the LDAP server
     /// </summary>
@@ -45,37 +55,35 @@ public class LdapConfiguration
 
     internal static bool Validate(LdapConfiguration configuration)
     {
-        var identifier = new LdapDirectoryIdentifier(configuration.Host, configuration.Port);
-        var credentials = new NetworkCredential(configuration.Username, configuration.Password);
-
-        using var connection = new LdapConnection(identifier, credentials);
-        connection.SessionOptions.ProtocolVersion = 3;
-        connection.SessionOptions.SecureSocketLayer = true;
-        connection.SessionOptions.VerifyServerCertificate = (_, _) => true;
-        connection.AuthType = AuthType.Basic;
-
+        if (!configuration.Enabled) return true;
+        LdapConnection connection;
         try
         {
-            connection.Bind();
+            connection = LdapHelper.BuildConnection(configuration);
         }
-        catch (Exception)
+        catch (LdapException)
         {
-            return false;
-        }
-        /*var request = new SearchRequest("OU=Schule,DC=sankt-afra,DC=de", "(objectClass=user)",
-            SearchScope.Subtree);
-        var response = (SearchResponse)connection.SendRequest(request);
-
-        Console.WriteLine("Request sent");
-        if (response is null)
-        {
+            Console.WriteLine("Cannot connect to LDAP server.");
             return false;
         }
 
-        foreach (var entry in response.Entries.Cast<SearchResultEntry>())
+        var studentGroupRequest = new SearchRequest(configuration.StudentGroup, "(objectClass=group)",
+            SearchScope.Base);
+        var studentGroupResponse = (SearchResponse)connection.SendRequest(studentGroupRequest);
+        if (studentGroupResponse.Entries.Count == 0)
         {
-            Console.WriteLine(entry.DistinguishedName);
-        }*/
+            Console.WriteLine("Student group does not exist in directory");
+            return false;
+        }
+
+        var tutorGroupRequest = new SearchRequest(configuration.TutorGroup, "(objectClass=group)",
+            SearchScope.Base);
+        var tutorGroupResponse = (SearchResponse)connection.SendRequest(tutorGroupRequest);
+        if (tutorGroupResponse.Entries.Count == 0)
+        {
+            Console.WriteLine("Tutor group does not exist in directory");
+            return false;
+        }
 
         return true;
     }
