@@ -1,10 +1,10 @@
 using System.Security.Claims;
 using Afra_App.Authentication;
+using Afra_App.Authentication.Ldap;
 using Afra_App.Data;
 using Afra_App.Data.DTO;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.EntityFrameworkCore;
 using Person = Afra_App.Data.People.Person;
 
 namespace Afra_App.Services;
@@ -15,13 +15,15 @@ namespace Afra_App.Services;
 public class UserService
 {
     private readonly AfraAppContext _context;
+    private readonly LdapService _ldapService;
 
     /// <summary>
     ///     Creates a new user service.
     /// </summary>
-    public UserService(AfraAppContext context)
+    public UserService(AfraAppContext context, LdapService ldapService)
     {
         _context = context;
+        _ldapService = ldapService;
     }
 
     /// <summary>
@@ -52,26 +54,15 @@ public class UserService
     /// <remarks>This is currently insecure.</remarks>
     /// <param name="request">The SignInRequest</param>
     /// <param name="httpContext">The current HttpContext</param>
-    /// <returns>Ok, if the credentials are valid; Otherwise, Unauthorized</returns>
+    /// <returns>Ok, if the credentials are valid; Otherwise, unauthorized</returns>
     public async Task<IResult> HandleSignInRequestAsync(SignInRequest request, HttpContext httpContext)
     {
-        var user = await FindUserWithUsernameAsync(request.Username);
+        var user = await _ldapService.VerifyUserAsync(request.Username, request.Password);
+
         if (user is null) return Results.Unauthorized();
-        var authorized = await CheckPasswordAsync(user, request.Password);
-        if (!authorized) return Results.Unauthorized();
 
         await SignInAsync(user, httpContext);
         return Results.Ok();
-    }
-
-    private Task<bool> CheckPasswordAsync(Person user, string password)
-    {
-        return Task.FromResult(true);
-    }
-
-    private async Task<Person?> FindUserWithUsernameAsync(string username)
-    {
-        return await _context.Personen.FirstOrDefaultAsync(u => u.Email == username);
     }
 
     private static async Task SignInAsync(Person user, HttpContext httpContext)

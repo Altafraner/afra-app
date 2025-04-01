@@ -49,6 +49,16 @@ public class Person
     public required Rolle Rolle { get; set; }
 
     /// <summary>
+    /// The ObjectGuid of the person in the LDAP directory.
+    /// </summary>
+    public Guid? LdapObjectId { get; set; }
+
+    /// <summary>
+    /// The time the person was last synchronized with the LDAP directory.
+    /// </summary>
+    public DateTime? LdapSyncTime { get; set; }
+
+    /// <summary>
     ///     A list of all Otia the person is responsible for.
     /// </summary>
     public ICollection<Otium.Otium> VerwalteteOtia { get; set; } = new List<Otium.Otium>();
