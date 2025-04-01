@@ -5,6 +5,7 @@ using Afra_App.Data;
 using Afra_App.Data.DTO;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.EntityFrameworkCore;
 using Person = Afra_App.Data.People.Person;
 
 namespace Afra_App.Services;
@@ -54,10 +55,18 @@ public class UserService
     /// <remarks>This is currently insecure.</remarks>
     /// <param name="request">The SignInRequest</param>
     /// <param name="httpContext">The current HttpContext</param>
+    /// <param name="environment">The application environment</param>
     /// <returns>Ok, if the credentials are valid; Otherwise, unauthorized</returns>
-    public async Task<IResult> HandleSignInRequestAsync(SignInRequest request, HttpContext httpContext)
+    public async Task<IResult> HandleSignInRequestAsync(SignInRequest request, HttpContext httpContext,
+        IWebHostEnvironment environment)
     {
-        var user = await _ldapService.VerifyUserAsync(request.Username, request.Password);
+        var user = (_ldapService.IsEnabled, environment.IsDevelopment()) switch
+        {
+            (true, _) => await _ldapService.VerifyUserAsync(request.Username.Trim(), request.Password.Trim()),
+            (false, true) => await _context.Personen.FirstOrDefaultAsync(u =>
+                u.Email.StartsWith(request.Username.Trim())),
+            _ => null
+        };
 
         if (user is null) return Results.Unauthorized();
 

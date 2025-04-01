@@ -13,8 +13,10 @@ public static class UserExtension
     public static void MapUserEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapPost("/api/user/login",
-                async (UserService userService, UserService.SignInRequest request, HttpContext context) =>
-                    await userService.HandleSignInRequestAsync(request, context)).WithName("sign-in")
+                async (UserService userService, UserService.SignInRequest request, HttpContext context,
+                        IWebHostEnvironment environment) =>
+                    await userService.HandleSignInRequestAsync(request, context, environment))
+            .WithName("sign-in")
             .WithOpenApi()
             .AllowAnonymous();
 

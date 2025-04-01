@@ -53,7 +53,7 @@ const submit = async (evt) => {
       <Password name="password" :feedback="false" fluid toggle-mask input-id="password"/>
       <label for="password">Passwort</label>
     </FloatLabel>
-    <Button type="submit" severity="secondary" label="Submit" fluid :loading="loading"/>
+    <Button :loading="loading" fluid label="Einloggen" severity="secondary" type="submit"/>
   </Form>
 </template>
 
