@@ -1,5 +1,5 @@
 ﻿<script setup>
-import {Button, DataTable, Column, Tag, useToast, Skeleton} from "primevue";
+import {Button, Column, DataTable, Skeleton, Tag, useToast} from "primevue";
 import {formatDate, formatStudent} from "@/helpers/formatters.js";
 import {ref} from "vue";
 import {useSettings} from "@/stores/useSettings.js";
@@ -70,7 +70,11 @@ update();
         {{ formatDate(new Date(data.datum)) }}
       </template>
     </Column>
-    <Column header="Block" field="block"/>
+    <Column header="Block">
+      <template #body="{data}">
+        {{ data.block + 1 }}
+      </template>
+    </Column>
     <Column header="Auslastung">
       <template #body="{data}">
         <auslastungs-tag :auslastung="data.auslastung"/>

@@ -2,13 +2,14 @@
 import {Tag} from "primevue";
 
 const props = defineProps({
-  value: Object
+  value: Object,
+  minimal: Boolean
 })
 
 </script>
 
 <template>
-  <Tag severity="secondary">
+  <Tag v-if="!minimal" severity="secondary">
     <span v-if="props.value.icon"
           :class="`ot-angebot-icon ${props.value.cssColor ? 'ot-angebot-white' : ''}`"
           :style="`background-color: ${props.value.cssColor ?? 'unset'}`">
@@ -18,6 +19,12 @@ const props = defineProps({
       {{ props.value.bezeichnung }}
     </span>
   </Tag>
+  <span v-else class="inline-flex items-baseline justify-center gap-1">
+    <i :class="props.value.icon" :style="`color: ${props.value.cssColor ?? 'inherit'}`"/>
+    <span>
+      {{ props.value.bezeichnung }}
+    </span>
+  </span>
 </template>
 
 <style scoped>
