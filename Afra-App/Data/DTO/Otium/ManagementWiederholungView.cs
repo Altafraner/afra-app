@@ -1,4 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
+using Afra_App.Data.Otium;
 using Afra_App.Data.Schuljahr;
 
 namespace Afra_App.Data.DTO.Otium;
@@ -11,13 +13,15 @@ public record ManagementWiederholungView
     /// <summary>
     ///     Construct an empty ManagementWiederholungView
     /// </summary>
-    public ManagementWiederholungView() { }
+    public ManagementWiederholungView()
+    {
+    }
 
     /// <summary>
     ///     Construct a ManagementWiederholungView from a Database Wiederholung
     /// </summary>
     [SetsRequiredMembers]
-    public ManagementWiederholungView(Data.Otium.Wiederholung dbWiederholung)
+    public ManagementWiederholungView(Wiederholung dbWiederholung)
     {
         Tutor = (dbWiederholung.Tutor is not null) ? new PersonInfoMinimal(dbWiederholung.Tutor) : null;
         Ort = dbWiederholung.Ort;
@@ -43,6 +47,7 @@ public record ManagementWiederholungView
     /// <summary>
     ///     The Day of the Week that Termine of the Wiederholung are scheduled
     /// </summary>
+    [JsonConverter(typeof(JsonNumberEnumConverter<DayOfWeek>))]
     public required DayOfWeek Wochentag { get; set; }
 
     /// <summary>

@@ -1,13 +1,10 @@
 ﻿<script setup>
-import {ref} from "vue";
 import AfraOtiumEnrollmentTable from "@/components/Otium/Management/AfraOtiumEnrollmentTable.vue";
 import {formatDate} from "@/helpers/formatters.js";
 
 const props = defineProps({
   otium: Object,
 })
-
-const otium = ref(props.otium)
 
 </script>
 

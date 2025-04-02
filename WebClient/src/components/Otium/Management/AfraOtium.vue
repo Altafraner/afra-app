@@ -1,18 +1,17 @@
 ﻿<script setup>
-import {ref, reactive} from "vue";
+import {reactive, ref} from "vue";
 import {
-  Card,
-  Divider,
-  Button,
-  Tag,
-  InputText,
-  Message,
-  Textarea,
   Accordion,
   AccordionContent,
-  AccordionPanel,
   AccordionHeader,
-  Panel
+  AccordionPanel,
+  Button,
+  Card,
+  Divider,
+  InputText,
+  Message,
+  Panel,
+  Textarea
 } from "primevue";
 import AfraOtiumDateTable from "@/components/Otium/Management/AfraOtiumDateTable.vue";
 import AfraOtiumRegTable from "@/components/Otium/Management/AfraOtiumRegTable.vue";
@@ -30,7 +29,6 @@ const props = defineProps({
   mayEdit: Boolean,
   minimal: Boolean
 })
-const otium = ref(props['otium'])
 const isEditing = ref(false)
 
 if (props.minimal && (props.mayEdit || props.mayEnroll))
@@ -41,9 +39,9 @@ function toggleEdit() {
 }
 
 const initialValues = reactive({
-  bezeichnung: otium.value.bezeichnung,
-  beschreibung: otium.value.beschreibung,
-  kategorien: otium.value.kategorien,
+  bezeichnung: props.otium.bezeichnung,
+  beschreibung: props.otium.beschreibung,
+  kategorien: props.otium.kategorien,
 })
 
 function findKategorie(id, kategorien) {

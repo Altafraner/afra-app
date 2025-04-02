@@ -1,7 +1,9 @@
 ﻿<script setup>
 import {useUser} from "@/stores/useUser.js";
-import Student from "@/views/Dashboard/Student.vue";
-import Teacher from "@/views/Dashboard/Teacher.vue";
+import {defineAsyncComponent} from "vue";
+
+const Student = defineAsyncComponent(() => import("@/views/Dashboard/Student.vue"));
+const Teacher = defineAsyncComponent(() => import("@/views/Dashboard/Teacher.vue"));
 
 const user = useUser()
 </script>

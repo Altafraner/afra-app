@@ -1,12 +1,10 @@
 ﻿<script setup>
-import {ref} from 'vue';
-import {DataTable, Column, Button} from "primevue";
+import {Button, Column, DataTable} from "primevue";
 
 const props = defineProps({
   managers: Array,
 })
 
-const managers = ref(props.managers)
 </script>
 
 <template>

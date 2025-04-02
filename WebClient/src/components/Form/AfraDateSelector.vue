@@ -1,7 +1,6 @@
 ﻿<script setup>
 import {Button, InputGroup, Select} from "primevue";
 import InputGroupAddon from "primevue/inputgroupaddon";
-import {ref} from "vue";
 import {formatDate} from "../../helpers/formatters.js";
 
 const props = defineProps({
@@ -13,17 +12,16 @@ const emitToday = () => emit("today")
 
 const date = defineModel()
 
-const datesAvailable = ref(props.options)
 
 function change_date(next) {
-  let n = datesAvailable.value.findIndex((element) => element.datum === date.value.datum)
+  let n = props.options.findIndex((element) => element.datum === date.value.datum)
   n = next(n)
-  while (n < datesAvailable.value.length && n >= 0) {
-    if (datesAvailable.value[n].disabled) {
+  while (n < props.options.length && n >= 0) {
+    if (props.options[n].disabled) {
       n = next(n)
       continue
     }
-    date.value = datesAvailable.value[n]
+    date.value = props.options[n]
     emit("dateChanged")
     return
   }
@@ -44,7 +42,7 @@ function date_to_label(data) {
               @click="decrement_date"/>
     </input-group-addon>
     <Select filter v-model="date" option-label="datum" option-disabled="disabled"
-            :options="datesAvailable" @change="() => emit('dateChanged')">
+            :options="props.options" @change="() => emit('dateChanged')">
       <template #value="{value}">{{ formatDate(date_to_label(value)) }} | {{ value.wochentyp }}
       </template>
       <template #option="{option}">{{ formatDate(date_to_label(option)) }} |

@@ -5,7 +5,7 @@ import 'primeicons/primeicons.css'
 import AfraNav from "@/components/AfraNav.vue";
 import {useUser} from "@/stores/useUser.js";
 import wappen from '/favicon.svg?url'
-import {Image, Message, Skeleton, Toast, useToast} from "primevue";
+import {ConfirmPopup, Image, Message, Skeleton, Toast, useToast} from "primevue";
 import Login from "@/components/Login.vue";
 
 const user = useUser();
@@ -21,6 +21,7 @@ user.update().catch(() => {
 
 <template>
   <Toast/>
+  <ConfirmPopup/>
   <Message severity="warn" closable>
     Sie sehen eine Testversion der Otiums-App. Alle Daten können jederzeit gelöscht werden.
   </Message>

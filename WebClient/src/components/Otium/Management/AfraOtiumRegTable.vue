@@ -1,7 +1,8 @@
 ﻿<script setup>
-import {ref} from 'vue';
-import {DataTable, Column, Button} from "primevue";
+import {Button, Column, DataTable} from "primevue";
 import {formatTutor} from "@/helpers/formatters.js";
+
+const wochentage = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag']
 
 const props = defineProps({
   regs: Array,
@@ -9,20 +10,28 @@ const props = defineProps({
   allowEdit: Boolean
 })
 
-const regs = ref(props.regs)
 </script>
 
 <template>
   <DataTable :value="regs" size="medium">
 
     <Column field="wochentyp" header="Woche"/>
-    <Column field="wochentag" header="Tag"/>
-    <Column field="block" header="Block"/>
+    <Column header="Tag">
+      <template #body="{data}">
+        {{ wochentage[data.wochentag] }}
+      </template>
+    </Column>
+    <Column header="Block">
+      <template #body="{data}">
+        {{ data.block + 1 }}
+      </template>
+    </Column>
     <Column field="tutor" header="Tutor">
       <template #body="slotProps">
         {{ formatTutor(slotProps.data.tutor) }}
       </template>
     </Column>
+    <Column field="ort" header="Ort"/>
     <Column v-if="allowEdit" class="text-right afra-col-action">
       <template #header>
         <Button aria-label="Neue Regelmäßigkeit" icon="pi pi-plus" size="small"></Button>
@@ -36,6 +45,11 @@ const regs = ref(props.regs)
         </span>
       </template>
     </Column>
+    <template #empty>
+      <div class="flex justify-center">
+        Keine Regelmäßigkeiten gefunden.
+      </div>
+    </template>
   </DataTable>
 </template>
 
