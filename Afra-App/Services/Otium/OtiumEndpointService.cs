@@ -1,7 +1,9 @@
+using System.Text;
 using Afra_App.Data;
 using Afra_App.Data.Configuration;
 using Afra_App.Data.DTO;
 using Afra_App.Data.DTO.Otium;
+using Afra_App.Data.People;
 using Afra_App.Data.TimeInterval;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -21,11 +23,11 @@ namespace Afra_App.Services.Otium;
 /// </summary>
 public class OtiumEndpointService
 {
+    private readonly IBatchingEmailService _batchingEmailService;
     private readonly AfraAppContext _context;
     private readonly EnrollmentService _enrollmentService;
     private readonly KategorieService _kategorieService;
     private readonly OtiumConfiguration _otiumConfiguration;
-    private readonly IBatchingEmailService _batchingEmailService;
 
     /// <summary>
     ///     Constructor for the OtiumEndpointService. Usually called by the DI container.
@@ -300,6 +302,8 @@ public class OtiumEndpointService
             .Include(o => o.Wiederholungen).ThenInclude(t => t.Tutor)
             .Include(o => o.Wiederholungen).ThenInclude(t => t.Termine)
             .Include(o => o.Kategorie)
+            .OrderBy(o => o.Bezeichnung)
+            .ThenByDescending(o => o.Termine.Count)
             .Select(otium => new DTO_Otium_View(otium));
     }
 
@@ -317,10 +321,9 @@ public class OtiumEndpointService
             .Include(o => o.Wiederholungen).ThenInclude(t => t.Termine)
             .Include(o => o.Kategorie)
             .FirstOrDefault(o => o.Id == otiumId);
+
         if (otium is null)
-        {
             throw new EntityNotFoundException("Kein Otium mit dieser Id gefunden.");
-        }
 
         return new DTO_Otium_View(otium);
     }
@@ -331,28 +334,26 @@ public class OtiumEndpointService
     /// <param name="dtoOtium">The Otium data to add</param>
     public async Task<Guid> CreateOtiumAsync(DTO_Otium_Creation dtoOtium)
     {
-        var Kategorie = _context.OtiaKategorien.Find(dtoOtium.Kategorie);
-        if (Kategorie is null)
+        var kategorie = await _context.OtiaKategorien.FindAsync(dtoOtium.Kategorie);
+        if (kategorie is null)
             throw new ArgumentException("Kategorie must be valid Kategorie");
 
-        var Verantwortliche = dtoOtium.Verantwortliche.Select(v => _context.Personen.Find(v));
+        var verantwortliche = await _context.Personen.Where(p => dtoOtium.Verantwortliche.Contains(p.Id))
+            .ToListAsync();
 
-        if (Verantwortliche.Any(x => x?.Rolle != Data.People.Rolle.Tutor))
-        {
+        if (verantwortliche.Any(x => x.Rolle != Rolle.Tutor))
             throw new ArgumentException("Only Tutors can be Verantwortliche");
-        }
 
-        var db_otium = new DB_Otium
+        var dbOtium = new DB_Otium
         {
-            Id = new Guid(),
-            Kategorie = Kategorie,
+            Kategorie = kategorie,
             Bezeichnung = dtoOtium.Bezeichnung,
             Beschreibung = dtoOtium.Beschreibung
         };
-        _context.Otia.Add(db_otium);
+        _context.Otia.Add(dbOtium);
         await _context.SaveChangesAsync();
 
-        return db_otium.Id;
+        return dbOtium.Id;
     }
 
     /// <summary>
@@ -361,27 +362,17 @@ public class OtiumEndpointService
     /// <param name="otiumId">The Id of the Otium to delete.</param>
     public async Task DeleteOtiumAsync(Guid otiumId)
     {
-        var otium = await _context.Otia.FindAsync(otiumId);
+        var otium = await _context.Otia
+            .Include(o => o.Termine)
+            .FirstOrDefaultAsync(o => o.Id == otiumId);
         if (otium is null)
-        {
             throw new EntityNotFoundException("Kein Otium mit dieser Id gefunden.");
-        }
 
-        var termine = _context.OtiaTermine
-            .Include(t => t.Otium)
-            .Where(t => t.Otium.Id == otium.Id);
-
-        var hatEinschreibungen = _context.OtiaEinschreibungen
-            .Include(e => e.Termin)
-            .Include(e => e.Termin.Otium)
-            .Where(e => e.Termin.Otium.Id == otiumId)
-            .Any();
+        var hatEinschreibungen = _context.OtiaEinschreibungen.Any(e => e.Termin.Otium.Id == otiumId);
         if (hatEinschreibungen)
-        {
             throw new EntityDeletionException("Otia mit Terminen mit Einschreibungen können nicht gelöscht werden.");
-        }
 
-        _context.OtiaTermine.RemoveRange(termine);
+        _context.OtiaTermine.RemoveRange(otium.Termine);
 
         _context.Otia.Remove(otium);
         await _context.SaveChangesAsync();
@@ -394,32 +385,27 @@ public class OtiumEndpointService
     /// <param name="otiumTermin">The OtiumTermin to create.</param>
     public async Task<Guid> CreateOtiumTerminAsync(Guid otiumId, DTO_Termin_Creation otiumTermin)
     {
-        var otium = _context.Otia.Find(otiumId);
+        var otium = await _context.Otia.FindAsync(otiumId);
         if (otium is null)
-        {
             throw new ArgumentException("Kein Otium mit dieser Id existiert.");
-        }
-        var block = _context.Blocks.Find(otiumTermin.Block);
+
+        var block = await _context.Blocks.FindAsync(otiumTermin.Block);
         if (block is null)
-        {
             throw new ArgumentException("Kein Block mit dieser Id existiert.");
-        }
-        var tutor = _context.Personen.Find(otiumTermin.Tutor);
+
+        var tutor = await _context.Personen.FindAsync(otiumTermin.Tutor);
         if (tutor is null)
-        {
             throw new ArgumentException("Kein Tutor mit dieser Id existiert.");
-        }
 
         var dbOtiumTermin = new DB_Termin
         {
-            Id = new Guid(),
             Otium = otium,
             Block = block,
             Ort = otiumTermin.Ort,
             Tutor = tutor,
             MaxEinschreibungen = otiumTermin.MaxEinschreibungen,
             IstAbgesagt = false,
-            Wiederholung = null,
+            Wiederholung = null
         };
 
         _context.OtiaTermine.Add(dbOtiumTermin);
@@ -441,32 +427,23 @@ public class OtiumEndpointService
             .Include(x => x.Otium)
             .FirstOrDefaultAsync(o => o.Id == otiumTerminId);
         if (otiumTermin is null)
-        {
             throw new EntityNotFoundException("Kein Termin mit dieser Id");
-        }
 
         var otium = await _context.Otia.FindAsync(otiumId);
         if (otium is null)
-        {
             throw new EntityNotFoundException("Kein Otium mit dieser Id");
-        }
 
         if (otiumId != otiumTermin.Otium.Id)
-        {
             throw new EntityDeletionException("Der Termin ist nicht ein Termin des gegeben Otiums.");
-        }
 
         if (otiumTermin.Wiederholung is not null)
-        {
-            throw new EntityDeletionException("Termine aus Wiederholungsregeln können nicht gelöscht werden, sondern nur abgesagt.");
-        }
+            throw new EntityDeletionException(
+                "Termine aus Wiederholungsregeln können nicht gelöscht werden, sondern nur abgesagt.");
 
-        var hatEinschreibungen = otiumTermin.Enrollments.Any();
+        var hatEinschreibungen = otiumTermin.Enrollments.Count != 0;
 
         if (hatEinschreibungen)
-        {
             throw new EntityDeletionException("Termine mit Einschreibungen können nicht gelöscht werden.");
-        }
 
         _context.OtiaTermine.Remove(otiumTermin);
         await _context.SaveChangesAsync();
@@ -479,63 +456,50 @@ public class OtiumEndpointService
     /// <param name="otiumWiederholung">The Wiederholung to create.</param>
     public async Task<Guid> CreateOtiumWiederholungAsync(Guid otiumId, DTO_Wiederholung_Creation otiumWiederholung)
     {
-        var otium = _context.Otia.Find(otiumId);
+        var otium = await _context.Otia.FindAsync(otiumId);
         if (otium is null)
-        {
             throw new ArgumentException("Kein Otium mit dieser Id existiert.");
-        }
-        var tutor = _context.Personen.Find(otiumWiederholung.Tutor);
+
+        var tutor = await _context.Personen.FindAsync(otiumWiederholung.Tutor);
         if (tutor is null)
-        {
             throw new ArgumentException("Kein Tutor mit dieser Id existiert.");
-        }
 
         var dbOtiumWiederholung = new DB_Wiederholung
         {
-            Id = new Guid(),
             Otium = otium,
             Block = otiumWiederholung.Block,
             Wochentyp = otiumWiederholung.Wochentyp,
             Wochentag = otiumWiederholung.Wochentag,
             Ort = otiumWiederholung.Ort,
-            Tutor = tutor,
+            Tutor = tutor
         };
         _context.OtiaWiederholungen.Add(dbOtiumWiederholung);
 
-        for (var a = otiumWiederholung.startDate; a <= otiumWiederholung.endDate; a = a.AddDays(1))
+        var schultage = _context.Schultage
+            .Where(s => s.Datum.DayOfWeek == dbOtiumWiederholung.Wochentag &&
+                        s.Wochentyp == dbOtiumWiederholung.Wochentyp &&
+                        s.Datum <= otiumWiederholung.endDate &&
+                        s.Datum >= otiumWiederholung.startDate)
+            .AsAsyncEnumerable();
+        await foreach (var schultag in schultage)
         {
-            if (a.DayOfWeek != dbOtiumWiederholung.Wochentag) continue;
-
-            var schultag = _context.Schultage.FirstOrDefault(x =>
-                x.Wochentyp == dbOtiumWiederholung.Wochentyp
-                && x.Datum == a
-            );
-
-            if (schultag is null)
-            {
-                continue;
-            }
-
             var block = _context.Blocks.FirstOrDefault(x =>
-                x.Nummer == dbOtiumWiederholung.Block
-                && x.Schultag == schultag
+                x.Nummer == dbOtiumWiederholung.Block &&
+                x.Schultag == schultag
             );
 
             if (block is null)
-            {
                 throw new InvalidOperationException("Block not available for scheduling");
-            }
 
             var dbOtiumTermin = new DB_Termin
             {
-                Id = new Guid(),
                 Otium = otium,
                 Ort = dbOtiumWiederholung.Ort,
                 Tutor = dbOtiumWiederholung.Tutor,
                 Block = block,
                 MaxEinschreibungen = otiumWiederholung.MaxEinschreibungen,
                 IstAbgesagt = false,
-                Wiederholung = dbOtiumWiederholung,
+                Wiederholung = dbOtiumWiederholung
             };
 
             _context.OtiaTermine.Add(dbOtiumTermin);
@@ -555,31 +519,24 @@ public class OtiumEndpointService
     {
         var otiumWiederholung = await _context.OtiaWiederholungen
             .Include(x => x.Otium)
-            .Include(x => x.Termine).ThenInclude(t => t.Enrollments)
+            .Include(x => x.Termine)
+            .ThenInclude(t => t.Enrollments)
             .FirstOrDefaultAsync(o => o.Id == otiumWiederholungId);
         if (otiumWiederholung is null)
-        {
             throw new EntityNotFoundException("Keine Wiederholung mit dieser Id");
-        }
 
         var otium = await _context.Otia.FindAsync(otiumId);
         if (otium is null)
-        {
             throw new EntityNotFoundException("Kein Otium mit dieser Id");
-        }
 
         if (otiumId != otiumWiederholung.Otium.Id)
-        {
             throw new EntityDeletionException("Die Wiederholung ist nicht eine Wiederholung des gegeben Otiums.");
-        }
 
-        var hatEinschreibungen = otiumWiederholung.Termine
-            .Where(t => t.Enrollments.Any()).Any();
+        var hatEinschreibungen = otiumWiederholung.Termine.Any(t => t.Enrollments.Count != 0);
 
         if (hatEinschreibungen)
-        {
-            throw new EntityDeletionException("Wiederholungen mit Terminen mit Einschreibungen können nicht gelöscht werden.");
-        }
+            throw new EntityDeletionException(
+                "Wiederholungen mit Terminen mit Einschreibungen können nicht gelöscht werden.");
 
         _context.OtiaWiederholungen.Remove(otiumWiederholung);
         await _context.SaveChangesAsync();
@@ -599,49 +556,39 @@ public class OtiumEndpointService
             .Include(x => x.Otium)
             .FirstOrDefaultAsync(o => o.Id == otiumTerminId);
         if (otiumTermin is null)
-        {
             throw new EntityNotFoundException("Kein Termin mit dieser Id");
-        }
 
         var otium = await _context.Otia.FindAsync(otiumId);
         if (otium is null)
-        {
             throw new EntityNotFoundException("Kein Otium mit dieser Id");
-        }
 
         if (otiumId != otiumTermin.Otium.Id)
-        {
             throw new EntityDeletionException("Der Termin ist nicht ein Termin des gegeben Otiums.");
-        }
 
         if (otiumTermin.IstAbgesagt)
-        {
             return;
-        }
 
         // Delete existing enrollments 
-        var Einschreibungen = otiumTermin.Enrollments;
+        var einschreibungen = otiumTermin.Enrollments;
 
-        var Teilnehmer = Einschreibungen.Select(oe => oe.BetroffenePerson).ToList();
+        var teilnehmer = einschreibungen.Select(oe => oe.BetroffenePerson).ToList();
 
-        _context.OtiaEinschreibungen.RemoveRange(Einschreibungen);
+        _context.OtiaEinschreibungen.RemoveRange(einschreibungen);
         otiumTermin.IstAbgesagt = true;
         await _context.SaveChangesAsync();
 
         // Notify previously enrolled students
-        foreach (var t in Teilnehmer)
-        {
+        foreach (var t in teilnehmer)
             await _batchingEmailService.ScheduleEmailAsync(
                 t,
-                $"Otium Termin abgesagt",
+                "Otium Termin abgesagt",
                 $"""
-                Das Otium {otiumTermin.Otium.Bezeichnung} wurde
-                am {otiumTermin.Block.Schultag.Datum} abgesagt.
-                Schreibe dich gegebenenfalls um.
-                """,
-            TimeSpan.FromSeconds(30)
+                 Das Otium {otiumTermin.Otium.Bezeichnung} wurde
+                 am {otiumTermin.Block.Schultag.Datum} abgesagt.
+                 Schreibe dich gegebenenfalls um.
+                 """,
+                TimeSpan.FromSeconds(30)
             );
-        }
     }
 
     /// <summary>
@@ -651,13 +598,15 @@ public class OtiumEndpointService
     /// <param name="bezeichnung">The new Bezeichnung</param>
     public async Task OtiumSetBezeichnungAsync(Guid otiumId, string bezeichnung)
     {
-        var otium = _context.Otia.Find(otiumId);
-        if (otium is null)
-        {
-            throw new ArgumentException("Kein Otium mit dieser Id existiert.");
-        }
+        var otium = await _context.Otia.FindAsync(otiumId);
+        if (otium is null) throw new ArgumentException("Kein Otium mit dieser Id existiert.");
 
-        otium.Bezeichnung = bezeichnung;
+        var bezeichnungBuilder = new StringBuilder();
+        foreach (var line in bezeichnung.Split('\n'))
+            if (!string.IsNullOrWhiteSpace(line))
+                bezeichnungBuilder.AppendLine(line.Trim());
+
+        otium.Bezeichnung = bezeichnungBuilder.ToString();
         await _context.SaveChangesAsync();
     }
 
@@ -668,11 +617,9 @@ public class OtiumEndpointService
     /// <param name="beschreibung">The new Beschreibung</param>
     public async Task OtiumSetBeschreibungAsync(Guid otiumId, string beschreibung)
     {
-        var otium = _context.Otia.Find(otiumId);
+        var otium = await _context.Otia.FindAsync(otiumId);
         if (otium is null)
-        {
             throw new ArgumentException("Kein Otium mit dieser Id existiert.");
-        }
 
         otium.Beschreibung = beschreibung;
         await _context.SaveChangesAsync();
@@ -685,19 +632,15 @@ public class OtiumEndpointService
     /// <param name="persId">The Id new Verantwortliche Person</param>
     public async Task OtiumAddVerantwortlichAsync(Guid otiumId, Guid persId)
     {
-        var otium = _context.Otia.Find(otiumId);
+        var otium = await _context.Otia.FindAsync(otiumId);
         if (otium is null)
-        {
             throw new ArgumentException("Kein Otium mit dieser Id existiert.");
-        }
 
-        var pers = _context.Personen.Find(persId);
-        if (pers is null)
-        {
+        var person = await _context.Personen.FindAsync(persId);
+        if (person is null)
             throw new ArgumentException("Keine Person mit dieser Id existiert.");
-        }
 
-        otium.Verantwortliche.Add(pers);
+        otium.Verantwortliche.Add(person);
         await _context.SaveChangesAsync();
     }
 
@@ -708,32 +651,31 @@ public class OtiumEndpointService
     /// <param name="persId">The Id new Verantwortliche Person</param>
     public async Task OtiumRemoveVerantwortlichAsync(Guid otiumId, Guid persId)
     {
-        var otium = _context.Otia.Find(otiumId);
+        var otium = await _context.Otia.FindAsync(otiumId);
         if (otium is null)
-        {
             throw new ArgumentException("Kein Otium mit dieser Id existiert.");
-        }
 
-        var pers = _context.Personen.Find(persId);
-        if (pers is null)
-        {
+        var person = await _context.Personen.FindAsync(persId);
+        if (person is null)
             throw new ArgumentException("Keine Person mit dieser Id existiert.");
-        }
 
-        otium.Verantwortliche.Remove(pers);
+        otium.Verantwortliche.Remove(person);
         await _context.SaveChangesAsync();
     }
 
     /// <summary>
-    ///     An Exception thrown when the Entity to operate on was not found 
+    ///     An Exception thrown when the Entity to operate on was not found
     /// </summary>
     public class EntityNotFoundException : InvalidOperationException
     {
         /// <summary>
         ///     Constructs a new EntityNotFoundException
         /// </summary>
-        public EntityNotFoundException(string message) : base(message) { }
+        public EntityNotFoundException(string message) : base(message)
+        {
+        }
     }
+
     /// <summary>
     ///     An Exception thrown when the request failed because it breaks logical constraints
     /// </summary>
@@ -742,6 +684,8 @@ public class OtiumEndpointService
         /// <summary>
         ///     Constructs a new EntityDeletionException
         /// </summary>
-        public EntityDeletionException(string message) : base(message) { }
+        public EntityDeletionException(string message) : base(message)
+        {
+        }
     }
 }

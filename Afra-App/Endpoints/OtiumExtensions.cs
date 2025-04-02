@@ -14,7 +14,6 @@ public static class OtiumExtensions
     public static void MapOtium(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/otium")
-            .WithGroupName("Otium")
             .WithOpenApi()
             .RequireAuthorization();
         group.MapKategorienEndpoints();
