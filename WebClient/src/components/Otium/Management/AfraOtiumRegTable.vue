@@ -4,7 +4,7 @@ import {formatDayOfWeek, formatTutor} from "@/helpers/formatters.js";
 import CreateWiederholungForm from "@/components/Form/CreateWiederholungForm.vue";
 import {ref} from "vue";
 
-const emits = defineEmits(['create'])
+const emits = defineEmits(['create', 'delete'])
 const props = defineProps({
   regs: Array,
   allowEnrollment: Boolean,
@@ -49,12 +49,10 @@ function showCreateDialog() {
         <Button aria-label="Neue Regelmäßigkeit" icon="pi pi-plus" size="small"
                 @click="showCreateDialog"/>
       </template>
-      <template #body>
+      <template #body="{data}">
         <span class="inline-flex gap-1">
-          <Button aria-label="Ansehen" severity="primary" size="small" variant="text"
-                  icon="pi pi-eye"></Button>
-          <Button aria-label="Bearbeiten" severity="secondary" variant="text" size="small"
-                  icon="pi pi-pencil"></Button>
+          <Button v-tooltip="'Löschen'" aria-label="Löschen" icon="pi pi-times" severity="danger"
+                  size="small" variant="text" @click="() => emits('delete', data.id)"/>
         </span>
       </template>
     </Column>

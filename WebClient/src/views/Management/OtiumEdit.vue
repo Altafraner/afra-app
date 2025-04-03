@@ -138,6 +138,20 @@ async function deleteTermin(id) {
   }
 }
 
+async function deleteReg(id) {
+  const api = mande(`/api/otium/management/wiederholung/${id}`);
+  try {
+    await api.delete()
+    await getOtium(false)
+  } catch (e) {
+    toast.add({
+      severity: "error",
+      summary: "Fehler",
+      detail: "Die Wiederholung konnte nicht gelöscht werden."
+    })
+  }
+}
+
 async function createTermin(data) {
   console.log(data)
   const api = mande(`/api/otium/management/termin`);
@@ -244,7 +258,7 @@ setup();
         <AccordionHeader>Regelmäßigkeiten</AccordionHeader>
         <AccordionContent>
           <afra-otium-reg-table :regs="otium.wiederholungen"
-                                allowEdit @create="createReg"/>
+                                allowEdit @create="createReg" @delete="deleteReg"/>
         </AccordionContent>
       </AccordionPanel>
       <!--AccordionPanel value="2">

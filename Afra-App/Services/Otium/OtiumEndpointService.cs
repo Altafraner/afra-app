@@ -537,6 +537,7 @@ public class OtiumEndpointService
     public async Task DeleteOtiumWiederholungAsync(Guid otiumWiederholungId)
     {
         var otiumWiederholung = await _context.OtiaWiederholungen
+            .AsSplitQuery()
             .Include(x => x.Otium)
             .Include(x => x.Termine)
             .ThenInclude(t => t.Enrollments)
