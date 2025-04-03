@@ -31,9 +31,4 @@ public class Termin : OtiumsInstanz
     ///     True, if the Termin is cancelled.
     /// </summary>
     public bool IstAbgesagt { get; set; }
-
-    /// <summary>
-    ///     A maximum number of concurrent enrollments for the Termin. If null, no limit is set.
-    /// </summary>
-    public int? MaxEinschreibungen { get; set; }
 }

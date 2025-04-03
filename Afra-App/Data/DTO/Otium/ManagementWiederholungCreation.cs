@@ -20,7 +20,7 @@ public record ManagementWiederholungCreation
     /// <summary>
     ///     The Id of the tutor of the Otium. Could be a student or a teacher.
     /// </summary>
-    public required Guid Tutor { get; set; }
+    public Guid? Tutor { get; set; }
 
     /// <summary>
     ///     The location for the Otium.
@@ -43,12 +43,12 @@ public record ManagementWiederholungCreation
     public required Wochentyp Wochentyp { get; set; }
 
     /// <summary>
-    ///     The First Date the recurrency rule is applied to
+    ///     The First Date the recurrence rule is applied to
     /// </summary>
-    public required DateOnly startDate { get; set; }
+    public required DateOnly StartDate { get; set; }
 
     /// <summary>
-    ///     The Last Date the recurrency rule is applied to
+    ///     The Last Date the recurrence rule is applied to
     /// </summary>
-    public required DateOnly endDate { get; set; }
+    public required DateOnly EndDate { get; set; }
 }

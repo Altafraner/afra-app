@@ -1,14 +1,26 @@
 ﻿<script setup>
-import {Button, Column, DataTable} from "primevue";
-import {formatTutor} from "@/helpers/formatters.js";
+import {Button, Column, DataTable, Dialog} from "primevue";
+import {formatDayOfWeek, formatTutor} from "@/helpers/formatters.js";
+import CreateWiederholungForm from "@/components/Form/CreateWiederholungForm.vue";
+import {ref} from "vue";
 
-const wochentage = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag']
-
+const emits = defineEmits(['create'])
 const props = defineProps({
   regs: Array,
   allowEnrollment: Boolean,
   allowEdit: Boolean
 })
+
+const createDialogVisible = ref(false);
+
+function createRepeating(data) {
+  createDialogVisible.value = false;
+  emits('create', data);
+}
+
+function showCreateDialog() {
+  createDialogVisible.value = true;
+}
 
 </script>
 
@@ -18,7 +30,7 @@ const props = defineProps({
     <Column field="wochentyp" header="Woche"/>
     <Column header="Tag">
       <template #body="{data}">
-        {{ wochentage[data.wochentag] }}
+        {{ formatDayOfWeek(data.wochentag) }}
       </template>
     </Column>
     <Column header="Block">
@@ -34,7 +46,8 @@ const props = defineProps({
     <Column field="ort" header="Ort"/>
     <Column v-if="allowEdit" class="text-right afra-col-action">
       <template #header>
-        <Button aria-label="Neue Regelmäßigkeit" icon="pi pi-plus" size="small"></Button>
+        <Button aria-label="Neue Regelmäßigkeit" icon="pi pi-plus" size="small"
+                @click="showCreateDialog"/>
       </template>
       <template #body>
         <span class="inline-flex gap-1">
@@ -51,6 +64,10 @@ const props = defineProps({
       </div>
     </template>
   </DataTable>
+  <Dialog v-model:visible="createDialogVisible" :style="{width: '35rem'}" header="Termin hinzufügen"
+          modal>
+    <CreateWiederholungForm @submit="createRepeating"/>
+  </Dialog>
 </template>
 
 <style scoped>

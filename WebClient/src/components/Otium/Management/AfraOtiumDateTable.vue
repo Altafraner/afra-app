@@ -1,17 +1,21 @@
 ﻿<script setup>
-import {Button, Column, DataTable, useConfirm, useToast} from "primevue";
+import {Button, Column, DataTable, Dialog, useConfirm} from "primevue";
 import {formatDate, formatPerson} from "@/helpers/formatters.js";
 import {RouterLink} from "vue-router";
+import {defineAsyncComponent, ref} from "vue";
+
+const CreateTerminForm = defineAsyncComponent(() => import("@/components/Form/CreateTerminForm.vue"));
 
 const confirm = useConfirm();
-const toast = useToast();
 
 const props = defineProps({
   dates: Array,
   allowEdit: Boolean
 })
 
-const emit = defineEmits(['delete', 'cancel'])
+const emit = defineEmits(['delete', 'cancel', 'create'])
+
+const createDialogVisible = ref(false);
 
 const openConfirmDialog = (event, callback, message) => {
   confirm.require({
@@ -38,6 +42,15 @@ const confirmCancel = (event, id) => {
 const confirmDelete = (event, id) => {
   const onConfirm = () => emit('delete', id);
   openConfirmDialog(event, onConfirm, "Termin löschen?")
+}
+
+const triggerCreateDialog = () => {
+  createDialogVisible.value = true;
+}
+
+const create = (data) => {
+  createDialogVisible.value = false;
+  emit('create', data);
 }
 </script>
 
@@ -66,12 +79,10 @@ const confirmDelete = (event, id) => {
     <Column v-if="allowEdit" class="text-right afra-col-action">
       <template #header v-if="allowEdit">
         <Button v-tooltip="'Termin hinzufügen'" aria-label="Neuer Termin" icon="pi pi-plus"
-                size="small"/>
+                size="small" @click="triggerCreateDialog"/>
       </template>
       <template #body="{data}">
         <span v-if="!data.istAbgesagt" class="inline-flex gap-1">
-          <Button aria-label="Bearbeiten" severity="secondary" variant="text" size="small"
-                  icon="pi pi-pencil"/>
           <Button v-tooltip="'Absagen'" aria-label="Absagen" icon="pi pi-stop" severity="danger"
                   size="small" variant="text"
                   @click="(event) => confirmCancel(event, data.id)"/>
@@ -87,6 +98,10 @@ const confirmDelete = (event, id) => {
       </template>
     </Column>
   </DataTable>
+  <Dialog v-model:visible="createDialogVisible" :style="{width: '35rem'}" header="Termin hinzufügen"
+          modal>
+    <CreateTerminForm @submit="create"/>
+  </Dialog>
 </template>
 
 <style scoped>

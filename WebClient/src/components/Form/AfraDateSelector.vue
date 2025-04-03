@@ -1,10 +1,24 @@
 ﻿<script setup>
-import {Button, InputGroup, Select} from "primevue";
+import {Button, FloatLabel, InputGroup, Select} from "primevue";
 import InputGroupAddon from "primevue/inputgroupaddon";
-import {formatDate} from "../../helpers/formatters.js";
+import {formatDate} from "@/helpers/formatters.js";
 
 const props = defineProps({
-  options: Array
+  options: Array,
+  hideToday: {
+    type: Boolean,
+    default: false
+  },
+  name: {
+    type: String,
+    required: false
+  },
+  showLabel: Boolean,
+  label: {
+    type: String,
+    default: "Datum",
+    required: false
+  }
 })
 
 const emit = defineEmits(["dateChanged", "today"])
@@ -41,15 +55,20 @@ function date_to_label(data) {
       <Button severity="secondary" rounded icon="pi pi-chevron-left" variant="text"
               @click="decrement_date"/>
     </input-group-addon>
-    <Select filter v-model="date" option-label="datum" option-disabled="disabled"
-            :options="props.options" @change="() => emit('dateChanged')">
-      <template #value="{value}">{{ formatDate(date_to_label(value)) }} | {{ value.wochentyp }}
-      </template>
-      <template #option="{option}">{{ formatDate(date_to_label(option)) }} |
-        {{ option.wochentyp }}
-      </template>
-    </Select>
-    <input-group-addon>
+    <FloatLabel variant="on">
+      <Select id="datum" v-model="date"
+              :name="name" :options="props.options" option-disabled="disabled"
+              @change="() => emit('dateChanged')">
+        <template #value="{value}">
+          {{ formatDate(date_to_label(value)) }} | {{ value.wochentyp }}
+        </template>
+        <template #option="{option}">{{ formatDate(date_to_label(option)) }} |
+          {{ option.wochentyp }}
+        </template>
+      </Select>
+      <label v-if="showLabel" for="datum">{{ label }}</label>
+    </FloatLabel>
+    <input-group-addon v-if="!hideToday">
       <Button severity="secondary" rounded icon="pi pi-calendar-times" variant="text"
               aria-label="Heute" @click="emitToday"/>
     </input-group-addon>

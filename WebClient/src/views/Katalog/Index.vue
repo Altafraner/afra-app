@@ -7,6 +7,7 @@ import AfraOtiumKatalogView from "@/components/Otium/Katalog/AfraOtiumKatalogVie
 import {mande} from "mande";
 import {useUser} from "@/stores/useUser.js";
 import {useRoute, useRouter} from "vue-router";
+import {useSettings} from "@/stores/useSettings.js";
 
 const props = defineProps({
   datum: {
@@ -18,6 +19,8 @@ const props = defineProps({
 const router = useRouter();
 const location = useRoute();
 const toast = useToast();
+const settings = useSettings();
+
 const loading = ref(true)
 const user = useUser();
 const datesAvailable = ref([])
@@ -73,11 +76,10 @@ async function startup() {
 
 async function getTermine() {
   loading.value = true
-  const termineGetter = mande("/api/schuljahr")
-  const termine = await termineGetter.get();
-  datesAvailable.value = termine.schultage
-  dateDefault.value = termine.standard
-  date.value = termine.standard
+  await settings.updateSchuljahr();
+  datesAvailable.value = settings.schuljahr
+  dateDefault.value = settings.defaultDay
+  date.value = settings.defaultDay
 }
 
 async function getAngebote() {

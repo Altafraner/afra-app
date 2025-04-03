@@ -107,9 +107,9 @@ update();
   <DataTable :value="mentees" v-if="!loading">
     <Column header="Name">
       <template #body="{data}">
-        <Button variant="link" as="RouterLink" :to="`/student/${data.mentee.id}`">
-          {{ formatStudent(data.mentee) }}
-        </Button>
+        <Button :label="formatStudent(data.mentee)" :to="`/student/${data.mentee.id}`"
+                as="RouterLink"
+                variant="text"/>
       </template>
     </Column>
     <Column

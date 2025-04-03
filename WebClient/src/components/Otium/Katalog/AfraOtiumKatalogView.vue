@@ -15,8 +15,8 @@ const props = defineProps({
   <DataTable :value="props.otia">
     <Column header="Bezeichnung">
       <template #body="{data}">
-        <Button v-if="data.istAbgesagt" variant="link" :label="data.otium" disabled/>
-        <Button v-else variant="link" as="RouterLink" :to="linkGenerator(data)" :label="data.otium"
+        <Button v-if="data.istAbgesagt" :label="data.otium" disabled variant="text"/>
+        <Button v-else :label="data.otium" :to="linkGenerator(data)" as="RouterLink" variant="text"
                 :disabled="data.istAbgesagt"/>
       </template>
     </Column>

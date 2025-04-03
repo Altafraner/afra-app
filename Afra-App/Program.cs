@@ -8,6 +8,7 @@ using Afra_App.Services.Otium;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Quartz;
 using Quartz.AspNetCore;
 
@@ -40,8 +41,11 @@ builder.Services.AddControllers();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddDbContext<AfraAppContext>(options =>
+{
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"),
-        AfraAppContext.ConfigureNpgsql));
+        AfraAppContext.ConfigureNpgsql);
+    options.ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning));
+});
 builder.Services.AddOpenApi();
 builder.Services.AddCors(options =>
 {
@@ -125,6 +129,7 @@ app.UseAuthorization();
 app.MapOtium();
 app.MapSchuljahr();
 app.MapUserEndpoints();
+app.MapPeopleEndpoints();
 if (app.Configuration.GetValue<bool>("Saml:Enabled")) app.MapSaml();
 
 if (app.Environment.IsDevelopment()) app.MapControllers();

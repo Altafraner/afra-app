@@ -15,7 +15,10 @@ export const useSettings = defineStore('settings', {
         id: 1
       }
     ],
-    kategorien: null
+    schuljahr: null,
+    defaultDay: null,
+    kategorien: null,
+    personen: null,
   }),
   actions: {
     async updateKategorien() {
@@ -26,6 +29,27 @@ export const useSettings = defineStore('settings', {
         this.kategorien = await kategorieGetter.get();
       } catch (error) {
         console.error("Error fetching kategorien", error);
+      }
+    },
+    async updateSchuljahr() {
+      if (this.schuljahr) return;
+      const termineGetter = mande("/api/schuljahr")
+      try {
+        const termine = await termineGetter.get();
+        this.schuljahr = termine.schultage
+        this.defaultDay = termine.standard
+      } catch (error) {
+        console.error("Error fetching schuljahr", error);
+      }
+    },
+    async updatePersonen() {
+      if (this.personen) return;
+      const personenGetter = mande('/api/people')
+
+      try {
+        this.personen = await personenGetter.get();
+      } catch (error) {
+        console.error("Error fetching personen", error);
       }
     }
   }

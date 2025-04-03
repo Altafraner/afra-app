@@ -20,6 +20,11 @@ public abstract class OtiumsInstanz
     public required Person? Tutor { get; set; }
 
     /// <summary>
+    ///     Maximum number of concurrent enrollments for the Otium. If null, no limit is set.
+    /// </summary>
+    public int? MaxEinschreibungen { get; set; } = null;
+
+    /// <summary>
     ///     The location for the Otium.
     /// </summary>
     [MaxLength(10)]

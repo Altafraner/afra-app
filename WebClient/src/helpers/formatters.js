@@ -1,4 +1,5 @@
-﻿const padString = (text, n) => String(text).padStart(n, '0')
+﻿const wochentage = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag']
+const padString = (text, n) => String(text).padStart(n, '0')
 export const formatTutor = tutor => tutor ? tutor.nachname + ", " + tutor.vorname : ''
 
 export const formatStudent = student => student.vorname + " " + student.nachname
@@ -26,6 +27,8 @@ export const chooseSeverity = (now) => {
   if (now < 100) return 'warn'
   return 'danger'
 }
+
+export const formatDayOfWeek = (number) => wochentage[number % 7]
 
 const otiumLinkGenerator = (otiumId, date, blockId) => `${formatMachineDate(date)}/${blockId}/${otiumId}`
 export const otiumKatalogLinkGenerator = (otiumId, date, blockId) => `/katalog/${otiumLinkGenerator(otiumId, date, blockId)}`

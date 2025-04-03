@@ -70,6 +70,23 @@ async function updateBezeichnung() {
   }
 }
 
+async function updateKategorie() {
+  let kategorieId
+  try {
+    kategorieId = Object.keys(kategorie.value)[0];
+  } catch {
+    return;
+  }
+  if (otium.value.kategorie === kategorieId) return;
+
+  try {
+    await simpleUpdate('kategorie', kategorieId)
+  } finally {
+    const kategorieId = findChildren(settings.kategorien, otium.value.kategorie).id;
+    kategorie.value = {[kategorieId]: true}
+  }
+}
+
 async function updateBeschreibung() {
   if (beschreibung.value.replaceAll('\n\n', '\n') === otium.value.bezeichnung) return;
   try {
@@ -112,12 +129,63 @@ async function deleteTermin(id) {
   try {
     await api.delete()
     await getOtium(false)
-  } catch {
+  } catch (e) {
     toast.add({
       severity: "error",
       summary: "Fehler",
       detail: "Der Termin konnte nicht gelöscht werden."
     })
+  }
+}
+
+async function createTermin(data) {
+  console.log(data)
+  const api = mande(`/api/otium/management/termin`);
+  try {
+    await api.post({
+      otiumId: otium.value.id,
+      ort: data.ort,
+      datum: data.date,
+      block: data.block,
+      tutor: data.person,
+      maxEinschreibungen: data.maxEnrollments
+    })
+  } catch (e) {
+    console.log(e.response)
+    toast.add({
+      severity: "error",
+      summary: "Fehler",
+      detail: "Der Termin konnte nicht erstellt werden. \n" + await e.body.split('(')[0]
+    })
+  } finally {
+    await getOtium(false)
+  }
+}
+
+async function createReg(data) {
+  console.log(data)
+  const api = mande(`/api/otium/management/wiederholung`);
+  try {
+    await api.post({
+      otiumId: otium.value.id,
+      wochentyp: data.wochentyp,
+      wochentag: data.wochentag,
+      startDate: data.von,
+      endDate: data.bis,
+      ort: data.ort,
+      block: data.block,
+      tutor: data.person,
+      maxEinschreibungen: data.maxEnrollments
+    })
+  } catch (e) {
+    console.log(e.response)
+    toast.add({
+      severity: "error",
+      summary: "Fehler",
+      detail: "Die Regelmäßigkeit konnte nicht erstellt werden. \n" + (e.body ? e.body.split('(')[0] : '')
+    })
+  } finally {
+    await getOtium(false)
   }
 }
 
@@ -140,7 +208,7 @@ setup();
           <InputText v-model="bezeichnung" type="text"/>
         </template>
       </GridEditRow>
-      <GridEditRow header="Kategorie">
+      <GridEditRow header="Kategorie" @update="updateKategorie">
         <template #body>
           <SimpleBreadcrumb :model="findPath(settings.kategorien, otium.kategorie)">
             <template #item="{item}">
@@ -169,14 +237,14 @@ setup();
         <AccordionHeader>Termine</AccordionHeader>
         <AccordionContent>
           <afra-otium-date-table :dates="otium.termine" allowEdit @cancel="cancelTermin"
-                                 @delete="deleteTermin"/>
+                                 @create="createTermin" @delete="deleteTermin"/>
         </AccordionContent>
       </AccordionPanel>
       <AccordionPanel value="1">
         <AccordionHeader>Regelmäßigkeiten</AccordionHeader>
         <AccordionContent>
           <afra-otium-reg-table :regs="otium.wiederholungen"
-                                allowEdit/>
+                                allowEdit @create="createReg"/>
         </AccordionContent>
       </AccordionPanel>
       <!--AccordionPanel value="2">
