@@ -23,11 +23,23 @@ public record ManagementWiederholungView
     [SetsRequiredMembers]
     public ManagementWiederholungView(Wiederholung dbWiederholung)
     {
+        Id = dbWiederholung.Id;
+        otiumId = dbWiederholung.Otium.Id;
         Tutor = (dbWiederholung.Tutor is not null) ? new PersonInfoMinimal(dbWiederholung.Tutor) : null;
         Ort = dbWiederholung.Ort;
         Wochentag = dbWiederholung.Wochentag;
         Wochentyp = dbWiederholung.Wochentyp;
     }
+
+    /// <summary>
+    ///     The Id the wiederholung
+    /// </summary>
+    public required Guid Id { get; set; }
+
+    /// <summary>
+    ///     The Id of the otium the wiederholung belongs to
+    /// </summary>
+    public required Guid otiumId { get; set; }
 
     /// <summary>
     ///     The Information on the tutor of the Otium. Could be a student or a teacher.

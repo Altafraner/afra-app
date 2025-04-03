@@ -8,6 +8,11 @@ namespace Afra_App.Data.DTO.Otium;
 public record ManagementWiederholungCreation
 {
     /// <summary>
+    ///     The Id of the otium the wiederholung belongs to
+    /// </summary>
+    public required Guid otiumId { get; set; }
+
+    /// <summary>
     ///     A maximum number of concurrent enrollments for the Oium. If null, no limit is set.
     /// </summary>
     public int? MaxEinschreibungen { get; set; }

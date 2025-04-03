@@ -6,9 +6,19 @@ namespace Afra_App.Data.DTO.Otium;
 public record ManagementTerminCreation
 {
     /// <summary>
-    ///     The Id of the Block the Termin is on.
+    ///     The number of the Block the Termin is on.
     /// </summary>
-    public required Guid? Block { get; set; }
+    public required sbyte Block { get; set; }
+
+    /// <summary>
+    ///     The Id of the otium the termin belongs to
+    /// </summary>
+    public required Guid otiumId { get; set; }
+
+    /// <summary>
+    ///     The date the Termin is on.
+    /// </summary>
+    public required DateOnly Datum { get; set; }
 
     /// <summary>
     ///     A maximum number of concurrent enrollments for the Termin. If null, no limit is set.

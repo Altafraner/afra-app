@@ -21,6 +21,7 @@ public record ManagementTerminView
     public ManagementTerminView(Data.Otium.Termin termin)
     {
         Id = termin.Id;
+        OtiumId = termin.Otium.Id;
         Ort = termin.Ort;
         Tutor = termin.Tutor is not null ? new PersonInfoMinimal(termin.Tutor) : null;
         MaxEinschreibungen = termin.MaxEinschreibungen;
@@ -30,9 +31,14 @@ public record ManagementTerminView
     }
 
     /// <summary>
-    /// The id of the Termin database entry
+    ///     The id of the Termin database entry
     /// </summary>
-    public required Guid Id { get; set; }
+    public Guid Id { get; set; }
+
+    /// <summary>
+    ///     The Id of the otium the termin belongs to
+    /// </summary>
+    public required Guid OtiumId { get; set; }
 
     /// <summary>
     ///     The number of the Block the Termin is on.

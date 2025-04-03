@@ -2,7 +2,6 @@ using Afra_App.Authentication;
 using Afra_App.Data;
 using Afra_App.Data.People;
 using Afra_App.Services.Otium;
-using Microsoft.AspNetCore.Mvc;
 using DTO_Otium_Creation = Afra_App.Data.DTO.Otium.ManagementOtiumCreation;
 using DTO_Termin_Creation = Afra_App.Data.DTO.Otium.ManagementTerminCreation;
 using DTO_Wiederholung_Creation = Afra_App.Data.DTO.Otium.ManagementWiederholungCreation;
@@ -14,6 +13,9 @@ namespace Afra_App.Endpoints.Otium;
 /// </summary>
 public static class ManagementEndpoints
 {
+    private record StringWrapper(string Value);
+    private record IntWrapper(int Value);
+
     /// <summary>
     ///     Maps the management endpoints to the given <see cref="IEndpointRouteBuilder" />.
     /// </summary>
@@ -21,18 +23,22 @@ public static class ManagementEndpoints
     public static void MapManagementEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapGet("/management/termin/{terminId:guid}", GetTerminForTeacher);
-        app.MapDelete("/management/termin/{otiumTerminId:guid}", DeleteOtiumTermin);
-        app.MapPut("/management/termin/{otiumTerminId:guid}/cancel", OtiumTerminAbsagen);
         app.MapGet("/management/otium", GetOtia);
         app.MapGet("/management/otium/{otiumId:guid}", GetOtium);
         app.MapPost("/management/otium", CreateOtium);
         app.MapDelete("/management/otium/{otiumId:guid}", DeleteOtium);
-        app.MapPost("/management/otium/{otiumId:guid}/termine", CreateOtiumTermin);
-        app.MapPost("/management/otium/{otiumId:guid}/wiederholungen", CreateOtiumWiederholung);
         app.MapPut("/management/otium/{otiumId:guid}/bezeichnung", OtiumSetBezeichnung);
         app.MapPut("/management/otium/{otiumId:guid}/beschreibung", OtiumSetBeschreibung);
         app.MapPost("/management/otium/{otiumId:guid}/verantwortliche", OtiumAddVerantwortlich);
         app.MapDelete("/management/otium/{otiumId:guid}/verantwortliche/{persId:guid}", OtiumRemoveVerantwortlich);
+        app.MapPut("/management/otium/{otiumId:guid}/kategorie", OtiumSetKategorie);
+
+        app.MapPost("/management/termine", CreateOtiumTermin);
+        app.MapDelete("/management/termine/{otiumTerminId:guid}", DeleteOtiumTermin);
+        app.MapPut("/management/termine/{otiumTerminId:guid}/cancel", OtiumTerminAbsagen);
+        app.MapPut("/management/termine/{otiumTerminId:guid}/maxeinschreibungen", OtiumTerminSetMaxEinschreibungen);
+
+        app.MapPost("/management/otium/wiederholungen", CreateOtiumWiederholung);
     }
 
     private static async Task<IResult> GetTerminForTeacher(OtiumEndpointService service, HttpContext httpContext,
@@ -108,14 +114,14 @@ public static class ManagementEndpoints
     }
 
     private static async Task<IResult> CreateOtiumTermin(OtiumEndpointService service, HttpContext httpContext,
-        AfraAppContext context, Guid otiumId, DTO_Termin_Creation otiumTermin)
+            AfraAppContext context, DTO_Termin_Creation otiumTermin)
     {
         var user = await httpContext.GetPersonAsync(context);
         if (user.Rolle != Rolle.Tutor) return Results.Unauthorized();
 
         try
         {
-            var id = await service.CreateOtiumTerminAsync(otiumId, otiumTermin);
+            var id = await service.CreateOtiumTerminAsync(otiumTermin);
             return Results.Ok(id);
         }
         catch (ArgumentException e)
@@ -146,14 +152,14 @@ public static class ManagementEndpoints
     }
 
     private static async Task<IResult> CreateOtiumWiederholung(OtiumEndpointService service, HttpContext httpContext,
-        AfraAppContext context, Guid otiumId, DTO_Wiederholung_Creation otiumWiederholung)
+        AfraAppContext context, DTO_Wiederholung_Creation otiumWiederholung)
     {
         var user = await httpContext.GetPersonAsync(context);
         if (user.Rolle != Rolle.Tutor) return Results.Unauthorized();
 
         try
         {
-            var id = await service.CreateOtiumWiederholungAsync(otiumId, otiumWiederholung);
+            var id = await service.CreateOtiumWiederholungAsync(otiumWiederholung);
             return Results.Ok(id);
         }
         catch (ArgumentException e)
@@ -163,14 +169,14 @@ public static class ManagementEndpoints
     }
 
     private static async Task<IResult> DeleteOtiumWiederholung(OtiumEndpointService service, HttpContext httpContext,
-        AfraAppContext context, Guid otiumId, Guid otiumWiederholungId)
+        AfraAppContext context, Guid otiumWiederholungId)
     {
         var user = await httpContext.GetPersonAsync(context);
         if (user.Rolle != Rolle.Tutor) return Results.Unauthorized();
 
         try
         {
-            await service.DeleteOtiumWiederholungAsync(otiumId, otiumWiederholungId);
+            await service.DeleteOtiumWiederholungAsync(otiumWiederholungId);
             return Results.Ok();
         }
         catch (OtiumEndpointService.EntityNotFoundException)
@@ -205,7 +211,7 @@ public static class ManagementEndpoints
     }
 
     private static async Task<IResult> OtiumSetBezeichnung(OtiumEndpointService service, HttpContext httpContext,
-        AfraAppContext context, Guid otiumId, StringValue value)
+        AfraAppContext context, Guid otiumId, StringWrapper value)
     {
         if (string.IsNullOrWhiteSpace(value.Value) || value.Value.Length <= 3 || value.Value.Length > 50)
             return Results.BadRequest();
@@ -225,7 +231,7 @@ public static class ManagementEndpoints
     }
 
     private static async Task<IResult> OtiumSetBeschreibung(OtiumEndpointService service, HttpContext httpContext,
-        AfraAppContext context, Guid otiumId, StringValue value)
+        AfraAppContext context, Guid otiumId, StringWrapper value)
     {
         var user = await httpContext.GetPersonAsync(context);
         if (user.Rolle != Rolle.Tutor) return Results.Unauthorized();
@@ -242,7 +248,7 @@ public static class ManagementEndpoints
     }
 
     private static async Task<IResult> OtiumAddVerantwortlich(OtiumEndpointService service, HttpContext httpContext,
-        AfraAppContext context, Guid otiumId, [FromBody] Guid persId)
+        AfraAppContext context, Guid otiumId, Guid persId)
     {
         var user = await httpContext.GetPersonAsync(context);
         if (user.Rolle != Rolle.Tutor) return Results.Unauthorized();
@@ -275,5 +281,41 @@ public static class ManagementEndpoints
         }
     }
 
-    private record StringValue(string Value);
+    private static async Task<IResult> OtiumSetKategorie(OtiumEndpointService service, HttpContext httpContext,
+            AfraAppContext context, Guid otiumId, Guid Kategorie)
+    {
+        var user = await httpContext.GetPersonAsync(context);
+        if (user.Rolle != Rolle.Tutor) return Results.Unauthorized();
+
+        try
+        {
+            await service.OtiumSetKategorieAsync(otiumId, Kategorie);
+            return Results.Ok();
+        }
+        catch (OtiumEndpointService.EntityNotFoundException)
+        {
+            return Results.NotFound();
+        }
+        catch (InvalidOperationException e)
+        {
+            return Results.BadRequest(e.Message);
+        }
+    }
+
+    private static async Task<IResult> OtiumTerminSetMaxEinschreibungen(OtiumEndpointService service, HttpContext httpContext,
+           AfraAppContext context, Guid otiumTerminId, IntWrapper maxEinschreibungen)
+    {
+        var user = await httpContext.GetPersonAsync(context);
+        if (user.Rolle != Rolle.Tutor) return Results.Unauthorized();
+
+        try
+        {
+            await service.OtiumTerminSetMaxEinschreibungenAsync(otiumTerminId, maxEinschreibungen.Value);
+            return Results.Ok();
+        }
+        catch (OtiumEndpointService.EntityNotFoundException)
+        {
+            return Results.NotFound();
+        }
+    }
 }
