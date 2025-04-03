@@ -36,6 +36,7 @@ public static class ManagementEndpoints
         app.MapPut("/management/termin/{otiumTerminId:guid}/maxeinschreibungen", OtiumTerminSetMaxEinschreibungen);
 
         app.MapPost("/management/wiederholung", CreateOtiumWiederholung);
+        app.MapDelete("/management/wiederholung/{otiumWiederholungId:guid}", DeleteOtiumWiederholung);
     }
 
     private static async Task<IResult> GetTerminForTeacher(OtiumEndpointService service, HttpContext httpContext,
