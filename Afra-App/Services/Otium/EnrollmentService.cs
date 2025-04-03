@@ -1,7 +1,6 @@
 using Afra_App.Data;
 using Afra_App.Data.Configuration;
 using Afra_App.Data.DTO.Otium;
-using Afra_App.Data.Otium;
 using Afra_App.Data.People;
 using Afra_App.Data.Schuljahr;
 using Afra_App.Data.TimeInterval;
@@ -20,15 +19,13 @@ public class EnrollmentService
     private readonly OtiumConfiguration _configuration;
     private readonly AfraAppContext _context;
     private readonly KategorieService _kategorieService;
-    private readonly ILogger _logger;
 
     /// <summary>
     ///     Constructs the EnrollmentService. Usually called by the DI container.
     /// </summary>
-    public EnrollmentService(ILogger<EnrollmentService> logger, AfraAppContext context,
+    public EnrollmentService(AfraAppContext context,
         KategorieService kategorieService, IOptions<OtiumConfiguration> configuration)
     {
-        _logger = logger;
         _context = context;
         _kategorieService = kategorieService;
         _configuration = configuration.Value;
@@ -407,23 +404,28 @@ public class EnrollmentService
             .Distinct()
             .ToList();
 
-        var requiredKategories = await _kategorieService.GetKategorienTrackingAsync(true);
-        List<Kategorie> notEnrolled = [];
-        foreach (var kategorie in requiredKategories)
+        var requiredKategories = (await _kategorieService.GetKategorienTrackingAsync(true))
+            .Select(k => k.Id)
+            .ToList();
+        foreach (var transitiveKategorien in userKategoriesInWeek.Select(kategorie =>
+                     _kategorieService.GetTransitiveKategoriesIdsAsyncEnumerable(kategorie)))
         {
-            if (await _kategorieService.IsKategorieTransitiveInListAsync(kategorie, userKategoriesInWeek)) continue;
-            notEnrolled.Add(kategorie);
-            break;
+            // Okay, this is super inefficient. We should probably cache this.
+            await foreach (var id in transitiveKategorien)
+                requiredKategories.Remove(id);
+
+            if (requiredKategories.Count == 0)
+                break;
         }
 
-        if (notEnrolled.Count == 0)
+        if (requiredKategories.Count == 0)
             return true;
 
         // Check if the user currently tries to enroll in a still required kategorie
         var transitiveKategories = _kategorieService.GetTransitiveKategoriesAsyncEnumerable(termin.Otium.Kategorie);
 
         await foreach (var kategorie in transitiveKategories)
-            if (notEnrolled.Contains(kategorie))
+            if (requiredKategories.Contains(kategorie.Id))
                 return true;
 
         // Find num all free blocks >= 30 min in the week -> num30MinBlockAvailable
@@ -443,6 +445,6 @@ public class EnrollmentService
             timeline.Remove(enrollment.Interval.ToDateTimeInterval(enrollment.Termin.Block.Schultag.Datum));
         var num30MinBlockAvailable = timeline.GetIntervals().Sum(i => (int)(i.Duration / TimeSpan.FromMinutes(30)));
 
-        return num30MinBlockAvailable >= notEnrolled.Count;
+        return num30MinBlockAvailable >= requiredKategories.Count;
     }
 }

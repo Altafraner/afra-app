@@ -75,15 +75,15 @@ public class KategorieService
     /// <param name="kategorie">The category to check</param>
     /// <param name="availableKategorien">The list of kategories to check against</param>
     /// <returns></returns>
-    public async Task<bool> IsKategorieTransitiveInListAsync(Kategorie kategorie,
-        List<Kategorie> availableKategorien)
+    public async Task<bool> IsKategorieTransitiveInIdListAsync(Kategorie kategorie,
+        List<Guid> availableKategorien)
     {
         ArgumentNullException.ThrowIfNull(availableKategorien);
 
         var currentCategory = kategorie;
         while (currentCategory is not null)
         {
-            if (availableKategorien.Contains(currentCategory))
+            if (availableKategorien.Contains(currentCategory.Id))
                 return true;
             currentCategory = await GetParentAsync(currentCategory);
         }
