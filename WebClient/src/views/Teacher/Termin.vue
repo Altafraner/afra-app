@@ -32,11 +32,27 @@ async function fetchData() {
   }
 }
 
+async function updateMaxEnrollments(numEnrollments) {
+  const api = mande(`/api/otium/management/termin/${props.terminId}/maxEinschreibungen`);
+  try {
+    await api.patch({value: numEnrollments})
+  } catch (e) {
+    toast.add({
+      severity: "error",
+      summary: "Fehler",
+      detail: "Es ist ein Fehler beim Aktualisieren der maximalen Teilnehmerzahl aufgetreten."
+    })
+    console.error(e)
+  } finally {
+    await fetchData();
+  }
+}
+
 fetchData()
 </script>
 
 <template>
-  <AfraOtiumInstance v-if="!loading" :otium="otium"/>
+  <AfraOtiumInstance v-if="!loading" :otium="otium" @update-max-enrollments="updateMaxEnrollments"/>
 </template>
 
 <style scoped>

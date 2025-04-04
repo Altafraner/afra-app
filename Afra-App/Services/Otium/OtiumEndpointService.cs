@@ -288,6 +288,8 @@ public class OtiumEndpointService
             Otium = termin.Otium.Bezeichnung,
             Block = termin.Block.Nummer,
             Datum = termin.Block.Schultag.Datum,
+            MaxEinschreibungen = termin.MaxEinschreibungen,
+            IstAbgesagt = termin.IstAbgesagt,
             Tutor = termin.Tutor is not null ? new PersonInfoMinimal(termin.Tutor) : null,
             Einschreibungen = termin.Enrollments.Select(e =>
                 new LehrerEinschreibung(new PersonInfoMinimal(e.BetroffenePerson), e.Interval,
@@ -698,7 +700,7 @@ public class OtiumEndpointService
     /// </summary>
     /// <param name="otiumTerminId">The Id of the OtiumTermin to set maxEinschreibungen on.</param>
     /// <param name="maxEinschreibungen">The new value of MaxEinschreibungen.</param>
-    public async Task OtiumTerminSetMaxEinschreibungenAsync(Guid otiumTerminId, int maxEinschreibungen)
+    public async Task OtiumTerminSetMaxEinschreibungenAsync(Guid otiumTerminId, int? maxEinschreibungen)
     {
         var otiumTermin = await _context.OtiaTermine
             .Include(x => x.Enrollments).ThenInclude(e => e.BetroffenePerson).Include(termin => termin.Otium)
@@ -707,16 +709,17 @@ public class OtiumEndpointService
         if (otiumTermin is null)
             throw new EntityNotFoundException("Kein Termin mit dieser Id");
 
-        if (maxEinschreibungen < 0)
-            throw new InvalidOperationException("maxEinschreibungen needs to be non-negative");
+        if (maxEinschreibungen <= 0)
+            throw new InvalidOperationException("maxEinschreibungen needs to greater than zero");
 
-        if (otiumTermin.Enrollments.Count > maxEinschreibungen)
+        // The first part of the expression is not strictly necessary as int > null is always false. It is here just for clarity.
+        if (maxEinschreibungen is not null && otiumTermin.Enrollments.Count > maxEinschreibungen)
         {
             // kick some attendees from the list
             var enrollments = otiumTermin.Enrollments.ToArray();
             Random.Shared.Shuffle(enrollments);
 
-            var enrollmentsToCancel = enrollments[maxEinschreibungen..];
+            var enrollmentsToCancel = enrollments[maxEinschreibungen.Value..];
             var attendeesToCancel = enrollmentsToCancel.Select(oe => oe.BetroffenePerson).ToList();
 
             _context.OtiaEinschreibungen.RemoveRange(enrollmentsToCancel);
@@ -739,6 +742,7 @@ public class OtiumEndpointService
         }
 
         otiumTermin.MaxEinschreibungen = maxEinschreibungen;
+        await _context.SaveChangesAsync();
     }
 
     /// <summary>

@@ -23,17 +23,17 @@ public static class ManagementEndpoints
         app.MapGet("/management/otium/{otiumId:guid}", GetOtium);
         app.MapPost("/management/otium", CreateOtium);
         app.MapDelete("/management/otium/{otiumId:guid}", DeleteOtium);
-        app.MapPut("/management/otium/{otiumId:guid}/bezeichnung", OtiumSetBezeichnung);
-        app.MapPut("/management/otium/{otiumId:guid}/beschreibung", OtiumSetBeschreibung);
+        app.MapPatch("/management/otium/{otiumId:guid}/bezeichnung", OtiumSetBezeichnung);
+        app.MapPatch("/management/otium/{otiumId:guid}/beschreibung", OtiumSetBeschreibung);
+        app.MapPatch("/management/otium/{otiumId:guid}/kategorie", OtiumSetKategorie);
         app.MapPost("/management/otium/{otiumId:guid}/verantwortliche", OtiumAddVerantwortlich);
         app.MapDelete("/management/otium/{otiumId:guid}/verantwortliche/{persId:guid}", OtiumRemoveVerantwortlich);
-        app.MapPut("/management/otium/{otiumId:guid}/kategorie", OtiumSetKategorie);
 
         app.MapGet("/management/termin/{otiumTerminId:guid}", GetTerminForTeacher);
         app.MapPost("/management/termin", CreateOtiumTermin);
         app.MapDelete("/management/termin/{otiumTerminId:guid}", DeleteOtiumTermin);
         app.MapPut("/management/termin/{otiumTerminId:guid}/cancel", OtiumTerminAbsagen);
-        app.MapPut("/management/termin/{otiumTerminId:guid}/maxeinschreibungen", OtiumTerminSetMaxEinschreibungen);
+        app.MapPatch("/management/termin/{otiumTerminId:guid}/maxEinschreibungen", OtiumTerminSetMaxEinschreibungen);
 
         app.MapPost("/management/wiederholung", CreateOtiumWiederholung);
         app.MapDelete("/management/wiederholung/{otiumWiederholungId:guid}", DeleteOtiumWiederholung);
@@ -306,7 +306,7 @@ public static class ManagementEndpoints
 
     private static async Task<IResult> OtiumTerminSetMaxEinschreibungen(OtiumEndpointService service,
         HttpContext httpContext,
-        AfraAppContext context, Guid otiumTerminId, IntWrapper maxEinschreibungen)
+        AfraAppContext context, Guid otiumTerminId, IntOrNullWrapper maxEinschreibungen)
     {
         var user = await httpContext.GetPersonAsync(context);
         if (user.Rolle != Rolle.Tutor) return Results.Unauthorized();
@@ -320,11 +320,15 @@ public static class ManagementEndpoints
         {
             return Results.NotFound();
         }
+        catch (InvalidOperationException)
+        {
+            return Results.BadRequest();
+        }
     }
 
     private record StringWrapper(string Value);
 
-    private record IntWrapper(int Value);
+    private record IntOrNullWrapper(int? Value);
 
     private record GuidWrapper(Guid Value);
 }

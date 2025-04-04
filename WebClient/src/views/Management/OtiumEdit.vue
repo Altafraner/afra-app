@@ -99,7 +99,7 @@ async function updateBeschreibung() {
 async function simpleUpdate(type, value) {
   const api = mande(`/api/otium/management/otium/${otium.value.id}/${type}`);
   try {
-    await api.put({value: value})
+    await api.patch({value: value})
     await getOtium(false)
   } catch {
     toast.add({

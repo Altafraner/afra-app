@@ -17,6 +17,16 @@ public record LehrerTermin : IMinimalTermin
     /// </summary>
     public required DateOnly Datum { get; set; }
 
+    /// <summary>
+    ///     True iff the termin has been cancelled
+    /// </summary>
+    public bool IstAbgesagt { get; set; }
+
+    /// <summary>
+    ///     The maximum number of people that can be at the termin concurrently. Null if there is no limit
+    /// </summary>
+    public int? MaxEinschreibungen { get; set; }
+
     /// <inheritdoc />
     public required sbyte Block { get; set; }
 
