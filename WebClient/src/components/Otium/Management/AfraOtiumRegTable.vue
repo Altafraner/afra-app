@@ -62,7 +62,8 @@ function showCreateDialog() {
       </div>
     </template>
   </DataTable>
-  <Dialog v-model:visible="createDialogVisible" :style="{width: '35rem'}" header="Termin hinzufügen"
+  <Dialog v-model:visible="createDialogVisible" :style="{width: '35rem'}"
+          header="Regelmäßigkeit hinzufügen"
           modal>
     <CreateWiederholungForm @submit="createRepeating"/>
   </Dialog>

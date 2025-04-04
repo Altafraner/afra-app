@@ -1,16 +1,16 @@
 ﻿<script setup>
 import {
-  DataTable,
-  Column,
   Badge,
-  MeterGroup,
   Button,
+  Column,
+  DataTable,
+  MeterGroup,
+  Popover,
   Skeleton,
   Tag,
-  Popover,
   useToast
 } from "primevue";
-import {nextTick, ref} from "vue";
+import {ref} from "vue";
 import AfraKategorieTag from "@/components/Otium/Shared/AfraKategorieTag.vue";
 import {chooseColor, formatDate, formatTime, formatTutor} from "@/helpers/formatters.js";
 import {mande} from "mande";
@@ -33,12 +33,6 @@ const otium = ref(null)
 const connection = ref(null)
 const poprev = ref()
 const grund = ref("")
-
-function showReason(evt, reason) {
-  poprev.value.hide();
-  grund.value = reason;
-  nextTick(() => poprev.value.show(evt))
-}
 
 function findKategorie(id, kategorien) {
   const index = kategorien.findIndex((e) => e.id === id);
@@ -139,8 +133,9 @@ setup();
         {{ formatDate(new Date(otium.datum)) }}, {{ formatTime(new Date(otium.datum)) }} Uhr
       </span>
     </p>
-    <!--p v-if="!props.minimal" v-for="beschreibung in otium.beschreibung.split('\n').filter(desc => desc)">
-      {{ beschreibung }}</p-->
+    <p v-for="beschreibung in otium.beschreibung.split('\n').filter(desc => desc)"
+       v-if="!props.minimal && otium.beschreibung">
+      {{ beschreibung }}</p>
     <DataTable :value="otium.einschreibungen">
       <Column header="Start">
         <template #body="{data}">
@@ -164,17 +159,25 @@ setup();
       </Column>
       <Column class="text-right afra-col-action">
         <template #body="{data}">
-          <Button v-if="!data.kannBearbeiten && !buttonLoading && data.grund" icon="pi pi-question"
-                  size="small" variant="text" severity="secondary"
-                  @click="(evt) => showReason(evt, data.grund)"/>
           <Button v-if="otium.istAbgesagt" severity="danger" disabled variant="text" size="small"
                   icon="pi pi-exclamation-triangle" label="Abgesagt"/>
-          <Button v-else-if="data.eingeschrieben" icon="pi pi-times" severity="danger" size="small"
-                  variant="text" label="Austragen" :disabled="!data.kannBearbeiten || buttonLoading"
-                  @click="(evt) => unenroll(data.interval.start, evt)" :loading="buttonLoading"/>
-          <Button v-else icon="pi pi-plus" size="small" variant="text" label="Einschreiben"
-                  :disabled="!data.kannBearbeiten || buttonLoading"
-                  @click="(evt) => enroll(data.interval.start, evt)" :loading="buttonLoading"/>
+          <template v-else-if="data.eingeschrieben">
+            <Button v-if="data.kannBearbeiten" :disabled="buttonLoading" :loading="buttonLoading"
+                    icon="pi pi-times"
+                    label="Austragen" severity="danger" size="small"
+                    variant="text" @click="(evt) => unenroll(data.interval.start, evt)"/>
+            <Button v-else v-tooltip.left="data.grund" disabled icon="pi pi-times"
+                    label="Austragen" severity="danger" size="small" variant="text"/>
+          </template>
+          <template v-else>
+            <Button v-if="data.kannBearbeiten" :disabled="buttonLoading" :loading="buttonLoading"
+                    icon="pi pi-plus"
+                    label="Einschreiben" size="small" variant="text"
+                    @click="(evt) => enroll(data.interval.start, evt)"/>
+            <Button v-else v-tooltip.left="data.grund" :loading="buttonLoading" disabled
+                    icon="pi pi-plus"
+                    label="Einschreiben" size="small" variant="text"/>
+          </template>
         </template>
       </Column>
     </DataTable>

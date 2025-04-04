@@ -348,12 +348,6 @@ public class OtiumEndpointService
         if (kategorie is null)
             throw new ArgumentException("Kategorie must be valid Kategorie");
 
-        var verantwortliche = await _context.Personen.Where(p => dtoOtium.Verantwortliche.Contains(p.Id))
-            .ToListAsync();
-
-        if (verantwortliche.Any(x => x.Rolle != Rolle.Tutor))
-            throw new ArgumentException("Only Tutors can be Verantwortliche");
-
         var dbOtium = new DB_Otium
         {
             Kategorie = kategorie,

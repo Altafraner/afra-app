@@ -25,6 +25,7 @@ public record Termin : ITermin
         Einschreibungen = einschreibungen;
         Block = termin.Block.Nummer;
         Datum = termin.Block.Schultag.Datum.ToDateTime(startTime);
+        Beschreibung = termin.Otium.Beschreibung;
     }
 
     /// <summary>
@@ -36,6 +37,11 @@ public record Termin : ITermin
     ///     A list of all available timeslots for the termin
     /// </summary>
     public IAsyncEnumerable<EinschreibungsPreview> Einschreibungen { get; set; }
+
+    /// <summary>
+    /// The description of the termin
+    /// </summary>
+    public string Beschreibung { get; set; }
 
     /// <summary>
     ///     The unique ID for the Termin

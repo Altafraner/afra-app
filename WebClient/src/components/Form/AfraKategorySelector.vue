@@ -9,7 +9,12 @@ const props = defineProps({
   options: Array,
   name: String,
   hideClear: Boolean,
-  fluid: Boolean
+  fluid: Boolean,
+  id: String,
+  placeholder: {
+    type: String,
+    default: "Kategorie"
+  }
 })
 
 const emit = defineEmits(["change"])
@@ -34,8 +39,10 @@ function treeMappingFunction(element) {
 </script>
 
 <template>
-  <TreeSelect :name="props.name" placeholder="Kategorie" :options="optionsTree" v-model="kategorie"
-              :fluid="fluid" :show-clear="!props.hideClear" @change="() => emit('change')">
+  <TreeSelect :id="id" v-model="kategorie" :fluid="fluid"
+              :name="props.name"
+              :options="optionsTree" :placeholder="placeholder" :show-clear="!props.hideClear"
+              @change="() => emit('change')">
     <template #option="slotProps">
       <div class="flex gap-1 items-center">
         <span v-if="slotProps.node.afra_icon"
