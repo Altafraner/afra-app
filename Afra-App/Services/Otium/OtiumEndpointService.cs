@@ -746,6 +746,42 @@ public class OtiumEndpointService
     }
 
     /// <summary>
+    ///     Sets the tutor of an OtiumTermin.
+    /// </summary>
+    /// <param name="otiumTerminId">The Id of the OtiumTermin to set the tutor on.</param>
+    /// <param name="personId">The new tutor.</param>
+    public async Task OtiumTerminSetTutorAsync(Guid otiumTerminId, Guid personId)
+    {
+        var otiumTermin = await _context.OtiaTermine
+            .FindAsync(otiumTerminId);
+        if (otiumTermin is null)
+            throw new EntityNotFoundException("Kein Termin mit dieser Id");
+
+        var person = await _context.Personen.FindAsync(personId);
+        if (otiumTermin is null)
+            throw new EntityNotFoundException("Keine Person mit dieser Id");
+
+        otiumTermin.Tutor = person;
+        await _context.SaveChangesAsync();
+    }
+
+    /// <summary>
+    ///     Sets the ort of an OtiumTermin.
+    /// </summary>
+    /// <param name="otiumTerminId">The Id of the OtiumTermin to set the ort on.</param>
+    /// <param name="ort">The new ort.</param>
+    public async Task OtiumTerminSetOrtAsync(Guid otiumTerminId, String ort)
+    {
+        var otiumTermin = await _context.OtiaTermine
+            .FindAsync(otiumTerminId);
+        if (otiumTermin is null)
+            throw new EntityNotFoundException("Kein Termin mit dieser Id");
+
+        otiumTermin.Ort = ort;
+        await _context.SaveChangesAsync();
+    }
+
+    /// <summary>
     ///     An Exception thrown when the Entity to operate on was not found
     /// </summary>
     public class EntityNotFoundException : InvalidOperationException

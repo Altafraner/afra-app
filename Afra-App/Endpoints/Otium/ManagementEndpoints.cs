@@ -34,6 +34,8 @@ public static class ManagementEndpoints
         app.MapDelete("/management/termin/{otiumTerminId:guid}", DeleteOtiumTermin);
         app.MapPut("/management/termin/{otiumTerminId:guid}/cancel", OtiumTerminAbsagen);
         app.MapPatch("/management/termin/{otiumTerminId:guid}/maxEinschreibungen", OtiumTerminSetMaxEinschreibungen);
+        app.MapPatch("/management/termin/{otiumTerminId:guid}/tutor", OtiumTerminSetTutor);
+        app.MapPatch("/management/termin/{otiumTerminId:guid}/ort", OtiumTerminSetOrt);
 
         app.MapPost("/management/wiederholung", CreateOtiumWiederholung);
         app.MapDelete("/management/wiederholung/{otiumWiederholungId:guid}", DeleteOtiumWiederholung);
@@ -314,6 +316,48 @@ public static class ManagementEndpoints
         try
         {
             await service.OtiumTerminSetMaxEinschreibungenAsync(otiumTerminId, maxEinschreibungen.Value);
+            return Results.Ok();
+        }
+        catch (OtiumEndpointService.EntityNotFoundException)
+        {
+            return Results.NotFound();
+        }
+        catch (InvalidOperationException)
+        {
+            return Results.BadRequest();
+        }
+    }
+    private static async Task<IResult> OtiumTerminSetTutor(OtiumEndpointService service,
+        HttpContext httpContext,
+        AfraAppContext context, Guid otiumTerminId, GuidWrapper personId)
+    {
+        var user = await httpContext.GetPersonAsync(context);
+        if (user.Rolle != Rolle.Tutor) return Results.Unauthorized();
+
+        try
+        {
+            await service.OtiumTerminSetTutorAsync(otiumTerminId, personId.Value);
+            return Results.Ok();
+        }
+        catch (OtiumEndpointService.EntityNotFoundException)
+        {
+            return Results.NotFound();
+        }
+        catch (InvalidOperationException)
+        {
+            return Results.BadRequest();
+        }
+    }
+    private static async Task<IResult> OtiumTerminSetOrt(OtiumEndpointService service,
+        HttpContext httpContext,
+        AfraAppContext context, Guid otiumTerminId, StringWrapper ort)
+    {
+        var user = await httpContext.GetPersonAsync(context);
+        if (user.Rolle != Rolle.Tutor) return Results.Unauthorized();
+
+        try
+        {
+            await service.OtiumTerminSetOrtAsync(otiumTerminId, ort.Value);
             return Results.Ok();
         }
         catch (OtiumEndpointService.EntityNotFoundException)
