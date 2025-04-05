@@ -546,9 +546,12 @@ public class OtiumEndpointService
             throw new EntityDeletionException(
                 "Wiederholungen mit Terminen mit Einschreibungen können nicht gelöscht werden.");
 
+        _context.OtiaTermine.RemoveRange(otiumWiederholung.Termine);
+
         _context.OtiaWiederholungen.Remove(otiumWiederholung);
         await _context.SaveChangesAsync();
     }
+
     /// <summary>
     ///     Discontinues an Otiumwiederholung by deleting all termine starting from <paramref name="firstDayAfter"/>
     ///     Cancels future termine to ensure that there are not have any enrollments.
