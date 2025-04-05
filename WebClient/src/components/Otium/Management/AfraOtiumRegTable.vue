@@ -1,6 +1,6 @@
-﻿<script setup>
+<script setup>
 import {Button, Column, DataTable, Dialog} from "primevue";
-import {formatDayOfWeek, formatTutor} from "@/helpers/formatters.js";
+import {formatDayOfWeek, formatTutor, formatDate} from "@/helpers/formatters.js";
 import CreateWiederholungForm from "@/components/Form/CreateWiederholungForm.vue";
 import {ref} from "vue";
 
@@ -44,6 +44,16 @@ function showCreateDialog() {
       </template>
     </Column>
     <Column field="ort" header="Ort"/>
+    <Column field="startDate" header="Von">
+      <template #body="slotProps">
+        {{ formatDate(new Date(slotProps.data.startDate)) }}
+      </template>
+    </Column>
+    <Column field="endDate" header="Bis">
+      <template #body="slotProps">
+        {{ formatDate(new Date(slotProps.data.endDate)) }}
+      </template>
+    </Column>
     <Column v-if="allowEdit" class="text-right afra-col-action">
       <template #header>
         <Button aria-label="Neue Regelmäßigkeit" icon="pi pi-plus" size="small"

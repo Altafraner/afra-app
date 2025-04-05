@@ -29,6 +29,8 @@ public record ManagementWiederholungView
         Ort = dbWiederholung.Ort;
         Wochentag = dbWiederholung.Wochentag;
         Wochentyp = dbWiederholung.Wochentyp;
+        StartDate = dbWiederholung.StartDate;
+        EndDate = dbWiederholung.EndDate;
     }
 
     /// <summary>
@@ -66,4 +68,14 @@ public record ManagementWiederholungView
     ///     The Type of Week that Termine of the Wiederholung are scheduled
     /// </summary>
     public required Wochentyp Wochentyp { get; set; }
+
+    /// <summary>
+    ///     The date of the first Termin
+    /// </summary>
+    public DateOnly StartDate { get; set; }
+
+    /// <summary>
+    ///     The date of the Last Termin
+    /// </summary>
+    public DateOnly EndDate { get; set; }
 }
