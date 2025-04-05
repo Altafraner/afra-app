@@ -1,6 +1,7 @@
 using Afra_App.Data;
 using Afra_App.Data.Configuration;
 using Afra_App.Data.DTO.Otium;
+using Afra_App.Data.Otium;
 using Afra_App.Data.People;
 using Afra_App.Data.Schuljahr;
 using Afra_App.Data.TimeInterval;
@@ -161,6 +162,22 @@ public class EnrollmentService
     }
 
     /// <summary>
+    /// Gets the times of all non-optional blocks that the student is not enrolled in.
+    /// </summary>
+    /// <param name="blocks">The blocks to check for</param>
+    /// <param name="einschreibungen">The users enrollments</param>
+    /// <returns>A timeline containing all times the user must enroll in but has not done so.</returns>
+    public Timeline<TimeOnly> GetNotEnrolledTimes(IEnumerable<Block> blocks, IEnumerable<Einschreibung> einschreibungen)
+    {
+        var timeline = new Timeline<TimeOnly>();
+        foreach (var block in blocks)
+        foreach (var subBlock in _configuration.Blocks[block.Nummer].Where(b => b.Mandatory))
+            timeline.Add(subBlock.Interval);
+        foreach (var einschreibung in einschreibungen) timeline.Remove(einschreibung.Interval);
+        return timeline;
+    }
+
+    /// <summary>
     ///     Checks if a set of einschreibungen covers all non-optional blocks of a schultag.
     /// </summary>
     /// <param name="schultag">The day to check for</param>
@@ -168,15 +185,36 @@ public class EnrollmentService
     /// <returns>True, iff all non optional blocks are enrolled</returns>
     public bool AreAllNonOptionalBlocksEnrolled(Schultag schultag, IEnumerable<Einschreibung> einschreibungen)
     {
-        var timeline = new Timeline<TimeOnly>();
-        foreach (var block in schultag.Blocks)
-        foreach (var subBlock in _configuration.Blocks[block.Nummer].Where(b => b.Mandatory))
-            timeline.Add(subBlock.Interval);
+        var timeline = GetNotEnrolledTimes(schultag.Blocks, einschreibungen);
+        return timeline.GetIntervals().Count == 0;
+    }
 
-        foreach (var einschreibung in einschreibungen) timeline.Remove(einschreibung.Interval);
+    /// <summary>
+    /// Gets all kategories that are required for a set of enrollments and not included in the categories of enrollments.
+    /// </summary>
+    /// <param name="enrollments">The enrollments to exclude the (tranistive) categories from</param>
+    /// <returns>
+    ///     An enumerable of all <see cref="Kategorie">Kategorien</see> that are required but covered by the <see cref="enrollments"/>
+    /// </returns>
+    public async Task<List<Kategorie>> GetMissingKategories(IEnumerable<Einschreibung> enrollments)
+    {
+        // Get required categories
+        var requiredKategories = (await _kategorieService.GetKategorienAsync(true)).ToList();
+        foreach (var enrollment in enrollments)
+        {
+            var currentKategorie = enrollment.Termin.Otium.Kategorie;
+            var transitiveKategories =
+                _kategorieService.GetTransitiveKategoriesAsyncEnumerable(currentKategorie, false);
 
-        var allNonOptionalBlocksEnrolled = timeline.GetIntervals().Count == 0;
-        return allNonOptionalBlocksEnrolled;
+            await foreach (var category in transitiveKategories)
+            {
+                var catOfList = requiredKategories.FirstOrDefault(c => c.Id == category.Id);
+                if (catOfList is null) continue;
+                requiredKategories.Remove(catOfList);
+            }
+        }
+
+        return requiredKategories;
     }
 
     /// <summary>

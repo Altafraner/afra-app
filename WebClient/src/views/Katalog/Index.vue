@@ -1,6 +1,6 @@
 ﻿<script setup>
 import {ref, watch} from "vue";
-import {Column, DataTable, Skeleton, useToast} from "primevue";
+import {Column, DataTable, Message, Skeleton, useToast} from "primevue";
 import AfraDateSelector from "@/components/Form/AfraDateSelector.vue";
 import AfraKategorySelector from "@/components/Form/AfraKategorySelector.vue";
 import AfraOtiumKatalogView from "@/components/Otium/Katalog/AfraOtiumKatalogView.vue";
@@ -27,6 +27,7 @@ const datesAvailable = ref([])
 const dateDefault = ref(null)
 const kategorieOptionsTree = ref()
 const otia = ref([])
+const hinweise = ref([])
 const date = ref(null);
 const kategorie = ref(null);
 const categoryChanged = () => {
@@ -83,8 +84,10 @@ async function getTermine() {
 }
 
 async function getAngebote() {
-  const angeboteGetter = mande("/api/otium")
-  otia.value = await angeboteGetter.get(`${date.value.datum}`);
+  const api = mande("/api/otium")
+  const result = await api.get(`${date.value.datum}`);
+  otia.value = result.termine
+  hinweise.value = result.hinweise
   filterOtiaByKategorie()
 }
 
@@ -133,6 +136,20 @@ startup()
       </div>
       <AfraKategorySelector v-model="kategorie" :options="kategorieOptionsTree"
                             @change="categoryChanged"/>
+
+      <template v-if="user.isStudent">
+        <Message v-if="hinweise.length === 0" severity="success">
+          Deine Belegung entspricht den Vorgaben.
+        </Message>
+        <Message v-else severity="warn">
+          <div class="flex flex-col">
+            <div class="font-bold">Deine Belegung entspricht noch nicht den Vorgaben.</div>
+            <ul>
+              <li v-for="(item, index) in hinweise" :key="index">{{ item }}</li>
+            </ul>
+          </div>
+        </Message>
+      </template>
 
       <AfraOtiumKatalogView :otia="selectedOtia" :link-generator="linkGenerator"/>
     </template>

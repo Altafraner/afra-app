@@ -1,4 +1,4 @@
-namespace Afra_App.Data.DTO.Otium;
+namespace Afra_App.Data.DTO.Otium.Dashboard;
 
 /// <summary>
 ///     A DTO for a day in the otium calendar

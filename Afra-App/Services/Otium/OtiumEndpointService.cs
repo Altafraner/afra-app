@@ -3,6 +3,7 @@ using Afra_App.Data;
 using Afra_App.Data.Configuration;
 using Afra_App.Data.DTO;
 using Afra_App.Data.DTO.Otium;
+using Afra_App.Data.DTO.Otium.Katalog;
 using Afra_App.Data.People;
 using Afra_App.Data.TimeInterval;
 using Microsoft.EntityFrameworkCore;
@@ -44,11 +45,21 @@ public class OtiumEndpointService
     }
 
     /// <summary>
+    ///     Gets the Katalog for a given date.
+    /// </summary>
+    /// <param name="person">The person the generate the messages for</param>
+    /// <param name="date">The date to get the <see cref="TerminPreview"/>s for</param>
+    public async Task<Tag> GetKatalogForDay(Person person, DateOnly date)
+    {
+        return new Tag(GetTerminPreviewsForDay(date), await GetStatusForDayAsync(person, date));
+    }
+
+    /// <summary>
     ///     Retrieves the Otium data for a given date and block.
     /// </summary>
     /// <param name="date">The date for which to retrieve the Otium data.</param>
     /// <returns>A List of all Otia happening at that time.</returns>
-    public async IAsyncEnumerable<TerminPreview> GetKatalogForDay(DateOnly date)
+    private async IAsyncEnumerable<TerminPreview> GetTerminPreviewsForDay(DateOnly date)
     {
         // Get the schultag for the given date and block
         var blocks = await _context.Blocks
@@ -101,17 +112,61 @@ public class OtiumEndpointService
             _otiumConfiguration.Blocks[termin.Block.Nummer].First().Interval.Start);
     }
 
+    private async Task<IEnumerable<string>> GetStatusForDayAsync(Person user, DateOnly date)
+    {
+        if (user.Rolle != Rolle.Student)
+            return [];
+
+        List<string> messages = [];
+
+        // Week Start and End
+        var weekStart = date.AddDays(-(int)date.DayOfWeek + 1);
+        var weekEnd = weekStart.AddDays(7);
+
+        // Get all blocks for the given week
+        var blocks = await _context.Schultage
+            .Where(s => s.Datum >= weekStart && s.Datum < weekEnd)
+            .SelectMany(s => s.Blocks)
+            .ToListAsync();
+
+        // Get all enrollments for the given week
+        var weeksEnrollments = await _context.OtiaEinschreibungen
+            .Include(e => e.Termin)
+            .ThenInclude(t => t.Otium)
+            .ThenInclude(o => o.Kategorie)
+            .Include(einschreibung => einschreibung.Termin)
+            .ThenInclude(termin => termin.Block)
+            .Where(e => blocks.Contains(e.Termin.Block) &&
+                        e.BetroffenePerson.Id == user.Id)
+            .ToListAsync();
+
+        // Find all times on date the user is not enrolled in
+        var timeline = _enrollmentService.GetNotEnrolledTimes(
+            blocks.Where(b => b.SchultagKey == date),
+            weeksEnrollments.Where(e => e.Termin.Block.SchultagKey == date));
+
+        messages.AddRange(timeline.GetIntervals().Select(interval =>
+            $"Es fehlen Einschreibungen von {interval.Start:t} bis {interval.End:t}"));
+
+        var missingCategories = await _enrollmentService.GetMissingKategories(weeksEnrollments);
+
+        messages.AddRange(missingCategories.Select(category =>
+            $"Es muss mindestens ein Angebot der Kategorie \"{category.Bezeichnung}\" pro Woche belegt werden."));
+
+        return messages;
+    }
+
     /// <summary>
     ///     Generates the dashboard for a student.
     /// </summary>
     /// <param name="user">The student to generate the dashboard for</param>
-    /// <param name="all">Iff true, all available school-days are included. Otherwise just the current and next two weeks.</param>
-    public async IAsyncEnumerable<Tag> GetStudentDashboardAsyncEnumerable(Person user, bool all)
+    /// <param name="all">Iff true, all available school-days are included. Otherwise, just the current and next two weeks.</param>
+    public async IAsyncEnumerable<Data.DTO.Otium.Dashboard.Tag> GetStudentDashboardAsyncEnumerable(Person user,
+        bool all)
     {
         // Get Monday of the current week
         var startDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek + 1));
         var endDate = startDate.AddDays(7 * 3);
-
 
         // Okay, this looks heavy. Enumerate to List as we need to access the elements multiple times.
         var allEinschreibungen = await _context.OtiaEinschreibungen.AsNoTrackingWithIdentityResolution()
@@ -155,7 +210,7 @@ public class OtiumEndpointService
                     .OrderBy(e => e.Interval.Start)
                     .Select(e => new Einschreibung(e))
                 : [];
-            var tag = new Tag(schultag.Datum,
+            var tag = new Data.DTO.Otium.Dashboard.Tag(schultag.Datum,
                 vollstaendig,
                 localKategorienErfuellt,
                 einschreibungen

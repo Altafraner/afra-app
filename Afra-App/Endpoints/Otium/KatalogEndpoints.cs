@@ -20,9 +20,12 @@ public static class KatalogEndpoints
         app.MapDelete("/{terminId:guid}/{start}", UnenrollAsync);
     }
 
-    private static IResult GetDay(OtiumEndpointService service, DateOnly date)
+    private static async Task<IResult> GetDay(OtiumEndpointService service, HttpContext httpContext,
+        AfraAppContext dbContext, DateOnly date)
     {
-        return Results.Ok(service.GetKatalogForDay(date));
+        var user = await httpContext.GetPersonAsync(dbContext);
+
+        return Results.Ok(await service.GetKatalogForDay(user, date));
     }
 
     private static async Task<IResult> GetTermin(OtiumEndpointService service, Guid terminId, HttpContext httpContext,

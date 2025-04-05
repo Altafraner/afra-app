@@ -1,4 +1,4 @@
-namespace Afra_App.Data.DTO.Otium;
+namespace Afra_App.Data.DTO.Otium.Katalog;
 
 /// <summary>
 ///     A DTO for sending a preview of a termin to the client.
