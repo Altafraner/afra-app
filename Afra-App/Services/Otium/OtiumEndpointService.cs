@@ -551,6 +551,7 @@ public class OtiumEndpointService
     }
     /// <summary>
     ///     Discontinues an Otiumwiederholung by deleting all termine starting from <paramref name="firstDayAfter"/>
+    ///     Cancels future termine to ensure that there are not have any enrollments.
     /// </summary>
     /// <param name="otiumWiederholungId">The Id of the OtiumWiederholung to discontinue.</param>
     /// <param name="firstDayAfter">The first date from which on the recurrence will not be scheduled.</param>
@@ -569,6 +570,11 @@ public class OtiumEndpointService
             throw new EntityNotFoundException("Keine Wiederholung mit dieser Id");
 
         var termineToDelete = otiumWiederholung.Termine.Where(t => t.Block.Schultag.Datum >= firstDayAfter);
+
+        foreach (var t in termineToDelete)
+        {
+            await OtiumTerminAbsagenAsync(t.Id);
+        }
 
         var hatEinschreibungen = termineToDelete.Any(t => t.Enrollments.Count != 0);
         if (hatEinschreibungen)
