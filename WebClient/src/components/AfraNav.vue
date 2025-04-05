@@ -68,8 +68,8 @@ const logout = async () => {
   }
 }
 
-async function setup() {
-  await user.update()
+async function setup(update = true) {
+  if (update) await user.update()
   if (user.loading) return;
   if (user.isStudent) {
     items.value = items_student
@@ -83,7 +83,7 @@ async function setup() {
 setup()
 
 user.$subscribe(() => {
-  setup();
+  setup(false);
 })
 </script>
 
