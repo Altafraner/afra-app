@@ -91,9 +91,13 @@ const create = (data) => {
           <Button v-tooltip="'Absagen beenden'" aria-label="Absagen beenden"
                   icon="pi pi-caret-right" severity="primary"
                   size="small" variant="text"/>
-          <Button v-if="data.wiederholungId===null" v-tooltip="'Löschen'" aria-label="Löschen" icon="pi pi-times" severity="danger"
+          <Button v-if="data.wiederholungId===null" v-tooltip="'Löschen'" aria-label="Löschen"
+                  icon="pi pi-times" severity="danger"
                   size="small" variant="text"
                   @click="(event) => confirmDelete(event, data.id)"/>
+          <Button v-else v-tooltip="'Regelmäßige Termine können nicht gelöscht werden.'"
+                  aria-label="Löschen" icon="pi pi-times" severity="secondary"
+                  disabled size="small" variant="text"/>
         </span>
       </template>
     </Column>
