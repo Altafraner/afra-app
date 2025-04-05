@@ -59,9 +59,11 @@ const create = (data) => {
     <Column header="Termin">
       <template #body="{data}">
         <Button v-if="!data.istAbgesagt" :as="RouterLink" :label="formatDate(new Date(data.datum))"
-                :to="{name: 'Verwaltung-Termin', params: {terminId: data.id}}" variant="text"/>
-        <Button v-else :label="formatDate(new Date(data.datum))" disabled severity="danger"
+                :icon="data.wiederholungId===null ? '' : 'pi pi-refresh'"
+                :to="{name: 'Verwaltung-Termin', params: {terminId: data.id}}"
                 variant="text"/>
+        <Button v-else :label="formatDate(new Date(data.datum))" disabled severity="danger"
+                :icon="data.wiederholungId===null ? '' : 'pi pi-refresh'" variant="text"/>
       </template>
     </Column>
     <Column field="block" header="Block">
