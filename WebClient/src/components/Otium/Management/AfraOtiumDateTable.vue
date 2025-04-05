@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import {Button, Column, DataTable, Dialog, useConfirm} from "primevue";
 import {formatDate, formatPerson} from "@/helpers/formatters.js";
 import {RouterLink} from "vue-router";
@@ -91,7 +91,7 @@ const create = (data) => {
           <Button v-tooltip="'Absagen beenden'" aria-label="Absagen beenden"
                   icon="pi pi-caret-right" severity="primary"
                   size="small" variant="text"/>
-          <Button v-tooltip="'Löschen'" aria-label="Löschen" icon="pi pi-times" severity="danger"
+          <Button v-if="data.wiederholungId===null" v-tooltip="'Löschen'" aria-label="Löschen" icon="pi pi-times" severity="danger"
                   size="small" variant="text"
                   @click="(event) => confirmDelete(event, data.id)"/>
         </span>

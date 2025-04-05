@@ -28,6 +28,7 @@ public record ManagementTerminView
         Block = termin.Block.Nummer;
         Datum = termin.Block.Schultag.Datum;
         IstAbgesagt = termin.IstAbgesagt;
+        WiederholungId = termin.Wiederholung?.Id;
     }
 
     /// <summary>
@@ -39,6 +40,11 @@ public record ManagementTerminView
     ///     The Id of the otium the termin belongs to
     /// </summary>
     public required Guid OtiumId { get; set; }
+
+    /// <summary>
+    ///     The Id of the wiederholung the termin belongs to. Null if termin is singular.
+    /// </summary>
+    public required Guid? WiederholungId { get; set; }
 
     /// <summary>
     ///     The number of the Block the Termin is on.
