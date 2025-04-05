@@ -1,10 +1,11 @@
 <script setup>
 import {Button, Column, DataTable, Dialog} from "primevue";
-import {formatDayOfWeek, formatTutor, formatDate} from "@/helpers/formatters.js";
+import {formatDate, formatDayOfWeek, formatTutor} from "@/helpers/formatters.js";
 import CreateWiederholungForm from "@/components/Form/CreateWiederholungForm.vue";
 import {ref} from "vue";
+import CancelWiederholungForm from "@/components/Form/CancelWiederholungForm.vue";
 
-const emits = defineEmits(['create', 'delete'])
+const emits = defineEmits(['create', 'delete', 'cancel'])
 const props = defineProps({
   regs: Array,
   allowEnrollment: Boolean,
@@ -12,14 +13,27 @@ const props = defineProps({
 })
 
 const createDialogVisible = ref(false);
+const cancelDialogVisible = ref(false);
+const wiederholungToCancel = ref(null);
 
 function createRepeating(data) {
   createDialogVisible.value = false;
   emits('create', data);
 }
 
+function cancelRepeating(data) {
+  console.log("Cancelling", data);
+  cancelDialogVisible.value = false;
+  emits('cancel', wiederholungToCancel.value.id, data);
+}
+
 function showCreateDialog() {
   createDialogVisible.value = true;
+}
+
+function showCancelDialog(data) {
+  wiederholungToCancel.value = data;
+  cancelDialogVisible.value = true;
 }
 
 </script>
@@ -63,6 +77,8 @@ function showCreateDialog() {
         <span class="inline-flex gap-1">
           <Button v-tooltip="'Löschen'" aria-label="Löschen" icon="pi pi-times" severity="danger"
                   size="small" variant="text" @click="() => emits('delete', data.id)"/>
+          <Button v-tooltip="'Einkürzen'" aria-label="Löschen" icon="pi pi-stop" severity="danger"
+                  size="small" variant="text" @click="() => showCancelDialog(data)"/>
         </span>
       </template>
     </Column>
@@ -76,6 +92,11 @@ function showCreateDialog() {
           header="Regelmäßigkeit hinzufügen"
           modal>
     <CreateWiederholungForm @submit="createRepeating"/>
+  </Dialog>
+  <Dialog v-model:visible="cancelDialogVisible" :style="{width: '35rem'}"
+          header="Regelmäßigkeit verkürzen"
+          modal>
+    <CancelWiederholungForm :wiederholung="wiederholungToCancel" @submit="cancelRepeating"/>
   </Dialog>
 </template>
 

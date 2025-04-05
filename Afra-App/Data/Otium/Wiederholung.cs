@@ -35,10 +35,10 @@ public class Wiederholung : OtiumsInstanz
     /// <summary>
     ///     The date of the first Termin
     /// </summary>
-    public DateOnly StartDate => Termine.Min(t => t.Block.Schultag.Datum);
+    public DateOnly? StartDate => Termine.Count != 0 ? Termine.Min(t => t.Block.Schultag.Datum) : null;
 
     /// <summary>
     ///     The date of the Last Termin
     /// </summary>
-    public DateOnly EndDate => Termine.Max(t => t.Block.Schultag.Datum);
+    public DateOnly? EndDate => Termine.Count != 0 ? Termine.Max(t => t.Block.Schultag.Datum) : null;
 }

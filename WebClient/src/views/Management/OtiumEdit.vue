@@ -152,6 +152,20 @@ async function deleteReg(id) {
   }
 }
 
+async function cancelReg(id, date) {
+  const api = mande(`/api/otium/management/wiederholung/${id}/discontinue`);
+  try {
+    await api.patch({value: date.datum})
+    await getOtium(false)
+  } catch (e) {
+    toast.add({
+      severity: "error",
+      summary: "Fehler",
+      detail: "Die Wiederholung konnte nicht gekürzt werden."
+    })
+  }
+}
+
 async function createTermin(data) {
   console.log(data)
   const api = mande(`/api/otium/management/termin`);
@@ -257,7 +271,7 @@ setup();
       <AccordionPanel value="1">
         <AccordionHeader>Regelmäßigkeiten</AccordionHeader>
         <AccordionContent>
-          <afra-otium-reg-table :regs="otium.wiederholungen"
+          <afra-otium-reg-table :regs="otium.wiederholungen" @cancel="cancelReg"
                                 allowEdit @create="createReg" @delete="deleteReg"/>
         </AccordionContent>
       </AccordionPanel>

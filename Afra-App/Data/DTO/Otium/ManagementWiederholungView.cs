@@ -24,7 +24,7 @@ public record ManagementWiederholungView
     public ManagementWiederholungView(Wiederholung dbWiederholung)
     {
         Id = dbWiederholung.Id;
-        otiumId = dbWiederholung.Otium.Id;
+        OtiumId = dbWiederholung.Otium.Id;
         Tutor = (dbWiederholung.Tutor is not null) ? new PersonInfoMinimal(dbWiederholung.Tutor) : null;
         Ort = dbWiederholung.Ort;
         Wochentag = dbWiederholung.Wochentag;
@@ -41,7 +41,7 @@ public record ManagementWiederholungView
     /// <summary>
     ///     The Id of the otium the wiederholung belongs to
     /// </summary>
-    public required Guid otiumId { get; set; }
+    public required Guid OtiumId { get; set; }
 
     /// <summary>
     ///     The Information on the tutor of the Otium. Could be a student or a teacher.
@@ -72,10 +72,10 @@ public record ManagementWiederholungView
     /// <summary>
     ///     The date of the first Termin
     /// </summary>
-    public DateOnly StartDate { get; set; }
+    public DateOnly? StartDate { get; set; }
 
     /// <summary>
     ///     The date of the Last Termin
     /// </summary>
-    public DateOnly EndDate { get; set; }
+    public DateOnly? EndDate { get; set; }
 }

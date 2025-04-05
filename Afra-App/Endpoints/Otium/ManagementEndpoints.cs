@@ -194,7 +194,8 @@ public static class ManagementEndpoints
         }
     }
 
-    private static async Task<IResult> OtiumWiederholungDiscontinue(OtiumEndpointService service, HttpContext httpContext,
+    private static async Task<IResult> OtiumWiederholungDiscontinue(OtiumEndpointService service,
+        HttpContext httpContext,
         AfraAppContext context, Guid otiumWiederholungId, DateOnlyWrapper firstDayAfter)
     {
         var user = await httpContext.GetPersonAsync(context);
@@ -212,6 +213,10 @@ public static class ManagementEndpoints
         catch (OtiumEndpointService.EntityDeletionException e)
         {
             return Results.Conflict(e.Message);
+        }
+        catch (ArgumentException e)
+        {
+            return Results.BadRequest(e.Message);
         }
     }
 
