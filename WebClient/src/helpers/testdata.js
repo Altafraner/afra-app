@@ -128,20 +128,26 @@ const terminEinschreibungsDetailsBase = {
   kontrolliert: false,
   einschreibungen: [
     {
-      start: new Date(0, 0, 0, 13, 30),
-      ende: new Date(0, 0, 0, 14, 15),
+      interval: {
+        start: "13:30",
+        end: "14:15",
+      },
       student: student1,
       verified: 1
     },
     {
-      start: new Date(0, 0, 0, 13, 45),
-      ende: new Date(0, 0, 0, 14, 30),
+      interval: {
+        start: "13:45",
+        end: "14:30",
+      },
       student: student2,
       verified: 0
     },
     {
-      start: new Date(0, 0, 0, 13, 30),
-      ende: new Date(0, 0, 0, 14, 45),
+      interval: {
+        start: "13:30",
+        end: "14:45",
+      },
       student: student3,
       verified: 2
     }

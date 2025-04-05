@@ -1,13 +1,13 @@
 ﻿<script setup>
 import Menubar from 'primevue/menubar';
 import {ref} from "vue";
-import {Image, Button, useToast} from "primevue";
+import {Button, Image, useToast} from "primevue";
 
 import wappen from '/Vereinswappen.jpg?url'
 import {useUser} from "@/stores/useUser.js";
 import {useRouter} from "vue-router";
 
-const items = ref([
+const items_teacher = [
   {
     label: "Übersicht",
     route: "/",
@@ -18,19 +18,35 @@ const items = ref([
     route: "/katalog",
     icon: "pi pi-list"
   },
-  /*{
-    label: "Test",
-    route: "/test",
-    icon: "pi pi-code"
-  },*/
   {
     label: "Aufsicht",
     route: "/aufsicht",
     icon: "pi pi-eye"
+  },
+  {
+    label: "Verwaltung",
+    route: "/management",
+    icon: "pi pi-cog"
   }
-]);
+]
+
+const items_student = [
+  {
+    label: "Übersicht",
+    route: "/",
+    icon: "pi pi-user"
+  },
+  {
+    label: "Katalog",
+    route: "/katalog",
+    icon: "pi pi-list"
+  },
+]
+
 const toast = useToast();
 const router = useRouter();
+const items = ref([])
+const user = useUser();
 
 const logout = async () => {
   const user = useUser();
@@ -51,6 +67,24 @@ const logout = async () => {
     });
   }
 }
+
+async function setup() {
+  await user.update()
+  if (user.loading) return;
+  if (user.isStudent) {
+    items.value = items_student
+  } else if (user.isTeacher) {
+    items.value = items_teacher
+  } else {
+    items.value = []
+  }
+}
+
+setup()
+
+user.$subscribe(() => {
+  setup();
+})
 </script>
 
 
