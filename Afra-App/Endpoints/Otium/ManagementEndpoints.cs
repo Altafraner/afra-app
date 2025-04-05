@@ -39,6 +39,7 @@ public static class ManagementEndpoints
 
         app.MapPost("/management/wiederholung", CreateOtiumWiederholung);
         app.MapDelete("/management/wiederholung/{otiumWiederholungId:guid}", DeleteOtiumWiederholung);
+        app.MapPatch("/management/wiederholung/{otiumWiederholungId:guid}/discontinue", OtiumWiederholungDiscontinue);
     }
 
     private static async Task<IResult> GetTerminForTeacher(OtiumEndpointService service, HttpContext httpContext,
@@ -181,6 +182,27 @@ public static class ManagementEndpoints
         try
         {
             await service.DeleteOtiumWiederholungAsync(otiumWiederholungId);
+            return Results.Ok();
+        }
+        catch (OtiumEndpointService.EntityNotFoundException)
+        {
+            return Results.NotFound();
+        }
+        catch (OtiumEndpointService.EntityDeletionException e)
+        {
+            return Results.Conflict(e.Message);
+        }
+    }
+
+    private static async Task<IResult> OtiumWiederholungDiscontinue(OtiumEndpointService service, HttpContext httpContext,
+        AfraAppContext context, Guid otiumWiederholungId, DateOnlyWrapper firstDayAfter)
+    {
+        var user = await httpContext.GetPersonAsync(context);
+        if (user.Rolle != Rolle.Tutor) return Results.Unauthorized();
+
+        try
+        {
+            await service.OtiumWiederholungDiscontinueAsync(otiumWiederholungId, firstDayAfter.Value);
             return Results.Ok();
         }
         catch (OtiumEndpointService.EntityNotFoundException)
@@ -379,4 +401,6 @@ public static class ManagementEndpoints
     private record GuidWrapper(Guid Value);
 
     private record GuidOrNullWrapper(Guid? Value);
+
+    private record DateOnlyWrapper(DateOnly Value);
 }

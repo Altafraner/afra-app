@@ -549,6 +549,35 @@ public class OtiumEndpointService
         _context.OtiaWiederholungen.Remove(otiumWiederholung);
         await _context.SaveChangesAsync();
     }
+    /// <summary>
+    ///     Discontinues an Otiumwiederholung by deleting all termine starting from <paramref name="firstDayAfter"/>
+    /// </summary>
+    /// <param name="otiumWiederholungId">The Id of the OtiumWiederholung to discontinue.</param>
+    /// <param name="firstDayAfter">The first date from which on the recurrence will not be scheduled.</param>
+    public async Task OtiumWiederholungDiscontinueAsync(Guid otiumWiederholungId, DateOnly firstDayAfter)
+    {
+        var otiumWiederholung = await _context.OtiaWiederholungen
+            .AsSplitQuery()
+            .Include(x => x.Otium)
+            .Include(x => x.Termine)
+            .ThenInclude(t => t.Enrollments)
+            .Include(x => x.Termine)
+            .ThenInclude(t => t.Block)
+            .ThenInclude(b => b.Schultag)
+            .FirstOrDefaultAsync(o => o.Id == otiumWiederholungId);
+        if (otiumWiederholung is null)
+            throw new EntityNotFoundException("Keine Wiederholung mit dieser Id");
+
+        var termineToDelete = otiumWiederholung.Termine.Where(t => t.Block.Schultag.Datum >= firstDayAfter);
+
+        var hatEinschreibungen = termineToDelete.Any(t => t.Enrollments.Count != 0);
+        if (hatEinschreibungen)
+            throw new EntityDeletionException(
+                "Wiederholungen mit Terminen mit Einschreibungen können nicht gelöscht werden.");
+
+        _context.OtiaTermine.RemoveRange(termineToDelete);
+        await _context.SaveChangesAsync();
+    }
 
     /// <summary>
     ///     Cancels an OtiumTermin.
