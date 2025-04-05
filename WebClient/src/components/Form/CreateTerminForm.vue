@@ -5,6 +5,7 @@ import {Form} from '@primevue/forms';
 import AfraDateSelector from "@/components/Form/AfraDateSelector.vue";
 import {useSettings} from "@/stores/useSettings.js";
 import {formatTutor} from "@/helpers/formatters.js";
+import AfraPersonSelector from "@/components/Form/AfraPersonSelector.vue";
 
 const emit = defineEmits(["submit"]);
 
@@ -124,13 +125,9 @@ setup()
       <label for="betreuerSwitch">Betreuer:in zuweisen</label>
       <ToggleSwitch v-model="betreuerZuweisenSelected" if="betreuerSwitch"/>
     </div>
-    <FloatLabel class="w-full" variant="on">
-      <Select id="betreuerSelect" v-model="personSelected" :disabled="!betreuerZuweisenSelected"
-              :options="personen"
-              filter fluid name="tutor" option-label="name" option-value="id"
-              required/>
-      <label for="betreuerSelect">Betreuer:in</label>
-    </FloatLabel>
+    <AfraPersonSelector id="betreuerSelect" v-model="personSelected"
+                        :disabled="!betreuerZuweisenSelected"
+                        name="tutor" required/>
     <div class="flex justify-between mt-4">
       <label for="maxEnrollmentSwitch">Teilnehmer:innen-Zahl beschränken</label>
       <ToggleSwitch v-model="maxEnrollmentsSetzenSelected"

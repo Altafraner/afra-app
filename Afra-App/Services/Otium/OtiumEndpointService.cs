@@ -750,16 +750,22 @@ public class OtiumEndpointService
     /// </summary>
     /// <param name="otiumTerminId">The Id of the OtiumTermin to set the tutor on.</param>
     /// <param name="personId">The new tutor.</param>
-    public async Task OtiumTerminSetTutorAsync(Guid otiumTerminId, Guid personId)
+    public async Task OtiumTerminSetTutorAsync(Guid otiumTerminId, Guid? personId)
     {
         var otiumTermin = await _context.OtiaTermine
-            .FindAsync(otiumTerminId);
+            .Include(t => t.Tutor)
+            .FirstOrDefaultAsync(t => t.Id == otiumTerminId);
+
         if (otiumTermin is null)
             throw new EntityNotFoundException("Kein Termin mit dieser Id");
 
-        var person = await _context.Personen.FindAsync(personId);
-        if (otiumTermin is null)
-            throw new EntityNotFoundException("Keine Person mit dieser Id");
+        Person? person = null;
+        if (personId.HasValue)
+        {
+            person = await _context.Personen.FindAsync(personId);
+            if (person is null)
+                throw new EntityNotFoundException("Keine Person mit dieser Id");
+        }
 
         otiumTermin.Tutor = person;
         await _context.SaveChangesAsync();

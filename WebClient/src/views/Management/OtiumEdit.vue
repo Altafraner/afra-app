@@ -219,7 +219,7 @@ setup();
           <span>{{ otium.bezeichnung }}</span>
         </template>
         <template #edit>
-          <InputText v-model="bezeichnung" type="text"/>
+          <InputText v-model="bezeichnung" fluid type="text"/>
         </template>
       </GridEditRow>
       <GridEditRow header="Kategorie" @update="updateKategorie">

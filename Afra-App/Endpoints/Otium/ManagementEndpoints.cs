@@ -327,9 +327,10 @@ public static class ManagementEndpoints
             return Results.BadRequest();
         }
     }
+
     private static async Task<IResult> OtiumTerminSetTutor(OtiumEndpointService service,
         HttpContext httpContext,
-        AfraAppContext context, Guid otiumTerminId, GuidWrapper personId)
+        AfraAppContext context, Guid otiumTerminId, GuidOrNullWrapper personId)
     {
         var user = await httpContext.GetPersonAsync(context);
         if (user.Rolle != Rolle.Tutor) return Results.Unauthorized();
@@ -348,6 +349,7 @@ public static class ManagementEndpoints
             return Results.BadRequest();
         }
     }
+
     private static async Task<IResult> OtiumTerminSetOrt(OtiumEndpointService service,
         HttpContext httpContext,
         AfraAppContext context, Guid otiumTerminId, StringWrapper ort)
@@ -375,4 +377,6 @@ public static class ManagementEndpoints
     private record IntOrNullWrapper(int? Value);
 
     private record GuidWrapper(Guid Value);
+
+    private record GuidOrNullWrapper(Guid? Value);
 }

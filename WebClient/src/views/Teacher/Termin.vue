@@ -33,9 +33,21 @@ async function fetchData() {
 }
 
 async function updateMaxEnrollments(numEnrollments) {
-  const api = mande(`/api/otium/management/termin/${props.terminId}/maxEinschreibungen`);
+  await simpleUpdate('maxEinschreibungen', numEnrollments)
+}
+
+async function updateTutor(tutor) {
+  await simpleUpdate('tutor', tutor)
+}
+
+async function updateOrt(ort) {
+  await simpleUpdate('ort', ort)
+}
+
+async function simpleUpdate(name, value) {
+  const api = mande(`/api/otium/management/termin/${props.terminId}/${name}`);
   try {
-    await api.patch({value: numEnrollments})
+    await api.patch({value})
   } catch (e) {
     toast.add({
       severity: "error",
@@ -52,7 +64,8 @@ fetchData()
 </script>
 
 <template>
-  <AfraOtiumInstance v-if="!loading" :otium="otium" @update-max-enrollments="updateMaxEnrollments"/>
+  <AfraOtiumInstance v-if="!loading" :otium="otium" @update-max-enrollments="updateMaxEnrollments"
+                     @update-ort="updateOrt" @update-tutor="updateTutor"/>
 </template>
 
 <style scoped>
