@@ -3,6 +3,7 @@ using Afra_App.Authentication;
 using Afra_App.Authentication.Ldap;
 using Afra_App.Data;
 using Afra_App.Data.DTO;
+using Afra_App.Data.People;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
@@ -62,7 +63,8 @@ public class UserService
     {
         var user = (_ldapService.IsEnabled, environment.IsDevelopment()) switch
         {
-            (true, _) => await _ldapService.VerifyUserAsync(request.Username.Trim(), request.Password.Trim()),
+            (true, _) => await _ldapService.VerifyUserAsync(request.Username.Trim(), request.Password.Trim(),
+                request.Roll),
             (false, true) => await _context.Personen.FirstOrDefaultAsync(u =>
                 u.Email.StartsWith(request.Username.Trim())),
             _ => null
@@ -128,5 +130,5 @@ public class UserService
     /// </summary>
     /// <param name="Username">The username of the user.</param>
     /// <param name="Password">The password of the user.</param>
-    public record SignInRequest(string Username, string Password);
+    public record SignInRequest(string Username, string Password, Rolle Roll);
 }

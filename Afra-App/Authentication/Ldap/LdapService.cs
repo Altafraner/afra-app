@@ -50,27 +50,17 @@ public class LdapService
         var teacherEntries = GetGroupEntries(connection, _configuration.TutorGroup);
         foreach (SearchResultEntry entry in teacherEntries)
         {
-            var success = TryGetOrCreatePersonFromEntry(entry, Rolle.Tutor, dbUsers, out var person);
-            if (!success)
-            {
-                _logger.LogWarning("Sync: Failed to create of find user from entry");
-                continue;
-            }
-
-            person!.LdapSyncTime = syncTime;
+            var success = TryGetOrCreatePersonFromEntry(entry, dbUsers, syncTime);
+            if (success) continue;
+            _logger.LogWarning("Sync: Failed to create of find user from entry");
         }
 
         var studentEntries = GetGroupEntries(connection, _configuration.StudentGroup);
         foreach (SearchResultEntry entry in studentEntries)
         {
-            var success = TryGetOrCreatePersonFromEntry(entry, Rolle.Student, dbUsers, out var person);
-            if (!success)
-            {
-                _logger.LogWarning("Sync: Failed to create of find user from entry");
-                continue;
-            }
-
-            person!.LdapSyncTime = syncTime;
+            var success = TryGetOrCreatePersonFromEntry(entry, dbUsers, syncTime);
+            if (success) continue;
+            _logger.LogWarning("Sync: Failed to create of find user from entry");
         }
 
         await _context.SaveChangesAsync();
@@ -92,7 +82,7 @@ public class LdapService
     /// <param name="shouldRetry">Whether to retry if the user exists in LDAP but not in DB</param>
     /// <returns>The user authenticated by <see cref="username"/> and <see cref="password"/> if the credentials are valid; Otherwise, null</returns>
     /// <exception cref="InvalidOperationException">The LDAP Service is not enabled. Check with <see cref="IsEnabled"/>.</exception>
-    public async Task<Person?> VerifyUserAsync(string username, string password, bool shouldRetry = true)
+    public async Task<Person?> VerifyUserAsync(string username, string password, Rolle roll, bool shouldRetry = true)
     {
         if (!_configuration.Enabled)
             throw new InvalidOperationException("Ldap is not enabled");
@@ -122,14 +112,14 @@ public class LdapService
             return null;
         }
 
-        var user = await _context.Personen.FirstOrDefaultAsync(p => p.LdapObjectId == objGuid);
+        var user = await _context.Personen.FirstOrDefaultAsync(p => p.LdapObjectId == objGuid && p.Rolle == roll);
 
         if (user is not null || !shouldRetry) return user;
 
         _logger.LogWarning("User not found in database, starting sync");
         await SynchronizeAsync();
 
-        user = await _context.Personen.FirstOrDefaultAsync(p => p.LdapObjectId == objGuid);
+        user = await _context.Personen.FirstOrDefaultAsync(p => p.LdapObjectId == objGuid && p.Rolle == roll);
         if (user is null)
             _logger.LogError("User not found after sync. \n dn: {dn}\n guid: {guid}",
                 entry.DistinguishedName, objGuid);
@@ -147,13 +137,12 @@ public class LdapService
         return response.Entries;
     }
 
-    private bool TryGetOrCreatePersonFromEntry(SearchResultEntry entry, Rolle rolle, IEnumerable<Person> users,
-        out Person? user)
+    private bool TryGetOrCreatePersonFromEntry(SearchResultEntry entry, List<Person> users,
+        DateTime syncTime)
     {
         if (!LdapHelper.TryGetGuidFromEntry(entry, out var objGuid))
         {
             _logger.LogWarning("Failed to obtain objectGuid, skipping");
-            user = null;
             return false;
         }
 
@@ -168,26 +157,48 @@ public class LdapService
         surname ??= "";
         mail ??= "";
 
-        user = users.FirstOrDefault(p => p.LdapObjectId == objGuid);
-        if (user is null)
+        var tutor = users.FirstOrDefault(p => p.LdapObjectId == objGuid && p.Rolle == Rolle.Tutor);
+        if (tutor is null)
         {
-            user = new Person
+            tutor = new Person
             {
                 LdapObjectId = objGuid,
                 Vorname = givenName,
                 Nachname = surname,
                 Email = mail,
-                Rolle = rolle
+                Rolle = Rolle.Tutor
             };
 
-            _context.Personen.Add(user);
-            return true;
+            _context.Personen.Add(tutor);
         }
 
-        user.Vorname = givenName;
-        user.Nachname = surname;
-        user.Email = mail;
-        user.Rolle = rolle;
+        tutor.Vorname = givenName;
+        tutor.Nachname = surname;
+        tutor.Email = mail;
+        tutor.Rolle = Rolle.Tutor;
+        tutor.LdapSyncTime = syncTime;
+
+        var student = users.FirstOrDefault(p => p.LdapObjectId == objGuid && p.Rolle == Rolle.Student);
+        if (student is null)
+        {
+            student = new Person
+            {
+                LdapObjectId = objGuid,
+                Vorname = givenName,
+                Nachname = surname,
+                Email = mail,
+                Rolle = Rolle.Student
+            };
+
+            _context.Personen.Add(student);
+        }
+
+        student.Vorname = givenName;
+        student.Nachname = surname;
+        student.Email = mail;
+        student.Rolle = Rolle.Student;
+        student.Mentor = tutor;
+        student.LdapSyncTime = syncTime;
         return true;
     }
 }
