@@ -28,6 +28,8 @@ public static class PeopleEndpoints
             return Results.Unauthorized();
 
         var people = dbContext.Personen
+            .Where(p => !string.IsNullOrWhiteSpace(p.Nachname) && !string.IsNullOrWhiteSpace(p.Vorname) &&
+                        p.Vorname != "Tafel")
             .OrderBy(p => p.Nachname)
             .ThenBy(p => p.Vorname)
             .Select(p => new PersonInfoMinimal(p))
