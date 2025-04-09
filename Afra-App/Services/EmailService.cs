@@ -44,7 +44,13 @@ public class EmailService : IEmailService
         email.From.Add(email.Sender);
         email.To.Add(MailboxAddress.Parse(toAddress));
         email.Subject = subject;
-        email.Body = new TextPart(TextFormat.Plain) { Text = body };
+        var realbody = $"""
+                        {body}
+
+                        --
+                        Dies ist eine automatisch generierte Nachricht der Afra-App. Bitte antworten Sie nicht auf diese E-Mail.
+                        """;
+        email.Body = new TextPart(TextFormat.Plain) { Text = realbody };
 
         using var smtp = new SmtpClient();
         await smtp.ConnectAsync(_emailConfiguration.Host, _emailConfiguration.Port,

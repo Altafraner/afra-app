@@ -2,7 +2,7 @@ services:
   idp:
     image: boxyhq/mock-saml
     env_file: idp.env
-    ports: 
+    ports:
       - "4000:4000"
   db:
     image: postgres:alpine
@@ -18,3 +18,4 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8090:1080"
+      - "1025:1025"

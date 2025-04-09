@@ -1,4 +1,3 @@
-using System.Text;
 using Afra_App.Data;
 using Afra_App.Data.Email;
 using Afra_App.Data.People;
@@ -125,7 +124,7 @@ internal class FlushEmailsJob : IJob
             const string batchSubject = "Neue Benachrichtigungen";
             var batchText = "";
 
-            foreach (var (em, i) in emailsForUser.Select((x, i) => (x, i)))
+            for (var i = 0; i < emailsForUser.Count; i++)
             {
                 // Notification format:
                 //  1. Title
@@ -134,12 +133,11 @@ internal class FlushEmailsJob : IJob
                 //  2. Other Title
                 //     Notification text
                 //  ...
-                var notificationHeading = $"{i + 1,2}. {em.Subject}";
-                var notificationText = em.Body
-                    .Split(Environment.NewLine)
-                    .Select(s => "    " + s)
-                    .Aggregate(new StringBuilder(), (a, b) => a.AppendLine(b));
-                batchText += $"{notificationHeading}\n{notificationText}";
+                const string spacing = "    ";
+                var email = emailsForUser[i];
+                var notificationHeading = $"{i + 1,2}. {email.Subject}";
+                var notificationText = spacing + email.Body.ReplaceLineEndings(Environment.NewLine + spacing);
+                batchText += notificationHeading + Environment.NewLine + notificationText + Environment.NewLine;
             }
 
             _logger.LogInformation("Flushing E-Mail Notifications for {}", userEmail);
