@@ -8,19 +8,21 @@ namespace Afra_App.Data.DTO.Otium;
 public record ManagementOtiumView
 {
     /// Construct an empty ManagementOtiumView
-    public ManagementOtiumView() { }
+    public ManagementOtiumView()
+    {
+    }
 
     /// Construct a ManagementOtiumView from a Database Otium
     [SetsRequiredMembers]
-    public ManagementOtiumView(Data.Otium.Otium db_otium)
+    public ManagementOtiumView(Data.Otium.Otium dbOtium)
     {
-        Id = db_otium.Id;
-        Bezeichnung = db_otium.Bezeichnung;
-        Beschreibung = db_otium.Beschreibung;
-        Kategorie = db_otium.Kategorie.Id;
-        Verantwortliche = db_otium.Verantwortliche.Select(v => new Data.DTO.PersonInfoMinimal(v));
-        Termine = db_otium.Termine.Select(t => new ManagementTerminView(t));
-        Wiederholungen = db_otium.Wiederholungen.Select(r => new ManagementWiederholungView(r));
+        Id = dbOtium.Id;
+        Bezeichnung = dbOtium.Bezeichnung;
+        Beschreibung = dbOtium.Beschreibung;
+        Kategorie = dbOtium.Kategorie.Id;
+        Verantwortliche = dbOtium.Verantwortliche.Select(v => new PersonInfoMinimal(v));
+        Termine = dbOtium.Termine.Select(t => new ManagementTerminView(t));
+        Wiederholungen = dbOtium.Wiederholungen.Select(r => new ManagementWiederholungView(r));
     }
 
     /// <summary>

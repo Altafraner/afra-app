@@ -25,11 +25,6 @@ const routes = [
     props: true,
   },
   {
-    path: "/test",
-    name: "Test",
-    component: () => import('@/views/Test.vue')
-  },
-  {
     path: "/aufsicht",
     name: "Aufsicht",
     component: () => import('@/views/Aufsicht.vue'),
@@ -48,7 +43,7 @@ const routes = [
   },
   {
     path: "/management/termin/:terminId",
-    name: "Lehrer-Termin",
+    name: "Verwaltung-Termin",
     component: () => import('@/views/Teacher/Termin.vue'),
     props: true
   },
@@ -56,6 +51,17 @@ const routes = [
     path: '/:pathMatch(.*)*',
     name: "NotFound",
     component: () => import('@/views/NotFound.vue')
+  },
+  {
+    path: '/management',
+    name: "Verwaltung-Überblick",
+    component: () => import('@/views/Management/OtiaOverview.vue'),
+  },
+  {
+    path: '/management/otium/:otiumId',
+    name: "Verwaltung-Otium",
+    component: () => import('@/views/Management/OtiumEdit.vue'),
+    props: true
   }
 ]
 

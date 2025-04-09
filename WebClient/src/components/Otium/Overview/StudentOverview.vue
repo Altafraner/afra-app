@@ -3,7 +3,8 @@ import {formatDate} from "@/helpers/formatters.js";
 import {
   Accordion,
   AccordionContent,
-  AccordionHeader, AccordionPanel,
+  AccordionHeader,
+  AccordionPanel,
   Badge,
   Button,
   Column,
@@ -38,7 +39,7 @@ const props = defineProps({
         <DataTable :value="termin.einschreibungen">
           <Column header="Otium">
             <template #body="{data}">
-              <Button class="w-[8rem]" :label="data.otium" variant="link" as="RouterLink"
+              <Button :label="data.otium" as="RouterLink" class="w-[8rem]" variant="text"
                       :to="`/termin/${data.terminId}`"/>
             </template>
           </Column>

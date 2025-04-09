@@ -21,7 +21,11 @@ public static class SchuljahrExtensions
 
     private static async Task<IResult> GetSchuljahr(AfraAppContext context)
     {
-        var schultage = await context.Schultage.OrderBy(s => s.Datum).ToListAsync();
+        var schultage = await context.Schultage
+            .Include(s => s.Blocks)
+            .OrderBy(s => s.Datum)
+            .Select(s => new Schultag(s.Datum, s.Wochentyp, s.Blocks.Select(b => b.Nummer)))
+            .ToListAsync();
         var next = schultage.FirstOrDefault(s => s.Datum >= DateOnly.FromDateTime(DateTime.Now)) ?? schultage.Last();
 
         return Results.Ok(new Schuljahr(next, schultage));

@@ -6,11 +6,6 @@ namespace Afra_App.Data.DTO.Otium;
 public record ManagementOtiumCreation
 {
     /// <summary>
-    ///     A unique identifier for the Otium
-    /// </summary>
-    public Guid? Id { get; set; }
-
-    /// <summary>
     ///     A name for the Otium
     /// </summary>
     public required string Bezeichnung { get; set; }
@@ -24,9 +19,4 @@ public record ManagementOtiumCreation
     ///     A reference to the category of the Otium. Categories are transitive.
     /// </summary>
     public required Guid Kategorie { get; set; }
-
-    /// <summary>
-    ///     A list of all people responsible for the Otium.
-    /// </summary>
-    public required IEnumerable<Guid> Verantwortliche { get; set; }
 }

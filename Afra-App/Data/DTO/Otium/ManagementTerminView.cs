@@ -10,7 +10,9 @@ public record ManagementTerminView
     /// <summary>
     ///     Construct an empty ManagementTerminView
     /// </summary>
-    public ManagementTerminView() { }
+    public ManagementTerminView()
+    {
+    }
 
     /// <summary>
     ///     Construct a ManagementTerminView from a Database Termin
@@ -18,12 +20,31 @@ public record ManagementTerminView
     [SetsRequiredMembers]
     public ManagementTerminView(Data.Otium.Termin termin)
     {
+        Id = termin.Id;
+        OtiumId = termin.Otium.Id;
         Ort = termin.Ort;
-        Tutor = (termin.Tutor is not null) ? new PersonInfoMinimal(termin.Tutor) : null;
+        Tutor = termin.Tutor is not null ? new PersonInfoMinimal(termin.Tutor) : null;
         MaxEinschreibungen = termin.MaxEinschreibungen;
         Block = termin.Block.Nummer;
         Datum = termin.Block.Schultag.Datum;
+        IstAbgesagt = termin.IstAbgesagt;
+        WiederholungId = termin.Wiederholung?.Id;
     }
+
+    /// <summary>
+    ///     The id of the Termin database entry
+    /// </summary>
+    public Guid Id { get; set; }
+
+    /// <summary>
+    ///     The Id of the otium the termin belongs to
+    /// </summary>
+    public required Guid OtiumId { get; set; }
+
+    /// <summary>
+    ///     The Id of the wiederholung the termin belongs to. Null if termin is singular.
+    /// </summary>
+    public required Guid? WiederholungId { get; set; }
 
     /// <summary>
     ///     The number of the Block the Termin is on.
@@ -49,4 +70,9 @@ public record ManagementTerminView
     ///     The location for the Otium.
     /// </summary>
     public required string Ort { get; set; }
+
+    /// <summary>
+    ///     Whether the Termin is cancelled or not.
+    /// </summary>
+    public required bool IstAbgesagt { get; set; }
 }

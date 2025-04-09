@@ -31,4 +31,14 @@ public class Wiederholung : OtiumsInstanz
     ///     A list of all instances of the recurrence rule. Useful for bulk operations.
     /// </summary>
     public ICollection<Termin> Termine { get; init; } = new List<Termin>();
+
+    /// <summary>
+    ///     The date of the first Termin
+    /// </summary>
+    public DateOnly? StartDate => Termine.Count != 0 ? Termine.Min(t => t.Block.Schultag.Datum) : null;
+
+    /// <summary>
+    ///     The date of the Last Termin
+    /// </summary>
+    public DateOnly? EndDate => Termine.Count != 0 ? Termine.Max(t => t.Block.Schultag.Datum) : null;
 }

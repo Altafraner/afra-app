@@ -1,12 +1,13 @@
 ﻿<script setup>
 import {ref, watch} from "vue";
-import {Column, DataTable, Skeleton, useToast} from "primevue";
+import {Column, DataTable, Message, Skeleton, useToast} from "primevue";
 import AfraDateSelector from "@/components/Form/AfraDateSelector.vue";
 import AfraKategorySelector from "@/components/Form/AfraKategorySelector.vue";
 import AfraOtiumKatalogView from "@/components/Otium/Katalog/AfraOtiumKatalogView.vue";
 import {mande} from "mande";
 import {useUser} from "@/stores/useUser.js";
 import {useRoute, useRouter} from "vue-router";
+import {useSettings} from "@/stores/useSettings.js";
 
 const props = defineProps({
   datum: {
@@ -18,12 +19,15 @@ const props = defineProps({
 const router = useRouter();
 const location = useRoute();
 const toast = useToast();
+const settings = useSettings();
+
 const loading = ref(true)
 const user = useUser();
 const datesAvailable = ref([])
 const dateDefault = ref(null)
 const kategorieOptionsTree = ref()
 const otia = ref([])
+const hinweise = ref([])
 const date = ref(null);
 const kategorie = ref(null);
 const categoryChanged = () => {
@@ -73,16 +77,17 @@ async function startup() {
 
 async function getTermine() {
   loading.value = true
-  const termineGetter = mande("/api/schuljahr")
-  const termine = await termineGetter.get();
-  datesAvailable.value = termine.schultage
-  dateDefault.value = termine.standard
-  date.value = termine.standard
+  await settings.updateSchuljahr();
+  datesAvailable.value = settings.schuljahr
+  dateDefault.value = settings.defaultDay
+  date.value = settings.defaultDay
 }
 
 async function getAngebote() {
-  const angeboteGetter = mande("/api/otium")
-  otia.value = await angeboteGetter.get(`${date.value.datum}`);
+  const api = mande("/api/otium")
+  const result = await api.get(`${date.value.datum}`);
+  otia.value = result.termine
+  hinweise.value = result.hinweise
   filterOtiaByKategorie()
 }
 
@@ -131,6 +136,20 @@ startup()
       </div>
       <AfraKategorySelector v-model="kategorie" :options="kategorieOptionsTree"
                             @change="categoryChanged"/>
+
+      <template v-if="user.isStudent">
+        <Message v-if="hinweise.length === 0" severity="success">
+          Deine Belegung entspricht den Vorgaben.
+        </Message>
+        <Message v-else severity="warn">
+          <div class="flex flex-col">
+            <div class="font-bold">Deine Belegung entspricht noch nicht den Vorgaben.</div>
+            <ul>
+              <li v-for="(item, index) in hinweise" :key="index">{{ item }}</li>
+            </ul>
+          </div>
+        </Message>
+      </template>
 
       <AfraOtiumKatalogView :otia="selectedOtia" :link-generator="linkGenerator"/>
     </template>

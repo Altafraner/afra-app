@@ -6,6 +6,7 @@ using Afra_App.Data.People;
 using Afra_App.Data.Schuljahr;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -14,9 +15,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Afra_App.Migrations
 {
     [DbContext(typeof(AfraAppContext))]
-    partial class AfraAppContextModelSnapshot : ModelSnapshot
+    [Migration("20250403135418_MaxEinschreibungenForRegularities")]
+    partial class MaxEinschreibungenForRegularities
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -232,12 +235,6 @@ namespace Afra_App.Migrations
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)");
-
-                    b.Property<Guid?>("LdapObjectId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("LdapSyncTime")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("MentorId")
                         .HasColumnType("uuid");
