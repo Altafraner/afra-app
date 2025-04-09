@@ -31,7 +31,7 @@ const props = defineProps({
                    severity="secondary">Ok</Badge>
             <Badge class="w-[8rem]" v-else-if="termin.vollstaendig && !termin.kategorienErfuellt"
                    severity="warn">Kategorien fehlen</Badge>
-            <Badge class="w-[8rem]" v-else severity="danger">Nicht Ok</Badge>
+            <Badge v-else class="w-[8rem]" severity="danger">Auffällig</Badge>
           </span>
         </div>
       </AccordionHeader>

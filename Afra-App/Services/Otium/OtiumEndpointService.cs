@@ -127,6 +127,8 @@ public class OtiumEndpointService
         var blocks = await _context.Schultage
             .Where(s => s.Datum >= weekStart && s.Datum < weekEnd)
             .SelectMany(s => s.Blocks)
+            .OrderBy(b => b.SchultagKey)
+            .ThenBy(b => b.Nummer)
             .ToListAsync();
 
         // Get all enrollments for the given week
@@ -169,7 +171,7 @@ public class OtiumEndpointService
         var endDate = startDate.AddDays(7 * 3);
 
         // Okay, this looks heavy. Enumerate to List as we need to access the elements multiple times.
-        var allEinschreibungen = await _context.OtiaEinschreibungen.AsNoTrackingWithIdentityResolution()
+        var allEinschreibungen = await _context.OtiaEinschreibungen
             .Include(e => e.Termin)
             .ThenInclude(t => t.Block)
             .ThenInclude(b => b.Schultag)
@@ -183,7 +185,8 @@ public class OtiumEndpointService
             .Where(t => all || (t.Termin.Block.Schultag.Datum >= startDate && t.Termin.Block.Schultag.Datum < endDate))
             .ToListAsync();
 
-        var allSchoolDays = await _context.Schultage.AsNoTracking()
+        var allSchoolDays = await _context.Schultage
+            .Include(s => s.Blocks)
             .Where(t => all || (t.Datum >= startDate && t.Datum < endDate))
             .OrderBy(s => s.Datum)
             .ToListAsync();
@@ -243,7 +246,9 @@ public class OtiumEndpointService
             .ThenBy(p => p.Nachname)
             .ToListAsync();
 
-        var schultage = _context.Schultage.Where(s => s.Datum >= startDate && s.Datum < endDate);
+        var schultage = _context.Schultage
+            .Include(s => s.Blocks)
+            .Where(s => s.Datum >= startDate && s.Datum < endDate);
 
         List<MenteePreview> menteePreviews = [];
 
@@ -656,7 +661,7 @@ public class OtiumEndpointService
         if (otiumTermin.IstAbgesagt)
             return;
 
-        // Delete existing enrollments 
+        // Delete existing enrollments
         var einschreibungen = otiumTermin.Enrollments;
 
         var teilnehmer = einschreibungen.Select(oe => oe.BetroffenePerson).ToList();
