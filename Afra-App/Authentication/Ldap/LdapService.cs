@@ -43,7 +43,7 @@ public class LdapService
             throw new InvalidOperationException("Ldap is not enabled");
 
         _logger.LogInformation("LDAP synchronization started");
-        using var connection = LdapHelper.BuildConnection(_configuration);
+        using var connection = LdapHelper.BuildConnection(_configuration, _logger);
         var syncTime = DateTime.UtcNow;
         var dbUsers = await _context.Personen.Where(p => p.LdapObjectId != null).ToListAsync();
 
@@ -97,7 +97,7 @@ public class LdapService
         if (!_configuration.Enabled)
             throw new InvalidOperationException("Ldap is not enabled");
 
-        using var connection = LdapHelper.BuildConnection(_configuration);
+        using var connection = LdapHelper.BuildConnection(_configuration, _logger);
         var request = new SearchRequest(_configuration.BaseDn, $"(sAMAccountName={LdapHelper.Sanitize(username)})",
             SearchScope.Subtree);
 

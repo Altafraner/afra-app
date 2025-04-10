@@ -13,7 +13,7 @@ public static class LdapHelper
     /// <summary>
     /// Builds a new LDAP connection from the given configuration
     /// </summary>
-    public static LdapConnection BuildConnection(LdapConfiguration configuration)
+    public static LdapConnection BuildConnection(LdapConfiguration configuration, ILogger? logger = null)
     {
         var identifier = new LdapDirectoryIdentifier(configuration.Host, configuration.Port);
         var credentials = new NetworkCredential(configuration.Username, configuration.Password);
@@ -27,7 +27,29 @@ public static class LdapHelper
             },
             AuthType = AuthType.Basic
         };
-        if (!configuration.ValidateCertificate) connection.SessionOptions.VerifyServerCertificate = (_, _) => true;
+        if (!configuration.ValidateCertificate)
+        {
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+            {
+                connection.SessionOptions.VerifyServerCertificate = (_, _) => true;
+            }
+            else if (Environment.GetEnvironmentVariable("LDAPSTLS_REQCERT") != "never")
+            {
+                void Log(string message)
+                {
+                    if (logger is not null)
+                    {
+                        logger.Log(LogLevel.Warning, message);
+                        return;
+                    }
+
+                    Console.WriteLine(message);
+                }
+
+                Log(
+                    "LDAP: Certificate validation is disabled, but 'LDAPSTLS_REQCERT' is not set to 'never'. This will not work outside windows.");
+            }
+        }
 
         connection.Bind();
 
