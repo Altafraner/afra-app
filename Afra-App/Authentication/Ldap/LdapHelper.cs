@@ -33,7 +33,7 @@ public static class LdapHelper
             {
                 connection.SessionOptions.VerifyServerCertificate = (_, _) => true;
             }
-            else if (Environment.GetEnvironmentVariable("LDAPSTLS_REQCERT") != "never")
+            else if (Environment.GetEnvironmentVariable("LDAPTLS_REQCERT") != "never")
             {
                 void Log(string message)
                 {
@@ -47,7 +47,7 @@ public static class LdapHelper
                 }
 
                 Log(
-                    "LDAP: Certificate validation is disabled, but 'LDAPSTLS_REQCERT' is not set to 'never'. This will not work outside windows.");
+                    "LDAP: Certificate validation is disabled, but 'LDAPTLS_REQCERT' is not set to 'never'. This will not work outside windows.");
             }
         }
 
