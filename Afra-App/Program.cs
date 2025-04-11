@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Security.Cryptography;
 using System.Text.Json.Serialization;
 using Afra_App.Authentication.Ldap;
@@ -117,13 +118,28 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
 });
 
+using (var scope = app.Services.CreateScope())
+{
+    using var context = scope.ServiceProvider.GetService<AfraAppContext>()!;
+
+    if (context.Database.GetPendingMigrations().Any())
+    {
+        if (builder.Configuration.GetValue<bool>("MigrateOnStartup"))
+        {
+            app.Logger.LogInformation("Migrating database");
+            context.Database.Migrate();
+            app.Logger.LogInformation("Database migrated");
+        }
+        else
+        {
+            throw new ValidationException("The database is not up to date. Please run the migrations.");
+        }
+    }
+}
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    using var scope = app.Services.CreateScope();
-    using var context = scope.ServiceProvider.GetService<AfraAppContext>();
-    context!.Database.Migrate();
-
     app.UseCors();
     app.MapOpenApi();
     app.UseSwagger();
