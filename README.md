@@ -10,13 +10,19 @@ Zum Aufsetzen muss in den Ordner `/dev` navigiert und (z. B. mit dem WSL) das Sk
 
 Dieses erstellt Zertifikate zur Verschlüsselung, sowie für den SAML IdP und SP.
 
-Mit `docker-compose up -d` bzw. `podman-compose up -d` kann eine Entwicklungsumgebung mit einem Test-IdP (Port 4000) und Postgres (Port 5432) gestartet werden.
+Mit `docker-compose up -d` bzw. `podman-compose up -d` kann eine Entwicklungsumgebung mit einem Saml-Test-IdP (Port 4000), Postgres (Port 5432) und Mailcatcher (Port 8090) gestartet werden.
 
-Die WebApi und die Client-App müssen jeweils eigenständig gestartet werden. (`npm run dev` und `dotnet run`)
+Die WebApi und die Client-App müssen jeweils eigenständig aus ihren entsprechenden Ordnern heraus gestartet werden. (in `WebClient`: `npm run dev` und in `Afra-App` `dotnet run`)
 
 Die Entwicklungsumgebung setzt die Datenbank bei jedem Neustart zurück. Durch einen Aufruf von `http://localhost:5043/api/test/seed` kann ein Grundbestand an Daten angelegt werden.
 
-## Endpunkte zum Testen:
-- `http://localhost:5030/api/test/seed` (Datenbank füllen)
-- `http://localhost:5030/api/test/authenticate/{guid}` (Als Nutzer mit `guid` einloggen)
-- `http://localhost:5030/api/test/reset` (Datenbank zurücksetzen)
+### Endpunkte zum Testen:
+- `http://localhost:5173/api/test/seed` (Datenbank füllen)
+- `http://localhost:5173/api/test/seed/users` (Datenbank füllen)
+- `http://localhost:5173/api/test/reset` (Datenbank zurücksetzen)
+
+### Hinweise zum Login:
+Normalerweise wird zur Authentifizierung ein Microsoft AD mit LDAP verwendet. In Zukunft soll evtl. SAML zum Einsatz kommen. Da beides zum Testen unpraktisch ist, kann LDAP in der `appsettings(.Development).json` deaktiviert werden. Für diesen Fall erfolgt der Login mit beliebigem Passwort und dem Anfang einer E-Mail-Adresse. Am besten liest man einfach einmal die Datenbank aus um die über den `/api/test/seed/users`-Endpunkt generierten Nutzer einzusehen.
+
+# Hinweis zur Lizenz:
+Alle Inhalte sind geistiges Eigentum der Entwickler und dürfen nur mit deren Einverständnis verteilt werden. Eine Lizenz wird durch die Entwickler zu einem späteren Zeitpunkt festgelegt werden.
