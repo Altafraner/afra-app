@@ -1,21 +1,20 @@
-FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
-WORKDIR /app
-EXPOSE 8080
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends libldap-2.5 \
-    && rm -rf /var/lib/apt/lists/*
-USER $APP_UID
-
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
-ARG BUILD_CONFIGURATION=Release
-WORKDIR /src
-COPY ["Afra-App/Afra-App.csproj", "Afra-App/"]
+FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS build
+COPY ["Afra-App/Afra-App.csproj", "/src/Afra-App/"]
 WORKDIR /src/Afra-App
-RUN dotnet restore "Afra-App.csproj"
+RUN dotnet restore "Afra-App.csproj" \
+    --runtime linux-musl-x64
 COPY ./Afra-App /src/Afra-App
-RUN dotnet publish "Afra-App.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "Afra-App.csproj" \
+    -c release \
+    --no-restore \
+    --runtime linux-musl-x64 \
+    --self-contained true /p:PublishSingleFile=true \
+    -o /app/publish /p:UseAppHost=true
 
-FROM base AS final
+FROM mcr.microsoft.com/dotnet/runtime-deps:9.0-alpine AS run
+RUN apk add --no-cache openldap
+EXPOSE 8080
+USER $APP_UID
 WORKDIR /app
 COPY --from=build /app/publish .
-ENTRYPOINT ["dotnet", "Afra-App.dll"]
+ENTRYPOINT ["./Afra-App"]
