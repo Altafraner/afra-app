@@ -14,20 +14,20 @@ const routes = [
   },
   {
     path: "/katalog/:datum",
-    name: "Katalog-datum",
+    name: "Katalog-Datum",
     component: () => import('@/views/Katalog/Index.vue'),
     props: true,
+  },
+  {
+    path: "/termin/:terminId",
+    name: "Katalog-Termin",
+    component: () => import('@/views/Katalog/Termin.vue'),
+    props: true
   },
   {
     path: "/aufsicht",
     name: "Aufsicht",
     component: () => import('@/views/Aufsicht.vue'),
-  },
-  {
-    path: "/termin/:terminId",
-    name: "Termin",
-    component: () => import('@/views/Katalog/Termin.vue'),
-    props: true
   },
   {
     path: "/student/:studentId",
@@ -48,7 +48,7 @@ const routes = [
   },
   {
     path: '/management',
-    name: "Verwaltung-Überblick",
+    name: "Verwaltung",
     component: () => import('@/views/Management/OtiaOverview.vue'),
   },
   {

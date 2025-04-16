@@ -47,7 +47,7 @@ const navItems = computed(() => {
     {
       label: formatDate(new Date(otium.value.datum)),
       route: {
-        name: "Katalog-datum",
+        name: "Katalog-Datum",
         params: {
           datum: otium.value.datum.split('T')[0]
         }
