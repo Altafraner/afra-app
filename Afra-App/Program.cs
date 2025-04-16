@@ -94,13 +94,13 @@ catch (CryptographicException exception)
 
 builder.Services.AddQuartz(q =>
     {
-        q.UsePersistentStore(x =>
+        q.UsePersistentStore(storeOptions =>
             {
                 var conString = builder.Configuration.GetConnectionString("DefaultConnection")!;
-                x.UsePostgres(x =>
-                    x.ConnectionString = conString
+                storeOptions.UsePostgres(pgOptions =>
+                    pgOptions.ConnectionString = conString
                 );
-                x.UseSystemTextJsonSerializer();
+                storeOptions.UseSystemTextJsonSerializer();
             }
         );
     }

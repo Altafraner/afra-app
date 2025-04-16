@@ -192,9 +192,9 @@ public class EnrollmentService
     /// <summary>
     /// Gets all kategories that are required for a set of enrollments and not included in the categories of enrollments.
     /// </summary>
-    /// <param name="enrollments">The enrollments to exclude the (tranistive) categories from</param>
+    /// <param name="enrollments">The enrollments to exclude the (transitive) categories from</param>
     /// <returns>
-    ///     An enumerable of all <see cref="Kategorie">Kategorien</see> that are required but covered by the <see cref="enrollments"/>
+    ///     An enumerable of all <see cref="Kategorie">Kategorien</see> that are required but covered by the <paramref name="enrollments"/>
     /// </returns>
     public async Task<List<Kategorie>> GetMissingKategories(IEnumerable<Einschreibung> enrollments)
     {

@@ -1,6 +1,7 @@
-namespace Afra_App.Data.Email;
-
+using System.ComponentModel.DataAnnotations;
 using Afra_App.Data.People;
+
+namespace Afra_App.Data.Email;
 
 /// <summary>
 /// A record representing an Email scheduled for sending
@@ -21,12 +22,14 @@ public class ScheduledEmail
     /// The notification subject
     /// </summary>
     /// <remarks> Not the email subject </remarks>
+    [MaxLength(100)]
     public required string Subject { get; set; }
 
     /// <summary>
     /// The notification text
     /// </summary>
     /// <remarks> Not the email subject </remarks>
+    [MaxLength(10000)]
     public required string Body { get; set; }
 
     /// <summary>

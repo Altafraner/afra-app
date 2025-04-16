@@ -13,7 +13,7 @@ public record ManagementTerminCreation
     /// <summary>
     ///     The Id of the otium the termin belongs to
     /// </summary>
-    public required Guid otiumId { get; set; }
+    public required Guid OtiumId { get; set; }
 
     /// <summary>
     ///     The date the Termin is on.

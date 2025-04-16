@@ -455,7 +455,7 @@ public class OtiumEndpointService
         if (string.IsNullOrWhiteSpace(otiumTermin.Ort))
             throw new ArgumentNullException(nameof(otiumTermin), "Sie müssen einen Ort angeben.");
 
-        var otium = await _context.Otia.FindAsync(otiumTermin.otiumId);
+        var otium = await _context.Otia.FindAsync(otiumTermin.OtiumId);
         if (otium is null)
             throw new ArgumentException("Kein Otium mit dieser Id existiert.");
 
@@ -475,7 +475,7 @@ public class OtiumEndpointService
         }
 
         var conflict = await _context.OtiaTermine.AnyAsync(t =>
-            t.Otium.Id == otiumTermin.otiumId &&
+            t.Otium.Id == otiumTermin.OtiumId &&
             t.Block.Nummer == otiumTermin.Block &&
             t.Block.Schultag.Datum == otiumTermin.Datum &&
             t.Tutor == tutor);
@@ -533,7 +533,7 @@ public class OtiumEndpointService
     /// <param name="otiumWiederholung">The Wiederholung to create.</param>
     public async Task<Guid> CreateOtiumWiederholungAsync(DTO_Wiederholung_Creation otiumWiederholung)
     {
-        var otium = await _context.Otia.FindAsync(otiumWiederholung.otiumId);
+        var otium = await _context.Otia.FindAsync(otiumWiederholung.OtiumId);
         if (otium is null)
             throw new ArgumentException("Kein Otium mit dieser Id existiert.");
 

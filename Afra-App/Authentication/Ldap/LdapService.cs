@@ -90,7 +90,7 @@ public class LdapService
     /// <param name="username">The users username</param>
     /// <param name="password">The users (secret) password</param>
     /// <param name="shouldRetry">Whether to retry if the user exists in LDAP but not in DB</param>
-    /// <returns>The user authenticated by <see cref="username"/> and <see cref="password"/> if the credentials are valid; Otherwise, null</returns>
+    /// <returns>The user authenticated by <paramref name="username"/> and <paramref name="password"/> if the credentials are valid; Otherwise, null</returns>
     /// <exception cref="InvalidOperationException">The LDAP Service is not enabled. Check with <see cref="IsEnabled"/>.</exception>
     public async Task<Person?> VerifyUserAsync(string username, string password, bool shouldRetry = true)
     {

@@ -143,16 +143,21 @@ public record struct TimeOnlyInterval : ITimeInterval<TimeOnly>
 
     /// <summary>
     ///     Converts the TimeOnlyInterval to a <see cref="DateTimeInterval" /> using the specified <see cref="DateOnly" /> as
-    ///     Date component while maintaining Time and Duratation.
+    ///     Date component while maintaining time and duration.
     /// </summary>
     public DateTimeInterval ToDateTimeInterval(DateOnly date)
     {
         return new DateTimeInterval(new DateTime(date, Start), Duration);
     }
 
-    public readonly void Deconstruct(out TimeOnly Start, out TimeSpan Duration)
+    /// <summary>
+    /// Deconstructs the TimeOnlyInterval into its components.
+    /// </summary>
+    /// <param name="start">The start time of the interval</param>
+    /// <param name="duration">The duration of the interval</param>
+    public readonly void Deconstruct(out TimeOnly start, out TimeSpan duration)
     {
-        Start = this.Start;
-        Duration = this.Duration;
+        start = Start;
+        duration = Duration;
     }
 }
