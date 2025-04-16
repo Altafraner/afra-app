@@ -17,6 +17,7 @@ public record Einschreibung : IMinimalTermin
         TerminId = einschreibung.Termin.Id;
         Interval = einschreibung.Interval;
         Otium = einschreibung.Termin.Otium.Bezeichnung;
+        OtiumId = einschreibung.Termin.Otium.Id;
         Ort = einschreibung.Termin.Ort;
         Block = einschreibung.Termin.Block.Nummer;
         Tutor = einschreibung.Termin.Tutor is not null ? new PersonInfoMinimal(einschreibung.Termin.Tutor) : null;
@@ -39,6 +40,9 @@ public record Einschreibung : IMinimalTermin
 
     /// <inheritdoc />
     public string Otium { get; set; }
+
+    /// <inheritdoc />
+    public Guid OtiumId { get; set; }
 
     /// <inheritdoc />
     public string Ort { get; set; }

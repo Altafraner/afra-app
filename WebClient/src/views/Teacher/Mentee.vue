@@ -1,14 +1,11 @@
 ﻿<script setup>
-import {
-  Button,
-  Skeleton,
-  useToast
-} from "primevue";
-import {ref} from "vue";
+import {Button, Skeleton, useToast} from "primevue";
+import {computed, ref} from "vue";
 import {mande} from "mande";
 import {useUser} from "@/stores/useUser.js";
 import StudentOverview from "@/components/Otium/Overview/StudentOverview.vue";
 import {formatStudent} from "@/helpers/formatters.js";
+import NavBreadcrumb from "@/components/NavBreadcrumb.vue";
 
 const props = defineProps({
   studentId: String
@@ -20,6 +17,22 @@ const user = useUser()
 const toast = useToast()
 const termine = ref(null);
 const all = ref(false);
+
+const username = computed(() => {
+  if (user.user) {
+    return formatStudent(mentee.value);
+  } else {
+    return null;
+  }
+});
+
+const navItems = ref([
+  {
+    label: "Mentees"
+  }, {
+    label: username
+  }
+])
 
 async function fetchData(getAll = false) {
   loading.value = true;
@@ -47,6 +60,7 @@ fetchData()
 
 <template>
   <template v-if="!loading">
+    <NavBreadcrumb :items="navItems"/>
     <h1>{{ formatStudent(mentee) }}</h1>
     <h2 v-if="!all">Nächste Veranstaltungen</h2>
     <p v-if="!all">Gezeigt werden die Veranstaltungen der nächsten drei Wochen.</p>

@@ -37,6 +37,9 @@ public record LehrerTermin : IMinimalTermin
     public required string Otium { get; set; }
 
     /// <inheritdoc />
+    public required Guid OtiumId { get; set; }
+
+    /// <inheritdoc />
     public required string Ort { get; set; }
 
     /// <inheritdoc />

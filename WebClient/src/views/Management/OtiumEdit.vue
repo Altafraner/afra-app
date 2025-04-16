@@ -11,7 +11,7 @@ import {
 import {useSettings} from "@/stores/useSettings.js";
 import {useUser} from "@/stores/useUser.js";
 import {mande} from "mande";
-import {ref} from "vue";
+import {computed, ref} from "vue";
 import SimpleBreadcrumb from "@/components/SimpleBreadcrumb.vue";
 import {findChildren, findPath} from "@/helpers/tree.js";
 import AfraKategorieTag from "@/components/Otium/Shared/AfraKategorieTag.vue";
@@ -20,6 +20,7 @@ import Grid from "@/components/Form/Grid/Grid.vue";
 import GridEditRow from "@/components/Form/Grid/GridEditRow.vue";
 import AfraOtiumRegTable from "@/components/Otium/Management/AfraOtiumRegTable.vue";
 import AfraOtiumDateTable from "@/components/Otium/Management/AfraOtiumDateTable.vue";
+import NavBreadcrumb from "@/components/NavBreadcrumb.vue";
 
 const props = defineProps({
   otiumId: String
@@ -35,6 +36,18 @@ const otium = ref({});
 const bezeichnung = ref('')
 const beschreibung = ref('')
 const kategorie = ref(null)
+
+const navItems = computed(() => [
+  {
+    label: "Verwaltung",
+    route: {
+      name: "Verwaltung-Überblick"
+    }
+  },
+  {
+    label: otium.value != null ? otium.value.bezeichnung : "",
+  }
+])
 
 async function getOtium(setInternal = true) {
   const getter = mande('/api/otium/management/otium/' + props.otiumId);
@@ -225,6 +238,7 @@ setup();
     <h1>Sie sind nicht Autorisiert, diese Seite zu nutzen.</h1>
   </template>
   <template v-else-if="!loading">
+    <NavBreadcrumb :items="navItems"/>
     <h1>{{ otium.bezeichnung }}</h1>
     <h2>Stammdaten</h2>
     <Grid>

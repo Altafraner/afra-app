@@ -15,6 +15,7 @@ public record TerminPreview : ITermin
     {
         Id = termin.Id;
         Otium = termin.Otium.Bezeichnung;
+        OtiumId = termin.Otium.Id;
         Ort = termin.Ort;
         Block = termin.Block.Nummer;
         Kategorien = kategorien;
@@ -42,6 +43,9 @@ public record TerminPreview : ITermin
     ///     The designation of the otium for which the termin is
     /// </summary>
     public string Otium { get; set; }
+
+    /// <inheritdoc />
+    public Guid OtiumId { get; set; }
 
     /// <summary>
     ///     The location where the termin takes place

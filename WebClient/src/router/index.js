@@ -19,12 +19,6 @@ const routes = [
     props: true,
   },
   {
-    path: "/katalog/:datum/:block",
-    name: "Katalog-datum-block",
-    component: () => import('@/views/Katalog/Index.vue'),
-    props: true,
-  },
-  {
     path: "/aufsicht",
     name: "Aufsicht",
     component: () => import('@/views/Aufsicht.vue'),
