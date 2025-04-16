@@ -9,6 +9,7 @@ import {findPath} from "@/helpers/tree.js";
 import SimpleBreadcrumb from "@/components/SimpleBreadcrumb.vue";
 import {RouterLink} from "vue-router";
 import CreateOtiumForm from "@/components/Form/CreateOtiumForm.vue";
+import NavBreadcrumb from "@/components/NavBreadcrumb.vue";
 
 const user = useUser();
 const settings = useSettings();
@@ -19,6 +20,15 @@ const loading = ref(true);
 const createDialogOpen = ref(false);
 
 const otia = ref([]);
+
+const navItems = ref([
+  {
+    label: "Verwaltung",
+    route: {
+      name: "Verwaltung-Überblick"
+    }
+  }
+])
 
 async function getOtia() {
   const getter = mande('/api/otium/management/otium');
@@ -105,6 +115,7 @@ setup();
     <h1>Sie sind nicht Autorisiert, diese Seite zu nutzen.</h1>
   </template>
   <template v-else-if="!loading">
+    <NavBreadcrumb :items="navItems"/>
     <h1>Alle Otia</h1>
     <p>Klicken sie auf ein Otium, um Details zu sehen oder es zu Bearbeiten.</p>
     <DataTable :value="otia">

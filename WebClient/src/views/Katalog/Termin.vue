@@ -10,13 +10,14 @@ import {
   Tag,
   useToast
 } from "primevue";
-import {ref} from "vue";
+import {computed, ref} from "vue";
 import AfraKategorieTag from "@/components/Otium/Shared/AfraKategorieTag.vue";
 import {chooseColor, formatDate, formatTime, formatTutor} from "@/helpers/formatters.js";
 import {mande} from "mande";
 import {useUser} from "@/stores/useUser.js";
 import {useSettings} from "@/stores/useSettings.js";
 import {useRouter} from "vue-router";
+import NavBreadcrumb from "@/components/NavBreadcrumb.vue";
 
 const settings = useSettings();
 const user = useUser();
@@ -33,6 +34,30 @@ const otium = ref(null)
 const connection = ref(null)
 const poprev = ref()
 const grund = ref("")
+
+const navItems = computed(() => {
+  if (loading.value) return [];
+  return [
+    {
+      label: "Katalog",
+      route: {
+        name: "Katalog"
+      }
+    },
+    {
+      label: formatDate(new Date(otium.value.datum)),
+      route: {
+        name: "Katalog-datum",
+        params: {
+          datum: otium.value.datum.split('T')[0]
+        }
+      }
+    },
+    {
+      label: otium.value.otium
+    }
+  ];
+})
 
 function findKategorie(id, kategorien) {
   const index = kategorien.findIndex((e) => e.id === id);
@@ -114,6 +139,7 @@ setup();
 
 <template>
   <template v-if="!loading">
+    <NavBreadcrumb :items="navItems"/>
     <h1 class="mb-2">{{ otium.otium }}</h1>
     <span class="inline-flex gap-1 mb-4 text-sm">
       <Tag v-if="otium.istAbgesagt" severity="danger"

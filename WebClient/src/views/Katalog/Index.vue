@@ -1,5 +1,5 @@
 ﻿<script setup>
-import {ref, watch} from "vue";
+import {computed, ref, watch} from "vue";
 import {Column, DataTable, Message, Skeleton, useToast} from "primevue";
 import AfraDateSelector from "@/components/Form/AfraDateSelector.vue";
 import AfraKategorySelector from "@/components/Form/AfraKategorySelector.vue";
@@ -8,6 +8,8 @@ import {mande} from "mande";
 import {useUser} from "@/stores/useUser.js";
 import {useRoute, useRouter} from "vue-router";
 import {useSettings} from "@/stores/useSettings.js";
+import {formatDate} from "@/helpers/formatters.js";
+import NavBreadcrumb from "@/components/NavBreadcrumb.vue";
 
 const props = defineProps({
   datum: {
@@ -36,6 +38,23 @@ const selectedOtia = ref(otia.value)
 
 const linkGenerator = otium => `/termin/${otium.id}`
 
+const navItems = computed(() => {
+  const start = {
+    label: "Katalog",
+    route: {
+      name: "Katalog"
+    }
+  }
+  return date.value == null ?
+    [start] :
+    [
+      start,
+      {
+        label: formatDate(new Date(date.value.datum))
+      }
+    ];
+})
+
 watch(kategorie, filterOtiaByKategorie)
 
 function filterOtiaByKategorie() {
@@ -60,6 +79,8 @@ async function startup() {
         date.value = dateDefault.value
         await router.replace('/katalog')
       }
+    } else {
+      date.value = dateDefault.value
     }
     await kategoriesPromise;
     await dateChanged()
@@ -74,6 +95,14 @@ async function startup() {
   }
   loading.value = false
 }
+
+watch(props, async () => {
+  if (!props.datum || props.datum === "" && date.value.datum !== dateDefault.value.datum) {
+    date.value = dateDefault.value
+    kategorie.value = null
+    await dateChanged()
+  }
+})
 
 async function getTermine() {
   loading.value = true
@@ -126,6 +155,7 @@ startup()
 </script>
 
 <template>
+  <NavBreadcrumb :items="navItems"/>
   <h1>Otia-Katalog</h1>
 
   <div class="flex gap-3 flex-col">

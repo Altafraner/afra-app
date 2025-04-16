@@ -17,6 +17,7 @@ public record Termin : ITermin
     {
         Id = termin.Id;
         Otium = termin.Otium.Bezeichnung;
+        OtiumId = termin.Otium.Id;
         Ort = termin.Ort;
         Kategorien = kategorien;
         IstAbgesagt = termin.IstAbgesagt;
@@ -50,6 +51,9 @@ public record Termin : ITermin
 
     /// <inheritdoc />
     public string Otium { get; set; }
+
+    /// <inheritdoc />
+    public Guid OtiumId { get; set; }
 
     /// <inheritdoc />
     public string Ort { get; set; }

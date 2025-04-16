@@ -16,6 +16,11 @@ public interface IMinimalTermin
     public string Otium { get; set; }
 
     /// <summary>
+    ///     The if of the otium for which the termin is
+    /// </summary>
+    public Guid OtiumId { get; set; }
+
+    /// <summary>
     ///     The location where the termin takes place
     /// </summary>
     public string Ort { get; set; }

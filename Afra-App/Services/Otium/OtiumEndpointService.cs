@@ -346,6 +346,7 @@ public class OtiumEndpointService
             Id = termin.Id,
             Ort = termin.Ort,
             Otium = termin.Otium.Bezeichnung,
+            OtiumId = termin.Otium.Id,
             Block = termin.Block.Nummer,
             Datum = termin.Block.Schultag.Datum,
             MaxEinschreibungen = termin.MaxEinschreibungen,

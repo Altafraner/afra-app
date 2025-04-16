@@ -1,9 +1,11 @@
 ﻿<script setup>
-import {ref} from "vue";
+import {computed, ref} from "vue";
 import {useUser} from "@/stores/useUser.js";
 import {useToast} from "primevue";
 import {mande} from "mande";
 import AfraOtiumInstance from "@/components/Otium/Management/AfraOtiumInstance.vue";
+import NavBreadcrumb from "@/components/NavBreadcrumb.vue";
+import {formatDate} from "@/helpers/formatters.js";
 
 const props = defineProps({
   terminId: String
@@ -13,6 +15,26 @@ const loading = ref(true);
 const user = useUser()
 const toast = useToast()
 const otium = ref(null);
+const navItems = computed(() => [
+  {
+    label: "Verwaltung",
+    route: {
+      name: "Verwaltung-Überblick"
+    }
+  },
+  {
+    label: otium.value != null ? otium.value.otium : "",
+    route: otium.value != null ? {
+      name: "Verwaltung-Otium",
+      params: {
+        otiumId: otium.value.otiumId
+      }
+    } : null
+  },
+  {
+    label: otium.value != null ? `${formatDate(new Date(otium.value.datum))} ${otium.value.block + 1}. Block` : ""
+  }
+])
 
 async function fetchData() {
   loading.value = true;
@@ -64,6 +86,7 @@ fetchData()
 </script>
 
 <template>
+  <NavBreadcrumb :items="navItems"/>
   <AfraOtiumInstance v-if="!loading" :otium="otium" @update-max-enrollments="updateMaxEnrollments"
                      @update-ort="updateOrt" @update-tutor="updateTutor"/>
 </template>
