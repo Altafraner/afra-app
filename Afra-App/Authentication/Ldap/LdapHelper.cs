@@ -24,6 +24,7 @@ public static class LdapHelper
             {
                 ProtocolVersion = 3,
                 SecureSocketLayer = true,
+                ReferralChasing = ReferralChasingOptions.None
             },
             AuthType = AuthType.Basic
         };
