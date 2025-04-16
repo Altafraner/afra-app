@@ -41,7 +41,7 @@ const navItems = computed(() => [
   {
     label: "Verwaltung",
     route: {
-      name: "Verwaltung-Überblick"
+      name: "Verwaltung"
     }
   },
   {

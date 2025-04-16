@@ -25,7 +25,7 @@ const navItems = ref([
   {
     label: "Verwaltung",
     route: {
-      name: "Verwaltung-Überblick"
+      name: "Verwaltung"
     }
   }
 ])

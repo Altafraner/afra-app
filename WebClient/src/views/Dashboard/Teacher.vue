@@ -61,8 +61,9 @@ update();
   <DataTable :value="termine" v-if="!loading">
     <Column header="Otium">
       <template #body="{data}">
-        <Button variant="text" as="RouterLink"
-                :to="'/management/termin/' + data.id" :label="data.otium"/>
+        <Button :label="data.otium" :to="{name: 'Verwaltung-Termin', params: {terminId: data.id}}"
+                as="RouterLink"
+                variant="text"/>
       </template>
     </Column>
     <Column header="Datum">
@@ -107,8 +108,8 @@ update();
   <DataTable :value="mentees" v-if="!loading">
     <Column header="Name">
       <template #body="{data}">
-        <Button :label="formatStudent(data.mentee)" :to="`/student/${data.mentee.id}`"
-                as="RouterLink"
+        <Button :label="formatStudent(data.mentee)"
+                :to="{name: 'Mentee', params: {studentId: data.mentee.id}}" as="RouterLink"
                 variant="text"/>
       </template>
     </Column>

@@ -40,7 +40,7 @@ const props = defineProps({
           <Column header="Otium">
             <template #body="{data}">
               <Button :label="data.otium" as="RouterLink" class="w-[8rem]" variant="text"
-                      :to="`/termin/${data.terminId}`"/>
+                      :to="{name: 'Katalog-Termin', params: {terminId: data.terminId}}"/>
             </template>
           </Column>
           <Column field="ort" header="Ort"/>
@@ -54,7 +54,7 @@ const props = defineProps({
           <template #footer>
             <div class="flex flex-row justify-between items-center">
               <Button v-if="props.showKatalog" class="w-[8rem]" size="small" as="RouterLink"
-                      :to="'/katalog/' + termin.datum" label="Katalog"/>
+                      :to="{name: 'Katalog-Datum', params: {datum: termin.datum}}" label="Katalog"/>
               <span v-else/>
               <span class="flex flex-row gap-3 mr-[var(--p-icon-size)] flex-wrap justify-end">
                 <Badge class="w-[8rem]" v-if="!termin.kategorienErfuellt" severity="warn">Kategorien fehlen</Badge>

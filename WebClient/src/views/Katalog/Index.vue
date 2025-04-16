@@ -36,7 +36,15 @@ const categoryChanged = () => {
 }
 const selectedOtia = ref(otia.value)
 
-const linkGenerator = otium => `/termin/${otium.id}`
+// const linkGenerator = otium => `/termin/${otium.id}`
+const linkGenerator = otium => {
+  return {
+    name: 'Katalog-Termin',
+    params: {
+      terminId: otium.id
+    }
+  }
+}
 
 const navItems = computed(() => {
   const start = {

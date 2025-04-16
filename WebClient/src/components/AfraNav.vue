@@ -15,17 +15,23 @@ const items_teacher = [
   },
   {
     label: "Katalog",
-    route: "/katalog",
+    route: {
+      name: "Katalog"
+    },
     icon: "pi pi-list"
   },
   {
     label: "Aufsicht",
-    route: "/aufsicht",
+    route: {
+      name: "Aufsicht"
+    },
     icon: "pi pi-eye"
   },
   {
     label: "Verwaltung",
-    route: "/management",
+    route: {
+      name: "Verwaltung"
+    },
     icon: "pi pi-cog"
   }
 ]
@@ -38,7 +44,9 @@ const items_student = [
   },
   {
     label: "Katalog",
-    route: "/katalog",
+    route: {
+      name: "Katalog"
+    },
     icon: "pi pi-list"
   },
 ]
