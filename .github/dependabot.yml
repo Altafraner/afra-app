@@ -1,0 +1,11 @@
+﻿version: 2
+updates:
+  - package-ecosystem: "nuget"
+    directory: "/Afra-App"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "npm"
+    directory: "/WebClient"
+    schedule:
+      interval: "daily"
