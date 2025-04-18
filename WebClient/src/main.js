@@ -4,7 +4,7 @@ import router from './router'
 import PrimeVue from 'primevue/config';
 import ToastService from 'primevue/toastservice';
 import Aura from '@primevue/themes/aura';
-import locale from 'primelocale/de.json'
+import {de as locale} from 'primelocale/de.json'
 import {definePreset} from "@primevue/themes";
 import {createPinia} from "pinia";
 import Tooltip from 'primevue/tooltip';
@@ -42,9 +42,9 @@ app.use(PrimeVue, {
         name: "primevue",
         order: "theme, base, primevue"
       }
-    },
-    locale
-  }
+    }
+  },
+  locale
 })
 app.use(ToastService)
 app.use(ConfirmationService)
