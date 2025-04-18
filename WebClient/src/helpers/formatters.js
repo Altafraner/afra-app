@@ -12,7 +12,7 @@ export const formatDate = date => date.toLocaleDateString('de-DE', {
   month: "short"
 });
 
-const formatMachineDate = date => date.toISOString().split('T')[0]
+export const formatMachineDate = date => date.toISOString().split('T')[0]
 
 export const formatTime = date => padString(date.getHours(), 2) + ":" + padString(date.getMinutes(), 2);
 
