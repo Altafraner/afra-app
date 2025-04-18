@@ -56,6 +56,11 @@ const routes = [
     name: "Verwaltung-Otium",
     component: () => import('@/views/Management/OtiumEdit.vue'),
     props: true
+  },
+  {
+    path: '/management/schuljahr/neu',
+    name: "Verwaltung-Schuljahr-Neu",
+    component: () => import('@/components/General/CreateSchoolyear.vue')
   }
 ]
 
