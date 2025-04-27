@@ -6,9 +6,14 @@ import Step from 'primevue/step';
 import StepPanel from 'primevue/steppanel';
 import FloatLabel from "primevue/floatlabel";
 import DatePicker from "primevue/datepicker";
-import {Button, Column, DataTable, Message, MultiSelect, Select} from "primevue";
+import {Button, Column, DataTable, Message, MultiSelect, Select, useToast} from "primevue";
 import Form from "@primevue/forms/form";
 import {formatDate, formatMachineDate} from "@/helpers/formatters.js";
+import {mande} from "mande";
+import {useRouter} from "vue-router";
+
+const toast = useToast();
+const router = useRouter();
 
 const stepperStatus = ref("0");
 
@@ -109,14 +114,15 @@ function addFerien() {
   if (!newFerien.value) return;
 
   const start = newFerien.value[0];
-  const end = newFerien.value[1] ?? start;
+  const end = newFerien.value[1] ?? new Date(start);
 
   if (!start || start > end) {
     return;
   }
 
   // Weird workaround for timezone issues
-  ferien.value.push({start, end: start !== end ? end : new Date(end).setHours(12)});
+  end.setHours(12);
+  ferien.value.push({start, end});
   newFerien.value = null;
 }
 
@@ -154,7 +160,8 @@ function form2Submit() {
   stepperStatus.value = "3";
 }
 
-function submit() {
+async function submit() {
+  const wochentypen = {'H': "H-Woche", 'N': "N-Woche"};
   const data = [];
 
   // This is weird a workaround for the fact that js handles dates in the local timezone but upon ISO string conversion transforms them to UTC.
@@ -197,15 +204,32 @@ function submit() {
     const blocks = week.type === 'H' ? angeboteAmWochentag.blocksH : angeboteAmWochentag.blocksN;
 
     data.push({
-      date: formatMachineDate(current),
-      type: week.type,
+      datum: formatMachineDate(current),
+      wochentyp: wochentypen[week.type],
       blocks: blocks
     });
 
     current.setDate(current.getDate() + 1);
   }
 
-  console.log(JSON.stringify(data));
+  const api = mande('/api/schuljahr/schultage')
+  try {
+    await api.post(data);
+    toast.add({
+      severity: 'success',
+      summary: 'Erfolg',
+      detail: 'Die Termine wurden erfolgreich gespeichert.',
+      life: 15000
+    });
+    router.push({name: 'Verwaltung'});
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: 'Fehler',
+      detail: 'Die Termine konnten nicht gespeichert werden.',
+    });
+  }
+
 }
 </script>
 
