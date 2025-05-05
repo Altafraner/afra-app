@@ -1,7 +1,7 @@
 ﻿<script setup>
 
 import {useSettings} from "@/stores/useSettings.js";
-import {Column, DataTable} from "primevue";
+import {Button, Column, DataTable} from "primevue";
 
 const settings = useSettings();
 
@@ -13,7 +13,7 @@ setup();
 </script>
 
 <template>
-  <h2>Schuljahr</h2>
+  <h2>Schultage</h2>
   <DataTable :value="settings.schuljahr">
     <Column header="Datum">
       <template #body="{data}">{{
@@ -23,20 +23,26 @@ setup();
             year: "numeric"
           })
         }}
-      </template>
-    </Column>
-    <Column header="Tag">
-      <template #body="{data}">{{
+        ({{
           new Date(data.datum).toLocaleDateString('de-DE', {
-            weekday: "long",
+            weekday: "short",
           })
-        }}
+        }})
       </template>
     </Column>
     <Column field="wochentyp" header="Wochentyp"/>
     <Column header="Blöcke">
       <template #body="{data}">
         {{ data.blocks.sort().join(', ') }}
+      </template>
+    </Column>
+    <Column class="afra-col-action text-right">
+      <template #header>
+        <Button v-tooltip="'Tag hinzufügen'" icon="pi pi-plus" size="small"/>
+      </template>
+      <template #body>
+        <Button v-tooltip="'bearbeiten'" icon="pi pi-pencil" severity="secondary" size="small"
+                variant="text"/>
       </template>
     </Column>
     <template #empty>
