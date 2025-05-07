@@ -236,6 +236,12 @@ namespace Afra_App.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)");
 
+                    b.Property<Guid?>("LdapObjectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("LdapSyncTime")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<Guid?>("MentorId")
                         .HasColumnType("uuid");
 

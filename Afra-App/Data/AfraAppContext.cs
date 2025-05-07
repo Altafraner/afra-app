@@ -121,11 +121,16 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
             .HasForeignKey(b => b.SchultagKey);
 
         modelBuilder.Entity<Block>()
-            .HasIndex(b => new { b.SchultagKey, b.Nummer })
+            .HasIndex(b => new { b.SchultagKey, Nummer = b.SchemaId })
             .IsUnique();
 
-        // Have to do this here because the [ComplexType] annotation is not valid on record structs.
-        modelBuilder.Entity<Einschreibung>()
-            .ComplexProperty(e => e.Interval);
+        /* This is a bit annoying, but we'll have to do it because of a bug in the Npgsql provider.
+         * By default, it'll use '\0' as the default value for char columns, as it is the default value for char in C#.
+         * However, the npgsql provider uses libpg for db access, which uses c strings, therefore thinks the string ends
+         * at the first null character and fails.
+         */
+        modelBuilder.Entity<Block>()
+            .Property(b => b.SchemaId)
+            .HasDefaultValueSql("''");
     }
 }

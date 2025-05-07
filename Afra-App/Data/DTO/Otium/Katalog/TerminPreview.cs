@@ -17,7 +17,7 @@ public record TerminPreview : ITermin
         Otium = termin.Otium.Bezeichnung;
         OtiumId = termin.Otium.Id;
         Ort = termin.Ort;
-        Block = termin.Block.Nummer;
+        Block = termin.Block.SchemaId;
         Kategorien = kategorien;
         IstAbgesagt = termin.IstAbgesagt;
         Tutor = termin.Tutor is null ? null : new PersonInfoMinimal(termin.Tutor);
@@ -53,7 +53,7 @@ public record TerminPreview : ITermin
     public string Ort { get; set; }
 
     /// <inheritdoc />
-    public sbyte Block { get; set; }
+    public char Block { get; set; }
 
     /// <summary>
     ///     A list of all categories the termin is in

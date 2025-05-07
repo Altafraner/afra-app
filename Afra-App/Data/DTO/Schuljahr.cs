@@ -12,4 +12,4 @@ public record Schuljahr(Schultag Standard, IEnumerable<Schultag> Schultage);
 /// <summary>
 /// A DTO for sending schooldays to the client.
 /// </summary>
-public record Schultag(DateOnly Datum, Wochentyp Wochentyp, IEnumerable<sbyte> Blocks);
+public record Schultag(DateOnly Datum, Wochentyp Wochentyp, IEnumerable<char> Blocks);

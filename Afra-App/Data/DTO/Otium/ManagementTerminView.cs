@@ -25,7 +25,7 @@ public record ManagementTerminView
         Ort = termin.Ort;
         Tutor = termin.Tutor is not null ? new PersonInfoMinimal(termin.Tutor) : null;
         MaxEinschreibungen = termin.MaxEinschreibungen;
-        Block = termin.Block.Nummer;
+        Block = termin.Block.SchemaId;
         Datum = termin.Block.Schultag.Datum;
         IstAbgesagt = termin.IstAbgesagt;
         WiederholungId = termin.Wiederholung?.Id;
@@ -49,7 +49,7 @@ public record ManagementTerminView
     /// <summary>
     ///     The number of the Block the Termin is on.
     /// </summary>
-    public required sbyte Block { get; set; }
+    public required char Block { get; set; }
 
     /// <summary>
     ///     The date the Termin is on.

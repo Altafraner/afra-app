@@ -16,8 +16,8 @@ public static class KatalogEndpoints
     {
         app.MapGet("/{date}", GetDay);
         app.MapGet("/{terminId:guid}", GetTermin);
-        app.MapPut("/{terminId:guid}/{start}", EnrollAsync);
-        app.MapDelete("/{terminId:guid}/{start}", UnenrollAsync);
+        app.MapPut("/{terminId:guid}", EnrollAsync);
+        app.MapDelete("/{terminId:guid}", UnenrollAsync);
     }
 
     private static async Task<IResult> GetDay(OtiumEndpointService service, HttpContext httpContext,
@@ -40,20 +40,20 @@ public static class KatalogEndpoints
     }
 
     private static async Task<IResult> EnrollAsync(OtiumEndpointService service, EnrollmentService enrollmentService,
-        HttpContext httpContext, AfraAppContext context, Guid terminId, TimeOnly start)
+        HttpContext httpContext, AfraAppContext context, Guid terminId)
     {
         var user = await httpContext.GetPersonAsync(context);
 
-        var termin = await enrollmentService.EnrollAsync(terminId, user, start);
+        var termin = await enrollmentService.EnrollAsync(terminId, user);
         return termin is null ? Results.BadRequest() : Results.Ok(await service.GetTerminAsync(terminId, user));
     }
 
     private static async Task<IResult> UnenrollAsync(OtiumEndpointService service, EnrollmentService enrollmentService,
-        HttpContext httpContext, AfraAppContext context, Guid terminId, TimeOnly start)
+        HttpContext httpContext, AfraAppContext context, Guid terminId)
     {
         var user = await httpContext.GetPersonAsync(context);
 
-        var termin = await enrollmentService.UnenrollAsync(terminId, user, start);
+        var termin = await enrollmentService.UnenrollAsync(terminId, user);
         return termin is null ? Results.BadRequest() : Results.Ok(await service.GetTerminAsync(terminId, user));
     }
 }

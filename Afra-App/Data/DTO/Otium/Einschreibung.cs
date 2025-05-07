@@ -1,5 +1,3 @@
-using Afra_App.Data.TimeInterval;
-
 namespace Afra_App.Data.DTO.Otium;
 
 /// <summary>
@@ -15,18 +13,12 @@ public record Einschreibung : IMinimalTermin
     {
         Id = einschreibung.Id;
         TerminId = einschreibung.Termin.Id;
-        Interval = einschreibung.Interval;
         Otium = einschreibung.Termin.Otium.Bezeichnung;
         OtiumId = einschreibung.Termin.Otium.Id;
         Ort = einschreibung.Termin.Ort;
-        Block = einschreibung.Termin.Block.Nummer;
+        Block = einschreibung.Termin.Block.SchemaId;
         Tutor = einschreibung.Termin.Tutor is not null ? new PersonInfoMinimal(einschreibung.Termin.Tutor) : null;
     }
-
-    /// <summary>
-    ///     The time interval for the enrollment
-    /// </summary>
-    public ITimeInterval<TimeOnly> Interval { get; set; }
 
     /// <summary>
     ///     The ID of the termin the enrollment is for
@@ -48,7 +40,7 @@ public record Einschreibung : IMinimalTermin
     public string Ort { get; set; }
 
     /// <inheritdoc />
-    public sbyte Block { get; set; }
+    public char Block { get; set; }
 
     /// <inheritdoc />
     public PersonInfoMinimal? Tutor { get; set; }
