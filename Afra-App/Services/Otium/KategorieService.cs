@@ -23,40 +23,16 @@ public class KategorieService
     }
 
     /// <summary>
-    ///     Return all categories.
+    ///     Return all required categories.
     /// </summary>
-    public async Task<List<Kategorie>> GetKategorienAsync(bool onlyRequired = false)
+    public async Task<List<Kategorie>> GetRequiredKategorienAsync()
     {
-        return await GenerateKategorieQuery(onlyRequired)
+        return await _context.OtiaKategorien
             .AsNoTracking()
-            .ToListAsync();
-    }
-
-    /// <summary>
-    ///     Return all categories.
-    /// </summary>
-    public async Task<List<Kategorie>> GetKategorienTrackingAsync(bool onlyRequired = false)
-    {
-        return await GenerateKategorieQuery(onlyRequired)
-            .ToListAsync();
-    }
-
-    /// <summary>
-    ///     Return all categories as an async enumerable.
-    /// </summary>
-    public IAsyncEnumerable<Kategorie> GetKategorienAsyncEnumerable(bool onlyRequired = false)
-    {
-        return GenerateKategorieQuery(onlyRequired)
-            .AsNoTracking()
-            .AsAsyncEnumerable();
-    }
-
-    private IQueryable<Kategorie> GenerateKategorieQuery(bool onlyRequired = false)
-    {
-        return _context.OtiaKategorien
             .Include(k => k.Children)
             .Include(kategorie => kategorie.Parent)
-            .Where(k => !onlyRequired || k.Required);
+            .Where(k => k.Required)
+            .ToListAsync();
     }
 
     /// <summary>
@@ -74,31 +50,15 @@ public class KategorieService
     ///     Gets a list of all transitive categories of a category.
     /// </summary>
     /// <param name="kategorie">The kategorie to find all parents for.</param>
-    /// <param name="tracking">Whether the <see cref="Kategorie" /> entry is tracking.</param>
     /// <returns>An Async Enumerable containing a kategorie and all its parents.</returns>
-    public async IAsyncEnumerable<Guid> GetTransitiveKategoriesIdsAsyncEnumerable(Kategorie kategorie,
-        bool tracking = true)
-    {
-        var transitiveKategories = GetTransitiveKategoriesAsyncEnumerable(kategorie, tracking);
-
-        await foreach (var transitiveKategory in transitiveKategories) yield return transitiveKategory.Id;
-    }
-
-    /// <summary>
-    ///     Gets a list of all transitive categories of a category.
-    /// </summary>
-    /// <param name="kategorie">The kategorie to find all parents for.</param>
-    /// <param name="tracking">Whether the <see cref="Kategorie" /> entry is tracking.</param>
-    /// <returns>An Async Enumerable containing a kategorie and all its parents.</returns>
-    public async IAsyncEnumerable<Kategorie> GetTransitiveKategoriesAsyncEnumerable(Kategorie kategorie,
-        bool tracking = true)
+    public async IAsyncEnumerable<Guid> GetTransitiveKategoriesIdsAsyncEnumerable(Kategorie kategorie)
     {
         // Extra variable needed to avoid null reference exception
-        var currentCategory = tracking ? kategorie : await _context.OtiaKategorien.FindAsync(kategorie.Id);
+        var currentCategory = await _context.OtiaKategorien.FindAsync(kategorie.Id);
 
         while (currentCategory is not null)
         {
-            yield return currentCategory;
+            yield return currentCategory.Id;
             currentCategory = await GetParentAsync(currentCategory);
         }
     }
@@ -122,8 +82,7 @@ public class KategorieService
                 return current;
             }
 
-            await _context.OtiaKategorien.Entry(current).Reference(c => c.Parent).LoadAsync();
-            current = current.Parent;
+            current = await GetParentAsync(current);
         }
 
         return null;

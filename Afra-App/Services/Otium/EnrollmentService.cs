@@ -152,22 +152,14 @@ public class EnrollmentService
     /// <returns>
     ///     An enumerable of all <see cref="Kategorie">Kategorien</see> that are required but covered by the <paramref name="enrollments"/>
     /// </returns>
-    public async Task<List<Kategorie>> GetMissingKategories(IEnumerable<Einschreibung> enrollments)
+    public async Task<HashSet<Kategorie>> GetMissingKategories(IEnumerable<Einschreibung> enrollments)
     {
         // Get required categories
-        var requiredKategories = (await _kategorieService.GetKategorienAsync(true)).ToList();
+        var requiredKategories = (await _kategorieService.GetRequiredKategorienAsync()).ToHashSet();
         foreach (var enrollment in enrollments)
         {
-            var currentKategorie = enrollment.Termin.Otium.Kategorie;
-            var transitiveKategories =
-                _kategorieService.GetTransitiveKategoriesAsyncEnumerable(currentKategorie, false);
-
-            await foreach (var category in transitiveKategories)
-            {
-                var catOfList = requiredKategories.FirstOrDefault(c => c.Id == category.Id);
-                if (catOfList is null) continue;
-                requiredKategories.Remove(catOfList);
-            }
+            var requiredParent = await _kategorieService.GetRequiredParentAsync(enrollment.Termin.Otium.Kategorie);
+            if (requiredParent != null) requiredKategories.Remove(requiredParent);
         }
 
         return requiredKategories;
@@ -184,9 +176,9 @@ public class EnrollmentService
     public async Task<Dictionary<DateOnly, bool>> CheckAllKategoriesInWeeks(
         List<Einschreibung> allEinschreibungen)
     {
-        // This is also used to load all kategories so we do not have to lazy load them later. One query is better than many.
-        var kategories = await _kategorieService.GetKategorienAsync();
-        var requiredKategories = kategories.Where(k => k.Required).ToList();
+        var requiredKategories = (await _kategorieService.GetRequiredKategorienAsync())
+            .Select(k => k.Id)
+            .ToList();
 
         var einschreibungenByWeek = new Dictionary<DateOnly, List<Einschreibung>>();
         foreach (var einschreibung in allEinschreibungen)
@@ -201,16 +193,12 @@ public class EnrollmentService
         foreach (var (week, weekEinschreibungen) in einschreibungenByWeek)
         {
             // Check if the user is enrolled in all required kategories
-            var localRequiredKategories = requiredKategories.ToList();
+            var localRequiredKategories = requiredKategories.ToHashSet();
             foreach (var einschreibung in weekEinschreibungen)
             {
-                var currentKategorie = kategories.First(k => k.Id == einschreibung.Termin.Otium.Kategorie.Id);
-                while (currentKategorie != null && localRequiredKategories.Count != 0)
-                {
-                    if (localRequiredKategories.Any(k => k.Id == currentKategorie.Id))
-                        localRequiredKategories.Remove(localRequiredKategories.First(k => k.Id == currentKategorie.Id));
-                    currentKategorie = currentKategorie.Parent;
-                }
+                var requiredParent =
+                    await _kategorieService.GetRequiredParentAsync(einschreibung.Termin.Otium.Kategorie);
+                if (requiredParent != null) localRequiredKategories.Remove(requiredParent.Id);
             }
 
             var kategorieRuleFulfilled = localRequiredKategories.Count == 0;
@@ -377,7 +365,7 @@ public class EnrollmentService
             .Distinct()
             .ToList();
 
-        var requiredKategories = (await _kategorieService.GetKategorienTrackingAsync(true))
+        var requiredKategories = (await _kategorieService.GetRequiredKategorienAsync())
             .Select(k => k.Id)
             .ToHashSet();
 
@@ -407,15 +395,16 @@ public class EnrollmentService
 
         var blockCategories = new Dictionary<Guid, HashSet<Guid>>();
 
+        var catsByBlock = await _context.OtiaTermine
+            .Where(t => blocksAvailable.Contains(t.Block))
+            .GroupBy(t => t.Block.Id)
+            .Select(e => new { Block = e.Key, Category = e.Select(t => t.Otium.Kategorie).Distinct().ToHashSet() })
+            .ToDictionaryAsync(t => t.Block, t => t.Category);
+
         foreach (var block in blocksAvailable)
         {
             blockCategories.TryAdd(block.Id, []);
-
-            var cats = await _context.OtiaTermine
-                .Where(t => blocksAvailable.Contains(t.Block))
-                .Select(t => t.Otium.Kategorie)
-                .Distinct()
-                .ToHashSetAsync();
+            var cats = catsByBlock.TryGetValue(block.Id, out var set) ? set : [];
 
             foreach (var cat in cats)
             {
