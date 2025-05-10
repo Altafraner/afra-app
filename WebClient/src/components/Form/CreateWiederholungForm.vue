@@ -155,15 +155,15 @@ setup()
     </div>
     <div class="w-full">
       <FloatLabel class="w-full" variant="on">
-        <Select id="block" v-model="block" :options="[0, 1]" fluid
+        <Select id="block" v-model="block" :options="['1', '2']" fluid
                 name="block" @change="blockOrWochentagChanged">
           <template #value="{value}">
             <template v-if="value || value === 0">
-              {{ value + 1 }}. Block
+              {{ value }}. Block
             </template>
           </template>
           <template #option="{option}">
-            {{ option + 1 }}. Block
+            {{ option }}. Block
           </template>
         </Select>
         <label for="block">Block</label>

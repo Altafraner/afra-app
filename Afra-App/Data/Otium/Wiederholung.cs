@@ -25,7 +25,7 @@ public class Wiederholung : OtiumsInstanz
     /// <summary>
     ///     The block the Otium is in.
     /// </summary>
-    public required sbyte Block { get; set; }
+    public required char Block { get; set; }
 
     /// <summary>
     ///     A list of all instances of the recurrence rule. Useful for bulk operations.

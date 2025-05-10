@@ -182,8 +182,10 @@ namespace Afra_App.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<short>("Block")
-                        .HasColumnType("smallint");
+                    b.Property<char>("Block")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("character(1)")
+                        .HasDefaultValueSql("''");
 
                     b.Property<int?>("MaxEinschreibungen")
                         .HasColumnType("integer");

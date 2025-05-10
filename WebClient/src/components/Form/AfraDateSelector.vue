@@ -29,6 +29,7 @@ const date = defineModel()
 
 function change_date(next) {
   let n = props.options.findIndex((element) => element.datum === date.value.datum)
+  if (n === -1) return;
   n = next(n)
   while (n < props.options.length && n >= 0) {
     if (props.options[n].disabled) {
@@ -60,10 +61,15 @@ function date_to_label(data) {
               :name="name" :options="props.options" option-disabled="disabled"
               @change="() => emit('dateChanged')">
         <template #value="{value}">
-          {{ formatDate(date_to_label(value)) }} | {{ value.wochentyp }}
+          <template v-if="value">
+            {{ formatDate(date_to_label(value)) }} | {{ value.wochentyp }}
+          </template>
         </template>
         <template #option="{option}">{{ formatDate(date_to_label(option)) }} |
           {{ option.wochentyp }}
+        </template>
+        <template #empty>
+          Kein Datum verfügbar.
         </template>
       </Select>
       <label v-if="showLabel" for="datum">{{ label }}</label>

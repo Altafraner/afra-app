@@ -105,10 +105,10 @@ setup()
                       name="date"/>
     <Select v-model="blockSelected" :options="dateSelected.blocks" name="block">
       <template #value="{value}">
-        {{ value + 1 }}. Block
+        {{ value }}. Block
       </template>
       <template #option="{option}">
-        {{ option + 1 }}. Block
+        {{ option }}. Block
       </template>
     </Select>
     <div class="font-bold mt-4">Details</div>

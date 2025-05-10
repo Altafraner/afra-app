@@ -132,5 +132,9 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
         modelBuilder.Entity<Block>()
             .Property(b => b.SchemaId)
             .HasDefaultValueSql("''");
+
+        modelBuilder.Entity<Wiederholung>()
+            .Property(w => w.Block)
+            .HasDefaultValueSql("''");
     }
 }
