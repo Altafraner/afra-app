@@ -25,12 +25,13 @@ public record ManagementWiederholungView
     {
         Id = dbWiederholung.Id;
         OtiumId = dbWiederholung.Otium.Id;
-        Tutor = (dbWiederholung.Tutor is not null) ? new PersonInfoMinimal(dbWiederholung.Tutor) : null;
+        Tutor = dbWiederholung.Tutor is not null ? new PersonInfoMinimal(dbWiederholung.Tutor) : null;
         Ort = dbWiederholung.Ort;
         Wochentag = dbWiederholung.Wochentag;
         Wochentyp = dbWiederholung.Wochentyp;
         StartDate = dbWiederholung.StartDate;
         EndDate = dbWiederholung.EndDate;
+        Block = dbWiederholung.Block;
     }
 
     /// <summary>
@@ -56,7 +57,7 @@ public record ManagementWiederholungView
     /// <summary>
     ///     The number of the Block the Wiederholung is on.
     /// </summary>
-    public required sbyte Block { get; set; }
+    public required char Block { get; set; }
 
     /// <summary>
     ///     The Day of the Week that Termine of the Wiederholung are scheduled

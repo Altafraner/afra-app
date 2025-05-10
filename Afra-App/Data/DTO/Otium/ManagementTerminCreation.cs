@@ -8,7 +8,7 @@ public record ManagementTerminCreation
     /// <summary>
     ///     The number of the Block the Termin is on.
     /// </summary>
-    public required sbyte Block { get; set; }
+    public required char Block { get; set; }
 
     /// <summary>
     ///     The Id of the otium the termin belongs to

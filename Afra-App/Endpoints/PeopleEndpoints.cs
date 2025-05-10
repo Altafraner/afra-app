@@ -1,7 +1,7 @@
 ﻿using Afra_App.Authentication;
 using Afra_App.Data;
 using Afra_App.Data.DTO;
-using Afra_App.Data.People;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
 namespace Afra_App.Endpoints;
@@ -18,21 +18,18 @@ public static class PeopleEndpoints
     {
         app.MapGet("/api/people", GetPeople)
             .WithName("GetPeople")
-            .RequireAuthorization();
+            .RequireAuthorization(AuthorizationPolicies.TutorOnly);
     }
 
-    private static async Task<IResult> GetPeople(AfraAppContext dbContext, HttpContext httpContext)
+    private static Ok<IAsyncEnumerable<PersonInfoMinimal>> GetPeople(AfraAppContext dbContext,
+        HttpContext httpContext)
     {
-        var user = await httpContext.GetPersonAsync(dbContext);
-        if (user.Rolle != Rolle.Tutor)
-            return Results.Unauthorized();
-
         var people = dbContext.Personen
             .OrderBy(p => p.Nachname)
             .ThenBy(p => p.Vorname)
             .Select(p => new PersonInfoMinimal(p))
             .AsAsyncEnumerable();
 
-        return Results.Ok(people);
+        return TypedResults.Ok(people);
     }
 }

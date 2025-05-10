@@ -2,14 +2,17 @@ using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text.Json.Serialization;
+using Afra_App.Authentication;
 using Afra_App.Authentication.Ldap;
 using Afra_App.Data;
 using Afra_App.Data.Configuration;
+using Afra_App.Data.People;
 using Afra_App.Endpoints;
 using Afra_App.Services;
 using Afra_App.Services.Otium;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Quartz;
@@ -68,12 +71,36 @@ builder.Services.AddAuthentication()
     .AddCookie(options =>
     {
         options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
-        options.LoginPath = "/SAML/LoginRedirect";
-        options.AccessDeniedPath = "/AccessDenied";
+        options.Events.OnRedirectToAccessDenied = context =>
+        {
+            var authenticated = context.HttpContext.User.Identity?.IsAuthenticated ?? false;
+            if (authenticated)
+            {
+                context.Response.Clear();
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                context.Response.WriteAsJsonAsync(new ProblemDetails
+                {
+                    Title = "Access Denied",
+                    Detail = "You are not allowed to access this resource. You do not seem to have the right roles.",
+                    Status = StatusCodes.Status403Forbidden,
+                    Type = "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.3"
+                });
+                return Task.CompletedTask;
+            }
+
+            context.Response.Redirect(context.RedirectUri);
+            return Task.CompletedTask;
+        };
         options.Cookie.SameSite = SameSiteMode.Strict;
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
     });
-builder.Services.AddAuthorization();
+
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy(AuthorizationPolicies.StudentOnly,
+        policy => policy.RequireClaim(AfraAppClaimTypes.Role, nameof(Rolle.Student)))
+    .AddPolicy(AuthorizationPolicies.TutorOnly,
+        policy => policy.RequireClaim(AfraAppClaimTypes.Role, nameof(Rolle.Tutor)));
+
 if (builder.Configuration.GetValue<bool>("Saml:Enabled")) builder.Services.AddSingleton<SamlService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<KategorieService>();

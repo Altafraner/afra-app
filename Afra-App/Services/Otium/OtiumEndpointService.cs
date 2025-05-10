@@ -4,7 +4,6 @@ using Afra_App.Data.Configuration;
 using Afra_App.Data.DTO;
 using Afra_App.Data.DTO.Otium;
 using Afra_App.Data.DTO.Otium.Katalog;
-using Afra_App.Data.People;
 using Afra_App.Data.TimeInterval;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -114,9 +113,6 @@ public class OtiumEndpointService
 
     private async Task<IEnumerable<string>> GetStatusForDayAsync(Person user, DateOnly date)
     {
-        if (user.Rolle != Rolle.Student)
-            return [];
-
         List<string> messages = [];
 
         // Week Start and End
@@ -325,6 +321,7 @@ public class OtiumEndpointService
     /// <summary>
     ///     Gets the detailed information about a termin for a teacher.
     /// </summary>
+    // The param teacher is still here as we need it later for checking if the teacher is allowed to see this termin.
     public async Task<LehrerTermin?> GetTerminForTeacher(Guid terminId, Person teacher)
     {
         var termin = await _context.OtiaTermine
@@ -336,10 +333,6 @@ public class OtiumEndpointService
             .ThenInclude(e => e.BetroffenePerson)
             .Where(t => !t.IstAbgesagt)
             .FirstOrDefaultAsync(t => t.Id == terminId);
-
-        //if (termin?.Tutor is null || termin.Tutor.Id != teacher.Id) return null;
-        if (teacher.Rolle != Rolle.Tutor)
-            return null;
 
         if (termin is null)
             return null;

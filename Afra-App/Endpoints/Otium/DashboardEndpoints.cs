@@ -1,6 +1,5 @@
 using Afra_App.Authentication;
 using Afra_App.Data;
-using Afra_App.Data.People;
 using Afra_App.Services.Otium;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,18 +15,23 @@ public static class DashboardEndpoints
     /// </summary>
     public static void MapDashboardEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/student", GetStudentDashboard);
+        app.MapGet("/student", GetStudentDashboard)
+            .RequireAuthorization(AuthorizationPolicies.StudentOnly);
         app.MapGet("/student/all",
-            (OtiumEndpointService service, HttpContext httpContext, AfraAppContext context) =>
-                GetStudentDashboard(service, httpContext, context, true));
+                (OtiumEndpointService service, HttpContext httpContext, AfraAppContext context) =>
+                    GetStudentDashboard(service, httpContext, context, true))
+            .RequireAuthorization(AuthorizationPolicies.StudentOnly);
 
-        app.MapGet("/student/{studentId:guid}", GetStudentDashboardForTeacher);
+        app.MapGet("/student/{studentId:guid}", GetStudentDashboardForTeacher)
+            .RequireAuthorization(AuthorizationPolicies.TutorOnly);
         app.MapGet("/student/{studentId:guid}/all",
-            (OtiumEndpointService service,
-                    HttpContext httpContext, AfraAppContext context, Guid studentId) =>
-                GetStudentDashboardForTeacher(service, httpContext, context, studentId, true));
+                (OtiumEndpointService service,
+                        HttpContext httpContext, AfraAppContext context, Guid studentId) =>
+                    GetStudentDashboardForTeacher(service, httpContext, context, studentId, true))
+            .RequireAuthorization(AuthorizationPolicies.TutorOnly);
 
-        app.MapGet("/teacher", GetTeacherDashboard);
+        app.MapGet("/teacher", GetTeacherDashboard)
+            .RequireAuthorization(AuthorizationPolicies.TutorOnly);
     }
 
     private static async Task<IResult> GetStudentDashboard(OtiumEndpointService service,
@@ -36,8 +40,6 @@ public static class DashboardEndpoints
         bool all = false)
     {
         var user = await httpContext.GetPersonAsync(context);
-        if (user.Rolle != Rolle.Student) return Results.Unauthorized();
-
         return Results.Ok(service.GetStudentDashboardAsyncEnumerable(user, all));
     }
 
@@ -48,8 +50,6 @@ public static class DashboardEndpoints
         bool all = false)
     {
         var user = await httpContext.GetPersonAsync(context);
-        if (user.Rolle != Rolle.Tutor) return Results.Unauthorized();
-
         var student = context.Personen
             .Include(p => p.Mentor)
             .FirstOrDefault(p => p.Id == studentId);
@@ -65,8 +65,6 @@ public static class DashboardEndpoints
         AfraAppContext context)
     {
         var user = await httpContext.GetPersonAsync(context);
-        if (user.Rolle != Rolle.Tutor) return Results.Unauthorized();
-
         return Results.Ok(await service.GetTeacherDashboardAsync(user));
     }
 }

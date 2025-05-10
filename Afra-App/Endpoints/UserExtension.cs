@@ -24,6 +24,7 @@ public static class UserExtension
             async (UserService userService, HttpContext context) => await userService.IsAuthorized(context));
 
         app.MapGet("/api/user/logout",
-            async (UserService userService, HttpContext context) => await userService.SignOutAsync(context));
+                async (UserService userService, HttpContext context) => await userService.SignOutAsync(context))
+            .RequireAuthorization();
     }
 }

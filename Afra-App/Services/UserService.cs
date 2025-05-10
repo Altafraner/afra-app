@@ -115,7 +115,8 @@ public class UserService
         {
             new(AfraAppClaimTypes.Id, user.Id.ToString()),
             new(AfraAppClaimTypes.GivenName, user.Vorname),
-            new(AfraAppClaimTypes.LastName, user.Nachname)
+            new(AfraAppClaimTypes.LastName, user.Nachname),
+            new(AfraAppClaimTypes.Role, user.Rolle.ToString())
         };
 
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);

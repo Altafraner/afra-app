@@ -30,7 +30,7 @@ public record ManagementWiederholungCreation
     /// <summary>
     ///     The number of the Block the Wiederholung is on.
     /// </summary>
-    public required sbyte Block { get; set; }
+    public required char Block { get; set; }
 
     /// <summary>
     ///     The Day of the Week that Termine of the Wiederholung are scheduled

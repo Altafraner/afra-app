@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Afra_App.Data.People;
 
 namespace Afra_App.Authentication;
 
@@ -22,4 +23,10 @@ public static class AfraAppClaimTypes
     ///     The family, aka. last, name of the user
     /// </summary>
     public static string LastName => "last_name";
+
+    /// <summary>
+    ///     The role of the user
+    /// </summary>
+    /// <remarks>Should be one of <see cref="Rolle"/></remarks>
+    public static string Role => ClaimTypes.Role;
 }
