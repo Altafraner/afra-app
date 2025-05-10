@@ -118,12 +118,12 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
         {
             blocks.Add(new Block
             {
-                Nummer = 0,
+                SchemaId = '0',
                 Schultag = schultag
             });
             blocks.Add(new Block
             {
-                Nummer = 1,
+                SchemaId = '1',
                 Schultag = schultag
             });
         }

@@ -20,12 +20,6 @@ const props = defineProps({
         {{ formatStudent(slotProps.data.student) }}
       </template>
     </Column>
-    <Column v-for="field in ['start', 'end']" :field="field"
-            :header="field==='start' ? 'Anfang' : 'Ende'">
-      <template #body="{data}">
-        {{ data.interval[field] }}
-      </template>
-    </Column>
     <Column header="Anwesenheit" v-if="props.showAttendance || props.mayEditAttendance"
             :class="props.mayEditAttendance ? 'text-right afra-col-action' : ''">
       <template #body="slotProps">

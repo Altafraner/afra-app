@@ -32,7 +32,7 @@ const navItems = computed(() => [
     } : null
   },
   {
-    label: otium.value != null ? `${formatDate(new Date(otium.value.datum))} ${otium.value.block + 1}. Block` : ""
+    label: otium.value != null ? `${formatDate(new Date(otium.value.datum))} ${otium.value.block}. Block` : ""
   }
 ])
 

@@ -28,7 +28,7 @@ public interface IMinimalTermin
     /// <summary>
     ///     The number of the block the termin is in
     /// </summary>
-    public sbyte Block { get; set; }
+    public char Block { get; set; }
 
     /// <summary>
     ///     The tutor handling the termin (optional)

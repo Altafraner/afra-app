@@ -16,7 +16,7 @@ public record LehrerUebersicht(IEnumerable<LehrerTerminPreview> Termine, IEnumer
 /// <param name="Auslastung">The calculated load factor of the termin.</param>
 /// <param name="Datum">The date the termin is happening on</param>
 /// <param name="Block">The block the termin is happening in</param>
-public record LehrerTerminPreview(Guid Id, string Otium, string Ort, int? Auslastung, DateOnly Datum, sbyte Block);
+public record LehrerTerminPreview(Guid Id, string Otium, string Ort, int? Auslastung, DateOnly Datum, char Block);
 
 /// <summary>
 /// Represents the preview of a student as seen by his mentor.

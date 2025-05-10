@@ -1,5 +1,3 @@
-using Afra_App.Data.TimeInterval;
-
 namespace Afra_App.Data.DTO.Otium;
 
 /// <summary>
@@ -28,7 +26,7 @@ public record LehrerTermin : IMinimalTermin
     public int? MaxEinschreibungen { get; set; }
 
     /// <inheritdoc />
-    public required sbyte Block { get; set; }
+    public required char Block { get; set; }
 
     /// <inheritdoc />
     public required Guid Id { get; set; }
@@ -50,9 +48,7 @@ public record LehrerTermin : IMinimalTermin
 ///     A DTO for a enrollment in a termin as seen by a tutor
 /// </summary>
 /// <param name="Student">The student enrolled</param>
-/// <param name="Interval">The interval the student has enrolled for</param>
 /// <param name="Anwesenheit">The current verification status</param>
 public record LehrerEinschreibung(
     PersonInfoMinimal? Student,
-    TimeOnlyInterval Interval,
     AnwesenheitsStatus Anwesenheit);

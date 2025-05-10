@@ -22,7 +22,7 @@ const props = defineProps({
     </Column>
     <Column header="Block">
       <template #body="{data}">
-        {{ data.block + 1 }}
+        {{ data.block }}
       </template>
     </Column>
     <Column header="Raum" field="ort"/>

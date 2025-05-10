@@ -24,7 +24,7 @@ public static class SchuljahrExtensions
         var schultage = await context.Schultage
             .Include(s => s.Blocks)
             .OrderBy(s => s.Datum)
-            .Select(s => new Schultag(s.Datum, s.Wochentyp, s.Blocks.Select(b => b.Nummer)))
+            .Select(s => new Schultag(s.Datum, s.Wochentyp, s.Blocks.Select(b => b.SchemaId)))
             .ToListAsync();
         var next = schultage.FirstOrDefault(s => s.Datum >= DateOnly.FromDateTime(DateTime.Now)) ?? schultage.Last();
 

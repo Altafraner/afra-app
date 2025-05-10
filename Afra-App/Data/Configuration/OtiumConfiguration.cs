@@ -10,7 +10,7 @@ public class OtiumConfiguration
     /// <summary>
     ///     A 2d array containing the subblocks of each block
     /// </summary>
-    public required SubBlock[][] Blocks { get; set; }
+    public required BlockMetadata[] Blocks { get; set; }
 
     /// <summary>
     ///     A static method to validate the configuration
@@ -19,8 +19,7 @@ public class OtiumConfiguration
     public static bool Validate(OtiumConfiguration config)
     {
         if (config.Blocks.Length == 0) return false;
-        if (config.Blocks.Any(list => list.Length == 0)) return false;
-        if (config.Blocks.SelectMany(list => list).Any(sb => sb.Interval.Duration == TimeSpan.Zero))
+        if (config.Blocks.Any(sb => sb.Interval.Duration <= TimeSpan.Zero))
             return false;
 
         return true;

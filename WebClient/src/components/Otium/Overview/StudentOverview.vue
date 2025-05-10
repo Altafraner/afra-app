@@ -44,8 +44,11 @@ const props = defineProps({
             </template>
           </Column>
           <Column field="ort" header="Ort"/>
-          <Column field="interval.start" header="Start"/>
-          <Column field="interval.duration" header="Dauer"/>
+          <Column field="block" header="Block">
+            <template #body="{data}">
+              {{ data.block }}. Block
+            </template>
+          </Column>
           <template #empty>
             <div class="flex justify-center">
               Keine Einträge

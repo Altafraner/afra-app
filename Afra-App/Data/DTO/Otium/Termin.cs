@@ -24,7 +24,7 @@ public record Termin : ITermin
         Tutor = termin.Tutor is not null ? new PersonInfoMinimal(termin.Tutor) : null;
         MaxEinschreibungen = termin.MaxEinschreibungen;
         Einschreibungen = einschreibungen;
-        Block = termin.Block.Nummer;
+        Block = termin.Block.SchemaId;
         Datum = termin.Block.Schultag.Datum.ToDateTime(startTime);
         Beschreibung = termin.Otium.Beschreibung;
     }
@@ -59,7 +59,7 @@ public record Termin : ITermin
     public string Ort { get; set; }
 
     /// <inheritdoc />
-    public sbyte Block { get; set; }
+    public char Block { get; set; }
 
     /// <inheritdoc />
     public IAsyncEnumerable<Guid> Kategorien { get; set; }

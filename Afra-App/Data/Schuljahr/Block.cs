@@ -24,5 +24,5 @@ public class Block
     /// <summary>
     ///     The number of the Block
     /// </summary>
-    public required sbyte Nummer { get; set; }
+    public required char SchemaId { get; set; } = '\0';
 }

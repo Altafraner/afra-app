@@ -78,7 +78,7 @@ public class OtiumEndpointService
             .ThenInclude(o => o.Kategorie)
             .Include(t => t.Tutor)
             .OrderBy(t => t.IstAbgesagt)
-            .ThenBy(t => t.Block.Nummer)
+            .ThenBy(t => t.Block.SchemaId)
             .ThenBy(t => t.Otium.Bezeichnung)
             .ToListAsync();
 
@@ -109,7 +109,7 @@ public class OtiumEndpointService
         return new Termin(termin,
             _enrollmentService.GetEnrolmentPreviews(user, termin),
             _kategorieService.GetTransitiveKategoriesIdsAsyncEnumerable(termin.Otium.Kategorie),
-            _otiumConfiguration.Blocks[termin.Block.Nummer].First().Interval.Start);
+            _otiumConfiguration.Blocks.First(b => b.Id == termin.Block.SchemaId).Interval.Start);
     }
 
     private async Task<IEnumerable<string>> GetStatusForDayAsync(Person user, DateOnly date)
@@ -128,7 +128,7 @@ public class OtiumEndpointService
             .Where(s => s.Datum >= weekStart && s.Datum < weekEnd)
             .SelectMany(s => s.Blocks)
             .OrderBy(b => b.SchultagKey)
-            .ThenBy(b => b.Nummer)
+            .ThenBy(b => b.SchemaId)
             .ToListAsync();
 
         // Get all enrollments for the given week
@@ -145,10 +145,10 @@ public class OtiumEndpointService
         // Find all times on date the user is not enrolled in
         var timeline = _enrollmentService.GetNotEnrolledTimes(
             blocks.Where(b => b.SchultagKey == date),
-            weeksEnrollments.Where(e => e.Termin.Block.SchultagKey == date));
+            user);
 
         messages.AddRange(timeline.GetIntervals().Select(interval =>
-            $"Es fehlen Einschreibungen von {interval.Start:t} bis {interval.End:t}"));
+            $"Es fehlen Einschreibungen von {interval.Start:t} bis {interval.End:t}."));
 
         var missingCategories = await _enrollmentService.GetMissingKategories(weeksEnrollments);
 
@@ -163,6 +163,7 @@ public class OtiumEndpointService
     /// </summary>
     /// <param name="user">The student to generate the dashboard for</param>
     /// <param name="all">Iff true, all available school-days are included. Otherwise, just the current and next two weeks.</param>
+    // I hate myself for writing this mess of a method. Have fun!
     public async IAsyncEnumerable<Data.DTO.Otium.Dashboard.Tag> GetStudentDashboardAsyncEnumerable(Person user,
         bool all)
     {
@@ -203,14 +204,15 @@ public class OtiumEndpointService
 
         foreach (var schultag in allSchoolDays)
         {
-            var localKategorienErfuellt = kategorieRuleByWeek
-                .FirstOrDefault(e => e.Key.Contains(schultag.Datum.ToDateTime(new TimeOnly()))).Value;
+            var monday = schultag.Datum.AddDays(-(int)schultag.Datum.DayOfWeek + 1);
+
+            var localKategorienErfuellt = kategorieRuleByWeek.GetValueOrDefault(monday, false);
             var vollstaendig = allEnrolledRuleByDay.ContainsKey(schultag.Datum) && allEnrolledRuleByDay[schultag.Datum];
             var einschreibungen = einschreibungenByDay.Keys.Any(k => k.Datum == schultag.Datum)
                 ? einschreibungenByDay
                     .FirstOrDefault(t => t.Key.Datum == schultag.Datum)
                     .Value
-                    .OrderBy(e => e.Interval.Start)
+                    .OrderBy(e => e.Termin.Block.SchemaId)
                     .Select(e => new Einschreibung(e))
                 : [];
             var tag = new Data.DTO.Otium.Dashboard.Tag(schultag.Datum,
@@ -265,7 +267,7 @@ public class OtiumEndpointService
             .Include(t => t.Block)
             .ThenInclude(b => b.Schultag)
             .OrderBy(t => t.Block.Schultag.Datum)
-            .ThenBy(t => t.Block.Nummer)
+            .ThenBy(t => t.Block.SchemaId)
             .Where(t => !t.IstAbgesagt && t.Tutor != null && t.Tutor.Id == user.Id &&
                         t.Block.Schultag.Datum >= DateOnly.FromDateTime(DateTime.Today) &&
                         t.Block.Schultag.Datum < endDate)
@@ -274,7 +276,7 @@ public class OtiumEndpointService
         foreach (var termin in termine)
             terminPreviews.Add(
                 new LehrerTerminPreview(termin.Id, termin.Otium.Bezeichnung, termin.Ort,
-                    await _enrollmentService.GetLoadPercent(termin), termin.Block.Schultag.Datum, termin.Block.Nummer)
+                    await _enrollmentService.GetLoadPercent(termin), termin.Block.Schultag.Datum, termin.Block.SchemaId)
             );
 
         return new LehrerUebersicht(terminPreviews, menteePreviews);
@@ -304,7 +306,8 @@ public class OtiumEndpointService
                 return isFullyEnrolledPerDay
                            .Where(group => week.Contains(group.Key.ToDateTime(TimeOnly.MinValue)))
                            .All(group => group.Value) &&
-                       kategorieRuleByWeek.ContainsKey(week) && kategorieRuleByWeek[week];
+                       kategorieRuleByWeek.ContainsKey(DateOnly.FromDateTime(week.Start)) &&
+                       kategorieRuleByWeek[DateOnly.FromDateTime(week.Start)];
             }
         }
     }
@@ -347,13 +350,13 @@ public class OtiumEndpointService
             Ort = termin.Ort,
             Otium = termin.Otium.Bezeichnung,
             OtiumId = termin.Otium.Id,
-            Block = termin.Block.Nummer,
+            Block = termin.Block.SchemaId,
             Datum = termin.Block.Schultag.Datum,
             MaxEinschreibungen = termin.MaxEinschreibungen,
             IstAbgesagt = termin.IstAbgesagt,
             Tutor = termin.Tutor is not null ? new PersonInfoMinimal(termin.Tutor) : null,
             Einschreibungen = termin.Enrollments.Select(e =>
-                new LehrerEinschreibung(new PersonInfoMinimal(e.BetroffenePerson), e.Interval,
+                new LehrerEinschreibung(new PersonInfoMinimal(e.BetroffenePerson),
                     AnwesenheitsStatus.Anwesend))
         };
     }
@@ -387,7 +390,7 @@ public class OtiumEndpointService
             .Include(o => o.Verantwortliche)
             .Include(o => o.Termine)
             .ThenInclude(t => t.Tutor)
-            .Include(o => o.Termine.OrderBy(t => t.Block.Schultag.Datum).ThenBy(t => t.Block.Nummer))
+            .Include(o => o.Termine.OrderBy(t => t.Block.Schultag.Datum).ThenBy(t => t.Block.SchemaId))
             .ThenInclude(t => t.Block)
             .ThenInclude(b => b.Schultag)
             .Include(o => o.Wiederholungen.OrderBy(w => w.Wochentyp).ThenBy(w => w.Wochentyp).ThenBy(w => w.Block))
@@ -461,7 +464,7 @@ public class OtiumEndpointService
             throw new ArgumentException("Kein Otium mit dieser Id existiert.");
 
         var block = await _context.Blocks.FirstOrDefaultAsync(c =>
-            c.Nummer == otiumTermin.Block && c.Schultag.Datum == otiumTermin.Datum);
+            c.SchemaId == otiumTermin.Block && c.Schultag.Datum == otiumTermin.Datum);
         if (block is null)
         {
             throw new ArgumentException("Kein solcher Block existiert.");
@@ -477,7 +480,7 @@ public class OtiumEndpointService
 
         var conflict = await _context.OtiaTermine.AnyAsync(t =>
             t.Otium.Id == otiumTermin.OtiumId &&
-            t.Block.Nummer == otiumTermin.Block &&
+            t.Block.SchemaId == otiumTermin.Block &&
             t.Block.Schultag.Datum == otiumTermin.Datum &&
             t.Tutor == tutor);
 
@@ -559,7 +562,7 @@ public class OtiumEndpointService
         _context.OtiaWiederholungen.Add(dbOtiumWiederholung);
 
         var blocks = _context.Blocks
-            .Where(b => b.Nummer == otiumWiederholung.Block &&
+            .Where(b => b.SchemaId == otiumWiederholung.Block &&
                         b.Schultag.Datum.DayOfWeek == otiumWiederholung.Wochentag &&
                         b.Schultag.Wochentyp == otiumWiederholung.Wochentyp &&
                         b.Schultag.Datum <= otiumWiederholung.EndDate &&

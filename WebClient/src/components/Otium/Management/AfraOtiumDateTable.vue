@@ -68,7 +68,7 @@ const create = (data) => {
     </Column>
     <Column field="block" header="Block">
       <template #body="{data}">
-        {{ data.block + 1 }}
+        {{ data.block }}
       </template>
     </Column>
     <Column field="tutor" header="Tutor">

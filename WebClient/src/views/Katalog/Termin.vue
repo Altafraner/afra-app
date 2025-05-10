@@ -89,10 +89,10 @@ async function loadTermin() {
   }
 }
 
-async function unenroll(start, evt) {
+async function unenroll() {
   buttonLoading.value = true
   try {
-    otium.value = await connection.value.delete(start.toString())
+    otium.value = await connection.value.delete()
     buttonLoading.value = false
   } catch (error) {
     toast.add({
@@ -103,10 +103,10 @@ async function unenroll(start, evt) {
   }
 }
 
-async function enroll(start, evt) {
+async function enroll() {
   buttonLoading.value = true
   try {
-    otium.value = await connection.value.put(start.toString())
+    otium.value = await connection.value.put()
     buttonLoading.value = false
   } catch (error) {
     toast.add({
@@ -191,7 +191,7 @@ setup();
             <Button v-if="data.kannBearbeiten" :disabled="buttonLoading" :loading="buttonLoading"
                     icon="pi pi-times"
                     label="Austragen" severity="danger" size="small"
-                    variant="text" @click="(evt) => unenroll(data.interval.start, evt)"/>
+                    variant="text" @click="() => unenroll()"/>
             <Button v-else v-tooltip.left="data.grund" disabled icon="pi pi-times"
                     label="Austragen" severity="danger" size="small" variant="text"/>
           </template>
@@ -199,7 +199,7 @@ setup();
             <Button v-if="data.kannBearbeiten" :disabled="buttonLoading" :loading="buttonLoading"
                     icon="pi pi-plus"
                     label="Einschreiben" size="small" variant="text"
-                    @click="(evt) => enroll(data.interval.start, evt)"/>
+                    @click="() => enroll()"/>
             <Button v-else v-tooltip.left="data.grund" :loading="buttonLoading" disabled
                     icon="pi pi-plus"
                     label="Einschreiben" size="small" variant="text"/>

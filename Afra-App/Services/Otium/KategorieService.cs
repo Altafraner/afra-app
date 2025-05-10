@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Afra_App.Data;
 using Afra_App.Data.Otium;
 using Microsoft.EntityFrameworkCore;
@@ -22,40 +23,16 @@ public class KategorieService
     }
 
     /// <summary>
-    ///     Return all categories.
+    ///     Return all required categories.
     /// </summary>
-    public async Task<List<Kategorie>> GetKategorienAsync(bool onlyRequired = false)
+    public async Task<List<Kategorie>> GetRequiredKategorienAsync()
     {
-        return await GenerateKategorieQuery(onlyRequired)
+        return await _context.OtiaKategorien
             .AsNoTracking()
-            .ToListAsync();
-    }
-
-    /// <summary>
-    ///     Return all categories.
-    /// </summary>
-    public async Task<List<Kategorie>> GetKategorienTrackingAsync(bool onlyRequired = false)
-    {
-        return await GenerateKategorieQuery(onlyRequired)
-            .ToListAsync();
-    }
-
-    /// <summary>
-    ///     Return all categories as an async enumerable.
-    /// </summary>
-    public IAsyncEnumerable<Kategorie> GetKategorienAsyncEnumerable(bool onlyRequired = false)
-    {
-        return GenerateKategorieQuery(onlyRequired)
-            .AsNoTracking()
-            .AsAsyncEnumerable();
-    }
-
-    private IQueryable<Kategorie> GenerateKategorieQuery(bool onlyRequired = false)
-    {
-        return _context.OtiaKategorien
             .Include(k => k.Children)
             .Include(kategorie => kategorie.Parent)
-            .Where(k => !onlyRequired || k.Required);
+            .Where(k => k.Required)
+            .ToListAsync();
     }
 
     /// <summary>
@@ -70,58 +47,45 @@ public class KategorieService
     }
 
     /// <summary>
-    ///     Checks if a category or any of its parents is in a list of categories.
-    /// </summary>
-    /// <param name="kategorie">The category to check</param>
-    /// <param name="availableKategorien">The list of kategories to check against</param>
-    /// <returns></returns>
-    public async Task<bool> IsKategorieTransitiveInIdListAsync(Kategorie kategorie,
-        List<Guid> availableKategorien)
-    {
-        ArgumentNullException.ThrowIfNull(availableKategorien);
-
-        var currentCategory = kategorie;
-        while (currentCategory is not null)
-        {
-            if (availableKategorien.Contains(currentCategory.Id))
-                return true;
-            currentCategory = await GetParentAsync(currentCategory);
-        }
-
-        return false;
-    }
-
-    /// <summary>
     ///     Gets a list of all transitive categories of a category.
     /// </summary>
     /// <param name="kategorie">The kategorie to find all parents for.</param>
-    /// <param name="tracking">Whether the <see cref="Kategorie" /> entry is tracking.</param>
     /// <returns>An Async Enumerable containing a kategorie and all its parents.</returns>
-    public async IAsyncEnumerable<Guid> GetTransitiveKategoriesIdsAsyncEnumerable(Kategorie kategorie,
-        bool tracking = true)
-    {
-        var transitiveKategories = GetTransitiveKategoriesAsyncEnumerable(kategorie, tracking);
-
-        await foreach (var transitiveKategory in transitiveKategories) yield return transitiveKategory.Id;
-    }
-
-    /// <summary>
-    ///     Gets a list of all transitive categories of a category.
-    /// </summary>
-    /// <param name="kategorie">The kategorie to find all parents for.</param>
-    /// <param name="tracking">Whether the <see cref="Kategorie" /> entry is tracking.</param>
-    /// <returns>An Async Enumerable containing a kategorie and all its parents.</returns>
-    public async IAsyncEnumerable<Kategorie> GetTransitiveKategoriesAsyncEnumerable(Kategorie kategorie,
-        bool tracking = true)
+    public async IAsyncEnumerable<Guid> GetTransitiveKategoriesIdsAsyncEnumerable(Kategorie kategorie)
     {
         // Extra variable needed to avoid null reference exception
-        var currentCategory = tracking ? kategorie : await _context.OtiaKategorien.FindAsync(kategorie.Id);
+        var currentCategory = await _context.OtiaKategorien.FindAsync(kategorie.Id);
 
         while (currentCategory is not null)
         {
-            yield return currentCategory;
+            yield return currentCategory.Id;
             currentCategory = await GetParentAsync(currentCategory);
         }
+    }
+
+    /// <summary>
+    /// Traverses the category tree upwards and returns the first required category.
+    /// </summary>
+    /// <param name="kategorie">The categorie to get the required parent from</param>
+    /// <returns>the first required parent if exists; Otherwise, null.</returns>
+    // This is handled by the reference.LoadAsync() call
+    [SuppressMessage("ReSharper", "EntityFramework.NPlusOne.IncompleteDataUsage")]
+    [SuppressMessage("ReSharper", "EntityFramework.NPlusOne.IncompleteDataQuery")]
+    public async Task<Kategorie?> GetRequiredParentAsync(Kategorie kategorie)
+    {
+        // TODO Cache this method. Should greatly improve performance
+        var current = await _context.OtiaKategorien.FindAsync(kategorie.Id);
+        while (current is not null)
+        {
+            if (current.Required)
+            {
+                return current;
+            }
+
+            current = await GetParentAsync(current);
+        }
+
+        return null;
     }
 
     private async Task<Kategorie?> GetParentAsync(Kategorie kategorie)

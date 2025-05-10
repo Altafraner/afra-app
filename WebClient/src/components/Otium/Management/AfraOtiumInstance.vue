@@ -58,7 +58,7 @@ const updateTutor = () => {
     </GridEditRow>
     <GridEditRow header="Block" hide-edit>
       <template #body>
-        {{ otium.block + 1 }}. Block
+        {{ otium.block }}. Block
       </template>
     </GridEditRow>
     <GridEditRow header="Ort" @edit="startEditOrt" @update="updateOrt">
