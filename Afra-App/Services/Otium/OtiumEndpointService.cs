@@ -54,7 +54,7 @@ public class OtiumEndpointService
     }
 
     /// <summary>
-    ///     Retrieves the Otium data for a given date and block.
+    ///     Retrieves the Otium data for a given date.
     /// </summary>
     /// <param name="date">The date for which to retrieve the Otium data.</param>
     /// <returns>A List of all Otia happening at that time.</returns>
@@ -79,14 +79,21 @@ public class OtiumEndpointService
             .OrderBy(t => t.IstAbgesagt)
             .ThenBy(t => t.Block.SchemaId)
             .ThenBy(t => t.Otium.Bezeichnung)
+            .Select(t => new TerminWithLoad
+            {
+                Termin = t,
+                Auslasung = t.MaxEinschreibungen == null
+                    ? null
+                    : (int)Math.Round((double)t.Enrollments.Count * 100 / t.MaxEinschreibungen.Value)
+            })
             .ToListAsync();
 
 
         // Calculate the load for each termin and cast it to a json object
         foreach (var termin in termine)
-            yield return new TerminPreview(termin,
-                await _enrollmentService.GetLoadPercent(termin),
-                _kategorieService.GetTransitiveKategoriesIdsAsyncEnumerable(termin.Otium.Kategorie));
+            yield return new TerminPreview(termin.Termin,
+                termin.Auslasung,
+                _kategorieService.GetTransitiveKategoriesIdsAsyncEnumerable(termin.Termin.Otium.Kategorie));
     }
 
     /// <summary>
@@ -874,6 +881,12 @@ public class OtiumEndpointService
 
         otiumTermin.Ort = ort;
         await _context.SaveChangesAsync();
+    }
+
+    private class TerminWithLoad
+    {
+        public required int? Auslasung { get; init; }
+        public required DB_Termin Termin { get; init; }
     }
 
     /// <summary>
