@@ -8,7 +8,7 @@ export const useUser = defineStore('user', {
     user: null
   }),
   getters: {
-    isStudent: (state) => state.user.rolle === "Student",
+    isStudent: (state) => state.user.rolle === "Oberstufe" || state.user.rolle === "Mittelstufe",
     isTeacher: (state) => state.user.rolle === "Tutor"
   },
   actions: {

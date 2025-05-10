@@ -65,7 +65,7 @@ fetchData()
     <h2 v-if="!all">Nächste Veranstaltungen</h2>
     <p v-if="!all">Gezeigt werden die Veranstaltungen der nächsten drei Wochen.</p>
     <h2 v-if="all">Alle Veranstaltungen</h2>
-    <StudentOverview :termine="termine"/>
+    <StudentOverview :student="mentee" :termine="termine"/>
     <Button v-if="!all" class="mt-4" @click="fetchData(true)" label="Alle anzeigen"
             severity="secondary" :loading="loading"/>
   </template>

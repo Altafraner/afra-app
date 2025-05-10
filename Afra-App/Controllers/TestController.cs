@@ -96,12 +96,12 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
 
         var studentsFaker = personFaker
             .RuleFor(p => p.Mentor, f => f.PickRandom(mentoren))
-            .RuleFor(p => p.Rolle, Rolle.Student);
+            .RuleFor(p => p.Rolle, f => f.PickRandomWithout(Rolle.Tutor));
 
 
         var students = seedUsers
             ? studentsFaker.Generate(250)
-            : await dbContext.Personen.Where(p => p.Rolle == Rolle.Student).ToListAsync();
+            : await dbContext.Personen.Where(p => p.Rolle != Rolle.Tutor).ToListAsync();
 
         var today = DateTime.Today;
         var nextMonday = today.AddDays((int)DayOfWeek.Monday - (int)today.DayOfWeek);
@@ -118,12 +118,12 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
         {
             blocks.Add(new Block
             {
-                SchemaId = '0',
+                SchemaId = '1',
                 Schultag = schultag
             });
             blocks.Add(new Block
             {
-                SchemaId = '1',
+                SchemaId = '2',
                 Schultag = schultag
             });
         }

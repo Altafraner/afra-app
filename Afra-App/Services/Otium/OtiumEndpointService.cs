@@ -4,7 +4,9 @@ using Afra_App.Data.Configuration;
 using Afra_App.Data.DTO;
 using Afra_App.Data.DTO.Otium;
 using Afra_App.Data.DTO.Otium.Katalog;
+using Afra_App.Data.People;
 using Afra_App.Data.TimeInterval;
+using Afra_App.Services.Email;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using DB_Otium = Afra_App.Data.Otium.Otium;
@@ -50,7 +52,8 @@ public class OtiumEndpointService
     /// <param name="date">The date to get the <see cref="TerminPreview"/>s for</param>
     public async Task<Tag> GetKatalogForDay(Person person, DateOnly date)
     {
-        return new Tag(GetTerminPreviewsForDay(date), await GetStatusForDayAsync(person, date));
+        return new Tag(GetTerminPreviewsForDay(date),
+            person.Rolle != Rolle.Oberstufe ? await GetStatusForDayAsync(person, date) : []);
     }
 
     /// <summary>
@@ -195,12 +198,14 @@ public class OtiumEndpointService
             .OrderBy(s => s.Datum)
             .ToListAsync();
 
-        var kategorieRuleByWeek = await _enrollmentService.CheckAllKategoriesInWeeks(allEinschreibungen);
-        var allEnrolledRuleByDay = new Dictionary<DateOnly, bool>();
-
-        // Check if the user is enrolled in all non-optional subblocks
         var einschreibungenByDay = allEinschreibungen.GroupBy(e => e.Termin.Block.Schultag)
             .ToDictionary(g => g.Key, g => g.ToList());
+
+        // Check if the user is enrolled in all non-optional subblocks
+        var kategorieRuleByWeek = user.Rolle != Rolle.Oberstufe
+            ? await _enrollmentService.CheckAllKategoriesInWeeks(allEinschreibungen)
+            : [];
+        var allEnrolledRuleByDay = new Dictionary<DateOnly, bool>();
         foreach (var (schultag, einschreibungen) in einschreibungenByDay)
             allEnrolledRuleByDay[schultag.Datum] =
                 _enrollmentService.AreAllNonOptionalBlocksEnrolled(schultag, einschreibungen);
@@ -209,7 +214,8 @@ public class OtiumEndpointService
         {
             var monday = schultag.Datum.AddDays(-(int)schultag.Datum.DayOfWeek + 1);
 
-            var localKategorienErfuellt = kategorieRuleByWeek.GetValueOrDefault(monday, false);
+            var localKategorienErfuellt =
+                user.Rolle == Rolle.Oberstufe || kategorieRuleByWeek.GetValueOrDefault(monday, false);
             var vollstaendig = allEnrolledRuleByDay.ContainsKey(schultag.Datum) && allEnrolledRuleByDay[schultag.Datum];
             var einschreibungen = einschreibungenByDay.Keys.Any(k => k.Datum == schultag.Datum)
                 ? einschreibungenByDay
@@ -287,6 +293,12 @@ public class OtiumEndpointService
 
         async Task<MenteePreview> GenerateMenteePreview(Person mentee)
         {
+            if (mentee.Rolle == Rolle.Oberstufe)
+                return new MenteePreview(new PersonInfoMinimal(mentee),
+                    MenteePreviewStatus.Okay,
+                    MenteePreviewStatus.Okay,
+                    MenteePreviewStatus.Okay);
+
             var enrollmentsPerDay = mentee.OtiaEinschreibungen.GroupBy(e => e.Termin.Block.Schultag.Datum)
                 .ToDictionary(g => g.Key, g => g.ToList());
             var isFullyEnrolledPerDay = new Dictionary<DateOnly, bool>();

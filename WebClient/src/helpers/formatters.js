@@ -4,7 +4,7 @@ export const formatTutor = tutor => tutor ? tutor.nachname + ", " + tutor.vornam
 
 export const formatStudent = student => student.vorname + " " + student.nachname
 
-export const formatPerson = person => person.rolle === "student" ? formatStudent(person) : formatTutor(person)
+export const formatPerson = person => person.rolle === "Oberstufe" || person.Rolle === "Mittelstufe" ? formatStudent(person) : formatTutor(person)
 
 export const formatDate = date => date.toLocaleDateString('de-DE', {
   weekday: "short",

@@ -4,12 +4,16 @@ using System.Security.Cryptography;
 using System.Text.Json.Serialization;
 using Afra_App.Authentication;
 using Afra_App.Authentication.Ldap;
+using Afra_App.Authentication.Saml;
 using Afra_App.Data;
 using Afra_App.Data.Configuration;
 using Afra_App.Data.People;
 using Afra_App.Endpoints;
+using Afra_App.Endpoints.Otium;
 using Afra_App.Services;
+using Afra_App.Services.Email;
 using Afra_App.Services.Otium;
+using Afra_App.Utilities;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
@@ -98,7 +102,7 @@ builder.Services.AddAuthentication()
 
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy(AuthorizationPolicies.StudentOnly,
-        policy => policy.RequireClaim(AfraAppClaimTypes.Role, nameof(Rolle.Student)))
+        policy => policy.RequireClaim(AfraAppClaimTypes.Role, nameof(Rolle.Oberstufe), nameof(Rolle.Mittelstufe)))
     .AddPolicy(AuthorizationPolicies.TutorOnly,
         policy => policy.RequireClaim(AfraAppClaimTypes.Role, nameof(Rolle.Tutor)));
 

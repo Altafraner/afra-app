@@ -44,9 +44,14 @@ public class LdapConfiguration
     public required string BaseDn { get; set; }
 
     /// <summary>
-    /// A group that all students are in
+    /// A group that all students in the Mittelstufe are in
     /// </summary>
-    public required string StudentGroup { get; set; }
+    public required string MittelstufeGroup { get; set; }
+
+    /// <summary>
+    /// A group that all students in the Oberstufe are in
+    /// </summary>
+    public required string OberstufeGroup { get; set; }
 
     /// <summary>
     /// A group that all teachers are in
@@ -67,12 +72,21 @@ public class LdapConfiguration
             return false;
         }
 
-        var studentGroupRequest = new SearchRequest(configuration.StudentGroup, "(objectClass=group)",
+        var mittelstufeGroupRequest = new SearchRequest(configuration.MittelstufeGroup, "(objectClass=group)",
             SearchScope.Base);
-        var studentGroupResponse = (SearchResponse)connection.SendRequest(studentGroupRequest);
-        if (studentGroupResponse.Entries.Count == 0)
+        var mittelstufeGroupResponse = (SearchResponse)connection.SendRequest(mittelstufeGroupRequest);
+        if (mittelstufeGroupResponse.Entries.Count == 0)
         {
-            Console.WriteLine("Student group does not exist in directory");
+            Console.WriteLine("Mittelstufe group does not exist in directory");
+            return false;
+        }
+
+        var oberstufeGroupRequest = new SearchRequest(configuration.OberstufeGroup, "(objectClass=group)",
+            SearchScope.Base);
+        var oberstufeGroupResponse = (SearchResponse)connection.SendRequest(oberstufeGroupRequest);
+        if (oberstufeGroupResponse.Entries.Count == 0)
+        {
+            Console.WriteLine("Oberstufe group does not exist in directory");
             return false;
         }
 

@@ -5,7 +5,7 @@ namespace Afra_App.Endpoints.Otium;
 /// <summary>
 ///     Contains endpoints for managing kategories.
 /// </summary>
-public static class KategorienEndpoints
+public static class Kategorien
 {
     /// <summary>
     ///     Maps the kategorie endpoints to the given <see cref="IEndpointRouteBuilder" />.

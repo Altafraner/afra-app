@@ -13,7 +13,14 @@ public enum Rolle
     [JsonStringEnumMemberName("Tutor")] Tutor,
 
     /// <summary>
-    ///     The person is a student
+    ///     The person is a student and in the Oberstufe
     /// </summary>
-    [JsonStringEnumMemberName("Student")] Student
+    [JsonStringEnumMemberName("Oberstufe")]
+    Oberstufe,
+
+    /// <summary>
+    ///     The person is a student and in the Mittelstufe
+    /// </summary>
+    [JsonStringEnumMemberName("Mittelstufe")]
+    Mittelstufe
 }

@@ -3,7 +3,7 @@ using System.Xml;
 using Afra_App.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Afra_App.Endpoints;
+namespace Afra_App.Authentication.Saml;
 
 /// <summary>
 ///     Extension methods for the SamlService

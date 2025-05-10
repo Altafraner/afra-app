@@ -10,7 +10,7 @@ namespace Afra_App.Endpoints.Otium;
 /// <summary>
 ///     A class containing the endpoints for the management of otia.
 /// </summary>
-public static class ManagementEndpoints
+public static class Management
 {
     /// <summary>
     ///     Maps the management endpoints to the given <see cref="IEndpointRouteBuilder" />.

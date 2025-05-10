@@ -4,7 +4,7 @@ using Afra_App.Data.People;
 using Microsoft.EntityFrameworkCore;
 using Quartz;
 
-namespace Afra_App.Services;
+namespace Afra_App.Services.Email;
 
 /// <summary>
 ///     An interface representing a batching email notification sender

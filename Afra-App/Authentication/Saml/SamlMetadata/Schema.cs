@@ -3,7 +3,7 @@ using System.Xml.Serialization;
 // For documentation see the official SAML Metadata specification.
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 
-namespace Afra_App.Authentication.SamlMetadata;
+namespace Afra_App.Authentication.Saml.SamlMetadata;
 
 [XmlRoot(ElementName = "X509Data", Namespace = "http://www.w3.org/2000/09/xmldsig#")]
 public class X509Data

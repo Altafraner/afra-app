@@ -47,31 +47,9 @@ public class LdapService
         var syncTime = DateTime.UtcNow;
         var dbUsers = await _context.Personen.Where(p => p.LdapObjectId != null).ToListAsync();
 
-        var teacherEntries = GetGroupEntries(connection, _configuration.TutorGroup);
-        foreach (SearchResultEntry entry in teacherEntries)
-        {
-            var success = TryGetOrCreatePersonFromEntry(entry, Rolle.Tutor, dbUsers, out var person);
-            if (!success)
-            {
-                _logger.LogWarning("Sync: Failed to create of find user from entry");
-                continue;
-            }
-
-            person!.LdapSyncTime = syncTime;
-        }
-
-        var studentEntries = GetGroupEntries(connection, _configuration.StudentGroup);
-        foreach (SearchResultEntry entry in studentEntries)
-        {
-            var success = TryGetOrCreatePersonFromEntry(entry, Rolle.Student, dbUsers, out var person);
-            if (!success)
-            {
-                _logger.LogWarning("Sync: Failed to create of find user from entry");
-                continue;
-            }
-
-            person!.LdapSyncTime = syncTime;
-        }
+        UpdateGroup(_configuration.TutorGroup, Rolle.Tutor);
+        UpdateGroup(_configuration.MittelstufeGroup, Rolle.Mittelstufe);
+        UpdateGroup(_configuration.OberstufeGroup, Rolle.Oberstufe);
 
         await _context.SaveChangesAsync();
 
@@ -82,6 +60,23 @@ public class LdapService
             _logger.LogWarning("There are {count} users that could not be synchronized", unsyncedUsers.Count);
 
         _logger.LogInformation("LDAP synchronization finished");
+        return;
+
+        void UpdateGroup(string ldapGroup, Rolle rolle)
+        {
+            var teacherEntries = GetGroupEntries(connection, ldapGroup);
+            foreach (SearchResultEntry entry in teacherEntries)
+            {
+                var success = TryGetOrCreatePersonFromEntry(entry, rolle, dbUsers, out var person);
+                if (!success)
+                {
+                    _logger.LogWarning("Sync: Failed to create of find user from entry");
+                    continue;
+                }
+
+                person!.LdapSyncTime = syncTime;
+            }
+        }
     }
 
     /// <summary>

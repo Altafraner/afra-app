@@ -1,11 +1,9 @@
-using Afra_App.Endpoints.Otium;
-
-namespace Afra_App.Endpoints;
+namespace Afra_App.Endpoints.Otium;
 
 /// <summary>
 ///     This class contains extension methods for the Otium endpoints.
 /// </summary>
-public static class OtiumExtensions
+public static class Extension
 {
     /// <summary>
     ///     Maps the Otium endpoints to the given <see cref="IEndpointRouteBuilder" />.

@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Afra_App.Services;
+namespace Afra_App.Utilities;
 
 /// <summary>
 ///     Converts a TimeOnly object to and from a string using the "t" format.

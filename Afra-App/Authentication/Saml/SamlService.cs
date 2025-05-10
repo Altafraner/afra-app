@@ -4,11 +4,12 @@ using System.Security.Cryptography.Xml;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
-using Afra_App.Authentication.SamlMetadata;
+using Afra_App.Authentication.Saml.SamlMetadata;
+using Afra_App.Utilities;
 using Microsoft.AspNetCore.Mvc;
-using KeyInfo = Afra_App.Authentication.SamlMetadata.KeyInfo;
+using KeyInfo = Afra_App.Authentication.Saml.SamlMetadata.KeyInfo;
 
-namespace Afra_App.Services;
+namespace Afra_App.Authentication.Saml;
 
 /// <summary>
 ///     A service for handling all SAML SP related tasks.
@@ -104,7 +105,7 @@ public class SamlService
             .Select(id => signedResponseXml.GetIdElement(responseXml, id))
             .OfType<XmlElement>()
             .Where(assertion => assertion is
-            { NamespaceURI: SamlAssertionNamespace, LocalName: SamlAssertionLocalName });
+                { NamespaceURI: SamlAssertionNamespace, LocalName: SamlAssertionLocalName });
 
         var signedAssertionsArray = signedAssertions as XmlElement[] ?? signedAssertions.ToArray();
 

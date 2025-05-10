@@ -4,7 +4,7 @@ using Microsoft.Extensions.Options;
 using MimeKit;
 using MimeKit.Text;
 
-namespace Afra_App.Services;
+namespace Afra_App.Services.Email;
 
 /// <summary>
 ///     An interface representing a email sender

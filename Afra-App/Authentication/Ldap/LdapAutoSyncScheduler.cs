@@ -1,7 +1,6 @@
-﻿using Afra_App.Authentication.Ldap;
-using Quartz;
+﻿using Quartz;
 
-namespace Afra_App.Services;
+namespace Afra_App.Authentication.Ldap;
 
 /// <summary>
 /// A background service that schedules the LDAP synchronization job

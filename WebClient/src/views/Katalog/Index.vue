@@ -175,7 +175,7 @@ startup()
       <AfraKategorySelector v-model="kategorie" :options="kategorieOptionsTree"
                             @change="categoryChanged"/>
 
-      <template v-if="user.isStudent">
+      <template v-if="user.isStudent && user.user.rolle !== 'Oberstufe'">
         <Message v-if="hinweise.length === 0" severity="success">
           Deine Belegung entspricht den Vorgaben.
         </Message>

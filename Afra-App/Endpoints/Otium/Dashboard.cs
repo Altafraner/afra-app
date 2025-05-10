@@ -8,7 +8,7 @@ namespace Afra_App.Endpoints.Otium;
 /// <summary>
 ///     A class containing the endpoints for the dashboard.
 /// </summary>
-public static class DashboardEndpoints
+public static class Dashboard
 {
     /// <summary>
     ///     Maps the dashboard endpoints to the given <see cref="IEndpointRouteBuilder" />.

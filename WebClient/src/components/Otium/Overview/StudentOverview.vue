@@ -10,10 +10,26 @@ import {
   Column,
   DataTable
 } from "primevue";
+import {useUser} from "@/stores/useUser.js";
+import {computed} from "vue";
 
 const props = defineProps({
   termine: Array,
-  showKatalog: Boolean
+  showKatalog: Boolean,
+  student: {
+    type: Object,
+    required: false
+  }
+})
+const user = useUser();
+
+
+const isOs = computed(() => {
+  if (props.student) {
+    return props.student.rolle === "Oberstufe";
+  }
+
+  return user.user.rolle === "Oberstufe"
 })
 
 </script>
@@ -26,12 +42,12 @@ const props = defineProps({
           <span>
             {{ formatDate(new Date(termin.datum)) }}
           </span>
-          <span class="flex flex-row gap-3">
+          <span v-if="!isOs" class="flex flex-row gap-3">
             <Badge class="w-[8rem]" v-if="termin.vollstaendig && termin.kategorienErfuellt"
                    severity="secondary">Ok</Badge>
             <Badge class="w-[8rem]" v-else-if="termin.vollstaendig && !termin.kategorienErfuellt"
                    severity="warn">Kategorien fehlen</Badge>
-            <Badge v-else class="w-[8rem]" severity="danger">Auffällig</Badge>
+            <Badge v-else class="w-[8rem]" severity="danger">Offen</Badge>
           </span>
         </div>
       </AccordionHeader>
@@ -59,7 +75,8 @@ const props = defineProps({
               <Button v-if="props.showKatalog" class="w-[8rem]" size="small" as="RouterLink"
                       :to="{name: 'Katalog-Datum', params: {datum: termin.datum}}" label="Katalog"/>
               <span v-else/>
-              <span class="flex flex-row gap-3 mr-[var(--p-icon-size)] flex-wrap justify-end">
+              <span v-if="!isOs"
+                    class="flex flex-row gap-3 mr-[var(--p-icon-size)] flex-wrap justify-end">
                 <Badge class="w-[8rem]" v-if="!termin.kategorienErfuellt" severity="warn">Kategorien fehlen</Badge>
                 <Badge class="w-[8rem]" v-if="!termin.vollstaendig"
                        severity="danger">Unvollständig</Badge>

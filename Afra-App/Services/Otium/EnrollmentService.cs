@@ -273,7 +273,8 @@ public class EnrollmentService
         var startDateTime = new DateTime(termin.Block.Schultag.Datum, schema.Interval.Start);
         if (startDateTime <= DateTime.Now) return (false, "Der Termin hat bereits begonnen.");
 
-        if (user.Rolle != Rolle.Student) return (false, "Nur Schüler:innen können sich einschreiben.");
+        if (user.Rolle is not Rolle.Mittelstufe and not Rolle.Oberstufe)
+            return (false, "Nur Schüler:innen können sich einschreiben.");
 
         return (true, null);
     }
@@ -333,6 +334,10 @@ public class EnrollmentService
 
         if (parallelEnrollment)
             return (false, "Du bist bereits zur selben Zeit eingeschrieben");
+
+        // Further rules do not apply to students in the Oberstufe
+        if (user.Rolle == Rolle.Oberstufe)
+            return (true, null);
 
         // Check if the user is adhering to the required categories
         var lastAvailableBlockRuleFulfilled = await LastAvailableBlockRuleFulfilled(user, termin);

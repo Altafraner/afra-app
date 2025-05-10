@@ -1,6 +1,6 @@
 using System.Security.Cryptography.X509Certificates;
 
-namespace Afra_App.Services;
+namespace Afra_App.Utilities;
 
 internal static class CertificateHelper
 {
