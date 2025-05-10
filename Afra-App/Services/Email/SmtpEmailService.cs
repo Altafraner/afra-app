@@ -7,27 +7,16 @@ using MimeKit.Text;
 namespace Afra_App.Services.Email;
 
 /// <summary>
-///     An interface representing a email sender
-/// </summary>
-public interface IEmailService
-{
-    /// <summary>
-    ///     Sends an Email
-    /// </summary>
-    public Task SendEmailAsync(string to, string subject, string body);
-}
-
-/// <summary>
 ///     An email sending service
 /// </summary>
-public class EmailService : IEmailService
+public class SmtpEmailService : IEmailService
 {
     private readonly EmailConfiguration _emailConfiguration;
 
     /// <summary>
-    ///     Constructs the EmailService. Usually called by the DI container.
+    ///     Constructs the SmtpEmailService. Usually called by the DI container.
     /// </summary>
-    public EmailService(IOptions<EmailConfiguration> emailConfiguration)
+    public SmtpEmailService(IOptions<EmailConfiguration> emailConfiguration)
     {
         _emailConfiguration = emailConfiguration.Value;
     }
@@ -61,31 +50,5 @@ public class EmailService : IEmailService
 
         await smtp.SendAsync(email);
         await smtp.DisconnectAsync(true);
-    }
-}
-
-/// <summary>
-///     An email sending service for debugging that logs any emails to the console unsent
-/// </summary>
-public class MockEmailService : IEmailService
-{
-    private readonly ILogger _logger;
-
-    /// <summary>
-    ///     Constructs the EmailService. Usually called by the DI container.
-    /// </summary>
-    public MockEmailService(ILogger<MockEmailService> logger)
-    {
-        _logger = logger;
-    }
-
-    /// <summary>
-    ///     Schedule an Email for ASAP delivery.
-    ///     Might batch multiple messages into a single SMTP session in the future.
-    /// </summary>
-    public Task SendEmailAsync(string toAddress, string subject, string body)
-    {
-        _logger.LogInformation("Sending Mail for {to}, subject: {subject}, body:\n{body}", toAddress, subject, body);
-        return Task.CompletedTask;
     }
 }
