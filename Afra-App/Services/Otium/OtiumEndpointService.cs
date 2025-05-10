@@ -149,7 +149,7 @@ public class OtiumEndpointService
         var missingCategories = await _enrollmentService.GetMissingKategories(weeksEnrollments);
 
         messages.AddRange(missingCategories.Select(category =>
-            $"Es muss mindestens ein Angebot der Kategorie \"{category.Bezeichnung}\" pro Woche belegt werden."));
+            $"Es muss mindestens ein Angebot der Kategorie \"{category}\" pro Woche belegt werden."));
 
         return messages;
     }

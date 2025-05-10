@@ -51,6 +51,7 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.Converters.Add(new TimeOnlyJsonConverter());
 });
 builder.Services.AddControllers();
+builder.Services.AddHybridCache();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddDbContext<AfraAppContext>(options =>

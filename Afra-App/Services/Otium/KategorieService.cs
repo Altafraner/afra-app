@@ -1,7 +1,7 @@
-using System.Diagnostics.CodeAnalysis;
 using Afra_App.Data;
 using Afra_App.Data.Otium;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 
 namespace Afra_App.Services.Otium;
 
@@ -10,16 +10,18 @@ namespace Afra_App.Services.Otium;
 /// </summary>
 public class KategorieService
 {
+    private readonly HybridCache _cache;
     private readonly AfraAppContext _context;
     private readonly ILogger _logger;
 
     /// <summary>
     ///     Constructor for the KategorieService. Usually called by the DI container.
     /// </summary>
-    public KategorieService(AfraAppContext context, ILogger<KategorieService> logger)
+    public KategorieService(AfraAppContext context, ILogger<KategorieService> logger, HybridCache cache)
     {
         _context = context;
         _logger = logger;
+        _cache = cache;
     }
 
     /// <summary>
@@ -66,20 +68,24 @@ public class KategorieService
     /// <summary>
     /// Traverses the category tree upwards and returns the first required category.
     /// </summary>
-    /// <param name="kategorie">The categorie to get the required parent from</param>
+    /// <param name="kategorie">The category to get the required parent from</param>
     /// <returns>the first required parent if exists; Otherwise, null.</returns>
     // This is handled by the reference.LoadAsync() call
-    [SuppressMessage("ReSharper", "EntityFramework.NPlusOne.IncompleteDataUsage")]
-    [SuppressMessage("ReSharper", "EntityFramework.NPlusOne.IncompleteDataQuery")]
-    public async Task<Kategorie?> GetRequiredParentAsync(Kategorie kategorie)
+    public async Task<Guid?> GetRequiredParentIdAsync(Kategorie kategorie)
     {
-        // TODO Cache this method. Should greatly improve performance
+        return await _cache.GetOrCreateAsync($"otium-kategorie-required-parent-{kategorie.Id}",
+            async _ => await FetchRequiredParentAsync(kategorie),
+            tags: ["otium-kategorie", "otium"]);
+    }
+
+    private async Task<Guid?> FetchRequiredParentAsync(Kategorie kategorie)
+    {
         var current = await _context.OtiaKategorien.FindAsync(kategorie.Id);
         while (current is not null)
         {
             if (current.Required)
             {
-                return current;
+                return current.Id;
             }
 
             current = await GetParentAsync(current);

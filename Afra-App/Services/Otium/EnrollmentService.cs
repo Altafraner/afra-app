@@ -152,17 +152,20 @@ public class EnrollmentService
     /// <returns>
     ///     An enumerable of all <see cref="Kategorie">Kategorien</see> that are required but covered by the <paramref name="enrollments"/>
     /// </returns>
-    public async Task<HashSet<Kategorie>> GetMissingKategories(IEnumerable<Einschreibung> enrollments)
+    public async Task<List<string>> GetMissingKategories(IEnumerable<Einschreibung> enrollments)
     {
         // Get required categories
-        var requiredKategories = (await _kategorieService.GetRequiredKategorienAsync()).ToHashSet();
+        var requiredKategories = (await _kategorieService.GetRequiredKategorienAsync()).Select(c => c.Id).ToHashSet();
         foreach (var enrollment in enrollments)
         {
-            var requiredParent = await _kategorieService.GetRequiredParentAsync(enrollment.Termin.Otium.Kategorie);
-            if (requiredParent != null) requiredKategories.Remove(requiredParent);
+            var requiredParent = await _kategorieService.GetRequiredParentIdAsync(enrollment.Termin.Otium.Kategorie);
+            if (requiredParent != null) requiredKategories.Remove(requiredParent.Value);
         }
 
-        return requiredKategories;
+        return await _context.OtiaKategorien
+            .Where(k => requiredKategories.Contains(k.Id))
+            .Select(k => k.Bezeichnung)
+            .ToListAsync();
     }
 
     /// <summary>
@@ -197,8 +200,8 @@ public class EnrollmentService
             foreach (var einschreibung in weekEinschreibungen)
             {
                 var requiredParent =
-                    await _kategorieService.GetRequiredParentAsync(einschreibung.Termin.Otium.Kategorie);
-                if (requiredParent != null) localRequiredKategories.Remove(requiredParent.Id);
+                    await _kategorieService.GetRequiredParentIdAsync(einschreibung.Termin.Otium.Kategorie);
+                if (requiredParent != null) localRequiredKategories.Remove(requiredParent.Value);
             }
 
             var kategorieRuleFulfilled = localRequiredKategories.Count == 0;
@@ -372,9 +375,9 @@ public class EnrollmentService
         // Once we have async linq we can do this with a set minus
         foreach (var cat in userKategoriesInWeek)
         {
-            var required = await _kategorieService.GetRequiredParentAsync(cat);
+            var required = await _kategorieService.GetRequiredParentIdAsync(cat);
             if (required != null)
-                requiredKategories.Remove(required.Id);
+                requiredKategories.Remove(required.Value);
         }
 
         if (requiredKategories.Count == 0)
@@ -390,8 +393,8 @@ public class EnrollmentService
             .Include(b => b.Schultag)
             .ToListAsync();
 
-        var terminsRequiredCategory = await _kategorieService.GetRequiredParentAsync(termin.Otium.Kategorie);
-        if (terminsRequiredCategory != null) requiredKategories.Remove(terminsRequiredCategory.Id);
+        var terminsRequiredCategory = await _kategorieService.GetRequiredParentIdAsync(termin.Otium.Kategorie);
+        if (terminsRequiredCategory != null) requiredKategories.Remove(terminsRequiredCategory.Value);
 
         var blockCategories = new Dictionary<Guid, HashSet<Guid>>();
 
@@ -408,9 +411,9 @@ public class EnrollmentService
 
             foreach (var cat in cats)
             {
-                var reqCat = await _kategorieService.GetRequiredParentAsync(cat);
-                if (reqCat is not null && requiredKategories.Contains(reqCat.Id))
-                    blockCategories[block.Id].Add(reqCat.Id);
+                var reqCat = await _kategorieService.GetRequiredParentIdAsync(cat);
+                if (reqCat is not null && requiredKategories.Contains(reqCat.Value))
+                    blockCategories[block.Id].Add(reqCat.Value);
             }
         }
 
