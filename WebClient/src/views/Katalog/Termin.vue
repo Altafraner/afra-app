@@ -1,15 +1,5 @@
 ﻿<script setup>
-import {
-  Badge,
-  Button,
-  Column,
-  DataTable,
-  MeterGroup,
-  Popover,
-  Skeleton,
-  Tag,
-  useToast
-} from "primevue";
+import {Badge, Button, Column, DataTable, MeterGroup, Skeleton, Tag, useToast} from "primevue";
 import {computed, ref} from "vue";
 import AfraKategorieTag from "@/components/Otium/Shared/AfraKategorieTag.vue";
 import {chooseColor, formatDate, formatTime, formatTutor} from "@/helpers/formatters.js";
@@ -32,8 +22,6 @@ const loading = ref(true)
 const buttonLoading = ref(true)
 const otium = ref(null)
 const connection = ref(null)
-const poprev = ref()
-const grund = ref("")
 
 const navItems = computed(() => {
   if (loading.value) return [];
@@ -159,9 +147,7 @@ setup();
         {{ formatDate(new Date(otium.datum)) }}, {{ formatTime(new Date(otium.datum)) }} Uhr
       </span>
     </p>
-    <p v-for="beschreibung in otium.beschreibung.split('\n').filter(desc => desc)"
-       v-if="!props.minimal && otium.beschreibung">
-      {{ beschreibung }}</p>
+
     <DataTable :value="otium.einschreibungen">
       <Column header="Start">
         <template #body="{data}">
@@ -207,10 +193,11 @@ setup();
         </template>
       </Column>
     </DataTable>
-
-    <Popover ref="poprev">
-      {{ grund }}
-    </Popover>
+    <h3>Beschreibung</h3>
+    <p v-for="beschreibung in otium.beschreibung.split('\n').filter(desc => desc)"
+       v-if="!props.minimal && otium.beschreibung">
+      {{ beschreibung }}
+    </p>
   </template>
   <div v-else>
     <h1>
