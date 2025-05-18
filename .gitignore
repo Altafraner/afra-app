@@ -4,3 +4,5 @@ Afra-App.sln.DotSettings.user
 dev/certs/*.pem
 dev/certs/*.key
 dev/idp.env
+
+docs/requests/**/*.private.env.json
