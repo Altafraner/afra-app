@@ -1,0 +1,28 @@
+﻿### Get All Schooldays
+GET {{hostAddress}}/api/schuljahr
+Accept: application/json
+
+
+### Create Schooldays with blocks
+POST {{hostAddress}}/api/schuljahr/schultage
+Content-Type: application/json
+Accept: application/json
+
+[
+    {
+        "datum": "2025-04-18",
+        "wochentyp": "N-Woche",
+        "blocks": [
+            "1",
+            "2",
+            "P"
+        ]
+    },
+    {
+        "datum": "2025-04-19",
+        "wochentyp": "H-Woche",
+        "blocks": [
+            "P"
+        ]
+    }
+]
