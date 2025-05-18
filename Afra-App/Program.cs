@@ -108,6 +108,7 @@ builder.Services.AddAuthorizationBuilder()
 
 if (builder.Configuration.GetValue<bool>("Saml:Enabled")) builder.Services.AddSingleton<SamlService>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<BlockHelper>();
 builder.Services.AddScoped<KategorieService>();
 builder.Services.AddScoped<OtiumEndpointService>();
 builder.Services.AddScoped<EnrollmentService>();

@@ -1,12 +1,10 @@
 using Afra_App.Data;
-using Afra_App.Data.Configuration;
 using Afra_App.Data.DTO.Otium;
 using Afra_App.Data.Otium;
 using Afra_App.Data.People;
 using Afra_App.Data.Schuljahr;
 using Afra_App.Data.TimeInterval;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Einschreibung = Afra_App.Data.Otium.Einschreibung;
 using Termin = Afra_App.Data.Otium.Termin;
 
@@ -17,7 +15,7 @@ namespace Afra_App.Services.Otium;
 /// </summary>
 public class EnrollmentService
 {
-    private readonly OtiumConfiguration _configuration;
+    private readonly BlockHelper _blockHelper;
     private readonly AfraAppContext _context;
     private readonly KategorieService _kategorieService;
     private readonly ILogger _logger;
@@ -26,13 +24,13 @@ public class EnrollmentService
     ///     Constructs the EnrollmentService. Usually called by the DI container.
     /// </summary>
     public EnrollmentService(AfraAppContext context,
-        KategorieService kategorieService, IOptions<OtiumConfiguration> configuration,
-        ILogger<EnrollmentService> logger)
+        KategorieService kategorieService,
+        ILogger<EnrollmentService> logger, BlockHelper blockHelper)
     {
         _context = context;
         _kategorieService = kategorieService;
-        _configuration = configuration.Value;
         _logger = logger;
+        _blockHelper = blockHelper;
     }
 
     /// <summary>
@@ -60,6 +58,7 @@ public class EnrollmentService
         {
             Termin = termin,
             BetroffenePerson = student,
+            Interval = _blockHelper.Get(termin.Block.SchemaId)!.Interval
         };
 
         _context.OtiaEinschreibungen.Add(einschreibung);
@@ -121,7 +120,7 @@ public class EnrollmentService
 
         foreach (var schemaId in notEnrolledBlocks)
         {
-            var schema = _configuration.Blocks.First(b => b.Id == schemaId);
+            var schema = _blockHelper.Get(schemaId)!;
             if (schema.Verpflichtend) timeline.Add(schema.Interval);
         }
 
@@ -146,11 +145,11 @@ public class EnrollmentService
     }
 
     /// <summary>
-    /// Gets all kategories that are required for a set of enrollments and not included in the categories of enrollments.
+    /// Gets all categories that are required for a set of enrollments and not included in the categories of enrollments.
     /// </summary>
     /// <param name="enrollments">The enrollments to exclude the (transitive) categories from</param>
     /// <returns>
-    ///     An enumerable of all <see cref="Kategorie">Kategorien</see> that are required but covered by the <paramref name="enrollments"/>
+    ///     A List of all <see cref="Kategorie">Kategorien</see> that are required but covered by the <paramref name="enrollments"/>
     /// </returns>
     public async Task<List<string>> GetMissingKategories(IEnumerable<Einschreibung> enrollments)
     {
@@ -158,6 +157,8 @@ public class EnrollmentService
         var requiredKategories = (await _kategorieService.GetRequiredKategorienAsync()).Select(c => c.Id).ToHashSet();
         foreach (var enrollment in enrollments)
         {
+            if (enrollment.Interval.Duration < _blockHelper.Get(enrollment.Termin.Block.SchemaId)!.Interval.Duration)
+                continue;
             var requiredParent = await _kategorieService.GetRequiredParentIdAsync(enrollment.Termin.Otium.Kategorie);
             if (requiredParent != null) requiredKategories.Remove(requiredParent.Value);
         }
@@ -184,6 +185,8 @@ public class EnrollmentService
             .ToList();
 
         var einschreibungenByWeek = new Dictionary<DateOnly, List<Einschreibung>>();
+        var blockDurations = allEinschreibungen.Select(e => e.Termin.Block.SchemaId).Distinct()
+            .ToDictionary(id => id, id => _blockHelper.Get(id)!.Interval.Duration);
         foreach (var einschreibung in allEinschreibungen)
         {
             var day = einschreibung.Termin.Block.Schultag.Datum;
@@ -199,6 +202,8 @@ public class EnrollmentService
             var localRequiredKategories = requiredKategories.ToHashSet();
             foreach (var einschreibung in weekEinschreibungen)
             {
+                if (einschreibung.Interval.Duration < blockDurations[einschreibung.Termin.Block.SchemaId])
+                    continue;
                 var requiredParent =
                     await _kategorieService.GetRequiredParentIdAsync(einschreibung.Termin.Otium.Kategorie);
                 if (requiredParent != null) localRequiredKategories.Remove(requiredParent.Value);
@@ -223,7 +228,7 @@ public class EnrollmentService
             .Where(e => e.Termin == termin)
             .ToListAsync();
 
-        var schema = _configuration.Blocks.FirstOrDefault(b => b.Id == termin.Block.SchemaId);
+        var schema = _blockHelper.Get(termin.Block.SchemaId);
         if (schema == null)
         {
             _logger.LogWarning(
@@ -262,7 +267,7 @@ public class EnrollmentService
 
     private (bool MayUnEnroll, string? Reason) CommonMayUnEnroll(Person user, Termin termin)
     {
-        var schema = _configuration.Blocks.FirstOrDefault(b => b.Id == termin.Block.SchemaId);
+        var schema = _blockHelper.Get(termin.Block.SchemaId);
 
         if (schema == null)
         {
@@ -368,7 +373,12 @@ public class EnrollmentService
                         e.Termin.Block.Schultag.Datum < DateOnly.FromDateTime(weekInterval.End))
             .ToListAsync();
 
+        var usersBlocks = usersEnrollmentsInWeek.Select(e => e.Termin.Block.Id);
+        var blockDurations = usersEnrollmentsInWeek
+            .ToDictionary(e => e.Termin.Block.Id, e => _blockHelper.Get(e.Termin.Block.SchemaId)!.Interval.Duration);
+
         var userKategoriesInWeek = usersEnrollmentsInWeek
+            .Where(e => e.Interval.Duration >= blockDurations[e.Termin.Block.Id])
             .Select(e => e.Termin.Otium.Kategorie)
             .Distinct()
             .ToList();
@@ -387,9 +397,6 @@ public class EnrollmentService
 
         if (requiredKategories.Count == 0)
             return true;
-
-        // I have to do this before the next query as ef core cannot translate it automatically
-        var usersBlocks = usersEnrollmentsInWeek.Select(e => e.Termin.Block.Id);
 
         var blocksAvailable = await _context.Blocks
             .Where(b => b.Schultag.Datum >= firstDayOfWeek && b.Schultag.Datum < lastDayOfWeek)

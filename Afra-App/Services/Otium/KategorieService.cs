@@ -12,15 +12,13 @@ public class KategorieService
 {
     private readonly HybridCache _cache;
     private readonly AfraAppContext _context;
-    private readonly ILogger _logger;
 
     /// <summary>
     ///     Constructor for the KategorieService. Usually called by the DI container.
     /// </summary>
-    public KategorieService(AfraAppContext context, ILogger<KategorieService> logger, HybridCache cache)
+    public KategorieService(AfraAppContext context, HybridCache cache)
     {
         _context = context;
-        _logger = logger;
         _cache = cache;
     }
 
@@ -84,9 +82,7 @@ public class KategorieService
         while (current is not null)
         {
             if (current.Required)
-            {
                 return current.Id;
-            }
 
             current = await GetParentAsync(current);
         }

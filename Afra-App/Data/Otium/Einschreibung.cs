@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Afra_App.Data.People;
+using Afra_App.Data.TimeInterval;
 
 namespace Afra_App.Data.Otium;
 
@@ -23,4 +24,9 @@ public class Einschreibung
     ///     A reference to the person affected by the enrollment.
     /// </summary>
     public required Person BetroffenePerson { get; set; }
+
+    /// <summary>
+    /// The time the enrollment is in. Usually, this is the full duration of the <see cref="Termin"/>.
+    /// </summary>
+    public required TimeOnlyInterval Interval { get; set; }
 }

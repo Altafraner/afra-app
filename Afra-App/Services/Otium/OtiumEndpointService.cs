@@ -1,6 +1,5 @@
 using System.Text;
 using Afra_App.Data;
-using Afra_App.Data.Configuration;
 using Afra_App.Data.DTO;
 using Afra_App.Data.DTO.Otium;
 using Afra_App.Data.DTO.Otium.Katalog;
@@ -8,7 +7,6 @@ using Afra_App.Data.People;
 using Afra_App.Data.TimeInterval;
 using Afra_App.Services.Email;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using DB_Otium = Afra_App.Data.Otium.Otium;
 using DB_Termin = Afra_App.Data.Otium.Termin;
 using DB_Wiederholung = Afra_App.Data.Otium.Wiederholung;
@@ -26,23 +24,23 @@ namespace Afra_App.Services.Otium;
 public class OtiumEndpointService
 {
     private readonly IBatchingEmailService _batchingEmailService;
+    private readonly BlockHelper _blockHelper;
     private readonly AfraAppContext _context;
     private readonly EnrollmentService _enrollmentService;
     private readonly KategorieService _kategorieService;
-    private readonly OtiumConfiguration _otiumConfiguration;
 
     /// <summary>
     ///     Constructor for the OtiumEndpointService. Usually called by the DI container.
     /// </summary>
     public OtiumEndpointService(AfraAppContext context, KategorieService kategorieService,
-        IOptions<OtiumConfiguration> otiumConfiguration, EnrollmentService enrollmentService,
-        IBatchingEmailService batchingEmailService)
+        EnrollmentService enrollmentService,
+        IBatchingEmailService batchingEmailService, BlockHelper blockHelper)
     {
         _context = context;
         _kategorieService = kategorieService;
         _enrollmentService = enrollmentService;
-        _otiumConfiguration = otiumConfiguration.Value;
         _batchingEmailService = batchingEmailService;
+        _blockHelper = blockHelper;
     }
 
     /// <summary>
@@ -118,7 +116,7 @@ public class OtiumEndpointService
         return new Termin(termin,
             _enrollmentService.GetEnrolmentPreviews(user, termin),
             _kategorieService.GetTransitiveKategoriesIdsAsyncEnumerable(termin.Otium.Kategorie),
-            _otiumConfiguration.Blocks.First(b => b.Id == termin.Block.SchemaId).Interval.Start);
+            _blockHelper.Get(termin.Block.SchemaId)!.Interval.Start);
     }
 
     private async Task<IEnumerable<string>> GetStatusForDayAsync(Person user, DateOnly date)
@@ -159,7 +157,7 @@ public class OtiumEndpointService
         var missingCategories = await _enrollmentService.GetMissingKategories(weeksEnrollments);
 
         messages.AddRange(missingCategories.Select(category =>
-            $"Es muss mindestens ein Angebot der Kategorie \"{category}\" pro Woche belegt werden."));
+            $"Es muss mindestens ein Angebot der Kategorie \"{category}\" pro Woche für einen vollen Block belegt werden."));
 
         return messages;
     }
