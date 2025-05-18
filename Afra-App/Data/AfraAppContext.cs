@@ -96,6 +96,8 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
             t.HasOne(ot => ot.Otium)
                 .WithMany(o => o.Termine);
             t.HasOne(ot => ot.Tutor).WithMany();
+            t.HasOne(ot => ot.Block).WithMany()
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Wiederholung>(w =>
@@ -120,7 +122,8 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
         {
             b.HasOne(e => e.Schultag)
                 .WithMany(e => e.Blocks)
-                .HasForeignKey(e => e.SchultagKey);
+                .HasForeignKey(e => e.SchultagKey)
+                .OnDelete(DeleteBehavior.Cascade);
 
             b.HasIndex(e => new { e.SchultagKey, Nummer = e.SchemaId })
                 .IsUnique();
