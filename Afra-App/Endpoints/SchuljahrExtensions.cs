@@ -63,6 +63,29 @@ public static class SchuljahrExtensions
                 Type = nameof(DtoSchultag.Blocks)
             });
 
+
+        foreach (var schultag in schultage.ToList())
+        {
+            var conflict = await context.Schultage.Include(e => e.Blocks)
+                .FirstOrDefaultAsync(s => s.Datum == schultag.Datum);
+            if (conflict == null) continue;
+
+            conflict.Wochentyp = schultag.Wochentyp;
+            schultage.Remove(schultag);
+
+            if (conflict.Blocks.All(b1 => schultag.Blocks.Any(b2 => b1.SchemaId == b2.SchemaId)) &&
+                schultag.Blocks.All(b1 => conflict.Blocks.Any(b2 => b1.SchemaId == b2.SchemaId)))
+                continue;
+
+            foreach (var block in schultag.Blocks)
+                if (conflict.Blocks.All(b => b.SchemaId != block.SchemaId))
+                    conflict.Blocks.Add(block);
+
+            foreach (var block in conflict.Blocks)
+                if (schultag.Blocks.All(b => b.SchemaId != block.SchemaId))
+                    conflict.Blocks.Remove(block);
+        }
+
         await context.Schultage.AddRangeAsync(schultage);
         await context.SaveChangesAsync();
 
