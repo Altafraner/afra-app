@@ -14,6 +14,13 @@ setup();
 
 <template>
   <h2>Schultage</h2>
+  <p>Hier können Sie die Schultage in diesem Schuljahr verwalten. Sie können auch
+    <Button :to="{name: 'Verwaltung-Schuljahr-Neu'}" as="RouterLink" class="p-0 hover:underline"
+            variant="link">
+      mehrere Termine
+      anlegen.
+    </Button>
+  </p>
   <DataTable :value="settings.schuljahr">
     <Column header="Datum">
       <template #body="{data}">{{
