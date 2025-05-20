@@ -31,8 +31,8 @@ export const useSettings = defineStore('settings', {
         console.error("Error fetching kategorien", error);
       }
     },
-    async updateSchuljahr() {
-      if (this.schuljahr) return;
+    async updateSchuljahr(force = false) {
+      if (!force && this.schuljahr) return;
       const termineGetter = mande("/api/schuljahr")
       try {
         const termine = await termineGetter.get();

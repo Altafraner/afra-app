@@ -1,12 +1,29 @@
 ﻿<script setup>
 
 import {useSettings} from "@/stores/useSettings.js";
-import {Button, Column, DataTable} from "primevue";
+import {Button, Column, DataTable, useDialog} from "primevue";
+import CreateSchoolday from "@/components/General/CreateSchoolday.vue";
 
 const settings = useSettings();
+const dialog = useDialog();
 
 async function setup() {
-  await settings.updateSchuljahr();
+  await settings.updateSchuljahr(true);
+}
+
+function addDay() {
+  dialog.open(CreateSchoolday, {
+    props: {
+      modal: true,
+      header: "Tag hinzufügen",
+    },
+    emits: {
+      onUpdate: () => {
+        console.log("Received update event");
+        settings.updateSchuljahr(true);
+      }
+    }
+  })
 }
 
 setup();
@@ -45,7 +62,7 @@ setup();
     </Column>
     <Column class="afra-col-action text-right">
       <template #header>
-        <Button v-tooltip="'Tag hinzufügen'" icon="pi pi-plus" size="small"/>
+        <Button v-tooltip="'Tag hinzufügen'" icon="pi pi-plus" size="small" @click="addDay"/>
       </template>
       <template #body>
         <Button v-tooltip="'bearbeiten'" icon="pi pi-pencil" severity="secondary" size="small"
