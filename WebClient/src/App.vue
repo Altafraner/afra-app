@@ -2,6 +2,7 @@
 import '@/assets/main.css'
 import 'primeicons/primeicons.css'
 
+import DynamicDialog from 'primevue/dynamicdialog';
 import AfraNav from "@/components/AfraNav.vue";
 import {useUser} from "@/stores/useUser.js";
 import wappen from '/favicon.svg?url'
@@ -22,6 +23,7 @@ user.update().catch(() => {
 <template>
   <Toast/>
   <ConfirmPopup/>
+  <DynamicDialog/>
   <Message severity="warn" closable>
     Sie sehen eine Testversion der Otiums-App. Alle Daten können jederzeit gelöscht werden.
   </Message>

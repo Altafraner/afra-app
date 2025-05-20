@@ -81,7 +81,7 @@ public static class SchuljahrExtensions
                 if (conflict.Blocks.All(b => b.SchemaId != block.SchemaId))
                     conflict.Blocks.Add(block);
 
-            foreach (var block in conflict.Blocks)
+            foreach (var block in conflict.Blocks.ToList())
                 if (schultag.Blocks.All(b => b.SchemaId != block.SchemaId))
                     conflict.Blocks.Remove(block);
         }

@@ -9,6 +9,7 @@ import {definePreset} from "@primevue/themes";
 import {createPinia} from "pinia";
 import Tooltip from 'primevue/tooltip';
 import ConfirmationService from 'primevue/confirmationservice';
+import DialogService from 'primevue/dialogservice';
 
 const AfraAppPreset = definePreset(Aura, {
   semantic: {
@@ -48,6 +49,7 @@ app.use(PrimeVue, {
 })
 app.use(ToastService)
 app.use(ConfirmationService)
+app.use(DialogService)
 
 app.directive('tooltip', Tooltip);
 
