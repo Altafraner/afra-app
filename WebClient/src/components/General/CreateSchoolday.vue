@@ -2,7 +2,7 @@
 import {inject, ref} from "vue";
 import FloatLabel from "primevue/floatlabel";
 import DatePicker from "primevue/datepicker";
-import {Button, Message, MultiSelect, Select, useToast} from "primevue";
+import {Button, Message, MultiSelect, Select, useConfirm, useToast} from "primevue";
 import Form from "@primevue/forms/form";
 import {formatMachineDate} from "@/helpers/formatters.js";
 import {mande} from "mande";
@@ -10,11 +10,14 @@ import {mande} from "mande";
 const dialogRef = inject('dialogRef');
 const emit = defineEmits(['update'])
 const toast = useToast();
+const confirm = useConfirm();
 
 const date = ref(null);
 const wochentyp = ref(null);
 const blocks = ref([]);
 const loading = ref(false);
+const initialFormValues = ref(null);
+const submitter = ref(null);
 
 const blocksAvailable = ref([
   {label: 'Block 1', value: '1'},
@@ -37,8 +40,27 @@ function resolve({values}) {
   return {values, errors}
 }
 
-async function submit({valid}) {
+async function trySubmit({valid, originalEvent}) {
   if (!valid) return;
+  if (!dialogRef.value.data || !('initialValues' in dialogRef.value.data)) {
+    submit();
+    return;
+  }
+  loading.value = true;
+
+  confirm.require({
+    target: originalEvent.submitter,
+    blockScroll: true,
+    message: 'Es werden möglicherweise Schüler:innen ausgeschrieben. Möchten Sie den Termin wirklich speichern?',
+    header: 'Termin speichern',
+    icon: 'pi pi-exclamation-triangle',
+    accept: submit,
+    reject: () => loading.value = false
+  })
+}
+
+async function submit() {
+  loading.value = true;
   const data = [];
 
   date.value.setHours(12);
@@ -67,13 +89,32 @@ async function submit({valid}) {
       summary: 'Fehler',
       detail: 'Die Termine konnten nicht gespeichert werden.',
     });
+  } finally {
+    loading.value = false;
   }
 }
+
+function setup() {
+  if (!dialogRef.value.data || !('initialValues' in dialogRef.value.data)) return;
+  const {initialValues} = dialogRef.value.data;
+
+  date.value = new Date(initialValues.datum);
+  wochentyp.value = initialValues.wochentyp;
+  blocks.value = initialValues.blocks;
+
+  initialFormValues.value = {
+    date: date.value,
+    wochentyp: wochentyp.value,
+    blocks: blocks.value
+  }
+}
+
+setup()
 </script>
 
 <template>
-  <Form v-slot="$form" :resolver="resolve" class="flex flex-col gap-4"
-        @submit="submit">
+  <Form v-slot="$form" :initial-values="initialFormValues" :resolver="resolve"
+        class="flex flex-col gap-4" @submit="trySubmit">
     <div class="w-full">
       <FloatLabel variant="on">
         <DatePicker id="date" v-model="date" date-format="dd.mm.yy"
