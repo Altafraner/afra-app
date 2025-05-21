@@ -1,11 +1,14 @@
 ﻿<script setup>
 
 import {useSettings} from "@/stores/useSettings.js";
-import {Button, Column, DataTable, useDialog} from "primevue";
+import {Button, Column, DataTable, useConfirm, useDialog, useToast} from "primevue";
 import CreateSchoolday from "@/components/General/CreateSchoolday.vue";
+import {mande} from "mande";
 
 const settings = useSettings();
 const dialog = useDialog();
+const confirm = useConfirm();
+const toast = useToast();
 
 async function setup() {
   await settings.updateSchuljahr(true);
@@ -42,6 +45,39 @@ function updateDay(data) {
       }
     }
   })
+}
+
+function deleteDay(event, data) {
+  confirm.require({
+    target: event.currentTarget,
+    message: 'Möchten Sie den Tag wirklich löschen?',
+    header: 'Tag löschen',
+    icon: 'pi pi-exclamation-triangle',
+    acceptProps: {
+      label: 'Ja',
+      severity: 'danger'
+    },
+    rejectProps: {
+      label: 'Nein',
+      severity: 'secondary'
+    },
+    accept: async () => {
+      const api = mande('/api/management/schuljahr/' + data.datum);
+      try {
+        await api.delete();
+
+      } catch (error) {
+        console.error(error);
+        toast.add({
+          severity: 'error',
+          summary: 'Fehler',
+          detail: 'Der Tag konnte nicht gelöscht werden.',
+        });
+      } finally {
+        await settings.updateSchuljahr(true);
+      }
+    }
+  });
 }
 
 setup();
@@ -82,8 +118,10 @@ setup();
         <Button v-tooltip="'Tag hinzufügen'" icon="pi pi-plus" size="small" @click="addDay"/>
       </template>
       <template #body="{data}">
-        <Button v-tooltip="'bearbeiten'" icon="pi pi-pencil" severity="secondary" size="small"
+        <Button v-tooltip="'Bearbeiten'" icon="pi pi-pencil" severity="secondary" size="small"
                 variant="text" @click="() => updateDay(data)"/>
+        <Button v-tooltip="'Löschen'" icon="pi pi-times" severity="danger" size="small"
+                variant="text" @click="(evt) => deleteDay(evt, data)"/>
       </template>
     </Column>
     <template #empty>

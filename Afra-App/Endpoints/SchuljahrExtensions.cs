@@ -1,3 +1,4 @@
+using Afra_App.Authentication;
 using Afra_App.Data;
 using Afra_App.Data.Configuration;
 using Afra_App.Data.DTO;
@@ -23,8 +24,11 @@ public static class SchuljahrExtensions
     {
         app.MapGet("/api/schuljahr", GetSchuljahr)
             .RequireAuthorization();
-        app.MapPost("api/schuljahr/schultage", AddSchultage)
-            .RequireAuthorization();
+
+        var management = app.MapGroup("/api/management/schuljahr")
+            .RequireAuthorization(AuthorizationPolicies.TutorOnly);
+        management.MapPost("/", AddSchultage);
+        management.MapDelete("/{datum}", DeleteSchultag);
     }
 
     private static async Task<IResult> GetSchuljahr(AfraAppContext context)
@@ -91,5 +95,16 @@ public static class SchuljahrExtensions
 
         return Results.Created(string.Empty,
             schultage.Select(s => new DtoSchultag(s.Datum, s.Wochentyp, s.Blocks.Select(b => b.SchemaId))));
+    }
+
+    private static async Task<IResult> DeleteSchultag(AfraAppContext context, DateOnly datum)
+    {
+        var schultag = await context.Schultage.FindAsync(datum);
+        if (schultag == null) return Results.NotFound();
+
+        context.Schultage.Remove(schultag);
+        await context.SaveChangesAsync();
+
+        return Results.NoContent();
     }
 }
