@@ -71,7 +71,7 @@ async function submit() {
     blocks: blocks.value
   });
 
-  const api = mande('/api/schuljahr/schultage')
+  const api = mande('/api/management/schuljahr')
   try {
     await api.post(data);
     toast.add({

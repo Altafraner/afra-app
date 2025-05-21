@@ -212,7 +212,7 @@ async function submit() {
     current.setDate(current.getDate() + 1);
   }
 
-  const api = mande('/api/schuljahr/schultage')
+  const api = mande('/api/management/schuljahr')
   try {
     await api.post(data);
     toast.add({
