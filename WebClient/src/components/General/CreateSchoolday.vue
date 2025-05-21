@@ -77,7 +77,7 @@ async function submit() {
     toast.add({
       severity: 'success',
       summary: 'Erfolg',
-      detail: 'Der Termin wurden erfolgreich gespeichert.',
+      detail: 'Der Termin wurde erfolgreich gespeichert.',
       life: 15000
     });
     emit('update');
