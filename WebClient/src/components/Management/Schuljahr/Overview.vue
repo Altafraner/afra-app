@@ -26,6 +26,24 @@ function addDay() {
   })
 }
 
+function updateDay(data) {
+  dialog.open(CreateSchoolday, {
+    data: {
+      initialValues: data
+    },
+    props: {
+      modal: true,
+      header: "Tag bearbeiten",
+    },
+    emits: {
+      onUpdate: () => {
+        console.log("Received update event");
+        settings.updateSchuljahr(true);
+      }
+    }
+  })
+}
+
 setup();
 </script>
 
@@ -34,8 +52,7 @@ setup();
   <p>Hier können Sie die Schultage in diesem Schuljahr verwalten. Sie können auch
     <Button :to="{name: 'Verwaltung-Schuljahr-Neu'}" as="RouterLink" class="p-0 hover:underline"
             variant="link">
-      mehrere Termine
-      anlegen.
+      mehrere Termine anlegen.
     </Button>
   </p>
   <DataTable :value="settings.schuljahr">
@@ -64,9 +81,9 @@ setup();
       <template #header>
         <Button v-tooltip="'Tag hinzufügen'" icon="pi pi-plus" size="small" @click="addDay"/>
       </template>
-      <template #body>
+      <template #body="{data}">
         <Button v-tooltip="'bearbeiten'" icon="pi pi-pencil" severity="secondary" size="small"
-                variant="text"/>
+                variant="text" @click="() => updateDay(data)"/>
       </template>
     </Column>
     <template #empty>
