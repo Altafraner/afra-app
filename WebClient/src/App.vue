@@ -5,7 +5,7 @@ import 'primeicons/primeicons.css'
 import DynamicDialog from 'primevue/dynamicdialog';
 import AfraNav from "@/components/AfraNav.vue";
 import {useUser} from "@/stores/useUser.js";
-import wappen from '/favicon.svg?url'
+import wappen from '/vdaa/favicon.svg?url'
 import {ConfirmPopup, Image, Message, Skeleton, Toast, useToast} from "primevue";
 import Login from "@/components/Login.vue";
 
@@ -64,10 +64,15 @@ user.update().catch(() => {
       </div>
     </main>
   </template>
-  <footer class="bg-primary w-full p-6 mt-[1rem] text-center text-primary-contrast">
-    <p class="h-[1.2em]">Provided by <a
+  <footer
+    class="bg-primary w-full py-6 px-8 mt-[1rem] text-center text-primary-contrast sm:grid sm:grid-cols-[1fr_auto_1fr] items-center gap-3 flex flex-wrap justify-between">
+    <span></span>
+    <p class="min-h-[1.2em]">Provided by <a
       class="font-bold inline-block text-primary-contrast underline decoration-primary hover:decoration-primary-contrast transition-all"
       href="https://verein-der-altafraner.de" target="_blank">Verein der Altafraner</a></p>
+    <span class="text-right">
+      <a href="https://github.com/Altafraner/afra-app" target="_blank"><i class="pi pi-github"/></a>
+    </span>
   </footer>
 </template>
 

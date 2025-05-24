@@ -1,7 +1,6 @@
 ﻿<script setup>
-import {Button} from "primevue";
-import wappen from '/favicon.svg?url'
-import {Image} from "primevue";
+import {Button, Image} from "primevue";
+import wappen from '/vdaa/favicon.svg?url'
 </script>
 
 <template>

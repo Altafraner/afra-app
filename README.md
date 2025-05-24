@@ -27,5 +27,11 @@ Die Entwicklungsumgebung setzt die Datenbank bei jedem Neustart zurück. Durch e
 ### Hinweise zum Login:
 Normalerweise wird zur Authentifizierung ein Microsoft AD mit LDAP verwendet. In Zukunft soll evtl. SAML zum Einsatz kommen. Da beides zum Testen unpraktisch ist, kann LDAP in der `appsettings(.Development).json` deaktiviert werden. Für diesen Fall erfolgt der Login mit beliebigem Passwort und dem Anfang einer E-Mail-Adresse. Am besten liest man einfach einmal die Datenbank aus um die über den `/api/test/seed/users`-Endpunkt generierten Nutzer einzusehen.
 
-# Hinweis zur Lizenz:
-Alle Inhalte sind geistiges Eigentum der Entwickler und dürfen nur mit deren Einverständnis verteilt werden. Eine Lizenz wird durch die Entwickler zu einem späteren Zeitpunkt festgelegt werden.
+# Lizenz:
+Dieses Programm wird unter der [AGPL Version 3.0](LICENSE) zur Verfügung gestellt.
+
+## Ausnahmen:
+Die folgenden Dateien bzw. alle Dateien in den folgenden Ordnern sind nicht unter der genannten Lizenz lizenziert und dürfen nicht ohne explizite Erlaubnis der Urheber verwendet werden:
+- `/WebClient/public/vdaa/`
+
+Diese Dateien sind ggf. urheberrechtlich geschützt und dürfen nicht ohne ausdrückliche Genehmigung des jeweiligen Rechteinhabers verwendet oder verändert werden. Für weitere Informationen wenden Sie sich bitte an den [Verein der Altafraner e. V.](https://verein-der-altafraner.de/).

@@ -3,7 +3,7 @@ import Menubar from 'primevue/menubar';
 import {ref} from "vue";
 import {Button, Image, useToast} from "primevue";
 
-import wappen from '/Vereinswappen.jpg?url'
+import wappen from '/vdaa/Vereinswappen.jpg?url'
 import {useUser} from "@/stores/useUser.js";
 import {useRouter} from "vue-router";
 
