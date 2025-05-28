@@ -94,6 +94,7 @@ public class AttendanceService : IAttendanceService
         var termine = await _dbContext.OtiaTermine
             .AsNoTracking()
             .Where(t => t.Block.Id == blockId)
+            .Include(t => t.Otium)
             .ToListAsync();
 
         var terminAttendance = new Dictionary<Termin, Dictionary<Person, AnwesenheitsStatus>>();
