@@ -3,6 +3,7 @@ using Afra_App.Data;
 using Afra_App.Data.DTO;
 using Afra_App.Data.DTO.Otium;
 using Afra_App.Data.DTO.Otium.Katalog;
+using Afra_App.Data.Otium;
 using Afra_App.Data.People;
 using Afra_App.Data.TimeInterval;
 using Afra_App.Services.Email;
@@ -14,7 +15,9 @@ using DTO_Otium_Creation = Afra_App.Data.DTO.Otium.ManagementOtiumCreation;
 using DTO_Otium_View = Afra_App.Data.DTO.Otium.ManagementOtiumView;
 using DTO_Termin_Creation = Afra_App.Data.DTO.Otium.ManagementTerminCreation;
 using DTO_Wiederholung_Creation = Afra_App.Data.DTO.Otium.ManagementWiederholungCreation;
+using Einschreibung = Afra_App.Data.DTO.Otium.Einschreibung;
 using Person = Afra_App.Data.People.Person;
+using Termin = Afra_App.Data.DTO.Otium.Termin;
 
 namespace Afra_App.Services.Otium;
 
