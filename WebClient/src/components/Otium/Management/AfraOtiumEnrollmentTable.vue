@@ -1,6 +1,6 @@
 ﻿<script setup>
 
-import {Column, DataTable} from "primevue";
+import {Badge, Column, DataTable} from "primevue";
 import AfraOtiumAnwesenheit from "@/components/Otium/Shared/AfraOtiumAnwesenheit.vue";
 import {formatStudent} from "@/helpers/formatters.js";
 
@@ -22,9 +22,13 @@ const props = defineProps({
     </Column>
     <Column header="Anwesenheit" v-if="props.showAttendance || props.mayEditAttendance"
             :class="props.mayEditAttendance ? 'text-right afra-col-action' : ''">
-      <template #body="slotProps">
-        <afra-otium-anwesenheit v-model="slotProps.data.anwesenheit"
+      <template #body="{data}">
+        <afra-otium-anwesenheit v-if="data.student.rolle!=='Oberstufe'" v-model="data.anwesenheit"
                                 :mayEdit="props.mayEditAttendance"/>
+        <badge v-else v-tooltip="'Oberstufenschüler:innen haben keine Anwesenheit'"
+               severity="secondary">
+          N/A
+        </badge>
       </template>
     </Column>
     <template #empty>

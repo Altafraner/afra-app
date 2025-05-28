@@ -3,7 +3,6 @@ using Afra_App.Data;
 using Afra_App.Data.DTO;
 using Afra_App.Data.DTO.Otium;
 using Afra_App.Data.DTO.Otium.Katalog;
-using Afra_App.Data.Otium;
 using Afra_App.Data.People;
 using Afra_App.Data.TimeInterval;
 using Afra_App.Services.Email;
@@ -26,6 +25,7 @@ namespace Afra_App.Services.Otium;
 /// </summary>
 public class OtiumEndpointService
 {
+    private readonly IAttendanceService _attendanceService;
     private readonly IBatchingEmailService _batchingEmailService;
     private readonly BlockHelper _blockHelper;
     private readonly AfraAppContext _context;
@@ -37,13 +37,14 @@ public class OtiumEndpointService
     /// </summary>
     public OtiumEndpointService(AfraAppContext context, KategorieService kategorieService,
         EnrollmentService enrollmentService,
-        IBatchingEmailService batchingEmailService, BlockHelper blockHelper)
+        IBatchingEmailService batchingEmailService, BlockHelper blockHelper, IAttendanceService attendanceService)
     {
         _context = context;
         _kategorieService = kategorieService;
         _enrollmentService = enrollmentService;
         _batchingEmailService = batchingEmailService;
         _blockHelper = blockHelper;
+        _attendanceService = attendanceService;
     }
 
     /// <summary>
@@ -357,6 +358,9 @@ public class OtiumEndpointService
         if (termin is null)
             return null;
 
+        var anwesenheiten = (await _attendanceService.GetAttendanceForTerminAsync(terminId))
+            .ToDictionary(element => element.Key.Id, element => element.Value);
+
         return new LehrerTermin
         {
             Id = termin.Id,
@@ -370,7 +374,7 @@ public class OtiumEndpointService
             Tutor = termin.Tutor is not null ? new PersonInfoMinimal(termin.Tutor) : null,
             Einschreibungen = termin.Enrollments.Select(e =>
                 new LehrerEinschreibung(new PersonInfoMinimal(e.BetroffenePerson),
-                    AnwesenheitsStatus.Anwesend))
+                    anwesenheiten[e.BetroffenePerson.Id]))
         };
     }
 
