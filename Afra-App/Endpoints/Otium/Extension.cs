@@ -1,3 +1,5 @@
+using Afra_App.Authentication;
+
 namespace Afra_App.Endpoints.Otium;
 
 /// <summary>
@@ -18,5 +20,7 @@ public static class Extension
         group.MapKatalogEndpoints();
         group.MapDashboardEndpoints();
         group.MapManagementEndpoints();
+        group.MapHub<AttendanceHub>("/attendance")
+            .RequireAuthorization(AuthorizationPolicies.TutorOnly);
     }
 }

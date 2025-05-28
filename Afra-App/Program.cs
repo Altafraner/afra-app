@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Security.Cryptography;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Afra_App.Authentication;
 using Afra_App.Authentication.Ldap;
@@ -48,12 +49,9 @@ builder.Services.AddOptions<LdapConfiguration>()
 
 // Add services to the container.
 
-builder.Services.ConfigureHttpJsonOptions(options =>
-{
-    options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
-    options.SerializerOptions.Converters.Add(new TimeOnlyJsonConverter());
-});
+builder.Services.ConfigureHttpJsonOptions(options => ConfigureJsonOptions(options.SerializerOptions));
+builder.Services.AddSignalR()
+    .AddJsonProtocol(options => ConfigureJsonOptions(options.PayloadSerializerOptions));
 builder.Services.AddControllers();
 builder.Services.AddHybridCache();
 
@@ -195,3 +193,11 @@ if (app.Configuration.GetValue<bool>("Saml:Enabled")) app.MapSaml();
 if (app.Environment.IsDevelopment()) app.MapControllers();
 
 app.Run();
+return;
+
+void ConfigureJsonOptions(JsonSerializerOptions options)
+{
+    options.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    options.Converters.Add(new JsonStringEnumConverter());
+    options.Converters.Add(new TimeOnlyJsonConverter());
+}
