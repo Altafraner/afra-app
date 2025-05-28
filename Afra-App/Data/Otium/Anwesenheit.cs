@@ -11,7 +11,7 @@ public class Anwesenheit
     /// <summary>
     /// The block the attendance is for
     /// </summary>
-    public Block Block { get; set; }
+    public Block Block { get; set; } = null!;
 
     /// <summary>
     /// The PK of the block the attendance is for
@@ -21,7 +21,7 @@ public class Anwesenheit
     /// <summary>
     /// The person who is attending
     /// </summary>
-    public Person Student { get; set; }
+    public Person Student { get; set; } = null!;
 
     /// <summary>
     /// The PK of the person who is attending
