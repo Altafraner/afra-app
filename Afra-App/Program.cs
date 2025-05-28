@@ -112,6 +112,7 @@ builder.Services.AddScoped<BlockHelper>();
 builder.Services.AddScoped<KategorieService>();
 builder.Services.AddScoped<OtiumEndpointService>();
 builder.Services.AddScoped<EnrollmentService>();
+builder.Services.AddScoped<IAttendanceService, AttendanceService>();
 builder.Services.AddScoped<LdapService>();
 
 try

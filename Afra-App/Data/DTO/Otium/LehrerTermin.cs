@@ -1,3 +1,5 @@
+using Afra_App.Data.Otium;
+
 namespace Afra_App.Data.DTO.Otium;
 
 /// <summary>
