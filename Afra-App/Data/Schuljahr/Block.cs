@@ -13,7 +13,7 @@ public class Block
     /// <summary>
     ///     The <see cref="Schultag" /> the Block is on
     /// </summary>
-    public Schultag Schultag { get; set; }
+    public Schultag Schultag { get; set; } = null!;
 
     /// <summary>
     ///     The foreign key of the <see cref="Schultag" /> the Block is on
