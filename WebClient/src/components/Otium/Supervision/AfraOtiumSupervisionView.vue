@@ -28,11 +28,16 @@ async function setup() {
   let currentBlock = null;
   try {
     currentBlock = await mande("/api/schuljahr/now").get();
-    console.log(currentBlock)
+    inactive.value = false;
+    const {
+      attendance: localAttendance,
+      updateAttendance,
+      updateStatus
+    } = useAttendance('block', currentBlock.id);
+    return {attendance: localAttendance, updateAttendance, updateStatus};
   } catch (e) {
     if (e.response?.status === 404) {
       inactive.value = true;
-      return;
     } else {
       console.error("Error fetching current block:", e);
       toast.add({
@@ -40,16 +45,13 @@ async function setup() {
         summary: "Fehler",
         detail: "Ein unerwarteter Fehler ist beim Laden der Daten aufgetreten"
       });
-      return;
     }
   }
-  inactive.value = false;
-  const {
-    attendance: localAttendance,
-    updateAttendance,
-    updateStatus
-  } = useAttendance('block', currentBlock.id);
-  return {attendance: localAttendance, updateAttendance, updateStatus};
+  return {
+    attendance: [], updateAttendance: () => {
+    }, updateStatus: () => {
+    }
+  };
 }
 
 const {attendance, updateAttendance, updateStatus} = await setup();
@@ -65,7 +67,10 @@ function updateStatusCallback(evt, terminId, status) {
 </script>
 
 <template>
-  <accordion>
+  <div v-if="inactive" class="flex justify-center">
+    <span>Aktuell findet kein Otium statt. Der / die Otiumsbeauftragte(n) kann / können Anwesenheiten im Nachhinein in der Verwaltungsansicht des Termins ändern.</span>
+  </div>
+  <accordion v-else>
     <accordion-panel v-for="room of attendance" :key="room.terminId" :value="room.terminId">
       <accordion-header>
         <div class="flex justify-between w-full items-center" style="margin-right: 1rem">
@@ -73,7 +78,8 @@ function updateStatusCallback(evt, terminId, status) {
             {{ room.ort }} - {{ room.otium }}
           </span>
           <Button :label="room.sindAnwesenheitenErfasst ? 'Fertig' : 'Ausstehend'"
-                  :severity="room.sindAnwesenheitenErfasst ? 'success' : 'danger'" class="confirm-button"
+                  :severity="room.sindAnwesenheitenErfasst ? 'success' : 'danger'"
+                  class="confirm-button"
                   size="small"
                   @click="(evt) => updateStatusCallback(evt, room.terminId, !room.sindAnwesenheitenErfasst)"/>
         </div>
