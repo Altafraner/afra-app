@@ -116,14 +116,17 @@ public static class SchuljahrExtensions
         var today = DateOnly.FromDateTime(now);
         var time = TimeOnly.FromDateTime(now);
 
-        // Give a 10 minute buffer
+        // Give a 10 minute buffer. We have to use DateTime as we'd otherwise break on the edge of a day.
         var blockSchema =
-            config.Value.Blocks.FirstOrDefault(b =>
-                time.IsBetween(b.Interval.Start.AddMinutes(-10), b.Interval.End.AddMinutes(10)));
-        if (blockSchema == null) return Results.NotFound();
+            config.Value.Blocks.Where(b =>
+                    today.ToDateTime(b.Interval.Start).AddMinutes(-10) <= now &&
+                    today.ToDateTime(b.Interval.End).AddMinutes(10) >= now)
+                .Select(b => b.Id)
+                .ToList();
+        if (blockSchema.Count == 0) return Results.NotFound();
         var block = await context.Blocks
             .AsNoTracking()
-            .Where(b => b.SchemaId == blockSchema.Id)
+            .Where(b => blockSchema.Contains(b.SchemaId))
             .Where(b => b.SchultagKey == today)
             .Select(b => new { b.Id, b.SchemaId })
             .FirstOrDefaultAsync();
