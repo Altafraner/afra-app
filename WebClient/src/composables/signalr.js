@@ -1,13 +1,13 @@
 ﻿import {ref} from "vue";
-import {useToast} from "primevue";
 import * as signalR from "@microsoft/signalr";
 
 /**
  * Establishes a SignalR connection to the specified URL and provides methods to send messages and register handlers.
  * @param {string} url The URL of the SignalR hub.
  * @param {boolean} reconnect Whether to enable automatic reconnection.
+ * @param {Object} toastService Optional service for displaying toast notifications.
  */
-export function useSignalR(url, reconnect = true) {
+export function useSignalR(url, reconnect = true, toastService = {add: () => undefined}) {
   const connection = ref(null);
   const {resolve, reject, promise} = createDeferred();
 
@@ -25,8 +25,7 @@ export function useSignalR(url, reconnect = true) {
   con.onclose(error => {
     console.log("Connection closed: ", error);
     if (error) {
-      const toast = useToast();
-      toast.add({
+      toastService.add({
         severity: "error",
         summary: "Verbindung getrennt",
         detail: "Die Verbindung zum Server wurde getrennt.",
@@ -37,10 +36,9 @@ export function useSignalR(url, reconnect = true) {
   con.start()
     .then(() => resolve())
     .catch(err => {
-      const toast = useToast();
       reject(err)
       console.error("Error starting SignalR connection: ", err)
-      toast.add(
+      toastService.add(
         {
           severity: "error",
           summary: "Verbindungsfehler",
@@ -64,9 +62,8 @@ export function useSignalR(url, reconnect = true) {
   function sendMessage(eventName, ...args) {
     return con.invoke(eventName, ...args)
       .catch(err => {
-        const toast = useToast();
         console.error(`Error sending message '${eventName}': `, err)
-        toast.add({
+        toastService.add({
           severity: "error",
           summary: "Nachrichtenfehler",
           detail: `Fehler beim Senden einer Nachricht an den Server.`,

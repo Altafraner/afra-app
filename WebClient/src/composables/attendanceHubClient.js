@@ -5,15 +5,16 @@ import {useSignalR} from "@/composables/signalr.js";
  * Connects to the attendance hub and returns a reactive list of attendances.
  * @param {'termin'|'block'} scope
  * @param {string} id
+ * @param toastService
  * @returns {Object}
  */
-export function useAttendance(scope, id) {
+export function useAttendance(scope, id, toastService = {add: () => undefined}) {
   const {
     connectionPromise,
     registerMessageHandler,
     registerReconnectHandler,
     sendMessage
-  } = useSignalR('/api/otium/attendance', true)
+  } = useSignalR('/api/otium/attendance', true, toastService)
   const attendances = ref([])
 
   registerReconnectHandler(registerScope)
@@ -96,9 +97,19 @@ export function useAttendance(scope, id) {
     await sendMessage('SetTerminStatus', blockId, terminId, status)
   }
 
+  async function sendMove(studentId, terminId) {
+    await sendMessage('MoveStudent', studentId, terminId)
+  }
+
+  async function sendMoveNow(studentId, fromTerminId, toTerminId) {
+    await sendMessage('MoveStudentNow', studentId, fromTerminId, toTerminId)
+  }
+
   return {
     attendance: attendances,
     updateAttendance: sendAttendanceUpdate,
-    updateStatus: sendStatusUpdate
+    updateStatus: sendStatusUpdate,
+    moveStudent: sendMove,
+    moveStudentNow: sendMoveNow
   };
 }
