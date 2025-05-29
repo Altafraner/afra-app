@@ -9,27 +9,25 @@ const emit = defineEmits(["valueChanged"])
 const status = defineModel({default: "Fehlend"})
 
 const toggle = (value) => {
-  status.value = stati[value]
-  emit("valueChanged")
+  emit("valueChanged", stati[value])
 };
 
 const severities = {
   'Fehlend': 'danger',
   'Entschuldigt': 'warn',
-  'Bestätigt': 'success'
+  'Anwesend': 'success'
 }
-const stati = ['Fehlend', 'Entschuldigt', 'Bestätigt']
+const stati = ['Fehlend', 'Entschuldigt', 'Anwesend']
 </script>
 
 <template>
   <InputGroup v-if="mayEdit">
-    <Button :severity="status===stati[0] ? 'danger' : 'secondary'" label="Fehlend" size="small"
+    <Button :label="stati[0]" :severity="status===stati[0] ? 'danger' : 'secondary'" size="small"
             @click="() => toggle(0)"/>
-    <Button :severity="status===stati[1] ? 'warn' : 'secondary'" label="Entschuldigt" size="small"
+    <Button :label="stati[1]" :severity="status===stati[1] ? 'warn' : 'secondary'" size="small"
             @click="() => toggle(1)"/>
-    <Button :severity="(status===stati[2] || status==='anwesend') ? 'success' : 'secondary'"
-            size="small"
-            label="Bestätigt" @click="() => toggle(2)"/>
+    <Button :label="stati[2]" :severity="(status===stati[2]) ? 'success' : 'secondary'" size="small"
+            @click="() => toggle(2)"/>
   </InputGroup>
   <Badge v-else :severity="severities[status]">{{ status }}</Badge>
 </template>
