@@ -13,13 +13,6 @@ const user = useUser();
 const termine = ref([]);
 const mentees = ref([]);
 const loading = ref(true);
-const findBlock = startTime => {
-  for (const block of settings.blocks) {
-    if (startTime >= block.startTime && startTime < block.endTime) return block.id
-  }
-
-  console.error("start Time is in no Block", startTime)
-}
 
 const severity = {
   Okay: {
@@ -117,8 +110,14 @@ update();
       v-for="field in [{field: 'letzteWoche', header: 'Letzte'}, {field: 'dieseWoche', header: 'Diese'}, {field: 'nächsteWoche', header: 'Nächste'}]"
       :key="field.field" :header="field.header">
       <template #body="{data}">
-        <Tag :severity="severity[data[field.field]].severity">
+        <Tag v-if="data.mentee.rolle !== 'Oberstufe'"
+             :severity="severity[data[field.field]].severity">
           {{ severity[data[field.field]].label }}
+        </Tag>
+        <Tag v-else
+             v-tooltip="'Schüler:innen der Oberstufe sind nicht an die üblichen Regeln gebungen.'"
+             severity="secondary">
+          N/A
         </Tag>
       </template>
     </Column>
