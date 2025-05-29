@@ -137,14 +137,22 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
         foreach (var (termin, anwesenheitByPerson) in attendancesByTermin)
         {
             var enrollments = anwesenheitByPerson.Select((entry, _) =>
-                new LehrerEinschreibung(new PersonInfoMinimal(entry.Key), entry.Value));
+                    new LehrerEinschreibung(new PersonInfoMinimal(entry.Key), entry.Value))
+                .OrderBy(e => e.Student?.Vorname)
+                .ThenBy(e => e.Student?.Nachname)
+                .ToList();
             updates.Add(new IAttendanceHubClient.TerminInformation(termin.Id, termin.Otium.Bezeichnung, termin.Ort,
                 enrollments, termin.SindAnwesenheitenKontrolliert));
         }
 
+        updates = updates.OrderBy(e => e.Ort).ToList();
+
         var missingPersonsEnrollments = missingPersons.Select((entry, _) =>
-            new LehrerEinschreibung(new PersonInfoMinimal(entry.Key), entry.Value));
-        updates.Add(new IAttendanceHubClient.TerminInformation(Guid.Empty, "Nicht eingeschrieben", "FEHLEND",
+                new LehrerEinschreibung(new PersonInfoMinimal(entry.Key), entry.Value))
+            .OrderBy(e => e.Student?.Vorname)
+            .ThenBy(e => e.Student?.Nachname)
+            .ToList();
+        updates.Insert(0, new IAttendanceHubClient.TerminInformation(Guid.Empty, "Nicht eingeschrieben", "FEHLEND",
             missingPersonsEnrollments, missingPersonsChecked));
 
         return updates;
