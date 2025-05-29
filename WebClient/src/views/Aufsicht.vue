@@ -1,11 +1,9 @@
 ﻿<script setup>
-import {ref} from "vue";
+import {ref, Suspense} from "vue";
 import {Button} from "primevue";
 import AfraOtiumSupervisionView from "@/components/Otium/Supervision/AfraOtiumSupervisionView.vue";
-import {supervisionDetails} from "@/helpers/testdata.js";
 
 const status = ref(false)
-const rooms = ref(supervisionDetails)
 
 function start() {
   status.value = true
@@ -29,7 +27,14 @@ function stop() {
       Otiums-Slot sind. Alle Änderungen, die Sie vornehmen, werden protokolliert.</p>
   </div>
   <div v-else>
-    <afra-otium-supervision-view :rooms="rooms"/>
+    <Suspense>
+      <afra-otium-supervision-view/>
+      <template #fallback>
+        <div class="flex justify-center">
+          <span class="p-3">Lade Aufsicht...</span>
+        </div>
+      </template>
+    </Suspense>
   </div>
 </template>
 
