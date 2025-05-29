@@ -25,4 +25,9 @@ public class Block
     ///     The number of the Block
     /// </summary>
     public required char SchemaId { get; set; } = '\0';
+
+    /// <summary>
+    ///     True, iff the supervisor has checked on missing students for this Block.
+    /// </summary>
+    public bool SindAnwesenheitenFehlernderKontrolliert { get; set; } = false;
 }

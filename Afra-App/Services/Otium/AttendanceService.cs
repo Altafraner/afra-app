@@ -11,14 +11,16 @@ namespace Afra_App.Services.Otium;
 public class AttendanceService : IAttendanceService
 {
     private const AnwesenheitsStatus DefaultAttendanceStatus = AnwesenheitsStatus.Fehlend;
+    private readonly BlockHelper _blockHelper;
     private readonly AfraAppContext _dbContext;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AttendanceService"/> class.
     /// </summary>
-    public AttendanceService(AfraAppContext dbContext)
+    public AttendanceService(AfraAppContext dbContext, BlockHelper blockHelper)
     {
         _dbContext = dbContext;
+        _blockHelper = blockHelper;
     }
 
     /// <inheritdoc />
@@ -81,14 +83,17 @@ public class AttendanceService : IAttendanceService
 
     /// <inheritdoc />
     public async Task<(Dictionary<Termin, Dictionary<Person, AnwesenheitsStatus>> termine,
-            Dictionary<Person, AnwesenheitsStatus> missingPersons)>
+            Dictionary<Person, AnwesenheitsStatus> missingPersons, bool)>
         GetAttendanceForBlockAsync(Guid blockId)
     {
-        var blockExists = await _dbContext.Blocks
+        var block = await _dbContext.Blocks
             .AsNoTracking()
-            .AnyAsync(b => b.Id == blockId);
+            .Where(b => b.Id == blockId)
+            .Select(b => new
+                { b.SchemaId, SindAnwesenheitenFehlernderErfasst = b.SindAnwesenheitenFehlernderKontrolliert })
+            .FirstOrDefaultAsync();
 
-        if (!blockExists)
+        if (block is null)
             throw new KeyNotFoundException($"Block ID {blockId} not found");
 
         var termine = await _dbContext.OtiaTermine
@@ -102,6 +107,13 @@ public class AttendanceService : IAttendanceService
         {
             var attendance = await GetAttendanceForTerminAsync(termin.Id);
             terminAttendance[termin] = attendance;
+        }
+
+        // If the block is not mandatory, we return the attendance without checking for missing students
+        var blockSchema = _blockHelper.Get(block.SchemaId);
+        if (!blockSchema!.Verpflichtend)
+        {
+            return (terminAttendance, new Dictionary<Person, AnwesenheitsStatus>(), true);
         }
 
         var personIds = terminAttendance.Values
@@ -127,7 +139,7 @@ public class AttendanceService : IAttendanceService
             p => p,
             p => missingPersonsAttendance.TryGetValue(p.Id, out var status) ? status.Status : DefaultAttendanceStatus);
 
-        return (terminAttendance, missingPersonsAttendanceDict);
+        return (terminAttendance, missingPersonsAttendanceDict, block.SindAnwesenheitenFehlernderErfasst);
     }
 
     /// <inheritdoc />
@@ -162,6 +174,30 @@ public class AttendanceService : IAttendanceService
             throw new KeyNotFoundException($"Student ID {studentId} not found");
 
         await CreateOrUpdate(studentId, blockId, status);
+        await _dbContext.SaveChangesAsync();
+    }
+
+    /// <inheritdoc />
+    public async Task SetStatusForTerminAsync(Guid terminId, bool status)
+    {
+        var termin = await _dbContext.OtiaTermine
+            .FirstOrDefaultAsync(t => t.Id == terminId);
+        if (termin is null)
+            throw new KeyNotFoundException($"Termin ID {terminId} not found");
+
+        termin.SindAnwesenheitenKontrolliert = status;
+        await _dbContext.SaveChangesAsync();
+    }
+
+    /// <inheritdoc />
+    public async Task SetStatusForMissingPersonsAsync(Guid blockId, bool status)
+    {
+        var block = await _dbContext.Blocks
+            .FirstOrDefaultAsync(b => b.Id == blockId);
+        if (block is null)
+            throw new KeyNotFoundException($"Block ID {blockId} not found");
+
+        block.SindAnwesenheitenFehlernderKontrolliert = status;
         await _dbContext.SaveChangesAsync();
     }
 

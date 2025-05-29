@@ -26,6 +26,12 @@ public interface IAttendanceHubClient
     Task UpdateTerminAttendances(IEnumerable<LehrerEinschreibung> updates);
 
     /// <summary>
+    /// Tells the client to update the status of a specific termin.
+    /// </summary>
+    /// <param name="update">The status-update to send</param>
+    Task UpdateTerminStatus(TerminStatusUpdate update);
+
+    /// <summary>
     /// A dto for updating the attendance status of a student in a specific block.
     /// </summary>
     /// <param name="StudentId">The students id</param>
@@ -33,6 +39,13 @@ public interface IAttendanceHubClient
     /// <param name="BlockId">The blocks id</param>
     /// <param name="Status">The students updated status</param>
     public record AttendanceUpdate(Guid StudentId, Guid TerminId, Guid BlockId, AnwesenheitsStatus Status);
+
+    /// <summary>
+    /// A dto for updating the status of a specific termin.
+    /// </summary>
+    /// <param name="TerminId">The id of the termin the update is for</param>
+    /// <param name="SindAnwesenheitenErfasst">The new status</param>
+    public record TerminStatusUpdate(Guid TerminId, bool SindAnwesenheitenErfasst);
 
     /// <summary>
     /// A dto for sending the information about a specific termin to the client.
@@ -45,5 +58,6 @@ public interface IAttendanceHubClient
         Guid TerminId,
         string Otium,
         string Ort,
-        IEnumerable<LehrerEinschreibung> Einschreibungen);
+        IEnumerable<LehrerEinschreibung> Einschreibungen,
+        bool SindAnwesenheitenErfasst);
 }
