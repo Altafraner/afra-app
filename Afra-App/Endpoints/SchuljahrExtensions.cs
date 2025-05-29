@@ -24,6 +24,8 @@ public static class SchuljahrExtensions
     {
         app.MapGet("/api/schuljahr", GetSchuljahr)
             .RequireAuthorization();
+        app.MapGet("/api/schuljahr/now", GetNow)
+            .RequireAuthorization();
 
         var management = app.MapGroup("/api/management/schuljahr")
             .RequireAuthorization(AuthorizationPolicies.TutorOnly);
@@ -106,5 +108,25 @@ public static class SchuljahrExtensions
         await context.SaveChangesAsync();
 
         return Results.NoContent();
+    }
+
+    private static async Task<IResult> GetNow(AfraAppContext context, IOptions<OtiumConfiguration> config)
+    {
+        var now = DateTime.Now;
+        var today = DateOnly.FromDateTime(now);
+        var time = TimeOnly.FromDateTime(now);
+
+        // Give a 10 minute buffer
+        var blockSchema =
+            config.Value.Blocks.FirstOrDefault(b =>
+                time.IsBetween(b.Interval.Start.AddMinutes(-10), b.Interval.End.AddMinutes(10)));
+        if (blockSchema == null) return Results.NotFound();
+        var block = await context.Blocks
+            .AsNoTracking()
+            .Where(b => b.SchemaId == blockSchema.Id)
+            .Where(b => b.SchultagKey == today)
+            .Select(b => new { b.Id, b.SchemaId })
+            .FirstOrDefaultAsync();
+        return block == null ? Results.NotFound() : Results.Ok(block);
     }
 }
