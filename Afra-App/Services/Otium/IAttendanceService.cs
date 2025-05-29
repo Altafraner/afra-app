@@ -31,7 +31,7 @@ public interface IAttendanceService
     /// <returns>A dictionary containing all enrolled students attendance status grouped by their termin along with all
     /// the attendance statuses for students not enrolled</returns>
     public Task<(Dictionary<Termin, Dictionary<Person, AnwesenheitsStatus>> termine,
-            Dictionary<Person, AnwesenheitsStatus> missingPersons)>
+            Dictionary<Person, AnwesenheitsStatus> missingPersons, bool)>
         GetAttendanceForBlockAsync(Guid blockId);
 
     /// <summary>
@@ -50,4 +50,18 @@ public interface IAttendanceService
     /// <param name="status">The status to set</param>
     /// <exception cref="KeyNotFoundException">The student or block does not exist.</exception>
     public Task SetAttendanceForStudentInBlockAsync(Guid studentId, Guid blockId, AnwesenheitsStatus status);
+
+    /// <summary>
+    /// Sets the checked status for a specific termin
+    /// </summary>
+    /// <param name="terminId">The id of the termin</param>
+    /// <param name="status">The new status</param>
+    public Task SetStatusForTerminAsync(Guid terminId, bool status);
+
+    /// <summary>
+    /// Sets the checked status for checking on missing persons in a specific block
+    /// </summary>
+    /// <param name="blockId">The Id of the block</param>
+    /// <param name="status">The status to set</param>
+    public Task SetStatusForMissingPersonsAsync(Guid blockId, bool status);
 }

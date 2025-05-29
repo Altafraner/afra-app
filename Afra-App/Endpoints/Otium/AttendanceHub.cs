@@ -70,7 +70,7 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
     /// <param name="studentId">The id of the Students <see cref="Data.People.Person"/> entity.</param>
     /// <param name="status">The new status</param>
     /// <param name="dbContext">Injected via DI</param>
-    public async Task SetStatusForBlock(Guid blockId, Guid studentId, AnwesenheitsStatus status,
+    public async Task SetAttendanceStatusInBlock(Guid blockId, Guid studentId, AnwesenheitsStatus status,
         AfraAppContext dbContext)
     {
         // Might return Guid.Empty if the user is not enrolled in any termin of the block
@@ -91,7 +91,7 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
     /// <param name="status">The new status</param>
     /// <param name="dbContext">Injected from DI-Container</param>
     /// <exception cref="KeyNotFoundException"></exception>
-    public async Task SetStatusForTermin(Guid terminId, Guid studentId, AnwesenheitsStatus status,
+    public async Task SetAttendanceStatusInTermin(Guid terminId, Guid studentId, AnwesenheitsStatus status,
         AfraAppContext dbContext)
     {
         var blockId = dbContext.OtiaTermine.Where(t => t.Id == terminId)
@@ -104,6 +104,23 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
         await UpdateAttendance(status, studentId, blockId, terminId);
     }
 
+    /// <summary>
+    /// Updates the checked-status of a specific termin or all missing persons in a block.
+    /// </summary>
+    /// <param name="blockId">The id of the block the update is for</param>
+    /// <param name="terminId">The id of the termin the update is for. Use <see cref="Guid.Empty">Guid.Empty</see> for missing persons. </param>
+    /// <param name="status">The new status</param>
+    public async Task SetTerminStatus(Guid blockId, Guid terminId, bool status)
+    {
+        if (terminId == Guid.Empty)
+            await _attendanceService.SetStatusForMissingPersonsAsync(blockId, status);
+        else
+            await _attendanceService.SetStatusForTerminAsync(terminId, status);
+
+        await Clients.Groups(TerminGroupName(terminId), BlockGroupName(blockId))
+            .UpdateTerminStatus(new IAttendanceHubClient.TerminStatusUpdate(terminId, status));
+    }
+
     private async Task UpdateAttendance(AnwesenheitsStatus status, Guid studentId, Guid blockId, Guid terminId)
     {
         await _attendanceService.SetAttendanceForStudentInBlockAsync(studentId, blockId, status);
@@ -113,7 +130,7 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
 
     private async Task<List<IAttendanceHubClient.TerminInformation>> GetBlockAttendances(Guid blockId)
     {
-        var (attendancesByTermin, missingPersons) =
+        var (attendancesByTermin, missingPersons, missingPersonsChecked) =
             await _attendanceService.GetAttendanceForBlockAsync(blockId);
 
         List<IAttendanceHubClient.TerminInformation> updates = [];
@@ -122,13 +139,13 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
             var enrollments = anwesenheitByPerson.Select((entry, _) =>
                 new LehrerEinschreibung(new PersonInfoMinimal(entry.Key), entry.Value));
             updates.Add(new IAttendanceHubClient.TerminInformation(termin.Id, termin.Otium.Bezeichnung, termin.Ort,
-                enrollments));
+                enrollments, termin.SindAnwesenheitenKontrolliert));
         }
 
         var missingPersonsEnrollments = missingPersons.Select((entry, _) =>
             new LehrerEinschreibung(new PersonInfoMinimal(entry.Key), entry.Value));
         updates.Add(new IAttendanceHubClient.TerminInformation(Guid.Empty, "Nicht eingeschrieben", "FEHLEND",
-            missingPersonsEnrollments));
+            missingPersonsEnrollments, missingPersonsChecked));
 
         return updates;
     }

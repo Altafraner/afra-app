@@ -1,5 +1,5 @@
-﻿import {onUnmounted, ref, toValue} from "vue";
-import * as signalR from "@microsoft/signalr";
+﻿import {ref, toValue} from "vue";
+import {useSignalR} from "@/composables/signalr.js";
 
 /**
  * Connects to the attendance hub and returns a reactive list of attendances.
@@ -8,39 +8,31 @@ import * as signalR from "@microsoft/signalr";
  * @returns {Object}
  */
 export function useAttendance(scope, id) {
-  const connection = ref(null)
+  const {
+    connectionPromise,
+    registerMessageHandler,
+    registerReconnectHandler,
+    sendMessage
+  } = useSignalR('/api/otium/attendance', true)
   const attendances = ref([])
 
-  const con = new signalR.HubConnectionBuilder()
-    .withUrl("/api/otium/attendance")
-    .withAutomaticReconnect()
-    .configureLogging(signalR.LogLevel.Information)
-    .build();
-  connection.value = con;
-  con.onclose(error => {
-    console.log("Connection closed: ", error);
-  })
-  con.onreconnected(registerScope);
-  con.start()
-    .then(() => registerScope())
+  registerReconnectHandler(registerScope)
+  connectionPromise.then(registerScope)
 
   if (toValue(scope) === "termin") {
-    con.on('UpdateTerminAttendances', updateTerminAttendances);
-    con.on('UpdateAttendance', updateAttendanceInTermin);
+    registerMessageHandler('UpdateTerminAttendances', updateTerminAttendances);
+    registerMessageHandler('UpdateAttendance', updateAttendanceInTermin);
   } else if (toValue(scope) === "block") {
-    con.on('UpdateBlockAttendances', updateBlockAttendances);
-    con.on('UpdateAttendance', updateAttendanceInBlock);
+    registerMessageHandler('UpdateBlockAttendances', updateBlockAttendances);
+    registerMessageHandler('UpdateAttendance', updateAttendanceInBlock);
+    registerMessageHandler('UpdateTerminStatus', updateTerminStatus);
   } else {
     throw Error(`Unrecognized scope: ${scope}`);
   }
 
-  onUnmounted(async () => {
-    await connection.value.stop();
-  })
-
   async function registerScope() {
     const methodName = toValue(scope) === "termin" ? "SubscribeToTermin" : "SubscribeToBlock";
-    await con.invoke(methodName, toValue(id));
+    await sendMessage(methodName, toValue(id));
   }
 
   function updateTerminAttendances(data) {
@@ -49,6 +41,15 @@ export function useAttendance(scope, id) {
 
   function updateBlockAttendances(data) {
     attendances.value = data;
+  }
+
+  function updateTerminStatus(data) {
+    const index = attendances.value.findIndex(t => t.terminId === data.terminId);
+    if (index !== -1) {
+      attendances.value[index].sindAnwesenheitenErfasst = data.sindAnwesenheitenErfasst;
+    } else {
+      console.warn(`Received status for non-existent termin`, data);
+    }
   }
 
   function updateAttendanceInTermin(data) {
@@ -79,13 +80,25 @@ export function useAttendance(scope, id) {
    * @param studentId The ID of the student whose attendance is being updated.
    * @param {'Fehlend' | 'Entschuldigt', 'Anwesend'} status The new attendance status for the student.
    */
-  function sendUpdate(studentId, status) {
-    const methodName = toValue(scope) === "termin" ? "SetStatusForTermin" : "SetStatusForBlock";
-    connection.value.invoke(methodName, toValue(id), studentId, status)
-      .catch(error => {
-        console.error("Error sending update:", error);
-      });
+  async function sendAttendanceUpdate(studentId, status) {
+    const methodName = toValue(scope) === "termin" ? "SetAttendanceStatusInTermin" : "SetAttendanceStatusInBlock";
+    await sendMessage(methodName, toValue(id), studentId, status)
   }
 
-  return {attendance: attendances, update: sendUpdate};
+  /**
+   * Sends a status update for a specific termin or block.
+   * @param innerId If the scope is "termin", this is the id of the block, otherwise it's the id of the termin.
+   * @param status The new status to set for the termin or block.
+   */
+  async function sendStatusUpdate(innerId, status) {
+    const blockId = toValue(scope) === "termin" ? innerId : toValue(id)
+    const terminId = toValue(scope) === "termin" ? toValue(id) : innerId
+    await sendMessage('SetTerminStatus', blockId, terminId, status)
+  }
+
+  return {
+    attendance: attendances,
+    updateAttendance: sendAttendanceUpdate,
+    updateStatus: sendStatusUpdate
+  };
 }

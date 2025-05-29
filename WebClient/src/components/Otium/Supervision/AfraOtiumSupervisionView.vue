@@ -44,14 +44,23 @@ async function setup() {
     }
   }
   inactive.value = false;
-  const {attendance: localAttendance, update} = useAttendance('block', currentBlock.id);
-  return {attendance: localAttendance, update};
+  const {
+    attendance: localAttendance,
+    updateAttendance,
+    updateStatus
+  } = useAttendance('block', currentBlock.id);
+  return {attendance: localAttendance, updateAttendance, updateStatus};
 }
 
-const {attendance, update} = await setup();
+const {attendance, updateAttendance, updateStatus} = await setup();
 
 function updateAttendanceCallback(student, status) {
-  update(student.id, status);
+  updateAttendance(student.id, status);
+}
+
+function updateStatusCallback(evt, terminId, status) {
+  evt.stopPropagation();
+  updateStatus(terminId, status);
 }
 </script>
 
@@ -63,9 +72,10 @@ function updateAttendanceCallback(student, status) {
           <span>
             {{ room.ort }} - {{ room.otium }}
           </span>
-          <Button v-if="false" :severity="room.kontrolliert ? 'success' : 'danger'"
-                  :label="room.kontrolliert ? 'Fertig' : 'Ausstehend'" size="small"
-                  class="confirm-button" @click="(evt) => roomToggleDone(evt, room)"/>
+          <Button :label="room.sindAnwesenheitenErfasst ? 'Fertig' : 'Ausstehend'"
+                  :severity="room.sindAnwesenheitenErfasst ? 'success' : 'danger'" class="confirm-button"
+                  size="small"
+                  @click="(evt) => updateStatusCallback(evt, room.terminId, !room.sindAnwesenheitenErfasst)"/>
         </div>
       </accordion-header>
       <accordion-content>
