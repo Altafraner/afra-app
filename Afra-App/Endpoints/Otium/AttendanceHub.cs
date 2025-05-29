@@ -5,6 +5,7 @@ using Afra_App.Data.Otium;
 using Afra_App.Data.Schuljahr;
 using Afra_App.Services.Otium;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 
 namespace Afra_App.Endpoints.Otium;
 
@@ -121,6 +122,60 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
             .UpdateTerminStatus(new IAttendanceHubClient.TerminStatusUpdate(terminId, status));
     }
 
+    /// <summary>
+    /// Moves a student from one termin to another.
+    /// </summary>
+    /// <param name="studentId">The id of the student to move</param>
+    /// <param name="fromTerminId">The id of the termin to move the student from. Use <see cref="Guid.Empty">Guid.Empty</see> when the student is not enrolled. </param>
+    /// <param name="toTerminId">The id of the termin to move the student to</param>
+    /// <param name="enrollmentService">From DI</param>
+    /// <param name="context">From DI</param>
+    public async Task MoveStudentNow(Guid studentId, Guid fromTerminId, Guid toTerminId,
+        EnrollmentService enrollmentService, AfraAppContext context)
+    {
+        if (fromTerminId == toTerminId)
+            return;
+
+        try
+        {
+            await enrollmentService.ForceMoveNow(studentId, fromTerminId, toTerminId);
+            var blockId = await context.OtiaTermine
+                .Where(t => t.Id == toTerminId)
+                .Select(t => t.Block.Id)
+                .FirstOrDefaultAsync();
+
+            await SendUpdateToAffected(blockId, fromTerminId, toTerminId);
+        }
+        catch (KeyNotFoundException)
+        {
+            throw new HubException("One of the IDs provided was not found in the database.");
+        }
+        catch (InvalidOperationException)
+        {
+            throw new HubException("The termin is not currently running");
+        }
+    }
+
+    /// <summary>
+    /// Moves a student from one termin to another.
+    /// </summary>
+    /// <param name="studentId"></param>
+    /// <param name="toTerminId"></param>
+    /// <param name="enrollmentService"></param>
+    /// <exception cref="HubException"></exception>
+    public async Task MoveStudent(Guid studentId, Guid toTerminId, EnrollmentService enrollmentService)
+    {
+        try
+        {
+            var (fromTerminId, blockId) = await enrollmentService.ForceMove(studentId, toTerminId);
+            await SendUpdateToAffected(blockId, fromTerminId, toTerminId);
+        }
+        catch (KeyNotFoundException)
+        {
+            throw new HubException("One of the IDs provided was not found in the database.");
+        }
+    }
+
     private async Task UpdateAttendance(AnwesenheitsStatus status, Guid studentId, Guid blockId, Guid terminId)
     {
         await _attendanceService.SetAttendanceForStudentInBlockAsync(studentId, blockId, status);
@@ -163,6 +218,24 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
         var enrollments = await _attendanceService.GetAttendanceForTerminAsync(terminId);
         return enrollments.Select(entry => new LehrerEinschreibung(new PersonInfoMinimal(entry.Key), entry.Value))
             .ToList();
+    }
+
+    private async Task SendUpdateToAffected(Guid blockId, Guid fromTerminId, Guid toTerminId)
+    {
+        var blockUpdates = await GetBlockAttendances(blockId);
+        await Clients.Group(BlockGroupName(blockId)).UpdateBlockAttendances(blockUpdates);
+
+        var toTerminUpdates = blockUpdates.FirstOrDefault(t => t.TerminId == toTerminId);
+        if (toTerminUpdates is not null)
+            await Clients.Group(TerminGroupName(toTerminId))
+                .UpdateTerminAttendances(toTerminUpdates.Einschreibungen);
+
+        if (fromTerminId == Guid.Empty)
+            return;
+        var fromTerminUpdates = blockUpdates.FirstOrDefault(t => t.TerminId == fromTerminId);
+        if (fromTerminUpdates is not null)
+            await Clients.Group(TerminGroupName(fromTerminId))
+                .UpdateTerminAttendances(fromTerminUpdates.Einschreibungen);
     }
 
     private static string TerminGroupName(Guid terminId) => $"termin-{terminId}";

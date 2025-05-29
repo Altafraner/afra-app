@@ -265,6 +265,102 @@ public class EnrollmentService
             : (int)Math.Round((double)numEnrollments / termin.MaxEinschreibungen.Value) * 100;
     }
 
+    /// <summary>
+    /// Moves a student to a termin. This will remove the student from any other termins in the same block.
+    /// </summary>
+    /// <param name="studentId">The id of the student to move</param>
+    /// <param name="toTerminId">The id of the termin to move to</param>
+    /// <returns>The id of the termin the student was previously enrolled in and the id of the block affected</returns>
+    /// <exception cref="KeyNotFoundException">Eiter the student or termin could not be found</exception>
+    public async Task<(Guid oldTerminId, Guid blockId)> ForceMove(Guid studentId, Guid toTerminId)
+    {
+        var toTermin = await _context.OtiaTermine
+            .Include(t => t.Block)
+            .FirstOrDefaultAsync(t => t.Id == toTerminId);
+        if (toTermin == null)
+            throw new KeyNotFoundException("Der Termin konnte nicht gefunden werden.");
+
+        var currentEnrollment = await _context.OtiaEinschreibungen
+            .Where(e => e.BetroffenePerson.Id == studentId && e.Termin.Block == toTermin.Block)
+            .ToListAsync();
+        _context.OtiaEinschreibungen.RemoveRange(currentEnrollment);
+
+        var blockSchema = _blockHelper.Get(toTermin.Block.SchemaId)!;
+        await _context.OtiaEinschreibungen.AddAsync(new Einschreibung
+        {
+            BetroffenePerson = await _context.Personen.FindAsync(studentId)
+                               ?? throw new KeyNotFoundException("Die Person konnte nicht gefunden werden."),
+            Termin = toTermin,
+            Interval = blockSchema.Interval
+        });
+
+        await _context.SaveChangesAsync();
+        return (currentEnrollment
+                .OrderBy(e => e.Interval.End)
+                .LastOrDefault()?.Id ?? Guid.Empty,
+            toTermin.Block.Id);
+    }
+
+    /// <summary>
+    /// Moves a student from one running termin to another, keeping track of the time the change was made.
+    /// </summary>
+    /// <param name="studentId">The id of the student to move</param>
+    /// <param name="fromTerminId">The id of the termin the student is moving from. Use Guid.Empty if you expect the student to not be enrolled.</param>
+    /// <param name="toTerminId">The id of the termin the student should be enrolled for</param>
+    /// <exception cref="KeyNotFoundException">Either the student, ore one of the termine could not be found.</exception>
+    /// <exception cref="InvalidOperationException">One of the termines is not running. Consider using <see cref="ForceMove"/></exception>
+    public async Task ForceMoveNow(Guid studentId, Guid fromTerminId, Guid toTerminId)
+    {
+        var now = DateTime.Now;
+        var nowTime = TimeOnly.FromDateTime(now);
+        var today = DateOnly.FromDateTime(now);
+        if (fromTerminId != Guid.Empty)
+        {
+            // EF Core struggles with the OrderBy here, so i'll load all the einschreibungen and order them in memory.
+            var fromEinschreibung = (await _context.OtiaEinschreibungen
+                    .Include(e => e.Termin)
+                    .ThenInclude(e => e.Block)
+                    .Where(e => e.BetroffenePerson.Id == studentId && e.Termin.Id == fromTerminId)
+                    .ToListAsync())
+                .OrderByDescending(e => e.Interval.End)
+                .FirstOrDefault();
+            if (fromEinschreibung == null)
+                throw new KeyNotFoundException("Die Einschreibung konnte nicht gefunden werden.");
+
+            if (fromEinschreibung.Termin.Block.SchultagKey != today || !fromEinschreibung.Interval.Contains(nowTime))
+                throw new InvalidOperationException(
+                    "Sie können keine Einschreibung jetzt beenden, wenn die Einschreibung nicht grade stattfindet!");
+
+            fromEinschreibung.Interval = new TimeOnlyInterval(fromEinschreibung.Interval.Start, nowTime);
+        }
+
+        var toTermin = await _context.OtiaTermine
+            .Include(t => t.Block)
+            .FirstOrDefaultAsync(t => t.Id == toTerminId);
+
+        if (toTermin == null)
+            throw new KeyNotFoundException("Der Termin konnte nicht gefunden werden.");
+
+        if (toTermin.Block.SchultagKey != today)
+            throw new InvalidOperationException(
+                "Sie können keine Einschreibung jetzt beginnen, wenn der Termin nicht heute ist!");
+
+        var blockSchema = _blockHelper.Get(toTermin.Block.SchemaId)!;
+        if (!blockSchema.Interval.Contains(nowTime))
+            throw new InvalidOperationException(
+                "Sie können keine Einschreibung jetzt beginnen, wenn der Termin nicht grade stattfindet!");
+
+        _context.OtiaEinschreibungen.Add(new Einschreibung
+        {
+            BetroffenePerson = await _context.Personen.FindAsync(studentId)
+                               ?? throw new KeyNotFoundException("Die Person konnte nicht gefunden werden."),
+            Termin = toTermin,
+            Interval = new TimeOnlyInterval(nowTime, blockSchema.Interval.End)
+        });
+
+        await _context.SaveChangesAsync();
+    }
+
     private (bool MayUnEnroll, string? Reason) CommonMayUnEnroll(Person user, Termin termin)
     {
         var schema = _blockHelper.Get(termin.Block.SchemaId);
