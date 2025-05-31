@@ -142,6 +142,7 @@ builder.Services.AddQuartz(q =>
 );
 builder.Services.AddQuartzServer(options => { options.WaitForJobsToComplete = true; });
 builder.Services.AddHostedService<LdapAutoSyncScheduler>();
+builder.Services.AddHostedService<EnrollmentReminderService>();
 
 builder.Services.AddTransient<IEmailService, SmtpEmailService>();
 builder.Services.AddTransient<IBatchingEmailService, BatchingEmailService>();

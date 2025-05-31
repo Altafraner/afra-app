@@ -10,5 +10,11 @@ public interface IBatchingEmailService
     /// <summary>
     ///     Schedule a notification for delivery in a batch within the specified timeframe
     /// </summary>
-    public Task ScheduleEmailAsync(Person recipient, string subject, string body, TimeSpan deadline);
+    public Task ScheduleEmailAsync(Person recipient, string subject, string body, TimeSpan deadline) =>
+        ScheduleEmailAsync(recipient.Id, subject, body, deadline);
+
+    /// <summary>
+    ///     Schedule a notification for delivery in a batch within the specified timeframe
+    /// </summary>
+    public Task ScheduleEmailAsync(Guid recipientId, string subject, string body, TimeSpan deadline);
 }

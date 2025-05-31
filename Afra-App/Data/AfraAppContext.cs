@@ -135,7 +135,9 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
         });
 
         modelBuilder.Entity<ScheduledEmail>()
-            .HasOne(e => e.Recipient);
+            .HasOne(e => e.Recipient)
+            .WithMany()
+            .HasForeignKey(e => e.RecipientId);
 
         modelBuilder.Entity<Block>(b =>
         {
