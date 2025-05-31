@@ -21,7 +21,8 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:5043',
-        changeOrigin: true
+        changeOrigin: true,
+        ws: true
       },
       '/SAML': {
         target: 'http://127.0.0.1:5043',

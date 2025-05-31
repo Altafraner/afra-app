@@ -13,7 +13,7 @@ public class Block
     /// <summary>
     ///     The <see cref="Schultag" /> the Block is on
     /// </summary>
-    public Schultag Schultag { get; set; }
+    public Schultag Schultag { get; set; } = null!;
 
     /// <summary>
     ///     The foreign key of the <see cref="Schultag" /> the Block is on
@@ -25,4 +25,9 @@ public class Block
     ///     The number of the Block
     /// </summary>
     public required char SchemaId { get; set; } = '\0';
+
+    /// <summary>
+    ///     True, iff the supervisor has checked on missing students for this Block.
+    /// </summary>
+    public bool SindAnwesenheitenFehlernderKontrolliert { get; set; } = false;
 }

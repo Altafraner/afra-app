@@ -8,45 +8,49 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Person = Afra_App.Data.People.Person;
 
-namespace Afra_App.Services;
+namespace Afra_App.Services.User;
 
 /// <summary>
 ///     A Service for handling user related operations, such as signing in.
 /// </summary>
-public class UserService
+public class UserSigninService
 {
-    private readonly AfraAppContext _context;
+    private readonly AfraAppContext _dbContext;
+    private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly LdapService _ldapService;
+    private readonly UserAccessor _userAccessor;
 
     /// <summary>
     ///     Creates a new user service.
     /// </summary>
-    public UserService(AfraAppContext context, LdapService ldapService)
+    public UserSigninService(AfraAppContext dbContext, LdapService ldapService,
+        IHttpContextAccessor httpContextAccessor,
+        UserAccessor userAccessor)
     {
-        _context = context;
+        _dbContext = dbContext;
         _ldapService = ldapService;
+        _httpContextAccessor = httpContextAccessor;
+        _userAccessor = userAccessor;
     }
 
     /// <summary>
     ///     Signs in the <see cref="Data.People.Person" /> with the given id for the given <see cref="HttpContent" />
     /// </summary>
     /// <param name="userId">The id of the <see cref="Data.People.Person" /> to sign in</param>
-    /// <param name="httpContext">The <see cref="HttpContent" /> of the current session</param>
     /// <exception cref="InvalidOperationException">The user with the given id does not exist.</exception>
-    public async Task SignInAsync(Guid userId, HttpContext httpContext)
+    public async Task SignInAsync(Guid userId)
     {
-        var user = await _context.Personen.FindAsync(userId);
+        var user = await _dbContext.Personen.FindAsync(userId);
         if (user is null) throw new InvalidOperationException("The user does not exist");
-        await SignInAsync(user, httpContext);
+        await SignInAsync(user);
     }
 
     /// <summary>
     ///     Signs out the current user.
     /// </summary>
-    /// <param name="httpContext">The <see cref="HttpContent" /> of the current session</param>
-    public async Task SignOutAsync(HttpContext httpContext)
+    public async Task SignOutAsync()
     {
-        await httpContext.SignOutAsync();
+        await _httpContextAccessor.HttpContext!.SignOutAsync();
     }
 
     /// <summary>
@@ -54,46 +58,45 @@ public class UserService
     /// </summary>
     /// <remarks>This is currently insecure.</remarks>
     /// <param name="request">The SignInRequest</param>
-    /// <param name="httpContext">The current HttpContext</param>
     /// <param name="environment">The application environment</param>
     /// <returns>Ok, if the credentials are valid; Otherwise, unauthorized</returns>
-    public async Task<IResult> HandleSignInRequestAsync(SignInRequest request, HttpContext httpContext,
-        IWebHostEnvironment environment)
+    public async Task<IResult> HandleSignInRequestAsync(SignInRequest request, IWebHostEnvironment environment)
     {
         var user = (_ldapService.IsEnabled, environment.IsDevelopment()) switch
         {
             (true, _) => await _ldapService.VerifyUserAsync(request.Username.Trim(), request.Password.Trim()),
-            (false, true) => await _context.Personen.FirstOrDefaultAsync(u =>
+            (false, true) => await _dbContext.Personen.FirstOrDefaultAsync(u =>
                 u.Email.StartsWith(request.Username.Trim())),
             _ => null
         };
 
         if (user is null) return Results.Unauthorized();
 
-        await SignInAsync(user, httpContext);
+        await SignInAsync(user);
         return Results.Ok();
     }
 
-    private static async Task SignInAsync(Person user, HttpContext httpContext)
+    private async Task SignInAsync(Person user)
     {
         var claimsPrincipal = GenerateClaimsPrincipal(user);
-        await httpContext.SignInAsync(claimsPrincipal);
+        await _httpContextAccessor.HttpContext!.SignInAsync(claimsPrincipal);
     }
 
     /// <summary>
     ///     Check whether the current user is authorized.
     /// </summary>
-    /// <param name="httpContext">The current HttpContext</param>
     /// <returns>The logged-in user if the user is authorized; Otherwise, unauthorized.</returns>
-    public async Task<IResult> IsAuthorized(HttpContext httpContext)
+    public async Task<IResult> GetAuthorized()
     {
         // Check if the user is authenticated
-        if (!(httpContext.User.Identity?.IsAuthenticated ?? false)) return Results.Unauthorized();
+        var httpContext = _httpContextAccessor.HttpContext;
+        if (httpContext?.User.Identity is null || !httpContext.User.Identity.IsAuthenticated)
+            return Results.Unauthorized();
 
         try
         {
             // Retrieve the Person associated with the current user and return it
-            var person = await httpContext.GetPersonAsync(_context);
+            var person = await _userAccessor.GetUserAsync();
             return Results.Ok(new PersonInfoMinimal(person));
         }
         catch (Exception e) when (e is InvalidOperationException or KeyNotFoundException)

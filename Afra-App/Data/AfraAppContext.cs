@@ -49,6 +49,11 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
     public DbSet<Einschreibung> OtiaEinschreibungen { get; set; }
 
     /// <summary>
+    ///     All attendances for Otia
+    /// </summary>
+    public DbSet<Anwesenheit> OtiaAnwesenheiten { get; set; }
+
+    /// <summary>
     ///     All school days
     /// </summary>
     public DbSet<Schultag> Schultage { get; set; }
@@ -69,7 +74,8 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
     internal static Action<NpgsqlDbContextOptionsBuilder> ConfigureNpgsql =>
         builder => builder
             .MapEnum<Rolle>("person_rolle")
-            .MapEnum<Wochentyp>("wochentyp");
+            .MapEnum<Wochentyp>("wochentyp")
+            .MapEnum<AnwesenheitsStatus>("anwesenheits_status");
 
     /// <summary>
     ///     The keys used by the ASP.NET Core Data Protection API.
@@ -115,8 +121,23 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
         modelBuilder.Entity<Einschreibung>()
             .ComplexProperty(e => e.Interval);
 
+        modelBuilder.Entity<Anwesenheit>(e =>
+        {
+            e.HasOne(a => a.Student)
+                .WithMany()
+                .HasForeignKey(a => a.StudentId);
+
+            e.HasOne(a => a.Block)
+                .WithMany()
+                .HasForeignKey(a => a.BlockId);
+
+            e.HasKey(a => new { a.BlockId, a.StudentId });
+        });
+
         modelBuilder.Entity<ScheduledEmail>()
-            .HasOne(e => e.Recipient);
+            .HasOne(e => e.Recipient)
+            .WithMany()
+            .HasForeignKey(e => e.RecipientId);
 
         modelBuilder.Entity<Block>(b =>
         {
