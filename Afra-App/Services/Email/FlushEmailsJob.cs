@@ -1,4 +1,5 @@
 ﻿using Afra_App.Data;
+using Afra_App.Data.People;
 using Microsoft.EntityFrameworkCore;
 using Quartz;
 
@@ -45,7 +46,14 @@ internal class FlushEmailsJob : IJob
             var userEmail = user.Email;
 
             const string batchSubject = "Neue Benachrichtigungen";
-            var batchText = "";
+            var begrüßung = user.Rolle == Rolle.Tutor ? "Sehr geehrter" : "Liebe";
+            var anrede = user.Rolle == Rolle.Tutor ? "Sie haben" : "Du hast";
+            var batchText = $"""
+                             {begrüßung} {user.Vorname} {user.Nachname},
+
+                             {anrede} neue Benachrichtigungen in der Afra-App. Diese sind im folgenden aufgelistet.
+
+                             """;
 
             for (var i = 0; i < emailsForUser.Count; i++)
             {
