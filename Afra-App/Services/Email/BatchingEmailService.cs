@@ -1,6 +1,5 @@
 using Afra_App.Data;
 using Afra_App.Data.Email;
-using Afra_App.Data.People;
 using Quartz;
 
 namespace Afra_App.Services.Email;
@@ -31,7 +30,7 @@ public class BatchingEmailService : IBatchingEmailService
     /// <param name="subject">The subject of the notification (Not the Subject of the actual Email)</param>
     /// <param name="body">The body of the notification</param>
     /// <param name="deadline">The TimeSpan within which to send the email containing the notification</param>
-    public async Task ScheduleEmailAsync(Person recipient, string subject, string body, TimeSpan deadline)
+    public async Task ScheduleEmailAsync(Guid recipientId, string subject, string body, TimeSpan deadline)
     {
         var absDeadLine = DateTime.UtcNow + deadline;
         var mailId = Guid.CreateVersion7();
@@ -39,7 +38,7 @@ public class BatchingEmailService : IBatchingEmailService
             new ScheduledEmail
             {
                 Id = mailId,
-                Recipient = recipient,
+                RecipientId = recipientId,
                 Subject = subject,
                 Body = body,
                 Deadline = absDeadLine
@@ -47,12 +46,12 @@ public class BatchingEmailService : IBatchingEmailService
         );
         await _context.SaveChangesAsync();
 
-        var key = new JobKey($"mail-flush-{recipient}-{mailId}", "flush-email");
+        var key = new JobKey($"mail-flush-{recipientId}-{mailId}", "flush-email");
 
         // Create a job to flush all notifications to this recipient after the deadline passes
         var job = JobBuilder.Create<FlushEmailsJob>()
             .WithIdentity(key)
-            .UsingJobData("user_id", recipient.Id)
+            .UsingJobData("user_id", recipientId)
             .Build();
         var trigger = TriggerBuilder.Create()
             .ForJob(key)
