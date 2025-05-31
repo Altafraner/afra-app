@@ -1,12 +1,10 @@
-using Afra_App.Authentication;
 using Afra_App.Data;
 using Afra_App.Data.Otium;
 using Afra_App.Data.People;
 using Afra_App.Data.Schuljahr;
-using Afra_App.Services;
+using Afra_App.Services.User;
 using Bogus;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Person = Afra_App.Data.People.Person;
@@ -19,7 +17,7 @@ namespace Afra_App.Controllers;
 
 [ApiController]
 [Route("/api/[controller]")]
-public class TestController(AfraAppContext dbContext, UserService userService) : ControllerBase
+public class TestController(AfraAppContext dbContext, UserSigninService userSigninService) : ControllerBase
 {
     [HttpGet("reset")]
     public ActionResult ResetDb()
@@ -168,7 +166,7 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
     {
         try
         {
-            await userService.SignInAsync(id, HttpContext);
+            await userSigninService.SignInAsync(id);
         }
         catch (InvalidOperationException e)
         {
@@ -184,13 +182,5 @@ public class TestController(AfraAppContext dbContext, UserService userService) :
     {
         await HttpContext.SignOutAsync();
         return Ok("Logged out");
-    }
-
-    [Route("authenticate")]
-    [Authorize]
-    [HttpGet]
-    public ActionResult<Data.DTO.Person> PrintAuthentication()
-    {
-        return new Data.DTO.Person(HttpContext.GetPerson(dbContext));
     }
 }

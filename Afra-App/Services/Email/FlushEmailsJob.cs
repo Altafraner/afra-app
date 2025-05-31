@@ -14,9 +14,9 @@ internal class FlushEmailsJob : IJob
     private readonly IEmailService _emailService;
     private readonly ILogger _logger;
 
-    public FlushEmailsJob(AfraAppContext context, IEmailService emailService, ILogger<FlushEmailsJob> logger)
+    public FlushEmailsJob(AfraAppContext dbContext, IEmailService emailService, ILogger<FlushEmailsJob> logger)
     {
-        _dbContext = context;
+        _dbContext = dbContext;
         _emailService = emailService;
         _logger = logger;
     }

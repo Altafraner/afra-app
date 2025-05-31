@@ -1,6 +1,6 @@
 using System.Text;
 using System.Xml;
-using Afra_App.Services;
+using Afra_App.Services.User;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Afra_App.Authentication.Saml;
@@ -30,8 +30,9 @@ public static class SamlExtensions
     }
 
     private static async Task<IResult> SamlResponseHandler([FromForm(Name = "SAMLResponse")] string response,
-        [FromForm(Name = "RelayState")] string? relayState, SamlService samlService, UserService userService,
-        ILogger<SamlService> logger, HttpContext httpContext)
+        [FromForm(Name = "RelayState")] string? relayState, SamlService samlService,
+        UserSigninService userSigninService,
+        ILogger<SamlService> logger)
     {
         var responseXml = new XmlDocument();
         try
@@ -58,7 +59,7 @@ public static class SamlExtensions
 
         logger.LogInformation("Signing in User: {userId}", user);
 
-        await userService.SignInAsync(new Guid(user), httpContext);
+        await userSigninService.SignInAsync(new Guid(user));
 
         return Results.LocalRedirect(string.IsNullOrWhiteSpace(relayState) || relayState == "undefined"
             ? "/"
