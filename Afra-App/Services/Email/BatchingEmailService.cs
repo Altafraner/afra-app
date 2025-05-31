@@ -10,23 +10,23 @@ namespace Afra_App.Services.Email;
 /// </summary>
 public class BatchingEmailService : IBatchingEmailService
 {
-    private readonly AfraAppContext _context;
+    private readonly AfraAppContext _dbContext;
     private readonly IScheduler _scheduler;
 
     /// <summary>
     ///     Constructs the BatchingEmailService. Usually called by the DI container.
     /// </summary>
-    public BatchingEmailService(ISchedulerFactory schedulerFactory, AfraAppContext context)
+    public BatchingEmailService(ISchedulerFactory schedulerFactory, AfraAppContext dbContext)
     {
         _scheduler = schedulerFactory.GetScheduler().GetAwaiter().GetResult();
-        _context = context;
+        _dbContext = dbContext;
     }
 
     /// <summary>
     ///     Inserts an email into the database and schedules flushing all mails for the respective user when the deadline
     ///     passes.
     /// </summary>
-    /// <param name="recipient">The Person to receive the email</param>
+    /// <param name="recipientId">The ID of the person to receive the email</param>
     /// <param name="subject">The subject of the notification (Not the Subject of the actual Email)</param>
     /// <param name="body">The body of the notification</param>
     /// <param name="deadline">The TimeSpan within which to send the email containing the notification</param>
@@ -34,7 +34,7 @@ public class BatchingEmailService : IBatchingEmailService
     {
         var absDeadLine = DateTime.UtcNow + deadline;
         var mailId = Guid.CreateVersion7();
-        _context.ScheduledEmails.Add(
+        _dbContext.ScheduledEmails.Add(
             new ScheduledEmail
             {
                 Id = mailId,
@@ -44,7 +44,7 @@ public class BatchingEmailService : IBatchingEmailService
                 Deadline = absDeadLine
             }
         );
-        await _context.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync();
 
         var key = new JobKey($"mail-flush-{recipientId}-{mailId}", "flush-email");
 

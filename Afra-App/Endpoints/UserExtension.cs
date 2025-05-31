@@ -1,9 +1,9 @@
-using Afra_App.Services;
+using Afra_App.Services.User;
 
 namespace Afra_App.Endpoints;
 
 /// <summary>
-///     Extension Methods for the <see cref="UserService" /> class.
+///     Extension Methods for the <see cref="UserSigninService" /> class.
 /// </summary>
 public static class UserExtension
 {
@@ -13,18 +13,18 @@ public static class UserExtension
     public static void MapUserEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapPost("/api/user/login",
-                async (UserService userService, UserService.SignInRequest request, HttpContext context,
+                async (UserSigninService userSigninService, UserSigninService.SignInRequest request,
                         IWebHostEnvironment environment) =>
-                    await userService.HandleSignInRequestAsync(request, context, environment))
+                    await userSigninService.HandleSignInRequestAsync(request, environment))
             .WithName("sign-in")
             .WithOpenApi()
             .AllowAnonymous();
 
         app.MapGet("/api/user",
-            async (UserService userService, HttpContext context) => await userService.IsAuthorized(context));
+            async (UserSigninService userSigninService) => await userSigninService.GetAuthorized());
 
         app.MapGet("/api/user/logout",
-                async (UserService userService, HttpContext context) => await userService.SignOutAsync(context))
+                async (UserSigninService userSigninService) => await userSigninService.SignOutAsync())
             .RequireAuthorization();
     }
 }

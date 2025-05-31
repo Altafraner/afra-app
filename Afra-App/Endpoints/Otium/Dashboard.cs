@@ -1,6 +1,7 @@
 using Afra_App.Authentication;
 using Afra_App.Data;
 using Afra_App.Services.Otium;
+using Afra_App.Services.User;
 using Microsoft.EntityFrameworkCore;
 
 namespace Afra_App.Endpoints.Otium;
@@ -18,16 +19,16 @@ public static class Dashboard
         app.MapGet("/student", GetStudentDashboard)
             .RequireAuthorization(AuthorizationPolicies.StudentOnly);
         app.MapGet("/student/all",
-                (OtiumEndpointService service, HttpContext httpContext, AfraAppContext context) =>
-                    GetStudentDashboard(service, httpContext, context, true))
+                (OtiumEndpointService service, UserAccessor userAccessor) =>
+                    GetStudentDashboard(service, userAccessor, true))
             .RequireAuthorization(AuthorizationPolicies.StudentOnly);
 
         app.MapGet("/student/{studentId:guid}", GetStudentDashboardForTeacher)
             .RequireAuthorization(AuthorizationPolicies.TutorOnly);
         app.MapGet("/student/{studentId:guid}/all",
                 (OtiumEndpointService service,
-                        HttpContext httpContext, AfraAppContext context, Guid studentId) =>
-                    GetStudentDashboardForTeacher(service, httpContext, context, studentId, true))
+                        UserAccessor userAccessor, AfraAppContext dbContext, Guid studentId) =>
+                    GetStudentDashboardForTeacher(service, userAccessor, dbContext, studentId, true))
             .RequireAuthorization(AuthorizationPolicies.TutorOnly);
 
         app.MapGet("/teacher", GetTeacherDashboard)
@@ -35,22 +36,21 @@ public static class Dashboard
     }
 
     private static async Task<IResult> GetStudentDashboard(OtiumEndpointService service,
-        HttpContext httpContext,
-        AfraAppContext context,
+        UserAccessor userAccessor,
         bool all = false)
     {
-        var user = await httpContext.GetPersonAsync(context);
+        var user = await userAccessor.GetUserAsync();
         return Results.Ok(service.GetStudentDashboardAsyncEnumerable(user, all));
     }
 
     private static async Task<IResult> GetStudentDashboardForTeacher(OtiumEndpointService service,
-        HttpContext httpContext,
-        AfraAppContext context,
+        UserAccessor userAccessor,
+        AfraAppContext dbContext,
         Guid studentId,
         bool all = false)
     {
-        var user = await httpContext.GetPersonAsync(context);
-        var student = context.Personen
+        var user = await userAccessor.GetUserAsync();
+        var student = dbContext.Personen
             .Include(p => p.Mentor)
             .FirstOrDefault(p => p.Id == studentId);
 
@@ -61,10 +61,9 @@ public static class Dashboard
     }
 
     private static async Task<IResult> GetTeacherDashboard(OtiumEndpointService service,
-        HttpContext httpContext,
-        AfraAppContext context)
+        UserAccessor userAccessor)
     {
-        var user = await httpContext.GetPersonAsync(context);
+        var user = await userAccessor.GetUserAsync();
         return Results.Ok(await service.GetTeacherDashboardAsync(user));
     }
 }

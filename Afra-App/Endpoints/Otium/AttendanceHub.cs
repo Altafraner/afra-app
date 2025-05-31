@@ -10,14 +10,14 @@ using Microsoft.EntityFrameworkCore;
 namespace Afra_App.Endpoints.Otium;
 
 /// <summary>
-/// A hub for managing attendance updates in the Otium application.
+///     A hub for managing attendance updates in the Otium application.
 /// </summary>
 public class AttendanceHub : Hub<IAttendanceHubClient>
 {
     private readonly IAttendanceService _attendanceService;
 
     /// <summary>
-    /// Constructs a new instance of the <see cref="AttendanceHub"/> class.
+    ///     Constructs a new instance of the <see cref="AttendanceHub" /> class.
     /// </summary>
     public AttendanceHub(IAttendanceService attendanceService)
     {
@@ -25,9 +25,9 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
     }
 
     /// <summary>
-    /// Subscribes a user to get updates for a specific termin.
+    ///     Subscribes a user to get updates for a specific termin.
     /// </summary>
-    /// <param name="terminId">The <see cref="Guid"/> of the <see cref="Data.Otium.Termin"/> to subscribe to.</param>
+    /// <param name="terminId">The <see cref="Guid" /> of the <see cref="Data.Otium.Termin" /> to subscribe to.</param>
     public async Task SubscribeToTermin(Guid terminId)
     {
         await Groups.AddToGroupAsync(Context.ConnectionId, TerminGroupName(terminId));
@@ -36,18 +36,18 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
     }
 
     /// <summary>
-    /// Unsubscribes a user from updates for a specific termin.
+    ///     Unsubscribes a user from updates for a specific termin.
     /// </summary>
-    /// <param name="terminId">The <see cref="Guid"/> of the <see cref="Data.Otium.Termin"/> to unsubscribe from.</param>
+    /// <param name="terminId">The <see cref="Guid" /> of the <see cref="Data.Otium.Termin" /> to unsubscribe from.</param>
     public Task UnsubscribeFromTermin(Guid terminId)
     {
         return Groups.RemoveFromGroupAsync(Context.ConnectionId, TerminGroupName(terminId));
     }
 
     /// <summary>
-    /// Subscribes a user to get updates for a specific block.
+    ///     Subscribes a user to get updates for a specific block.
     /// </summary>
-    /// <param name="blockId">The <see cref="Guid"/> of the <see cref="Block"/> to subscribe to.</param>
+    /// <param name="blockId">The <see cref="Guid" /> of the <see cref="Block" /> to subscribe to.</param>
     public async Task SubscribeToBlock(Guid blockId)
     {
         await Groups.AddToGroupAsync(Context.ConnectionId, BlockGroupName(blockId));
@@ -56,19 +56,19 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
     }
 
     /// <summary>
-    /// Unsubscribes a user from updates for a specific block.
+    ///     Unsubscribes a user from updates for a specific block.
     /// </summary>
-    /// <param name="blockId">The <see cref="Guid"/> of the <see cref="Block"/> to unsubscribe from.</param>
+    /// <param name="blockId">The <see cref="Guid" /> of the <see cref="Block" /> to unsubscribe from.</param>
     public Task UnsubscribeFromBlock(Guid blockId)
     {
         return Groups.RemoveFromGroupAsync(Context.ConnectionId, BlockGroupName(blockId));
     }
 
     /// <summary>
-    /// Sets the attendance status for a user in a block.
+    ///     Sets the attendance status for a user in a block.
     /// </summary>
-    /// <param name="blockId">The id of the <see cref="Block"/></param>
-    /// <param name="studentId">The id of the Students <see cref="Data.People.Person"/> entity.</param>
+    /// <param name="blockId">The id of the <see cref="Block" /></param>
+    /// <param name="studentId">The id of the Students <see cref="Data.People.Person" /> entity.</param>
     /// <param name="status">The new status</param>
     /// <param name="dbContext">Injected via DI</param>
     public async Task SetAttendanceStatusInBlock(Guid blockId, Guid studentId, AnwesenheitsStatus status,
@@ -85,10 +85,10 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
     }
 
     /// <summary>
-    /// Set the attendance status for a specific termin for a specific student.
+    ///     Set the attendance status for a specific termin for a specific student.
     /// </summary>
-    /// <param name="terminId">The id of the <see cref="Data.Otium.Termin"/></param>
-    /// <param name="studentId">The id of the students <see cref="Data.People.Person"/> entity</param>
+    /// <param name="terminId">The id of the <see cref="Data.Otium.Termin" /></param>
+    /// <param name="studentId">The id of the students <see cref="Data.People.Person" /> entity</param>
     /// <param name="status">The new status</param>
     /// <param name="dbContext">Injected from DI-Container</param>
     /// <exception cref="KeyNotFoundException"></exception>
@@ -106,10 +106,13 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
     }
 
     /// <summary>
-    /// Updates the checked-status of a specific termin or all missing persons in a block.
+    ///     Updates the checked-status of a specific termin or all missing persons in a block.
     /// </summary>
     /// <param name="blockId">The id of the block the update is for</param>
-    /// <param name="terminId">The id of the termin the update is for. Use <see cref="Guid.Empty">Guid.Empty</see> for missing persons. </param>
+    /// <param name="terminId">
+    ///     The id of the termin the update is for. Use <see cref="Guid.Empty">Guid.Empty</see> for missing
+    ///     persons.
+    /// </param>
     /// <param name="status">The new status</param>
     public async Task SetTerminStatus(Guid blockId, Guid terminId, bool status)
     {
@@ -123,15 +126,18 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
     }
 
     /// <summary>
-    /// Moves a student from one termin to another.
+    ///     Moves a student from one termin to another.
     /// </summary>
     /// <param name="studentId">The id of the student to move</param>
-    /// <param name="fromTerminId">The id of the termin to move the student from. Use <see cref="Guid.Empty">Guid.Empty</see> when the student is not enrolled. </param>
+    /// <param name="fromTerminId">
+    ///     The id of the termin to move the student from. Use <see cref="Guid.Empty">Guid.Empty</see>
+    ///     when the student is not enrolled.
+    /// </param>
     /// <param name="toTerminId">The id of the termin to move the student to</param>
     /// <param name="enrollmentService">From DI</param>
-    /// <param name="context">From DI</param>
+    /// <param name="dbContext">From DI</param>
     public async Task MoveStudentNow(Guid studentId, Guid fromTerminId, Guid toTerminId,
-        EnrollmentService enrollmentService, AfraAppContext context)
+        EnrollmentService enrollmentService, AfraAppContext dbContext)
     {
         if (fromTerminId == toTerminId)
             return;
@@ -139,7 +145,7 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
         try
         {
             await enrollmentService.ForceMoveNow(studentId, fromTerminId, toTerminId);
-            var blockId = await context.OtiaTermine
+            var blockId = await dbContext.OtiaTermine
                 .Where(t => t.Id == toTerminId)
                 .Select(t => t.Block.Id)
                 .FirstOrDefaultAsync();
@@ -157,7 +163,7 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
     }
 
     /// <summary>
-    /// Moves a student from one termin to another.
+    ///     Moves a student from one termin to another.
     /// </summary>
     /// <param name="studentId"></param>
     /// <param name="toTerminId"></param>
@@ -238,6 +244,13 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
                 .UpdateTerminAttendances(fromTerminUpdates.Einschreibungen);
     }
 
-    private static string TerminGroupName(Guid terminId) => $"termin-{terminId}";
-    private static string BlockGroupName(Guid blockId) => $"block-{blockId}";
+    private static string TerminGroupName(Guid terminId)
+    {
+        return $"termin-{terminId}";
+    }
+
+    private static string BlockGroupName(Guid blockId)
+    {
+        return $"block-{blockId}";
+    }
 }

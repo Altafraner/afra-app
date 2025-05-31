@@ -33,9 +33,9 @@ public static class SchuljahrExtensions
         management.MapDelete("/{datum}", DeleteSchultag);
     }
 
-    private static async Task<IResult> GetSchuljahr(AfraAppContext context)
+    private static async Task<IResult> GetSchuljahr(AfraAppContext dbContext)
     {
-        var schultage = await context.Schultage
+        var schultage = await dbContext.Schultage
             .Include(s => s.Blocks)
             .OrderBy(s => s.Datum)
             .Select(s => new DtoSchultag(s.Datum, s.Wochentyp, s.Blocks.Select(b => b.SchemaId)))
@@ -46,7 +46,8 @@ public static class SchuljahrExtensions
         return Results.Ok(new Schuljahr(next, schultage));
     }
 
-    private static async Task<IResult> AddSchultage(AfraAppContext context, IOptions<OtiumConfiguration> configuration,
+    private static async Task<IResult> AddSchultage(AfraAppContext dbContext,
+        IOptions<OtiumConfiguration> configuration,
         [FromBody] IEnumerable<DtoSchultag> schultageIn)
     {
         var blockKeys = configuration.Value.Blocks.Select(e => e.Id).Distinct();
@@ -72,7 +73,7 @@ public static class SchuljahrExtensions
 
         foreach (var schultag in schultage.ToList())
         {
-            var conflict = await context.Schultage.Include(e => e.Blocks)
+            var conflict = await dbContext.Schultage.Include(e => e.Blocks)
                 .FirstOrDefaultAsync(s => s.Datum == schultag.Datum);
             if (conflict == null) continue;
 
@@ -92,25 +93,25 @@ public static class SchuljahrExtensions
                     conflict.Blocks.Remove(block);
         }
 
-        await context.Schultage.AddRangeAsync(schultage);
-        await context.SaveChangesAsync();
+        await dbContext.Schultage.AddRangeAsync(schultage);
+        await dbContext.SaveChangesAsync();
 
         return Results.Created(string.Empty,
             schultage.Select(s => new DtoSchultag(s.Datum, s.Wochentyp, s.Blocks.Select(b => b.SchemaId))));
     }
 
-    private static async Task<IResult> DeleteSchultag(AfraAppContext context, DateOnly datum)
+    private static async Task<IResult> DeleteSchultag(AfraAppContext dbContext, DateOnly datum)
     {
-        var schultag = await context.Schultage.FindAsync(datum);
+        var schultag = await dbContext.Schultage.FindAsync(datum);
         if (schultag == null) return Results.NotFound();
 
-        context.Schultage.Remove(schultag);
-        await context.SaveChangesAsync();
+        dbContext.Schultage.Remove(schultag);
+        await dbContext.SaveChangesAsync();
 
         return Results.NoContent();
     }
 
-    private static async Task<IResult> GetNow(AfraAppContext context, IOptions<OtiumConfiguration> config)
+    private static async Task<IResult> GetNow(AfraAppContext dbContext, IOptions<OtiumConfiguration> config)
     {
         var now = DateTime.Now;
         var today = DateOnly.FromDateTime(now);
@@ -124,7 +125,7 @@ public static class SchuljahrExtensions
                 .Select(b => b.Id)
                 .ToList();
         if (blockSchema.Count == 0) return Results.NotFound();
-        var block = await context.Blocks
+        var block = await dbContext.Blocks
             .AsNoTracking()
             .Where(b => blockSchema.Contains(b.SchemaId))
             .Where(b => b.SchultagKey == today)

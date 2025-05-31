@@ -11,9 +11,9 @@ using Afra_App.Data.Configuration;
 using Afra_App.Data.People;
 using Afra_App.Endpoints;
 using Afra_App.Endpoints.Otium;
-using Afra_App.Services;
 using Afra_App.Services.Email;
 using Afra_App.Services.Otium;
+using Afra_App.Services.User;
 using Afra_App.Utilities;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -105,7 +105,9 @@ builder.Services.AddAuthorizationBuilder()
         policy => policy.RequireClaim(AfraAppClaimTypes.Role, nameof(Rolle.Tutor)));
 
 if (builder.Configuration.GetValue<bool>("Saml:Enabled")) builder.Services.AddSingleton<SamlService>();
-builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<UserSigninService>();
+builder.Services.AddScoped<UserAccessor>();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<BlockHelper>();
 builder.Services.AddScoped<KategorieService>();
 builder.Services.AddScoped<OtiumEndpointService>();
