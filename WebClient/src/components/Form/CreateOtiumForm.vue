@@ -14,21 +14,48 @@ const bezeichnung = ref(null);
 const beschreibung = ref(null);
 const kategorie = ref(null);
 
-function resolver({values}) {
-  const errors = {}
+function resolver({ values }) {
+  console.log(values);
+  
+  const errors = {};
 
-  return {values, errors}
+  const bezeichnung = (values.bezeichnung ?? '').trim();
+  const beschreibung = (values.beschreibung ?? '').trim();
+
+  if (!bezeichnung || bezeichnung === '') {
+    errors.bezeichnung = [{  message: 'Bezeichnung ist erforderlich.' }];
+  } else if ([...bezeichnung].length < 3) {
+    errors.bezeichnung = [{  message: 'Bezeichnung muss über 3 Zeichen besitzen.' }];
+  } else if ([...bezeichnung].length > 10) {
+    errors.bezeichnung = [{ message: 'Bezeichnung muss unter 10 Zeichen besitzen.' }];
+  }
+
+  if (!beschreibung || beschreibung === '') {
+    errors.beschreibung = [{  message: 'Beschreibung ist erforderlich.' }];
+  } else if ([...beschreibung].length < 3) {
+    errors.beschreibung = [{  message: 'Beschreibung muss über 3 Zeichen besitzen.' }];
+  } else if ([...beschreibung].length > 500) {
+    errors.beschreibung = [{ message: 'Beschreibung muss unter 500 Zeichen besitzen.' }];
+  }
+
+  if (!values.kategorie) {
+    errors.kategorie = [{ message: 'Kategorie ist erforderlich.' }];
+  }
+
+  console.log(errors);
+  
+  return { values, errors };
 }
 
-function submit({valid}) {
-  if (!valid) return;
 
-  const kategorieId = Object.keys(kategorie.value)[0]
+function submit({valid, values}) {
+  if (!valid) return;
+  const kategorieId = Object.keys(values.kategorie)[0];
   emits('submit', {
-    bezeichnung: bezeichnung.value,
-    beschreibung: beschreibung.value,
+    bezeichnung: values.bezeichnung,
+    beschreibung: values.beschreibung,
     kategorie: kategorieId
-  })
+  });
 }
 
 async function setup() {
@@ -42,11 +69,10 @@ setup()
 </script>
 
 <template>
-  <Form v-if="!loading" v-slot="$form" :resolver="resolver" class="flex flex-col gap-3"
-        @submit="submit">
+  <Form v-if="!loading" v-slot="$form" :resolver="resolver" class="flex flex-col gap-3" @submit="submit">
     <div class="w-full">
       <FloatLabel class="w-full" variant="on">
-        <InputText id="bezeichnung" v-model="bezeichnung" fluid name="bezeichnung"/>
+        <InputText id="bezeichnung" v-model="bezeichnung" name="bezeichnung" fluid />
         <label for="bezeichnung">Bezeichnung</label>
       </FloatLabel>
       <Message v-if="$form.bezeichnung?.invalid" severity="error" size="small" variant="simple">
@@ -55,7 +81,7 @@ setup()
     </div>
     <div class="w-full">
       <FloatLabel class="w-full" variant="on">
-        <Textarea id="beschreibung" v-model="beschreibung" auto-resize fluid rows="2"/>
+        <Textarea id="beschreibung" v-model="beschreibung" name="beschreibung" auto-resize fluid rows="2"/>
         <label for="beschreibung">Beschreibung</label>
       </FloatLabel>
       <Message v-if="$form.beschreibung?.invalid" severity="error" size="small" variant="simple">
@@ -72,7 +98,7 @@ setup()
         {{ $form.kategorie.error.message }}
       </Message>
     </div>
-    <Button class="mt-4" label="Erstellen" severity="primary" type="submit"/>
+    <Button class="mt-4" label="Erstellen" severity="primary" type="submit" />
   </Form>
 </template>
 

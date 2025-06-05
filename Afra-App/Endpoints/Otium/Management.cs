@@ -149,6 +149,12 @@ public static class Management
     {
         try
         {
+            if (otiumWiederholung.OtiumId == Guid.Empty)
+                return Results.BadRequest("OtiumId darf nicht leer sein.");
+
+            if (string.IsNullOrWhiteSpace(otiumWiederholung.Ort) || otiumWiederholung.Ort.Length > 10)
+                return Results.BadRequest("Ort darf nicht leer sein und darf maximal 10 Zeichen enthalten.");
+
             var id = await service.CreateOtiumWiederholungAsync(otiumWiederholung);
             return Results.Ok(id);
         }
@@ -221,7 +227,7 @@ public static class Management
         AfraAppContext context, Guid otiumId, StringWrapper value)
     {
         if (string.IsNullOrWhiteSpace(value.Value) || value.Value.Length <= 3 || value.Value.Length > 50)
-            return Results.BadRequest();
+            return Results.BadRequest("Die Bezeichnung muss zwischen 3 und 50 Zeichen sein.");
 
         try
         {
@@ -236,7 +242,12 @@ public static class Management
 
     private static async Task<IResult> OtiumSetBeschreibung(OtiumEndpointService service, HttpContext httpContext,
         AfraAppContext context, Guid otiumId, StringWrapper value)
-    {
+    {   
+        if (string.IsNullOrWhiteSpace(value.Value))
+            return Results.BadRequest("Beschreibung darf nicht leer sein.");
+        if (value.Value.Length <= 3 || value.Value.Length > 500)
+            return Results.BadRequest("Beschreibung muss zwischen 4 und 500 Zeichen lang sein.");
+
         try
         {
             await service.OtiumSetBeschreibungAsync(otiumId, value.Value);
@@ -298,6 +309,7 @@ public static class Management
         HttpContext httpContext,
         AfraAppContext context, Guid otiumTerminId, IntOrNullWrapper maxEinschreibungen)
     {
+        
         try
         {
             await service.OtiumTerminSetMaxEinschreibungenAsync(otiumTerminId, maxEinschreibungen.Value);
@@ -336,6 +348,9 @@ public static class Management
         HttpContext httpContext,
         AfraAppContext context, Guid otiumTerminId, StringWrapper ort)
     {
+        if (string.IsNullOrWhiteSpace(ort.Value) || ort.Value.Length > 10)
+            return Results.BadRequest("The 'ort' field must be between 4 and 10 characters long and cannot be null or whitespace.");
+        
         try
         {
             await service.OtiumTerminSetOrtAsync(otiumTerminId, ort.Value);

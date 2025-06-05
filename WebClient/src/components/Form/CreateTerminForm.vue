@@ -25,9 +25,15 @@ const personen = ref(null)
 function resolve({values}) {
   const errors = {}
 
-  if (!values.ort)
-    errors.ort = [{message: "Es muss ein Ort gesetzt sein"}]
+  const ort = (values.ort ?? '').trim();
 
+  if (!ort || ort === '')
+    errors.ort = [{message: "Es muss ein Ort gesetzt sein"}]
+  if ([...ort].length < 3) {
+    errors.ort = [{message: "Der Ort muss größer als 3 Zeichen sein"}]
+  }
+  if ([...ort].length > 10)
+    errors.ort = [{message: "Der Ort muss kleiner als 10 Zeichen sein"}]
   return {values, errors}
 }
 
