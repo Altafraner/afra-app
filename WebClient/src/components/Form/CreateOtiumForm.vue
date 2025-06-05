@@ -14,10 +14,38 @@ const bezeichnung = ref(null);
 const beschreibung = ref(null);
 const kategorie = ref(null);
 
-function resolver({values}) {
-  const errors = {}
+function resolver({ values }) {
+  const errors = {};
 
-  return {values, errors}
+  if (!values.bezeichnung || values.bezeichnung.trim() === '') {
+    errors.bezeichnung = {
+      type: 'required',
+      message: 'Bezeichnung ist erforderlich.'
+    };
+  }
+
+  if (!values.beschreibung || values.beschreibung.trim() === '') {
+    errors.beschreibung = {
+      type: 'required',
+      message: 'Beschreibung darf nicht leer sein.'
+    };
+  }
+
+  if (values.ort && [...values.ort].length > 10) {
+    errors.ort = {
+      type: 'maxLength',
+      message: 'Ort darf maximal 10 Zeichen enthalten.'
+    };
+  }
+
+  if (!values.kategorie) {
+    errors.kategorie = {
+      type: 'required',
+      message: 'Kategorie ist erforderlich.'
+    };
+  }
+
+  return { values, errors };
 }
 
 function submit({valid}) {
