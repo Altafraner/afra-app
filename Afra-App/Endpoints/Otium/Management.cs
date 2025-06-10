@@ -149,6 +149,12 @@ public static class Management
     {
         try
         {
+            if (otiumWiederholung.OtiumId == Guid.Empty)
+                return Results.BadRequest("OtiumId darf nicht leer sein.");
+
+            if (string.IsNullOrWhiteSpace(otiumWiederholung.Ort) || otiumWiederholung.Ort.Length > 15)
+                return Results.BadRequest("Ort darf nicht leer sein und darf maximal 15 Zeichen enthalten.");
+
             var id = await service.CreateOtiumWiederholungAsync(otiumWiederholung);
             return Results.Ok(id);
         }
@@ -236,7 +242,9 @@ public static class Management
 
     private static async Task<IResult> OtiumSetBeschreibung(OtiumEndpointService service, HttpContext httpContext,
         AfraAppContext context, Guid otiumId, StringWrapper value)
-    {
+    {   
+        if (string.IsNullOrWhiteSpace(value.Value) || value.Value.Length <= 3 || value.Value.Length > 10)
+            return Results.BadRequest();
         try
         {
             await service.OtiumSetBeschreibungAsync(otiumId, value.Value);
@@ -298,6 +306,7 @@ public static class Management
         HttpContext httpContext,
         AfraAppContext context, Guid otiumTerminId, IntOrNullWrapper maxEinschreibungen)
     {
+        
         try
         {
             await service.OtiumTerminSetMaxEinschreibungenAsync(otiumTerminId, maxEinschreibungen.Value);
@@ -336,6 +345,9 @@ public static class Management
         HttpContext httpContext,
         AfraAppContext context, Guid otiumTerminId, StringWrapper ort)
     {
+        if (string.IsNullOrWhiteSpace(ort.Value) || ort.Value.Length <= 3 || ort.Value.Length > 25)
+            return Results.BadRequest();
+        
         try
         {
             await service.OtiumTerminSetOrtAsync(otiumTerminId, ort.Value);
