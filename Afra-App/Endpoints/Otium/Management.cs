@@ -1,5 +1,4 @@
 using Afra_App.Authentication;
-using Afra_App.Data;
 using Afra_App.Services.Otium;
 using Afra_App.Services.User;
 using DTO_Otium_Creation = Afra_App.Data.DTO.Otium.ManagementOtiumCreation;
@@ -46,8 +45,10 @@ public static class Management
         group.MapPatch("/wiederholung/{otiumWiederholungId:guid}/discontinue", OtiumWiederholungDiscontinue);
     }
 
-    private static async Task<IResult> GetTerminForTeacher(OtiumEndpointService service, UserAccessor userAccessor,
-        AfraAppContext dbContext, Guid otiumTerminId)
+    private static async Task<IResult> GetTerminForTeacher(
+        OtiumEndpointService service,
+        UserAccessor userAccessor,
+        Guid otiumTerminId)
     {
         var user = await userAccessor.GetUserAsync();
 
