@@ -1,4 +1,6 @@
-﻿using Afra_App.Services.Email;
+﻿using Afra_App.Data.Configuration;
+using Afra_App.Services.Email;
+using Microsoft.Extensions.Options;
 using Quartz;
 
 namespace Afra_App.Services.Otium;
@@ -11,16 +13,18 @@ public class EnrollmentReminderJob : IJob
     private readonly IBatchingEmailService _batchingEmailService;
     private readonly EnrollmentService _enrollmentService;
     private readonly ILogger<EnrollmentReminderJob> _logger;
+    private readonly IOptions<OtiumConfiguration> _otiumConfiguration;
 
     /// <summary>
     /// Constructor for the EnrollmentReminderJob. Called by the DI container.
     /// </summary>
     public EnrollmentReminderJob(ILogger<EnrollmentReminderJob> logger, EnrollmentService enrollmentService,
-        IBatchingEmailService batchingEmailService)
+        IBatchingEmailService batchingEmailService, IOptions<OtiumConfiguration> otiumConfiguration)
     {
         _logger = logger;
         _enrollmentService = enrollmentService;
         _batchingEmailService = batchingEmailService;
+        _otiumConfiguration = otiumConfiguration;
     }
 
     /// <inheritdoc />
@@ -29,7 +33,7 @@ public class EnrollmentReminderJob : IJob
         var now = DateTime.Now;
         var tomorrow = DateOnly.FromDateTime(now.AddDays(1));
         var hasRun = context.JobDetail.JobDataMap.TryGetDateTime("last_run", out var lastRun);
-        if (!hasRun && TimeOnly.FromDateTime(now) < EnrollmentReminderService.DefaultReminderTime)
+        if (!hasRun && TimeOnly.FromDateTime(now) < _otiumConfiguration.Value.EnrollmentReminder.Time)
         {
             _logger.LogWarning(
                 "Enrollment reminder job was scheduled before the default reminder time. Skipping execution.");

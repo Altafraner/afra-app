@@ -1,4 +1,6 @@
-﻿using Quartz;
+﻿using Afra_App.Data.Configuration;
+using Microsoft.Extensions.Options;
+using Quartz;
 
 namespace Afra_App.Services.Otium;
 
@@ -9,23 +11,33 @@ public class EnrollmentReminderService : BackgroundService
 {
     private const string GroupName = "otium-enrollment-reminder";
     private const string JobName = "enrollment-reminder-job";
-    public static readonly TimeOnly DefaultReminderTime = new(17, 0);
     private readonly ILogger<EnrollmentReminderService> _logger;
+    private readonly IOptions<OtiumConfiguration> _otiumConfiguration;
 
     private readonly IServiceProvider _serviceProvider;
 
     /// <summary>
     /// Constructor for the EnrollmentReminderService.
     /// </summary>
-    public EnrollmentReminderService(IServiceProvider serviceProvider, ILogger<EnrollmentReminderService> logger)
+    public EnrollmentReminderService(IServiceProvider serviceProvider, IOptions<OtiumConfiguration> otiumConfiguration,
+        ILogger<EnrollmentReminderService> logger)
     {
         _serviceProvider = serviceProvider;
+        _otiumConfiguration = otiumConfiguration;
         _logger = logger;
     }
 
     /// <inheritdoc />
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        if (!_otiumConfiguration.Value.EnrollmentReminder.Enabled)
+        {
+            _logger.LogInformation("Reminders are disabled. Skipping enrollment reminder job scheduling.");
+            return;
+        }
+
+        var defaultReminderTime = _otiumConfiguration.Value.EnrollmentReminder.Time;
+
         using var scope = _serviceProvider.CreateScope();
         var schedulerFactory = scope.ServiceProvider.GetRequiredService<ISchedulerFactory>();
         var scheduler = await schedulerFactory.GetScheduler(stoppingToken);
@@ -36,13 +48,19 @@ public class EnrollmentReminderService : BackgroundService
             .StartNow()
             .Build();
 
+        var triggerCron = TriggerBuilder.Create()
+            .ForJob(key)
+            .WithSchedule(CronScheduleBuilder.DailyAtHourAndMinute(defaultReminderTime.Hour, defaultReminderTime.Minute)
+                .WithMisfireHandlingInstructionFireAndProceed())
+            .Build();
+
         var exists = await scheduler.CheckExists(key, stoppingToken);
         if (exists)
         {
             var triggers = await scheduler.GetTriggersOfJob(key, stoppingToken);
             await scheduler.UnscheduleJobs(triggers.Select(t => t.Key).ToList(), stoppingToken);
 
-            await scheduler.ScheduleJob(CreateTrigger(), stoppingToken);
+            await scheduler.ScheduleJob(triggerCron, stoppingToken);
             await scheduler.ScheduleJob(triggerNow, stoppingToken);
             return;
         }
@@ -55,15 +73,7 @@ public class EnrollmentReminderService : BackgroundService
             .Build();
 
         await scheduler.AddJob(job, false, stoppingToken);
-        await scheduler.ScheduleJob(CreateTrigger(), stoppingToken);
+        await scheduler.ScheduleJob(triggerCron, stoppingToken);
         await scheduler.ScheduleJob(triggerNow, stoppingToken);
-
-        return;
-
-        ITrigger CreateTrigger() => TriggerBuilder.Create()
-            .ForJob(key)
-            .WithSchedule(CronScheduleBuilder.DailyAtHourAndMinute(DefaultReminderTime.Hour, DefaultReminderTime.Minute)
-                .WithMisfireHandlingInstructionFireAndProceed())
-            .Build();
     }
 }

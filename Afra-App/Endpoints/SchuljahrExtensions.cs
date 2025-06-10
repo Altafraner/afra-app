@@ -115,7 +115,6 @@ public static class SchuljahrExtensions
     {
         var now = DateTime.Now;
         var today = DateOnly.FromDateTime(now);
-        var time = TimeOnly.FromDateTime(now);
 
         // Give a 10 minute buffer. We have to use DateTime as we'd otherwise break on the edge of a day.
         var blockSchema =

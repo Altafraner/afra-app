@@ -28,7 +28,8 @@ public class EnrollmentService
     /// </summary>
     public EnrollmentService(AfraAppContext dbContext,
         KategorieService kategorieService,
-        ILogger<EnrollmentService> logger, BlockHelper blockHelper)
+        ILogger<EnrollmentService> logger,
+        BlockHelper blockHelper)
     {
         _dbContext = dbContext;
         _kategorieService = kategorieService;
