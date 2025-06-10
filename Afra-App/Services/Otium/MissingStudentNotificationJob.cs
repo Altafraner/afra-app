@@ -84,7 +84,7 @@ public class MissingStudentNotificationJob : IJob
 
                 var notification = new IAttendanceHubClient.Notification(
                     "Benachrichtigungen werden bald gesendet",
-                    "In fünf Minuten wird eine Benachrichtigung an alle Personen gesendet, die im aktuellen Otium-Block fehlen.",
+                    "In fünf Minuten wird eine Benachrichtigung über alle Personen gesendet, die im aktuellen Otium-Block fehlen.",
                     IAttendanceHubClient.NotificationSeverity.Warning);
                 await _attendanceHub.Clients.Group(AttendanceHub.BlockGroupName(blockId)).Notify(notification);
                 foreach (var termin in terminAttendance.Keys)

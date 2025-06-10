@@ -30,6 +30,7 @@ export function useAttendance(scope, id, toastService = {add: () => undefined}) 
   } else {
     throw Error(`Unrecognized scope: ${scope}`);
   }
+  registerMessageHandler('Notify', notify);
 
   async function registerScope() {
     const methodName = toValue(scope) === "termin" ? "SubscribeToTermin" : "SubscribeToBlock";
@@ -74,6 +75,20 @@ export function useAttendance(scope, id, toastService = {add: () => undefined}) 
       }
     } else
       console.warn(`Received status for non-existent termin`, data);
+  }
+
+  const severityMap = {
+    'Error': 'error',
+    'Warning': 'warn',
+    'Info': 'info'
+  }
+
+  function notify(data) {
+    toastService.add({
+      summary: data.subject,
+      detail: data.body,
+      severity: severityMap[data.severity]
+    });
   }
 
   /**
