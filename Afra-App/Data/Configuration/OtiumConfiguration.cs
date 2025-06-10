@@ -10,12 +10,14 @@ public class OtiumConfiguration
     /// <summary>
     ///     A 2d array containing the subblocks of each block
     /// </summary>
-    public required BlockMetadata[] Blocks { get; set; }
+    public required BlockMetadata[] Blocks { get; init; }
 
     /// <summary>
     ///     Information about the enrollment reminder
     /// </summary>
-    public required EnrollmentReminderInfo EnrollmentReminder { get; set; }
+    public required EnrollmentReminderInfo EnrollmentReminder { get; init; }
+
+    public required MissingStudentsReportInfo MissingStudentsReport { get; init; }
 
     /// <summary>
     ///     A static method to validate the configuration
@@ -40,5 +42,15 @@ public class OtiumConfiguration
     public record EnrollmentReminderInfo(
         bool Enabled,
         TimeOnly Time
+    );
+
+    /// <summary>
+    /// Information about the automatic report of missing students
+    /// </summary>
+    /// <param name="Enabled">Whether to send automatic reports</param>
+    /// <param name="Recipients">The mail adresses of the notifications recipients</param>
+    public record MissingStudentsReportInfo(
+        bool Enabled,
+        string[] Recipients
     );
 }

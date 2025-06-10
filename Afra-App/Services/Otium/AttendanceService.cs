@@ -83,7 +83,7 @@ public class AttendanceService : IAttendanceService
 
     /// <inheritdoc />
     public async Task<(Dictionary<Termin, Dictionary<Person, AnwesenheitsStatus>> termine,
-            Dictionary<Person, AnwesenheitsStatus> missingPersons, bool)>
+            Dictionary<Person, AnwesenheitsStatus> missingPersons, bool missingPersonsChecked)>
         GetAttendanceForBlockAsync(Guid blockId)
     {
         var block = await _dbContext.Blocks

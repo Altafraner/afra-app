@@ -31,7 +31,7 @@ public interface IAttendanceService
     /// <returns>A dictionary containing all enrolled students attendance status grouped by their termin along with all
     /// the attendance statuses for students not enrolled</returns>
     public Task<(Dictionary<Termin, Dictionary<Person, AnwesenheitsStatus>> termine,
-            Dictionary<Person, AnwesenheitsStatus> missingPersons, bool)>
+            Dictionary<Person, AnwesenheitsStatus> missingPersons, bool missingPersonsChecked)>
         GetAttendanceForBlockAsync(Guid blockId);
 
     /// <summary>

@@ -9,6 +9,27 @@ namespace Afra_App.Endpoints.Otium;
 public interface IAttendanceHubClient
 {
     /// <summary>
+    /// The severity of a notification that is sent to the client.
+    /// </summary>
+    public enum NotificationSeverity
+    {
+        /// <summary>
+        /// An error has occurred, immediate action is required.
+        /// </summary>
+        Error,
+
+        /// <summary>
+        /// There has been some unexpected behavior, but it is not critical.
+        /// </summary>
+        Warning,
+
+        /// <summary>
+        /// Some information that is not critical, but might be useful.
+        /// </summary>
+        Info,
+    }
+
+    /// <summary>
     /// Tells the client to update the attendance status of a student.
     /// </summary>
     /// <param name="update">The update to send</param>
@@ -30,6 +51,12 @@ public interface IAttendanceHubClient
     /// </summary>
     /// <param name="update">The status-update to send</param>
     Task UpdateTerminStatus(TerminStatusUpdate update);
+
+    /// <summary>
+    /// Sends a notification to the client with the given information.
+    /// </summary>
+    /// <param name="notification">The notification to send</param>
+    Task Notify(Notification notification);
 
     /// <summary>
     /// A dto for updating the attendance status of a student in a specific block.
@@ -60,4 +87,16 @@ public interface IAttendanceHubClient
         string Ort,
         IEnumerable<LehrerEinschreibung> Einschreibungen,
         bool SindAnwesenheitenErfasst);
+
+    /// <summary>
+    /// A dto for sending a notification to the client.
+    /// </summary>
+    /// <param name="Subject">The notification subject</param>
+    /// <param name="Body">The notification body</param>
+    /// <param name="Severity">The notification severity</param>
+    public record Notification(
+        string Subject,
+        string Body,
+        NotificationSeverity Severity
+    );
 }

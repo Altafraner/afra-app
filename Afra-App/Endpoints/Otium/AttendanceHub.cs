@@ -6,6 +6,7 @@ using Afra_App.Data.Schuljahr;
 using Afra_App.Services.Otium;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Quartz;
 
 namespace Afra_App.Endpoints.Otium;
 
@@ -48,11 +49,46 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
     ///     Subscribes a user to get updates for a specific block.
     /// </summary>
     /// <param name="blockId">The <see cref="Guid" /> of the <see cref="Block" /> to subscribe to.</param>
-    public async Task SubscribeToBlock(Guid blockId)
+    /// <param name="schedulerFactory"></param>
+    /// <param name="blockHelper"></param>
+    /// <param name="context"></param>
+    public async Task SubscribeToBlock(Guid blockId, ISchedulerFactory schedulerFactory, BlockHelper blockHelper,
+        AfraAppContext context)
     {
         await Groups.AddToGroupAsync(Context.ConnectionId, BlockGroupName(blockId));
         var updates = await GetBlockAttendances(blockId);
         await Clients.Caller.UpdateBlockAttendances(updates);
+        var scheduler = await schedulerFactory.GetScheduler();
+        var jobKey = new JobKey($"MissingStudentNotification-{blockId}");
+
+        var block = await context.Blocks.FindAsync(blockId);
+        var metadata = blockHelper.Get(block!.SchemaId)!;
+
+        var now = DateTime.Now;
+        var today = DateOnly.FromDateTime(now);
+        var time = TimeOnly.FromDateTime(now);
+
+        if (block.SchultagKey != today ||
+            !time.IsBetween(metadata.Interval.Start, metadata.Interval.End))
+            return;
+
+        if (await scheduler.CheckExists(jobKey))
+            return;
+
+        var job = JobBuilder.Create<MissingStudentNotificationJob>()
+            .WithIdentity(jobKey)
+            .UsingJobData("block", blockId.ToString())
+            .UsingJobData("fire_after", metadata.Interval.Start.AddMinutes(30).ToShortTimeString())
+            .UsingJobData("block_schema", block.SchemaId)
+            .DisallowConcurrentExecution()
+            .PersistJobDataAfterExecution()
+            .Build();
+        var trigger = TriggerBuilder.Create()
+            .WithIdentity($"MissingStudentNotificationTrigger-{blockId}")
+            .WithSimpleSchedule(x => x.WithIntervalInMinutes(1).RepeatForever())
+            .StartNow()
+            .Build();
+        await scheduler.ScheduleJob(job, trigger);
     }
 
     /// <summary>
@@ -244,12 +280,12 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
                 .UpdateTerminAttendances(fromTerminUpdates.Einschreibungen);
     }
 
-    private static string TerminGroupName(Guid terminId)
+    internal static string TerminGroupName(Guid terminId)
     {
         return $"termin-{terminId}";
     }
 
-    private static string BlockGroupName(Guid blockId)
+    internal static string BlockGroupName(Guid blockId)
     {
         return $"block-{blockId}";
     }
