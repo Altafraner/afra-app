@@ -10,7 +10,7 @@ namespace Afra_App.Services.Otium;
 /// </summary>
 public class EnrollmentReminderJob : IJob
 {
-    private readonly IBatchingEmailService _batchingEmailService;
+    private readonly IEmailOutbox _emailOutbox;
     private readonly EnrollmentService _enrollmentService;
     private readonly ILogger<EnrollmentReminderJob> _logger;
     private readonly IOptions<OtiumConfiguration> _otiumConfiguration;
@@ -19,11 +19,11 @@ public class EnrollmentReminderJob : IJob
     /// Constructor for the EnrollmentReminderJob. Called by the DI container.
     /// </summary>
     public EnrollmentReminderJob(ILogger<EnrollmentReminderJob> logger, EnrollmentService enrollmentService,
-        IBatchingEmailService batchingEmailService, IOptions<OtiumConfiguration> otiumConfiguration)
+        IEmailOutbox emailOutbox, IOptions<OtiumConfiguration> otiumConfiguration)
     {
         _logger = logger;
         _enrollmentService = enrollmentService;
-        _batchingEmailService = batchingEmailService;
+        _emailOutbox = emailOutbox;
         _otiumConfiguration = otiumConfiguration;
     }
 
@@ -59,7 +59,7 @@ public class EnrollmentReminderJob : IJob
                 const string body =
                     "Du hast dich für morgen noch nicht für alle Otiums-Blöcke eingeschrieben. Bitte hole das schnellstmöglich nach.";
 
-                await _batchingEmailService.ScheduleEmailAsync(person.Id, subject, body, TimeSpan.FromMinutes(5));
+                await _emailOutbox.ScheduleNotificationAsync(person.Id, subject, body, TimeSpan.FromMinutes(5));
             }
 
             context.JobDetail.JobDataMap.Put("last_run", now);

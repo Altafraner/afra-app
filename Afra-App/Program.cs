@@ -147,7 +147,7 @@ builder.Services.AddHostedService<LdapAutoSyncScheduler>();
 builder.Services.AddHostedService<EnrollmentReminderService>();
 
 builder.Services.AddTransient<IEmailService, SmtpEmailService>();
-builder.Services.AddTransient<IBatchingEmailService, BatchingEmailService>();
+builder.Services.AddTransient<IEmailOutbox, EmailOutbox>();
 
 var app = builder.Build();
 

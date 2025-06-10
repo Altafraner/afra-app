@@ -32,7 +32,7 @@ public class SmtpEmailService : IEmailService
         email.Sender.Name = _emailConfiguration.SenderName;
         email.From.Add(email.Sender);
         email.To.Add(MailboxAddress.Parse(toAddress));
-        email.Subject = subject;
+        email.Subject = "[Afra-App] " + subject;
         var realbody = $"""
                         {body}
 

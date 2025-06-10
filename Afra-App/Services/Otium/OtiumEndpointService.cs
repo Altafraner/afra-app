@@ -26,9 +26,9 @@ namespace Afra_App.Services.Otium;
 public class OtiumEndpointService
 {
     private readonly IAttendanceService _attendanceService;
-    private readonly IBatchingEmailService _batchingEmailService;
     private readonly BlockHelper _blockHelper;
     private readonly AfraAppContext _dbContext;
+    private readonly IEmailOutbox _emailOutbox;
     private readonly EnrollmentService _enrollmentService;
     private readonly KategorieService _kategorieService;
 
@@ -37,12 +37,12 @@ public class OtiumEndpointService
     /// </summary>
     public OtiumEndpointService(AfraAppContext dbContext, KategorieService kategorieService,
         EnrollmentService enrollmentService,
-        IBatchingEmailService batchingEmailService, BlockHelper blockHelper, IAttendanceService attendanceService)
+        IEmailOutbox emailOutbox, BlockHelper blockHelper, IAttendanceService attendanceService)
     {
         _dbContext = dbContext;
         _kategorieService = kategorieService;
         _enrollmentService = enrollmentService;
-        _batchingEmailService = batchingEmailService;
+        _emailOutbox = emailOutbox;
         _blockHelper = blockHelper;
         _attendanceService = attendanceService;
     }
@@ -690,7 +690,7 @@ public class OtiumEndpointService
 
         // Notify previously enrolled students
         foreach (var t in teilnehmer)
-            await _batchingEmailService.ScheduleEmailAsync(
+            await _emailOutbox.ScheduleNotificationAsync(
                 t,
                 "Otium Termin abgesagt",
                 $"""
@@ -828,7 +828,7 @@ public class OtiumEndpointService
 
             // Notify previously enrolled students
             foreach (var t in attendeesToCancel)
-                await _batchingEmailService.ScheduleEmailAsync(
+                await _emailOutbox.ScheduleNotificationAsync(
                     t,
                     "Otium Einschreibung Abgesagt",
                     $"""

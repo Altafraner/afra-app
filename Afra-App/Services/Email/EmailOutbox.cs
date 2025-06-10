@@ -8,15 +8,15 @@ namespace Afra_App.Services.Email;
 ///     A notification service that sends notifications to the same user in a single email.
 ///     Deadlines are respected while minimizing the number of E-Mails sent.
 /// </summary>
-public class BatchingEmailService : IBatchingEmailService
+public class EmailOutbox : IEmailOutbox
 {
     private readonly AfraAppContext _dbContext;
     private readonly IScheduler _scheduler;
 
     /// <summary>
-    ///     Constructs the BatchingEmailService. Usually called by the DI container.
+    ///     Constructs the EmailOutbox. Usually called by the DI container.
     /// </summary>
-    public BatchingEmailService(ISchedulerFactory schedulerFactory, AfraAppContext dbContext)
+    public EmailOutbox(ISchedulerFactory schedulerFactory, AfraAppContext dbContext)
     {
         _scheduler = schedulerFactory.GetScheduler().GetAwaiter().GetResult();
         _dbContext = dbContext;
@@ -30,7 +30,7 @@ public class BatchingEmailService : IBatchingEmailService
     /// <param name="subject">The subject of the notification (Not the Subject of the actual Email)</param>
     /// <param name="body">The body of the notification</param>
     /// <param name="deadline">The TimeSpan within which to send the email containing the notification</param>
-    public async Task ScheduleEmailAsync(Guid recipientId, string subject, string body, TimeSpan deadline)
+    public async Task ScheduleNotificationAsync(Guid recipientId, string subject, string body, TimeSpan deadline)
     {
         var absDeadLine = DateTime.UtcNow + deadline;
         var mailId = Guid.CreateVersion7();
@@ -49,7 +49,7 @@ public class BatchingEmailService : IBatchingEmailService
         var key = new JobKey($"mail-flush-{recipientId}-{mailId}", "flush-email");
 
         // Create a job to flush all notifications to this recipient after the deadline passes
-        var job = JobBuilder.Create<FlushEmailsJob>()
+        var job = JobBuilder.Create<BatchEmailsJob>()
             .WithIdentity(key)
             .UsingJobData("user_id", recipientId)
             .Build();
@@ -59,5 +59,27 @@ public class BatchingEmailService : IBatchingEmailService
             .Build();
 
         await _scheduler.ScheduleJob(job, trigger);
+    }
+
+    /// <inheritdoc />
+    public Task SendReportAsync(string recipient, string subject, string body)
+    {
+        var jobDataMap = new JobDataMap
+        {
+            { "subject", subject },
+            { "body", body },
+            { "recipient", recipient },
+            { "retryCount", 0 }
+        };
+        var job = JobBuilder.Create<FlushEmailJob>()
+            .WithIdentity($"report-{Guid.CreateVersion7()}", "flush-report")
+            .UsingJobData(jobDataMap)
+            .Build();
+
+        var trigger = TriggerBuilder.Create()
+            .StartNow()
+            .Build();
+
+        return _scheduler.ScheduleJob(job, trigger);
     }
 }
