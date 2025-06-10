@@ -1,5 +1,5 @@
 ﻿<script setup>
-import {computed, ref, watch} from "vue";
+import {computed, ref, Suspense, watch} from "vue";
 import {Column, DataTable, Message, Skeleton, useToast} from "primevue";
 import AfraDateSelector from "@/components/Form/AfraDateSelector.vue";
 import AfraKategorySelector from "@/components/Form/AfraKategorySelector.vue";
@@ -188,8 +188,9 @@ startup()
           </div>
         </Message>
       </template>
-
-      <AfraOtiumKatalogView :otia="selectedOtia" :link-generator="linkGenerator"/>
+      <Suspense>
+        <AfraOtiumKatalogView :link-generator="linkGenerator" :otia="selectedOtia"/>
+      </Suspense>
     </template>
     <div v-else class="flex gap-5 flex-col">
       <div class="flex gap-3 justify-between">

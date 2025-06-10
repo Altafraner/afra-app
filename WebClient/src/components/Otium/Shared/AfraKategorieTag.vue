@@ -3,7 +3,8 @@ import {Tag} from "primevue";
 
 const props = defineProps({
   value: Object,
-  minimal: Boolean
+  minimal: Boolean,
+  hideName: Boolean
 })
 
 </script>
@@ -15,13 +16,13 @@ const props = defineProps({
           :style="`background-color: ${props.value.cssColor ?? 'unset'}`">
       <i :class="props.value.icon"/>
     </span>
-    <span>
+    <span v-if="!hideName">
       {{ props.value.bezeichnung }}
     </span>
   </Tag>
   <span v-else class="inline-flex items-baseline justify-center gap-1">
     <i :class="props.value.icon" :style="`color: ${props.value.cssColor ?? 'inherit'}`"/>
-    <span>
+    <span v-if="!hideName">
       {{ props.value.bezeichnung }}
     </span>
   </span>
