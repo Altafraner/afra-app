@@ -69,6 +69,8 @@ public class AttendanceService : IAttendanceService
             .Include(e => e.BetroffenePerson)
             .Where(e => e.Termin.Id == terminId)
             .Select(e => e.BetroffenePerson)
+            .OrderBy(e => e.Vorname)
+            .ThenBy(e => e.Nachname)
             .ToListAsync();
 
         var attendances = await _dbContext.OtiaAnwesenheiten

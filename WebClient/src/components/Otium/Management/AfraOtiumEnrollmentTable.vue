@@ -8,7 +8,8 @@ const props = defineProps({
   enrollments: Array,
   showAttendance: Boolean,
   mayEditAttendance: Boolean,
-  updateFunction: Function
+  updateFunction: Function,
+  showTransfer: Boolean
 })
 
 const emit = defineEmits(["initMove"]);
@@ -29,7 +30,7 @@ function initMove(student) {
     <Column header="Anwesenheit" v-if="props.showAttendance || props.mayEditAttendance"
             :class="props.mayEditAttendance ? 'text-right afra-col-action' : ''">
       <template #body="{data}">
-        <span class="flex justify-end items-center gap-2">
+        <span :class="props.mayEditAttendance ? 'flex justify-end items-center gap-2' : ''">
           <afra-otium-anwesenheit v-if="data.student.rolle!=='Oberstufe'" v-model="data.anwesenheit"
                                   :mayEdit="props.mayEditAttendance"
                                   @value-changed="(value) => updateFunction(data.student, value)"/>
@@ -37,7 +38,8 @@ function initMove(student) {
                  severity="secondary">
             N/A
           </badge>
-          <Button v-if="mayEditAttendance" v-tooltip="'In anderes Otium verschieben'"
+          <Button v-if="mayEditAttendance && showTransfer"
+                  v-tooltip="'In anderes Otium verschieben'"
                   icon="pi pi-forward" severity="secondary"
                   size="small" variant="text"
                   @click="() => initMove(data.student)"/>

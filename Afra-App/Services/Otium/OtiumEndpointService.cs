@@ -350,16 +350,13 @@ public class OtiumEndpointService
             .Include(t => t.Block)
             .ThenInclude(b => b.Schultag)
             .Include(t => t.Otium)
-            .Include(t => t.Enrollments)
-            .ThenInclude(e => e.BetroffenePerson)
             .Where(t => !t.IstAbgesagt)
             .FirstOrDefaultAsync(t => t.Id == terminId);
 
         if (termin is null)
             return null;
 
-        var anwesenheiten = (await _attendanceService.GetAttendanceForTerminAsync(terminId))
-            .ToDictionary(element => element.Key.Id, element => element.Value);
+        var anwesenheiten = await _attendanceService.GetAttendanceForTerminAsync(terminId);
 
         return new LehrerTermin
         {
@@ -368,13 +365,13 @@ public class OtiumEndpointService
             Otium = termin.Otium.Bezeichnung,
             OtiumId = termin.Otium.Id,
             Block = termin.Block.SchemaId,
+            BlockId = termin.Block.Id,
             Datum = termin.Block.Schultag.Datum,
             MaxEinschreibungen = termin.MaxEinschreibungen,
             IstAbgesagt = termin.IstAbgesagt,
             Tutor = termin.Tutor is not null ? new PersonInfoMinimal(termin.Tutor) : null,
-            Einschreibungen = termin.Enrollments.Select(e =>
-                new LehrerEinschreibung(new PersonInfoMinimal(e.BetroffenePerson),
-                    anwesenheiten[e.BetroffenePerson.Id]))
+            Einschreibungen = anwesenheiten.Select(e =>
+                new LehrerEinschreibung(new PersonInfoMinimal(e.Key), e.Value))
         };
     }
 

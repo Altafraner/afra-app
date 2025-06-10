@@ -71,11 +71,21 @@ export function useSignalR(url, reconnect = true, toastService = {add: () => und
       });
   }
 
+  async function closeConnection() {
+    try {
+      await con.stop();
+      console.log("SignalR connection closed successfully.");
+    } catch (error) {
+      console.error("Error closing SignalR connection: ", error);
+    }
+  }
+
   return {
     sendMessage,
     registerReconnectHandler,
     registerCloseHandler,
     registerMessageHandler,
+    closeConnection,
     connectionPromise: promise
   };
 }

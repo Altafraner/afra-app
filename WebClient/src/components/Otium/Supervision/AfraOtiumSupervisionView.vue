@@ -105,7 +105,7 @@ function initMove(student, terminId) {
       <accordion-content>
         <afra-otium-enrollment-table :enrollments="room.einschreibungen"
                                      :update-function="updateAttendanceCallback"
-                                     may-edit-attendance
+                                     may-edit-attendance show-transfer
                                      @initMove="(student) => initMove(student, room.terminId)"/>
       </accordion-content>
     </accordion-panel>

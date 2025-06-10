@@ -13,7 +13,8 @@ export function useAttendance(scope, id, toastService = {add: () => undefined}) 
     connectionPromise,
     registerMessageHandler,
     registerReconnectHandler,
-    sendMessage
+    sendMessage,
+    closeConnection
   } = useSignalR('/api/otium/attendance', true, toastService)
   const attendances = ref([])
 
@@ -120,11 +121,18 @@ export function useAttendance(scope, id, toastService = {add: () => undefined}) 
     await sendMessage('MoveStudentNow', studentId, fromTerminId, toTerminId)
   }
 
+  async function close() {
+    await closeConnection()
+    attendances.value = [];
+    console.log("Attendance hub connection closed.");
+  }
+
   return {
     attendance: attendances,
     updateAttendance: sendAttendanceUpdate,
     updateStatus: sendStatusUpdate,
     moveStudent: sendMove,
-    moveStudentNow: sendMoveNow
+    moveStudentNow: sendMoveNow,
+    stop: close
   };
 }

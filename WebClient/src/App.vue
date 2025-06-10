@@ -31,7 +31,13 @@ user.update().catch(() => {
     <afra-nav v-if="user.loggedIn"/>
     <main class="flex justify-center min-h-[90vh] mt-4">
       <div v-if="user.loggedIn" class="container">
-        <RouterView/>
+        <RouterView v-slot="{ Component }">
+          <template v-if="Component">
+            <Suspense>
+              <component :is="Component"/>
+            </Suspense>
+          </template>
+        </RouterView>
       </div>
       <div class="min-container" v-else>
         <div class="flex justify-center">

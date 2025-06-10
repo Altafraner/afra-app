@@ -27,6 +27,11 @@ public record LehrerTermin : IMinimalTermin
     /// </summary>
     public int? MaxEinschreibungen { get; set; }
 
+    /// <summary>
+    ///     The unique identifier of the block this termin belongs to
+    /// </summary>
+    public required Guid BlockId { get; set; }
+
     /// <inheritdoc />
     public required char Block { get; set; }
 
