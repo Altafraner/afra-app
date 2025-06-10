@@ -1,6 +1,6 @@
 using Afra_App.Authentication;
-using Afra_App.Data;
 using Afra_App.Services.Otium;
+using Afra_App.Services.User;
 using DTO_Otium_Creation = Afra_App.Data.DTO.Otium.ManagementOtiumCreation;
 using DTO_Termin_Creation = Afra_App.Data.DTO.Otium.ManagementTerminCreation;
 using DTO_Wiederholung_Creation = Afra_App.Data.DTO.Otium.ManagementWiederholungCreation;
@@ -45,25 +45,25 @@ public static class Management
         group.MapPatch("/wiederholung/{otiumWiederholungId:guid}/discontinue", OtiumWiederholungDiscontinue);
     }
 
-    private static async Task<IResult> GetTerminForTeacher(OtiumEndpointService service, HttpContext httpContext,
-        AfraAppContext context, Guid otiumTerminId)
+    private static async Task<IResult> GetTerminForTeacher(
+        OtiumEndpointService service,
+        UserAccessor userAccessor,
+        Guid otiumTerminId)
     {
-        var user = await httpContext.GetPersonAsync(context);
+        var user = await userAccessor.GetUserAsync();
 
         var otium = await service.GetTerminForTeacher(otiumTerminId, user);
 
         return otium is null ? Results.BadRequest() : Results.Ok(otium);
     }
 
-    private static IResult GetOtia(OtiumEndpointService service, HttpContext httpContext,
-        AfraAppContext context)
+    private static IResult GetOtia(OtiumEndpointService service)
     {
         var otia = service.GetOtia();
         return Results.Ok(otia);
     }
 
-    private static IResult GetOtium(OtiumEndpointService service, HttpContext httpContext,
-        AfraAppContext context, Guid otiumId)
+    private static IResult GetOtium(OtiumEndpointService service, Guid otiumId)
     {
         try
         {
@@ -76,8 +76,7 @@ public static class Management
         }
     }
 
-    private static async Task<IResult> CreateOtium(OtiumEndpointService service, HttpContext httpContext,
-        AfraAppContext context, DTO_Otium_Creation otium)
+    private static async Task<IResult> CreateOtium(OtiumEndpointService service, DTO_Otium_Creation otium)
     {
         try
         {
@@ -90,8 +89,7 @@ public static class Management
         }
     }
 
-    private static async Task<IResult> DeleteOtium(OtiumEndpointService service, HttpContext httpContext,
-        AfraAppContext context, Guid otiumId)
+    private static async Task<IResult> DeleteOtium(OtiumEndpointService service, Guid otiumId)
     {
         try
         {
@@ -108,8 +106,7 @@ public static class Management
         }
     }
 
-    private static async Task<IResult> CreateOtiumTermin(OtiumEndpointService service, HttpContext httpContext,
-        AfraAppContext context, DTO_Termin_Creation otiumTermin)
+    private static async Task<IResult> CreateOtiumTermin(OtiumEndpointService service, DTO_Termin_Creation otiumTermin)
     {
         try
         {
@@ -126,8 +123,7 @@ public static class Management
         }
     }
 
-    private static async Task<IResult> DeleteOtiumTermin(OtiumEndpointService service, HttpContext httpContext,
-        AfraAppContext context, Guid otiumTerminId)
+    private static async Task<IResult> DeleteOtiumTermin(OtiumEndpointService service, Guid otiumTerminId)
     {
         try
         {
@@ -144,8 +140,8 @@ public static class Management
         }
     }
 
-    private static async Task<IResult> CreateOtiumWiederholung(OtiumEndpointService service, HttpContext httpContext,
-        AfraAppContext context, DTO_Wiederholung_Creation otiumWiederholung)
+    private static async Task<IResult> CreateOtiumWiederholung(OtiumEndpointService service,
+        DTO_Wiederholung_Creation otiumWiederholung)
     {
         try
         {
@@ -158,8 +154,7 @@ public static class Management
         }
     }
 
-    private static async Task<IResult> DeleteOtiumWiederholung(OtiumEndpointService service, HttpContext httpContext,
-        AfraAppContext context, Guid otiumWiederholungId)
+    private static async Task<IResult> DeleteOtiumWiederholung(OtiumEndpointService service, Guid otiumWiederholungId)
     {
         try
         {
@@ -177,8 +172,7 @@ public static class Management
     }
 
     private static async Task<IResult> OtiumWiederholungDiscontinue(OtiumEndpointService service,
-        HttpContext httpContext,
-        AfraAppContext context, Guid otiumWiederholungId, DateOnlyWrapper firstDayAfter)
+        Guid otiumWiederholungId, DateOnlyWrapper firstDayAfter)
     {
         try
         {
@@ -199,8 +193,7 @@ public static class Management
         }
     }
 
-    private static async Task<IResult> OtiumTerminAbsagen(OtiumEndpointService service, HttpContext httpContext,
-        AfraAppContext context, Guid otiumTerminId)
+    private static async Task<IResult> OtiumTerminAbsagen(OtiumEndpointService service, Guid otiumTerminId)
     {
         try
         {
@@ -217,8 +210,8 @@ public static class Management
         }
     }
 
-    private static async Task<IResult> OtiumSetBezeichnung(OtiumEndpointService service, HttpContext httpContext,
-        AfraAppContext context, Guid otiumId, StringWrapper value)
+    private static async Task<IResult> OtiumSetBezeichnung(OtiumEndpointService service, Guid otiumId,
+        StringWrapper value)
     {
         if (string.IsNullOrWhiteSpace(value.Value) || value.Value.Length <= 3 || value.Value.Length > 50)
             return Results.BadRequest();
@@ -234,8 +227,8 @@ public static class Management
         }
     }
 
-    private static async Task<IResult> OtiumSetBeschreibung(OtiumEndpointService service, HttpContext httpContext,
-        AfraAppContext context, Guid otiumId, StringWrapper value)
+    private static async Task<IResult> OtiumSetBeschreibung(OtiumEndpointService service, Guid otiumId,
+        StringWrapper value)
     {
         try
         {
@@ -248,8 +241,7 @@ public static class Management
         }
     }
 
-    private static async Task<IResult> OtiumAddVerantwortlich(OtiumEndpointService service, HttpContext httpContext,
-        AfraAppContext context, Guid otiumId, Guid persId)
+    private static async Task<IResult> OtiumAddVerantwortlich(OtiumEndpointService service, Guid otiumId, Guid persId)
     {
         try
         {
@@ -262,8 +254,8 @@ public static class Management
         }
     }
 
-    private static async Task<IResult> OtiumRemoveVerantwortlich(OtiumEndpointService service, HttpContext httpContext,
-        AfraAppContext context, Guid otiumId, Guid persId)
+    private static async Task<IResult> OtiumRemoveVerantwortlich(OtiumEndpointService service, Guid otiumId,
+        Guid persId)
     {
         try
         {
@@ -276,8 +268,8 @@ public static class Management
         }
     }
 
-    private static async Task<IResult> OtiumSetKategorie(OtiumEndpointService service, HttpContext httpContext,
-        AfraAppContext context, Guid otiumId, GuidWrapper kategorie)
+    private static async Task<IResult> OtiumSetKategorie(OtiumEndpointService service, Guid otiumId,
+        GuidWrapper kategorie)
     {
         try
         {
@@ -295,8 +287,7 @@ public static class Management
     }
 
     private static async Task<IResult> OtiumTerminSetMaxEinschreibungen(OtiumEndpointService service,
-        HttpContext httpContext,
-        AfraAppContext context, Guid otiumTerminId, IntOrNullWrapper maxEinschreibungen)
+        Guid otiumTerminId, IntOrNullWrapper maxEinschreibungen)
     {
         try
         {
@@ -313,9 +304,8 @@ public static class Management
         }
     }
 
-    private static async Task<IResult> OtiumTerminSetTutor(OtiumEndpointService service,
-        HttpContext httpContext,
-        AfraAppContext context, Guid otiumTerminId, GuidOrNullWrapper personId)
+    private static async Task<IResult> OtiumTerminSetTutor(OtiumEndpointService service, Guid otiumTerminId,
+        GuidOrNullWrapper personId)
     {
         try
         {
@@ -332,9 +322,8 @@ public static class Management
         }
     }
 
-    private static async Task<IResult> OtiumTerminSetOrt(OtiumEndpointService service,
-        HttpContext httpContext,
-        AfraAppContext context, Guid otiumTerminId, StringWrapper ort)
+    private static async Task<IResult> OtiumTerminSetOrt(OtiumEndpointService service, Guid otiumTerminId,
+        StringWrapper ort)
     {
         try
         {

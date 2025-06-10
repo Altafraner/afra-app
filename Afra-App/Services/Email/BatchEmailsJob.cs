@@ -1,4 +1,5 @@
 ﻿using Afra_App.Data;
+using Afra_App.Data.People;
 using Microsoft.EntityFrameworkCore;
 using Quartz;
 
@@ -7,16 +8,19 @@ namespace Afra_App.Services.Email;
 /// <summary>
 ///     A Job that sends a batched email with all pending notifications for a single User
 /// </summary>
-internal class FlushEmailsJob : IJob
+internal class BatchEmailsJob : IJob
 {
     private readonly AfraAppContext _dbContext;
-    private readonly IEmailService _emailService;
+    private readonly IEmailOutbox _emailOutbox;
     private readonly ILogger _logger;
 
-    public FlushEmailsJob(AfraAppContext context, IEmailService emailService, ILogger<FlushEmailsJob> logger)
+    public BatchEmailsJob(
+        AfraAppContext dbContext,
+        IEmailOutbox emailOutbox,
+        ILogger<BatchEmailsJob> logger)
     {
-        _dbContext = context;
-        _emailService = emailService;
+        _dbContext = dbContext;
+        _emailOutbox = emailOutbox;
         _logger = logger;
     }
 
@@ -44,8 +48,15 @@ internal class FlushEmailsJob : IJob
 
             var userEmail = user.Email;
 
-            const string batchSubject = "Neue Benachrichtigungen";
-            var batchText = "";
+            var batchSubject = emailsForUser.Count == 1 ? emailsForUser.First().Subject : "Neue Benachrichtigungen";
+            var begrüßung = user.Rolle == Rolle.Tutor ? "Sehr geehrter" : "Liebe";
+            var anrede = user.Rolle == Rolle.Tutor ? "Sie haben" : "Du hast";
+            var batchText = $"""
+                             {begrüßung} {user.Vorname} {user.Nachname},
+
+                             {anrede} neue Benachrichtigungen in der Afra-App. Diese sind im folgenden aufgelistet.
+
+                             """;
 
             for (var i = 0; i < emailsForUser.Count; i++)
             {
@@ -64,7 +75,7 @@ internal class FlushEmailsJob : IJob
             }
 
             _logger.LogInformation("Flushing E-Mail Notifications for {email}", userEmail);
-            await _emailService.SendEmailAsync(userEmail, batchSubject, batchText);
+            await _emailOutbox.SendReportAsync(userEmail, batchSubject, batchText);
 
             _dbContext.RemoveRange(emailsForUser);
             await _dbContext.SaveChangesAsync();
@@ -73,14 +84,26 @@ internal class FlushEmailsJob : IJob
         {
             _logger.LogWarning("Failed to flush emails for user {userId}", jobContext.JobDetail.JobDataMap["user_id"]);
 
-            // Reschedule the job to retry in 2 minutes
+            // Do not retry if this is a retry job
+            if (jobContext.Trigger.Key.Name.EndsWith("-retry"))
+            {
+                _logger.LogError("A retry job failed to batch emails: {Message}", e.Message);
+                throw new JobExecutionException("Failed to flush emails after retrying.", e)
+                {
+                    RefireImmediately = false,
+                    UnscheduleFiringTrigger = true,
+                    UnscheduleAllTriggers = false
+                };
+            }
+
+            // Reschedule the job to retry in 1 minute
             var oldTrigger = jobContext.Trigger;
             var newTrigger = oldTrigger.GetTriggerBuilder()
                 .ForJob(jobContext.JobDetail)
                 .WithIdentity($"{oldTrigger.Key.Name}-retry", oldTrigger.Key.Group)
-                .StartAt(DateTimeOffset.UtcNow.AddMinutes(2))
+                .StartAt(DateTimeOffset.UtcNow.AddMinutes(1))
                 .Build();
-            await jobContext.Scheduler.ScheduleJob(newTrigger);
+            await jobContext.Scheduler.RescheduleJob(jobContext.Trigger.Key, newTrigger);
 
             // Still throw the exception to mark the job as failed
             throw new JobExecutionException(e, false)

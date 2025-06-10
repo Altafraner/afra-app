@@ -14,21 +14,21 @@ namespace Afra_App.Authentication.Ldap;
 public class LdapService
 {
     private readonly LdapConfiguration _configuration;
-    private readonly AfraAppContext _context;
+    private readonly AfraAppContext _dbContext;
     private readonly ILogger<LdapService> _logger;
 
     /// <summary>
     ///     Creates a new instance of the LdapService.
     /// </summary>
-    public LdapService(IOptions<LdapConfiguration> configuration, ILogger<LdapService> logger, AfraAppContext context)
+    public LdapService(IOptions<LdapConfiguration> configuration, ILogger<LdapService> logger, AfraAppContext dbContext)
     {
         _configuration = configuration.Value;
         _logger = logger;
-        _context = context;
+        _dbContext = dbContext;
     }
 
     /// <summary>
-    /// Checks whether the LDAP service is enabled.
+    ///     Checks whether the LDAP service is enabled.
     /// </summary>
     public bool IsEnabled => _configuration.Enabled;
 
@@ -36,7 +36,7 @@ public class LdapService
     ///     Synchronizes the database with the LDAP server.
     /// </summary>
     /// <exception cref="LdapException">The LDAP Server did not respond</exception>
-    /// <exception cref="InvalidOperationException">The LDAP Service is not enabled. Check with <see cref="IsEnabled"/>.</exception>
+    /// <exception cref="InvalidOperationException">The LDAP Service is not enabled. Check with <see cref="IsEnabled" />.</exception>
     public async Task SynchronizeAsync()
     {
         if (!_configuration.Enabled)
@@ -45,15 +45,15 @@ public class LdapService
         _logger.LogInformation("LDAP synchronization started");
         using var connection = LdapHelper.BuildConnection(_configuration, _logger);
         var syncTime = DateTime.UtcNow;
-        var dbUsers = await _context.Personen.Where(p => p.LdapObjectId != null).ToListAsync();
+        var dbUsers = await _dbContext.Personen.Where(p => p.LdapObjectId != null).ToListAsync();
 
         UpdateGroup(_configuration.TutorGroup, Rolle.Tutor);
         UpdateGroup(_configuration.MittelstufeGroup, Rolle.Mittelstufe);
         UpdateGroup(_configuration.OberstufeGroup, Rolle.Oberstufe);
 
-        await _context.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync();
 
-        var unsyncedUsers = await _context.Personen
+        var unsyncedUsers = await _dbContext.Personen
             .Where(p => p.LdapObjectId != null && p.LdapSyncTime < syncTime)
             .ToListAsync();
         if (unsyncedUsers.Count != 0)
@@ -85,8 +85,11 @@ public class LdapService
     /// <param name="username">The users username</param>
     /// <param name="password">The users (secret) password</param>
     /// <param name="shouldRetry">Whether to retry if the user exists in LDAP but not in DB</param>
-    /// <returns>The user authenticated by <paramref name="username"/> and <paramref name="password"/> if the credentials are valid; Otherwise, null</returns>
-    /// <exception cref="InvalidOperationException">The LDAP Service is not enabled. Check with <see cref="IsEnabled"/>.</exception>
+    /// <returns>
+    ///     The user authenticated by <paramref name="username" /> and <paramref name="password" /> if the credentials are
+    ///     valid; Otherwise, null
+    /// </returns>
+    /// <exception cref="InvalidOperationException">The LDAP Service is not enabled. Check with <see cref="IsEnabled" />.</exception>
     public async Task<Person?> VerifyUserAsync(string username, string password, bool shouldRetry = true)
     {
         if (!_configuration.Enabled)
@@ -117,14 +120,14 @@ public class LdapService
             return null;
         }
 
-        var user = await _context.Personen.FirstOrDefaultAsync(p => p.LdapObjectId == objGuid);
+        var user = await _dbContext.Personen.FirstOrDefaultAsync(p => p.LdapObjectId == objGuid);
 
         if (user is not null || !shouldRetry) return user;
 
         _logger.LogWarning("User not found in database, starting sync");
         await SynchronizeAsync();
 
-        user = await _context.Personen.FirstOrDefaultAsync(p => p.LdapObjectId == objGuid);
+        user = await _dbContext.Personen.FirstOrDefaultAsync(p => p.LdapObjectId == objGuid);
         if (user is null)
             _logger.LogError("User not found after sync. \n dn: {dn}\n guid: {guid}",
                 entry.DistinguishedName, objGuid);
@@ -175,7 +178,7 @@ public class LdapService
                 Rolle = rolle
             };
 
-            _context.Personen.Add(user);
+            _dbContext.Personen.Add(user);
             return true;
         }
 

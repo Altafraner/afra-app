@@ -11,14 +11,14 @@ namespace Afra_App.Services.Otium;
 public class KategorieService
 {
     private readonly HybridCache _cache;
-    private readonly AfraAppContext _context;
+    private readonly AfraAppContext _dbContext;
 
     /// <summary>
     ///     Constructor for the KategorieService. Usually called by the DI container.
     /// </summary>
-    public KategorieService(AfraAppContext context, HybridCache cache)
+    public KategorieService(AfraAppContext dbContext, HybridCache cache)
     {
-        _context = context;
+        _dbContext = dbContext;
         _cache = cache;
     }
 
@@ -27,7 +27,7 @@ public class KategorieService
     /// </summary>
     public async Task<List<Kategorie>> GetRequiredKategorienAsync()
     {
-        return await _context.OtiaKategorien
+        return await _dbContext.OtiaKategorien
             .AsNoTracking()
             .Include(k => k.Children)
             .Include(kategorie => kategorie.Parent)
@@ -40,7 +40,7 @@ public class KategorieService
     /// </summary>
     public IAsyncEnumerable<Kategorie> GetKategorienTreeAsyncEnumerable()
     {
-        return _context.OtiaKategorien.AsNoTracking()
+        return _dbContext.OtiaKategorien.AsNoTracking()
             .Include(k => k.Children)
             .Where(k => k.Parent == null)
             .AsAsyncEnumerable();
@@ -54,7 +54,7 @@ public class KategorieService
     public async IAsyncEnumerable<Guid> GetTransitiveKategoriesIdsAsyncEnumerable(Kategorie kategorie)
     {
         // Extra variable needed to avoid null reference exception
-        var currentCategory = await _context.OtiaKategorien.FindAsync(kategorie.Id);
+        var currentCategory = await _dbContext.OtiaKategorien.FindAsync(kategorie.Id);
 
         while (currentCategory is not null)
         {
@@ -64,7 +64,7 @@ public class KategorieService
     }
 
     /// <summary>
-    /// Traverses the category tree upwards and returns the first required category.
+    ///     Traverses the category tree upwards and returns the first required category.
     /// </summary>
     /// <param name="kategorie">The category to get the required parent from</param>
     /// <returns>the first required parent if exists; Otherwise, null.</returns>
@@ -78,7 +78,7 @@ public class KategorieService
 
     private async Task<Guid?> FetchRequiredParentAsync(Kategorie kategorie)
     {
-        var current = await _context.OtiaKategorien.FindAsync(kategorie.Id);
+        var current = await _dbContext.OtiaKategorien.FindAsync(kategorie.Id);
         while (current is not null)
         {
             if (current.Required)
@@ -92,7 +92,7 @@ public class KategorieService
 
     private async Task<Kategorie?> GetParentAsync(Kategorie kategorie)
     {
-        await _context.Entry(kategorie).Reference(c => c.Parent).LoadAsync();
+        await _dbContext.Entry(kategorie).Reference(c => c.Parent).LoadAsync();
         return kategorie.Parent;
     }
 }

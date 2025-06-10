@@ -1,33 +1,35 @@
 ﻿<script setup>
-import {Button, Badge} from "primevue";
+import {Badge, Button} from "primevue";
 import InputGroup from "primevue/inputgroup";
 
 const props = defineProps({
   mayEdit: Boolean
 })
 const emit = defineEmits(["valueChanged"])
-const status = defineModel({default: 0})
+const status = defineModel({default: "Fehlend"})
 
 const toggle = (value) => {
-  status.value = value
-  emit("valueChanged")
+  emit("valueChanged", stati[value])
 };
 
-const severities = ['danger', 'warn', 'success']
-const labels = ['Fehlend', 'Entschuldigt', 'Bestätigt']
+const severities = {
+  'Fehlend': 'danger',
+  'Entschuldigt': 'warn',
+  'Anwesend': 'success'
+}
+const stati = ['Fehlend', 'Entschuldigt', 'Anwesend']
 </script>
 
 <template>
   <InputGroup v-if="mayEdit">
-    <Button :severity="status===0 ? 'danger' : 'secondary'" size="small" label="Fehlend"
+    <Button :label="stati[0]" :severity="status===stati[0] ? 'danger' : 'secondary'" size="small"
             @click="() => toggle(0)"/>
-    <Button :severity="status===1 ? 'warn' : 'secondary'" size="small" label="Entschuldigt"
+    <Button :label="stati[1]" :severity="status===stati[1] ? 'warn' : 'secondary'" size="small"
             @click="() => toggle(1)"/>
-    <Button :severity="(status===2 || status==='anwesend') ? 'success' : 'secondary'" size="small"
-            label="Bestätigt" @click="() => toggle(2)"/>
+    <Button :label="stati[2]" :severity="(status===stati[2]) ? 'success' : 'secondary'" size="small"
+            @click="() => toggle(2)"/>
   </InputGroup>
-  <Badge v-else-if="status==='Anwesend'" :severity="severities[2]">{{ labels[2] }}</Badge>
-  <Badge v-else :severity="severities[status]">{{ labels[status] }}</Badge>
+  <Badge v-else :severity="severities[status]">{{ status }}</Badge>
 </template>
 
 <style scoped>

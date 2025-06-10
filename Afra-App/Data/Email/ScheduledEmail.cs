@@ -14,9 +14,14 @@ public class ScheduledEmail
     public required Guid Id { get; set; }
 
     /// <summary>
+    ///     The foreign key to the recipient
+    /// </summary>
+    public Guid RecipientId { get; set; }
+
+    /// <summary>
     /// The recipient
     /// </summary>
-    public required Person Recipient { get; set; }
+    public Person Recipient { get; set; } = null!;
 
     /// <summary>
     /// The notification subject

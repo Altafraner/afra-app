@@ -1,3 +1,5 @@
+using Afra_App.Data.Otium;
+
 namespace Afra_App.Data.DTO.Otium;
 
 /// <summary>
@@ -24,6 +26,11 @@ public record LehrerTermin : IMinimalTermin
     ///     The maximum number of people that can be at the termin concurrently. Null if there is no limit
     /// </summary>
     public int? MaxEinschreibungen { get; set; }
+
+    /// <summary>
+    ///     The unique identifier of the block this termin belongs to
+    /// </summary>
+    public required Guid BlockId { get; set; }
 
     /// <inheritdoc />
     public required char Block { get; set; }

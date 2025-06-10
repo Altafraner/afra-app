@@ -31,4 +31,9 @@ public class Termin : OtiumsInstanz
     ///     True, if the Termin is cancelled.
     /// </summary>
     public bool IstAbgesagt { get; set; }
+
+    /// <summary>
+    ///     True, iff a supervisor has checked the attendance for this Termin.
+    /// </summary>
+    public bool SindAnwesenheitenKontrolliert { get; set; } = false;
 }

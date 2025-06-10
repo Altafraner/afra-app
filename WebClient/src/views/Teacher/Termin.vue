@@ -1,11 +1,15 @@
 ﻿<script setup>
-import {computed, ref} from "vue";
+import {computed, ref, watch} from "vue";
 import {useUser} from "@/stores/useUser.js";
-import {useToast} from "primevue";
+import {Button, FloatLabel, InputNumber, InputText, ToggleSwitch, useToast} from "primevue";
 import {mande} from "mande";
-import AfraOtiumInstance from "@/components/Otium/Management/AfraOtiumInstance.vue";
 import NavBreadcrumb from "@/components/NavBreadcrumb.vue";
-import {formatDate} from "@/helpers/formatters.js";
+import {formatDate, formatPerson} from "@/helpers/formatters.js";
+import GridEditRow from "@/components/Form/Grid/GridEditRow.vue";
+import Grid from "@/components/Form/Grid/Grid.vue";
+import AfraPersonSelector from "@/components/Form/AfraPersonSelector.vue";
+import AfraOtiumEnrollmentTable from "@/components/Otium/Management/AfraOtiumEnrollmentTable.vue";
+import {useAttendance} from "@/composables/attendanceHubClient.js";
 
 const props = defineProps({
   terminId: String
@@ -15,6 +19,17 @@ const loading = ref(true);
 const user = useUser()
 const toast = useToast()
 const otium = ref(null);
+
+const aufsichtRunning = ref(false);
+
+const maxEnrollmentsSetzenSelected = ref(false)
+const maxEnrollmentsSelected = ref(null)
+const betreuerZuweisenSelected = ref(false)
+const ort = ref()
+const personSelected = ref(null)
+const updateStatusFunction = ref((studentId, status) => undefined);
+const stopAufsicht = ref(() => undefined);
+
 const navItems = computed(() => [
   {
     label: "Verwaltung",
@@ -54,16 +69,16 @@ async function fetchData() {
   }
 }
 
-async function updateMaxEnrollments(numEnrollments) {
-  await simpleUpdate('maxEinschreibungen', numEnrollments)
+async function updateMaxEnrollments() {
+  await simpleUpdate('maxEinschreibungen', maxEnrollmentsSetzenSelected.value ? maxEnrollmentsSelected.value : null)
 }
 
-async function updateTutor(tutor) {
-  await simpleUpdate('tutor', tutor)
+async function updateTutor() {
+  await simpleUpdate('tutor', betreuerZuweisenSelected.value ? personSelected.value : null)
 }
 
-async function updateOrt(ort) {
-  await simpleUpdate('ort', ort)
+async function updateOrt() {
+  await simpleUpdate('ort', ort.value)
 }
 
 async function simpleUpdate(name, value) {
@@ -82,13 +97,127 @@ async function simpleUpdate(name, value) {
   }
 }
 
-fetchData()
+async function startAufsicht() {
+  if (aufsichtRunning.value) return;
+  aufsichtRunning.value = true;
+
+  const aufsicht = useAttendance('termin', props.terminId, toast);
+  const watcher = watch(aufsicht.attendance, (newValue) => {
+    otium.value.einschreibungen = newValue;
+  });
+  updateStatusFunction.value = aufsicht.updateAttendance;
+  stopAufsicht.value = async () => {
+    if (!aufsichtRunning.value) return;
+    aufsichtRunning.value = false;
+    watcher.stop();
+    await aufsicht.updateStatus(otium.value.blockId, true)
+    await aufsicht.stop();
+    await fetchData()
+
+    updateStatusFunction.value = (studentId, status) => undefined;
+  }
+}
+
+async function updateAttendanceCallback(student, status) {
+  updateStatusFunction.value(student.id, status);
+}
+
+const startEditMaxEnrollments = () => {
+  maxEnrollmentsSetzenSelected.value = otium.value.maxEinschreibungen !== null
+  maxEnrollmentsSelected.value = otium.value.maxEinschreibungen
+}
+
+const startEditTutor = () => {
+  betreuerZuweisenSelected.value = otium.value.tutor !== null
+  personSelected.value = betreuerZuweisenSelected.value ? otium.value.tutor.id : null
+}
+
+const startEditOrt = () => {
+  ort.value = otium.value.ort
+}
+
+await fetchData()
 </script>
 
 <template>
   <NavBreadcrumb :items="navItems"/>
-  <AfraOtiumInstance v-if="!loading" :otium="otium" @update-max-enrollments="updateMaxEnrollments"
-                     @update-ort="updateOrt" @update-tutor="updateTutor"/>
+  <h1>
+    {{ otium.otium }}
+  </h1>
+  <grid>
+    <GridEditRow header="Datum" hide-edit>
+      <template #body>
+        {{ formatDate(new Date(otium.datum)) }}
+      </template>
+    </GridEditRow>
+    <GridEditRow header="Block" hide-edit>
+      <template #body>
+        {{ otium.block }}. Block
+      </template>
+    </GridEditRow>
+    <GridEditRow header="Ort" @edit="startEditOrt" @update="updateOrt">
+      <template #body>
+        {{ otium.ort }}
+      </template>
+      <template #edit>
+        <FloatLabel class="w-full" variant="on">
+          <InputText id="ort" v-model="ort" fluid name="ort"/>
+          <label for="ort">Ort</label>
+        </FloatLabel>
+      </template>
+    </GridEditRow>
+    <GridEditRow header="Betreuer:in" @edit="startEditTutor" @update="updateTutor">
+      <template #body>
+        <template v-if="otium.tutor===null">
+          Kein:e Betreuer:in
+        </template>
+        <template v-else>
+          {{ formatPerson(otium.tutor) }}
+        </template>
+      </template>
+      <template #edit>
+        <div class="w-full flex flex-col gap-3">
+          <div class="flex justify-between">
+            <label for="betreuerSwitch">Betreuer:in zuweisen</label>
+            <ToggleSwitch v-model="betreuerZuweisenSelected" if="betreuerSwitch"/>
+          </div>
+          <AfraPersonSelector v-model="personSelected" :disabled="!betreuerZuweisenSelected"
+                              name="tutor" required/>
+        </div>
+      </template>
+    </GridEditRow>
+    <GridEditRow header="max. Teilnehner:innen" @edit="startEditMaxEnrollments"
+                 @update="updateMaxEnrollments">
+      <template #body>
+        {{ otium.maxEinschreibungen ? otium.maxEinschreibungen : "Unbegrenzt" }}
+      </template>
+      <template #edit>
+        <div class="w-full flex flex-col gap-3">
+          <div class="flex justify-between">
+            <label for="maxEnrollmentSwitch">Teilnehmer:innen-Zahl beschränken</label>
+            <ToggleSwitch v-model="maxEnrollmentsSetzenSelected"
+                          if="maxEnrollmentSwitch"/>
+          </div>
+          <FloatLabel class="w-full" variant="on">
+            <InputNumber id="maxEnrollmentInput" v-model="maxEnrollmentsSelected"
+                         :disabled="!maxEnrollmentsSetzenSelected" fluid name="maxEnrollments"/>
+            <label for="maxEnrollmentInput">max. Teilnehmer:innen</label>
+          </FloatLabel>
+        </div>
+      </template>
+    </GridEditRow>
+  </grid>
+  <div class="flex justify-between items-end gap-3 flex-wrap mt-3">
+    <h2>Einschreibungen</h2>
+    <Button v-if="!aufsichtRunning" icon="pi pi-eye" label="Aufsicht" severity="secondary"
+            @click="startAufsicht"/>
+    <Button v-else icon="pi pi-stop" label="Aufsicht beenden" severity="success"
+            @click="stopAufsicht"/>
+  </div>
+  <AfraOtiumEnrollmentTable :enrollments="otium.einschreibungen"
+                            :may-edit-attendance="aufsichtRunning"
+                            :update-function="updateAttendanceCallback"
+                            show-attendance/>
 </template>
 
 <style scoped>
