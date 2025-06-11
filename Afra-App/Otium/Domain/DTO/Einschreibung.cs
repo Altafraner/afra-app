@@ -23,6 +23,7 @@ public record Einschreibung : IMinimalTermin
         Block = einschreibung.Termin.Block.SchemaId;
         Tutor = einschreibung.Termin.Tutor is not null ? new PersonInfoMinimal(einschreibung.Termin.Tutor) : null;
         Interval = einschreibung.Interval;
+        Datum = einschreibung.Termin.Block.SchultagKey;
     }
 
     /// <summary>
@@ -34,6 +35,11 @@ public record Einschreibung : IMinimalTermin
     ///     The time the enrollment is in. Usually, this is the full duration of the <see cref="Termin" />.
     /// </summary>
     public TimeOnlyInterval Interval { get; set; }
+
+    /// <summary>
+    ///     The date the enrollment is for
+    /// </summary>
+    public DateOnly Datum { get; set; }
 
     /// <summary>
     /// The ID of the category the enrollment is for

@@ -2,6 +2,7 @@ using System.Text;
 using Afra_App.Backbone.Domain.TimeInterval;
 using Afra_App.Backbone.Services.Email;
 using Afra_App.Otium.Domain.DTO;
+using Afra_App.Otium.Domain.DTO.Dashboard;
 using Afra_App.Otium.Domain.DTO.Katalog;
 using Afra_App.User.Domain.DTO;
 using Afra_App.User.Domain.Models;
@@ -9,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using DB_Otium = Afra_App.Otium.Domain.Models.Otium;
 using DB_Termin = Afra_App.Otium.Domain.Models.Termin;
 using DB_Wiederholung = Afra_App.Otium.Domain.Models.Wiederholung;
+using DB_Schultag = Afra_App.Otium.Domain.Models.Schuljahr.Schultag;
 using DTO_Otium_Creation = Afra_App.Otium.Domain.DTO.ManagementOtiumCreation;
 using DTO_Otium_View = Afra_App.Otium.Domain.DTO.ManagementOtiumView;
 using DTO_Termin_Creation = Afra_App.Otium.Domain.DTO.ManagementTerminCreation;
@@ -171,9 +173,92 @@ public class OtiumEndpointService
     /// <param name="user">The student to generate the dashboard for</param>
     /// <param name="all">Iff true, all available school-days are included. Otherwise, just the current and next two weeks.</param>
     // I hate myself for writing this mess of a method. Have fun!
-    public async IAsyncEnumerable<Domain.DTO.Dashboard.Tag> GetStudentDashboardAsyncEnumerable(Person user,
+    public async IAsyncEnumerable<Week> GetStudentDashboardAsyncEnumerable(Person user,
         bool all)
     {
+        var thisMonday = GetMonday(DateOnly.FromDateTime(DateTime.Today));
+
+        var startDate = thisMonday;
+        var endDate = startDate.AddDays(7 * 3);
+
+        IQueryable<DB_Schultag> schultageQuery = _dbContext.Schultage
+            .Include(s => s.Blocks)
+            .OrderBy(s => s.Datum);
+        if (!all)
+        {
+            schultageQuery = schultageQuery.Where(s => s.Datum >= startDate && s.Datum < endDate);
+        }
+
+        var schultage = await schultageQuery.ToListAsync();
+
+        var einschreibungen = await _dbContext.OtiaEinschreibungen
+            .Where(e => e.BetroffenePerson.Id == user.Id)
+            .Include(e => e.Termin)
+            .ThenInclude(e => e.Block)
+            .ThenInclude(e => e.Schultag)
+            .Include(e => e.Termin)
+            .ThenInclude(e => e.Tutor)
+            .Include(e => e.Termin)
+            .ThenInclude(e => e.Otium)
+            .ThenInclude(e => e.Kategorie)
+            .OrderBy(s => s.Termin.Block.SchultagKey)
+            .ThenBy(s => s.Termin.Block.SchemaId)
+            .Where(e => schultage.Contains(e.Termin.Block.Schultag))
+            .ToListAsync();
+
+        var weeks = schultage.GroupBy(s => GetMonday(s.Datum));
+
+        foreach (var week in weeks)
+        {
+            var weekEnd = week.Key.AddDays(7);
+            var einschreibungenForWeek = einschreibungen
+                .TakeWhile(e => e.Termin.Block.SchultagKey < weekEnd)
+                .ToList();
+            einschreibungen.RemoveRange(0, einschreibungenForWeek.Count);
+
+            var messageBuilder = new StringBuilder();
+
+            var kategorieRule = await _enrollmentService.GetMissingKategories(einschreibungenForWeek);
+
+            if (kategorieRule.Count > 0)
+            {
+                messageBuilder.AppendLine("**Fehlende Kategorien**");
+                foreach (var kategorie in kategorieRule)
+                {
+                    messageBuilder.AppendLine(
+                        $"""- Es muss mindestens ein Angebot der Kategorie *"{kategorie}"* pro Woche für einen vollen Block belegt werden.""");
+                }
+
+                messageBuilder.AppendLine();
+            }
+
+            var enrollmentsByDay = einschreibungenForWeek.GroupBy(e => e.Termin.Block.SchultagKey)
+                .ToDictionary(e => e.Key, e => e.ToList());
+
+            foreach (var day in week)
+            {
+                var enrollmentsForDay = enrollmentsByDay.TryGetValue(day.Datum, out var list) ? list : [];
+                var missingEnrollmentsForDay =
+                    _enrollmentService.GetNotEnrolledTimes(day.Blocks, enrollmentsForDay).GetIntervals();
+
+                if (missingEnrollmentsForDay.Count <= 0) continue;
+                messageBuilder.AppendLine($"**Fehlende Einschreibungen am {day.Datum.ToString("dd.MM.yyyy")}**");
+                foreach (var interval in missingEnrollmentsForDay)
+                {
+                    messageBuilder.AppendLine(
+                        $"- Es fehlen Einschreibungen von {interval.Start:t} Uhr bis {interval.End:t} Uhr.");
+                }
+
+                messageBuilder.AppendLine();
+            }
+
+            yield return new Week(
+                week.Key,
+                messageBuilder.ToString(),
+                einschreibungenForWeek.Select(e => new Einschreibung(e))
+            );
+        }
+        /*
         // Get Monday of the current week
         var startDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek + 1));
         var endDate = startDate.AddDays(7 * 3);
@@ -213,7 +298,7 @@ public class OtiumEndpointService
 
         foreach (var schultag in allSchoolDays)
         {
-            var monday = schultag.Datum.AddDays(-(int)schultag.Datum.DayOfWeek + 1);
+            var monday = GetMonday(schultag.Datum);
 
             var localKategorienErfuellt =
                 user.Rolle == Rolle.Oberstufe || kategorieRuleByWeek.GetValueOrDefault(monday, false);
@@ -232,8 +317,10 @@ public class OtiumEndpointService
             );
 
             yield return tag;
-        }
+        }*/
     }
+
+    private DateOnly GetMonday(DateOnly date) => date.AddDays(-(int)date.DayOfWeek + 1);
 
     /// <summary>
     ///     Returns an overview of termine and mentees for a teacher.

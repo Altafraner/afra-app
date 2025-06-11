@@ -131,6 +131,29 @@ public class EnrollmentService
     }
 
     /// <summary>
+    /// Gets the times of all non-optional blocks that the student is not enrolled in.
+    /// </summary>
+    /// <param name="blocks">The blocks to check for</param>
+    /// <param name="einschreibungen">The enrollments the user is enrolled in</param>
+    /// <returns>A timeline containing all times the user must enroll in but has not done so.</returns>
+    public Timeline<TimeOnly> GetNotEnrolledTimes(IEnumerable<Block> blocks, IEnumerable<Einschreibung> einschreibungen)
+    {
+        var timeline = new Timeline<TimeOnly>();
+        var enrolledBlocks = einschreibungen
+            .Select(e => e.Termin.Block)
+            .DistinctBy(e => e.Id);
+
+        var notEnrolledBlocks = blocks.Where(b => !enrolledBlocks.Contains(b));
+        foreach (var block in notEnrolledBlocks)
+        {
+            var schema = _blockHelper.Get(block.SchemaId)!;
+            if (schema.Verpflichtend) timeline.Add(schema.Interval);
+        }
+
+        return timeline;
+    }
+
+    /// <summary>
     ///     Checks if a set of einschreibungen covers all non-optional blocks of a schultag.
     /// </summary>
     /// <param name="schultag">The day to check for</param>
@@ -152,7 +175,7 @@ public class EnrollmentService
     /// </summary>
     /// <param name="enrollments">The enrollments to exclude the (transitive) categories from</param>
     /// <returns>
-    ///     A List of all <see cref="Kategorie">Kategorien</see> that are required but covered by the <paramref name="enrollments"/>
+    ///     A List of all Bezeichnungen of <see cref="Kategorie">Kategorien</see> that are required but not covered by the <paramref name="enrollments"/>
     /// </returns>
     public async Task<List<string>> GetMissingKategories(IEnumerable<Einschreibung> enrollments)
     {

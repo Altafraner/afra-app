@@ -15,6 +15,7 @@
     "@primevue/themes": "^4.3.4",
     "@tailwindcss/vite": "^4.0.12",
     "mande": "^2.0.9",
+    "marked": "^15.0.12",
     "pinia": "^3.0.1",
     "primeicons": "^7.0.0",
     "primelocale": "^1.4.0",
