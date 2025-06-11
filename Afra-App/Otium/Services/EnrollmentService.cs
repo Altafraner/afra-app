@@ -1,5 +1,5 @@
 using Afra_App.Backbone.Domain.TimeInterval;
-using Afra_App.Otium.Domain.DTO;
+using Afra_App.Otium.Domain.DTO.Katalog;
 using Afra_App.Otium.Domain.Models;
 using Afra_App.Otium.Domain.Models.Schuljahr;
 using Afra_App.User.Domain.DTO;
@@ -248,7 +248,7 @@ public class EnrollmentService
     /// <param name="user">The user to check for</param>
     /// <param name="termin">The termin to check in</param>
     /// <returns></returns>
-    public async IAsyncEnumerable<EinschreibungsPreview> GetEnrolmentPreviews(Person user, Termin termin)
+    public async Task<EinschreibungsPreview> GetEnrolmentPreview(Person user, Termin termin)
     {
         var terminEinschreibungen = await _dbContext.OtiaEinschreibungen.AsNoTracking()
             .Where(e => e.Termin == termin)
@@ -260,7 +260,8 @@ public class EnrollmentService
             _logger.LogWarning(
                 "Schema with id {Id} not found. This should not happen. Please check the configuration.",
                 termin.Block.SchemaId);
-            yield break;
+            throw new KeyNotFoundException(
+                $"Schema with id {termin.Block.SchemaId} not found. This should not happen. Please check the configuration.");
         }
 
         var countEnrolled = terminEinschreibungen.Count;
@@ -269,7 +270,7 @@ public class EnrollmentService
         var (mayEdit, reason) = usersEnrollment != null
             ? await MayUnenroll(user, termin)
             : await MayEnroll(user, termin, countEnrolled);
-        yield return new EinschreibungsPreview(countEnrolled, mayEdit, reason, usersEnrollment != null,
+        return new EinschreibungsPreview(countEnrolled, mayEdit, reason, usersEnrollment != null,
             schema.Interval);
     }
 

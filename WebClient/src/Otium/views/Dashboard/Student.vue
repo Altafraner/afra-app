@@ -16,7 +16,6 @@ async function fetchData(getAll = false) {
   const dataGetter = mande("/api/otium/student")
   try {
     termine.value = await (getAll ? dataGetter.get("all") : dataGetter.get());
-    console.log(termine.value)
     all.value = getAll;
   } catch (e) {
     await user.update()

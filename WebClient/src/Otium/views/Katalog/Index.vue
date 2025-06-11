@@ -16,6 +16,11 @@ const props = defineProps({
     type: String,
     required: false,
     default: ""
+  },
+  terminId: {
+    type: String,
+    required: false,
+    default: undefined
   }
 })
 const router = useRouter();
@@ -36,16 +41,6 @@ const categoryChanged = () => {
 }
 const selectedOtia = ref(otia.value)
 
-// const linkGenerator = otium => `/termin/${otium.id}`
-const linkGenerator = otium => {
-  return {
-    name: 'Katalog-Termin',
-    params: {
-      terminId: otium.id
-    }
-  }
-}
-
 const navItems = computed(() => {
   const start = {
     label: "Katalog",
@@ -54,13 +49,13 @@ const navItems = computed(() => {
     }
   }
   return date.value == null ?
-    [start] :
-    [
-      start,
-      {
-        label: formatDate(new Date(date.value.datum))
-      }
-    ];
+      [start] :
+      [
+        start,
+        {
+          label: formatDate(new Date(date.value.datum))
+        }
+      ];
 })
 
 watch(kategorie, filterOtiaByKategorie)
@@ -189,7 +184,7 @@ startup()
         </Message>
       </template>
       <Suspense>
-        <AfraOtiumKatalogView :link-generator="linkGenerator" :otia="selectedOtia"/>
+        <AfraOtiumKatalogView :otia="selectedOtia" :termin-id="terminId"/>
       </Suspense>
     </template>
     <div v-else class="flex gap-5 flex-col">

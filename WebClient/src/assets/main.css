@@ -10,6 +10,10 @@
         @apply text-2xl font-bold my-3;
     }
 
+    h3 {
+        @apply text-lg font-semibold mt-2 mb-1;
+    }
+
     p {
         @apply my-2;
     }

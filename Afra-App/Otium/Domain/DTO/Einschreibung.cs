@@ -1,4 +1,5 @@
 using Afra_App.Backbone.Domain.TimeInterval;
+using Afra_App.Otium.Domain.DTO.Katalog;
 using Afra_App.User.Domain.DTO;
 
 namespace Afra_App.Otium.Domain.DTO;

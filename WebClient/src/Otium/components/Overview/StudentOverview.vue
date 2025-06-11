@@ -93,7 +93,7 @@ const isOs = computed(() => {
             <template #body="{data}">
               <AfraKategorieTag v-if="data.kategorie" :value="data.kategorie" hide-name minimal/>
               <Button :label="data.otium" as="RouterLink" class="" variant="text"
-                      :to="{name: 'Katalog-Termin', params: {terminId: data.terminId}}"/>
+                      :to="{name: 'Katalog-Datum-Termin', params: {datum: data.datum, terminId: data.terminId}}"/>
             </template>
           </Column>
           <Column header="Ort">

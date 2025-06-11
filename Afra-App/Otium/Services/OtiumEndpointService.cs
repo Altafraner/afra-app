@@ -17,7 +17,7 @@ using DTO_Termin_Creation = Afra_App.Otium.Domain.DTO.ManagementTerminCreation;
 using DTO_Wiederholung_Creation = Afra_App.Otium.Domain.DTO.ManagementWiederholungCreation;
 using Einschreibung = Afra_App.Otium.Domain.DTO.Einschreibung;
 using Person = Afra_App.User.Domain.Models.Person;
-using Termin = Afra_App.Otium.Domain.DTO.Termin;
+using Termin = Afra_App.Otium.Domain.DTO.Katalog.Termin;
 
 namespace Afra_App.Otium.Services;
 
@@ -119,8 +119,8 @@ public class OtiumEndpointService
         if (termin == null) return null;
 
         return new Termin(termin,
-            _enrollmentService.GetEnrolmentPreviews(user, termin),
-            _kategorieService.GetTransitiveKategoriesIdsAsyncEnumerable(termin.Otium.Kategorie),
+            await _enrollmentService.GetEnrolmentPreview(user, termin),
+            termin.Otium.Kategorie.Id,
             _blockHelper.Get(termin.Block.SchemaId)!.Interval.Start);
     }
 
