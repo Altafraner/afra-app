@@ -1,17 +1,11 @@
 ﻿<script setup>
 import {formatDate} from "@/helpers/formatters.js";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionHeader,
-  AccordionPanel,
-  Badge,
-  Button,
-  Column,
-  DataTable
-} from "primevue";
+import {Accordion, AccordionContent, AccordionHeader, AccordionPanel, Badge, Button, Column, DataTable} from "primevue";
 import {useUser} from "@/stores/user.js";
 import {computed} from "vue";
+import {useOtiumStore} from "@/Otium/stores/otium.js";
+import {findPath} from "@/helpers/tree.js";
+import AfraKategorieTag from "@/Otium/components/Shared/AfraKategorieTag.vue";
 
 const props = defineProps({
   termine: Array,
@@ -22,7 +16,31 @@ const props = defineProps({
   }
 })
 const user = useUser();
+const otiumStore = useOtiumStore()
 
+const findKategorie = (kategorie) => {
+  const path = findPath(otiumStore.kategorien, kategorie);
+  for (const element of path) {
+    if (element.icon != null) {
+      return element;
+    }
+  }
+  return null;
+}
+
+const termineMitKategorie = computed(() => {
+  return props.termine.map(termin => {
+    return {
+      ...termin,
+      einschreibungen: termin.einschreibungen.map(einschreibung => {
+        return {
+          ...einschreibung,
+          kategorie: findKategorie(einschreibung.kategorieId)
+        }
+      })
+    }
+  })
+})
 
 const isOs = computed(() => {
   if (props.student) {
@@ -36,7 +54,7 @@ const isOs = computed(() => {
 
 <template>
   <Accordion v-if="props.termine != null">
-    <AccordionPanel v-for="termin in props.termine" :key="termin.datum" :value="termin.datum">
+    <AccordionPanel v-for="termin in termineMitKategorie" :key="termin.datum" :value="termin.datum">
       <AccordionHeader>
         <div class="flex w-full justify-between mr-4">
           <span>
@@ -55,11 +73,17 @@ const isOs = computed(() => {
         <DataTable :value="termin.einschreibungen">
           <Column header="Otium">
             <template #body="{data}">
-              <Button :label="data.otium" as="RouterLink" class="w-[8rem]" variant="text"
+              <AfraKategorieTag v-if="data.kategorie && data.kategorie != null" :value="data.kategorie" hide-name
+                                minimal/>
+              <Button :label="data.otium" as="RouterLink" class="" variant="text"
                       :to="{name: 'Katalog-Termin', params: {terminId: data.terminId}}"/>
             </template>
           </Column>
-          <Column field="ort" header="Ort"/>
+          <Column header="Ort">
+            <template #body="{data}">
+              {{ data.ort }}
+            </template>
+          </Column>
           <Column field="block" header="Block">
             <template #body="{data}">
               {{ data.block }}. Block

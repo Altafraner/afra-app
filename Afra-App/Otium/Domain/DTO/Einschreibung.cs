@@ -18,6 +18,7 @@ public record Einschreibung : IMinimalTermin
         TerminId = einschreibung.Termin.Id;
         Otium = einschreibung.Termin.Otium.Bezeichnung;
         OtiumId = einschreibung.Termin.Otium.Id;
+        KategorieId = einschreibung.Termin.Otium.Kategorie.Id;
         Ort = einschreibung.Termin.Ort;
         Block = einschreibung.Termin.Block.SchemaId;
         Tutor = einschreibung.Termin.Tutor is not null ? new PersonInfoMinimal(einschreibung.Termin.Tutor) : null;
@@ -33,6 +34,11 @@ public record Einschreibung : IMinimalTermin
     ///     The time the enrollment is in. Usually, this is the full duration of the <see cref="Termin" />.
     /// </summary>
     public TimeOnlyInterval Interval { get; set; }
+
+    /// <summary>
+    /// The ID of the category the enrollment is for
+    /// </summary>
+    public Guid KategorieId { get; set; }
 
     /// <summary>
     ///     The ID of the enrollment
