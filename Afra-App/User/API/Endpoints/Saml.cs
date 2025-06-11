@@ -4,7 +4,7 @@ using Afra_App.User.Services;
 using Afra_App.User.Services.SAML;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Afra_App.User.Extensions;
+namespace Afra_App.User.API.Endpoints;
 
 /// <summary>
 ///     Extension methods for the SamlService
@@ -13,7 +13,7 @@ namespace Afra_App.User.Extensions;
 ///     <para>Not fully refactored from Controller. See <see cref="IUrlHelper" /> in <c>/SAML/Metadaa</c></para>
 ///     <para>Currently not in use because of changed scope.</para>
 /// </remarks>
-public static class SamlExtensions
+public static class Saml
 {
     /// <summary>
     ///     Registers the SAML Endpoints

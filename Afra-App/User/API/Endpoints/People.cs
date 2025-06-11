@@ -8,7 +8,7 @@ namespace Afra_App.User.API.Endpoints;
 /// <summary>
 /// A class containing extension methods for the people endpoint.
 /// </summary>
-public static class PeopleEndpoints
+public static class People
 {
     /// <summary>
     /// Maps endpoints for getting people.

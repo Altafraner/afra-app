@@ -5,7 +5,7 @@ namespace Afra_App.User.API.Endpoints;
 /// <summary>
 ///     Extension Methods for the <see cref="UserSigninService" /> class.
 /// </summary>
-public static class UserExtension
+public static class User
 {
     /// <summary>
     ///     Maps the user endpoints to the given <see cref="IEndpointRouteBuilder" />.

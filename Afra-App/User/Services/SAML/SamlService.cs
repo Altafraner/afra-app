@@ -4,10 +4,10 @@ using System.Security.Cryptography.Xml;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
-using Afra_App.Backbone.Authentication.Saml.SamlMetadata;
 using Afra_App.Backbone.Utilities;
+using Afra_App.User.Domain.Saml.SamlMetadata;
 using Microsoft.AspNetCore.Mvc;
-using KeyInfo = Afra_App.Backbone.Authentication.Saml.SamlMetadata.KeyInfo;
+using KeyInfo = Afra_App.User.Domain.Saml.SamlMetadata.KeyInfo;
 
 namespace Afra_App.User.Services.SAML;
 
@@ -245,7 +245,7 @@ public class SamlService
                     Binding = "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST",
                     Location = urlHelper.RouteUrl("SamlController.Post") ?? ""
                 },
-                Extensions = new Backbone.Authentication.Saml.SamlMetadata.Extensions
+                Extensions = new Domain.Saml.SamlMetadata.Extensions
                 {
                     UiInfo = new UiInfo
                     {

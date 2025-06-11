@@ -1,6 +1,5 @@
 using Afra_App.Backbone.Authentication;
 using Afra_App.Otium.Configuration;
-using Afra_App.Otium.Domain.DTO;
 using Afra_App.Otium.Domain.Models.Schuljahr;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,7 +12,7 @@ namespace Afra_App.Otium.API.Endpoints;
 /// <summary>
 ///     A class containing extension methods for the school year endpoint.
 /// </summary>
-public static class SchuljahrExtensions
+public static class Schuljahr
 {
     /// <summary>
     ///     Maps the school year endpoint to the given <see cref="IEndpointRouteBuilder" />.
@@ -42,7 +41,7 @@ public static class SchuljahrExtensions
         var next = schultage.FirstOrDefault(s => s.Datum >= DateOnly.FromDateTime(DateTime.Now)) ??
                    schultage.LastOrDefault();
 
-        return Results.Ok(new Schuljahr(next, schultage));
+        return Results.Ok(new Domain.DTO.Schuljahr(next, schultage));
     }
 
     private static async Task<IResult> AddSchultage(AfraAppContext dbContext,
