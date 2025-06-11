@@ -29,7 +29,3 @@ export const chooseSeverity = (now) => {
 }
 
 export const formatDayOfWeek = (number) => wochentage[number % 7]
-
-const otiumLinkGenerator = (otiumId, date, blockId) => `${formatMachineDate(date)}/${blockId}/${otiumId}`
-export const otiumKatalogLinkGenerator = (otiumId, date, blockId) => `/katalog/${otiumLinkGenerator(otiumId, date, blockId)}`
-export const otiumTutorLinkGenerator = (otiumId, date, blockId) => `/tutor/${otiumLinkGenerator(otiumId, date, blockId)}`

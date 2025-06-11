@@ -1,9 +1,9 @@
 ﻿<script setup>
-import {useUser} from "@/stores/useUser.js";
+import {useUser} from "@/stores/user.js";
 import {defineAsyncComponent} from "vue";
 
-const Student = defineAsyncComponent(() => import("@/views/Dashboard/Student.vue"));
-const Teacher = defineAsyncComponent(() => import("@/views/Dashboard/Teacher.vue"));
+const Student = defineAsyncComponent(() => import("@/Otium/views/Dashboard/Student.vue"));
+const Teacher = defineAsyncComponent(() => import("@/Otium/views/Dashboard/Teacher.vue"));
 
 const user = useUser()
 </script>

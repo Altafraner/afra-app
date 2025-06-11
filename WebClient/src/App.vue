@@ -4,7 +4,7 @@ import 'primeicons/primeicons.css'
 
 import DynamicDialog from 'primevue/dynamicdialog';
 import AfraNav from "@/components/AfraNav.vue";
-import {useUser} from "@/stores/useUser.js";
+import {useUser} from "@/stores/user.js";
 import wappen from '/vdaa/favicon.svg?url'
 import {ConfirmPopup, Image, Message, Skeleton, Toast, useToast} from "primevue";
 import Login from "@/components/Login.vue";

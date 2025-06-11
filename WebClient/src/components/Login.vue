@@ -3,7 +3,7 @@ import {Form} from '@primevue/forms';
 import {Button, FloatLabel, InputText, Password, useToast} from "primevue";
 import {ref} from "vue";
 import {mande} from "mande";
-import {useUser} from "@/stores/useUser.js";
+import {useUser} from "@/stores/user.js";
 
 const loading = ref(false)
 const user = useUser()

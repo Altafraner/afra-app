@@ -1,5 +1,6 @@
 import {createRouter, createWebHistory} from 'vue-router'
 import Home from "@/views/Home.vue";
+import {routes as otium} from "@/Otium/router/routes.js";
 
 const routes = [
   {
@@ -7,61 +8,12 @@ const routes = [
     name: "Home",
     component: Home
   },
-  {
-    path: "/katalog",
-    name: "Katalog",
-    component: () => import('@/views/Katalog/Index.vue')
-  },
-  {
-    path: "/katalog/:datum",
-    name: "Katalog-Datum",
-    component: () => import('@/views/Katalog/Index.vue'),
-    props: true,
-  },
-  {
-    path: "/termin/:terminId",
-    name: "Katalog-Termin",
-    component: () => import('@/views/Katalog/Termin.vue'),
-    props: true
-  },
-  {
-    path: "/aufsicht",
-    name: "Aufsicht",
-    component: () => import('@/views/Aufsicht.vue'),
-  },
-  {
-    path: "/student/:studentId",
-    name: "Mentee",
-    component: () => import('@/views/Teacher/Mentee.vue'),
-    props: true
-  },
-  {
-    path: "/management/termin/:terminId",
-    name: "Verwaltung-Termin",
-    component: () => import('@/views/Teacher/Termin.vue'),
-    props: true
-  },
+  ...otium,
   {
     path: '/:pathMatch(.*)*',
     name: "NotFound",
     component: () => import('@/views/NotFound.vue')
   },
-  {
-    path: '/management',
-    name: "Verwaltung",
-    component: () => import('@/views/Management/OtiaOverview.vue'),
-  },
-  {
-    path: '/management/otium/:otiumId',
-    name: "Verwaltung-Otium",
-    component: () => import('@/views/Management/OtiumEdit.vue'),
-    props: true
-  },
-  {
-    path: '/management/schuljahr/neu',
-    name: "Verwaltung-Schuljahr-Neu",
-    component: () => import('@/components/General/CreateSchoolyear.vue')
-  }
 ]
 
 const router = createRouter({
