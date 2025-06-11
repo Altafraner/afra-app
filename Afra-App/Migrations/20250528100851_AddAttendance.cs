@@ -1,5 +1,5 @@
 ﻿using System;
-using Afra_App.Data.Otium;
+using Afra_App.Otium.Domain.Models;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable

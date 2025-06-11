@@ -3,18 +3,21 @@ using System.Globalization;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Afra_App.Authentication;
-using Afra_App.Authentication.Ldap;
-using Afra_App.Authentication.Saml;
-using Afra_App.Data;
-using Afra_App.Data.Configuration;
-using Afra_App.Data.People;
-using Afra_App.Endpoints;
-using Afra_App.Endpoints.Otium;
-using Afra_App.Services.Email;
-using Afra_App.Services.Otium;
-using Afra_App.Services.User;
-using Afra_App.Utilities;
+using Afra_App;
+using Afra_App.Backbone.Authentication;
+using Afra_App.Backbone.Configuration;
+using Afra_App.Backbone.Services.Email;
+using Afra_App.Backbone.Utilities;
+using Afra_App.Otium.API.Endpoints;
+using Afra_App.Otium.Configuration;
+using Afra_App.Otium.Services;
+using Afra_App.User.API.Endpoints;
+using Afra_App.User.Configuration;
+using Afra_App.User.Domain.Models;
+using Afra_App.User.Extensions;
+using Afra_App.User.Services;
+using Afra_App.User.Services.LDAP;
+using Afra_App.User.Services.SAML;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
@@ -125,7 +128,7 @@ try
 }
 catch (CryptographicException exception)
 {
-    Console.WriteLine($"Could not load certificate for Data Protection {exception.Message}");
+    Console.WriteLine($"Could not load certificate for Domain Protection {exception.Message}");
     Environment.Exit(1);
 }
 

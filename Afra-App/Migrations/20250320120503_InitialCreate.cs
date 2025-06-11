@@ -1,6 +1,6 @@
 ﻿using System;
-using Afra_App.Data.People;
-using Afra_App.Data.Schuljahr;
+using Afra_App.Otium.Domain.Models.Schuljahr;
+using Afra_App.User.Domain.Models;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
