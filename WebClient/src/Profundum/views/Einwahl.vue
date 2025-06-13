@@ -1,6 +1,7 @@
 ﻿<script setup>
 import {computed, ref} from "vue";
 import EinwahlSelectorGroup from "@/Profundum/components/EinwahlSelectorGroup.vue";
+import {Button} from "primevue";
 
 const options = ref([
   {
@@ -54,6 +55,10 @@ for (const option of options.value) {
   results.value[option.id] = [null, null, null];
 }
 
+function send() {
+  console.log('Sending, ...', results);
+}
+
 const preSelected = computed(() => {
   // return an array of the ids of all selected options
   const computedResult = {};
@@ -71,6 +76,15 @@ const preSelected = computed(() => {
   }
   return computedResult;
 })
+
+const maySend = computed(() => {
+  for (const option of options.value) {
+    if (!results.value[option.id].every(value => value !== null)) {
+      return false;
+    }
+  }
+  return true;
+});
 </script>
 
 <template>
@@ -80,6 +94,7 @@ const preSelected = computed(() => {
     <EinwahlSelectorGroup v-model="results[option.id]" :options="option.options"
                           :pre-selected="preSelected[option.id]"/>
   </div>
+  <Button :disabled="!maySend" class="mb-4" fluid label="Wünsche abgeben" @click="send"/>
 </template>
 
 <style scoped>
