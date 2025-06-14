@@ -152,6 +152,12 @@ public static class Management
             if (otiumWiederholung.OtiumId == Guid.Empty)
                 return Results.BadRequest("OtiumId darf nicht leer sein.");
 
+            if (string.IsNullOrWhiteSpace(otiumWiederholung.Ort) || otiumWiederholung.Ort.Length > 15)
+                return Results.BadRequest("Ort darf nicht leer sein und darf maximal 15 Zeichen enthalten.");
+
+            if (otiumWiederholung.OtiumId == Guid.Empty)
+                return Results.BadRequest("OtiumId darf nicht leer sein.");
+
             if (string.IsNullOrWhiteSpace(otiumWiederholung.Ort) || otiumWiederholung.Ort.Length > 10)
                 return Results.BadRequest("Ort darf nicht leer sein und darf maximal 10 Zeichen enthalten.");
 
@@ -309,6 +315,7 @@ public static class Management
         HttpContext httpContext,
         AfraAppContext context, Guid otiumTerminId, IntOrNullWrapper maxEinschreibungen)
     {
+        
         
         try
         {
