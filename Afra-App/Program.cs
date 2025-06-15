@@ -6,10 +6,23 @@ using Afra_App.Backbone.Utilities;
 using Afra_App.Otium.Extensions;
 using Afra_App.User.Extensions;
 using Microsoft.AspNetCore.HttpOverrides;
+using OpenTelemetry.Metrics;
 
 CultureInfo.CurrentCulture = CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfoByIetfLanguageTag("de-DE");
 
 var builder = WebApplication.CreateBuilder(args);
+
+var otel = builder.Services.AddOpenTelemetry();
+
+otel.WithMetrics(metrics => metrics
+    .AddAspNetCoreInstrumentation()
+    .AddRuntimeInstrumentation()
+    .AddMeter("System.Net.Http")
+    .AddMeter("System.Net.NameResolution")
+    .AddMeter("Microsoft.AspNetCore.Hosting")
+    .AddMeter("Microsoft.AspNetCore.Server.Kestrel")
+    .AddPrometheusExporter()
+);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -37,6 +50,8 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
 });
+
+app.MapPrometheusScrapingEndpoint();
 
 app.UseBackbone();
 
