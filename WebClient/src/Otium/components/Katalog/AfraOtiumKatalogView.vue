@@ -40,7 +40,8 @@ await settings.updateKategorien();
 </script>
 
 <template>
-  <DataTable v-model:expanded-rows="rowsExpanded" :pt="{ rowGroupHeaderCell: { colspan: 4 }}" :value="props.otia"
+  <DataTable v-model:expanded-rows="rowsExpanded" :pt="{ rowGroupHeaderCell: { colspan: 4 }}"
+             :value="props.otia"
              data-key="id"
              group-rows-by="block" row-group-mode="subheader">
     <Column header="Bezeichnung">
@@ -48,13 +49,14 @@ await settings.updateKategorien();
         <Button v-if="data.istAbgesagt" disabled variant="text">
           <afra-kategorie-tag v-if="findKategorie(data)" :value="findKategorie(data)"
                               hide-name minimal/>
-          <span>{{ data.otium }}</span>
+          <span class="font-semibold text-left">{{ data.otium }}</span>
         </Button>
-        <Button v-else :disabled="data.istAbgesagt" :label="data.otium" variant="text" @click="() => expand(data.id)">
+        <Button v-else :disabled="data.istAbgesagt" :label="data.otium" variant="text"
+                @click="() => expand(data.id)">
           <i :class="(rowsExpanded[data.id] ?? false) ? 'pi pi-angle-down text-lg' : 'pi pi-angle-right text-lg'"/>
           <afra-kategorie-tag v-if="findKategorie(data)" :value="findKategorie(data)"
                               hide-name minimal/>
-          <span class="font-semibold">{{ data.otium }}</span>
+          <span class="font-semibold text-left">{{ data.otium }}</span>
         </Button>
       </template>
     </Column>
