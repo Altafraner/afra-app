@@ -13,6 +13,8 @@ public static class RouteBuilderExtension
     /// </summary>
     public static void UseBackbone(this WebApplication app)
     {
+        app.UseAuthentication();
+        app.UseAuthorization();
         using var scope = app.Services.CreateScope();
         using var context = scope.ServiceProvider.GetService<AfraAppContext>()!;
 
@@ -25,7 +27,5 @@ public static class RouteBuilderExtension
         app.Logger.LogInformation("Migrating database");
         context.Database.Migrate();
         app.Logger.LogInformation("Database migrated");
-
-        app.UseAuthorization();
     }
 }
