@@ -3,7 +3,7 @@ import {computed, inject, ref} from "vue";
 import Form from "@primevue/forms/form";
 import {formatStudent} from "@/helpers/formatters.js";
 import FloatLabel from "primevue/floatlabel";
-import {Message, Select, SplitButton} from "primevue";
+import {Button, Message, Select, SplitButton} from "primevue";
 
 const dialogRef = inject("dialogRef");
 
@@ -16,6 +16,10 @@ const options = computed(() => {
     label: angebot.ort + ' – ' + angebot.otium,
     value: angebot.terminId ?? angebot.id
   }));
+})
+
+const canMoveNow = computed(() => {
+  return dialogRef.value.data.canMoveNow;
 })
 
 const buttonOptions = [
@@ -79,8 +83,10 @@ function submit({valid}) {
         {{ $form.destination.error.message }}
       </Message>
     </div>
-    <SplitButton :model="buttonOptions" class="mt-3" fluid label="Ab jetzt verschieben"
+    <SplitButton v-if="canMoveNow" :model="buttonOptions" class="mt-3" fluid
+                 label="Ab jetzt verschieben"
                  @click="save"/>
+    <Button v-else class="mt-3" fluid label="Verschieben" @click="moveAll"/>
   </Form>
 </template>
 

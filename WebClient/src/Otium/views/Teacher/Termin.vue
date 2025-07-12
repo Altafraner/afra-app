@@ -170,7 +170,8 @@ const initMove = async (student) => {
     },
     data: {
       student,
-      angebote: alternatives
+      angebote: alternatives,
+      canMoveNow: otium.value.isRunning
     },
     onClose: move
   })

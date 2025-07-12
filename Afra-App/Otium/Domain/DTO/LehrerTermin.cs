@@ -24,6 +24,11 @@ public record LehrerTermin : ITermin
     public bool IstAbgesagt { get; set; }
 
     /// <summary>
+    /// true, iff the termin is currently running
+    /// </summary>
+    public bool IsRunning { get; set; } = false;
+
+    /// <summary>
     ///     The maximum number of people that can be at the termin concurrently. Null if there is no limit
     /// </summary>
     public int? MaxEinschreibungen { get; set; }

@@ -67,7 +67,8 @@ function initMove(student, terminId) {
     },
     data: {
       student,
-      angebote: computed(() => attendance.value.filter(termin => termin.terminId !== '00000000-0000-0000-0000-000000000000'))
+      angebote: computed(() => attendance.value.filter(termin => termin.terminId !== '00000000-0000-0000-0000-000000000000')),
+      canMoveNow: true
     },
     onClose: move
   })

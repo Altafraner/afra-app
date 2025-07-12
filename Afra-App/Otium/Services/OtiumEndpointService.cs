@@ -4,6 +4,7 @@ using Afra_App.Backbone.Services.Email;
 using Afra_App.Otium.Domain.DTO;
 using Afra_App.Otium.Domain.DTO.Dashboard;
 using Afra_App.Otium.Domain.DTO.Katalog;
+using Afra_App.Otium.Domain.Models.Schuljahr;
 using Afra_App.User.Domain.DTO;
 using Afra_App.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
@@ -32,13 +33,15 @@ public class OtiumEndpointService
     private readonly IEmailOutbox _emailOutbox;
     private readonly EnrollmentService _enrollmentService;
     private readonly KategorieService _kategorieService;
+    private readonly SchuljahrService _schuljahrService;
 
     /// <summary>
     ///     Constructor for the OtiumEndpointService. Usually called by the DI container.
     /// </summary>
     public OtiumEndpointService(AfraAppContext dbContext, KategorieService kategorieService,
         EnrollmentService enrollmentService,
-        IEmailOutbox emailOutbox, BlockHelper blockHelper, IAttendanceService attendanceService)
+        IEmailOutbox emailOutbox, BlockHelper blockHelper, IAttendanceService attendanceService,
+        SchuljahrService schuljahrService)
     {
         _dbContext = dbContext;
         _kategorieService = kategorieService;
@@ -46,6 +49,7 @@ public class OtiumEndpointService
         _emailOutbox = emailOutbox;
         _blockHelper = blockHelper;
         _attendanceService = attendanceService;
+        _schuljahrService = schuljahrService;
     }
 
     /// <summary>
@@ -444,6 +448,18 @@ public class OtiumEndpointService
 
         var anwesenheiten = await _attendanceService.GetAttendanceForTerminAsync(terminId);
 
+        Block? currentBlock = null;
+        try
+        {
+            currentBlock = await _schuljahrService.GetCurrentBlockAsync();
+        }
+        catch (KeyNotFoundException)
+        {
+            currentBlock = null;
+        }
+
+        var isRunning = currentBlock is not null && currentBlock.Id == termin.Block.Id;
+
         return new LehrerTermin
         {
             Id = termin.Id,
@@ -455,6 +471,7 @@ public class OtiumEndpointService
             Datum = termin.Block.Schultag.Datum,
             MaxEinschreibungen = termin.MaxEinschreibungen,
             IstAbgesagt = termin.IstAbgesagt,
+            IsRunning = isRunning,
             Tutor = termin.Tutor is not null ? new PersonInfoMinimal(termin.Tutor) : null,
             Einschreibungen = anwesenheiten.Select(e =>
                 new LehrerEinschreibung(new PersonInfoMinimal(e.Key), e.Value))
