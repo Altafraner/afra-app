@@ -1,8 +1,13 @@
 ﻿<script setup>
 import {computed, ref} from "vue";
 import EinwahlSelectorGroup from "@/Profundum/components/EinwahlSelectorGroup.vue";
-import {Button} from "primevue";
+import {Button, useToast} from "primevue";
 import {testdata} from "@/Profundum/components/testdata.js";
+import {mande} from "mande";
+import {useRouter} from "vue-router";
+
+const toast = useToast();
+const router = useRouter();
 
 const options = ref(testdata);
 const results = ref({});
@@ -11,8 +16,19 @@ for (const option of options.value) {
   results.value[option.id] = [null, null, null];
 }
 
-function send() {
+async function send() {
   console.log('Sending, ...', results);
+  const api = mande('/api/profundum');
+  await api.post(results.value);
+
+  toast.add({
+    severity: 'success',
+    summary: 'Wünsche erfolgreich abgegeben',
+    detail: 'Deine Wünsche wurden erfolgreich gespeichert.',
+    life: 3000
+  });
+
+  await router.push({name: 'Home'});
 }
 
 const preSelected = computed(() => {
