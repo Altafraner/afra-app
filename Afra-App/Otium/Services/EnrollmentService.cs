@@ -308,6 +308,7 @@ public class EnrollmentService
             throw new KeyNotFoundException("Der Termin konnte nicht gefunden werden.");
 
         var currentEnrollment = await _dbContext.OtiaEinschreibungen
+            .Include(e => e.Termin)
             .Where(e => e.BetroffenePerson.Id == studentId && e.Termin.Block == toTermin.Block)
             .ToListAsync();
         _dbContext.OtiaEinschreibungen.RemoveRange(currentEnrollment);
@@ -322,10 +323,17 @@ public class EnrollmentService
         });
 
         await _dbContext.SaveChangesAsync();
-        return (currentEnrollment
-                .OrderBy(e => e.Interval.End)
-                .LastOrDefault()?.Id ?? Guid.Empty,
+        return (GetOldTerminId(),
             toTermin.Block.Id);
+
+        Guid GetOldTerminId()
+        {
+            var oldEnrollment = currentEnrollment
+                .OrderBy(e => e.Interval.End)
+                .LastOrDefault();
+
+            return oldEnrollment is null ? Guid.Empty : oldEnrollment.Termin.Id;
+        }
     }
 
     /// <summary>

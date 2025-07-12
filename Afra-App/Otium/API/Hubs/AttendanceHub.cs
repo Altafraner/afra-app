@@ -304,6 +304,8 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
         if (toTerminUpdates is not null)
             await Clients.Group(TerminGroupName(toTerminId))
                 .UpdateTerminAttendances(toTerminUpdates.Einschreibungen);
+        else
+            _logger.LogWarning("Tried to update termine for {fromTerminId}, but did not find any", fromTerminId);
 
         if (fromTerminId == Guid.Empty)
             return;
@@ -311,6 +313,8 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
         if (fromTerminUpdates is not null)
             await Clients.Group(TerminGroupName(fromTerminId))
                 .UpdateTerminAttendances(fromTerminUpdates.Einschreibungen);
+        else
+            _logger.LogWarning("Tried to update termine for {fromTerminId}, but did not find any", fromTerminId);
     }
 
     internal static string TerminGroupName(Guid terminId)
