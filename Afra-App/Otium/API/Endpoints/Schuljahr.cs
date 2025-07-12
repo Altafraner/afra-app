@@ -1,11 +1,7 @@
 using Afra_App.Backbone.Authentication;
-using Afra_App.Otium.Configuration;
-using Afra_App.Otium.Domain.Models.Schuljahr;
+using Afra_App.Otium.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using DtoSchultag = Afra_App.Otium.Domain.DTO.Schultag;
-using Schultag = Afra_App.Otium.Domain.Models.Schuljahr.Schultag;
 
 namespace Afra_App.Otium.API.Endpoints;
 
@@ -31,103 +27,49 @@ public static class Schuljahr
         management.MapDelete("/{datum}", DeleteSchultag);
     }
 
-    private static async Task<IResult> GetSchuljahr(AfraAppContext dbContext)
+    private static async Task<IResult> GetSchuljahr(SchuljahrService schuljahrService)
     {
-        var schultage = await dbContext.Schultage
-            .Include(s => s.Blocks)
-            .OrderBy(s => s.Datum)
-            .Select(s => new DtoSchultag(s.Datum, s.Wochentyp, s.Blocks.Select(b => b.SchemaId)))
-            .ToListAsync();
-        var next = schultage.FirstOrDefault(s => s.Datum >= DateOnly.FromDateTime(DateTime.Now)) ??
-                   schultage.LastOrDefault();
-
-        return Results.Ok(new Domain.DTO.Schuljahr(next, schultage));
+        return Results.Ok(await schuljahrService.GetSchuljahrAsync());
     }
 
-    private static async Task<IResult> AddSchultage(AfraAppContext dbContext,
-        IOptions<OtiumConfiguration> configuration,
+    private static async Task<IResult> AddSchultage(SchuljahrService schuljahrService,
         [FromBody] IEnumerable<DtoSchultag> schultageIn)
     {
-        var blockKeys = configuration.Value.Blocks.Select(e => e.Id).Distinct();
-        var schultage = schultageIn.Select(s => new Schultag
+        try
         {
-            Datum = s.Datum,
-            Wochentyp = s.Wochentyp,
-            Blocks = s.Blocks.Select(b => new Block
-            {
-                SchemaId = b
-            }).ToList()
-        }).ToList();
+            var schultage = await schuljahrService.AddRangeAsync(schultageIn);
 
-        if (schultage.SelectMany(s => s.Blocks).Any(b => !blockKeys.Contains(b.SchemaId)))
+            return Results.Created(string.Empty,
+                schultage.Select(s => new DtoSchultag(s.Datum, s.Wochentyp, s.Blocks.Select(b => b.SchemaId))));
+        }
+        catch (KeyNotFoundException e)
+        {
             return Results.Problem(new ProblemDetails
             {
                 Title = "Invalid Block",
                 Status = StatusCodes.Status400BadRequest,
-                Detail = "The block you provided is not valid. Valid blocks are: " + string.Join(", ", blockKeys),
+                Detail = e.Message,
                 Type = nameof(DtoSchultag.Blocks)
             });
-
-
-        foreach (var schultag in schultage.ToList())
-        {
-            var conflict = await dbContext.Schultage.Include(e => e.Blocks)
-                .FirstOrDefaultAsync(s => s.Datum == schultag.Datum);
-            if (conflict == null) continue;
-
-            conflict.Wochentyp = schultag.Wochentyp;
-            schultage.Remove(schultag);
-
-            if (conflict.Blocks.All(b1 => schultag.Blocks.Any(b2 => b1.SchemaId == b2.SchemaId)) &&
-                schultag.Blocks.All(b1 => conflict.Blocks.Any(b2 => b1.SchemaId == b2.SchemaId)))
-                continue;
-
-            foreach (var block in schultag.Blocks)
-                if (conflict.Blocks.All(b => b.SchemaId != block.SchemaId))
-                    conflict.Blocks.Add(block);
-
-            foreach (var block in conflict.Blocks.ToList())
-                if (schultag.Blocks.All(b => b.SchemaId != block.SchemaId))
-                    conflict.Blocks.Remove(block);
         }
-
-        await dbContext.Schultage.AddRangeAsync(schultage);
-        await dbContext.SaveChangesAsync();
-
-        return Results.Created(string.Empty,
-            schultage.Select(s => new DtoSchultag(s.Datum, s.Wochentyp, s.Blocks.Select(b => b.SchemaId))));
     }
 
-    private static async Task<IResult> DeleteSchultag(AfraAppContext dbContext, DateOnly datum)
+    private static async Task<IResult> DeleteSchultag(SchuljahrService schuljahrService, DateOnly datum)
     {
-        var schultag = await dbContext.Schultage.FindAsync(datum);
-        if (schultag == null) return Results.NotFound();
-
-        dbContext.Schultage.Remove(schultag);
-        await dbContext.SaveChangesAsync();
-
-        return Results.NoContent();
+        try
+        {
+            await schuljahrService.DeleteSchultagAsync(datum);
+            return Results.NoContent();
+        }
+        catch (KeyNotFoundException e)
+        {
+            return Results.NotFound(e.Message);
+        }
     }
 
-    private static async Task<IResult> GetNow(AfraAppContext dbContext, IOptions<OtiumConfiguration> config)
+    private static async Task<IResult> GetNow(SchuljahrService schuljahrService)
     {
-        var now = DateTime.Now;
-        var today = DateOnly.FromDateTime(now);
-
-        // Give a 10 minute buffer. We have to use DateTime as we'd otherwise break on the edge of a day.
-        var blockSchema =
-            config.Value.Blocks.Where(b =>
-                    today.ToDateTime(b.Interval.Start).AddMinutes(-10) <= now &&
-                    today.ToDateTime(b.Interval.End).AddMinutes(10) >= now)
-                .Select(b => b.Id)
-                .ToList();
-        if (blockSchema.Count == 0) return Results.NotFound();
-        var block = await dbContext.Blocks
-            .AsNoTracking()
-            .Where(b => blockSchema.Contains(b.SchemaId))
-            .Where(b => b.SchultagKey == today)
-            .Select(b => new { b.Id, b.SchemaId })
-            .FirstOrDefaultAsync();
-        return block == null ? Results.NotFound() : Results.Ok(block);
+        var block = await schuljahrService.GetCurrentBlockAsync();
+        return block == null ? Results.NotFound() : Results.Ok(new { block.Id, block.SchemaId });
     }
 }
