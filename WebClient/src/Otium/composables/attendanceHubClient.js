@@ -17,6 +17,7 @@ export function useAttendance(scope, id, toastService = {add: () => undefined}) 
     closeConnection
   } = useSignalR('/api/otium/attendance', true, toastService)
   const attendances = ref([])
+  const alternatives = ref([])
 
   registerReconnectHandler(registerScope)
   connectionPromise.then(registerScope)
@@ -113,6 +114,11 @@ export function useAttendance(scope, id, toastService = {add: () => undefined}) 
     await sendMessage('SetTerminStatus', blockId, terminId, status)
   }
 
+  async function updateAlternatives() {
+    if (scope !== 'termin') throw Error("You can only update alternatives for a termin, not a block.");
+    alternatives.value = await sendMessage('GetTerminAlternatives', id);
+  }
+
   async function sendMove(studentId, terminId) {
     await sendMessage('MoveStudent', studentId, terminId)
   }
@@ -129,8 +135,10 @@ export function useAttendance(scope, id, toastService = {add: () => undefined}) 
 
   return {
     attendance: attendances,
+    alternatives,
     updateAttendance: sendAttendanceUpdate,
     updateStatus: sendStatusUpdate,
+    updateAlternatives,
     moveStudent: sendMove,
     moveStudentNow: sendMoveNow,
     stop: close

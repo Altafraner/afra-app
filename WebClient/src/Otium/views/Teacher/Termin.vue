@@ -1,7 +1,15 @@
 ﻿<script setup>
 import {computed, ref, watch} from "vue";
 import {useUser} from "@/stores/user.js";
-import {Button, FloatLabel, InputNumber, InputText, ToggleSwitch, useToast} from "primevue";
+import {
+  Button,
+  FloatLabel,
+  InputNumber,
+  InputText,
+  ToggleSwitch,
+  useDialog,
+  useToast
+} from "primevue";
 import {mande} from "mande";
 import NavBreadcrumb from "@/components/NavBreadcrumb.vue";
 import {formatDate, formatPerson} from "@/helpers/formatters.js";
@@ -10,6 +18,7 @@ import GridEditRow from "@/components/Form/GridEditRow.vue";
 import AfraPersonSelector from "@/Otium/components/Form/AfraPersonSelector.vue";
 import AfraOtiumEnrollmentTable from "@/Otium/components/Management/AfraOtiumEnrollmentTable.vue";
 import {useAttendance} from "@/Otium/composables/attendanceHubClient.js";
+import MoveStudentForm from "@/Otium/components/Supervision/MoveStudentForm.vue";
 
 const props = defineProps({
   terminId: String
@@ -18,9 +27,14 @@ const props = defineProps({
 const loading = ref(true);
 const user = useUser()
 const toast = useToast()
+const dialog = useDialog();
 const otium = ref(null);
 
 const aufsichtRunning = ref(false);
+const alternatives = ref([]);
+const moveStudent = ref(() => undefined);
+const moveStudentNow = ref(() => undefined);
+const updateAlternatives = ref(() => undefined);
 
 const maxEnrollmentsSetzenSelected = ref(false)
 const maxEnrollmentsSelected = ref(null)
@@ -102,19 +116,29 @@ async function startAufsicht() {
   aufsichtRunning.value = true;
 
   const aufsicht = useAttendance('termin', props.terminId, toast);
-  const watcher = watch(aufsicht.attendance, (newValue) => {
+  const enrollmentWatcher = watch(aufsicht.attendance, (newValue) => {
     otium.value.einschreibungen = newValue;
   });
+  const alternativesWatcher = watch(aufsicht.alternatives, (newValue) => {
+    alternatives.value = newValue;
+  });
+  moveStudent.value = aufsicht.moveStudent;
+  moveStudentNow.value = aufsicht.moveStudentNow;
   updateStatusFunction.value = aufsicht.updateAttendance;
+  updateAlternatives.value = aufsicht.updateAlternatives;
   stopAufsicht.value = async () => {
     if (!aufsichtRunning.value) return;
     aufsichtRunning.value = false;
-    watcher.stop();
+    enrollmentWatcher.stop();
+    alternativesWatcher.stop();
     await aufsicht.updateStatus(otium.value.blockId, true)
     await aufsicht.stop();
     await fetchData()
 
-    updateStatusFunction.value = (studentId, status) => undefined;
+    updateStatusFunction.value = () => undefined;
+    moveStudent.value = () => undefined;
+    moveStudentNow.value = () => undefined;
+    updateAlternatives.value = () => undefined;
   }
 }
 
@@ -134,6 +158,32 @@ const startEditTutor = () => {
 
 const startEditOrt = () => {
   ort.value = otium.value.ort
+}
+
+const initMove = async (student) => {
+  updateAlternatives.value();
+  dialog.open(MoveStudentForm, {
+    props: {
+      header: "Schüler:in verschieben",
+      modal: true,
+      class: "sm:max-w-xl"
+    },
+    data: {
+      student,
+      angebote: alternatives
+    },
+    onClose: move
+  })
+
+  async function move({data}) {
+    console.log(data)
+    if (!data) return;
+    if (data.all) {
+      moveStudent.value(student.id, data.destination)
+      return
+    }
+    await moveStudentNow.value(student.id, otium.value.id, data.destination)
+  }
 }
 
 await fetchData()
@@ -217,7 +267,7 @@ await fetchData()
   <AfraOtiumEnrollmentTable :enrollments="otium.einschreibungen"
                             :may-edit-attendance="aufsichtRunning"
                             :update-function="updateAttendanceCallback"
-                            show-attendance/>
+                            show-attendance show-transfer @init-move="initMove"/>
 </template>
 
 <style scoped>

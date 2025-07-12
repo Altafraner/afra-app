@@ -3,7 +3,7 @@ namespace Afra_App.Otium.Domain.DTO.Katalog;
 /// <summary>
 ///     A interface representing the basic structure of a DTO for a termin
 /// </summary>
-public interface ITermin : IMinimalTermin
+public interface ITermin : DTO.ITermin
 {
     /// <summary>
     ///     The maximum number of people that can be at the termin concurrently

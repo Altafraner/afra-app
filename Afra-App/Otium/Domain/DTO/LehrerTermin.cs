@@ -6,7 +6,7 @@ namespace Afra_App.Otium.Domain.DTO;
 /// <summary>
 ///     A DTO for a termin as seen by a tutor
 /// </summary>
-public record LehrerTermin : IMinimalTermin
+public record LehrerTermin : ITermin
 {
     /// <summary>
     ///     A list of enrollments for the termin

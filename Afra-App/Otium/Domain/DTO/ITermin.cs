@@ -5,7 +5,7 @@ namespace Afra_App.Otium.Domain.DTO;
 /// <summary>
 ///     A interface representing the minimal basic structure of a DTO for a termin
 /// </summary>
-public interface IMinimalTermin
+public interface ITermin
 {
     /// <summary>
     ///     The unique identifier for the termin

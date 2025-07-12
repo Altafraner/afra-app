@@ -16,13 +16,15 @@ namespace Afra_App.Otium.API.Hubs;
 public class AttendanceHub : Hub<IAttendanceHubClient>
 {
     private readonly IAttendanceService _attendanceService;
+    private readonly ILogger<AttendanceHub> _logger;
 
     /// <summary>
     ///     Constructs a new instance of the <see cref="AttendanceHub" /> class.
     /// </summary>
-    public AttendanceHub(IAttendanceService attendanceService)
+    public AttendanceHub(IAttendanceService attendanceService, ILogger<AttendanceHub> logger)
     {
         _attendanceService = attendanceService;
+        _logger = logger;
     }
 
     /// <summary>
@@ -162,6 +164,34 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
     }
 
     /// <summary>
+    /// Retrieves the parallel running termins for a given termin.
+    /// </summary>
+    /// <param name="terminId">The id of the termin to find alternatives to</param>
+    /// <param name="dbContext">From DI</param>
+    /// <returns></returns>
+    public async Task<List<MinimalTermin>> GetTerminAlternatives(Guid terminId, AfraAppContext dbContext)
+    {
+        var termin = await dbContext.OtiaTermine
+            .Include(t => t.Block)
+            .FirstOrDefaultAsync(t => t.Id == terminId);
+
+        if (termin is null)
+            throw new KeyNotFoundException($"Termin ID {terminId} not found");
+
+        var alternatives = await dbContext.OtiaTermine
+            .Include(t => t.Tutor)
+            .Include(t => t.Block)
+            .Include(t => t.Otium)
+            .Where(t => t.Block.Id == termin.Block.Id && t.Id != terminId)
+            .OrderBy(t => t.Otium.Bezeichnung)
+            .Select(t => new MinimalTermin(t.Id, t.Otium.Bezeichnung,
+                t.Tutor != null ? new PersonInfoMinimal(t.Tutor) : null, t.Ort))
+            .ToListAsync();
+
+        return alternatives;
+    }
+
+    /// <summary>
     ///     Moves a student from one termin to another.
     /// </summary>
     /// <param name="studentId">The id of the student to move</param>
@@ -194,6 +224,9 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
         }
         catch (InvalidOperationException)
         {
+            _logger.LogWarning(
+                "Someone tried to move a student ({studentId}) from a termin ({fromTerminId}) that is not currently running",
+                studentId, fromTerminId);
             throw new HubException("The termin is not currently running");
         }
     }

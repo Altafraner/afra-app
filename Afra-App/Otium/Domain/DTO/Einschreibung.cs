@@ -7,7 +7,7 @@ namespace Afra_App.Otium.Domain.DTO;
 /// <summary>
 ///     A DTO for an enrollment
 /// </summary>
-public record Einschreibung : IMinimalTermin
+public record Einschreibung : ITermin
 {
     /// <summary>
     ///     Creates a new DTO from a einschreibung entry

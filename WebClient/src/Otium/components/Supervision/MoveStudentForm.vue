@@ -14,7 +14,7 @@ const form = ref();
 const options = computed(() => {
   return dialogRef.value.data.angebote.map(angebot => ({
     label: angebot.ort + ' – ' + angebot.otium,
-    value: angebot.terminId
+    value: angebot.terminId ?? angebot.id
   }));
 })
 
