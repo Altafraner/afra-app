@@ -46,7 +46,9 @@ public record Termin : ITermin
     /// </summary>
     public string Beschreibung { get; set; }
 
-    /// <inheritdoc />
+    /// <summary>
+    ///    The unique ID of the category the Otium is in
+    /// </summary>
     public Guid Kategorie { get; set; }
 
     /// <summary>
