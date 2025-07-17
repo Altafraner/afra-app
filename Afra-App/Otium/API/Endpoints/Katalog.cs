@@ -19,16 +19,14 @@ public static class Katalog
         app.MapDelete("/{terminId:guid}", UnenrollAsync);
     }
 
-    private static async Task<IResult> GetDay(OtiumEndpointService service, UserAccessor userAccessor,
-        AfraAppContext dbContext, DateOnly date)
+    private static async Task<IResult> GetDay(OtiumEndpointService service, UserAccessor userAccessor, DateOnly date)
     {
         var user = await userAccessor.GetUserAsync();
 
         return Results.Ok(await service.GetKatalogForDay(user, date));
     }
 
-    private static async Task<IResult> GetTermin(OtiumEndpointService service, Guid terminId, UserAccessor userAccessor,
-        AfraAppContext dbContext)
+    private static async Task<IResult> GetTermin(OtiumEndpointService service, Guid terminId, UserAccessor userAccessor)
     {
         var user = await userAccessor.GetUserAsync();
 
@@ -39,7 +37,7 @@ public static class Katalog
     }
 
     private static async Task<IResult> EnrollAsync(OtiumEndpointService service, EnrollmentService enrollmentService,
-        UserAccessor userAccessor, AfraAppContext dbContext, Guid terminId)
+        UserAccessor userAccessor, Guid terminId)
     {
         var user = await userAccessor.GetUserAsync();
 
@@ -48,7 +46,7 @@ public static class Katalog
     }
 
     private static async Task<IResult> UnenrollAsync(OtiumEndpointService service, EnrollmentService enrollmentService,
-        UserAccessor userAccessor, AfraAppContext dbContext, Guid terminId)
+        UserAccessor userAccessor, Guid terminId)
     {
         var user = await userAccessor.GetUserAsync();
 
