@@ -452,7 +452,7 @@ public class OtiumEndpointService
 
         var anwesenheiten = await _attendanceService.GetAttendanceForTerminAsync(terminId);
 
-        Block? currentBlock = null;
+        Block? currentBlock;
         try
         {
             currentBlock = await _schuljahrService.GetCurrentBlockAsync();
@@ -503,7 +503,7 @@ public class OtiumEndpointService
     /// <summary>
     ///     Gets a single Otium
     /// </summary>
-    /// <param name="otiumId">The Id of the Otium to get.</param>
+    /// <param name="otiumId">The ID of the Otium to get.</param>
     public DTO_Otium_View GetOtium(Guid otiumId)
     {
         var otium = _dbContext.Otia
@@ -550,7 +550,7 @@ public class OtiumEndpointService
     /// <summary>
     ///     Deletes an Otium
     /// </summary>
-    /// <param name="otiumId">The Id of the Otium to delete.</param>
+    /// <param name="otiumId">The ID of the Otium to delete.</param>
     public async Task DeleteOtiumAsync(Guid otiumId)
     {
         var otium = await _dbContext.Otia
@@ -625,7 +625,7 @@ public class OtiumEndpointService
     /// <summary>
     ///     Deletes an individual OtiumTermin. Cannot be used on regular Termine.
     /// </summary>
-    /// <param name="otiumTerminId">The Id of the OtiumTermin to delete.</param>
+    /// <param name="otiumTerminId">The ID of the OtiumTermin to delete.</param>
     public async Task DeleteOtiumTerminAsync(Guid otiumTerminId)
     {
         var otiumTermin = await _dbContext.OtiaTermine
@@ -711,7 +711,7 @@ public class OtiumEndpointService
     /// <summary>
     ///     Deletes an Otiumwiederholung.
     /// </summary>
-    /// <param name="otiumWiederholungId">The Id of the OtiumWiederholung to delete.</param>
+    /// <param name="otiumWiederholungId">The ID of the OtiumWiederholung to delete.</param>
     public async Task DeleteOtiumWiederholungAsync(Guid otiumWiederholungId)
     {
         var otiumWiederholung = await _dbContext.OtiaWiederholungen
@@ -738,7 +738,7 @@ public class OtiumEndpointService
     ///     Discontinues an Otiumwiederholung by deleting all termine starting from <paramref name="firstDayAfter" />
     ///     Cancels future termine to ensure that there are not have any enrollments.
     /// </summary>
-    /// <param name="otiumWiederholungId">The Id of the OtiumWiederholung to discontinue.</param>
+    /// <param name="otiumWiederholungId">The ID of the OtiumWiederholung to discontinue.</param>
     /// <param name="firstDayAfter">The first date from which on the recurrence will not be scheduled.</param>
     public async Task OtiumWiederholungDiscontinueAsync(Guid otiumWiederholungId, DateOnly firstDayAfter)
     {
@@ -767,7 +767,7 @@ public class OtiumEndpointService
     /// <summary>
     ///     Cancels an OtiumTermin.
     /// </summary>
-    /// <param name="otiumTerminId">The Id of the OtiumTermin to cancel.</param>
+    /// <param name="otiumTerminId">The ID of the OtiumTermin to cancel.</param>
     public async Task OtiumTerminAbsagenAsync(Guid otiumTerminId)
     {
         var otiumTermin = await _dbContext.OtiaTermine
@@ -809,7 +809,7 @@ public class OtiumEndpointService
     /// <summary>
     ///     Sets the Bezeichnung of an OtiumTermin
     /// </summary>
-    /// <param name="otiumId">The Id of the Otium to change the Bezeichnung of.</param>
+    /// <param name="otiumId">The ID of the Otium to change the Bezeichnung of.</param>
     /// <param name="bezeichnung">The new Bezeichnung</param>
     public async Task OtiumSetBezeichnungAsync(Guid otiumId, string bezeichnung)
     {
@@ -823,7 +823,7 @@ public class OtiumEndpointService
     /// <summary>
     ///     Sets the Beschreibung of an OtiumTermin
     /// </summary>
-    /// <param name="otiumId">The Id of the Otium to change the Beschreibung> of.</param>
+    /// <param name="otiumId">The ID of the Otium to change the Beschreibung> of.</param>
     /// <param name="beschreibung">The new Beschreibung</param>
     public async Task OtiumSetBeschreibungAsync(Guid otiumId, string beschreibung)
     {
@@ -843,8 +843,8 @@ public class OtiumEndpointService
     /// <summary>
     ///     Adds a Person as Verantwortlich for the given Otium
     /// </summary>
-    /// <param name="otiumId">The Id of the Otium to add the Person on.</param>
-    /// <param name="persId">The Id new Verantwortliche Person</param>
+    /// <param name="otiumId">The ID of the Otium to add the Person on.</param>
+    /// <param name="persId">The ID new Verantwortliche Person</param>
     public async Task OtiumAddVerantwortlichAsync(Guid otiumId, Guid persId)
     {
         var otium = await _dbContext.Otia.FindAsync(otiumId);
@@ -862,8 +862,8 @@ public class OtiumEndpointService
     /// <summary>
     ///     Removes a Person as Verantwortlich for the given Otium
     /// </summary>
-    /// <param name="otiumId">The Id of the Otium to remove the Person on.</param>
-    /// <param name="persId">The Id new Verantwortliche Person</param>
+    /// <param name="otiumId">The ID of the Otium to remove the Person on.</param>
+    /// <param name="persId">The ID new Verantwortliche Person</param>
     public async Task OtiumRemoveVerantwortlichAsync(Guid otiumId, Guid persId)
     {
         var otium = await _dbContext.Otia.FindAsync(otiumId);
@@ -881,7 +881,7 @@ public class OtiumEndpointService
     /// <summary>
     ///     Sets the Beschreibung of an Kategorie
     /// </summary>
-    /// <param name="otiumId">The Id of the Otium to change the Kategorie of.</param>
+    /// <param name="otiumId">The ID of the Otium to change the Kategorie of.</param>
     /// <param name="kategorieId">The Id of the new Kategorie</param>
     /// TODO : Implement proper constraints
     public async Task OtiumSetKategorieAsync(Guid otiumId, Guid kategorieId)
@@ -903,7 +903,7 @@ public class OtiumEndpointService
     /// <summary>
     ///     Sets the maxEinschreibungen of an OtiumTermin.
     /// </summary>
-    /// <param name="otiumTerminId">The Id of the OtiumTermin to set maxEinschreibungen on.</param>
+    /// <param name="otiumTerminId">The ID of the OtiumTermin to set maxEinschreibungen on.</param>
     /// <param name="maxEinschreibungen">The new value of MaxEinschreibungen.</param>
     public async Task OtiumTerminSetMaxEinschreibungenAsync(Guid otiumTerminId, int? maxEinschreibungen)
     {
@@ -951,7 +951,7 @@ public class OtiumEndpointService
     /// <summary>
     ///     Sets the tutor of an OtiumTermin.
     /// </summary>
-    /// <param name="otiumTerminId">The Id of the OtiumTermin to set the tutor on.</param>
+    /// <param name="otiumTerminId">The ID of the OtiumTermin to set the tutor on.</param>
     /// <param name="personId">The new tutor.</param>
     public async Task OtiumTerminSetTutorAsync(Guid otiumTerminId, Guid? personId)
     {
@@ -977,7 +977,7 @@ public class OtiumEndpointService
     /// <summary>
     ///     Sets the ort of an OtiumTermin.
     /// </summary>
-    /// <param name="otiumTerminId">The Id of the OtiumTermin to set the ort on.</param>
+    /// <param name="otiumTerminId">The ID of the OtiumTermin to set the ort on.</param>
     /// <param name="ort">The new ort.</param>
     public async Task OtiumTerminSetOrtAsync(Guid otiumTerminId, string ort)
     {
