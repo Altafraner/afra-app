@@ -101,7 +101,7 @@ function multiEnroll() {
     try {
       if (options.data === undefined || options.data === null) return;
       if (options.data.selected.length === 0) return enroll();
-      const response = await mande('/api/otium/' + props.terminId + '/multi-enroll').post(options.data.selected)
+      const response = await mande('/api/otium/' + props.terminId + '/multi-enroll').put(options.data.selected)
       if (response.denied.length > 0) {
         toast.add({
           severity: "warn",
@@ -125,6 +125,7 @@ function multiEnroll() {
         console.error(err);
       }
     } finally {
+      await loadTermin()
       buttonLoading.value = false;
     }
   }
