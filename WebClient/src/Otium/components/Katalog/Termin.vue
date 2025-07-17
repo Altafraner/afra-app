@@ -1,5 +1,5 @@
 ﻿<script setup>
-import {Button, Tag, useToast} from "primevue";
+import {Button, Tag, useDialog, useToast} from "primevue";
 import {ref} from "vue";
 import {formatDate, formatTime, formatTutor} from "@/helpers/formatters.js";
 import {mande} from "mande";
@@ -9,11 +9,13 @@ import {useRouter} from "vue-router";
 import AfraKategorieTag from "@/Otium/components/Shared/AfraKategorieTag.vue";
 import {findPath} from "@/helpers/tree.js";
 import SimpleBreadcrumb from "@/components/SimpleBreadcrumb.vue";
+import MultipleEnrollmentForm from "@/Otium/components/Katalog/Forms/MultipleEnrollmentForm.vue";
 
 const settings = useOtiumStore();
 const user = useUser();
 const toast = useToast();
 const router = useRouter();
+const dialog = useDialog();
 const props = defineProps({
   terminId: String,
 })
@@ -81,6 +83,53 @@ async function enroll() {
   }
 }
 
+function multiEnroll() {
+  buttonLoading.value = true;
+  dialog.open(MultipleEnrollmentForm, {
+    props: {
+      header: "Mehrfach einschreiben",
+      modal: true,
+      class: "sm:max-w-xl"
+    },
+    data: {
+      options: otium.value.wiederholungen
+    },
+    onClose: multiEnrollCallback
+  })
+
+  async function multiEnrollCallback(options) {
+    try {
+      if (options.data === undefined || options.data === null) return;
+      if (options.data.selected.length === 0) return enroll();
+      const response = await mande('/api/otium/' + props.terminId + '/multi-enroll').post(options.data.selected)
+      if (response.denied.length > 0) {
+        toast.add({
+          severity: "warn",
+          summary: "Einschreibung teilweise fehlgeschlagen",
+          detail: `Die Einschreibung in die folgenden Termine ist fehlgeschlagen: ${response.denied.map(d => formatDate(new Date(d))).join(', ')}`
+        });
+      }
+    } catch (err) {
+      if (err.response)
+        toast.add({
+          severity: "error",
+          summary: "Fehler",
+          detail: `Es ist ein Fehler beim Einschreiben aufgetreten. Code: ${err.response.status} (${err.response.statusText})`
+        })
+      else {
+        toast.add({
+          severity: "error",
+          summary: "Fehler",
+          detail: "Es ist ein Fehler beim Einschreiben aufgetreten."
+        })
+        console.error(err);
+      }
+    } finally {
+      buttonLoading.value = false;
+    }
+  }
+}
+
 async function loadKategorien() {
   await settings.updateKategorien()
   kategorien.value = settings.kategorien;
@@ -128,11 +177,24 @@ await setup();
               label="Austragen" severity="danger" variant="text"/>
     </template>
     <template v-else>
-      <Button v-if="otium.einschreibung.kannBearbeiten" :disabled="buttonLoading"
-              :loading="buttonLoading"
-              icon="pi pi-plus"
-              label="Einschreiben" variant="text"
-              @click="() => enroll()"/>
+      <div v-if="otium.einschreibung.kannBearbeiten" class="flex flex-col gap-3 items-end">
+        <Button :disabled="buttonLoading"
+                :loading="buttonLoading"
+                class="justify-end"
+                fluid
+                icon="pi pi-plus"
+                label="Einschreiben"
+                variant="text"
+                @click="() => enroll()"/>
+        <Button v-if="otium.wiederholungen.length > 0"
+                :disabled="buttonLoading"
+                :loading="buttonLoading"
+                icon="pi pi-refresh"
+                label="Mehrmals Einschreiben"
+                severity="secondary"
+                variant="text"
+                @click="() => multiEnroll()"/>
+      </div>
       <Button v-else v-tooltip.left="otium.einschreibung.grund" :loading="buttonLoading" disabled
               icon="pi pi-plus"
               label="Einschreiben" variant="text"/>
