@@ -1,5 +1,6 @@
 using Afra_App.Otium.Services;
 using Afra_App.User.Services;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Afra_App.Otium.API.Endpoints;
 
@@ -16,6 +17,7 @@ public static class Katalog
         app.MapGet("/{date}", GetDay);
         app.MapGet("/{terminId:guid}", GetTermin);
         app.MapPut("/{terminId:guid}", EnrollAsync);
+        app.MapPut("/{terminId:guid}/multi-enroll", MultiEnrollAsync);
         app.MapDelete("/{terminId:guid}", UnenrollAsync);
     }
 
@@ -43,6 +45,27 @@ public static class Katalog
 
         var termin = await enrollmentService.EnrollAsync(terminId, user);
         return termin is null ? Results.BadRequest() : Results.Ok(await service.GetTerminAsync(terminId, user));
+    }
+
+    private static async Task<IResult> MultiEnrollAsync(OtiumEndpointService service,
+        EnrollmentService enrollmentService,
+        UserAccessor userAccessor, Guid terminId, [FromBody] IEnumerable<DateOnly> dates)
+    {
+        var user = await userAccessor.GetUserAsync();
+
+        try
+        {
+            var result = await enrollmentService.EnrollAsync(terminId, dates, user);
+            return Results.Ok(result);
+        }
+        catch (KeyNotFoundException)
+        {
+            return Results.NotFound();
+        }
+        catch (InvalidOperationException)
+        {
+            return Results.BadRequest("You may not enroll in this termin.");
+        }
     }
 
     private static async Task<IResult> UnenrollAsync(OtiumEndpointService service, EnrollmentService enrollmentService,

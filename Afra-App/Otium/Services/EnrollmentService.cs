@@ -70,6 +70,78 @@ public class EnrollmentService
     }
 
     /// <summary>
+    /// Enrolls a user in a termin for the date of the termin and all specified dates of the termin's recurrence.
+    /// </summary>
+    /// <param name="terminId">The id of the first termin to enroll in</param>
+    /// <param name="dates">the dates to also enroll for</param>
+    /// <param name="student">The student to enroll</param>
+    /// <returns>A <see cref="MultiEnrollmentStatus"/> object with information on the success of all enrollments.</returns>
+    /// <exception cref="KeyNotFoundException">No termin with the specified <paramref name="terminId"/> could be found.</exception>
+    /// <exception cref="InvalidOperationException">The user may not enroll for the termin with the specified <paramref name="terminId"/></exception>
+    public async Task<MultiEnrollmentStatus> EnrollAsync(Guid terminId, IEnumerable<DateOnly> dates, Person student)
+    {
+        // Okay, this is ugly, but it works.
+        var startingTermin = await _dbContext.OtiaTermine
+            .Include(termin => termin.Block)
+            .ThenInclude(block => block.Schultag)
+            .Include(termin => termin.Otium)
+            .ThenInclude(otium => otium.Kategorie)
+            .Include(termin => termin.Wiederholung)
+            .ThenInclude(wdh => wdh!.Termine)
+            .ThenInclude(termin => termin.Block)
+            .ThenInclude(block => block.Schultag)
+            .Include(termin => termin.Wiederholung)
+            .ThenInclude(wdh => wdh!.Termine)
+            .ThenInclude(termin => termin.Otium)
+            .ThenInclude(otium => otium.Kategorie)
+            .AsSplitQuery()
+            .FirstOrDefaultAsync(t => t.Id == terminId);
+
+        if (startingTermin == null) throw new KeyNotFoundException("Der Termin konnte nicht gefunden werden.");
+        var (mayEnroll, _) = await MayEnroll(student, startingTermin);
+
+        if (!mayEnroll) throw new InvalidOperationException("Der Nutzer darf sich nicht einschreiben.");
+        var einschreibung = new Einschreibung
+        {
+            Termin = startingTermin,
+            BetroffenePerson = student,
+            Interval = _blockHelper.Get(startingTermin.Block.SchemaId)!.Interval
+        };
+
+        List<DateOnly> success = [startingTermin.Block.SchultagKey];
+        List<DateOnly> failure = [];
+        _dbContext.OtiaEinschreibungen.Add(einschreibung);
+        foreach (var date in dates)
+        {
+            var recurringTermin = startingTermin.Wiederholung?.Termine.FirstOrDefault(t => t.Block.SchultagKey == date);
+            if (recurringTermin is null)
+            {
+                failure.Add(date);
+                continue;
+            }
+
+            var (mayEnrollRec, _) = await MayEnroll(student, recurringTermin);
+            if (!mayEnrollRec)
+            {
+                failure.Add(date);
+                continue;
+            }
+
+            var einschreibungRec = new Einschreibung
+            {
+                Termin = recurringTermin,
+                BetroffenePerson = student,
+                Interval = _blockHelper.Get(recurringTermin.Block.SchemaId)!.Interval
+            };
+            _dbContext.OtiaEinschreibungen.Add(einschreibungRec);
+            success.Add(recurringTermin.Block.SchultagKey);
+        }
+
+        await _dbContext.SaveChangesAsync();
+        return new MultiEnrollmentStatus(success, failure);
+    }
+
+    /// <summary>
     ///     Unenrolls a user from a termin for the subblock starting at a given time.
     /// </summary>
     /// <param name="terminId">the id of the termin entity</param>
