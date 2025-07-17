@@ -119,6 +119,10 @@ public class OtiumEndpointService
             .ThenInclude(otium => otium.Kategorie)
             .Include(termin => termin.Block)
             .ThenInclude(block => block.Schultag)
+            .Include(termin => termin.Wiederholung)
+            .ThenInclude(wdh => wdh!.Termine)
+            .ThenInclude(wdhTermin => wdhTermin.Block)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(t => t.Id == terminId);
         if (termin == null) return null;
 

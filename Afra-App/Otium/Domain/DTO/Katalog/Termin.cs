@@ -12,7 +12,7 @@ public record Termin : ITermin
     /// </summary>
     /// <param name="termin">The termins DB entry</param>
     /// <param name="einschreibung">Information on whether and how to enroll</param>
-    /// <param name="kategorie">The categorie the Otium is in</param>
+    /// <param name="kategorie">The category the Otium is in</param>
     /// <param name="startTime">The time the termin starts at</param>
     public Termin(Models.Termin termin, EinschreibungsPreview einschreibung,
         Guid kategorie, TimeOnly startTime)
@@ -29,6 +29,11 @@ public record Termin : ITermin
         Block = termin.Block.SchemaId;
         Datum = termin.Block.Schultag.Datum.ToDateTime(startTime);
         Beschreibung = termin.Otium.Beschreibung;
+        Wiederholungen = termin.Wiederholung?.Termine
+            .Select(t => t.Block.SchultagKey)
+            .Distinct()
+            .Order()
+            .SkipWhile(d => d <= termin.Block.SchultagKey) ?? [];
     }
 
     /// <summary>
@@ -50,6 +55,11 @@ public record Termin : ITermin
     ///    The unique ID of the category the Otium is in
     /// </summary>
     public Guid Kategorie { get; set; }
+
+    /// <summary>
+    ///    A list of all dates on which the termin is repeated
+    /// </summary>
+    public IEnumerable<DateOnly> Wiederholungen { get; set; } = [];
 
     /// <summary>
     ///     The unique ID for the Termin
