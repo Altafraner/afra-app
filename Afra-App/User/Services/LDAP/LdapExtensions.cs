@@ -1,19 +1,18 @@
 ﻿using System.DirectoryServices.Protocols;
 using System.Net;
-using System.Text;
-using Afra_App.User.Configuration;
+using Afra_App.User.Configuration.LDAP;
 
 namespace Afra_App.User.Services.LDAP;
 
 /// <summary>
-/// A helper class for building LDAP connections
+/// Provides extension methods for working with LDAP connections and entries.
 /// </summary>
-public static class LdapHelper
+public static class LdapExtensions
 {
     /// <summary>
-    /// Builds a new LDAP connection from the given configuration
+    /// Builds a new LDAP connection a the given configuration
     /// </summary>
-    public static LdapConnection BuildConnection(LdapConfiguration configuration, ILogger? logger = null)
+    public static LdapConnection BuildConnection(this LdapConfiguration configuration, ILogger? logger = null)
     {
         var identifier = new LdapDirectoryIdentifier(configuration.Host, configuration.Port);
         var credentials = new NetworkCredential(configuration.Username, configuration.Password);
@@ -64,7 +63,7 @@ public static class LdapHelper
     /// <param name="objGuid">The objects <see cref="Guid"/>, if exists and valid; Otherwise, <see cref="Guid.Empty">Guid.Empty</see>
     /// </param>
     /// <returns>True, if the entry has a valid Guid; Otherwise, false</returns>
-    public static bool TryGetGuidFromEntry(SearchResultEntry entry, out Guid objGuid)
+    public static bool TryGetGuid(this SearchResultEntry entry, out Guid objGuid)
     {
         if (entry.Attributes["objectGuid"]?.GetValues(typeof(byte[])).FirstOrDefault() is not byte[] objGuidBytes)
         {
@@ -90,54 +89,8 @@ public static class LdapHelper
     /// <param name="entry">The entry to get the attribute from</param>
     /// <param name="attributeName">If exists and is a string, the value of the first instance of the attribute; Otherwise, null</param>
     /// <returns></returns>
-    public static string? GetSingleAttribute(SearchResultEntry entry, string attributeName)
+    public static string? GetSingleAttribute(this SearchResultEntry entry, string attributeName)
     {
         return entry.Attributes[attributeName]?.GetValues(typeof(string)).FirstOrDefault() as string;
-    }
-
-    /// <summary>
-    /// Sanitize a string for use in LDAP queries
-    /// </summary>
-    /// <param name="value">The string to sanizize</param>
-    /// <returns>The sanitized string</returns>
-    /// <remarks>This is an approx. port of the java implementation for DefaultEncoder.encodeForLDAP(string, true) from the esapi-java-legacy project</remarks>
-    public static string Sanitize(string value)
-    {
-        StringBuilder sb = new(value.Length);
-        foreach (var c in value)
-            switch (c)
-            {
-                case '\\':
-                    sb.Append("\\5c");
-                    break;
-                case '/':
-                    sb.Append("\\2f");
-                    break;
-                case '*':
-                    sb.Append("\\2a");
-                    break;
-                case '(':
-                    sb.Append("\\28");
-                    break;
-                case ')':
-                    sb.Append("\\29");
-                    break;
-                case '\0':
-                    sb.Append("\\00");
-                    break;
-                default:
-                    if (c >= 0x80)
-                    {
-                        var bytes = Encoding.UTF8.GetBytes([c]);
-                        foreach (var b in bytes) sb.Append($"\\{b:X2}");
-
-                        break;
-                    }
-
-                    sb.Append(c);
-                    break;
-            }
-
-        return sb.ToString();
     }
 }

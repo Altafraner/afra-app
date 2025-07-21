@@ -1,6 +1,7 @@
 ﻿using System.DirectoryServices.Protocols;
 using System.Net;
-using Afra_App.User.Configuration;
+using Afra_App.Backbone.Services.Email;
+using Afra_App.User.Configuration.LDAP;
 using Afra_App.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -14,16 +15,19 @@ public class LdapService
 {
     private readonly LdapConfiguration _configuration;
     private readonly AfraAppContext _dbContext;
+    private readonly IEmailOutbox _emailOutbox;
     private readonly ILogger<LdapService> _logger;
 
     /// <summary>
     ///     Creates a new instance of the LdapService.
     /// </summary>
-    public LdapService(IOptions<LdapConfiguration> configuration, ILogger<LdapService> logger, AfraAppContext dbContext)
+    public LdapService(IOptions<LdapConfiguration> configuration, ILogger<LdapService> logger, AfraAppContext dbContext,
+        IEmailOutbox emailOutbox)
     {
         _configuration = configuration.Value;
         _logger = logger;
         _dbContext = dbContext;
+        _emailOutbox = emailOutbox;
     }
 
     /// <summary>
@@ -42,13 +46,19 @@ public class LdapService
             throw new InvalidOperationException("Ldap is not enabled");
 
         _logger.LogInformation("LDAP synchronization started");
-        using var connection = LdapHelper.BuildConnection(_configuration, _logger);
-        var syncTime = DateTime.UtcNow;
-        var dbUsers = await _dbContext.Personen.Where(p => p.LdapObjectId != null).ToListAsync();
+        using var connection = _configuration.BuildConnection(_logger);
 
-        UpdateGroup(_configuration.TutorGroup, Rolle.Tutor);
-        UpdateGroup(_configuration.MittelstufeGroup, Rolle.Mittelstufe);
-        UpdateGroup(_configuration.OberstufeGroup, Rolle.Oberstufe);
+        // This time is used to determine which users have been synced since the last sync. It must stay constant for the whole sync process
+        var syncTime = DateTime.UtcNow;
+
+        // Get all users once so we don't have to query the database for every user
+        var dbUsers = await _dbContext.Personen
+            .Include(p => p.GlobalPermissions)
+            .Where(p => p.LdapObjectId != null)
+            .ToListAsync();
+
+        foreach (var description in _configuration.UserGroups) UpdateUserGroup(description);
+        foreach (var description in _configuration.PermissionGroups) UpdateGlobalPermissionGroup(description);
 
         await _dbContext.SaveChangesAsync();
 
@@ -56,25 +66,87 @@ public class LdapService
             .Where(p => p.LdapObjectId != null && p.LdapSyncTime < syncTime)
             .ToListAsync();
         if (unsyncedUsers.Count != 0)
+        {
             _logger.LogWarning("There are {count} users that could not be synchronized", unsyncedUsers.Count);
+            var unsyncedUsersWithoutNotification =
+                unsyncedUsers.Where(user => user.LdapSyncFailureTime == null).ToList();
+            foreach (var user in unsyncedUsersWithoutNotification) user.LdapSyncFailureTime = syncTime;
+            foreach (var email in _configuration.NotificationEmails)
+            {
+                await _emailOutbox.SendReportAsync(email, "LDAP Nutzer konnten nicht synchronisiert werden",
+                    $"""
+                     Es konnten nicht alle Benutzer synchronisiert werden. Möglicherweise wurden die Benutzer im Verzeichnisdienst gelöscht. Sollte dies der Fall sein, Löschen Sie die Benutzer bitte manuell aus der Afra-App.
+                     Neue nicht synchronisierte Benutzer: {string.Join(", ", unsyncedUsersWithoutNotification.Select(u => $"{u.Vorname} {u.Nachname} ({u.Email})"))}
+
+                     Falls der Benutzer versehentlich gelöscht wurde, erstellen Sie den Benutzer neu und, kontaktieren Sie den Datenbank-Administrator, um den Benutzer neu zu verknüpfen.
+
+                     Falls der Benutzer nicht gelöscht wurde, überprüfen Sie bitte die LDAP-Konfiguration und die Verbindung zum LDAP-Server.
+                     """);
+            }
+
+            await _dbContext.SaveChangesAsync();
+        }
 
         _logger.LogInformation("LDAP synchronization finished");
         return;
 
-        void UpdateGroup(string ldapGroup, Rolle rolle)
+        void UpdateUserGroup(LdapUserSyncDescription ldapGroup)
         {
-            var teacherEntries = GetGroupEntries(connection, ldapGroup);
-            foreach (SearchResultEntry entry in teacherEntries)
+            var groupEntries = GetGroupEntries(connection, ldapGroup);
+            foreach (SearchResultEntry entry in groupEntries)
             {
-                var success = TryGetOrCreatePersonFromEntry(entry, rolle, dbUsers, out var person);
+                var success =
+                    TryGetOrCreatePersonFromEntry(entry, ldapGroup.Rolle, ldapGroup.Group, dbUsers, out var person);
                 if (!success)
                 {
-                    _logger.LogWarning("Sync: Failed to create of find user from entry");
+                    _logger.LogError("Sync: Failed to create of find user from entry");
                     continue;
                 }
 
                 person!.LdapSyncTime = syncTime;
+                person.LdapSyncFailureTime = null;
             }
+        }
+
+        void UpdateGlobalPermissionGroup(LdapPermissionSyncDescription ldapGroup)
+        {
+            // Keep track of users that already have the permission so we can remove them later if they are not in the group anymore.
+            var usersWithPermission = dbUsers
+                .Where(p => p.GlobalPermissions.Contains(ldapGroup.Permission))
+                .ToHashSet();
+
+            // Add users from LDAP group
+            var groupEntries = GetGroupEntries(connection, ldapGroup);
+            foreach (SearchResultEntry entry in groupEntries)
+            {
+                if (!entry.TryGetGuid(out var objGuid))
+                {
+                    _logger.LogError("Failed to obtain objectGuid, skipping");
+                    continue;
+                }
+
+                var user = dbUsers.FirstOrDefault(p => p.LdapObjectId == objGuid);
+                if (user is null)
+                {
+                    _logger.LogError("User with objectGuid {guid} not found in database, skipping", objGuid);
+                    continue;
+                }
+
+                user.GlobalPermissions.Add(ldapGroup.Permission);
+                usersWithPermission.Remove(user);
+            }
+
+            // Add manually assigned users
+            var manuallyAddedUsersMails = ldapGroup.ManuallyAssignedUsers.Select(e => e.ToLower().Trim()).ToArray();
+            var manuallyAddedUsers = dbUsers.Where(u => manuallyAddedUsersMails.Contains(u.Email.ToLower().Trim()));
+            foreach (var user in manuallyAddedUsers)
+            {
+                user.GlobalPermissions.Add(ldapGroup.Permission);
+                usersWithPermission.Remove(user);
+            }
+
+            // Remove users that were in the group but not anymore
+            foreach (var user in usersWithPermission) user.GlobalPermissions.Remove(ldapGroup.Permission);
         }
     }
 
@@ -94,8 +166,9 @@ public class LdapService
         if (!_configuration.Enabled)
             throw new InvalidOperationException("Ldap is not enabled");
 
-        using var connection = LdapHelper.BuildConnection(_configuration, _logger);
-        var request = new SearchRequest(_configuration.BaseDn, $"(sAMAccountName={LdapHelper.Sanitize(username)})",
+        using var connection = _configuration.BuildConnection(_logger);
+        var request = new SearchRequest(_configuration.GlobalScope.BaseDn,
+            $"&{_configuration.GlobalScope.Filter}(sAMAccountName={LdapSanitizer.Sanitize(username)})",
             SearchScope.Subtree);
 
         var response = (SearchResponse)connection.SendRequest(request);
@@ -113,9 +186,9 @@ public class LdapService
             return null;
         }
 
-        if (!LdapHelper.TryGetGuidFromEntry(entry, out var objGuid))
+        if (!entry.TryGetGuid(out var objGuid))
         {
-            _logger.LogWarning("Could not get objectGuid from entry on login\n dn: {dn}", entry.DistinguishedName);
+            _logger.LogError("Could not get objectGuid from entry on login\n dn: {dn}", entry.DistinguishedName);
             return null;
         }
 
@@ -123,7 +196,7 @@ public class LdapService
 
         if (user is not null || !shouldRetry) return user;
 
-        _logger.LogWarning("User not found in database, starting sync");
+        _logger.LogWarning("User not found in database, starting sync, this may take a while");
         await SynchronizeAsync();
 
         user = await _dbContext.Personen.FirstOrDefaultAsync(p => p.LdapObjectId == objGuid);
@@ -134,32 +207,32 @@ public class LdapService
         return user;
     }
 
-    private SearchResultEntryCollection GetGroupEntries(LdapConnection connection, string group)
+    private static SearchResultEntryCollection GetGroupEntries(LdapConnection connection, LdapSearchDescription group)
     {
-        var searchRequest = new SearchRequest(_configuration.BaseDn, $"(&(objectClass=user)(memberOf={group}))",
-            SearchScope.Subtree);
+        var searchRequest = new SearchRequest(group.BaseDn, group.Filter, SearchScope.Subtree);
         var response = (SearchResponse)connection.SendRequest(searchRequest);
 
         if (response is null) throw new LdapException("No response from LDAP server");
         return response.Entries;
     }
 
-    private bool TryGetOrCreatePersonFromEntry(SearchResultEntry entry, Rolle rolle, IEnumerable<Person> users,
+    private bool TryGetOrCreatePersonFromEntry(SearchResultEntry entry, Rolle rolle, string? gruppe,
+        IEnumerable<Person> users,
         out Person? user)
     {
-        if (!LdapHelper.TryGetGuidFromEntry(entry, out var objGuid))
+        if (!entry.TryGetGuid(out var objGuid))
         {
-            _logger.LogWarning("Failed to obtain objectGuid, skipping");
+            _logger.LogError("Failed to obtain objectGuid, skipping");
             user = null;
             return false;
         }
 
-        var givenName = LdapHelper.GetSingleAttribute(entry, "givenName");
-        var surname = LdapHelper.GetSingleAttribute(entry, "sn");
-        var mail = LdapHelper.GetSingleAttribute(entry, "mail");
+        var givenName = entry.GetSingleAttribute("givenName");
+        var surname = entry.GetSingleAttribute("sn");
+        var mail = entry.GetSingleAttribute("mail");
 
         if (givenName is null || surname is null || mail is null)
-            _logger.LogWarning("User has missing attributes, filling with empty strings");
+            _logger.LogWarning("User {guid} has missing attributes, filling with empty strings", objGuid);
 
         givenName ??= "";
         surname ??= "";
@@ -174,7 +247,8 @@ public class LdapService
                 Vorname = givenName,
                 Nachname = surname,
                 Email = mail,
-                Rolle = rolle
+                Rolle = rolle,
+                Gruppe = gruppe
             };
 
             _dbContext.Personen.Add(user);
@@ -185,6 +259,7 @@ public class LdapService
         user.Nachname = surname;
         user.Email = mail;
         user.Rolle = rolle;
+        user.Gruppe = gruppe;
         return true;
     }
 }

@@ -74,6 +74,7 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
     internal static Action<NpgsqlDbContextOptionsBuilder> ConfigureNpgsql =>
         builder => builder
             .MapEnum<Rolle>("person_rolle")
+            .MapEnum<GlobalPermission>("global_permission")
             .MapEnum<Wochentyp>("wochentyp")
             .MapEnum<AnwesenheitsStatus>("anwesenheits_status");
 
@@ -88,6 +89,9 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
         modelBuilder.Entity<Person>()
             .HasOne(p => p.Mentor)
             .WithMany(p => p.Mentees);
+
+        modelBuilder.Entity<Person>()
+            .PrimitiveCollection(p => p.GlobalPermissions);
 
         modelBuilder.Entity<Otium.Domain.Models.Otium>(o =>
         {

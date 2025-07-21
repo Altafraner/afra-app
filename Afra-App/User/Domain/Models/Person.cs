@@ -49,6 +49,17 @@ public class Person
     public required Rolle Rolle { get; set; }
 
     /// <summary>
+    /// A group the person belongs to, e.g. a class.
+    /// </summary>
+    [MaxLength(100)]
+    public string? Gruppe { get; set; }
+
+    /// <summary>
+    /// A list of all global permissions the person has.
+    /// </summary>
+    public ISet<GlobalPermission> GlobalPermissions { get; set; } = new HashSet<GlobalPermission>();
+
+    /// <summary>
     /// The ObjectGuid of the person in the LDAP directory.
     /// </summary>
     public Guid? LdapObjectId { get; set; }
@@ -57,6 +68,11 @@ public class Person
     /// The time the person was last synchronized with the LDAP directory.
     /// </summary>
     public DateTime? LdapSyncTime { get; set; }
+
+    /// <summary>
+    /// The time the first LDAP sync failed for this person. Gets reset when the sync is successful again.
+    /// </summary>
+    public DateTime? LdapSyncFailureTime { get; set; }
 
     /// <summary>
     ///     A list of all Otia the person is responsible for.

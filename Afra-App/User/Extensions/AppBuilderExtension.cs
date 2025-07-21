@@ -1,4 +1,4 @@
-﻿using Afra_App.User.Configuration;
+﻿using Afra_App.User.Configuration.LDAP;
 using Afra_App.User.Services;
 using Afra_App.User.Services.LDAP;
 using Afra_App.User.Services.SAML;
