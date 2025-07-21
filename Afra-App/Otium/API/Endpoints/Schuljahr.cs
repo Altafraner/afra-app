@@ -22,7 +22,7 @@ public static class Schuljahr
             .RequireAuthorization();
 
         var management = app.MapGroup("/api/management/schuljahr")
-            .RequireAuthorization(AuthorizationPolicies.TutorOnly);
+            .RequireAuthorization(AuthorizationPolicies.Otiumsverantwortlich);
         management.MapPost("/", AddSchultage);
         management.MapDelete("/{datum}", DeleteSchultag);
     }

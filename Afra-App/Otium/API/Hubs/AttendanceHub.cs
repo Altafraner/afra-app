@@ -1,9 +1,11 @@
-﻿using Afra_App.Otium.Domain.DTO;
+﻿using Afra_App.Backbone.Authentication;
+using Afra_App.Otium.Domain.DTO;
 using Afra_App.Otium.Domain.HubClients;
 using Afra_App.Otium.Domain.Models;
 using Afra_App.Otium.Domain.Models.Schuljahr;
 using Afra_App.Otium.Services;
 using Afra_App.User.Domain.DTO;
+using Afra_App.User.Domain.Models;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Quartz;
@@ -16,23 +18,35 @@ namespace Afra_App.Otium.API.Hubs;
 public class AttendanceHub : Hub<IAttendanceHubClient>
 {
     private readonly IAttendanceService _attendanceService;
+    private readonly BlockHelper _blockHelper;
     private readonly ILogger<AttendanceHub> _logger;
 
     /// <summary>
     ///     Constructs a new instance of the <see cref="AttendanceHub" /> class.
     /// </summary>
-    public AttendanceHub(IAttendanceService attendanceService, ILogger<AttendanceHub> logger)
+    public AttendanceHub(IAttendanceService attendanceService, ILogger<AttendanceHub> logger, BlockHelper blockHelper)
     {
         _attendanceService = attendanceService;
         _logger = logger;
+        _blockHelper = blockHelper;
     }
 
     /// <summary>
     ///     Subscribes a user to get updates for a specific termin.
     /// </summary>
     /// <param name="terminId">The <see cref="Guid" /> of the <see cref="Domain.Models.Termin" /> to subscribe to.</param>
-    public async Task SubscribeToTermin(Guid terminId)
+    /// <param name="managementService">From DI</param>
+    public async Task SubscribeToTermin(Guid terminId, ManagementService managementService)
     {
+        var termin = await managementService.GetTerminByIdAsync(terminId);
+        var block = await managementService.GetBlockOfTerminAsync(termin);
+        if (!HasAuthorityOverBlockAsync(block))
+        {
+            _logger.LogWarning("User {userId} tried to subscribe to termin {terminId} without authority",
+                Context.UserIdentifier, terminId);
+            throw new HubException("You do not have permission to subscribe to this termin.");
+        }
+
         await Groups.AddToGroupAsync(Context.ConnectionId, TerminGroupName(terminId));
         var updates = await GetTerminAttendances(terminId);
         await Clients.Caller.UpdateTerminAttendances(updates);
@@ -57,14 +71,23 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
     public async Task SubscribeToBlock(Guid blockId, ISchedulerFactory schedulerFactory, BlockHelper blockHelper,
         AfraAppContext context)
     {
+        var block = await context.Blocks.FindAsync(blockId);
+        if (block is null)
+            throw new HubException($"Block with ID {blockId} not found");
+        if (!HasAuthorityOverBlockAsync(block))
+        {
+            _logger.LogWarning("User {userId} tried to subscribe to block {blockId} without authority",
+                Context.UserIdentifier, blockId);
+            throw new HubException("You do not have permission to subscribe to this block.");
+        }
+
         await Groups.AddToGroupAsync(Context.ConnectionId, BlockGroupName(blockId));
         var updates = await GetBlockAttendances(blockId);
         await Clients.Caller.UpdateBlockAttendances(updates);
         var scheduler = await schedulerFactory.GetScheduler();
         var jobKey = new JobKey($"MissingStudentNotification-{blockId}");
 
-        var block = await context.Blocks.FindAsync(blockId);
-        var metadata = blockHelper.Get(block!.SchemaId)!;
+        var metadata = blockHelper.Get(block.SchemaId)!;
 
         var now = DateTime.Now;
         var today = DateOnly.FromDateTime(now);
@@ -112,12 +135,23 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
     public async Task SetAttendanceStatusInBlock(Guid blockId, Guid studentId, AnwesenheitsStatus status,
         AfraAppContext dbContext)
     {
+        var block = await dbContext.Blocks
+            .FirstOrDefaultAsync(b => b.Id == blockId);
+        if (block is null)
+            throw new HubException($"Block with ID {blockId} not found");
+        if (!HasAuthorityOverBlockAsync(block))
+        {
+            _logger.LogWarning("User {userId} tried to set attendance status for block {blockId} without authority",
+                Context.UserIdentifier, blockId);
+            throw new HubException("You do not have permission to set attendance status for this block.");
+        }
+
         // Might return Guid.Empty if the user is not enrolled in any termin of the block
-        var terminId = dbContext.OtiaEinschreibungen
+        var terminId = await dbContext.OtiaEinschreibungen
             .Where(e => e.Termin.Block.Id == blockId)
             .Where(e => e.BetroffenePerson.Id == studentId)
             .Select(t => t.Termin.Id)
-            .FirstOrDefault();
+            .FirstOrDefaultAsync();
 
         await UpdateAttendance(status, studentId, blockId, terminId);
     }
@@ -133,12 +167,21 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
     public async Task SetAttendanceStatusInTermin(Guid terminId, Guid studentId, AnwesenheitsStatus status,
         AfraAppContext dbContext)
     {
-        var blockId = dbContext.OtiaTermine.Where(t => t.Id == terminId)
-            .Select(t => t.Block.Id)
-            .FirstOrDefault();
+        var block = await dbContext.OtiaTermine.Where(t => t.Id == terminId)
+            .Select(t => t.Block)
+            .FirstOrDefaultAsync();
+        if (block is null)
+            throw new HubException($"Block for Termin ID {terminId} not found");
+        if (!HasAuthorityOverBlockAsync(block))
+        {
+            _logger.LogWarning("User {userId} tried to set attendance status for termin {terminId} without authority",
+                Context.UserIdentifier, terminId);
+            throw new HubException("You do not have permission to set attendance status for this termin.");
+        }
 
+        var blockId = block.Id;
         if (blockId == Guid.Empty)
-            throw new KeyNotFoundException($"Termin ID {terminId} not found");
+            throw new HubException($"Termin ID {terminId} not found");
 
         await UpdateAttendance(status, studentId, blockId, terminId);
     }
@@ -152,8 +195,20 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
     ///     persons.
     /// </param>
     /// <param name="status">The new status</param>
-    public async Task SetTerminStatus(Guid blockId, Guid terminId, bool status)
+    /// <param name="dbContext">From DI</param>
+    public async Task SetTerminStatus(Guid blockId, Guid terminId, bool status, AfraAppContext dbContext)
     {
+        var block = await dbContext.Blocks
+            .FirstOrDefaultAsync(b => b.Id == blockId);
+        if (block is null)
+            throw new HubException($"Block with ID {blockId} not found");
+        if (!HasAuthorityOverBlockAsync(block))
+        {
+            _logger.LogWarning("User {userId} tried to set termin status for block {blockId} without authority",
+                Context.UserIdentifier, blockId);
+            throw new HubException("You do not have permission to set termin status for this block.");
+        }
+
         if (terminId == Guid.Empty)
             await _attendanceService.SetStatusForMissingPersonsAsync(blockId, status);
         else
@@ -176,7 +231,7 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
             .FirstOrDefaultAsync(t => t.Id == terminId);
 
         if (termin is null)
-            throw new KeyNotFoundException($"Termin ID {terminId} not found");
+            throw new HubException($"Termin ID {terminId} not found");
 
         var alternatives = await dbContext.OtiaTermine
             .Include(t => t.Tutor)
@@ -208,15 +263,36 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
         if (fromTerminId == toTerminId)
             return;
 
+        var fromBlock = await dbContext.OtiaTermine
+            .Where(t => t.Id == fromTerminId)
+            .Select(t => t.Block)
+            .FirstOrDefaultAsync();
+        var toBlock = await dbContext.OtiaTermine
+            .Where(t => t.Id == toTerminId)
+            .Select(t => t.Block)
+            .FirstOrDefaultAsync();
+        if (fromBlock is null || toBlock is null)
+            throw new HubException("One of the termin IDs provided was not found in the database.");
+        if (fromBlock.Id != toBlock.Id)
+        {
+            _logger.LogWarning(
+                "Someone tried to move a student ({studentId}) from a termin ({fromTerminId}) to a termin ({toTerminId}) that is not in the same block",
+                studentId, fromTerminId, toTerminId);
+            throw new HubException("The termin is not in the same block as the target termin.");
+        }
+
+        if (!HasAuthorityOverBlockAsync(fromBlock))
+        {
+            _logger.LogWarning(
+                "User {userId} tried to move student {studentId} from termin {fromTerminId} to termin {toTerminId} without authority",
+                Context.UserIdentifier, studentId, fromTerminId, toTerminId);
+            throw new HubException("You do not have permission to move students in this block.");
+        }
+
         try
         {
             await enrollmentService.ForceMoveNow(studentId, fromTerminId, toTerminId);
-            var blockId = await dbContext.OtiaTermine
-                .Where(t => t.Id == toTerminId)
-                .Select(t => t.Block.Id)
-                .FirstOrDefaultAsync();
-
-            await SendUpdateToAffected(blockId, fromTerminId, toTerminId);
+            await SendUpdateToAffected(fromBlock.Id, fromTerminId, toTerminId);
         }
         catch (KeyNotFoundException)
         {
@@ -234,12 +310,29 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
     /// <summary>
     ///     Moves a student from one termin to another.
     /// </summary>
-    /// <param name="studentId"></param>
-    /// <param name="toTerminId"></param>
-    /// <param name="enrollmentService"></param>
-    /// <exception cref="HubException"></exception>
-    public async Task MoveStudent(Guid studentId, Guid toTerminId, EnrollmentService enrollmentService)
+    /// <param name="studentId">The id of the user</param>
+    /// <param name="toTerminId">The id of the termin to move the user to</param>
+    /// <param name="enrollmentService">From DI</param>
+    /// <param name="dbContext">From DI</param>
+    public async Task MoveStudent(Guid studentId, Guid toTerminId, EnrollmentService enrollmentService,
+        AfraAppContext dbContext)
     {
+        var toBlock = await dbContext.OtiaTermine
+            .Where(t => t.Id == toTerminId)
+            .Select(t => t.Block)
+            .FirstOrDefaultAsync();
+
+        if (toBlock is null)
+            throw new HubException("One of the termin IDs provided was not found in the database.");
+
+        if (!HasAuthorityOverBlockAsync(toBlock))
+        {
+            _logger.LogWarning(
+                "User {userId} tried to move student {studentId} to termin {toTerminId} without authority",
+                Context.UserIdentifier, studentId, toTerminId);
+            throw new HubException("You do not have permission to move students in this block.");
+        }
+
         try
         {
             var (fromTerminId, blockId) = await enrollmentService.ForceMove(studentId, toTerminId);
@@ -315,6 +408,17 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
                 .UpdateTerminAttendances(fromTerminUpdates.Einschreibungen);
         else
             _logger.LogWarning("Tried to update termine for {fromTerminId}, but did not find any", fromTerminId);
+    }
+
+    private bool HasAuthorityOverBlockAsync(Block block)
+    {
+        if (Context.User?.HasClaim(AfraAppClaimTypes.GlobalPermission, nameof(GlobalPermission.Otiumsverantwortlich)) ??
+            false)
+            return true;
+
+        var metadata = _blockHelper.Get(block.SchemaId)!;
+        return TimeOnly.FromDateTime(DateTime.Now)
+            .IsBetween(metadata.Interval.Start, metadata.Interval.Start.AddMinutes(25));
     }
 
     internal static string TerminGroupName(Guid terminId)

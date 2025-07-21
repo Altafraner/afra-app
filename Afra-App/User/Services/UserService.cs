@@ -24,8 +24,15 @@ public class UserService
     /// <returns>The users Person entity</returns>
     public async Task<Person> GetUserById(Guid userId)
     {
-        return await _dbContext.Personen
-            .FirstAsync(p => p.Id == userId);
+        try
+        {
+            return await _dbContext.Personen
+                .FirstAsync(p => p.Id == userId);
+        }
+        catch (InvalidOperationException)
+        {
+            throw new KeyNotFoundException("User not found.");
+        }
     }
 
     /// <summary>

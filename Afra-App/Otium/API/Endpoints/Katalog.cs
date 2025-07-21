@@ -1,3 +1,4 @@
+using Afra_App.Backbone.Authentication;
 using Afra_App.Otium.Services;
 using Afra_App.User.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -16,9 +17,12 @@ public static class Katalog
     {
         app.MapGet("/{date}", GetDay);
         app.MapGet("/{terminId:guid}", GetTermin);
-        app.MapPut("/{terminId:guid}", EnrollAsync);
-        app.MapPut("/{terminId:guid}/multi-enroll", MultiEnrollAsync);
-        app.MapDelete("/{terminId:guid}", UnenrollAsync);
+        app.MapPut("/{terminId:guid}", EnrollAsync)
+            .RequireAuthorization(AuthorizationPolicies.StudentOnly);
+        app.MapPut("/{terminId:guid}/multi-enroll", MultiEnrollAsync)
+            .RequireAuthorization(AuthorizationPolicies.StudentOnly);
+        app.MapDelete("/{terminId:guid}", UnenrollAsync)
+            .RequireAuthorization(AuthorizationPolicies.StudentOnly);
     }
 
     private static async Task<IResult> GetDay(OtiumEndpointService service, UserAccessor userAccessor, DateOnly date)

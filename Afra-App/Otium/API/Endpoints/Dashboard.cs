@@ -1,7 +1,7 @@
 using Afra_App.Backbone.Authentication;
 using Afra_App.Otium.Services;
+using Afra_App.User.Domain.Models;
 using Afra_App.User.Services;
-using Microsoft.EntityFrameworkCore;
 
 namespace Afra_App.Otium.API.Endpoints;
 
@@ -26,8 +26,8 @@ public static class Dashboard
             .RequireAuthorization(AuthorizationPolicies.TutorOnly);
         app.MapGet("/student/{studentId:guid}/all",
                 (OtiumEndpointService service,
-                        UserAccessor userAccessor, AfraAppContext dbContext, Guid studentId) =>
-                    GetStudentDashboardForTeacher(service, userAccessor, dbContext, studentId, true))
+                        UserService userService, UserAuthorizationHelper authHelper, Guid studentId) =>
+                    GetStudentDashboardForTeacher(service, userService, authHelper, studentId, true))
             .RequireAuthorization(AuthorizationPolicies.TutorOnly);
 
         app.MapGet("/teacher", GetTeacherDashboard)
@@ -43,18 +43,26 @@ public static class Dashboard
     }
 
     private static async Task<IResult> GetStudentDashboardForTeacher(OtiumEndpointService service,
-        UserAccessor userAccessor,
-        AfraAppContext dbContext,
+        UserService userService,
+        UserAuthorizationHelper authHelper,
         Guid studentId,
         bool all = false)
     {
-        var user = await userAccessor.GetUserAsync();
-        var student = dbContext.Personen
-            .Include(p => p.Mentor)
-            .FirstOrDefault(p => p.Id == studentId);
+        Person student;
+        try
+        {
+            student = await userService.GetUserById(studentId);
+        }
+        catch (KeyNotFoundException)
+        {
+            return Results.NotFound();
+        }
 
-        if (student is null) return Results.NotFound();
-        if (student.Mentor is null || student.Mentor.Id != user.Id) return Results.Unauthorized();
+        var isMentor = await authHelper.CurrentUserIsMentorOf(student);
+        var hasBypass = await authHelper.CurrentUserHasGlobalPermission(GlobalPermission.Otiumsverantwortlich) ||
+                        await authHelper.CurrentUserHasGlobalPermission(GlobalPermission.Admin);
+
+        if (!isMentor && !hasBypass) return Results.Unauthorized();
 
         return Results.Ok(service.GetStudentDashboardForTeacher(student, all));
     }
