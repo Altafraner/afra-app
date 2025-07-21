@@ -121,6 +121,9 @@ public class UserSigninService
             new(AfraAppClaimTypes.Role, user.Rolle.ToString())
         };
 
+        claims.AddRange(user.GlobalPermissions.Select(perm =>
+            new Claim(AfraAppClaimTypes.GlobalPermission, perm.ToString())));
+
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
 
         return new ClaimsPrincipal(identity);

@@ -1,0 +1,49 @@
+﻿using Afra_App.User.Domain.Models;
+using Microsoft.EntityFrameworkCore;
+
+namespace Afra_App.User.Services;
+
+/// <summary>
+/// A service for managing users in the Afra-App.
+/// </summary>
+public class UserService
+{
+    private readonly AfraAppContext _dbContext;
+
+    /// <summary>
+    /// Called by DI
+    /// </summary>
+    public UserService(AfraAppContext dbContext)
+    {
+        _dbContext = dbContext;
+    }
+
+    /// <summary>
+    /// Gets a user by their ID.
+    /// </summary>
+    /// <returns>The users Person entity</returns>
+    public async Task<Person> GetUserById(Guid userId)
+    {
+        return await _dbContext.Personen
+            .FirstAsync(p => p.Id == userId);
+    }
+
+    /// <summary>
+    /// Gets a list of mentors for a given student.
+    /// </summary>
+    /// <param name="student">The student to get the mentors of</param>
+    /// <returns>A list of the students mentors</returns>
+    public async Task<List<Person>> GetMentors(Person student)
+    {
+        if (student.Rolle == Rolle.Tutor)
+            throw new InvalidOperationException("Tutors do not have mentors.");
+
+        await _dbContext.Entry(student).Reference(s => s.Mentor).LoadAsync();
+        if (student.Mentor is not null)
+            return await _dbContext.Personen
+                .Where(p => p.Id == student.Mentor.Id)
+                .ToListAsync();
+
+        return [];
+    }
+}

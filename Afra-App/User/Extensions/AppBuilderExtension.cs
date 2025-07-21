@@ -22,6 +22,8 @@ public static class AppBuilderExtension
 
         builder.Services.AddScoped<UserSigninService>();
         builder.Services.AddScoped<UserAccessor>();
+        builder.Services.AddScoped<UserService>();
+        builder.Services.AddScoped<UserAuthorizationHelper>();
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddScoped<LdapService>();
         if (builder.Configuration.GetValue<bool>("Saml:Enabled")) builder.Services.AddSingleton<SamlService>();

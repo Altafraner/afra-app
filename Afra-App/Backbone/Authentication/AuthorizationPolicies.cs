@@ -14,4 +14,19 @@ public static class AuthorizationPolicies
     /// Only students may access this endpoint.
     /// </summary>
     public const string StudentOnly = "StudentOnly";
+
+    /// <summary>
+    /// Only admins may access this endpoint.
+    /// </summary>
+    public const string AdminOnly = "AdminOnly";
+
+    /// <summary>
+    /// Only users with the permission "Otiumsverantwortliche:r" may access this endpoint.
+    /// </summary>
+    public const string Otiumsverantwortlich = "Otiumsverantwortliche:r";
+
+    /// <summary>
+    /// Only users with the permission "Profundumsverantwortliche:r" may access this endpoint.
+    /// </summary>
+    public const string Profundumserantwortlich = "Profundumsverantwortliche:r";
 }

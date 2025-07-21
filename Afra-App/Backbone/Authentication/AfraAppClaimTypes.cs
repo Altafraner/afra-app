@@ -29,4 +29,10 @@ public static class AfraAppClaimTypes
     /// </summary>
     /// <remarks>Should be one of <see cref="Rolle" /></remarks>
     public static string Role => ClaimTypes.Role;
+
+    /// <summary>
+    ///     A global permission of the user
+    /// </summary>
+    /// <remarks>Should be one of <see cref="GlobalPermission" /></remarks>
+    public static string GlobalPermission => "GlobalPermission";
 }

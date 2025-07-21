@@ -72,10 +72,20 @@ public static class AppBuilderExtension
     {
         builder.Services.AddAuthorizationBuilder()
             .AddPolicy(AuthorizationPolicies.StudentOnly,
-                policy => policy.RequireClaim(AfraAppClaimTypes.Role, nameof(Rolle.Oberstufe),
-                    nameof(Rolle.Mittelstufe)))
+                policy => policy.RequireClaim(AfraAppClaimTypes.Role,
+                    nameof(Rolle.Oberstufe), nameof(Rolle.Mittelstufe)))
             .AddPolicy(AuthorizationPolicies.TutorOnly,
-                policy => policy.RequireClaim(AfraAppClaimTypes.Role, nameof(Rolle.Tutor)));
+                policy => policy.RequireClaim(AfraAppClaimTypes.Role,
+                    nameof(Rolle.Tutor)))
+            .AddPolicy(AuthorizationPolicies.Otiumsverantwortlich,
+                policy => policy.RequireClaim(AfraAppClaimTypes.GlobalPermission,
+                    nameof(GlobalPermission.Otiumsverantwortlich)))
+            .AddPolicy(AuthorizationPolicies.Profundumserantwortlich,
+                policy => policy.RequireClaim(AfraAppClaimTypes.GlobalPermission,
+                    nameof(GlobalPermission.Profundumsverantwortlich)))
+            .AddPolicy(AuthorizationPolicies.AdminOnly,
+                policy => policy.RequireClaim(AfraAppClaimTypes.GlobalPermission,
+                    nameof(GlobalPermission.Admin)));
     }
 
     private static void ConfigureDataProtection(this WebApplicationBuilder builder)

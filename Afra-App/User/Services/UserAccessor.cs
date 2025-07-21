@@ -9,6 +9,7 @@ namespace Afra_App.User.Services;
 /// </summary>
 public class UserAccessor
 {
+    private const string UserPersonObjectCacheKey = "UserPersonObject";
     private readonly AfraAppContext _dbContext;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IServiceScopeFactory _serviceScopeFactory;
@@ -39,6 +40,10 @@ public class UserAccessor
         if (httpContext is null)
             throw new InvalidOperationException("The HttpContext is not available!");
 
+        if (httpContext.Items.TryGetValue(UserPersonObjectCacheKey, out var cachedUserObject) &&
+            cachedUserObject is Person cachedUser)
+            return cachedUser;
+
         if (!httpContext.User.Identity?.IsAuthenticated ?? true)
             throw new InvalidOperationException("The user is not logged in!");
 
@@ -48,7 +53,11 @@ public class UserAccessor
         var user = await _dbContext.Personen.FindAsync(new Guid(httpContext.User.Claims
             .First(claim => claim.Type == AfraAppClaimTypes.Id).Value));
 
-        if (user is not null) return user;
+        if (user is not null)
+        {
+            httpContext.Items.Add(UserPersonObjectCacheKey, user);
+            return user;
+        }
 
         using var scope = _serviceScopeFactory.CreateScope();
         var signinService = scope.ServiceProvider.GetRequiredService<UserSigninService>();
