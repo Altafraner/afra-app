@@ -18,9 +18,12 @@ export function useAttendance(scope, id, toastService = {add: () => undefined}) 
   } = useSignalR('/api/otium/attendance', true, toastService)
   const attendances = ref([])
   const alternatives = ref([])
+  let autoRecallIntervall = null;
 
   registerReconnectHandler(registerScope)
-  connectionPromise.then(registerScope)
+  connectionPromise
+    .then(registerScope)
+    .then(registerAutoRecall)
 
   if (toValue(scope) === "termin") {
     registerMessageHandler('UpdateTerminAttendances', updateTerminAttendances);
@@ -37,6 +40,10 @@ export function useAttendance(scope, id, toastService = {add: () => undefined}) 
   async function registerScope() {
     const methodName = toValue(scope) === "termin" ? "SubscribeToTermin" : "SubscribeToBlock";
     await sendMessage(methodName, toValue(id));
+  }
+
+  function registerAutoRecall() {
+    autoRecallIntervall = setInterval(registerScope, 1000 * 60 * 5)
   }
 
   function updateTerminAttendances(data) {
@@ -128,6 +135,7 @@ export function useAttendance(scope, id, toastService = {add: () => undefined}) 
   }
 
   async function close() {
+    clearInterval(autoRecallIntervall);
     await closeConnection()
     attendances.value = [];
     console.log("Attendance hub connection closed.");
