@@ -129,6 +129,15 @@ public class SchuljahrService
         return schultage;
     }
 
+    /// <summary>
+    /// Gets the blocks for a given date
+    /// </summary>
+    public async Task<List<Block>> GetBlocksAsync(DateOnly datum)
+    {
+        var blocks = await _dbContext.Blocks.Where(b => b.SchultagKey == datum).ToListAsync();
+        return blocks;
+    }
+
     private List<char> GetCurrentSchemas(TimeOnly now) =>
         _configuration.Value.Blocks
             .Where(metadata => metadata.Interval.Contains(now))

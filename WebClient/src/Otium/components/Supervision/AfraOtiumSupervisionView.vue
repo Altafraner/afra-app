@@ -9,21 +9,29 @@ import {
   useToast
 } from "primevue";
 import {mande} from "mande";
-import {computed, ref} from "vue";
+import {computed, onUnmounted, ref} from "vue";
 import MoveStudentForm from "@/Otium/components/Supervision/MoveStudentForm.vue";
 import AfraOtiumEnrollmentTable from "@/Otium/components/Management/AfraOtiumEnrollmentTable.vue";
 import {useAttendance} from "@/Otium/composables/attendanceHubClient.js";
+import {useRoute} from "vue-router";
 
 const props = defineProps({
-  rooms: Array
+  rooms: Array,
+  useQueryBlock: Boolean
 })
 
 const inactive = ref(false);
 const toast = useToast();
 const dialog = useDialog();
+const route = props.useQueryBlock ? useRoute() : undefined;
 
 
 async function setup() {
+  if (props.useQueryBlock && route.query.blockId !== undefined) {
+    inactive.value = false;
+    return useAttendance('block', route.query.blockId, toast);
+  }
+
   let currentBlock = null;
   try {
     currentBlock = await mande("/api/schuljahr/now").get();
@@ -48,6 +56,8 @@ async function setup() {
 
 const attendanceService = await setup();
 const attendance = await attendanceService.attendance;
+
+onUnmounted(() => attendanceService.stop())
 
 function updateAttendanceCallback(student, status) {
   attendanceService.updateAttendance(student.id, status);
@@ -76,10 +86,10 @@ function initMove(student, terminId) {
   function move({data}) {
     if (!data) return;
     if (data.all) {
-      attendanceService.moveStudentNow(student.id, terminId, data.destination)
+      attendanceService.moveStudent(student.id, data.destination)
       return
     }
-    attendanceService.moveStudent(student.id, data.destination)
+    attendanceService.moveStudentNow(student.id, terminId, data.destination)
   }
 }
 </script>

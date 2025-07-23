@@ -4,11 +4,14 @@ import {useOtiumStore} from "@/Otium/stores/otium.js";
 import {Button, Column, DataTable, useConfirm, useDialog, useToast} from "primevue";
 import {mande} from "mande";
 import CreateSchoolday from "@/Otium/components/Schuljahr/CreateSchoolday.vue";
+import {useRouter} from "vue-router";
+import BlockSelectorDialog from "@/Otium/components/Management/BlockSelectorDialog.vue";
 
 const settings = useOtiumStore();
 const dialog = useDialog();
 const confirm = useConfirm();
 const toast = useToast();
+const router = useRouter();
 
 async function setup() {
   await settings.updateSchuljahr(true);
@@ -80,6 +83,36 @@ function deleteDay(event, data) {
   });
 }
 
+async function showAttendance(data) {
+  const result = await mande('/api/schuljahr/' + data.datum).get();
+
+  const blocks = result.map(item => {
+    return {
+      id: item.id,
+      label: item.name
+    }
+  });
+
+  dialog.open(BlockSelectorDialog, {
+    props: {
+      modal: true,
+      header: "Block auswählen"
+    },
+    data: {
+      items: blocks
+    },
+    onClose: (data) => {
+      if (data.data && data.data.id)
+        router.push({
+          name: "Aufsicht",
+          query: {
+            blockId: data.data.id
+          }
+        })
+    }
+  })
+}
+
 setup();
 </script>
 
@@ -118,6 +151,8 @@ setup();
         <Button v-tooltip="'Tag hinzufügen'" icon="pi pi-plus" size="small" @click="addDay"/>
       </template>
       <template #body="{data}">
+        <Button v-tooltip="'Aufsicht'" icon="pi pi-eye" severity="secondary" size="small"
+                variant="text" @click="() => showAttendance(data)"/>
         <Button v-tooltip="'Bearbeiten'" icon="pi pi-pencil" severity="secondary" size="small"
                 variant="text" @click="() => updateDay(data)"/>
         <Button v-tooltip="'Löschen'" icon="pi pi-times" severity="danger" size="small"

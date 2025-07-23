@@ -2,8 +2,10 @@
 import {ref, Suspense} from "vue";
 import {Button} from "primevue";
 import AfraOtiumSupervisionView from "@/Otium/components/Supervision/AfraOtiumSupervisionView.vue";
+import {useRoute} from "vue-router";
 
-const status = ref(false)
+const route = useRoute();
+const status = ref(route.query.blockId !== undefined)
 
 function start() {
   status.value = true
@@ -28,7 +30,7 @@ function stop() {
   </div>
   <div v-else>
     <Suspense>
-      <afra-otium-supervision-view/>
+      <afra-otium-supervision-view :use-query-block="route.query.blockId!==undefined"/>
       <template #fallback>
         <div class="flex justify-center">
           <span class="p-3">Lade Aufsicht...</span>

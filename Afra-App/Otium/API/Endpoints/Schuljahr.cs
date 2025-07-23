@@ -20,6 +20,8 @@ public static class Schuljahr
             .RequireAuthorization();
         app.MapGet("/api/schuljahr/now", GetNow)
             .RequireAuthorization();
+        app.MapGet("/api/schuljahr/{date}", GetBlocks)
+            .RequireAuthorization();
 
         var management = app.MapGroup("/api/management/schuljahr")
             .RequireAuthorization(AuthorizationPolicies.Otiumsverantwortlich);
@@ -71,5 +73,19 @@ public static class Schuljahr
     {
         var block = await schuljahrService.GetCurrentBlockAsync();
         return block == null ? Results.NotFound() : Results.Ok(new { block.Id, block.SchemaId });
+    }
+
+    private static async Task<IResult> GetBlocks(DateOnly date, SchuljahrService schuljahrService,
+        BlockHelper blockHelper)
+    {
+        var blocks = await schuljahrService.GetBlocksAsync(date);
+        var blocksMapped = blocks.Select(b => new
+        {
+            schemaId = b.SchemaId,
+            name = blockHelper.Get(b.SchemaId)!.Bezeichnung,
+            id = b.Id
+        }).OrderBy(b => b.schemaId);
+
+        return Results.Ok(blocksMapped);
     }
 }
