@@ -25,9 +25,11 @@ const toast = useToast();
 const dialog = useDialog();
 const route = props.useQueryBlock ? useRoute() : undefined;
 
+const useDataFromQuery = computed(() => props.useQueryBlock && route.query.blockId !== undefined)
+
 
 async function setup() {
-  if (props.useQueryBlock && route.query.blockId !== undefined) {
+  if (useDataFromQuery.value) {
     inactive.value = false;
     return useAttendance('block', route.query.blockId, toast);
   }
@@ -78,7 +80,7 @@ function initMove(student, terminId) {
     data: {
       student,
       angebote: computed(() => attendance.value.filter(termin => termin.terminId !== '00000000-0000-0000-0000-000000000000')),
-      canMoveNow: true
+      canMoveNow: !useDataFromQuery.value
     },
     onClose: move
   })
