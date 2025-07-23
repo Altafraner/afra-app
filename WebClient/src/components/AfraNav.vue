@@ -26,13 +26,6 @@ const items_teacher = [
       name: "Aufsicht"
     },
     icon: "pi pi-eye"
-  },
-  {
-    label: "Verwaltung",
-    route: {
-      name: "Verwaltung"
-    },
-    icon: "pi pi-cog"
   }
 ]
 
@@ -49,6 +42,16 @@ const items_student = [
     },
     icon: "pi pi-list"
   },
+]
+
+const items_otium_manager = [
+  {
+    label: "Verwaltung",
+    route: {
+      name: "Verwaltung"
+    },
+    icon: "pi pi-cog"
+  }
 ]
 
 const toast = useToast();
@@ -85,6 +88,10 @@ async function setup(update = true) {
     items.value = items_teacher
   } else {
     items.value = []
+  }
+
+  if (user.user.berechtigungen.includes("Otiumsverantwortlich")) {
+    items.value = [...items.value, ...items_otium_manager];
   }
 }
 

@@ -1,6 +1,5 @@
 using System.Security.Claims;
 using Afra_App.Backbone.Authentication;
-using Afra_App.User.Domain.DTO;
 using Afra_App.User.Services.LDAP;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -85,24 +84,24 @@ public class UserSigninService
     ///     Check whether the current user is authorized.
     /// </summary>
     /// <returns>The logged-in user if the user is authorized; Otherwise, unauthorized.</returns>
-    public async Task<IResult> GetAuthorized()
+    public async Task<Person?> GetAuthorized()
     {
         // Check if the user is authenticated
         var httpContext = _httpContextAccessor.HttpContext;
         if (httpContext?.User.Identity is null || !httpContext.User.Identity.IsAuthenticated)
-            return Results.Unauthorized();
+            return null;
 
         try
         {
             // Retrieve the Person associated with the current user and return it
             var person = await _userAccessor.GetUserAsync();
-            return Results.Ok(new PersonInfoMinimal(person));
+            return person;
         }
         catch (Exception e) when (e is InvalidOperationException or KeyNotFoundException)
         {
             // Sign out the user if they are (for some bizarre reason) authenticated, but the Person could not be found
             await httpContext.SignOutAsync();
-            return Results.Unauthorized();
+            return null;
         }
     }
 

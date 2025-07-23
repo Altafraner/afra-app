@@ -1,3 +1,4 @@
+using Afra_App.User.Domain.DTO;
 using Afra_App.User.Services;
 
 namespace Afra_App.User.API.Endpoints;
@@ -21,7 +22,20 @@ public static class User
             .AllowAnonymous();
 
         app.MapGet("/api/user",
-            async (UserSigninService userSigninService) => await userSigninService.GetAuthorized());
+            async (UserSigninService userSigninService) =>
+            {
+                var user = await userSigninService.GetAuthorized();
+                return user is null
+                    ? Results.Unauthorized()
+                    : Results.Ok(new PersonLoginInfo
+                    {
+                        Id = user.Id,
+                        Vorname = user.Vorname,
+                        Nachname = user.Nachname,
+                        Rolle = user.Rolle,
+                        Berechtigungen = user.GlobalPermissions.ToArray()
+                    });
+            });
 
         app.MapGet("/api/user/logout",
                 async (UserSigninService userSigninService) => await userSigninService.SignOutAsync())
