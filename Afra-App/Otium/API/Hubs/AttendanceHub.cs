@@ -271,9 +271,10 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
             .Where(t => t.Id == toTerminId)
             .Select(t => t.Block)
             .FirstOrDefaultAsync();
-        if (fromBlock is null || toBlock is null)
+        if ((fromBlock is null && fromTerminId != Guid.Empty) || (toBlock is null && toTerminId != Guid.Empty))
             throw new HubException("One of the termin IDs provided was not found in the database.");
-        if (fromBlock.Id != toBlock.Id)
+        if ((fromBlock is not null && toBlock is not null && fromBlock.Id != toBlock.Id) ||
+            (fromBlock is null && toBlock is null))
         {
             _logger.LogWarning(
                 "Someone tried to move a student ({studentId}) from a termin ({fromTerminId}) to a termin ({toTerminId}) that is not in the same block",
@@ -281,7 +282,7 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
             throw new HubException("The termin is not in the same block as the target termin.");
         }
 
-        if (!HasAuthorityOverBlockAsync(fromBlock))
+        if (fromBlock is not null ? !HasAuthorityOverBlockAsync(fromBlock) : !HasAuthorityOverBlockAsync(toBlock!))
         {
             _logger.LogWarning(
                 "User {userId} tried to move student {studentId} from termin {fromTerminId} to termin {toTerminId} without authority",
@@ -292,7 +293,7 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
         try
         {
             await enrollmentService.ForceMoveNow(studentId, fromTerminId, toTerminId);
-            await SendUpdateToAffected(fromBlock.Id, fromTerminId, toTerminId);
+            await SendUpdateToAffected(fromBlock?.Id ?? toBlock!.Id, fromTerminId, toTerminId);
         }
         catch (KeyNotFoundException)
         {

@@ -1,6 +1,7 @@
 ﻿using System.DirectoryServices.Protocols;
 using System.Net;
 using Afra_App.Backbone.Services.Email;
+using Afra_App.Backbone.Utilities;
 using Afra_App.User.Configuration.LDAP;
 using Afra_App.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
@@ -72,7 +73,6 @@ public class LdapService
                 unsyncedUsers.Where(user => user.LdapSyncFailureTime == null).ToList();
             foreach (var user in unsyncedUsersWithoutNotification) user.LdapSyncFailureTime = syncTime;
             foreach (var email in _configuration.NotificationEmails)
-            {
                 await _emailOutbox.SendReportAsync(email, "LDAP Nutzer konnten nicht synchronisiert werden",
                     $"""
                      Es konnten nicht alle Benutzer synchronisiert werden. Möglicherweise wurden die Benutzer im Verzeichnisdienst gelöscht. Sollte dies der Fall sein, Löschen Sie die Benutzer bitte manuell aus der Afra-App.
@@ -82,7 +82,6 @@ public class LdapService
 
                      Falls der Benutzer nicht gelöscht wurde, überprüfen Sie bitte die LDAP-Konfiguration und die Verbindung zum LDAP-Server.
                      """);
-            }
 
             await _dbContext.SaveChangesAsync();
         }
@@ -132,7 +131,7 @@ public class LdapService
                     continue;
                 }
 
-                user.GlobalPermissions.Add(ldapGroup.Permission);
+                user.GlobalPermissions.AddOnce(ldapGroup.Permission);
                 usersWithPermission.Remove(user);
             }
 
@@ -141,7 +140,7 @@ public class LdapService
             var manuallyAddedUsers = dbUsers.Where(u => manuallyAddedUsersMails.Contains(u.Email.ToLower().Trim()));
             foreach (var user in manuallyAddedUsers)
             {
-                user.GlobalPermissions.Add(ldapGroup.Permission);
+                user.GlobalPermissions.AddOnce(ldapGroup.Permission);
                 usersWithPermission.Remove(user);
             }
 
