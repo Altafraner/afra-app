@@ -54,7 +54,6 @@ public class LdapService
 
         // Get all users once so we don't have to query the database for every user
         var dbUsers = await _dbContext.Personen
-            .Include(p => p.GlobalPermissions)
             .Where(p => p.LdapObjectId != null)
             .ToListAsync();
 
@@ -71,19 +70,23 @@ public class LdapService
             _logger.LogWarning("There are {count} users that could not be synchronized", unsyncedUsers.Count);
             var unsyncedUsersWithoutNotification =
                 unsyncedUsers.Where(user => user.LdapSyncFailureTime == null).ToList();
-            foreach (var user in unsyncedUsersWithoutNotification) user.LdapSyncFailureTime = syncTime;
-            foreach (var email in _configuration.NotificationEmails)
-                await _emailOutbox.SendReportAsync(email, "LDAP Nutzer konnten nicht synchronisiert werden",
-                    $"""
-                     Es konnten nicht alle Benutzer synchronisiert werden. Möglicherweise wurden die Benutzer im Verzeichnisdienst gelöscht. Sollte dies der Fall sein, Löschen Sie die Benutzer bitte manuell aus der Afra-App.
-                     Neue nicht synchronisierte Benutzer: {string.Join(", ", unsyncedUsersWithoutNotification.Select(u => $"{u.Vorname} {u.Nachname} ({u.Email})"))}
+            if (unsyncedUsersWithoutNotification.Count != 0)
+            {
+                foreach (var user in unsyncedUsersWithoutNotification) user.LdapSyncFailureTime = syncTime;
+                foreach (var email in _configuration.NotificationEmails)
+                    await _emailOutbox.SendReportAsync(email, "LDAP Nutzer konnten nicht synchronisiert werden",
+                        $"""
+                         Es konnten nicht alle Benutzer synchronisiert werden. Möglicherweise wurden die Benutzer im Verzeichnisdienst gelöscht. Sollte dies der Fall sein, löschen Sie die Benutzer bitte manuell aus der Afra-App.
+                         Neue nicht synchronisierte Benutzer:
+                          - {string.Join($"{Environment.NewLine} - ", unsyncedUsersWithoutNotification.Select(u => $"{u.Vorname} {u.Nachname} ({u.Email})"))}
 
-                     Falls der Benutzer versehentlich gelöscht wurde, erstellen Sie den Benutzer neu und, kontaktieren Sie den Datenbank-Administrator, um den Benutzer neu zu verknüpfen.
+                         Falls der Benutzer versehentlich gelöscht wurde, erstellen Sie den Benutzer neu und, kontaktieren Sie den Datenbank-Administrator, um den Benutzer neu zu verknüpfen.
 
-                     Falls der Benutzer nicht gelöscht wurde, überprüfen Sie bitte die LDAP-Konfiguration und die Verbindung zum LDAP-Server.
-                     """);
+                         Falls der Benutzer nicht gelöscht wurde, überprüfen Sie bitte die LDAP-Konfiguration und die Verbindung zum LDAP-Server.
+                         """);
 
-            await _dbContext.SaveChangesAsync();
+                await _dbContext.SaveChangesAsync();
+            }
         }
 
         _logger.LogInformation("LDAP synchronization finished");
@@ -167,7 +170,7 @@ public class LdapService
 
         using var connection = _configuration.BuildConnection(_logger);
         var request = new SearchRequest(_configuration.GlobalScope.BaseDn,
-            $"&{_configuration.GlobalScope.Filter}(sAMAccountName={LdapSanitizer.Sanitize(username)})",
+            $"(&{_configuration.GlobalScope.Filter}(sAMAccountName={LdapSanitizer.Sanitize(username)}))",
             SearchScope.Subtree);
 
         var response = (SearchResponse)connection.SendRequest(request);
