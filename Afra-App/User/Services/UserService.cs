@@ -53,4 +53,20 @@ public class UserService
 
         return [];
     }
+
+    /// <summary>
+    /// Gets the grade level of a student based on their group.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">The person is not a student</exception>
+    /// <exception cref="InvalidDataException">The persons group does not contain a valid grade level</exception>
+    public int GetKlassenstufe(Person person)
+    {
+        if (person.Rolle == Rolle.Tutor)
+            throw new InvalidOperationException("Only students have a grade level.");
+
+        if (string.IsNullOrWhiteSpace(person.Gruppe) || !char.IsAsciiDigit(person.Gruppe[0]))
+            throw new InvalidDataException("The person does not have a valid group.");
+
+        return Convert.ToInt32(person.Gruppe.TakeWhile(char.IsAsciiDigit));
+    }
 }
