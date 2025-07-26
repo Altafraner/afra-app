@@ -12,11 +12,12 @@ using DB_Otium = Afra_App.Otium.Domain.Models.Otium;
 using DB_Schultag = Afra_App.Otium.Domain.Models.Schuljahr.Schultag;
 using DB_Termin = Afra_App.Otium.Domain.Models.Termin;
 using DB_Wiederholung = Afra_App.Otium.Domain.Models.Wiederholung;
+using DB_Einschreibung = Afra_App.Otium.Domain.Models.Einschreibung;
 using DTO_Otium_Creation = Afra_App.Otium.Domain.DTO.ManagementOtiumCreation;
 using DTO_Otium_View = Afra_App.Otium.Domain.DTO.ManagementOtiumView;
 using DTO_Termin_Creation = Afra_App.Otium.Domain.DTO.ManagementTerminCreation;
 using DTO_Wiederholung_Creation = Afra_App.Otium.Domain.DTO.ManagementWiederholungCreation;
-using Einschreibung = Afra_App.Otium.Domain.DTO.Einschreibung;
+using DTO_Einschreibung = Afra_App.Otium.Domain.DTO.Einschreibung;
 using Person = Afra_App.User.Domain.Models.Person;
 using Termin = Afra_App.Otium.Domain.DTO.Katalog.Termin;
 
@@ -192,10 +193,7 @@ public class OtiumEndpointService
         IQueryable<DB_Schultag> schultageQuery = _dbContext.Schultage
             .Include(s => s.Blocks)
             .OrderBy(s => s.Datum);
-        if (!all)
-        {
-            schultageQuery = schultageQuery.Where(s => s.Datum >= startDate && s.Datum < endDate);
-        }
+        if (!all) schultageQuery = schultageQuery.Where(s => s.Datum >= startDate && s.Datum < endDate);
 
         var schultage = await schultageQuery.ToListAsync();
 
@@ -218,6 +216,7 @@ public class OtiumEndpointService
 
         foreach (var week in weeks)
         {
+            // Increase performance by taking from the already sorted list of enrollments, then removing them from the list before the next iteration.
             var weekEnd = week.Key.AddDays(7);
             var einschreibungenForWeek = einschreibungen
                 .TakeWhile(e => e.Termin.Block.SchultagKey < weekEnd)
@@ -227,15 +226,12 @@ public class OtiumEndpointService
             var messageBuilder = new StringBuilder();
 
             var kategorieRule = await _enrollmentService.GetMissingKategories(einschreibungenForWeek);
-
             if (kategorieRule.Count > 0)
             {
                 messageBuilder.AppendLine("**Fehlende Kategorien**");
                 foreach (var kategorie in kategorieRule)
-                {
                     messageBuilder.AppendLine(
                         $"""- Es muss mindestens ein Angebot der Kategorie *"{kategorie}"* pro Woche für einen vollen Block belegt werden.""");
-                }
 
                 messageBuilder.AppendLine();
             }
@@ -247,15 +243,15 @@ public class OtiumEndpointService
             {
                 var enrollmentsForDay = enrollmentsByDay.TryGetValue(day.Datum, out var list) ? list : [];
                 var missingEnrollmentsForDay =
-                    _enrollmentService.GetNotEnrolledTimes(day.Blocks, enrollmentsForDay).GetIntervals();
+                    _enrollmentService.GetNotEnrolledBlocks(enrollmentsForDay, day.Blocks)
+                        .OrderBy(b => b.SchemaId)
+                        .ToList();
 
                 if (missingEnrollmentsForDay.Count <= 0) continue;
                 messageBuilder.AppendLine($"**Fehlende Einschreibungen am {day.Datum.ToString("dd.MM.yyyy")}**");
-                foreach (var interval in missingEnrollmentsForDay)
-                {
+                foreach (var block in missingEnrollmentsForDay)
                     messageBuilder.AppendLine(
-                        $"- Es fehlen Einschreibungen von {interval.Start:t} Uhr bis {interval.End:t} Uhr.");
-                }
+                        $"- Es fehlen Einschreibungen im Block: *{_blockHelper.Get(block.SchemaId)!.Bezeichnung}*");
 
                 messageBuilder.AppendLine();
             }
@@ -263,69 +259,57 @@ public class OtiumEndpointService
             yield return new Week(
                 week.Key,
                 messageBuilder.ToString(),
-                einschreibungenForWeek.Select(e => new Einschreibung(e))
+                await GenerateDtosWithPlaceholders(einschreibungenForWeek, week.ToList(), user)
             );
         }
-        /*
-        // Get Monday of the current week
-        var startDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek + 1));
-        var endDate = startDate.AddDays(7 * 3);
+    }
 
-        // Okay, this looks heavy. Enumerate to List as we need to access the elements multiple times.
-        var allEinschreibungen = await _dbContext.OtiaEinschreibungen
-            .Include(e => e.Termin)
-            .ThenInclude(t => t.Block)
-            .ThenInclude(b => b.Schultag)
-            .Include(e => e.Termin)
-            .ThenInclude(t => t.Tutor)
-            .Include(e => e.Termin)
-            .ThenInclude(t => t.Otium)
-            .ThenInclude(o => o.Kategorie)
-            .ThenInclude(k => k.Parent)
-            .Where(t => t.BetroffenePerson == user)
-            .Where(t => all || (t.Termin.Block.Schultag.Datum >= startDate && t.Termin.Block.Schultag.Datum < endDate))
-            .ToListAsync();
+    /// <summary>
+    ///     Generates DTOs for the enrollments, including placeholders for unenrolled blocks.
+    /// </summary>
+    /// <param name="enrollments">The enrollments in the week</param>
+    /// <param name="schooldays">All schooldays with block in the week</param>
+    /// <param name="user">The user whose enrollments are given</param>
+    /// <returns>
+    ///     An enumerable containing DTOs for all enrollments and all unenrolled blocks. DTOs for unenrolled blocks only
+    ///     include date and block information. The sorting is stable.
+    /// </returns>
+    private async Task<IEnumerable<DTO_Einschreibung>> GenerateDtosWithPlaceholders(
+        List<DB_Einschreibung> enrollments, List<DB_Schultag> schooldays, Person user)
+    {
+        var allBlocks = schooldays.SelectMany(s => s.Blocks).ToList();
 
-        var allSchoolDays = await _dbContext.Schultage
-            .Include(s => s.Blocks)
-            .Where(t => all || (t.Datum >= startDate && t.Datum < endDate))
-            .OrderBy(s => s.Datum)
-            .ToListAsync();
+        var blocksUnenrolled =
+            _enrollmentService.GetNotEnrolledBlocks(enrollments, allBlocks);
 
-        var einschreibungenByDay = allEinschreibungen.GroupBy(e => e.Termin.Block.Schultag)
-            .ToDictionary(g => g.Key, g => g.ToList());
-
-        // Check if the user is enrolled in all non-optional subblocks
-        var kategorieRuleByWeek = user.Rolle != Rolle.Oberstufe
-            ? await _enrollmentService.CheckAllKategoriesInWeeks(allEinschreibungen)
+        var blocksDoneOrRunning = user.Rolle == Rolle.Mittelstufe
+            ? allBlocks.Where(_blockHelper.IsBlockDoneOrRunning).Select(b => b.Id).ToHashSet()
             : [];
-        var allEnrolledRuleByDay = new Dictionary<DateOnly, bool>();
-        foreach (var (schultag, einschreibungen) in einschreibungenByDay)
-            allEnrolledRuleByDay[schultag.Datum] =
-                _enrollmentService.AreAllNonOptionalBlocksEnrolled(schultag, einschreibungen);
+        var attendances = user.Rolle == Rolle.Mittelstufe
+            ? await _attendanceService.GetAttendanceForBlocksAsync(blocksDoneOrRunning, user.Id)
+            : [];
 
-        foreach (var schultag in allSchoolDays)
+        var additionalEnrollments = blocksUnenrolled.Select(b => (b.SchemaId, new DTO_Einschreibung
         {
-            var monday = GetMonday(schultag.Datum);
+            Datum = b.SchultagKey,
+            Block = _blockHelper.Get(b.SchemaId)!.Bezeichnung,
+            Anwesenheit = blocksDoneOrRunning.Contains(b.Id) ? attendances[b.Id] : null
+        }));
 
-            var localKategorienErfuellt =
-                user.Rolle == Rolle.Oberstufe || kategorieRuleByWeek.GetValueOrDefault(monday, false);
-            var vollstaendig = allEnrolledRuleByDay.ContainsKey(schultag.Datum) && allEnrolledRuleByDay[schultag.Datum];
-            var einschreibungen = einschreibungenByDay.Keys.Any(k => k.Datum == schultag.Datum)
-                ? einschreibungenByDay
-                    .FirstOrDefault(t => t.Key.Datum == schultag.Datum)
-                    .Value
-                    .OrderBy(e => e.Termin.Block.SchemaId)
-                    .Select(e => new Einschreibung(e))
-                : [];
-            var tag = new Domain.DTO.Dashboard.Tag(schultag.Datum,
-                vollstaendig,
-                localKategorienErfuellt,
-                einschreibungen
-            );
-
-            yield return tag;
-        }*/
+        return enrollments.Select(e => (e.Termin.Block.SchemaId, new DTO_Einschreibung
+            {
+                Block = _blockHelper.Get(e.Termin.Block.SchemaId)!.Bezeichnung,
+                Datum = e.Termin.Block.SchultagKey,
+                KategorieId = e.Termin.Otium.Kategorie.Id,
+                Ort = e.Termin.Ort,
+                Otium = e.Termin.Otium.Bezeichnung,
+                TerminId = e.Termin.Id,
+                Anwesenheit = blocksDoneOrRunning.Contains(e.Termin.Block.Id) ? attendances[e.Termin.Block.Id] : null
+            }))
+            .Concat(additionalEnrollments)
+            .OrderBy(e => e.Item2.Datum)
+            .ThenBy(e => e.SchemaId)
+            .Select(e => e.Item2);
     }
 
     private DateOnly GetMonday(DateOnly date) => date.AddDays(-(int)date.DayOfWeek + 1);

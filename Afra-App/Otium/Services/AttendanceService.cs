@@ -144,6 +144,18 @@ public class AttendanceService : IAttendanceService
     }
 
     /// <inheritdoc />
+    public async Task<Dictionary<Guid, AnwesenheitsStatus>> GetAttendanceForBlocksAsync(IEnumerable<Guid> blockIds,
+        Guid personId)
+    {
+        var attendances = await _dbContext.OtiaAnwesenheiten
+            .Where(a => a.StudentId == personId && blockIds.Contains(a.BlockId))
+            .ToDictionaryAsync(a => a.BlockId, a => a.Status);
+
+        return blockIds
+            .ToDictionary(b => b, b => attendances.GetValueOrDefault(b, DefaultAttendanceStatus));
+    }
+
+    /// <inheritdoc />
     public async Task SetAttendanceForEnrollmentAsync(Guid enrollmentId, AnwesenheitsStatus status)
     {
         var einschreibung = _dbContext.OtiaEinschreibungen

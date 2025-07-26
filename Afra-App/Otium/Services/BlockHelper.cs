@@ -31,4 +31,17 @@ public class BlockHelper
     {
         return _otiumConfiguration.Value.Blocks.FirstOrDefault(b => b.Id == schemaId);
     }
+
+    /// <summary>
+    /// Checks if a block is done or currently running.
+    /// </summary>
+    public bool IsBlockDoneOrRunning(Block block)
+    {
+        var now = DateTime.Now;
+        var today = DateOnly.FromDateTime(now);
+        var nowTime = TimeOnly.FromDateTime(now);
+
+        return block.SchultagKey < today ||
+               (block.SchultagKey == today && Get(block.SchemaId)!.Interval.Start < nowTime);
+    }
 }

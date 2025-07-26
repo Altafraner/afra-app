@@ -17,6 +17,7 @@ import {useOtiumStore} from "@/Otium/stores/otium.js";
 import {findPath} from "@/helpers/tree.js";
 import AfraKategorieTag from "@/Otium/components/Shared/AfraKategorieTag.vue";
 import {marked} from "marked";
+import AfraOtiumAnwesenheit from "@/Otium/components/Shared/AfraOtiumAnwesenheit.vue";
 
 const props = defineProps({
   termine: Array,
@@ -39,17 +40,32 @@ const findKategorie = (kategorie) => {
   return null;
 }
 
-const termineMitKategorie = computed(() => {
-  return props.termine.map(termin => {
+const formatedEnrollments = computed(() => {
+  return props.termine.map(week => {
+    let lastBlock = null;
+    let lastDate = null;
+    const result = week.einschreibungen.map(enrollment => {
+      const innerResult = {
+        datum: enrollment.datum,
+        datumVisible: enrollment.datum !== lastDate,
+        block: enrollment.block,
+        blockVisible: enrollment.block !== lastBlock,
+        otium: enrollment.otium,
+        ort: enrollment.ort,
+        terminId: enrollment.terminId,
+        kategorieId: enrollment.kategorieId,
+        kategorie: enrollment.kategorieId ? findKategorie(enrollment.kategorieId) : null,
+        anwesenheit: enrollment.anwesenheit
+      }
+      lastDate = enrollment.datum;
+      lastBlock = enrollment.block;
+      return innerResult;
+    })
+
     return {
-      ...termin,
-      messageHtml: termin.message ? marked(termin.message, {sanitize: true}) : null,
-      einschreibungen: termin.einschreibungen.map(einschreibung => {
-        return {
-          ...einschreibung,
-          kategorie: findKategorie(einschreibung.kategorieId)
-        }
-      })
+      ...week,
+      messageHtml: week.message ? marked(week.message, {sanitize: true}) : null,
+      einschreibungen: result
     }
   })
 })
@@ -58,7 +74,6 @@ const isOs = computed(() => {
   if (props.student) {
     return props.student.rolle === "Oberstufe";
   }
-
   return user.user.rolle === "Oberstufe"
 })
 
@@ -66,7 +81,8 @@ const isOs = computed(() => {
 
 <template>
   <Accordion v-if="termine != null">
-    <AccordionPanel v-for="termin in termineMitKategorie" :key="termin.monday" :value="termin.monday">
+    <AccordionPanel v-for="termin in formatedEnrollments" :key="termin.monday"
+                    :value="termin.monday">
       <AccordionHeader>
         <div class="flex w-full justify-between mr-4">
           <span>
@@ -88,47 +104,52 @@ const isOs = computed(() => {
         <Message v-else-if="!isOs" class="mb-2" severity="success">
           <div>Die Einschreibungen entsprechen den Vorgaben.</div>
         </Message>
-        <DataTable :value="termin.einschreibungen" group-rows-by="datum" row-group-mode="subheader">
-          <Column header="Otium">
+
+        <DataTable :value="termin.einschreibungen" size="small">
+          <Column header="Wochentag">
             <template #body="{data}">
-              <AfraKategorieTag v-if="data.kategorie" :value="data.kategorie" hide-name minimal/>
-              <Button :label="data.otium" as="RouterLink" class="" variant="text"
-                      :to="{name: 'Katalog-Datum-Termin', params: {datum: data.datum, terminId: data.terminId}}"/>
+              <template v-if="data.datumVisible">
+                {{ formatDate(new Date(data.datum)) }}
+              </template>
+            </template>
+          </Column>
+          <Column header="Block">
+            <template #body="{data}">
+              <template v-if="data.blockVisible">
+                {{ data.block }}
+              </template>
+            </template>
+          </Column>
+          <Column header="Angebot">
+            <template #body="{data}">
+              <span v-if="data.otium">
+                <AfraKategorieTag v-if="data.kategorieId" :value="findKategorie(data.kategorieId)"
+                                  hide-name
+                                  minimal/>
+                <Button :label="data.otium" :to="{name: 'Katalog-Datum-Termin', params: {datum: data.datum, terminId: data.terminId}}" as="RouterLink"
+                        variant="text"/>
+              </span>
+              <Button v-else-if="props.showKatalog" :to="{name: 'Katalog-Datum', params: {datum: data.datum}}" as="RouterLink"
+                      class="w-full justify-start" icon="pi pi-list" label="Katalog"
+                      size="small"/>
+              <span v-else>Keine Einschreibung</span>
             </template>
           </Column>
           <Column header="Ort">
             <template #body="{data}">
-              {{ data.ort }}
+              <template v-if="data.ort">
+                {{ data.ort }}
+              </template>
             </template>
           </Column>
-          <Column header="Datum">
+          <Column>
             <template #body="{data}">
-              {{ formatDate(new Date(data.datum)) }}
+              <AfraOtiumAnwesenheit v-if="data.anwesenheit" v-model="data.anwesenheit" minimal/>
             </template>
           </Column>
-          <Column field="block" header="Block">
-            <template #body="{data}">
-              {{ data.block }}. Block
-            </template>
-          </Column>
-          <template #groupheader="{data}">
-            <span class="font-semibold">{{ formatDate(new Date(data.datum)) }}</span>
-          </template>
           <template #empty>
             <div class="flex justify-center">
               Keine Einträge
-            </div>
-          </template>
-          <template #footer>
-            <div class="flex flex-row justify-between items-center">
-              <Button v-if="props.showKatalog" class="w-[8rem]" size="small" as="RouterLink"
-                      :to="{name: 'Katalog-Datum', params: {datum: termin.monday}}" label="Katalog"/>
-              <span v-else/>
-              <span v-if="!isOs"
-                    class="flex flex-row gap-3 mr-[var(--p-icon-size)] flex-wrap justify-end">
-                <Badge v-if="termin.message" class="w-[8rem]"
-                       severity="danger">Unvollständig</Badge>
-              </span>
             </div>
           </template>
         </DataTable>

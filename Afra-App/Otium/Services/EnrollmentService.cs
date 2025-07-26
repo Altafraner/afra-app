@@ -226,6 +226,20 @@ public class EnrollmentService
     }
 
     /// <summary>
+    ///     Gets all blocks that the user is not enrolled in.
+    /// </summary>
+    /// <param name="enrollments">The users enrollment</param>
+    /// <param name="blocks">All blocks the user should be enrolled in</param>
+    public IEnumerable<Block> GetNotEnrolledBlocks(IEnumerable<Einschreibung> enrollments, IEnumerable<Block> blocks)
+    {
+        var enrolledBlocks = enrollments
+            .Select(e => e.Termin.Block.Id)
+            .Distinct();
+
+        return blocks.Where(b => !enrolledBlocks.Contains(b.Id));
+    }
+
+    /// <summary>
     ///     Checks if a set of einschreibungen covers all non-optional blocks of a schultag.
     /// </summary>
     /// <param name="schultag">The day to check for</param>
