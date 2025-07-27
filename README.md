@@ -11,9 +11,10 @@ Das Projekt besteht aus einer Vue-SPA im Ordner `/WebClient` und einer ASP.NET C
 
 Zum Aufsetzen muss in den Ordner `/dev` navigiert und (z. B. mit dem WSL) das Skript `create_dev.sh` ausgeführt werden.
 
-Dieses erstellt Zertifikate zur Verschlüsselung, sowie für den SAML IdP und SP.
+Dieses erstellt Zertifikate zur Verschlüsselung.
 
-Mit `docker-compose up -d` bzw. `podman-compose up -d` kann eine Entwicklungsumgebung mit einem Saml-Test-IdP (Port 4000), Postgres (Port 5432) und Mailcatcher (Port 8090) gestartet werden.
+Mit `docker-compose up -d` bzw. `podman-compose up -d` kann eine Entwicklungsumgebung mit Postgres (Port 5432) und
+Mailcatcher (Port 8090) gestartet werden.
 
 Die WebApi und die Client-App müssen jeweils eigenständig aus ihren entsprechenden Ordnern heraus gestartet werden. (in `WebClient`: `npm run dev` und in `Afra-App` `dotnet run`)
 

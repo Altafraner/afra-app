@@ -1,7 +1,6 @@
 ﻿using Afra_App.User.Configuration.LDAP;
 using Afra_App.User.Services;
 using Afra_App.User.Services.LDAP;
-using Afra_App.User.Services.SAML;
 
 namespace Afra_App.User.Extensions;
 
@@ -26,7 +25,6 @@ public static class AppBuilderExtension
         builder.Services.AddScoped<UserAuthorizationHelper>();
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddScoped<LdapService>();
-        if (builder.Configuration.GetValue<bool>("Saml:Enabled")) builder.Services.AddSingleton<SamlService>();
 
         builder.Services.AddHostedService<LdapAutoSyncScheduler>();
     }

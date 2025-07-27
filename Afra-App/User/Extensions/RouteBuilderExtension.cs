@@ -14,6 +14,5 @@ public static class RouteBuilderExtension
     {
         app.MapUserEndpoints();
         app.MapPeopleEndpoints();
-        if (app.Configuration.GetValue<bool>("Saml:Enabled")) app.MapSaml();
     }
 }
