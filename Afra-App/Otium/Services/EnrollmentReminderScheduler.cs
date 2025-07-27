@@ -5,22 +5,23 @@ using Quartz;
 namespace Afra_App.Otium.Services;
 
 /// <summary>
-/// A background service that schedules a job to remind users about their missing enrollments in Otium events.
+///     A background service that schedules a job to remind users about their missing enrollments in Otium events.
 /// </summary>
-public class EnrollmentReminderService : BackgroundService
+public class EnrollmentReminderScheduler : BackgroundService
 {
     private const string GroupName = "otium-enrollment-reminder";
     private const string JobName = "enrollment-reminder-job";
-    private readonly ILogger<EnrollmentReminderService> _logger;
+    private readonly ILogger<EnrollmentReminderScheduler> _logger;
     private readonly IOptions<OtiumConfiguration> _otiumConfiguration;
 
     private readonly IServiceProvider _serviceProvider;
 
     /// <summary>
-    /// Constructor for the EnrollmentReminderService.
+    ///     Constructor for the EnrollmentReminderService.
     /// </summary>
-    public EnrollmentReminderService(IServiceProvider serviceProvider, IOptions<OtiumConfiguration> otiumConfiguration,
-        ILogger<EnrollmentReminderService> logger)
+    public EnrollmentReminderScheduler(IServiceProvider serviceProvider,
+        IOptions<OtiumConfiguration> otiumConfiguration,
+        ILogger<EnrollmentReminderScheduler> logger)
     {
         _serviceProvider = serviceProvider;
         _otiumConfiguration = otiumConfiguration;

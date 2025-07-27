@@ -1,6 +1,6 @@
 using Afra_App.Otium.Domain.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Afra_App.Otium.Services;
 
@@ -9,13 +9,13 @@ namespace Afra_App.Otium.Services;
 /// </summary>
 public class KategorieService
 {
-    private readonly HybridCache _cache;
+    private readonly IMemoryCache _cache;
     private readonly AfraAppContext _dbContext;
 
     /// <summary>
     ///     Constructor for the KategorieService. Usually called by the DI container.
     /// </summary>
-    public KategorieService(AfraAppContext dbContext, HybridCache cache)
+    public KategorieService(AfraAppContext dbContext, IMemoryCache cache)
     {
         _dbContext = dbContext;
         _cache = cache;
@@ -25,6 +25,13 @@ public class KategorieService
     ///     Return all required categories.
     /// </summary>
     public async Task<List<Kategorie>> GetRequiredKategorienAsync()
+    {
+        return await _cache.GetOrCreateAsync("otium-kategorie-required",
+            async _ => await FetchRequiredKategorienAsync()) ?? throw new Exception(
+            "Somehow we could neither fetch nor retrieve from cache the required categories. This should never happen.");
+    }
+
+    private async Task<List<Kategorie>> FetchRequiredKategorienAsync()
     {
         return await _dbContext.OtiaKategorien
             .AsNoTracking()
@@ -67,12 +74,10 @@ public class KategorieService
     /// </summary>
     /// <param name="kategorie">The category to get the required parent from</param>
     /// <returns>the first required parent if exists; Otherwise, null.</returns>
-    // This is handled by the reference.LoadAsync() call
     public async Task<Guid?> GetRequiredParentIdAsync(Kategorie kategorie)
     {
         return await _cache.GetOrCreateAsync($"otium-kategorie-required-parent-{kategorie.Id}",
-            async _ => await FetchRequiredParentAsync(kategorie),
-            tags: ["otium-kategorie", "otium"]);
+            async _ => await FetchRequiredParentAsync(kategorie));
     }
 
     private async Task<Guid?> FetchRequiredParentAsync(Kategorie kategorie)

@@ -51,7 +51,7 @@ public static class Dashboard
         Person student;
         try
         {
-            student = await userService.GetUserById(studentId);
+            student = await userService.GetUserByIdAsync(studentId);
         }
         catch (KeyNotFoundException)
         {

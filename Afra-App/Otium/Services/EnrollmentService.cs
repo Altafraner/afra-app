@@ -4,6 +4,7 @@ using Afra_App.Otium.Domain.Models;
 using Afra_App.Otium.Domain.Models.Schuljahr;
 using Afra_App.User.Domain.DTO;
 using Afra_App.User.Domain.Models;
+using Afra_App.User.Services;
 using Microsoft.EntityFrameworkCore;
 using Einschreibung = Afra_App.Otium.Domain.Models.Einschreibung;
 using Person = Afra_App.User.Domain.Models.Person;
@@ -21,6 +22,7 @@ public class EnrollmentService
     private readonly AfraAppContext _dbContext;
     private readonly KategorieService _kategorieService;
     private readonly ILogger _logger;
+    private readonly UserService _userService;
 
     /// <summary>
     ///     Constructs the EnrollmentService. Usually called by the DI container.
@@ -28,12 +30,13 @@ public class EnrollmentService
     public EnrollmentService(AfraAppContext dbContext,
         KategorieService kategorieService,
         ILogger<EnrollmentService> logger,
-        BlockHelper blockHelper)
+        BlockHelper blockHelper, UserService userService)
     {
         _dbContext = dbContext;
         _kategorieService = kategorieService;
         _logger = logger;
         _blockHelper = blockHelper;
+        _userService = userService;
     }
 
     /// <summary>
@@ -70,14 +73,17 @@ public class EnrollmentService
     }
 
     /// <summary>
-    /// Enrolls a user in a termin for the date of the termin and all specified dates of the termin's recurrence.
+    ///     Enrolls a user in a termin for the date of the termin and all specified dates of the termin's recurrence.
     /// </summary>
     /// <param name="terminId">The id of the first termin to enroll in</param>
     /// <param name="dates">the dates to also enroll for</param>
     /// <param name="student">The student to enroll</param>
-    /// <returns>A <see cref="MultiEnrollmentStatus"/> object with information on the success of all enrollments.</returns>
-    /// <exception cref="KeyNotFoundException">No termin with the specified <paramref name="terminId"/> could be found.</exception>
-    /// <exception cref="InvalidOperationException">The user may not enroll for the termin with the specified <paramref name="terminId"/></exception>
+    /// <returns>A <see cref="MultiEnrollmentStatus" /> object with information on the success of all enrollments.</returns>
+    /// <exception cref="KeyNotFoundException">No termin with the specified <paramref name="terminId" /> could be found.</exception>
+    /// <exception cref="InvalidOperationException">
+    ///     The user may not enroll for the termin with the specified
+    ///     <paramref name="terminId" />
+    /// </exception>
     public async Task<MultiEnrollmentStatus> EnrollAsync(Guid terminId, IEnumerable<DateOnly> dates, Person student)
     {
         // Okay, this is ugly, but it works.
@@ -146,8 +152,13 @@ public class EnrollmentService
     /// </summary>
     /// <param name="terminId">the id of the termin entity</param>
     /// <param name="student">the student wanting to enroll</param>
+    /// <param name="force">
+    ///     If true, will forcefully delete the users enrollment, even if normally not allowed. For use within
+    ///     system components only.
+    /// </param>
+    /// <param name="save">If true, will persist changes to database. Useful for bulk operations.</param>
     /// <returns>null, if the user may not enroll with the given parameters; Otherwise the termin the user has enrolled in.</returns>
-    public async Task<Termin?> UnenrollAsync(Guid terminId, Person student)
+    public async Task<Termin?> UnenrollAsync(Guid terminId, Person student, bool force = false, bool save = true)
     {
         var enrollment = await _dbContext.OtiaEinschreibungen
             .Include(e => e.Termin)
@@ -157,24 +168,25 @@ public class EnrollmentService
 
         if (enrollment == null) return null;
 
-        try
-        {
-            var (mayUnenroll, _) = await MayUnenroll(student, enrollment.Termin);
-            if (!mayUnenroll) return null;
-        }
-        catch (InvalidOperationException)
-        {
-            return null;
-        }
+        if (!force)
+            try
+            {
+                var (mayUnenroll, _) = await MayUnenroll(student, enrollment.Termin);
+                if (!mayUnenroll) return null;
+            }
+            catch (InvalidOperationException)
+            {
+                return null;
+            }
 
         _dbContext.OtiaEinschreibungen.Remove(enrollment);
 
-        await _dbContext.SaveChangesAsync();
+        if (save) await _dbContext.SaveChangesAsync();
         return enrollment.Termin;
     }
 
     /// <summary>
-    /// Gets the times of all non-optional blocks that the student is not enrolled in.
+    ///     Gets the times of all non-optional blocks that the student is not enrolled in.
     /// </summary>
     /// <param name="blocks">The blocks to check for</param>
     /// <param name="user">The users to get the times the user is not enrolled in</param>
@@ -203,7 +215,7 @@ public class EnrollmentService
     }
 
     /// <summary>
-    /// Gets the times of all non-optional blocks that the student is not enrolled in.
+    ///     Gets the times of all non-optional blocks that the student is not enrolled in.
     /// </summary>
     /// <param name="blocks">The blocks to check for</param>
     /// <param name="einschreibungen">The enrollments the user is enrolled in</param>
@@ -257,11 +269,12 @@ public class EnrollmentService
     }
 
     /// <summary>
-    /// Gets all categories that are required for a set of enrollments and not included in the categories of enrollments.
+    ///     Gets all categories that are required for a set of enrollments and not included in the categories of enrollments.
     /// </summary>
     /// <param name="enrollments">The enrollments to exclude the (transitive) categories from</param>
     /// <returns>
-    ///     A List of all Bezeichnungen of <see cref="Kategorie">Kategorien</see> that are required but not covered by the <paramref name="enrollments"/>
+    ///     A List of all Bezeichnungen of <see cref="Kategorie">Kategorien</see> that are required but not covered by the
+    ///     <paramref name="enrollments" />
     /// </returns>
     public async Task<List<string>> GetMissingKategories(IEnumerable<Einschreibung> enrollments)
     {
@@ -379,7 +392,7 @@ public class EnrollmentService
     }
 
     /// <summary>
-    /// Moves a student to a termin. This will remove the student from any other termins in the same block.
+    ///     Moves a student to a termin. This will remove the student from any other termins in the same block.
     /// </summary>
     /// <param name="studentId">The id of the student to move</param>
     /// <param name="toTerminId">The id of the termin to move to</param>
@@ -423,13 +436,18 @@ public class EnrollmentService
     }
 
     /// <summary>
-    /// Moves a student from one running termin to another, keeping track of the time the change was made.
+    ///     Moves a student from one running termin to another, keeping track of the time the change was made.
     /// </summary>
     /// <param name="studentId">The id of the student to move</param>
-    /// <param name="fromTerminId">The id of the termin the student is moving from. Use Guid.Empty if you expect the student to not be enrolled.</param>
+    /// <param name="fromTerminId">
+    ///     The id of the termin the student is moving from. Use Guid.Empty if you expect the student to
+    ///     not be enrolled.
+    /// </param>
     /// <param name="toTerminId">The id of the termin the student should be enrolled for</param>
     /// <exception cref="KeyNotFoundException">Either the student, ore one of the termine could not be found.</exception>
-    /// <exception cref="InvalidOperationException">One of the termines is not running. Consider using <see cref="ForceMove"/></exception>
+    /// <exception cref="InvalidOperationException">
+    ///     One of the termines is not running. Consider using <see cref="ForceMove" />
+    /// </exception>
     public async Task ForceMoveNow(Guid studentId, Guid fromTerminId, Guid toTerminId)
     {
         var now = DateTime.Now;
@@ -484,7 +502,7 @@ public class EnrollmentService
 
 
     /// <summary>
-    /// Gets a list of all persons that are not enrolled for a specific day.
+    ///     Gets a list of all persons that are not enrolled for a specific day.
     /// </summary>
     /// <param name="date">The date to get the Persons for</param>
     /// <returns>A set containing all found persons.</returns>
@@ -522,6 +540,49 @@ public class EnrollmentService
         }
 
         return missingPersons;
+    }
+
+    /// <summary>
+    ///     Gets a list of all students that are missing required categories in a week starting at the given monday.
+    /// </summary>
+    /// <param name="monday">The monday the week starts on</param>
+    public async Task<Dictionary<Person, HashSet<string>>> GetStudentsWithMissingCategoriesInWeek(DateOnly monday)
+    {
+        var endOfWeek = monday.AddDays(7);
+        var einschreibungenByUser = await _dbContext.Personen
+            .Where(person => person.Rolle == Rolle.Mittelstufe)
+            .GroupJoin(
+                _dbContext.OtiaEinschreibungen
+                    .Include(e => e.Termin)
+                    .ThenInclude(e => e.Otium)
+                    .ThenInclude(o => o.Kategorie)
+                    .Include(e => e.Termin)
+                    .ThenInclude(e => e.Block)
+                    .Where(e => e.Termin.Block.SchultagKey >= monday && e.Termin.Block.SchultagKey < endOfWeek),
+                person => person,
+                einschreibung => einschreibung.BetroffenePerson,
+                (person, einschreibungen) => new { person, einschreibungen })
+            .ToListAsync();
+
+        var result = new Dictionary<Person, HashSet<string>>();
+        foreach (var userWithEnrollments in einschreibungenByUser)
+        {
+            var missingCategories = await GetMissingKategories(userWithEnrollments.einschreibungen);
+            if (missingCategories.Count == 0)
+                continue;
+            if (!result.ContainsKey(userWithEnrollments.person)) result[userWithEnrollments.person] = [];
+            result[userWithEnrollments.person].UnionWith(missingCategories);
+        }
+
+        var allUsers = await _userService.GetUsersWithRoleAsync(Rolle.Mittelstufe);
+        var allCategories = (await _kategorieService.GetRequiredKategorienAsync())
+            .Select(c => c.Bezeichnung)
+            .ToHashSet();
+
+        // Ensure all users without enrollments are included
+        foreach (var user in allUsers) result.TryAdd(user, allCategories);
+
+        return result;
     }
 
     private (bool MayUnEnroll, string? Reason) CommonMayUnEnroll(Person user, Termin termin)

@@ -143,6 +143,23 @@ public class SchuljahrService
     }
 
     /// <summary>
+    ///     Gets the last day with blocks in the current week.
+    /// </summary>
+    /// <param name="datum">A date of a day in the week</param>
+    /// <returns>The last day of the week that has any scheduled blocks. Null iff there are no scheduled blocks for the week</returns>
+    public async Task<DateOnly?> GetLastDayWithBlocksAsync(DateOnly datum)
+    {
+        var monday = datum.DayOfWeek == DayOfWeek.Sunday ? datum.AddDays(-6) : datum.AddDays(-(int)datum.DayOfWeek + 1);
+        var endOfWeek = monday.AddDays(7);
+
+        var day = await _dbContext.Blocks
+            .Where(b => b.SchultagKey >= monday && b.SchultagKey < endOfWeek)
+            .MaxAsync(b => b.SchultagKey);
+
+        return day == default ? null : day;
+    }
+
+    /// <summary>
     ///     Gets all available block schemas.
     /// </summary>
     public IEnumerable<BlockSchema> GetAllSchemas()

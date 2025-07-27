@@ -3,7 +3,7 @@
 namespace Afra_App.User.Services;
 
 /// <summary>
-/// A helper class for user authorization in the Afra-App.
+///     A helper class for user authorization in the Afra-App.
 /// </summary>
 public class UserAuthorizationHelper
 {
@@ -11,7 +11,7 @@ public class UserAuthorizationHelper
     private readonly UserService _userService;
 
     /// <summary>
-    /// Called by DI
+    ///     Called by DI
     /// </summary>
     public UserAuthorizationHelper(UserService userService, UserAccessor userAccessor)
     {
@@ -20,7 +20,7 @@ public class UserAuthorizationHelper
     }
 
     /// <summary>
-    /// Gets the currently authenticated user.
+    ///     Gets the currently authenticated user.
     /// </summary>
     /// <exception cref="UnauthorizedAccessException">No user is authenticated</exception>
     public async Task<Person> GetUserAsync()
@@ -33,7 +33,7 @@ public class UserAuthorizationHelper
     }
 
     /// <summary>
-    /// Checks if the current user has the given user ID.
+    ///     Checks if the current user has the given user ID.
     /// </summary>
     /// <param name="userId">The id to check the current users id against</param>
     /// <returns>True, iff the currently authenticated user has the given id</returns>
@@ -45,7 +45,7 @@ public class UserAuthorizationHelper
     }
 
     /// <summary>
-    /// Checks if the current user has the given role.
+    ///     Checks if the current user has the given role.
     /// </summary>
     /// <param name="role">The role to check</param>
     /// <returns>True, iff the currently authenticated user has the given role</returns>
@@ -57,7 +57,7 @@ public class UserAuthorizationHelper
     }
 
     /// <summary>
-    /// Checks if the current user has the given global permission.
+    ///     Checks if the current user has the given global permission.
     /// </summary>
     /// <param name="permission">The global permission to check against</param>
     /// <returns>True, iff the user has the global permission</returns>
@@ -68,14 +68,14 @@ public class UserAuthorizationHelper
     }
 
     /// <summary>
-    /// Checks if the current user is a mentor of the given student.
+    ///     Checks if the current user is a mentor of the given student.
     /// </summary>
     /// <param name="student"></param>
     /// <returns></returns>
     public async Task<bool> CurrentUserIsMentorOf(Person student)
     {
         var currentUser = await GetUserAsync();
-        var mentors = await _userService.GetMentors(student);
+        var mentors = await _userService.GetMentorsAsync(student);
         return mentors.Any(m => m.Id == currentUser.Id);
     }
 }

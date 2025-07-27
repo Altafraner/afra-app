@@ -15,7 +15,12 @@ public class OtiumConfiguration
     /// <summary>
     ///     Information about the enrollment reminder
     /// </summary>
-    public required EnrollmentReminderInfo EnrollmentReminder { get; init; }
+    public required NotificationInfo EnrollmentReminder { get; init; }
+
+    /// <summary>
+    ///     Information about the student misbehaviour notification
+    /// </summary>
+    public required NotificationInfo StudentMisbehaviourNotification { get; init; }
 
     /// <summary>
     ///     Information about the automatic reporting of missing students
@@ -38,17 +43,17 @@ public class OtiumConfiguration
     }
 
     /// <summary>
-    /// Information about the enrollment reminder, which is sent out to users
+    ///     Information about a notification
     /// </summary>
-    /// <param name="Enabled">Whether to send enrollment reminders</param>
-    /// <param name="Time">The time to send the reminders at</param>
-    public record EnrollmentReminderInfo(
+    /// <param name="Enabled">Whether to send notifications</param>
+    /// <param name="Time">The time to send the notifications at</param>
+    public record NotificationInfo(
         bool Enabled,
         TimeOnly Time
     );
 
     /// <summary>
-    /// Information about the automatic report of missing students
+    ///     Information about the automatic report of missing students
     /// </summary>
     /// <param name="Enabled">Whether to send automatic reports</param>
     /// <param name="Recipients">The mail adresses of the notifications recipients</param>

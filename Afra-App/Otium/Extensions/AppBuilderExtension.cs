@@ -4,12 +4,13 @@ using Afra_App.Otium.Services;
 namespace Afra_App.Otium.Extensions;
 
 /// <summary>
-/// A static class that contains extension methods for <see cref="WebApplicationBuilder"/> to add Otium services and configuration.
+///     A static class that contains extension methods for <see cref="WebApplicationBuilder" /> to add Otium services and
+///     configuration.
 /// </summary>
 public static class AppBuilderExtension
 {
     /// <summary>
-    /// Adds Otium services and configuration to the specified <see cref="WebApplicationBuilder"/>.
+    ///     Adds Otium services and configuration to the specified <see cref="WebApplicationBuilder" />.
     /// </summary>
     public static void AddOtium(this WebApplicationBuilder builder)
     {
@@ -26,6 +27,7 @@ public static class AppBuilderExtension
         builder.Services.AddScoped<ManagementService>();
         builder.Services.AddScoped<IAttendanceService, AttendanceService>();
 
-        builder.Services.AddHostedService<EnrollmentReminderService>();
+        builder.Services.AddHostedService<EnrollmentReminderScheduler>();
+        builder.Services.AddHostedService<StudentMisbehaviourNotificationScheduler>();
     }
 }
