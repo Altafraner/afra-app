@@ -212,7 +212,7 @@ await fetchData()
       </template>
       <template #edit>
         <FloatLabel class="w-full" variant="on">
-          <InputText id="ort" v-model="ort" fluid name="ort"/>
+          <InputText id="ort" v-model="ort" fluid maxlength="20" name="ort"/>
           <label for="ort">Ort</label>
         </FloatLabel>
       </template>

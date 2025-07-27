@@ -247,7 +247,7 @@ setup();
           <span>{{ otium.bezeichnung }}</span>
         </template>
         <template #edit>
-          <InputText v-model="bezeichnung" fluid type="text"/>
+          <InputText v-model="bezeichnung" fluid maxlength="70" type="text"/>
         </template>
       </GridEditRow>
       <GridEditRow header="Kategorie" @update="updateKategorie">
@@ -270,7 +270,7 @@ setup();
           </p>
         </template>
         <template #edit>
-          <Textarea v-model="beschreibung" auto-resize fluid rows="2"/>
+          <Textarea v-model="beschreibung" auto-resize fluid maxlength="500" rows="2"/>
         </template>
       </GridEditRow>
     </Grid>

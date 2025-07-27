@@ -17,6 +17,17 @@ const kategorie = ref(null);
 function resolver({values}) {
   const errors = {}
 
+  if (!values.bezeichnung || values.bezeichnung.length < 1)
+    errors.bezeichnung = [{message: "Es muss eine Bezeichnung gesetzt sein"}]
+  if (values.bezeichnung && values.bezeichnung.length > 70)
+    errors.bezeichnung = [{message: "Die Bezeichnung darf maximal 70 Zeichen lang sein"}]
+  if (!values.beschreibung || values.beschreibung.length < 1)
+    errors.beschreibung = [{message: "Es muss eine Beschreibung gesetzt sein"}]
+  if (values.beschreibung && values.beschreibung.length > 500)
+    errors.beschreibung = [{message: "Die Beschreibung darf maximal 500 Zeichen lang sein"}]
+  if (!values.kategorie)
+    errors.kategorie = [{message: "Es muss eine Kategorie ausgewählt sein"}]
+
   return {values, errors}
 }
 
@@ -55,7 +66,8 @@ setup()
     </div>
     <div class="w-full">
       <FloatLabel class="w-full" variant="on">
-        <Textarea id="beschreibung" v-model="beschreibung" auto-resize fluid rows="2"/>
+        <Textarea id="beschreibung" v-model="beschreibung" auto-resize fluid name="beschreibung"
+                  rows="2"/>
         <label for="beschreibung">Beschreibung</label>
       </FloatLabel>
       <Message v-if="$form.beschreibung?.invalid" severity="error" size="small" variant="simple">

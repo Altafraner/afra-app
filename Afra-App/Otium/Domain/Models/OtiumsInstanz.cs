@@ -27,6 +27,6 @@ public abstract class OtiumsInstanz
     /// <summary>
     ///     The location for the Otium.
     /// </summary>
-    [MaxLength(10)]
+    [MaxLength(20)]
     public required string Ort { get; set; }
 }

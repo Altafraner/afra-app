@@ -25,8 +25,10 @@ const personen = ref(null)
 function resolve({values}) {
   const errors = {}
 
-  if (!values.ort)
+  if (!values.ort || values.ort.length < 1)
     errors.ort = [{message: "Es muss ein Ort gesetzt sein"}]
+  if (values.ort && values.ort.length > 20)
+    errors.ort = [{message: "Der Ort darf maximal 20 Zeichen lang sein"}]
 
   return {values, errors}
 }

@@ -37,8 +37,10 @@ function resolve({values}) {
   if (!values.block && values.block !== 0)
     errors.block = [{message: "Es muss ein Block gesetzt sein"}]
 
-  if (!values.ort)
+  if (!values.ort || values.ort.length < 1)
     errors.ort = [{message: "Es muss ein Ort gesetzt sein"}]
+  if (values.ort && values.ort.length > 20)
+    errors.ort = [{message: "Der Ort darf maximal 20 Zeichen lang sein"}]
 
   return {values, errors}
 }

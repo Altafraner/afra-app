@@ -16,7 +16,7 @@ public class Otium
     /// <summary>
     ///     A name for the Otium
     /// </summary>
-    [MaxLength(50)]
+    [MaxLength(70)]
     public required string Bezeichnung { get; set; }
 
     /// <summary>
