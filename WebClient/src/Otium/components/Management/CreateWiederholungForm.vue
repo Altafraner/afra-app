@@ -67,8 +67,9 @@ async function getPersonen() {
 async function setup() {
   const personPromise = getPersonen()
   const terminePromise = getTermine()
+  const blocksPromise = settings.updateBlocks()
 
-  await Promise.all([personPromise, terminePromise])
+  await Promise.all([personPromise, terminePromise, blocksPromise])
   blockOrWochentagChanged()
   loading.value = false
 }
@@ -77,7 +78,7 @@ function blockOrWochentagChanged() {
   const now = new Date(new Date().toDateString());
   datesAvailable.value = dates.value.filter(date => {
     const datum = new Date(date.datum)
-    return (block.value == null || date.blocks.includes(block.value)) &&
+    return (block.value == null || date.blocks.some(b => b.schemaId === block.value.schemaId)) &&
       datum >= now &&
       (wochentag.value == null || datum.getDay() === wochentag.value) &&
       (wochentyp.value == null || date.wochentyp === wochentyp.value)
@@ -100,7 +101,7 @@ function submit({valid}) {
     wochentag: wochentag.value,
     von: von.value.datum,
     bis: bis.value.datum,
-    block: block.value,
+    block: block.value.schemaId,
     ort: ort.value,
     person: personSelected.value,
     maxEnrollments: maxEnrollmentsSelected.value
@@ -157,15 +158,15 @@ setup()
     </div>
     <div class="w-full">
       <FloatLabel class="w-full" variant="on">
-        <Select id="block" v-model="block" :options="['1', '2']" fluid
+        <Select id="block" v-model="block" :options="settings.blocks" fluid
                 name="block" @change="blockOrWochentagChanged">
           <template #value="{value}">
             <template v-if="value || value === 0">
-              {{ value }}. Block
+              {{ value.bezeichnung }}
             </template>
           </template>
           <template #option="{option}">
-            {{ option }}. Block
+            {{ option.bezeichnung }}
           </template>
         </Select>
         <label for="block">Block</label>

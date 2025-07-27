@@ -24,7 +24,7 @@ public record LehrerTermin : ITermin
     public bool IstAbgesagt { get; set; }
 
     /// <summary>
-    /// true, iff the termin is currently running
+    ///     true, iff the termin is currently running
     /// </summary>
     public bool IsRunning { get; set; } = false;
 
@@ -39,7 +39,10 @@ public record LehrerTermin : ITermin
     public required Guid BlockId { get; set; }
 
     /// <inheritdoc />
-    public required char Block { get; set; }
+    public required char BlockSchemaId { get; set; }
+
+    /// <inheritdoc />
+    public required string Block { get; set; }
 
     /// <inheritdoc />
     public required Guid Id { get; set; }

@@ -77,7 +77,7 @@ function submit({valid}) {
   if (!valid) return
   emit("submit", {
     date: dateSelected.value.datum,
-    block: blockSelected.value,
+    block: blockSelected.value.schemaId,
     ort: ortSelected.value,
     person: personSelected.value,
     maxEnrollments: maxEnrollmentsSelected.value
@@ -107,10 +107,10 @@ setup()
                       name="date"/>
     <Select v-model="blockSelected" :options="dateSelected.blocks" name="block">
       <template #value="{value}">
-        {{ value }}. Block
+        {{ value.bezeichnung }}
       </template>
       <template #option="{option}">
-        {{ option }}. Block
+        {{ option.bezeichnung }}
       </template>
     </Select>
     <div class="font-bold mt-4">Details</div>

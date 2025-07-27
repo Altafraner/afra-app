@@ -28,9 +28,14 @@ public interface ITermin
     public string Ort { get; set; }
 
     /// <summary>
-    ///     The number of the block the termin is in
+    ///     The schema id of the block the termin is in
     /// </summary>
-    public char Block { get; set; }
+    public char BlockSchemaId { get; set; }
+
+    /// <summary>
+    ///     The name of the block the termin is in
+    /// </summary>
+    public string Block { get; set; }
 
     /// <summary>
     ///     The tutor handling the termin (optional)

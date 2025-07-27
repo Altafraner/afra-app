@@ -1,4 +1,5 @@
 using Afra_App.Backbone.Authentication;
+using Afra_App.Otium.Domain.DTO;
 using Afra_App.Otium.Services;
 using Microsoft.AspNetCore.Mvc;
 using DtoSchultag = Afra_App.Otium.Domain.DTO.Schultag;
@@ -16,12 +17,12 @@ public static class Schuljahr
     /// <param name="app"></param>
     public static void MapSchuljahr(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/api/schuljahr", GetSchuljahr)
+        var general = app.MapGroup("/api/schuljahr")
             .RequireAuthorization();
-        app.MapGet("/api/schuljahr/now", GetNow)
-            .RequireAuthorization();
-        app.MapGet("/api/schuljahr/{date}", GetBlocks)
-            .RequireAuthorization();
+        general.MapGet("/", GetSchuljahr);
+        general.MapGet("/now", GetNow);
+        general.MapGet("/{date}", GetBlocks);
+        general.MapGet("/schemas", GetBlockSchemas);
 
         var management = app.MapGroup("/api/management/schuljahr")
             .RequireAuthorization(AuthorizationPolicies.Otiumsverantwortlich);
@@ -34,15 +35,16 @@ public static class Schuljahr
         return Results.Ok(await schuljahrService.GetSchuljahrAsync());
     }
 
-    private static async Task<IResult> AddSchultage(SchuljahrService schuljahrService,
-        [FromBody] IEnumerable<DtoSchultag> schultageIn)
+    private static async Task<IResult> AddSchultage(SchuljahrService schuljahrService, BlockHelper blockHelper,
+        [FromBody] IEnumerable<SchultagCreation> schultageIn)
     {
         try
         {
             var schultage = await schuljahrService.AddRangeAsync(schultageIn);
 
             return Results.Created(string.Empty,
-                schultage.Select(s => new DtoSchultag(s.Datum, s.Wochentyp, s.Blocks.Select(b => b.SchemaId))));
+                schultage.Select(s => new DtoSchultag(s.Datum, s.Wochentyp,
+                    s.Blocks.Select(b => new BlockSchema(b.SchemaId, blockHelper.Get(b.SchemaId)!.Bezeichnung)))));
         }
         catch (KeyNotFoundException e)
         {
@@ -87,5 +89,10 @@ public static class Schuljahr
         }).OrderBy(b => b.schemaId);
 
         return Results.Ok(blocksMapped);
+    }
+
+    private static IResult GetBlockSchemas(SchuljahrService schuljahrService)
+    {
+        return Results.Ok(schuljahrService.GetAllSchemas());
     }
 }

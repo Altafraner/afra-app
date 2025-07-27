@@ -104,7 +104,8 @@ public class OtiumEndpointService
         foreach (var termin in termine)
             yield return new TerminPreview(termin.Termin,
                 termin.Auslasung,
-                _kategorieService.GetTransitiveKategoriesIdsAsyncEnumerable(termin.Termin.Otium.Kategorie));
+                _kategorieService.GetTransitiveKategoriesIdsAsyncEnumerable(termin.Termin.Otium.Kategorie),
+                _blockHelper.Get(termin.Termin.Block.SchemaId)!.Bezeichnung);
     }
 
     /// <summary>
@@ -127,10 +128,13 @@ public class OtiumEndpointService
             .FirstOrDefaultAsync(t => t.Id == terminId);
         if (termin == null) return null;
 
+        var schema = _blockHelper.Get(termin.Block.SchemaId)!;
+
         return new Termin(termin,
             await _enrollmentService.GetEnrolmentPreview(user, termin),
             termin.Otium.Kategorie.Id,
-            _blockHelper.Get(termin.Block.SchemaId)!.Interval.Start);
+            schema.Interval.Start,
+            schema.Bezeichnung);
     }
 
     private async Task<IEnumerable<string>> GetStatusForDayAsync(Person user, DateOnly date)
@@ -312,7 +316,10 @@ public class OtiumEndpointService
             .Select(e => e.Item2);
     }
 
-    private DateOnly GetMonday(DateOnly date) => date.AddDays(-(int)date.DayOfWeek + 1);
+    private DateOnly GetMonday(DateOnly date)
+    {
+        return date.AddDays(-(int)date.DayOfWeek + 1);
+    }
 
     /// <summary>
     ///     Returns an overview of termine and mentees for a teacher.
@@ -454,8 +461,9 @@ public class OtiumEndpointService
             Ort = termin.Ort,
             Otium = termin.Otium.Bezeichnung,
             OtiumId = termin.Otium.Id,
-            Block = termin.Block.SchemaId,
+            BlockSchemaId = termin.Block.SchemaId,
             BlockId = termin.Block.Id,
+            Block = _blockHelper.Get(termin.Block.SchemaId)!.Bezeichnung,
             Datum = termin.Block.Schultag.Datum,
             MaxEinschreibungen = termin.MaxEinschreibungen,
             IstAbgesagt = termin.IstAbgesagt,
@@ -469,19 +477,21 @@ public class OtiumEndpointService
     /// <summary>
     ///     Gets all Otia
     /// </summary>
-    public IEnumerable<DTO_Otium_View> GetOtia()
+    public IEnumerable<ManagementOtiumPreview> GetOtia()
     {
         return _dbContext.Otia
             .AsSplitQuery()
-            .Include(o => o.Verantwortliche)
-            .Include(o => o.Termine).ThenInclude(t => t.Tutor)
-            .Include(o => o.Termine).ThenInclude(t => t.Block).ThenInclude(b => b.Schultag)
-            .Include(o => o.Wiederholungen).ThenInclude(t => t.Tutor)
-            .Include(o => o.Wiederholungen).ThenInclude(t => t.Termine)
+            .Include(o => o.Termine)
             .Include(o => o.Kategorie)
             .OrderBy(o => o.Bezeichnung)
             .ThenByDescending(o => o.Termine.Count)
-            .Select(otium => new DTO_Otium_View(otium));
+            .Select(otium => new ManagementOtiumPreview
+            {
+                Id = otium.Id,
+                Bezeichnung = otium.Bezeichnung,
+                Kategorie = otium.Kategorie.Id,
+                Termine = otium.Termine.Count
+            });
     }
 
     /// <summary>
@@ -506,7 +516,18 @@ public class OtiumEndpointService
         if (otium is null)
             throw new EntityNotFoundException("Kein Otium mit dieser Id gefunden.");
 
-        return new DTO_Otium_View(otium);
+        return new DTO_Otium_View
+        {
+            Id = otium.Id,
+            Bezeichnung = otium.Bezeichnung,
+            Beschreibung = otium.Beschreibung,
+            Kategorie = otium.Kategorie.Id,
+            Verantwortliche = otium.Verantwortliche.Select(v => new PersonInfoMinimal(v)),
+            Termine = otium.Termine.Select(t =>
+                new ManagementTerminView(t, _blockHelper.Get(t.Block.SchemaId)!.Bezeichnung)),
+            Wiederholungen = otium.Wiederholungen.Select(r =>
+                new ManagementWiederholungView(r, _blockHelper.Get(r.Block)!.Bezeichnung))
+        };
     }
 
     /// <summary>

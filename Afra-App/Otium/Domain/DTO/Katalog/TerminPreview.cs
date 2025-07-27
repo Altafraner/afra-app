@@ -13,18 +13,20 @@ public record TerminPreview : ITermin
     /// <param name="termin">The termins DB entry</param>
     /// <param name="auslastung">The load of the termin</param>
     /// <param name="kategorien">A list of all categories the otium for the termin is in.</param>
-    public TerminPreview(Models.Termin termin, int? auslastung, IAsyncEnumerable<Guid> kategorien)
+    /// <param name="block">The block the termin is in</param>
+    public TerminPreview(Models.Termin termin, int? auslastung, IAsyncEnumerable<Guid> kategorien, string block)
     {
         Id = termin.Id;
         Otium = termin.Otium.Bezeichnung;
         OtiumId = termin.Otium.Id;
         Ort = termin.Ort;
-        Block = termin.Block.SchemaId;
+        BlockSchemaId = termin.Block.SchemaId;
         Kategorien = kategorien;
         IstAbgesagt = termin.IstAbgesagt;
         Tutor = termin.Tutor is null ? null : new PersonInfoMinimal(termin.Tutor);
         Auslastung = auslastung;
         MaxEinschreibungen = termin.MaxEinschreibungen;
+        Block = block;
     }
 
     /// <summary>
@@ -35,6 +37,11 @@ public record TerminPreview : ITermin
     ///     of minutes available for the termin.
     /// </remarks>
     public int? Auslastung { get; set; }
+
+    /// <summary>
+    ///     A list of all categories the termin is in
+    /// </summary>
+    public IAsyncEnumerable<Guid> Kategorien { get; set; }
 
     /// <summary>
     ///     A unique identifier for the termin
@@ -55,12 +62,10 @@ public record TerminPreview : ITermin
     public string Ort { get; set; }
 
     /// <inheritdoc />
-    public char Block { get; set; }
+    public char BlockSchemaId { get; set; }
 
-    /// <summary>
-    ///     A list of all categories the termin is in
-    /// </summary>
-    public IAsyncEnumerable<Guid> Kategorien { get; set; }
+    /// <inheritdoc />
+    public string Block { get; set; }
 
     /// <summary>
     ///     The tutor handling the termin (optional)

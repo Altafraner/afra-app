@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using Afra_App.User.Domain.DTO;
 
 namespace Afra_App.Otium.Domain.DTO;
@@ -8,24 +7,6 @@ namespace Afra_App.Otium.Domain.DTO;
 /// </summary>
 public record ManagementOtiumView
 {
-    /// Construct an empty ManagementOtiumView
-    public ManagementOtiumView()
-    {
-    }
-
-    /// Construct a ManagementOtiumView from a Database Otium
-    [SetsRequiredMembers]
-    public ManagementOtiumView(Models.Otium dbOtium)
-    {
-        Id = dbOtium.Id;
-        Bezeichnung = dbOtium.Bezeichnung;
-        Beschreibung = dbOtium.Beschreibung;
-        Kategorie = dbOtium.Kategorie.Id;
-        Verantwortliche = dbOtium.Verantwortliche.Select(v => new PersonInfoMinimal(v));
-        Termine = dbOtium.Termine.Select(t => new ManagementTerminView(t));
-        Wiederholungen = dbOtium.Wiederholungen.Select(r => new ManagementWiederholungView(r));
-    }
-
     /// <summary>
     ///     A unique identifier for the Otium
     /// </summary>

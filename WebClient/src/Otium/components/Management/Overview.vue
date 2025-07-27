@@ -122,7 +122,7 @@ setup()
       </Column>
       <Column class="text-right" header="Termine">
         <template #body="{data}">
-          {{ data.termine.length }}
+          {{ data.termine }}
         </template>
       </Column>
       <Column class="text-right afra-col-action">
@@ -139,7 +139,7 @@ setup()
         </template>
       </Column>
       <template #empty>
-        <div class="flex justify-center">Es sind eine Otia angelegt.</div>
+        <div class="flex justify-center">Es sind keine Otia angelegt.</div>
       </template>
     </DataTable>
     <Dialog v-model:visible="createDialogOpen" :style="{width: '35rem'}" header="Otium hinzufügen"

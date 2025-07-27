@@ -10,6 +10,16 @@ namespace Afra_App.Otium.Domain.DTO;
 public record Schuljahr(Schultag? Standard, IEnumerable<Schultag> Schultage);
 
 /// <summary>
-/// A DTO for sending schooldays to the client.
+///     A DTO for sending schooldays to the client.
 /// </summary>
-public record Schultag(DateOnly Datum, Wochentyp Wochentyp, IEnumerable<char> Blocks);
+public record Schultag(DateOnly Datum, Wochentyp Wochentyp, IEnumerable<BlockSchema> Blocks);
+
+/// <summary>
+///     A DTO for creating a new school day.
+/// </summary>
+public record SchultagCreation(DateOnly Datum, Wochentyp Wochentyp, IEnumerable<char> Blocks);
+
+/// <summary>
+///     A DTO for sending the schema of a block to the client.
+/// </summary>
+public record BlockSchema(char SchemaId, string Bezeichnung);

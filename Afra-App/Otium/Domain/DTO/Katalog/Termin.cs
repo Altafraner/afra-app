@@ -14,8 +14,9 @@ public record Termin : ITermin
     /// <param name="einschreibung">Information on whether and how to enroll</param>
     /// <param name="kategorie">The category the Otium is in</param>
     /// <param name="startTime">The time the termin starts at</param>
+    /// <param name="block">The block the termin is in.</param>
     public Termin(Models.Termin termin, EinschreibungsPreview einschreibung,
-        Guid kategorie, TimeOnly startTime)
+        Guid kategorie, TimeOnly startTime, string block)
     {
         Id = termin.Id;
         Otium = termin.Otium.Bezeichnung;
@@ -26,7 +27,7 @@ public record Termin : ITermin
         Tutor = termin.Tutor is not null ? new PersonInfoMinimal(termin.Tutor) : null;
         MaxEinschreibungen = termin.MaxEinschreibungen;
         Einschreibung = einschreibung;
-        Block = termin.Block.SchemaId;
+        BlockSchemaId = termin.Block.SchemaId;
         Datum = termin.Block.Schultag.Datum.ToDateTime(startTime);
         Beschreibung = termin.Otium.Beschreibung;
         Wiederholungen = termin.Wiederholung?.Termine
@@ -34,6 +35,7 @@ public record Termin : ITermin
             .Distinct()
             .Order()
             .SkipWhile(d => d <= termin.Block.SchultagKey) ?? [];
+        Block = block;
     }
 
     /// <summary>
@@ -47,17 +49,17 @@ public record Termin : ITermin
     public EinschreibungsPreview Einschreibung { get; set; }
 
     /// <summary>
-    /// The description of the termin
+    ///     The description of the termin
     /// </summary>
     public string Beschreibung { get; set; }
 
     /// <summary>
-    ///    The unique ID of the category the Otium is in
+    ///     The unique ID of the category the Otium is in
     /// </summary>
     public Guid Kategorie { get; set; }
 
     /// <summary>
-    ///    A list of all dates on which the termin is repeated
+    ///     A list of all dates on which the termin is repeated
     /// </summary>
     public IEnumerable<DateOnly> Wiederholungen { get; set; } = [];
 
@@ -76,7 +78,10 @@ public record Termin : ITermin
     public string Ort { get; set; }
 
     /// <inheritdoc />
-    public char Block { get; set; }
+    public char BlockSchemaId { get; set; }
+
+    /// <inheritdoc />
+    public string Block { get; set; }
 
     /// <inheritdoc />
     public PersonInfoMinimal? Tutor { get; set; }

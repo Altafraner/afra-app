@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using Afra_App.Otium.Domain.Models;
 using Afra_App.User.Domain.DTO;
 
 namespace Afra_App.Otium.Domain.DTO;
@@ -19,17 +20,18 @@ public record ManagementTerminView
     ///     Construct a ManagementTerminView from a Database Termin
     /// </summary>
     [SetsRequiredMembers]
-    public ManagementTerminView(Models.Termin termin)
+    public ManagementTerminView(Termin termin, string block)
     {
         Id = termin.Id;
         OtiumId = termin.Otium.Id;
         Ort = termin.Ort;
         Tutor = termin.Tutor is not null ? new PersonInfoMinimal(termin.Tutor) : null;
         MaxEinschreibungen = termin.MaxEinschreibungen;
-        Block = termin.Block.SchemaId;
+        BlockSchemaId = termin.Block.SchemaId;
         Datum = termin.Block.Schultag.Datum;
         IstAbgesagt = termin.IstAbgesagt;
         WiederholungId = termin.Wiederholung?.Id;
+        Block = block;
     }
 
     /// <summary>
@@ -43,14 +45,19 @@ public record ManagementTerminView
     public required Guid OtiumId { get; set; }
 
     /// <summary>
-    ///     The Id of the wiederholung the termin belongs to. Null if termin is singular.
+    ///     The ID of the wiederholung the termin belongs to. Null if termin is singular.
     /// </summary>
     public required Guid? WiederholungId { get; set; }
 
     /// <summary>
-    ///     The number of the Block the Termin is on.
+    ///     The name of the Block the Termin is in.
     /// </summary>
-    public required char Block { get; set; }
+    public required string Block { get; set; }
+
+    /// <summary>
+    ///     The schemaID of the Block the Termin is in.
+    /// </summary>
+    public required char BlockSchemaId { get; set; }
 
     /// <summary>
     ///     The date the Termin is on.

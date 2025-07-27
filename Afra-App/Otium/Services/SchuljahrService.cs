@@ -9,24 +9,27 @@ using Schultag = Afra_App.Otium.Domain.Models.Schuljahr.Schultag;
 namespace Afra_App.Otium.Services;
 
 /// <summary>
-/// A service for managing school years and school days.
+///     A service for managing school years and school days.
 /// </summary>
 public class SchuljahrService
 {
+    private readonly BlockHelper _blockHelper;
     private readonly IOptions<OtiumConfiguration> _configuration;
     private readonly AfraAppContext _dbContext;
 
     /// <summary>
-    /// Called from DI
+    ///     Called from DI
     /// </summary>
-    public SchuljahrService(AfraAppContext dbContext, IOptions<OtiumConfiguration> configuration)
+    public SchuljahrService(AfraAppContext dbContext, IOptions<OtiumConfiguration> configuration,
+        BlockHelper blockHelper)
     {
         _dbContext = dbContext;
         _configuration = configuration;
+        _blockHelper = blockHelper;
     }
 
     /// <summary>
-    /// Gets the current school year, including all school days and the next day.
+    ///     Gets the current school year, including all school days and the next day.
     /// </summary>
     /// <returns></returns>
     public async Task<Schuljahr> GetSchuljahrAsync()
@@ -34,7 +37,8 @@ public class SchuljahrService
         var schultage = await _dbContext.Schultage
             .Include(s => s.Blocks)
             .OrderBy(s => s.Datum)
-            .Select(s => new DtoSchultag(s.Datum, s.Wochentyp, s.Blocks.Select(b => b.SchemaId)))
+            .Select(s => new DtoSchultag(s.Datum, s.Wochentyp,
+                s.Blocks.Select(b => new BlockSchema(b.SchemaId, _blockHelper.Get(b.SchemaId)!.Bezeichnung))))
             .ToListAsync();
 
         var next = schultage.FirstOrDefault(s => s.Datum >= DateOnly.FromDateTime(DateTime.Now)) ??
@@ -44,7 +48,7 @@ public class SchuljahrService
     }
 
     /// <summary>
-    /// Finds the currently active block for today.
+    ///     Finds the currently active block for today.
     /// </summary>
     /// <returns>The currently active block, if any; Otherwise, null</returns>
     /// <exception cref="KeyNotFoundException">To</exception>
@@ -66,7 +70,7 @@ public class SchuljahrService
     }
 
     /// <summary>
-    /// Deletes a schultag from the database.
+    ///     Deletes a schultag from the database.
     /// </summary>
     /// <param name="datum">The date of the schultag</param>
     /// <exception cref="KeyNotFoundException">There is no schoolday at the specified date</exception>
@@ -80,12 +84,12 @@ public class SchuljahrService
     }
 
     /// <summary>
-    /// Adds a range of schultage to the database.
+    ///     Adds a range of schultage to the database.
     /// </summary>
     /// <param name="schultageIn">The schooldays to add</param>
     /// <returns>A list of the newly created schooldays</returns>
     /// <exception cref="KeyNotFoundException">An invalid BlockId was provided</exception>
-    public async Task<List<Schultag>> AddRangeAsync(IEnumerable<DtoSchultag> schultageIn)
+    public async Task<List<Schultag>> AddRangeAsync(IEnumerable<SchultagCreation> schultageIn)
     {
         var blockKeys = _configuration.Value.Blocks.Select(e => e.Id).Distinct();
         var schultage = schultageIn.Select(s => new Schultag
@@ -130,7 +134,7 @@ public class SchuljahrService
     }
 
     /// <summary>
-    /// Gets the blocks for a given date
+    ///     Gets the blocks for a given date
     /// </summary>
     public async Task<List<Block>> GetBlocksAsync(DateOnly datum)
     {
@@ -138,9 +142,19 @@ public class SchuljahrService
         return blocks;
     }
 
-    private List<char> GetCurrentSchemas(TimeOnly now) =>
-        _configuration.Value.Blocks
+    /// <summary>
+    ///     Gets all available block schemas.
+    /// </summary>
+    public IEnumerable<BlockSchema> GetAllSchemas()
+    {
+        return _blockHelper.GetAll().Select(bs => new BlockSchema(bs.Id, bs.Bezeichnung));
+    }
+
+    private List<char> GetCurrentSchemas(TimeOnly now)
+    {
+        return _configuration.Value.Blocks
             .Where(metadata => metadata.Interval.Contains(now))
             .Select(metadata => metadata.Id)
             .ToList();
+    }
 }

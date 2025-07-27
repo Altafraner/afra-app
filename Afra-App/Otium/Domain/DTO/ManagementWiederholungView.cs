@@ -22,7 +22,7 @@ public record ManagementWiederholungView
     ///     Construct a ManagementWiederholungView from a Database Wiederholung
     /// </summary>
     [SetsRequiredMembers]
-    public ManagementWiederholungView(Wiederholung dbWiederholung)
+    public ManagementWiederholungView(Wiederholung dbWiederholung, string block)
     {
         Id = dbWiederholung.Id;
         OtiumId = dbWiederholung.Otium.Id;
@@ -32,11 +32,12 @@ public record ManagementWiederholungView
         Wochentyp = dbWiederholung.Wochentyp;
         StartDate = dbWiederholung.StartDate;
         EndDate = dbWiederholung.EndDate;
-        Block = dbWiederholung.Block;
+        BlockSchemaId = dbWiederholung.Block;
+        Block = block;
     }
 
     /// <summary>
-    ///     The Id the wiederholung
+    ///     The ID of the wiederholung
     /// </summary>
     public required Guid Id { get; set; }
 
@@ -56,9 +57,14 @@ public record ManagementWiederholungView
     public required string Ort { get; set; }
 
     /// <summary>
-    ///     The number of the Block the Wiederholung is on.
+    ///     The name of the Block the Wiederholung is in.
     /// </summary>
-    public required char Block { get; set; }
+    public required string Block { get; set; }
+
+    /// <summary>
+    ///     The schemaID of the Block the Wiederholung is in.
+    /// </summary>
+    public required char BlockSchemaId { get; set; }
 
     /// <summary>
     ///     The Day of the Week that Termine of the Wiederholung are scheduled

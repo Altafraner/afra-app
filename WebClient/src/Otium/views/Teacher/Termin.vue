@@ -203,7 +203,7 @@ await fetchData()
     </GridEditRow>
     <GridEditRow header="Block" hide-edit>
       <template #body>
-        {{ otium.block }}. Block
+        {{ otium.block }}
       </template>
     </GridEditRow>
     <GridEditRow header="Ort" @edit="startEditOrt" @update="updateOrt">
