@@ -48,7 +48,7 @@ internal class BatchEmailsJob : IJob
             var userEmail = user.Email;
 
             var batchSubject = emailsForUser.Count == 1 ? emailsForUser.First().Subject : "Neue Benachrichtigungen";
-            var begrüßung = user.Rolle == Rolle.Tutor ? "Sehr geehrter" : "Liebe";
+            var begrüßung = user.Rolle == Rolle.Tutor ? "Sehr geehrte:r" : "Liebe:r";
             var anrede = user.Rolle == Rolle.Tutor ? "Sie haben" : "Du hast";
             var batchText = $"""
                              {begrüßung} {user.Vorname} {user.Nachname},
