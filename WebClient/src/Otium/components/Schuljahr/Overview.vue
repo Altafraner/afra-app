@@ -143,7 +143,7 @@ setup();
     <Column field="wochentyp" header="Wochentyp"/>
     <Column header="Blöcke">
       <template #body="{data}">
-        {{ data.blocks.sort().join(', ') }}
+        {{ data.blocks.sort().map(b => b.bezeichnung).join(', ') }}
       </template>
     </Column>
     <Column class="afra-col-action text-right">
