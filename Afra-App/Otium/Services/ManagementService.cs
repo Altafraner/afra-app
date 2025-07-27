@@ -1,6 +1,7 @@
 ﻿using Afra_App.Otium.Domain.Models;
 using Afra_App.Otium.Domain.Models.Schuljahr;
 using Afra_App.User.Domain.Models;
+using Microsoft.EntityFrameworkCore;
 using DB_Otium = Afra_App.Otium.Domain.Models.Otium;
 
 namespace Afra_App.Otium.Services;
@@ -39,7 +40,9 @@ public class ManagementService
     /// <exception cref="KeyNotFoundException">There is no such termin</exception>
     public async Task<Termin> GetTerminByIdAsync(Guid terminId)
     {
-        var termin = await _dbContext.OtiaTermine.FindAsync(terminId);
+        var termin = await _dbContext.OtiaTermine
+            .Include(t => t.Otium)
+            .FirstOrDefaultAsync(t => t.Id == terminId);
         if (termin is null)
             throw new KeyNotFoundException("Termin not found.");
 
@@ -93,5 +96,19 @@ public class ManagementService
     {
         await _dbContext.Entry(otium).Reference(o => o.Verantwortliche).LoadAsync();
         return otium.Verantwortliche.ToList();
+    }
+
+    /// <summary>
+    /// Continues a previously cancelled Termin.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">The termin is not canceled.</exception>
+    public async Task ContinueTerminAsync(Termin termin)
+    {
+        if (!termin.IstAbgesagt)
+            throw new InvalidOperationException("Termin ist nicht abgesagt.");
+
+        termin.IstAbgesagt = false;
+        _dbContext.OtiaTermine.Update(termin);
+        await _dbContext.SaveChangesAsync();
     }
 }

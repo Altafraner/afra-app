@@ -13,18 +13,18 @@ const props = defineProps({
   allowEdit: Boolean
 })
 
-const emit = defineEmits(['delete', 'cancel', 'create'])
+const emit = defineEmits(['delete', 'cancel', 'create', 'continue'])
 
 const createDialogVisible = ref(false);
 
-const openConfirmDialog = (event, callback, message) => {
+const openConfirmDialog = (event, callback, message, severity = "danger") => {
   confirm.require({
     target: event.currentTarget,
     message: message,
     icon: 'pi pi-exclamation-triangle',
     acceptProps: {
       label: 'Ja',
-      severity: 'danger'
+      severity: severity
     },
     rejectProps: {
       label: 'Nein',
@@ -42,6 +42,11 @@ const confirmCancel = (event, id) => {
 const confirmDelete = (event, id) => {
   const onConfirm = () => emit('delete', id);
   openConfirmDialog(event, onConfirm, "Termin löschen?")
+}
+
+const confirmContinue = (event, id) => {
+  const onConfirm = () => emit('continue', id);
+  openConfirmDialog(event, onConfirm, "Termin nicht mehr abbrechen?", "success")
 }
 
 const triggerCreateDialog = () => {
@@ -91,8 +96,8 @@ const create = (data) => {
         </span>
         <span v-else v-if="data.istAbgesagt" class="inline-flex gap-1">
           <Button v-tooltip="'Absagen beenden'" aria-label="Absagen beenden"
-                  icon="pi pi-caret-right" severity="primary"
-                  size="small" variant="text"/>
+                  icon="pi pi-caret-right" severity="success"
+                  size="small" variant="text" @click="(event) => confirmContinue(event, data.id)"/>
           <Button v-if="data.wiederholungId===null" v-tooltip="'Löschen'" aria-label="Löschen"
                   icon="pi pi-times" severity="danger"
                   size="small" variant="text"

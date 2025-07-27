@@ -137,6 +137,20 @@ async function cancelTermin(id) {
   }
 }
 
+async function continueTermin(id) {
+  const api = mande(`/api/otium/management/termin/${id}/cancel`);
+  try {
+    await api.delete()
+    await getOtium(false)
+  } catch {
+    toast.add({
+      severity: "error",
+      summary: "Fehler",
+      detail: "Der Termin konnte nicht abgesagt werden."
+    })
+  }
+}
+
 async function deleteTermin(id) {
   const api = mande(`/api/otium/management/termin/${id}`);
   try {
@@ -279,7 +293,8 @@ setup();
         <AccordionHeader>Termine</AccordionHeader>
         <AccordionContent>
           <afra-otium-date-table :dates="otium.termine" allowEdit @cancel="cancelTermin"
-                                 @create="createTermin" @delete="deleteTermin"/>
+                                 @continue="continueTermin" @create="createTermin"
+                                 @delete="deleteTermin"/>
         </AccordionContent>
       </AccordionPanel>
       <AccordionPanel value="1">

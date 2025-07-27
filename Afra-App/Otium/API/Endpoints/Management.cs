@@ -1,4 +1,5 @@
 using Afra_App.Backbone.Authentication;
+using Afra_App.Otium.Domain.Models;
 using Afra_App.Otium.Services;
 using Afra_App.User.Domain.Models;
 using Afra_App.User.Services;
@@ -42,6 +43,7 @@ public static class Management
         group.MapPost("/termin", CreateOtiumTermin);
         group.MapDelete("/termin/{otiumTerminId:guid}", DeleteOtiumTermin);
         group.MapPut("/termin/{otiumTerminId:guid}/cancel", OtiumTerminAbsagen);
+        group.MapDelete("/termin/{otiumTerminId:guid}/cancel", OtiumTerminFortsetzen);
         group.MapPatch("/termin/{otiumTerminId:guid}/maxEinschreibungen", OtiumTerminSetMaxEinschreibungen);
         group.MapPatch("/termin/{otiumTerminId:guid}/tutor", OtiumTerminSetTutor);
         group.MapPatch("/termin/{otiumTerminId:guid}/ort", OtiumTerminSetOrt);
@@ -293,6 +295,39 @@ public static class Management
         catch (OtiumEndpointService.EntityDeletionException e)
         {
             return Results.Conflict(e.Message);
+        }
+    }
+
+    private static async Task<IResult> OtiumTerminFortsetzen(ManagementService managementService,
+        UserAuthorizationHelper authHelper, Guid otiumTerminId)
+    {
+        DB_Otium otium;
+        Termin termin;
+        try
+        {
+            termin = await managementService.GetTerminByIdAsync(otiumTerminId);
+            otium = await managementService.GetOtiumOfTerminAsync(termin);
+        }
+        catch (KeyNotFoundException)
+        {
+            return Results.NotFound("Otium not found.");
+        }
+
+        if (!await MayEditAsync(authHelper, managementService, otium)) return Results.Forbid();
+
+        try
+        {
+            await managementService.ContinueTerminAsync(termin);
+            return Results.Ok();
+        }
+        catch (InvalidOperationException)
+        {
+            return Results.ValidationProblem(
+                new Dictionary<string, string[]>
+                {
+                    ["otiumTerminId"] = ["The termin is not cancelled."]
+                }
+            );
         }
     }
 
