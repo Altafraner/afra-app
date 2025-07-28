@@ -1,5 +1,6 @@
 ﻿using Afra_App.Backbone.Services.Email;
 using Afra_App.Otium.Configuration;
+using Afra_App.User.Domain.Models;
 using Microsoft.Extensions.Options;
 using Quartz;
 
@@ -50,7 +51,9 @@ public class EnrollmentReminderJob : IJob
 
         try
         {
-            var missing = await _enrollmentService.GetNotEnrolledPersonsForDayAsync(tomorrow);
+            var missing = (await _enrollmentService.GetNotEnrolledPersonsForDayAsync(tomorrow))
+                .Where(p => p.Rolle == Rolle.Mittelstufe)
+                .ToList();
             _logger.LogInformation("Found {Count} persons without enrollments for tomorrow.", missing.Count);
 
             foreach (var person in missing)

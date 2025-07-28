@@ -7,6 +7,7 @@ namespace Afra_App.Backbone.Services.Email;
 /// <summary>
 ///     A Job that sends a batched email with all pending notifications for a single User
 /// </summary>
+[PersistJobDataAfterExecution]
 internal class BatchEmailsJob : IJob
 {
     private readonly AfraAppContext _dbContext;

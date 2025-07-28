@@ -5,6 +5,7 @@ namespace Afra_App.Backbone.Services.Email;
 /// <summary>
 /// A job that sends a report via email.
 /// </summary>
+[PersistJobDataAfterExecution]
 public class FlushEmailJob : IJob
 {
     private readonly IEmailService _emailService;
@@ -39,7 +40,7 @@ public class FlushEmailJob : IJob
             if (!hasRetryCount) retryCount = 0;
             if (retryCount < 3)
             {
-                context.MergedJobDataMap.Put("retryCount", retryCount + 1);
+                context.JobDetail.JobDataMap.Put("retryCount", retryCount + 1);
                 var trigger = TriggerBuilder.Create()
                     .ForJob(context.JobDetail.Key)
                     .UsingJobData("retryCount", retryCount + 1)

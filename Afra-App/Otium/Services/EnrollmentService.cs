@@ -524,6 +524,7 @@ public class EnrollmentService
         foreach (var block in mandatoryBlocks)
         {
             var missingPersonsInBlock = await _dbContext.Personen
+                .Where(p => p.Rolle != Rolle.Tutor)
                 .Where(p => !_dbContext.OtiaEinschreibungen
                     .Any(e => e.BetroffenePerson.Id == p.Id &&
                               e.BetroffenePerson.Rolle == Rolle.Mittelstufe &&
@@ -532,7 +533,8 @@ public class EnrollmentService
                 {
                     Id = p.Id,
                     Vorname = p.Vorname,
-                    Nachname = p.Nachname
+                    Nachname = p.Nachname,
+                    Rolle = p.Rolle
                 })
                 .ToHashSetAsync();
 

@@ -14,6 +14,7 @@ namespace Afra_App.Otium.Services;
 /// <summary>
 ///     A job that notifies mentors about student misbehaviour.
 /// </summary>
+[PersistJobDataAfterExecution]
 public class StudentMisbehaviourNotificationJob : IJob
 {
     private readonly IAttendanceService _attendanceService;
