@@ -18,6 +18,9 @@ public class LdapService
     private readonly AfraAppContext _dbContext;
     private readonly IEmailOutbox _emailOutbox;
     private readonly ILogger<LdapService> _logger;
+    private Dictionary<string, Person> _studentsByDn = [];
+
+    private Dictionary<string, Person> _tutorsByDn = [];
 
     /// <summary>
     ///     Creates a new instance of the LdapService.
@@ -60,7 +63,9 @@ public class LdapService
         foreach (var description in _configuration.UserGroups) UpdateUserGroup(description);
         foreach (var description in _configuration.PermissionGroups) UpdateGlobalPermissionGroup(description);
 
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync(); // Save here to ensure all users have a valid ID.
+
+        await UpdateMentors(_configuration.MentorGroups);
 
         var unsyncedUsers = await _dbContext.Personen
             .Where(p => p.LdapObjectId != null && p.LdapSyncTime < syncTime)
@@ -84,17 +89,17 @@ public class LdapService
 
                          Falls der Benutzer nicht gelöscht wurde, überprüfen Sie bitte die LDAP-Konfiguration und die Verbindung zum LDAP-Server.
                          """);
-
-                await _dbContext.SaveChangesAsync();
             }
         }
+
+        await _dbContext.SaveChangesAsync();
 
         _logger.LogInformation("LDAP synchronization finished");
         return;
 
         void UpdateUserGroup(LdapUserSyncDescription ldapGroup)
         {
-            var groupEntries = GetGroupEntries(connection, ldapGroup);
+            var groupEntries = SubtreeSearch(connection, ldapGroup);
             foreach (SearchResultEntry entry in groupEntries)
             {
                 var success =
@@ -118,7 +123,7 @@ public class LdapService
                 .ToHashSet();
 
             // Add users from LDAP group
-            var groupEntries = GetGroupEntries(connection, ldapGroup);
+            var groupEntries = SubtreeSearch(connection, ldapGroup);
             foreach (SearchResultEntry entry in groupEntries)
             {
                 if (!entry.TryGetGuid(out var objGuid))
@@ -149,6 +154,57 @@ public class LdapService
 
             // Remove users that were in the group but not anymore
             foreach (var user in usersWithPermission) user.GlobalPermissions.Remove(ldapGroup.Permission);
+        }
+
+        async Task UpdateMentors(LdapSearchDescription searchDescription)
+        {
+            var groups = SubtreeSearch(connection, searchDescription, "member");
+            var dbEntries = await _dbContext.MentorMenteeRelations
+                .ToListAsync();
+
+            var dbEntriesByStruct =
+                dbEntries.ToDictionary(e => new MentorMenteeRelationStruct(e.MentorId, e.StudentId), e => e);
+
+            var dbEntriesSet = dbEntriesByStruct.Keys.ToHashSet();
+
+            var allMentorGroups = groups
+                .OfType<SearchResultEntry>()
+                .ToDictionary(e => e.DistinguishedName, e => e.GetMulitAttribute("member"));
+
+            foreach (var group in allMentorGroups)
+            {
+                var entriesList = group.Value.ToList();
+                var tutorDn = entriesList.FirstOrDefault(e => _tutorsByDn.ContainsKey(e));
+                var tutorSuccess = _tutorsByDn.TryGetValue(tutorDn ?? "", out var tutor);
+                if (!tutorSuccess || tutorDn is null)
+                {
+                    _logger.LogWarning("No tutor found in group {dn}, skipping", group.Key);
+                    continue;
+                }
+
+                entriesList.Remove(tutorDn);
+
+                foreach (var studentDn in entriesList)
+                {
+                    var studentSuccess = _studentsByDn.TryGetValue(studentDn, out var student);
+                    if (!studentSuccess)
+                    {
+                        _logger.LogWarning("Student {dn} not found", studentDn);
+                        continue;
+                    }
+
+                    var relation = new MentorMenteeRelationStruct(tutor!.Id, student!.Id);
+                    var exists = dbEntriesSet.Remove(relation);
+                    if (!exists)
+                        _dbContext.MentorMenteeRelations.Add(new MentorMenteeRelation()
+                        {
+                            MentorId = tutor.Id,
+                            StudentId = student.Id
+                        });
+                }
+            }
+
+            foreach (var relation in dbEntriesSet) _dbContext.MentorMenteeRelations.Remove(dbEntriesByStruct[relation]);
         }
     }
 
@@ -209,9 +265,11 @@ public class LdapService
         return user;
     }
 
-    private static SearchResultEntryCollection GetGroupEntries(LdapConnection connection, LdapSearchDescription group)
+    private static SearchResultEntryCollection SubtreeSearch(LdapConnection connection, LdapSearchDescription group,
+        params string[] attributes)
     {
-        var searchRequest = new SearchRequest(group.BaseDn, group.Filter, SearchScope.Subtree);
+        if (attributes.Length == 0) attributes = ["objectGuid", "givenName", "sn", "mail"];
+        var searchRequest = new SearchRequest(group.BaseDn, group.Filter, SearchScope.Subtree, attributes);
         var response = (SearchResponse)connection.SendRequest(searchRequest);
 
         if (response is null) throw new LdapException("No response from LDAP server");
@@ -254,6 +312,7 @@ public class LdapService
             };
 
             _dbContext.Personen.Add(user);
+            AddPersonToDict(entry, user);
             return true;
         }
 
@@ -262,6 +321,21 @@ public class LdapService
         user.Email = mail;
         user.Rolle = rolle;
         user.Gruppe = gruppe;
+        AddPersonToDict(entry, user);
         return true;
     }
+
+    private void AddPersonToDict(SearchResultEntry entry, Person person)
+    {
+        var dict = person.Rolle switch
+        {
+            Rolle.Tutor => _tutorsByDn,
+            Rolle.Mittelstufe => _studentsByDn,
+            Rolle.Oberstufe => _studentsByDn,
+            _ => throw new InvalidOperationException("Unknown role")
+        };
+        dict[entry.DistinguishedName] = person;
+    }
+
+    private record struct MentorMenteeRelationStruct(Guid MentorId, Guid MenteeId);
 }

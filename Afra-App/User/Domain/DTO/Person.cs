@@ -18,7 +18,6 @@ public record struct Person
         Vorname = person.Vorname;
         Nachname = person.Nachname;
         Email = person.Email;
-        Mentor = person.Mentor is not null ? new PersonInfoMinimal(person.Mentor) : null;
         Mentees = person.Mentees.Select(mentee => new PersonInfoMinimal(mentee));
         Rolle = person.Rolle;
     }

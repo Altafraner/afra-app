@@ -24,6 +24,11 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
     public DbSet<Person> Personen { get; set; }
 
     /// <summary>
+    ///     Contains the relations between mentors and mentees.
+    /// </summary>
+    public DbSet<MentorMenteeRelation> MentorMenteeRelations { get; set; }
+
+    /// <summary>
     ///     All the Otia in the application.
     /// </summary>
     public DbSet<Otium.Domain.Models.Otium> Otia { get; set; }
@@ -87,11 +92,17 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Person>()
-            .HasOne(p => p.Mentor)
-            .WithMany(p => p.Mentees);
+            .HasMany(p => p.Mentors)
+            .WithMany(p => p.Mentees)
+            .UsingEntity<MentorMenteeRelation>(
+                r => r.HasOne<Person>().WithMany().HasForeignKey(e => e.MentorId),
+                l => l.HasOne<Person>().WithMany().HasForeignKey(e => e.StudentId));
 
         modelBuilder.Entity<Person>()
             .PrimitiveCollection(p => p.GlobalPermissions);
+
+        modelBuilder.Entity<MentorMenteeRelation>()
+            .HasKey(r => new { r.MentorId, r.StudentId });
 
         modelBuilder.Entity<Otium.Domain.Models.Otium>(o =>
         {

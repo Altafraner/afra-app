@@ -34,9 +34,9 @@ public class Person
     public required string Email { get; set; }
 
     /// <summary>
-    ///     The mentor of the person. Only used if the person is a student.
+    ///     The mentors of the person. Only used if the person is a student.
     /// </summary>
-    public Person? Mentor { get; set; }
+    public ICollection<Person> Mentors { get; set; }
 
     /// <summary>
     ///     A collection of the mentees of the person. Only used if the person is a teacher.

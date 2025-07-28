@@ -88,9 +88,18 @@ public static class LdapExtensions
     /// </summary>
     /// <param name="entry">The entry to get the attribute from</param>
     /// <param name="attributeName">If exists and is a string, the value of the first instance of the attribute; Otherwise, null</param>
-    /// <returns></returns>
     public static string? GetSingleAttribute(this SearchResultEntry entry, string attributeName)
     {
         return entry.Attributes[attributeName]?.GetValues(typeof(string)).FirstOrDefault() as string;
+    }
+
+    /// <summary>
+    /// Gets a multivalued attribute from an LDAP entry
+    /// </summary>
+    /// <param name="entry">The entry to get the attribute from</param>
+    /// <param name="attributeName">The values of the attribute</param>
+    public static IEnumerable<string> GetMulitAttribute(this SearchResultEntry entry, string attributeName)
+    {
+        return entry.Attributes[attributeName]?.GetValues(typeof(string)).Cast<string>() ?? [];
     }
 }

@@ -92,7 +92,7 @@ public class TestController(AfraAppContext dbContext, UserSigninService userSign
             : await dbContext.Personen.Where(p => p.Rolle == Rolle.Tutor).ToListAsync();
 
         var studentsFaker = personFaker
-            .RuleFor(p => p.Mentor, f => f.PickRandom(mentoren))
+            .RuleFor(p => p.Mentors, f => [f.PickRandom(mentoren)])
             .RuleFor(p => p.Rolle, f => f.PickRandomWithout(Rolle.Tutor));
 
 
