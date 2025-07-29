@@ -668,7 +668,8 @@ public class EnrollmentService
 
         // Check if the user is adhering to the required categories
         var lastAvailableBlockRuleFulfilled = await LastAvailableBlockRuleFulfilled(user, termin);
-        return lastAvailableBlockRuleFulfilled
+        return lastAvailableBlockRuleFulfilled is LastAvailableBlockRuleStatus.Fulfillable
+            or LastAvailableBlockRuleStatus.ImpossibleButHelping
             ? (true, null)
             : (false,
                 "Du bist nicht in allen erforderlichen Kategorien eingeschrieben. Durch diese Einschreibung wäre das nicht mehr möglich.");
@@ -676,9 +677,13 @@ public class EnrollmentService
 
     // Come here for some hideous shit; Optimizing this is a problem for future me.
     // This currently needs three separate SQL-Queries + loading all categories.
-    private async Task<bool> LastAvailableBlockRuleFulfilled(Person user, Termin termin)
+    private async Task<LastAvailableBlockRuleStatus> LastAvailableBlockRuleFulfilled(Person user, Termin termin)
     {
-        // Find all required kategories the user is not enrolled to. -> notEnrolled[]
+        // Find all required categories the user is not enrolled to. -> notEnrolled[]
+        // This will break if we start having blocks on sundays
+        var now = DateTime.Now;
+        var time = TimeOnly.FromDateTime(now);
+        var today = DateOnly.FromDateTime(now);
         var firstDayOfWeek = termin.Block.Schultag.Datum.AddDays(-(int)termin.Block.Schultag.Datum.DayOfWeek + 1);
         var lastDayOfWeek = firstDayOfWeek.AddDays(7);
         var weekInterval = new DateTimeInterval(new DateTime(firstDayOfWeek, TimeOnly.MinValue),
@@ -699,46 +704,53 @@ public class EnrollmentService
         var blockDurations = usersEnrollmentsInWeek
             .ToDictionary(e => e.Termin.Block.Id, e => _blockHelper.Get(e.Termin.Block.SchemaId)!.Interval.Duration);
 
-        var userKategoriesInWeek = usersEnrollmentsInWeek
+        var usersCategoriesInWeek = usersEnrollmentsInWeek
             .Where(e => e.Interval.Duration >= blockDurations[e.Termin.Block.Id])
             .Select(e => e.Termin.Otium.Kategorie)
             .Distinct()
             .ToList();
 
-        var requiredKategories = (await _kategorieService.GetRequiredKategorienAsync())
+        var requiredCategories = (await _kategorieService.GetRequiredKategorienAsync())
             .Select(k => k.Id)
             .ToHashSet();
 
         // Once we have async linq we can do this with a set minus
-        foreach (var cat in userKategoriesInWeek)
-        {
-            var required = await _kategorieService.GetRequiredParentIdAsync(cat);
-            if (required != null)
-                requiredKategories.Remove(required.Value);
-        }
+        foreach (var cat in usersCategoriesInWeek)
+            if (await _kategorieService.GetRequiredParentIdAsync(cat) is { } required)
+                requiredCategories.Remove(required);
 
-        if (requiredKategories.Count == 0)
-            return true;
+        if (requiredCategories.Count == 0)
+            return LastAvailableBlockRuleStatus.Fulfillable;
 
-        var blocksAvailable = await _dbContext.Blocks
-            .Where(b => b.Schultag.Datum >= firstDayOfWeek && b.Schultag.Datum < lastDayOfWeek)
-            .Where(b => !usersBlocks.Contains(b.Id) &&
-                        b.Id != termin.Block.Id)
+        var allowedSchemas = _blockHelper.GetAll()
+            .Where(b => b.Interval.Start > time)
+            .Select(b => b.Id)
+            .ToHashSet();
+
+        var openBlocksInWeekWhenUnenrolled = await _dbContext.Blocks
+            .Where(b => b.Schultag.Datum >= firstDayOfWeek && b.Schultag.Datum < lastDayOfWeek &&
+                        (b.Schultag.Datum > today ||
+                         (b.Schultag.Datum == today && allowedSchemas.Contains(b.SchemaId))))
+            .Where(b => !usersBlocks.Contains(b.Id))
             .Include(b => b.Schultag)
             .ToListAsync();
 
+        var openBlocksInWeekWhenEnrolled = openBlocksInWeekWhenUnenrolled
+            .Where(b => b.Id != termin.Block.Id)
+            .ToList();
+
         var terminsRequiredCategory = await _kategorieService.GetRequiredParentIdAsync(termin.Otium.Kategorie);
-        if (terminsRequiredCategory != null) requiredKategories.Remove(terminsRequiredCategory.Value);
 
         var blockCategories = new Dictionary<Guid, HashSet<Guid>>();
 
         var catsByBlock = await _dbContext.OtiaTermine
-            .Where(t => blocksAvailable.Contains(t.Block))
+            .Where(t => !t.IstAbgesagt)
+            .Where(t => openBlocksInWeekWhenUnenrolled.Contains(t.Block))
             .GroupBy(t => t.Block.Id)
             .Select(e => new { Block = e.Key, Category = e.Select(t => t.Otium.Kategorie).Distinct().ToHashSet() })
             .ToDictionaryAsync(t => t.Block, t => t.Category);
 
-        foreach (var block in blocksAvailable)
+        foreach (var block in openBlocksInWeekWhenUnenrolled)
         {
             blockCategories.TryAdd(block.Id, []);
             var cats = catsByBlock.TryGetValue(block.Id, out var set) ? set : [];
@@ -746,18 +758,36 @@ public class EnrollmentService
             foreach (var cat in cats)
             {
                 var reqCat = await _kategorieService.GetRequiredParentIdAsync(cat);
-                if (reqCat is not null && requiredKategories.Contains(reqCat.Value))
+                if (reqCat is not null && requiredCategories.Contains(reqCat.Value))
                     blockCategories[block.Id].Add(reqCat.Value);
             }
         }
 
-        var blockIds = blocksAvailable.Select(b => b.Id).ToArray();
+        var blockIds = openBlocksInWeekWhenEnrolled.Select(b => b.Id).ToArray();
 
-        return Backtrack([]);
+        var terminsRequiredCategoryStillRequired = terminsRequiredCategory is not null &&
+                                                   requiredCategories.Contains(terminsRequiredCategory.Value);
+        if (terminsRequiredCategory != null) requiredCategories.Remove(terminsRequiredCategory.Value);
+
+        // Check if fulfillment is possible when enrolled
+        if (Backtrack([])) return LastAvailableBlockRuleStatus.Fulfillable;
+
+        // Check if fulfillment is at all possible
+        if (terminsRequiredCategoryStillRequired) requiredCategories.Add(terminsRequiredCategory!.Value);
+        blockIds = openBlocksInWeekWhenUnenrolled.Select(b => b.Id).ToArray();
+        if (Backtrack([])) return LastAvailableBlockRuleStatus.Blocking;
+
+        var stillRequiredCategoriesFulfillableInBlock = blockCategories[termin.Block.Id].Intersect(requiredCategories);
+
+        if (terminsRequiredCategoryStillRequired || stillRequiredCategoriesFulfillableInBlock.Any())
+            return LastAvailableBlockRuleStatus.ImpossibleButHelping;
+
+        return LastAvailableBlockRuleStatus.ImpossibleButBetterOptionsAvailable;
+
 
         bool Backtrack(HashSet<Guid> catsSelected, int blockIndex = 0)
         {
-            if (catsSelected.Count == requiredKategories.Count) return true;
+            if (requiredCategories.All(catsSelected.Contains)) return true;
             if (blockIndex >= blockIds.Length) return false;
 
             foreach (var cat in blockCategories[blockIds[blockIndex]])
@@ -769,8 +799,17 @@ public class EnrollmentService
                 catsSelected.Remove(cat);
             }
 
-            // Also try to not select a required category from this block. I'm unsure if this is a valid option.
-            return Backtrack(catsSelected, blockIndex + 1);
+            // If there are no required categories in this block, we can skip it. Otherwise, we can always choose one and the problem gets easier
+            return blockCategories[blockIds[blockIndex]].Count == 0 &&
+                   Backtrack(catsSelected, blockIndex + 1);
         }
+    }
+
+    private enum LastAvailableBlockRuleStatus
+    {
+        Fulfillable,
+        Blocking,
+        ImpossibleButHelping,
+        ImpossibleButBetterOptionsAvailable
     }
 }
