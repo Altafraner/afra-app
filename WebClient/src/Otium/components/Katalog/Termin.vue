@@ -19,25 +19,12 @@ const dialog = useDialog();
 const props = defineProps({
   terminId: String,
 })
+const emit = defineEmits(['update']);
 
 const kategorien = ref(null)
 const buttonLoading = ref(true)
 const otium = ref(null)
 const connection = ref(null)
-
-function findKategorie(id, kategorien) {
-  const index = kategorien.findIndex((e) => e.id === id);
-  if (index !== -1) {
-    return kategorien[index]
-  }
-
-  for (const kategorie of kategorien ?? []) {
-    const childResult = findKategorie(id, kategorie.children)
-    if (childResult != null) return childResult
-  }
-
-  return null
-}
 
 async function loadTermin() {
   buttonLoading.value = true
@@ -66,6 +53,8 @@ async function unenroll() {
       summary: "Fehler",
       detail: "Es ist ein Fehler beim Austragen aufgetreten."
     })
+  } finally {
+    emit('update');
   }
 }
 
@@ -80,6 +69,8 @@ async function enroll() {
       summary: "Fehler",
       detail: "Es ist ein Fehler beim Einschreiben aufgetreten."
     })
+  } finally {
+    emit('update');
   }
 }
 

@@ -49,13 +49,13 @@ const navItems = computed(() => {
     }
   }
   return date.value == null ?
-      [start] :
-      [
-        start,
-        {
-          label: formatDate(new Date(date.value.datum))
-        }
-      ];
+    [start] :
+    [
+      start,
+      {
+        label: formatDate(new Date(date.value.datum))
+      }
+    ];
 })
 
 watch(kategorie, filterOtiaByKategorie)
@@ -108,7 +108,6 @@ watch(props, async () => {
 })
 
 async function getTermine() {
-  loading.value = true
   await settings.updateSchuljahr();
   datesAvailable.value = settings.schuljahr
   dateDefault.value = settings.defaultDay
@@ -184,7 +183,7 @@ startup()
         </Message>
       </template>
       <Suspense>
-        <AfraOtiumKatalogView :otia="selectedOtia" :termin-id="terminId"/>
+        <AfraOtiumKatalogView :otia="selectedOtia" :termin-id="terminId" @reload="getAngebote"/>
       </Suspense>
     </template>
     <div v-else class="flex gap-5 flex-col">

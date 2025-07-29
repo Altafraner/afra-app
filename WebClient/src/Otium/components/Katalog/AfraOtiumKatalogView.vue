@@ -17,6 +17,8 @@ const props = defineProps({
   }
 })
 
+const emit = defineEmits('reload')
+
 const settings = useOtiumStore();
 const rowsExpanded = ref({});
 if (props.terminId) {
@@ -76,7 +78,7 @@ await settings.updateKategorien();
     </Column>
     <template #expansion="{data}">
       <Suspense>
-        <Termin :termin-id="data.id"/>
+        <Termin :termin-id="data.id" @update="() => emit('reload')"/>
         <template #fallback>
           <div>
             <h1>
