@@ -65,11 +65,17 @@ public class UserService
         if (student.Rolle == Rolle.Tutor)
             throw new InvalidOperationException("Tutors do not have mentors.");
 
-        await _dbContext.Entry(student).Reference(s => s.Mentors).LoadAsync();
+        await _dbContext.Entry(student).Collection(s => s.Mentors).LoadAsync();
 
         return student.Mentors.ToList();
     }
 
+    /// <summary>
+    /// Gets the mentees of a given mentor.
+    /// </summary>
+    /// <param name="mentor"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
     public async Task<List<Person>> GetMenteesAsync(Person mentor)
     {
         if (mentor.Rolle != Rolle.Tutor)

@@ -36,7 +36,7 @@ public class Person
     /// <summary>
     ///     The mentors of the person. Only used if the person is a student.
     /// </summary>
-    public ICollection<Person> Mentors { get; set; }
+    public ICollection<Person> Mentors { get; set; } = new List<Person>();
 
     /// <summary>
     ///     A collection of the mentees of the person. Only used if the person is a teacher.
