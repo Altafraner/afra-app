@@ -51,7 +51,7 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
     /// <summary>
     ///     All enrollments for Otia
     /// </summary>
-    public DbSet<Einschreibung> OtiaEinschreibungen { get; set; }
+    public DbSet<Otium.Domain.Models.Einschreibung> OtiaEinschreibungen { get; set; }
 
     /// <summary>
     ///     All attendances for Otia
@@ -73,6 +73,17 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
     /// </summary>
     public DbSet<ScheduledEmail> ScheduledEmails { get; set; }
 
+    ///
+    public DbSet<Profundum.Domain.Models.Profundum> Profunda { get; set; }
+    ///
+    public DbSet<Profundum.Domain.Models.ProfundumInstanz> ProfundaInstanzen { get; set; }
+    ///
+    public DbSet<Profundum.Domain.Models.Einschreibung> ProfundaEinschreibungen { get; set; }
+    ///
+    public DbSet<Profundum.Domain.Models.BelegWunsch> ProfundaBelegWuensche { get; set; }
+    ///
+    public DbSet<Profundum.Domain.Models.ProfundumSlot> ProfundaSlots { get; set; }
+
     /// <summary>
     ///     Configures the npgsql specific options for the context
     /// </summary>
@@ -81,7 +92,8 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
             .MapEnum<Rolle>("person_rolle")
             .MapEnum<GlobalPermission>("global_permission")
             .MapEnum<Wochentyp>("wochentyp")
-            .MapEnum<AnwesenheitsStatus>("anwesenheits_status");
+            .MapEnum<AnwesenheitsStatus>("anwesenheits_status")
+            .MapEnum<BelegWunschStufe>("belegwunsch_stufe");
 
     /// <summary>
     ///     The keys used by the ASP.NET Core Domain Protection API.
@@ -133,7 +145,7 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
         });
 
         // record structs do not work with the [ComplexType] attribute.
-        modelBuilder.Entity<Einschreibung>()
+        modelBuilder.Entity<Otium.Domain.Models.Einschreibung>()
             .ComplexProperty(e => e.Interval);
 
         modelBuilder.Entity<Anwesenheit>(e =>
@@ -163,6 +175,26 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
 
             b.HasIndex(e => new { e.SchultagKey, Nummer = e.SchemaId })
                 .IsUnique();
+        });
+
+        modelBuilder.Entity<Profundum.Domain.Models.Profundum>(p => { });
+        modelBuilder.Entity<Profundum.Domain.Models.ProfundumInstanz>(p =>
+        {
+            p.HasOne(i => i.Profundum)
+                .WithMany(p => p.Instanzen);
+            p.HasMany(p => p.Slots).WithMany();
+        });
+        modelBuilder.Entity<Profundum.Domain.Models.Einschreibung>(e =>
+        {
+            e.HasOne(e => e.BetroffenePerson).WithMany().HasForeignKey(e => e.BetroffenePersonKey);
+            e.HasOne(e => e.ProfundumInstanz).WithMany().HasForeignKey(e => e.ProfundumInstanzKey);
+            e.HasKey(b => new { b.BetroffenePersonKey, b.ProfundumInstanzKey, });
+        });
+        modelBuilder.Entity<Profundum.Domain.Models.BelegWunsch>(w =>
+        {
+            w.HasOne(w => w.BetroffenePerson).WithMany().HasForeignKey(w => w.BetroffenePersonKey);
+            w.HasOne(w => w.ProfundumInstanz).WithMany().HasForeignKey(w => w.ProfundumInstanzKey);
+            w.HasKey(b => new { b.ProfundumInstanzKey, b.BetroffenePersonKey, b.Stufe });
         });
 
         /*
