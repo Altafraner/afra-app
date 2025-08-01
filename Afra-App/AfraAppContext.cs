@@ -92,8 +92,7 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
             .MapEnum<Rolle>("person_rolle")
             .MapEnum<GlobalPermission>("global_permission")
             .MapEnum<Wochentyp>("wochentyp")
-            .MapEnum<AnwesenheitsStatus>("anwesenheits_status")
-            .MapEnum<BelegWunschStufe>("belegwunsch_stufe");
+            .MapEnum<AnwesenheitsStatus>("anwesenheits_status");
 
     /// <summary>
     ///     The keys used by the ASP.NET Core Domain Protection API.
