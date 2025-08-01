@@ -1,19 +1,25 @@
-﻿<script setup>
+<script setup>
 import {computed, ref} from "vue";
 import EinwahlSelectorGroup from "@/Profundum/components/EinwahlSelectorGroup.vue";
 import {Button, useToast} from "primevue";
-import {testdata} from "@/Profundum/components/testdata.js";
 import {mande} from "mande";
 import {useRouter} from "vue-router";
 
 const toast = useToast();
 const router = useRouter();
 
-const options = ref(testdata);
+const options = ref([]);
 const results = ref({});
 
-for (const option of options.value) {
-  results.value[option.id] = [null, null, null];
+async function get() {
+  const api = mande('/api/profundum');
+  const profunda = await api.get();
+  console.log(profunda);
+  options.value = profunda;
+
+  for (const option of options.value) {
+    results.value[option.id] = [null, null, null];
+  }
 }
 
 async function send() {
@@ -57,6 +63,14 @@ const maySend = computed(() => {
   }
   return true;
 });
+
+async function startup() {
+  get();
+
+}
+
+startup();
+
 </script>
 
 <template>

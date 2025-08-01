@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using Afra_App.Backbone.Extensions;
 using Afra_App.Backbone.Utilities;
 using Afra_App.Otium.Extensions;
+using Afra_App.Profundum.Extensions;
 using Afra_App.User.Extensions;
 using Microsoft.AspNetCore.HttpOverrides;
 using OpenTelemetry.Metrics;
@@ -41,6 +42,7 @@ builder.Services.AddCors(options =>
 
 builder.AddBackbone();
 builder.AddOtium();
+builder.AddProfundum();
 builder.AddUser();
 
 var app = builder.Build();
@@ -66,6 +68,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapOtium();
+app.MapProfundum();
 app.MapUser();
 
 app.Run();

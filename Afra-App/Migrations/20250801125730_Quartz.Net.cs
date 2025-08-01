@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -24,14 +24,14 @@ namespace Afra_App.Migrations
                                  DROP TABLE IF EXISTS qrtz_job_details;
                                  DROP TABLE IF EXISTS qrtz_calendars;
                                  set client_min_messages = NOTICE;
-                                 
+
                                  CREATE TABLE qrtz_job_details
                                    (
                                      sched_name TEXT NOT NULL,
                                  	job_name  TEXT NOT NULL,
                                      job_group TEXT NOT NULL,
                                      description TEXT NULL,
-                                     job_class_name   TEXT NOT NULL, 
+                                     job_class_name   TEXT NOT NULL,
                                      is_durable BOOL NOT NULL,
                                      is_nonconcurrent BOOL NOT NULL,
                                      is_update_data BOOL NOT NULL,
@@ -39,13 +39,13 @@ namespace Afra_App.Migrations
                                      job_data BYTEA NULL,
                                      PRIMARY KEY (sched_name,job_name,job_group)
                                  );
-                                 
+
                                  CREATE TABLE qrtz_triggers
                                    (
                                      sched_name TEXT NOT NULL,
                                  	trigger_name TEXT NOT NULL,
                                      trigger_group TEXT NOT NULL,
-                                     job_name  TEXT NOT NULL, 
+                                     job_name  TEXT NOT NULL,
                                      job_group TEXT NOT NULL,
                                      description TEXT NULL,
                                      next_fire_time BIGINT NULL,
@@ -59,10 +59,10 @@ namespace Afra_App.Migrations
                                      misfire_instr SMALLINT NULL,
                                      job_data BYTEA NULL,
                                      PRIMARY KEY (sched_name,trigger_name,trigger_group),
-                                     FOREIGN KEY (sched_name,job_name,job_group) 
-                                 		REFERENCES qrtz_job_details(sched_name,job_name,job_group) 
+                                     FOREIGN KEY (sched_name,job_name,job_group)
+                                 		REFERENCES qrtz_job_details(sched_name,job_name,job_group)
                                  );
-                                 
+
                                  CREATE TABLE qrtz_simple_triggers
                                    (
                                      sched_name TEXT NOT NULL,
@@ -72,11 +72,11 @@ namespace Afra_App.Migrations
                                      repeat_interval BIGINT NOT NULL,
                                      times_triggered BIGINT NOT NULL,
                                      PRIMARY KEY (sched_name,trigger_name,trigger_group),
-                                     FOREIGN KEY (sched_name,trigger_name,trigger_group) 
+                                     FOREIGN KEY (sched_name,trigger_name,trigger_group)
                                  		REFERENCES qrtz_triggers(sched_name,trigger_name,trigger_group) ON DELETE CASCADE
                                  );
-                                 
-                                 CREATE TABLE QRTZ_SIMPROP_TRIGGERS 
+
+                                 CREATE TABLE QRTZ_SIMPROP_TRIGGERS
                                    (
                                      sched_name TEXT NOT NULL,
                                      trigger_name TEXT NOT NULL ,
@@ -94,10 +94,10 @@ namespace Afra_App.Migrations
                                      bool_prop_2 BOOL NULL,
                                  	time_zone_id TEXT NULL,
                                  	PRIMARY KEY (sched_name,trigger_name,trigger_group),
-                                     FOREIGN KEY (sched_name,trigger_name,trigger_group) 
+                                     FOREIGN KEY (sched_name,trigger_name,trigger_group)
                                  		REFERENCES qrtz_triggers(sched_name,trigger_name,trigger_group) ON DELETE CASCADE
                                  );
-                                 
+
                                  CREATE TABLE qrtz_cron_triggers
                                    (
                                      sched_name TEXT NOT NULL,
@@ -106,10 +106,10 @@ namespace Afra_App.Migrations
                                      cron_expression TEXT NOT NULL,
                                      time_zone_id TEXT,
                                      PRIMARY KEY (sched_name,trigger_name,trigger_group),
-                                     FOREIGN KEY (sched_name,trigger_name,trigger_group) 
+                                     FOREIGN KEY (sched_name,trigger_name,trigger_group)
                                  		REFERENCES qrtz_triggers(sched_name,trigger_name,trigger_group) ON DELETE CASCADE
                                  );
-                                 
+
                                  CREATE TABLE qrtz_blob_triggers
                                    (
                                      sched_name TEXT NOT NULL,
@@ -117,26 +117,26 @@ namespace Afra_App.Migrations
                                      trigger_group TEXT NOT NULL,
                                      blob_data BYTEA NULL,
                                      PRIMARY KEY (sched_name,trigger_name,trigger_group),
-                                     FOREIGN KEY (sched_name,trigger_name,trigger_group) 
+                                     FOREIGN KEY (sched_name,trigger_name,trigger_group)
                                  		REFERENCES qrtz_triggers(sched_name,trigger_name,trigger_group) ON DELETE CASCADE
                                  );
-                                 
+
                                  CREATE TABLE qrtz_calendars
                                    (
                                      sched_name TEXT NOT NULL,
-                                     calendar_name  TEXT NOT NULL, 
+                                     calendar_name  TEXT NOT NULL,
                                      calendar BYTEA NOT NULL,
                                      PRIMARY KEY (sched_name,calendar_name)
                                  );
-                                 
+
                                  CREATE TABLE qrtz_paused_trigger_grps
                                    (
                                      sched_name TEXT NOT NULL,
-                                     trigger_group TEXT NOT NULL, 
+                                     trigger_group TEXT NOT NULL,
                                      PRIMARY KEY (sched_name,trigger_group)
                                  );
-                                 
-                                 CREATE TABLE qrtz_fired_triggers 
+
+                                 CREATE TABLE qrtz_fired_triggers
                                    (
                                      sched_name TEXT NOT NULL,
                                      entry_id TEXT NOT NULL,
@@ -153,8 +153,8 @@ namespace Afra_App.Migrations
                                      requests_recovery BOOL NULL,
                                      PRIMARY KEY (sched_name,entry_id)
                                  );
-                                 
-                                 CREATE TABLE qrtz_scheduler_state 
+
+                                 CREATE TABLE qrtz_scheduler_state
                                    (
                                      sched_name TEXT NOT NULL,
                                      instance_name TEXT NOT NULL,
@@ -162,14 +162,14 @@ namespace Afra_App.Migrations
                                      checkin_interval BIGINT NOT NULL,
                                      PRIMARY KEY (sched_name,instance_name)
                                  );
-                                 
+
                                  CREATE TABLE qrtz_locks
                                    (
                                      sched_name TEXT NOT NULL,
-                                     lock_name  TEXT NOT NULL, 
+                                     lock_name  TEXT NOT NULL,
                                      PRIMARY KEY (sched_name,lock_name)
                                  );
-                                 
+
                                  create index idx_qrtz_j_req_recovery on qrtz_job_details(requests_recovery);
                                  create index idx_qrtz_t_next_fire_time on qrtz_triggers(next_fire_time);
                                  create index idx_qrtz_t_state on qrtz_triggers(trigger_state);

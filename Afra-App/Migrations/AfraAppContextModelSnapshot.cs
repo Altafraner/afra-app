@@ -288,6 +288,100 @@ namespace Afra_App.Migrations
                     b.ToTable("OtiaWiederholungen");
                 });
 
+            modelBuilder.Entity("Afra_App.Profundum.Domain.Models.BelegWunsch", b =>
+                {
+                    b.Property<Guid>("ProfundumInstanzKey")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BetroffenePersonKey")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Stufe")
+                        .HasColumnType("integer");
+
+                    b.HasKey("ProfundumInstanzKey", "BetroffenePersonKey", "Stufe");
+
+                    b.HasIndex("BetroffenePersonKey");
+
+                    b.ToTable("ProfundaBelegWuensche");
+                });
+
+            modelBuilder.Entity("Afra_App.Profundum.Domain.Models.Einschreibung", b =>
+                {
+                    b.Property<Guid>("BetroffenePersonKey")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ProfundumInstanzKey")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("BetroffenePersonKey", "ProfundumInstanzKey");
+
+                    b.HasIndex("ProfundumInstanzKey");
+
+                    b.ToTable("ProfundaEinschreibungen");
+                });
+
+            modelBuilder.Entity("Afra_App.Profundum.Domain.Models.Profundum", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Bezeichnung")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<bool>("ProfilProfundum")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Profunda");
+                });
+
+            modelBuilder.Entity("Afra_App.Profundum.Domain.Models.ProfundumInstanz", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("MaxEinschreibungen")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("ProfundumId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProfundumId");
+
+                    b.ToTable("ProfundaInstanzen");
+                });
+
+            modelBuilder.Entity("Afra_App.Profundum.Domain.Models.ProfundumSlot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("EinwahlMöglich")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Jahr")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Quartal")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Wochentag")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ProfundaSlots");
+                });
+
             modelBuilder.Entity("Afra_App.User.Domain.Models.MentorMenteeRelation", b =>
                 {
                     b.Property<Guid>("MentorId")
@@ -381,6 +475,21 @@ namespace Afra_App.Migrations
                     b.HasIndex("VerwalteteOtiaId");
 
                     b.ToTable("OtiumPerson");
+                });
+
+            modelBuilder.Entity("ProfundumInstanzProfundumSlot", b =>
+                {
+                    b.Property<Guid>("ProfundumInstanzId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("SlotsId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("ProfundumInstanzId", "SlotsId");
+
+                    b.HasIndex("SlotsId");
+
+                    b.ToTable("ProfundumInstanzProfundumSlot");
                 });
 
             modelBuilder.Entity("Afra_App.Backbone.Domain.Email.ScheduledEmail", b =>
@@ -512,6 +621,55 @@ namespace Afra_App.Migrations
                     b.Navigation("Tutor");
                 });
 
+            modelBuilder.Entity("Afra_App.Profundum.Domain.Models.BelegWunsch", b =>
+                {
+                    b.HasOne("Afra_App.User.Domain.Models.Person", "BetroffenePerson")
+                        .WithMany()
+                        .HasForeignKey("BetroffenePersonKey")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Afra_App.Profundum.Domain.Models.ProfundumInstanz", "ProfundumInstanz")
+                        .WithMany()
+                        .HasForeignKey("ProfundumInstanzKey")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BetroffenePerson");
+
+                    b.Navigation("ProfundumInstanz");
+                });
+
+            modelBuilder.Entity("Afra_App.Profundum.Domain.Models.Einschreibung", b =>
+                {
+                    b.HasOne("Afra_App.User.Domain.Models.Person", "BetroffenePerson")
+                        .WithMany()
+                        .HasForeignKey("BetroffenePersonKey")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Afra_App.Profundum.Domain.Models.ProfundumInstanz", "ProfundumInstanz")
+                        .WithMany()
+                        .HasForeignKey("ProfundumInstanzKey")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BetroffenePerson");
+
+                    b.Navigation("ProfundumInstanz");
+                });
+
+            modelBuilder.Entity("Afra_App.Profundum.Domain.Models.ProfundumInstanz", b =>
+                {
+                    b.HasOne("Afra_App.Profundum.Domain.Models.Profundum", "Profundum")
+                        .WithMany("Instanzen")
+                        .HasForeignKey("ProfundumId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Profundum");
+                });
+
             modelBuilder.Entity("Afra_App.User.Domain.Models.MentorMenteeRelation", b =>
                 {
                     b.HasOne("Afra_App.User.Domain.Models.Person", null)
@@ -538,6 +696,21 @@ namespace Afra_App.Migrations
                     b.HasOne("Afra_App.Otium.Domain.Models.Otium", null)
                         .WithMany()
                         .HasForeignKey("VerwalteteOtiaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ProfundumInstanzProfundumSlot", b =>
+                {
+                    b.HasOne("Afra_App.Profundum.Domain.Models.ProfundumInstanz", null)
+                        .WithMany()
+                        .HasForeignKey("ProfundumInstanzId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Afra_App.Profundum.Domain.Models.ProfundumSlot", null)
+                        .WithMany()
+                        .HasForeignKey("SlotsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -569,6 +742,11 @@ namespace Afra_App.Migrations
             modelBuilder.Entity("Afra_App.Otium.Domain.Models.Wiederholung", b =>
                 {
                     b.Navigation("Termine");
+                });
+
+            modelBuilder.Entity("Afra_App.Profundum.Domain.Models.Profundum", b =>
+                {
+                    b.Navigation("Instanzen");
                 });
 
             modelBuilder.Entity("Afra_App.User.Domain.Models.Person", b =>
