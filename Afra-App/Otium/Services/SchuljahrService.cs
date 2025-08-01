@@ -1,4 +1,4 @@
-﻿using Afra_App.Otium.Configuration;
+using Afra_App.Otium.Configuration;
 using Afra_App.Otium.Domain.DTO;
 using Afra_App.Otium.Domain.Models.Schuljahr;
 using Microsoft.EntityFrameworkCore;
@@ -152,9 +152,13 @@ public class SchuljahrService
         var monday = datum.DayOfWeek == DayOfWeek.Sunday ? datum.AddDays(-6) : datum.AddDays(-(int)datum.DayOfWeek + 1);
         var endOfWeek = monday.AddDays(7);
 
-        var day = await _dbContext.Blocks
-            .Where(b => b.SchultagKey >= monday && b.SchultagKey < endOfWeek)
-            .MaxAsync(b => b.SchultagKey);
+        var days = _dbContext.Blocks.Where(
+                b => b.SchultagKey >= monday && b.SchultagKey < endOfWeek);
+        if (!days.Any())
+        {
+            return null;
+        }
+        var day = await days.MaxAsync(b => b.SchultagKey);
 
         return day == default ? null : day;
     }
