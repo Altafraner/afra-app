@@ -1,4 +1,4 @@
-﻿using Afra_App.User.Domain.Models;
+using Afra_App.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Afra_App.User.Services;
@@ -99,6 +99,6 @@ public class UserService
         if (string.IsNullOrWhiteSpace(person.Gruppe) || !char.IsAsciiDigit(person.Gruppe[0]))
             throw new InvalidDataException("The person does not have a valid group.");
 
-        return Convert.ToInt32(person.Gruppe.TakeWhile(char.IsAsciiDigit));
+        return Convert.ToInt32(person.Gruppe.TakeWhile(char.IsAsciiDigit).Aggregate("", (r, c) => r + c));
     }
 }
