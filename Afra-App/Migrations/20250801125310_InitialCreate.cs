@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Afra_App.Otium.Domain.Models;
 using Afra_App.Otium.Domain.Models.Schuljahr;
 using Afra_App.User.Domain.Models;
@@ -17,7 +17,6 @@ namespace Afra_App.Migrations
         {
             migrationBuilder.AlterDatabase()
                 .Annotation("Npgsql:Enum:anwesenheits_status", "anwesend,entschuldigt,fehlend")
-                .Annotation("Npgsql:Enum:belegwunsch_stufe", "dritt_wunsch,erst_wunsch,zweitwunsch")
                 .Annotation("Npgsql:Enum:global_permission", "admin,otiumsverantwortlich,profundumsverantwortlich")
                 .Annotation("Npgsql:Enum:person_rolle", "mittelstufe,oberstufe,tutor")
                 .Annotation("Npgsql:Enum:wochentyp", "h,n");
@@ -280,7 +279,7 @@ namespace Afra_App.Migrations
                 {
                     BetroffenePersonKey = table.Column<Guid>(type: "uuid", nullable: false),
                     ProfundumInstanzKey = table.Column<Guid>(type: "uuid", nullable: false),
-                    Stufe = table.Column<BelegWunschStufe>(type: "belegwunsch_stufe", nullable: false)
+                    Stufe = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
