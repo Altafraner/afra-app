@@ -15,6 +15,7 @@ public static class Enrollment
     {
         app.MapPost("/", AddBelegWunschAsync);
         app.MapGet("/", GetOptionsAsync);
+        app.MapGet("/matching", MatchingAsync);
     }
 
     ///
@@ -50,4 +51,19 @@ public static class Enrollment
 
         return await enrollmentService.RegisterBelegWunschAsync(user, wuensche);
     }
+
+    ///
+    private static async Task<IResult> MatchingAsync(EnrollmentService enrollmentService,
+           UserAccessor userAccessor, AfraAppContext dbContext, ILogger<EnrollmentService> logger, Guid[] slots)
+    {
+        var user = await userAccessor.GetUserAsync();
+        if (user is not { Rolle: User.Domain.Models.Rolle.Tutor })
+        {
+            logger.LogWarning("not tutor");
+            return Results.Unauthorized();
+        }
+        var slotsMöglich = dbContext.ProfundaSlots.Where(s => s.EinwahlMöglich).Select(s => s.Id).ToArray();
+        return await enrollmentService.PerformMatching(slotsMöglich);
+    }
+
 }
