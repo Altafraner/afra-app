@@ -152,15 +152,12 @@ public class SchuljahrService
         var monday = datum.DayOfWeek == DayOfWeek.Sunday ? datum.AddDays(-6) : datum.AddDays(-(int)datum.DayOfWeek + 1);
         var endOfWeek = monday.AddDays(7);
 
-        var days = _dbContext.Blocks.Where(
-                b => b.SchultagKey >= monday && b.SchultagKey < endOfWeek);
-        if (!days.Any())
-        {
-            return null;
-        }
-        var day = await days.MaxAsync(b => b.SchultagKey);
+        var day = await _dbContext.Blocks
+            .Where(b => b.SchultagKey >= monday && b.SchultagKey < endOfWeek)
+            .OrderByDescending(b => b.SchultagKey)
+            .FirstOrDefaultAsync();
 
-        return day == default ? null : day;
+        return day?.SchultagKey;
     }
 
     /// <summary>
