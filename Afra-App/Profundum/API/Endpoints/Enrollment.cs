@@ -61,5 +61,4 @@ public static class Enrollment
         var slotsMöglich = dbContext.ProfundaSlots.Where(s => s.EinwahlMöglich).Select(s => s.Id).ToArray();
         return await enrollmentService.PerformMatching(slotsMöglich);
     }
-
 }
