@@ -33,7 +33,9 @@ public class EnrollmentService
         _profundumConfiguration = profundumConfiguration;
     }
 
-    ///
+    /// <summary>
+    ///     Get all options for slots currently open for enrollment
+    /// </summary>
     public ICollection<BlockKatalog> GetKatalog()
     {
         var katalog = new List<BlockKatalog>() { };
@@ -77,7 +79,12 @@ public class EnrollmentService
         return ret;
     }
 
-    ///
+    /// <summary>
+    ///     Register a set of Profundum Belegwuensche.
+    ///     Validates that all currently open slots are filled
+    /// </summary>
+    /// <param name="student">The student wanting to enroll</param>
+    /// <param name="wuensche">A dictionary containing the ordered ids of ProdundumInstanzen given the slot</param>
     public async Task<IResult> RegisterBelegWunschAsync(Person student, Dictionary<String, Guid[]> wuensche)
     {
         var slotsMöglich = _dbContext.ProfundaSlots.Where(s => s.EinwahlMöglich).OrderBy(s => (s.Jahr * 4 + (int)s.Quartal) * 7 + s.Wochentag).ToArray().AsReadOnly();
@@ -148,7 +155,10 @@ public class EnrollmentService
         return Results.Ok("Einwahl gespeichert");
     }
 
-    ///
+    /// <summary>
+    ///     Perform a matching for the given slots and return information about the result
+    /// </summary>
+    /// <param name="slotIds">The Ids of the slots to apply the matching to</param>
     public async Task<IResult> PerformMatching(ICollection<Guid> slotIds)
     {
 

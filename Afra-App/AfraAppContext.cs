@@ -73,15 +73,29 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
     /// </summary>
     public DbSet<ScheduledEmail> ScheduledEmails { get; set; }
 
-    ///
+    /// <summary>
+    ///     All registered Profunda
+    /// </summary>
     public DbSet<Profundum.Domain.Models.Profundum> Profunda { get; set; }
-    ///
+
+    /// <summary>
+    ///     The slot instances op all registered Profunda
+    /// </summary>
     public DbSet<Profundum.Domain.Models.ProfundumInstanz> ProfundaInstanzen { get; set; }
-    ///
+
+    /// <summary>
+    ///     All finally matched Enrollments for Profunda
+    /// </summary>
     public DbSet<Profundum.Domain.Models.Einschreibung> ProfundaEinschreibungen { get; set; }
-    ///
+
+    /// <summary>
+    ///     All enrollment wishes for produnda submitted by students
+    /// </summary>
     public DbSet<Profundum.Domain.Models.BelegWunsch> ProfundaBelegWuensche { get; set; }
-    ///
+
+    /// <summary>
+    ///     All slots for profunda to have ProfundaInstanzen in
+    /// </summary>
     public DbSet<Profundum.Domain.Models.ProfundumSlot> ProfundaSlots { get; set; }
 
     /// <summary>
