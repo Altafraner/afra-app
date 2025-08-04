@@ -1,9 +1,9 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
-COPY ["Afra-App/Afra-App.csproj", "/src/Afra-App/"]
+COPY Afra-App.csproj /src/Afra-App/Afra-App.csproj
 WORKDIR /src/Afra-App
 RUN dotnet restore "Afra-App.csproj" \
     --runtime linux-x64
-COPY ./Afra-App /src/Afra-App
+COPY ./ /src/Afra-App
 RUN dotnet publish "Afra-App.csproj" \
     -c release \
     --no-restore \

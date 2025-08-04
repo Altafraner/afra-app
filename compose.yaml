@@ -1,22 +1,24 @@
 services:
   backend:
     build:
-      context: .
-      dockerfile: Afra-App/Dockerfile
+      context: Afra-App
+      dockerfile: Dockerfile
     links:
       - db
     depends_on:
       - db
+    restart: unless-stopped
     volumes:
       - './dev/certs:/certs:ro'
   web:
     build:
-      context: ./WebClient
+      context: WebClient
       dockerfile: Dockerfile
     ports:
       - "8080:80"
     links:
       - backend
+    restart: unless-stopped
   db:
     image: "postgres:alpine"
     environment:
@@ -25,3 +27,4 @@ services:
       POSTGRES_DB: "afra-app"
     #volumes:
     #  - './storage/db:/var/lib/postgresql/data'
+    restart: unless-stopped

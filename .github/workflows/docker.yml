@@ -1,0 +1,17 @@
+name: Build Docker Images
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: build backend image
+      run: docker build Afra-App
+    - name: build frontend image
+      run: docker build WebClient
