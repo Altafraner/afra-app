@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Afra_App.Otium.Domain.Models;
 using Afra_App.Otium.Domain.Models.Schuljahr;
 using Afra_App.User.Domain.Models;

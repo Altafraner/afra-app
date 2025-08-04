@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using Afra_App.Backbone.Authentication;
 using Afra_App.User.Domain.Models;
 

@@ -1,4 +1,4 @@
-﻿namespace Afra_App.Backbone.Authentication;
+namespace Afra_App.Backbone.Authentication;
 
 /// <summary>
 /// A static class containing constants for authorization policies.

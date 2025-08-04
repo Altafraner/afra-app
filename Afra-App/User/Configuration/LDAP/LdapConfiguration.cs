@@ -1,4 +1,4 @@
-﻿using System.DirectoryServices.Protocols;
+using System.DirectoryServices.Protocols;
 using Afra_App.User.Services.LDAP;
 
 namespace Afra_App.User.Configuration.LDAP;

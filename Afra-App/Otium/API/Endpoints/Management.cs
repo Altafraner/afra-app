@@ -3,10 +3,10 @@ using Afra_App.Otium.Domain.Models;
 using Afra_App.Otium.Services;
 using Afra_App.User.Domain.Models;
 using Afra_App.User.Services;
+using DB_Otium = Afra_App.Otium.Domain.Models.Otium;
 using DTO_Otium_Creation = Afra_App.Otium.Domain.DTO.ManagementOtiumCreation;
 using DTO_Termin_Creation = Afra_App.Otium.Domain.DTO.ManagementTerminCreation;
 using DTO_Wiederholung_Creation = Afra_App.Otium.Domain.DTO.ManagementWiederholungCreation;
-using DB_Otium = Afra_App.Otium.Domain.Models.Otium;
 
 namespace Afra_App.Otium.API.Endpoints;
 

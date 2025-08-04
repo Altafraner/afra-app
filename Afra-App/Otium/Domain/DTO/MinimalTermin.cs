@@ -1,4 +1,4 @@
-﻿using Afra_App.User.Domain.DTO;
+using Afra_App.User.Domain.DTO;
 
 namespace Afra_App.Otium.Domain.DTO;
 

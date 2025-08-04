@@ -1,4 +1,4 @@
-﻿using System.Security.Cryptography;
+using System.Security.Cryptography;
 using Afra_App.Backbone.Authentication;
 using Afra_App.Backbone.Configuration;
 using Afra_App.Backbone.Services.Email;

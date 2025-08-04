@@ -1,4 +1,4 @@
-﻿using Quartz;
+using Quartz;
 
 namespace Afra_App.User.Services.LDAP;
 

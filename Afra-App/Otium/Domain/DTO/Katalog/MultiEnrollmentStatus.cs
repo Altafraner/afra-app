@@ -1,4 +1,4 @@
-﻿namespace Afra_App.Otium.Domain.DTO.Katalog;
+namespace Afra_App.Otium.Domain.DTO.Katalog;
 
 /// <summary>
 /// Represents the status of a multi-enrollment request.

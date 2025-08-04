@@ -1,4 +1,4 @@
-﻿using Afra_App.Otium.Domain.Models;
+using Afra_App.Otium.Domain.Models;
 using Afra_App.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -91,7 +91,7 @@ public class AttendanceService : IAttendanceService
             .AsNoTracking()
             .Where(b => b.Id == blockId)
             .Select(b => new
-                { b.SchemaId, SindAnwesenheitenFehlernderErfasst = b.SindAnwesenheitenFehlernderKontrolliert })
+            { b.SchemaId, SindAnwesenheitenFehlernderErfasst = b.SindAnwesenheitenFehlernderKontrolliert })
             .FirstOrDefaultAsync();
 
         if (block is null)

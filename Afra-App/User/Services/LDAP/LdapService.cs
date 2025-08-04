@@ -1,4 +1,4 @@
-﻿using System.DirectoryServices.Protocols;
+using System.DirectoryServices.Protocols;
 using System.Net;
 using Afra_App.Backbone.Services.Email;
 using Afra_App.Backbone.Utilities;

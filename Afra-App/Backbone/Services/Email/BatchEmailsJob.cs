@@ -1,4 +1,4 @@
-﻿using Afra_App.User.Domain.Models;
+using Afra_App.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Quartz;
 

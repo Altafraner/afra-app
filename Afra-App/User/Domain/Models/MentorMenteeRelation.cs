@@ -1,4 +1,4 @@
-﻿namespace Afra_App.User.Domain.Models;
+namespace Afra_App.User.Domain.Models;
 
 /// <summary>
 /// Represents a relationship between a mentor and a mentee.

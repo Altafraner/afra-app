@@ -1,4 +1,4 @@
-﻿using Afra_App.Backbone.Authentication;
+using Afra_App.Backbone.Authentication;
 using Afra_App.User.Domain.DTO;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;

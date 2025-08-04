@@ -198,12 +198,12 @@ public class EnrollmentService
         var blockList = blocks.ToList();
 
         var notEnrolledBlocks = from block in _dbContext.Blocks
-            where blockList.Contains(block)
-            join einschreibung in _dbContext.OtiaEinschreibungen
-                on block.Id equals einschreibung.Termin.Block.Id
-                into einschreibungen
-            where einschreibungen.All(e => e.BetroffenePerson != user)
-            select block.SchemaId;
+                                where blockList.Contains(block)
+                                join einschreibung in _dbContext.OtiaEinschreibungen
+                                    on block.Id equals einschreibung.Termin.Block.Id
+                                    into einschreibungen
+                                where einschreibungen.All(e => e.BetroffenePerson != user)
+                                select block.SchemaId;
 
         foreach (var schemaId in notEnrolledBlocks)
         {

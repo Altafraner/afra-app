@@ -1,4 +1,4 @@
-﻿using Afra_App.Backbone.Authentication;
+using Afra_App.Backbone.Authentication;
 using Afra_App.Otium.API.Endpoints;
 using Afra_App.Otium.API.Hubs;
 

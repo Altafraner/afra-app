@@ -1,4 +1,4 @@
-﻿namespace Afra_App.Otium.Domain.DTO.Katalog;
+namespace Afra_App.Otium.Domain.DTO.Katalog;
 
 /// <summary>
 /// A DTO representing a day for the katalog.

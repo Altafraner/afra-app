@@ -1,4 +1,4 @@
-﻿namespace Afra_App.Otium.Domain.DTO;
+namespace Afra_App.Otium.Domain.DTO;
 
 /// <summary>
 ///     Contains a preview of an Otium for the management UI.

@@ -1,4 +1,4 @@
-﻿namespace Afra_App.User.Configuration.LDAP;
+namespace Afra_App.User.Configuration.LDAP;
 
 /// <summary>
 /// Describes the parameters for syncing a collection of users from LDAP.

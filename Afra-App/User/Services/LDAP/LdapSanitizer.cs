@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 
 namespace Afra_App.User.Services.LDAP;
 

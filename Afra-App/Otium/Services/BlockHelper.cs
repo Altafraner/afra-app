@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.Contracts;
+using System.Diagnostics.Contracts;
 using Afra_App.Otium.Configuration;
 using Afra_App.Otium.Domain.Models.Schuljahr;
 using Microsoft.Extensions.Options;

@@ -1,4 +1,4 @@
-﻿using Afra_App.User.API.Endpoints;
+using Afra_App.User.API.Endpoints;
 
 namespace Afra_App.User.Extensions;
 

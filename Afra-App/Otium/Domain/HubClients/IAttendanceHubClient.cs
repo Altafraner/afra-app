@@ -1,4 +1,4 @@
-﻿using Afra_App.Otium.API.Hubs;
+using Afra_App.Otium.API.Hubs;
 using Afra_App.Otium.Domain.DTO;
 using Afra_App.Otium.Domain.Models;
 

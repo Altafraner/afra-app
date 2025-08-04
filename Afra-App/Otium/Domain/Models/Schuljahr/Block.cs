@@ -1,4 +1,4 @@
-﻿namespace Afra_App.Otium.Domain.Models.Schuljahr;
+namespace Afra_App.Otium.Domain.Models.Schuljahr;
 
 /// <summary>
 ///     A Block on a <see cref="Schultag" />

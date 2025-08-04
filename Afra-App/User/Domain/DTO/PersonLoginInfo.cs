@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 using Afra_App.User.Domain.Models;
 
 namespace Afra_App.User.Domain.DTO;

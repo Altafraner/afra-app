@@ -1,4 +1,4 @@
-﻿using Afra_App.Otium.Domain.Models.Schuljahr;
+using Afra_App.Otium.Domain.Models.Schuljahr;
 using Afra_App.User.Domain.Models;
 
 namespace Afra_App.Otium.Domain.Models;

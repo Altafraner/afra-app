@@ -1,13 +1,12 @@
+using Afra_App.Profundum.Configuration;
 using Afra_App.Profundum.Domain.DTO;
 using Afra_App.Profundum.Domain.Models;
 using Afra_App.User.Services;
-using Microsoft.EntityFrameworkCore;
-using Person = Afra_App.User.Domain.Models.Person;
-using Afra_App.Profundum.Configuration;
-
 using Google.OrTools.Sat;
-using LinearExpr = Google.OrTools.Sat.LinearExpr;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using LinearExpr = Google.OrTools.Sat.LinearExpr;
+using Person = Afra_App.User.Domain.Models.Person;
 
 namespace Afra_App.Profundum.Services;
 

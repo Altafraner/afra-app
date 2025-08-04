@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Afra_App.Backbone.Services.Email;
 using Afra_App.Otium.Configuration;
@@ -118,8 +118,8 @@ public class StudentMisbehaviourNotificationJob : IJob
                     t => t.Value.Where(e => e.Value == AnwesenheitsStatus.Fehlend));
 
             foreach (var (termin, anwesenheiten) in missingButEnrolled)
-            foreach (var (person, _) in anwesenheiten)
-                await _enrollmentService.UnenrollAsync(termin.Id, person, true, false);
+                foreach (var (person, _) in anwesenheiten)
+                    await _enrollmentService.UnenrollAsync(termin.Id, person, true, false);
             await _dbContext.SaveChangesAsync(context.CancellationToken);
 
             var missingStudentsInBlock = attendanceForBlock.missingPersons
