@@ -15,3 +15,5 @@ jobs:
       run: docker build Afra-App
     - name: build frontend image
       run: docker build WebClient
+    - name: build compose
+      run: docker compose build
