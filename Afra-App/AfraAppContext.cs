@@ -185,15 +185,11 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
         });
         modelBuilder.Entity<Profundum.Domain.Models.Einschreibung>(e =>
         {
-            e.HasOne(e => e.BetroffenePerson).WithMany().HasForeignKey(e => e.BetroffenePersonKey);
-            e.HasOne(e => e.ProfundumInstanz).WithMany().HasForeignKey(e => e.ProfundumInstanzKey);
-            e.HasKey(b => new { b.BetroffenePersonKey, b.ProfundumInstanzKey, });
+            e.HasKey(b => new { b.BetroffenePersonId, b.ProfundumInstanzId, });
         });
         modelBuilder.Entity<Profundum.Domain.Models.BelegWunsch>(w =>
         {
-            w.HasOne(w => w.BetroffenePerson).WithMany().HasForeignKey(w => w.BetroffenePersonKey);
-            w.HasOne(w => w.ProfundumInstanz).WithMany().HasForeignKey(w => w.ProfundumInstanzKey);
-            w.HasKey(b => new { b.ProfundumInstanzKey, b.BetroffenePersonKey, b.Stufe });
+            w.HasKey(b => new { b.ProfundumInstanzId, b.BetroffenePersonId, b.Stufe });
         });
 
         /*

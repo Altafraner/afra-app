@@ -3,9 +3,11 @@ using Afra_App.Profundum.Domain.Models;
 using Afra_App.User.Services;
 using Microsoft.EntityFrameworkCore;
 using Person = Afra_App.User.Domain.Models.Person;
+using Afra_App.Profundum.Configuration;
 
 using Google.OrTools.Sat;
 using LinearExpr = Google.OrTools.Sat.LinearExpr;
+using Microsoft.Extensions.Options;
 
 namespace Afra_App.Profundum.Services;
 
@@ -17,22 +19,24 @@ public class EnrollmentService
     private readonly AfraAppContext _dbContext;
     private readonly ILogger _logger;
     private readonly UserService _userService;
+    private readonly IOptions<ProfundumConfiguration> _profundumConfiguration;
 
     /// <summary>
     ///     Constructs the EnrollmentService. Usually called by the DI container.
     /// </summary>
     public EnrollmentService(AfraAppContext dbContext,
-        ILogger<EnrollmentService> logger, UserService userService)
+        ILogger<EnrollmentService> logger, UserService userService, IOptions<ProfundumConfiguration> profundumConfiguration)
     {
         _dbContext = dbContext;
         _logger = logger;
         _userService = userService;
+        _profundumConfiguration = profundumConfiguration;
     }
 
     ///
     public ICollection<BlockKatalog> GetKatalog()
     {
-        var bk = new List<BlockKatalog>() { };
+        var katalog = new List<BlockKatalog>() { };
         var slots = _dbContext.ProfundaSlots.Where(s => s.EinwahlMöglich).OrderBy(s => (s.Jahr * 4 + (int)s.Quartal) * 7 + s.Wochentag).ToArray();
 
         foreach (var s in slots)
@@ -42,7 +46,7 @@ public class EnrollmentService
                         .OrderBy(s => (s.Jahr * 4 + (int)s.Quartal) * 7 + s.Wochentag)
                         .First().Id
                 );
-            bk.Add(new BlockKatalog
+            katalog.Add(new BlockKatalog
             {
                 label = s.ToString(),
                 id = s.ToString(),
@@ -55,7 +59,22 @@ public class EnrollmentService
             });
         }
 
-        return bk;
+        return katalog;
+    }
+
+    private bool isProfundumPflichtig(Person student, IEnumerable<ProfundumQuartal> quartale)
+    {
+        var klasse = _userService.GetKlassenstufe(student);
+        _logger.LogInformation("klasse {}", klasse);
+        var profilQuartale = _profundumConfiguration.Value.ProfilPflichtigkeit.GetValueOrDefault(klasse);
+        _logger.LogInformation("pflichtige Quartale: {}", System.Text.Json.JsonSerializer.Serialize(profilQuartale));
+        _logger.LogInformation("relevante Quartale: {}", System.Text.Json.JsonSerializer.Serialize(quartale));
+        if (profilQuartale is null)
+        {
+            return false;
+        }
+        var ret = profilQuartale.Intersect(quartale).Any();
+        return ret;
     }
 
     ///
@@ -104,7 +123,6 @@ public class EnrollmentService
 
                 if (profundumInstanz.Slots.OrderBy(s => (s.Jahr * 4 + (int)s.Quartal) * 7 + s.Wochentag).First().Id == s.Id)
                 {
-                    _logger.LogInformation("Added {} {}", profundumInstanz.Profundum.Bezeichnung, stufe.ToString());
                     var belegWunsch = new BelegWunsch() { ProfundumInstanz = profundumInstanz, Stufe = stufe, BetroffenePerson = student };
                     _dbContext.ProfundaBelegWuensche.Add(belegWunsch);
 
@@ -120,15 +138,9 @@ public class EnrollmentService
             }
         }
 
-        ProfundumQuartal[] QuartaleWintersemester = [ProfundumQuartal.Q1, ProfundumQuartal.Q2];
-        if (QuartaleWintersemester.Contains(slotsMöglich.First().Quartal)
-            ? _userService.GetKlassenstufe(student) == 10
-            : _userService.GetKlassenstufe(student) == 9)
+        if (isProfundumPflichtig(student, slotsMöglich.Select(s => s.Quartal)) && !ProfilProfundumEnthalten)
         {
-            if (!ProfilProfundumEnthalten)
-            {
-                return Results.BadRequest("Kein Profilprofundum in Einwahl enthalten");
-            }
+            return Results.BadRequest("Kein Profilprofundum in Einwahl enthalten");
         }
 
         await _dbContext.SaveChangesAsync();
@@ -146,7 +158,7 @@ public class EnrollmentService
 
         var alteEinschreibungen = _dbContext.ProfundaEinschreibungen
             .Where(e => e.ProfundumInstanz.Slots.Any(s => slots.Contains(s)));
-        _logger.LogInformation("delting {} old enrollments", alteEinschreibungen.Count());
+        _logger.LogInformation("delting {numEnrollments} old enrollments", alteEinschreibungen.Count());
         _dbContext.RemoveRange(alteEinschreibungen);
         await _dbContext.SaveChangesAsync();
 
@@ -169,7 +181,7 @@ public class EnrollmentService
 
         var weights = new Dictionary<BelegWunschStufe, int> {
             { BelegWunschStufe.ErstWunsch, 100 },
-            { BelegWunschStufe.Zweitwunsch, 50 },
+            { BelegWunschStufe.ZweitWunsch, 50 },
             { BelegWunschStufe.DrittWunsch, 25 },
         }.AsReadOnly();
 
@@ -191,26 +203,25 @@ public class EnrollmentService
                     .Where(b => b.BetroffenePerson.Id == p.Id)
                     .Where(b => b.ProfundumInstanz.Slots.Contains(s)).ToArray();
                 var psBelegVar = psBeleg.Select(b => belegVariables[b]).ToArray();
-                var ps_beleg_var_WithoutLimits = psBeleg.Select(b => belegVariablesWithoutLimits[b]).ToArray();
+                var psBelegVarWithoutLimits = psBeleg.Select(b => belegVariablesWithoutLimits[b]).ToArray();
                 model.AddExactlyOne(psBelegVar);
-                modelWithoutLimits.AddExactlyOne(ps_beleg_var_WithoutLimits);
+                modelWithoutLimits.AddExactlyOne(psBelegVarWithoutLimits);
                 for (int i = 0; i < psBeleg.Length; ++i)
                 {
                     objective.AddTerm(psBelegVar[i], weights[psBeleg[i].Stufe] * psBeleg[i].ProfundumInstanz.Slots.Count());
-                    objectiveWithoutLimits.AddTerm(ps_beleg_var_WithoutLimits[i], weights[psBeleg[i].Stufe] * psBeleg[i].ProfundumInstanz.Slots.Count());
+                    objectiveWithoutLimits.AddTerm(psBelegVarWithoutLimits[i], weights[psBeleg[i].Stufe] * psBeleg[i].ProfundumInstanz.Slots.Count());
                 }
             }
         }
 
         // Mindestens ein Profilprofundum pro Semester für die hälfte der Schüler
         ProfundumQuartal[] QuartaleWintersemester = [ProfundumQuartal.Q1, ProfundumQuartal.Q2];
-        var ProfilProfundumPflichtige = QuartaleWintersemester.Contains(slots.First().Quartal)
-            ? personen.Where(p => _userService.GetKlassenstufe(p) == 10)
-            : personen.Where(p => _userService.GetKlassenstufe(p) == 9);
-        foreach (var p in ProfilProfundumPflichtige)
+        var ProfilProfundumPflichtige = personen.Where(p => isProfundumPflichtig(p, slots.Select(s => s.Quartal)));
+
+        foreach (var profundumPflichtigePerson in ProfilProfundumPflichtige)
         {
             var pBeleg = belegwünsche
-                .Where(b => b.BetroffenePerson.Id == p.Id)
+                .Where(b => b.BetroffenePerson.Id == profundumPflichtigePerson.Id)
                 .Where(b => b.ProfundumInstanz.Profundum.ProfilProfundum);
             model.AddAtLeastOne(pBeleg.Select(b => belegVariables[b]));
             modelWithoutLimits.AddAtLeastOne(pBeleg.Select(b => belegVariablesWithoutLimits[b]));
@@ -232,11 +243,18 @@ public class EnrollmentService
         var solver = new CpSolver();
         var solverWithoutLimits = new CpSolver();
         var resultStatus = solver.Solve(model);
-        _ = solverWithoutLimits.Solve(modelWithoutLimits);
+        var resultStatusWithoutLimits = solverWithoutLimits.Solve(modelWithoutLimits);
 
         if (resultStatus != CpSolverStatus.Optimal && resultStatus != CpSolverStatus.Feasible)
         {
-            return Results.Conflict($"No solution found in Matching {solver.NumConflicts()} Konflikte");
+            if (resultStatusWithoutLimits != CpSolverStatus.Optimal && resultStatusWithoutLimits != CpSolverStatus.Feasible)
+            {
+                return Results.Conflict($"No solution found in Matching likely due to errors in non-capacity constraints.");
+            }
+            else
+            {
+                return Results.Conflict($"No solution found in Matching due to capacity constraints");
+            }
         }
 
         // Ergebnis rückschreiben

@@ -14,7 +14,6 @@ const results = ref({});
 async function get() {
   const api = mande('/api/profundum');
   const profunda = await api.get();
-  console.log(profunda);
   options.value = profunda;
 
   for (const option of options.value) {

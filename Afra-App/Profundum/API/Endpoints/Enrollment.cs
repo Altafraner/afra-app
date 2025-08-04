@@ -26,15 +26,11 @@ public static class Enrollment
         if (user is not { Rolle: User.Domain.Models.Rolle.Mittelstufe })
         {
             logger.LogWarning("not mittelstufe");
-            return Results.Unauthorized();
+            return Results.Forbid();
         }
 
-        var bk = enrollmentService.GetKatalog();
-        return bk switch
-        {
-            { } => Results.Ok(bk),
-            null => Results.InternalServerError(),
-        };
+        var katalog = enrollmentService.GetKatalog();
+        return Results.Ok(katalog!);
     }
 
     ///
@@ -46,7 +42,7 @@ public static class Enrollment
         if (user is not { Rolle: User.Domain.Models.Rolle.Mittelstufe })
         {
             logger.LogWarning("not mittelstufe");
-            return Results.Unauthorized();
+            return Results.Forbid();
         }
 
         return await enrollmentService.RegisterBelegWunschAsync(user, wuensche);

@@ -13,12 +13,11 @@ public class Einschreibung
     public required Person BetroffenePerson { get; set; }
 
     ///
-    internal Guid BetroffenePersonKey { get; set; }
+    protected internal Guid BetroffenePersonId { get; set; }
 
     ///
     public required ProfundumInstanz ProfundumInstanz { get; set; }
 
     ///
-    internal Guid ProfundumInstanzKey { get; set; }
-
+    protected internal Guid ProfundumInstanzId { get; set; }
 }
