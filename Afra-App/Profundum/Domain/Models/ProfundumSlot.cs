@@ -1,18 +1,5 @@
 namespace Afra_App.Profundum.Domain.Models;
 
-///
-public enum ProfundumQuartal
-{
-    ///
-    Q1,
-    ///
-    Q2,
-    ///
-    Q3,
-    ///
-    Q4,
-}
-
 /// <summary>
 ///     A db record representing a Profundum.
 /// </summary>

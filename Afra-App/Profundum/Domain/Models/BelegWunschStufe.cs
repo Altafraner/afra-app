@@ -8,7 +8,7 @@ public enum BelegWunschStufe
     ErstWunsch = 1,
     ///
     [JsonStringEnumMemberName("Zweitwunsch")]
-    Zweitwunsch = 2,
+    ZweitWunsch = 2,
     ///
     [JsonStringEnumMemberName("Drittwunsch")]
     DrittWunsch = 3,
