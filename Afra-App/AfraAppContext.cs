@@ -190,7 +190,11 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
                 .IsUnique();
         });
 
-        modelBuilder.Entity<Profundum.Domain.Models.Profundum>(p => { });
+        modelBuilder.Entity<Profundum.Domain.Models.Profundum>(p =>
+        {
+            p.HasOne(p => p.Kategorie)
+                .WithMany(k => k.Profunda);
+        });
         modelBuilder.Entity<Profundum.Domain.Models.ProfundumInstanz>(p =>
         {
             p.HasOne(i => i.Profundum)
