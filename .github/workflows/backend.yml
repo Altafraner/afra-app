@@ -3,8 +3,12 @@ name: backend
 on:
   push:
     branches: [ "*" ]
+    paths:
+      - 'Afra-App/**'
   pull_request:
     branches: [ "*" ]
+    paths:
+      - 'Afra-App/**'
 
 jobs:
   build:

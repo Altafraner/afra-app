@@ -2,9 +2,13 @@ name: webclient
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "*" ]
+    paths:
+      - 'WebClient/**'
   pull_request:
-    branches: [ "main" ]
+    branches: [ "*" ]
+    paths:
+      - 'WebClient/**'
 
 jobs:
   build:

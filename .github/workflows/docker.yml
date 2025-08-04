@@ -3,8 +3,18 @@ name: Build Docker Images
 on:
   push:
     branches: [ "main" ]
+    paths:
+      - 'Afra-App/**'
+      - 'WebClient/**'
+      - 'compose.yaml'
+      - '.dockerignore'
   pull_request:
     branches: [ "main" ]
+    paths:
+      - 'Afra-App/**'
+      - 'WebClient/**'
+      - 'compose.yaml'
+      - '.dockerignore'
 
 jobs:
   build:
