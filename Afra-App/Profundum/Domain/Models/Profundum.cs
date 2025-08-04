@@ -19,7 +19,7 @@ public class Profundum
     public required string Bezeichnung { get; set; }
 
     ///
-    public required bool ProfilProfundum { get; set; }
+    public required ProfundumKategorie Kategorie { get; set; }
 
     ///
     public ICollection<ProfundumInstanz> Instanzen { get; set; } = [];

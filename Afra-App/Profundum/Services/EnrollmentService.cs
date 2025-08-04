@@ -115,7 +115,10 @@ public class EnrollmentService
                 }
 
                 var stufe = (BelegWunschStufe)(i + 1);
-                var profundumInstanz = _dbContext.ProfundaInstanzen.Include(p => p.Profundum).Include(p => p.Slots).Where(p => p.Id == l[i]).First();
+                var profundumInstanz = _dbContext.ProfundaInstanzen
+                    .Include(p => p.Profundum).ThenInclude(p => p.Kategorie)
+                    .Include(p => p.Slots)
+                    .Where(p => p.Id == l[i]).First();
 
                 if (profundumInstanz is null)
                 {
@@ -132,8 +135,7 @@ public class EnrollmentService
                 {
                     var belegWunsch = new BelegWunsch() { ProfundumInstanz = profundumInstanz, Stufe = stufe, BetroffenePerson = student };
                     _dbContext.ProfundaBelegWuensche.Add(belegWunsch);
-
-                    if (profundumInstanz.Profundum.ProfilProfundum)
+                    if (profundumInstanz.Profundum.Kategorie.ProfilProfundum)
                     {
                         ProfilProfundumEnthalten = true;
                     }
@@ -179,7 +181,7 @@ public class EnrollmentService
             .ToArrayAsync();
         var belegwünsche = await _dbContext.ProfundaBelegWuensche
             .Include(b => b.BetroffenePerson)
-            .Include(b => b.ProfundumInstanz).ThenInclude(pi => pi.Profundum)
+            .Include(b => b.ProfundumInstanz).ThenInclude(pi => pi.Profundum).ThenInclude(p => p.Kategorie)
             .Where(b => angebote.Contains(b.ProfundumInstanz))
             .ToArrayAsync();
         var personen = belegwünsche.Select(b => b.BetroffenePerson).ToHashSet();
@@ -232,7 +234,7 @@ public class EnrollmentService
         {
             var pBeleg = belegwünsche
                 .Where(b => b.BetroffenePerson.Id == profundumPflichtigePerson.Id)
-                .Where(b => b.ProfundumInstanz.Profundum.ProfilProfundum);
+                .Where(b => b.ProfundumInstanz.Profundum.Kategorie.ProfilProfundum);
             model.AddAtLeastOne(pBeleg.Select(b => belegVariables[b]));
             modelWithoutLimits.AddAtLeastOne(pBeleg.Select(b => belegVariablesWithoutLimits[b]));
         }
