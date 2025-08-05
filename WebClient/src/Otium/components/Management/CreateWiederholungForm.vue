@@ -139,7 +139,7 @@ setup()
     </div>
     <div class="w-full">
       <FloatLabel class="w-full" variant="on">
-        <Select id="wochentag" v-model="wochentag" :options="[1, 5]" fluid
+        <Select id="wochentag" v-model="wochentag" :options="[1, 2, 3, 4, 5, 6]" fluid
                 name="wochentag" @change="blockOrWochentagChanged">
           <template #value="{value}">
             <template v-if="value!=null">
