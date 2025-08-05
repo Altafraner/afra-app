@@ -16,4 +16,7 @@ public class ProfundumInstanz
 
     ///
     public int? MaxEinschreibungen { get; set; } = null;
+
+    ///
+    public ICollection<Einschreibung> Einschreibungen { get; set; } = [];
 }

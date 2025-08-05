@@ -84,6 +84,12 @@ public class Person
     /// </summary>
     public ICollection<Einschreibung> OtiaEinschreibungen { get; set; } = new List<Einschreibung>();
 
+    ///
+    public ICollection<Profundum.Domain.Models.Einschreibung> ProfundaEinschreibungen { get; set; } = [];
+
+    ///
+    public ICollection<Profundum.Domain.Models.BelegWunsch> ProfundaBelegwuensche { get; set; } = [];
+
     /// <inheritdoc />
     public override string ToString()
     {
