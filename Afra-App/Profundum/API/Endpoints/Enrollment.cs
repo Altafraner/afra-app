@@ -13,9 +13,11 @@ public static class Enrollment
     /// </summary>
     public static void MapEnrollmentEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapPost("/", AddBelegWunschAsync);
+        app.MapPost("/", AddBelegWuenscheAsync);
         app.MapGet("/", GetOptionsAsync);
         app.MapGet("/matching", MatchingAsync);
+        app.MapGet("/matching.csv", MatchingAsyncCSV);
+        app.MapGet("/missing", GetUnenrolledAsync);
     }
 
     ///
@@ -29,12 +31,12 @@ public static class Enrollment
             return Results.Forbid();
         }
 
-        var katalog = enrollmentService.GetKatalog();
+        var katalog = enrollmentService.GetKatalog(user);
         return Results.Ok(katalog!);
     }
 
     ///
-    private static async Task<IResult> AddBelegWunschAsync(EnrollmentService enrollmentService,
+    private static async Task<IResult> AddBelegWuenscheAsync(EnrollmentService enrollmentService,
         UserAccessor userAccessor, AfraAppContext dbContext, ILogger<EnrollmentService> logger,
         Dictionary<String, Guid[]> wuensche)
     {
@@ -50,6 +52,51 @@ public static class Enrollment
 
     ///
     private static async Task<IResult> MatchingAsync(EnrollmentService enrollmentService,
+           UserAccessor userAccessor, AfraAppContext dbContext, ILogger<EnrollmentService> logger)
+    {
+        var user = await userAccessor.GetUserAsync();
+        if (user is not { Rolle: User.Domain.Models.Rolle.Tutor })
+        {
+            logger.LogWarning("not tutor");
+            return Results.Unauthorized();
+        }
+        var slotsMöglich = dbContext.ProfundaSlots.Where(s => s.EinwahlMöglich).Select(s => s.Id).ToArray();
+        try
+        {
+            var result = await enrollmentService.PerformMatching(slotsMöglich);
+            return Results.Ok(result);
+        }
+        catch (ArgumentException e)
+        {
+            return Results.BadRequest(e.Message);
+        }
+    }
+
+    ///
+    private static async Task<IResult> MatchingAsyncCSV(EnrollmentService enrollmentService,
+           UserAccessor userAccessor, AfraAppContext dbContext, ILogger<EnrollmentService> logger)
+    {
+        var user = await userAccessor.GetUserAsync();
+        if (user is not { Rolle: User.Domain.Models.Rolle.Tutor })
+        {
+            logger.LogWarning("not tutor");
+            return Results.Unauthorized();
+        }
+        var slotsMöglich = dbContext.ProfundaSlots.Where(s => s.EinwahlMöglich).Select(s => s.Id).ToArray();
+        try
+        {
+            await enrollmentService.PerformMatching(slotsMöglich);
+            var csv = await enrollmentService.GetStudentMatchingCSV(slotsMöglich);
+            return Results.File(System.Text.Encoding.UTF8.GetBytes(csv), "text/csv");
+        }
+        catch (ArgumentException e)
+        {
+            return Results.BadRequest(e.Message);
+        }
+    }
+
+    ///
+    private static async Task<IResult> GetUnenrolledAsync(EnrollmentService enrollmentService,
            UserAccessor userAccessor, AfraAppContext dbContext, ILogger<EnrollmentService> logger, Guid[] slots)
     {
         var user = await userAccessor.GetUserAsync();
@@ -59,6 +106,14 @@ public static class Enrollment
             return Results.Unauthorized();
         }
         var slotsMöglich = dbContext.ProfundaSlots.Where(s => s.EinwahlMöglich).Select(s => s.Id).ToArray();
-        return await enrollmentService.PerformMatching(slotsMöglich);
+        try
+        {
+            var result = await enrollmentService.GetMissingStudents(slotsMöglich);
+            return Results.Ok(result);
+        }
+        catch (ArgumentException e)
+        {
+            return Results.BadRequest(e.Message);
+        }
     }
 }
