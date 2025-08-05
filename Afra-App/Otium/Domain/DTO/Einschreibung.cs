@@ -40,5 +40,5 @@ public record Einschreibung
     /// <summary>
     ///     The users attendance status for the enrollment
     /// </summary>
-    public AnwesenheitsStatus? Anwesenheit { get; set; }
+    public OtiumAnwesenheitsStatus? Anwesenheit { get; set; }
 }

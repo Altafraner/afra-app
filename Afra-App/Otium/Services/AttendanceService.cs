@@ -9,7 +9,7 @@ namespace Afra_App.Otium.Services;
 /// </summary>
 public class AttendanceService : IAttendanceService
 {
-    private const AnwesenheitsStatus DefaultAttendanceStatus = AnwesenheitsStatus.Fehlend;
+    private const OtiumAnwesenheitsStatus DefaultAttendanceStatus = OtiumAnwesenheitsStatus.Fehlend;
     private readonly BlockHelper _blockHelper;
     private readonly AfraAppContext _dbContext;
 
@@ -23,7 +23,7 @@ public class AttendanceService : IAttendanceService
     }
 
     /// <inheritdoc />
-    public async Task<AnwesenheitsStatus> GetAttendanceForEnrollmentAsync(Guid enrollmentId)
+    public async Task<OtiumAnwesenheitsStatus> GetAttendanceForEnrollmentAsync(Guid enrollmentId)
     {
         var enrollment = await _dbContext.OtiaEinschreibungen
             .Include(e => e.Termin)
@@ -51,7 +51,7 @@ public class AttendanceService : IAttendanceService
     }
 
     /// <inheritdoc />
-    public async Task<Dictionary<Person, AnwesenheitsStatus>> GetAttendanceForTerminAsync(Guid terminId)
+    public async Task<Dictionary<Person, OtiumAnwesenheitsStatus>> GetAttendanceForTerminAsync(Guid terminId)
     {
         var blockIdWrapper = await _dbContext.OtiaTermine
             .AsNoTracking()
@@ -83,8 +83,8 @@ public class AttendanceService : IAttendanceService
     }
 
     /// <inheritdoc />
-    public async Task<(Dictionary<Termin, Dictionary<Person, AnwesenheitsStatus>> termine,
-            Dictionary<Person, AnwesenheitsStatus> missingPersons, bool missingPersonsChecked)>
+    public async Task<(Dictionary<OtiumTermin, Dictionary<Person, OtiumAnwesenheitsStatus>> termine,
+            Dictionary<Person, OtiumAnwesenheitsStatus> missingPersons, bool missingPersonsChecked)>
         GetAttendanceForBlockAsync(Guid blockId)
     {
         var block = await _dbContext.Blocks
@@ -103,7 +103,7 @@ public class AttendanceService : IAttendanceService
             .Include(t => t.Otium)
             .ToListAsync();
 
-        var terminAttendance = new Dictionary<Termin, Dictionary<Person, AnwesenheitsStatus>>();
+        var terminAttendance = new Dictionary<OtiumTermin, Dictionary<Person, OtiumAnwesenheitsStatus>>();
         foreach (var termin in termine)
         {
             var attendance = await GetAttendanceForTerminAsync(termin.Id);
@@ -114,7 +114,7 @@ public class AttendanceService : IAttendanceService
         var blockSchema = _blockHelper.Get(block.SchemaId);
         if (!blockSchema!.Verpflichtend)
         {
-            return (terminAttendance, new Dictionary<Person, AnwesenheitsStatus>(), true);
+            return (terminAttendance, new Dictionary<Person, OtiumAnwesenheitsStatus>(), true);
         }
 
         var personIds = terminAttendance.Values
@@ -144,7 +144,7 @@ public class AttendanceService : IAttendanceService
     }
 
     /// <inheritdoc />
-    public async Task<Dictionary<Guid, AnwesenheitsStatus>> GetAttendanceForBlocksAsync(IEnumerable<Guid> blockIds,
+    public async Task<Dictionary<Guid, OtiumAnwesenheitsStatus>> GetAttendanceForBlocksAsync(IEnumerable<Guid> blockIds,
         Guid personId)
     {
         var attendances = await _dbContext.OtiaAnwesenheiten
@@ -156,7 +156,7 @@ public class AttendanceService : IAttendanceService
     }
 
     /// <inheritdoc />
-    public async Task SetAttendanceForEnrollmentAsync(Guid enrollmentId, AnwesenheitsStatus status)
+    public async Task SetAttendanceForEnrollmentAsync(Guid enrollmentId, OtiumAnwesenheitsStatus status)
     {
         var einschreibung = _dbContext.OtiaEinschreibungen
             .AsNoTracking()
@@ -172,7 +172,7 @@ public class AttendanceService : IAttendanceService
     }
 
     /// <inheritdoc />
-    public async Task SetAttendanceForStudentInBlockAsync(Guid studentId, Guid blockId, AnwesenheitsStatus status)
+    public async Task SetAttendanceForStudentInBlockAsync(Guid studentId, Guid blockId, OtiumAnwesenheitsStatus status)
     {
         var blockExists = await _dbContext.Blocks
             .AsNoTracking()
@@ -214,7 +214,7 @@ public class AttendanceService : IAttendanceService
         await _dbContext.SaveChangesAsync();
     }
 
-    private async Task CreateOrUpdate(Guid studentId, Guid blockId, AnwesenheitsStatus status)
+    private async Task CreateOrUpdate(Guid studentId, Guid blockId, OtiumAnwesenheitsStatus status)
     {
         var attendance = await _dbContext.OtiaAnwesenheiten
             .FirstOrDefaultAsync(a => a.StudentId == studentId && a.BlockId == blockId);
@@ -223,7 +223,7 @@ public class AttendanceService : IAttendanceService
             attendance.Status = status;
         else
         {
-            await _dbContext.OtiaAnwesenheiten.AddAsync(new Anwesenheit
+            await _dbContext.OtiaAnwesenheiten.AddAsync(new OtiumAnwesenheit
             {
                 BlockId = blockId,
                 StudentId = studentId,

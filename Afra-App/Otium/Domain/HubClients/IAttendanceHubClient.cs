@@ -66,7 +66,7 @@ public interface IAttendanceHubClient
     /// <param name="TerminId">The termins id</param>
     /// <param name="BlockId">The blocks id</param>
     /// <param name="Status">The students updated status</param>
-    public record AttendanceUpdate(Guid StudentId, Guid TerminId, Guid BlockId, AnwesenheitsStatus Status);
+    public record AttendanceUpdate(Guid StudentId, Guid TerminId, Guid BlockId, OtiumAnwesenheitsStatus Status);
 
     /// <summary>
     /// A dto for updating the status of a specific termin.

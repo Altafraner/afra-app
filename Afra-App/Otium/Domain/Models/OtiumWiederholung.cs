@@ -5,7 +5,7 @@ namespace Afra_App.Otium.Domain.Models;
 /// <summary>
 ///     A record representing a recurrence rule for an Otium.
 /// </summary>
-public class Wiederholung : OtiumsInstanz
+public class OtiumWiederholung : OtiumInstanz
 {
     /// <summary>
     ///     The unique identifier of the recurrence rule.
@@ -30,7 +30,7 @@ public class Wiederholung : OtiumsInstanz
     /// <summary>
     ///     A list of all instances of the recurrence rule. Useful for bulk operations.
     /// </summary>
-    public ICollection<Termin> Termine { get; init; } = new List<Termin>();
+    public ICollection<OtiumTermin> Termine { get; init; } = new List<OtiumTermin>();
 
     /// <summary>
     ///     The date of the first Termin

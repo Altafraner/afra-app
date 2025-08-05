@@ -34,7 +34,7 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
     /// <summary>
     ///     Subscribes a user to get updates for a specific termin.
     /// </summary>
-    /// <param name="terminId">The <see cref="Guid" /> of the <see cref="Domain.Models.Termin" /> to subscribe to.</param>
+    /// <param name="terminId">The <see cref="Guid" /> of the <see cref="Domain.Models.OtiumTermin" /> to subscribe to.</param>
     /// <param name="managementService">From DI</param>
     public async Task SubscribeToTermin(Guid terminId, ManagementService managementService)
     {
@@ -55,7 +55,7 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
     /// <summary>
     ///     Unsubscribes a user from updates for a specific termin.
     /// </summary>
-    /// <param name="terminId">The <see cref="Guid" /> of the <see cref="Domain.Models.Termin" /> to unsubscribe from.</param>
+    /// <param name="terminId">The <see cref="Guid" /> of the <see cref="Domain.Models.OtiumTermin" /> to unsubscribe from.</param>
     public Task UnsubscribeFromTermin(Guid terminId)
     {
         return Groups.RemoveFromGroupAsync(Context.ConnectionId, TerminGroupName(terminId));
@@ -132,7 +132,7 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
     /// <param name="studentId">The id of the Students <see cref="User.Domain.Models.Person" /> entity.</param>
     /// <param name="status">The new status</param>
     /// <param name="dbContext">Injected via DI</param>
-    public async Task SetAttendanceStatusInBlock(Guid blockId, Guid studentId, AnwesenheitsStatus status,
+    public async Task SetAttendanceStatusInBlock(Guid blockId, Guid studentId, OtiumAnwesenheitsStatus status,
         AfraAppContext dbContext)
     {
         var block = await dbContext.Blocks
@@ -159,12 +159,12 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
     /// <summary>
     ///     Set the attendance status for a specific termin for a specific student.
     /// </summary>
-    /// <param name="terminId">The id of the <see cref="Domain.Models.Termin" /></param>
+    /// <param name="terminId">The id of the <see cref="Domain.Models.OtiumTermin" /></param>
     /// <param name="studentId">The id of the students <see cref="User.Domain.Models.Person" /> entity</param>
     /// <param name="status">The new status</param>
     /// <param name="dbContext">Injected from DI-Container</param>
     /// <exception cref="KeyNotFoundException"></exception>
-    public async Task SetAttendanceStatusInTermin(Guid terminId, Guid studentId, AnwesenheitsStatus status,
+    public async Task SetAttendanceStatusInTermin(Guid terminId, Guid studentId, OtiumAnwesenheitsStatus status,
         AfraAppContext dbContext)
     {
         var block = await dbContext.OtiaTermine.Where(t => t.Id == terminId)
@@ -345,7 +345,7 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
         }
     }
 
-    private async Task UpdateAttendance(AnwesenheitsStatus status, Guid studentId, Guid blockId, Guid terminId)
+    private async Task UpdateAttendance(OtiumAnwesenheitsStatus status, Guid studentId, Guid blockId, Guid terminId)
     {
         await _attendanceService.SetAttendanceForStudentInBlockAsync(studentId, blockId, status);
         await Clients.Groups(TerminGroupName(terminId), BlockGroupName(blockId))

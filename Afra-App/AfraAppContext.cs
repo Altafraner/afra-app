@@ -36,27 +36,27 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
     /// <summary>
     ///     All instances of Otia
     /// </summary>
-    public DbSet<Termin> OtiaTermine { get; set; }
+    public DbSet<OtiumTermin> OtiaTermine { get; set; }
 
     /// <summary>
     ///     All recurrence rules for Otia
     /// </summary>
-    public DbSet<Wiederholung> OtiaWiederholungen { get; set; }
+    public DbSet<OtiumWiederholung> OtiaWiederholungen { get; set; }
 
     /// <summary>
     ///     All categories for Otia
     /// </summary>
-    public DbSet<Kategorie> OtiaKategorien { get; set; }
+    public DbSet<OtiumKategorie> OtiaKategorien { get; set; }
 
     /// <summary>
     ///     All enrollments for Otia
     /// </summary>
-    public DbSet<Otium.Domain.Models.Einschreibung> OtiaEinschreibungen { get; set; }
+    public DbSet<Otium.Domain.Models.OtiumEinschreibung> OtiaEinschreibungen { get; set; }
 
     /// <summary>
     ///     All attendances for Otia
     /// </summary>
-    public DbSet<Anwesenheit> OtiaAnwesenheiten { get; set; }
+    public DbSet<OtiumAnwesenheit> OtiaAnwesenheiten { get; set; }
 
     /// <summary>
     ///     All school days
@@ -86,12 +86,12 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
     /// <summary>
     ///     All finally matched Enrollments for Profunda
     /// </summary>
-    public DbSet<Profundum.Domain.Models.Einschreibung> ProfundaEinschreibungen { get; set; }
+    public DbSet<Profundum.Domain.Models.ProfundumEinschreibung> ProfundaEinschreibungen { get; set; }
 
     /// <summary>
     ///     All enrollment wishes for produnda submitted by students
     /// </summary>
-    public DbSet<Profundum.Domain.Models.BelegWunsch> ProfundaBelegWuensche { get; set; }
+    public DbSet<Profundum.Domain.Models.ProfundumBelegWunsch> ProfundaBelegWuensche { get; set; }
 
     /// <summary>
     ///     All slots for profunda to have ProfundaInstanzen in
@@ -106,7 +106,7 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
             .MapEnum<Rolle>("person_rolle")
             .MapEnum<GlobalPermission>("global_permission")
             .MapEnum<Wochentyp>("wochentyp")
-            .MapEnum<AnwesenheitsStatus>("anwesenheits_status");
+            .MapEnum<OtiumAnwesenheitsStatus>("anwesenheits_status");
 
     /// <summary>
     ///     The keys used by the ASP.NET Core Domain Protection API.
@@ -137,7 +137,7 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
                 .WithMany(p => p.VerwalteteOtia);
         });
 
-        modelBuilder.Entity<Termin>(t =>
+        modelBuilder.Entity<OtiumTermin>(t =>
         {
             t.HasOne(ot => ot.Otium)
                 .WithMany(o => o.Termine);
@@ -146,7 +146,7 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
-        modelBuilder.Entity<Wiederholung>(w =>
+        modelBuilder.Entity<OtiumWiederholung>(w =>
         {
             w.HasOne(or => or.Otium)
                 .WithMany(o => o.Wiederholungen);
@@ -158,10 +158,10 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
         });
 
         // record structs do not work with the [ComplexType] attribute.
-        modelBuilder.Entity<Otium.Domain.Models.Einschreibung>()
+        modelBuilder.Entity<Otium.Domain.Models.OtiumEinschreibung>()
             .ComplexProperty(e => e.Interval);
 
-        modelBuilder.Entity<Anwesenheit>(e =>
+        modelBuilder.Entity<OtiumAnwesenheit>(e =>
         {
             e.HasOne(a => a.Student)
                 .WithMany()
@@ -201,13 +201,13 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
                 .WithMany(p => p.Instanzen);
             p.HasMany(p => p.Slots).WithMany();
         });
-        modelBuilder.Entity<Profundum.Domain.Models.Einschreibung>(e =>
+        modelBuilder.Entity<Profundum.Domain.Models.ProfundumEinschreibung>(e =>
         {
             e.HasOne(e => e.ProfundumInstanz).WithMany(pi => pi.Einschreibungen);
             e.HasOne(e => e.BetroffenePerson).WithMany(pe => pe.ProfundaEinschreibungen);
             e.HasKey(b => new { b.BetroffenePersonId, b.ProfundumInstanzId, });
         });
-        modelBuilder.Entity<Profundum.Domain.Models.BelegWunsch>(w =>
+        modelBuilder.Entity<Profundum.Domain.Models.ProfundumBelegWunsch>(w =>
         {
             w.HasKey(b => new { b.ProfundumInstanzId, b.BetroffenePersonId, b.Stufe });
             w.HasOne(b => b.BetroffenePerson).WithMany(p => p.ProfundaBelegwuensche);
@@ -223,7 +223,7 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
             .Property(b => b.SchemaId)
             .HasDefaultValueSql("''");
 
-        modelBuilder.Entity<Wiederholung>()
+        modelBuilder.Entity<OtiumWiederholung>()
             .Property(w => w.Block)
             .HasDefaultValueSql("''");
     }

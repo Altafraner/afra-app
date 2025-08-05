@@ -15,7 +15,7 @@ public record Termin : ITermin
     /// <param name="kategorie">The category the Otium is in</param>
     /// <param name="startTime">The time the termin starts at</param>
     /// <param name="block">The block the termin is in.</param>
-    public Termin(Models.Termin termin, EinschreibungsPreview einschreibung,
+    public Termin(Models.OtiumTermin termin, EinschreibungsPreview einschreibung,
         Guid kategorie, TimeOnly startTime, string block)
     {
         Id = termin.Id;

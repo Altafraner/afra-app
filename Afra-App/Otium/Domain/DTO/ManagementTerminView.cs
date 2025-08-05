@@ -20,7 +20,7 @@ public record ManagementTerminView
     ///     Construct a ManagementTerminView from a Database Termin
     /// </summary>
     [SetsRequiredMembers]
-    public ManagementTerminView(Termin termin, string block)
+    public ManagementTerminView(OtiumTermin termin, string block)
     {
         Id = termin.Id;
         OtiumId = termin.Otium.Id;

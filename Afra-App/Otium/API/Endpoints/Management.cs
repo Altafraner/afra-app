@@ -302,7 +302,7 @@ public static class Management
         UserAuthorizationHelper authHelper, Guid otiumTerminId)
     {
         DB_Otium otium;
-        Termin termin;
+        OtiumTermin termin;
         try
         {
             termin = await managementService.GetTerminByIdAsync(otiumTerminId);

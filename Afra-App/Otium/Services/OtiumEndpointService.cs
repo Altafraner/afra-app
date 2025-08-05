@@ -9,11 +9,11 @@ using Afra_App.User.Domain.DTO;
 using Afra_App.User.Domain.Models;
 using Afra_App.User.Services;
 using Microsoft.EntityFrameworkCore;
-using DB_Einschreibung = Afra_App.Otium.Domain.Models.Einschreibung;
+using DB_Einschreibung = Afra_App.Otium.Domain.Models.OtiumEinschreibung;
 using DB_Otium = Afra_App.Otium.Domain.Models.Otium;
 using DB_Schultag = Afra_App.Otium.Domain.Models.Schuljahr.Schultag;
-using DB_Termin = Afra_App.Otium.Domain.Models.Termin;
-using DB_Wiederholung = Afra_App.Otium.Domain.Models.Wiederholung;
+using DB_Termin = Afra_App.Otium.Domain.Models.OtiumTermin;
+using DB_Wiederholung = Afra_App.Otium.Domain.Models.OtiumWiederholung;
 using DTO_Einschreibung = Afra_App.Otium.Domain.DTO.Einschreibung;
 using DTO_Otium_Creation = Afra_App.Otium.Domain.DTO.ManagementOtiumCreation;
 using DTO_Otium_View = Afra_App.Otium.Domain.DTO.ManagementOtiumView;
@@ -305,15 +305,15 @@ public class OtiumEndpointService
         }));
 
         return enrollments.Select(e => (e.Termin.Block.SchemaId, new DTO_Einschreibung
-            {
-                Block = _blockHelper.Get(e.Termin.Block.SchemaId)!.Bezeichnung,
-                Datum = e.Termin.Block.SchultagKey,
-                KategorieId = e.Termin.Otium.Kategorie.Id,
-                Ort = e.Termin.Ort,
-                Otium = e.Termin.Otium.Bezeichnung,
-                TerminId = e.Termin.Id,
-                Anwesenheit = blocksDoneOrRunning.Contains(e.Termin.Block.Id) ? attendances[e.Termin.Block.Id] : null
-            }))
+        {
+            Block = _blockHelper.Get(e.Termin.Block.SchemaId)!.Bezeichnung,
+            Datum = e.Termin.Block.SchultagKey,
+            KategorieId = e.Termin.Otium.Kategorie.Id,
+            Ort = e.Termin.Ort,
+            Otium = e.Termin.Otium.Bezeichnung,
+            TerminId = e.Termin.Id,
+            Anwesenheit = blocksDoneOrRunning.Contains(e.Termin.Block.Id) ? attendances[e.Termin.Block.Id] : null
+        }))
             .Concat(additionalEnrollments)
             .OrderBy(e => e.Item2.Datum)
             .ThenBy(e => e.SchemaId)

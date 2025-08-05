@@ -7,7 +7,7 @@ namespace Afra_App.Otium.Domain.Models;
 ///     An abstract class representing the basic structure of an instance for an Otium. Here to ensure consistency between
 ///     recurrent and single instances.
 /// </summary>
-public abstract class OtiumsInstanz
+public abstract class OtiumInstanz
 {
     /// <summary>
     ///     A reference to the Otium this instance is for.
