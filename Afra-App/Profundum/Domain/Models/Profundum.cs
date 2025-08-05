@@ -23,4 +23,9 @@ public class Profundum
 
     ///
     public ICollection<ProfundumInstanz> Instanzen { get; set; } = [];
+
+    ///
+    public int? minKlasse { get; set; } = null;
+    ///
+    public int? maxKlasse { get; set; } = null;
 }
