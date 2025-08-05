@@ -24,7 +24,17 @@ async function get() {
 async function send() {
   console.log('Sending, ...', results);
   const api = mande('/api/profundum');
-  await api.post(results.value);
+
+  try {
+    await api.post(results.value);
+  } catch (e) {
+    console.log(e.response)
+    toast.add({
+      severity: "error",
+      summary: "Fehler",
+      detail: "Deine Belegwünsche sind fehlerhaft. \n" + (e.body ? e.body.split('(')[0] : '')
+    })
+  }
 
   toast.add({
     severity: 'success',
