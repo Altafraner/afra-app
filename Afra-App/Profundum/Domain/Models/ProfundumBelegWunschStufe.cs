@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 
 ///
-public enum BelegWunschStufe
+public enum ProfundumBelegWunschStufe
 {
     ///
     [JsonStringEnumMemberName("ErstWunsch")]

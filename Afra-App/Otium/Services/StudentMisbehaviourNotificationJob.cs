@@ -115,7 +115,7 @@ public class StudentMisbehaviourNotificationJob : IJob
 
             var missingButEnrolled = attendanceForBlock.termine
                 .ToDictionary(t => t.Key,
-                    t => t.Value.Where(e => e.Value == AnwesenheitsStatus.Fehlend));
+                    t => t.Value.Where(e => e.Value == OtiumAnwesenheitsStatus.Fehlend));
 
             foreach (var (termin, anwesenheiten) in missingButEnrolled)
                 foreach (var (person, _) in anwesenheiten)
@@ -123,7 +123,7 @@ public class StudentMisbehaviourNotificationJob : IJob
             await _dbContext.SaveChangesAsync(context.CancellationToken);
 
             var missingStudentsInBlock = attendanceForBlock.missingPersons
-                .Where(s => s.Value == AnwesenheitsStatus.Fehlend)
+                .Where(s => s.Value == OtiumAnwesenheitsStatus.Fehlend)
                 .Concat(missingButEnrolled.SelectMany(t => t.Value))
                 .DistinctBy(s => s.Key.Id)
                 .Select(s => s.Key);

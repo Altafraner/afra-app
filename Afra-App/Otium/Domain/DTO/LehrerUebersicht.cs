@@ -10,7 +10,7 @@ namespace Afra_App.Otium.Domain.DTO;
 public record LehrerUebersicht(IEnumerable<LehrerTerminPreview> Termine, IEnumerable<MenteePreview> Mentees);
 
 /// <summary>
-/// Represents a preview of a <see cref="Models.Termin"/> the teacher is tutoring.
+/// Represents a preview of a <see cref="Models.OtiumTermin"/> the teacher is tutoring.
 /// </summary>
 /// <param name="Id">The id of the termin</param>
 /// <param name="Otium">The name of the Otium the termin is for</param>

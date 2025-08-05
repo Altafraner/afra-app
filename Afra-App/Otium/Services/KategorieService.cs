@@ -24,14 +24,14 @@ public class KategorieService
     /// <summary>
     ///     Return all required categories.
     /// </summary>
-    public async Task<List<Kategorie>> GetRequiredKategorienAsync()
+    public async Task<List<OtiumKategorie>> GetRequiredKategorienAsync()
     {
         return await _cache.GetOrCreateAsync("otium-kategorie-required",
             async _ => await FetchRequiredKategorienAsync()) ?? throw new Exception(
             "Somehow we could neither fetch nor retrieve from cache the required categories. This should never happen.");
     }
 
-    private async Task<List<Kategorie>> FetchRequiredKategorienAsync()
+    private async Task<List<OtiumKategorie>> FetchRequiredKategorienAsync()
     {
         return await _dbContext.OtiaKategorien
             .AsNoTracking()
@@ -44,7 +44,7 @@ public class KategorieService
     /// <summary>
     ///     Return all categories in a tree as an async enumerable.
     /// </summary>
-    public IAsyncEnumerable<Kategorie> GetKategorienTreeAsyncEnumerable()
+    public IAsyncEnumerable<OtiumKategorie> GetKategorienTreeAsyncEnumerable()
     {
         return _dbContext.OtiaKategorien.AsNoTracking()
             .Include(k => k.Children)
@@ -57,7 +57,7 @@ public class KategorieService
     /// </summary>
     /// <param name="kategorie">The kategorie to find all parents for.</param>
     /// <returns>An Async Enumerable containing a kategorie and all its parents.</returns>
-    public async IAsyncEnumerable<Guid> GetTransitiveKategoriesIdsAsyncEnumerable(Kategorie kategorie)
+    public async IAsyncEnumerable<Guid> GetTransitiveKategoriesIdsAsyncEnumerable(OtiumKategorie kategorie)
     {
         // Extra variable needed to avoid null reference exception
         var currentCategory = await _dbContext.OtiaKategorien.FindAsync(kategorie.Id);
@@ -74,13 +74,13 @@ public class KategorieService
     /// </summary>
     /// <param name="kategorie">The category to get the required parent from</param>
     /// <returns>the first required parent if exists; Otherwise, null.</returns>
-    public async Task<Guid?> GetRequiredParentIdAsync(Kategorie kategorie)
+    public async Task<Guid?> GetRequiredParentIdAsync(OtiumKategorie kategorie)
     {
         return await _cache.GetOrCreateAsync($"otium-kategorie-required-parent-{kategorie.Id}",
             async _ => await FetchRequiredParentAsync(kategorie));
     }
 
-    private async Task<Guid?> FetchRequiredParentAsync(Kategorie kategorie)
+    private async Task<Guid?> FetchRequiredParentAsync(OtiumKategorie kategorie)
     {
         var current = await _dbContext.OtiaKategorien.FindAsync(kategorie.Id);
         while (current is not null)
@@ -94,7 +94,7 @@ public class KategorieService
         return null;
     }
 
-    private async Task<Kategorie?> GetParentAsync(Kategorie kategorie)
+    private async Task<OtiumKategorie?> GetParentAsync(OtiumKategorie kategorie)
     {
         await _dbContext.Entry(kategorie).Reference(c => c.Parent).LoadAsync();
         return kategorie.Parent;

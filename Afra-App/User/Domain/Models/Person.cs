@@ -82,13 +82,13 @@ public class Person
     /// <summary>
     ///     A list of all Otia the person is enrolled in.
     /// </summary>
-    public ICollection<Einschreibung> OtiaEinschreibungen { get; set; } = new List<Einschreibung>();
+    public ICollection<OtiumEinschreibung> OtiaEinschreibungen { get; set; } = new List<OtiumEinschreibung>();
 
     ///
-    public ICollection<Profundum.Domain.Models.Einschreibung> ProfundaEinschreibungen { get; set; } = [];
+    public ICollection<Profundum.Domain.Models.ProfundumEinschreibung> ProfundaEinschreibungen { get; set; } = [];
 
     ///
-    public ICollection<Profundum.Domain.Models.BelegWunsch> ProfundaBelegwuensche { get; set; } = [];
+    public ICollection<Profundum.Domain.Models.ProfundumBelegWunsch> ProfundaBelegwuensche { get; set; } = [];
 
     /// <inheritdoc />
     public override string ToString()

@@ -6,10 +6,10 @@ using Afra_App.User.Domain.DTO;
 using Afra_App.User.Domain.Models;
 using Afra_App.User.Services;
 using Microsoft.EntityFrameworkCore;
-using Einschreibung = Afra_App.Otium.Domain.Models.Einschreibung;
+using OtiumEinschreibung = Afra_App.Otium.Domain.Models.OtiumEinschreibung;
+using OtiumTermin = Afra_App.Otium.Domain.Models.OtiumTermin;
 using Person = Afra_App.User.Domain.Models.Person;
 using Schultag = Afra_App.Otium.Domain.Models.Schuljahr.Schultag;
-using Termin = Afra_App.Otium.Domain.Models.Termin;
 
 namespace Afra_App.Otium.Services;
 
@@ -45,7 +45,7 @@ public class EnrollmentService
     /// <param name="terminId">The is of the termin entity to enroll to</param>
     /// <param name="student">The student wanting to enroll</param>
     /// <returns>null, iff the user may not enroll into the termin; Otherwise the Termin entity.</returns>
-    public async Task<Termin?> EnrollAsync(Guid terminId, Person student)
+    public async Task<OtiumTermin?> EnrollAsync(Guid terminId, Person student)
     {
         var termin = await _dbContext.OtiaTermine
             .Include(termin => termin.Block)
@@ -60,7 +60,7 @@ public class EnrollmentService
         var (mayEnroll, _) = await MayEnroll(student, termin);
         if (!mayEnroll) return null;
 
-        var einschreibung = new Einschreibung
+        var einschreibung = new OtiumEinschreibung
         {
             Termin = termin,
             BetroffenePerson = student,
@@ -107,7 +107,7 @@ public class EnrollmentService
         var (mayEnroll, _) = await MayEnroll(student, startingTermin);
 
         if (!mayEnroll) throw new InvalidOperationException("Der Nutzer darf sich nicht einschreiben.");
-        var einschreibung = new Einschreibung
+        var einschreibung = new OtiumEinschreibung
         {
             Termin = startingTermin,
             BetroffenePerson = student,
@@ -133,7 +133,7 @@ public class EnrollmentService
                 continue;
             }
 
-            var einschreibungRec = new Einschreibung
+            var einschreibungRec = new OtiumEinschreibung
             {
                 Termin = recurringTermin,
                 BetroffenePerson = student,
@@ -158,7 +158,7 @@ public class EnrollmentService
     /// </param>
     /// <param name="save">If true, will persist changes to database. Useful for bulk operations.</param>
     /// <returns>null, if the user may not enroll with the given parameters; Otherwise the termin the user has enrolled in.</returns>
-    public async Task<Termin?> UnenrollAsync(Guid terminId, Person student, bool force = false, bool save = true)
+    public async Task<OtiumTermin?> UnenrollAsync(Guid terminId, Person student, bool force = false, bool save = true)
     {
         var enrollment = await _dbContext.OtiaEinschreibungen
             .Include(e => e.Termin)
@@ -220,7 +220,7 @@ public class EnrollmentService
     /// <param name="blocks">The blocks to check for</param>
     /// <param name="einschreibungen">The enrollments the user is enrolled in</param>
     /// <returns>A timeline containing all times the user must enroll in but has not done so.</returns>
-    public Timeline<TimeOnly> GetNotEnrolledTimes(IEnumerable<Block> blocks, IEnumerable<Einschreibung> einschreibungen)
+    public Timeline<TimeOnly> GetNotEnrolledTimes(IEnumerable<Block> blocks, IEnumerable<OtiumEinschreibung> einschreibungen)
     {
         var timeline = new Timeline<TimeOnly>();
         var enrolledBlocks = einschreibungen
@@ -242,7 +242,7 @@ public class EnrollmentService
     /// </summary>
     /// <param name="enrollments">The users enrollment</param>
     /// <param name="blocks">All blocks the user should be enrolled in</param>
-    public IEnumerable<Block> GetNotEnrolledBlocks(IEnumerable<Einschreibung> enrollments, IEnumerable<Block> blocks)
+    public IEnumerable<Block> GetNotEnrolledBlocks(IEnumerable<OtiumEinschreibung> enrollments, IEnumerable<Block> blocks)
     {
         var enrolledBlocks = enrollments
             .Select(e => e.Termin.Block.Id)
@@ -257,7 +257,7 @@ public class EnrollmentService
     /// <param name="schultag">The day to check for</param>
     /// <param name="einschreibungen">The set of enrollments to aggregate the intervals from</param>
     /// <returns>True, iff all non optional blocks are enrolled</returns>
-    public bool AreAllNonOptionalBlocksEnrolled(Schultag schultag, IEnumerable<Einschreibung> einschreibungen)
+    public bool AreAllNonOptionalBlocksEnrolled(Schultag schultag, IEnumerable<OtiumEinschreibung> einschreibungen)
     {
         var blocksOnSchoolday = schultag.Blocks;
         var blocksEnrolled = einschreibungen
@@ -273,10 +273,10 @@ public class EnrollmentService
     /// </summary>
     /// <param name="enrollments">The enrollments to exclude the (transitive) categories from</param>
     /// <returns>
-    ///     A List of all Bezeichnungen of <see cref="Kategorie">Kategorien</see> that are required but not covered by the
+    ///     A List of all Bezeichnungen of <see cref="OtiumKategorie">Kategorien</see> that are required but not covered by the
     ///     <paramref name="enrollments" />
     /// </returns>
-    public async Task<List<string>> GetMissingKategories(IEnumerable<Einschreibung> enrollments)
+    public async Task<List<string>> GetMissingKategories(IEnumerable<OtiumEinschreibung> enrollments)
     {
         // Get required categories
         var requiredKategories = (await _kategorieService.GetRequiredKategorienAsync()).Select(c => c.Id).ToHashSet();
@@ -303,13 +303,13 @@ public class EnrollmentService
     ///     and a boolean value that is true iff the rule is fulfilled
     /// </returns>
     public async Task<Dictionary<DateOnly, bool>> CheckAllKategoriesInWeeks(
-        List<Einschreibung> allEinschreibungen)
+        List<OtiumEinschreibung> allEinschreibungen)
     {
         var requiredKategories = (await _kategorieService.GetRequiredKategorienAsync())
             .Select(k => k.Id)
             .ToList();
 
-        var einschreibungenByWeek = new Dictionary<DateOnly, List<Einschreibung>>();
+        var einschreibungenByWeek = new Dictionary<DateOnly, List<OtiumEinschreibung>>();
         var blockDurations = allEinschreibungen.Select(e => e.Termin.Block.SchemaId).Distinct()
             .ToDictionary(id => id, id => _blockHelper.Get(id)!.Interval.Duration);
         foreach (var einschreibung in allEinschreibungen)
@@ -347,7 +347,7 @@ public class EnrollmentService
     /// <param name="user">The user to check for</param>
     /// <param name="termin">The termin to check in</param>
     /// <returns></returns>
-    public async Task<EinschreibungsPreview> GetEnrolmentPreview(Person user, Termin termin)
+    public async Task<EinschreibungsPreview> GetEnrolmentPreview(Person user, OtiumTermin termin)
     {
         var terminEinschreibungen = await _dbContext.OtiaEinschreibungen.AsNoTracking()
             .Where(e => e.Termin == termin)
@@ -378,7 +378,7 @@ public class EnrollmentService
     /// </summary>
     /// <param name="termin">The termin for which to calculate the load.</param>
     /// <returns>The calculated load as a double, or null if MaxEinschreibungen is null.</returns>
-    public async Task<int?> GetLoadPercent(Termin termin)
+    public async Task<int?> GetLoadPercent(OtiumTermin termin)
     {
         if (termin.MaxEinschreibungen is null)
             return null;
@@ -413,7 +413,7 @@ public class EnrollmentService
         _dbContext.OtiaEinschreibungen.RemoveRange(currentEnrollment);
 
         var blockSchema = _blockHelper.Get(toTermin.Block.SchemaId)!;
-        await _dbContext.OtiaEinschreibungen.AddAsync(new Einschreibung
+        await _dbContext.OtiaEinschreibungen.AddAsync(new OtiumEinschreibung
         {
             BetroffenePerson = await _dbContext.Personen.FindAsync(studentId)
                                ?? throw new KeyNotFoundException("Die Person konnte nicht gefunden werden."),
@@ -489,7 +489,7 @@ public class EnrollmentService
             throw new InvalidOperationException(
                 "Sie können keine Einschreibung jetzt beginnen, wenn der Termin nicht grade stattfindet!");
 
-        _dbContext.OtiaEinschreibungen.Add(new Einschreibung
+        _dbContext.OtiaEinschreibungen.Add(new OtiumEinschreibung
         {
             BetroffenePerson = await _dbContext.Personen.FindAsync(studentId)
                                ?? throw new KeyNotFoundException("Die Person konnte nicht gefunden werden."),
@@ -587,7 +587,7 @@ public class EnrollmentService
         return result;
     }
 
-    private (bool MayUnEnroll, string? Reason) CommonMayUnEnroll(Person user, Termin termin)
+    private (bool MayUnEnroll, string? Reason) CommonMayUnEnroll(Person user, OtiumTermin termin)
     {
         var schema = _blockHelper.Get(termin.Block.SchemaId);
 
@@ -606,7 +606,7 @@ public class EnrollmentService
         return (true, null);
     }
 
-    private Task<(bool MayUnenroll, string? Reason)> MayUnenroll(Person user, Termin termin)
+    private Task<(bool MayUnenroll, string? Reason)> MayUnenroll(Person user, OtiumTermin termin)
     {
         var common = CommonMayUnEnroll(user, termin);
         if (!common.MayUnEnroll) return Task.FromResult(common);
@@ -614,7 +614,7 @@ public class EnrollmentService
         return Task.FromResult<(bool MayUnenroll, string? Reason)>((true, null));
     }
 
-    private async Task<(bool, string?)> MayEnroll(Person user, Termin termin)
+    private async Task<(bool, string?)> MayEnroll(Person user, OtiumTermin termin)
     {
         var countEnrolled = await _dbContext.OtiaEinschreibungen.AsNoTracking()
             .CountAsync(e => e.Termin == termin);
@@ -640,7 +640,7 @@ public class EnrollmentService
     ///         If called for different SubBlocks of the same Termin, this will make the same SQL-Query multiple times.
     ///     </para>
     /// </remarks>
-    private async Task<(bool MayEnroll, string? Reason)> MayEnroll(Person user, Termin termin,
+    private async Task<(bool MayEnroll, string? Reason)> MayEnroll(Person user, OtiumTermin termin,
         int countEnrolled)
     {
         var common = CommonMayUnEnroll(user, termin);
@@ -677,7 +677,7 @@ public class EnrollmentService
 
     // Come here for some hideous shit; Optimizing this is a problem for future me.
     // This currently needs three separate SQL-Queries + loading all categories.
-    private async Task<LastAvailableBlockRuleStatus> LastAvailableBlockRuleFulfilled(Person user, Termin termin)
+    private async Task<LastAvailableBlockRuleStatus> LastAvailableBlockRuleFulfilled(Person user, OtiumTermin termin)
     {
         // Find all required categories the user is not enrolled to. -> notEnrolled[]
         // This will break if we start having blocks on sundays

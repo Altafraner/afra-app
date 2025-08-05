@@ -14,7 +14,7 @@ public record TerminPreview : ITermin
     /// <param name="auslastung">The load of the termin</param>
     /// <param name="kategorien">A list of all categories the otium for the termin is in.</param>
     /// <param name="block">The block the termin is in</param>
-    public TerminPreview(Models.Termin termin, int? auslastung, IAsyncEnumerable<Guid> kategorien, string block)
+    public TerminPreview(Models.OtiumTermin termin, int? auslastung, IAsyncEnumerable<Guid> kategorien, string block)
     {
         Id = termin.Id;
         Otium = termin.Otium.Bezeichnung;

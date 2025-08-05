@@ -67,4 +67,4 @@ public record LehrerTermin : ITermin
 /// <param name="Anwesenheit">The current verification status</param>
 public record LehrerEinschreibung(
     PersonInfoMinimal? Student,
-    AnwesenheitsStatus Anwesenheit);
+    OtiumAnwesenheitsStatus Anwesenheit);

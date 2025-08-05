@@ -58,10 +58,10 @@ public class MissingStudentNotificationJob : IJob
 
             var missingEnrolled = terminAttendance.Values
                 .SelectMany(d => d.AsEnumerable())
-                .Where(e => e.Value == AnwesenheitsStatus.Fehlend);
+                .Where(e => e.Value == OtiumAnwesenheitsStatus.Fehlend);
             var othersAnwesenheitsStatus = schema.Verpflichtend
                 ? missingPersons
-                    .Where(e => e.Value == AnwesenheitsStatus.Fehlend)
+                    .Where(e => e.Value == OtiumAnwesenheitsStatus.Fehlend)
                 : [];
 
             var allMissing = missingEnrolled

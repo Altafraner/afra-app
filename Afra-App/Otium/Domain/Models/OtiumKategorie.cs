@@ -7,7 +7,7 @@ namespace Afra_App.Otium.Domain.Models;
 ///     A Kategorie for an Otium.
 /// </summary>
 /// <example>Studienzeit Mathematik</example>
-public class Kategorie
+public class OtiumKategorie
 {
     /// <summary>
     ///     A unique identifier for the Kategorie.
@@ -41,12 +41,12 @@ public class Kategorie
     /// <summary>
     ///     A parent Kategorie for this Kategorie. Used to build a tree of Kategories.
     /// </summary>
-    public Kategorie? Parent { get; set; }
+    public OtiumKategorie? Parent { get; set; }
 
     /// <summary>
     ///     A helper collection for navigating the tree
     /// </summary>
-    public ICollection<Kategorie> Children { get; init; } = new List<Kategorie>();
+    public ICollection<OtiumKategorie> Children { get; init; } = new List<OtiumKategorie>();
 
     /// <summary>
     ///     A helper collection for navigating to all Otia with this Kategorie.

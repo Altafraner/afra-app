@@ -22,7 +22,7 @@ public record ManagementWiederholungView
     ///     Construct a ManagementWiederholungView from a Database Wiederholung
     /// </summary>
     [SetsRequiredMembers]
-    public ManagementWiederholungView(Wiederholung dbWiederholung, string block)
+    public ManagementWiederholungView(OtiumWiederholung dbWiederholung, string block)
     {
         Id = dbWiederholung.Id;
         OtiumId = dbWiederholung.Otium.Id;

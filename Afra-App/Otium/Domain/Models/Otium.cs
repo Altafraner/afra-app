@@ -28,7 +28,7 @@ public class Otium
     /// <summary>
     ///     A reference to the category of the Otium. Categories are transitive.
     /// </summary>
-    public required Kategorie Kategorie { get; set; }
+    public required OtiumKategorie Kategorie { get; set; }
 
     /// <summary>
     ///     A list of all people responsible for the Otium.
@@ -38,10 +38,10 @@ public class Otium
     /// <summary>
     ///     All recurrence rules for the Otium
     /// </summary>
-    public ICollection<Wiederholung> Wiederholungen { get; set; } = new List<Wiederholung>();
+    public ICollection<OtiumWiederholung> Wiederholungen { get; set; } = new List<OtiumWiederholung>();
 
     /// <summary>
     ///     All instances of the Otium
     /// </summary>
-    public ICollection<Termin> Termine { get; set; } = new List<Termin>();
+    public ICollection<OtiumTermin> Termine { get; set; } = new List<OtiumTermin>();
 }

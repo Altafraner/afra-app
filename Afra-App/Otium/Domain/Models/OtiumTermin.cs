@@ -5,7 +5,7 @@ namespace Afra_App.Otium.Domain.Models;
 /// <summary>
 ///     A record representing a one-time instance of an Otium.
 /// </summary>
-public class Termin : OtiumsInstanz
+public class OtiumTermin : OtiumInstanz
 {
     /// <summary>
     ///     A unique identifier for the Termin
@@ -15,7 +15,7 @@ public class Termin : OtiumsInstanz
     /// <summary>
     ///     A reference to the recurrence rule for the Termin. May be null.
     /// </summary>
-    public Wiederholung? Wiederholung { get; set; }
+    public OtiumWiederholung? Wiederholung { get; set; }
 
     /// <summary>
     ///     A reference to the Block the Termin is on.
@@ -25,7 +25,7 @@ public class Termin : OtiumsInstanz
     /// <summary>
     ///     A reference to all enrollments for the Termin.
     /// </summary>
-    public ICollection<Einschreibung> Enrollments { get; set; } = new List<Einschreibung>();
+    public ICollection<OtiumEinschreibung> Enrollments { get; set; } = new List<OtiumEinschreibung>();
 
     /// <summary>
     ///     True, if the Termin is cancelled.

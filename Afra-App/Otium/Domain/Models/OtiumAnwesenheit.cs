@@ -6,7 +6,7 @@ namespace Afra_App.Otium.Domain.Models;
 /// <summary>
 /// Represents a DB entry with attendance information
 /// </summary>
-public class Anwesenheit
+public class OtiumAnwesenheit
 {
     /// <summary>
     /// The block the attendance is for
@@ -31,5 +31,5 @@ public class Anwesenheit
     /// <summary>
     /// The status of the attendance
     /// </summary>
-    public AnwesenheitsStatus Status { get; set; } = AnwesenheitsStatus.Fehlend;
+    public OtiumAnwesenheitsStatus Status { get; set; } = OtiumAnwesenheitsStatus.Fehlend;
 }

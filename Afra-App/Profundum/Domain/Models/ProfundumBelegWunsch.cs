@@ -5,7 +5,7 @@ namespace Afra_App.Profundum.Domain.Models;
 /// <summary>
 ///     A record representing an enrollment wish for a <see cref="Profundum" />.
 /// </summary>
-public class BelegWunsch
+public class ProfundumBelegWunsch
 {
     /// <summary>
     ///     A reference to the person affected by the enrollment.
@@ -31,5 +31,5 @@ public class BelegWunsch
     /// <summary>
     ///     The level of the BelegWunsch
     /// </summary>
-    public required BelegWunschStufe Stufe { get; set; }
+    public required ProfundumBelegWunschStufe Stufe { get; set; }
 }

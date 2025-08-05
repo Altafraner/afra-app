@@ -38,7 +38,7 @@ public class ManagementService
     /// Fetches a Termin by its ID.
     /// </summary>
     /// <exception cref="KeyNotFoundException">There is no such termin</exception>
-    public async Task<Termin> GetTerminByIdAsync(Guid terminId)
+    public async Task<OtiumTermin> GetTerminByIdAsync(Guid terminId)
     {
         var termin = await _dbContext.OtiaTermine
             .Include(t => t.Otium)
@@ -52,7 +52,7 @@ public class ManagementService
     /// <summary>
     /// Fetches the Otium instance associated with a given Termin.
     /// </summary>
-    public async Task<DB_Otium> GetOtiumOfTerminAsync(Termin termin)
+    public async Task<DB_Otium> GetOtiumOfTerminAsync(OtiumTermin termin)
     {
         await _dbContext.Entry(termin).Reference(t => t.Otium).LoadAsync();
         return termin.Otium;
@@ -61,7 +61,7 @@ public class ManagementService
     /// <summary>
     /// Gets the Block associated with a given Termin.
     /// </summary>
-    public async Task<Block> GetBlockOfTerminAsync(Termin termin)
+    public async Task<Block> GetBlockOfTerminAsync(OtiumTermin termin)
     {
         await _dbContext.Entry(termin).Reference(t => t.Block).LoadAsync();
         return termin.Block;
@@ -71,7 +71,7 @@ public class ManagementService
     /// Fetches a Wiederholung by its ID.
     /// </summary>
     /// <exception cref="KeyNotFoundException">There is no such termin</exception>
-    public async Task<Wiederholung> GetWiederholungByIdAsync(Guid terminId)
+    public async Task<OtiumWiederholung> GetWiederholungByIdAsync(Guid terminId)
     {
         var wiederholung = await _dbContext.OtiaWiederholungen.FindAsync(terminId);
         if (wiederholung is null)
@@ -83,7 +83,7 @@ public class ManagementService
     /// <summary>
     /// Fetches the Otium instance associated with a given Wiederholung.
     /// </summary>
-    public async Task<DB_Otium> GetOtiumOfWiederholungAsync(Wiederholung wiederholung)
+    public async Task<DB_Otium> GetOtiumOfWiederholungAsync(OtiumWiederholung wiederholung)
     {
         await _dbContext.Entry(wiederholung).Reference(t => t.Otium).LoadAsync();
         return wiederholung.Otium;
@@ -102,7 +102,7 @@ public class ManagementService
     /// Continues a previously cancelled Termin.
     /// </summary>
     /// <exception cref="InvalidOperationException">The termin is not canceled.</exception>
-    public async Task ContinueTerminAsync(Termin termin)
+    public async Task ContinueTerminAsync(OtiumTermin termin)
     {
         if (!termin.IstAbgesagt)
             throw new InvalidOperationException("Termin ist nicht abgesagt.");

@@ -5,7 +5,7 @@ namespace Afra_App.Profundum.Domain.Models;
 /// <summary>
 ///     A record representing an enrollment for a <see cref="Profundum" />.
 /// </summary>
-public class Einschreibung
+public class ProfundumEinschreibung
 {
     /// <summary>
     ///     A reference to the person affected by the enrollment.

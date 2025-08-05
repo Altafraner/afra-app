@@ -116,10 +116,10 @@ public class EnrollmentService
             return Results.Conflict("Bereits abgegeben");
         }
 
-        var wuenscheDict = new Dictionary<BelegWunschStufe, HashSet<ProfundumInstanz>>();
-        wuenscheDict[BelegWunschStufe.ErstWunsch] = new();
-        wuenscheDict[BelegWunschStufe.ZweitWunsch] = new();
-        wuenscheDict[BelegWunschStufe.DrittWunsch] = new();
+        var wuenscheDict = new Dictionary<ProfundumBelegWunschStufe, HashSet<ProfundumInstanz>>();
+        wuenscheDict[ProfundumBelegWunschStufe.ErstWunsch] = new();
+        wuenscheDict[ProfundumBelegWunschStufe.ZweitWunsch] = new();
+        wuenscheDict[ProfundumBelegWunschStufe.DrittWunsch] = new();
 
         foreach (var (str, l) in wuensche)
         {
@@ -136,11 +136,11 @@ public class EnrollmentService
 
             for (int i = 0; i < l.Length; ++i)
             {
-                if (!BelegWunschStufe.IsDefined(typeof(BelegWunschStufe), i + 1))
+                if (!ProfundumBelegWunschStufe.IsDefined(typeof(ProfundumBelegWunschStufe), i + 1))
                 {
                     return Results.BadRequest("Belegwunschstufe nicht definiert.");
                 }
-                var stufe = (BelegWunschStufe)(i + 1);
+                var stufe = (ProfundumBelegWunschStufe)(i + 1);
 
                 if (angeboteUsed.Where(a => a.Id == l[i]).FirstOrDefault() is not null)
                 {
@@ -165,7 +165,7 @@ public class EnrollmentService
             einwahl[s] = new ProfundumInstanz?[3];
         }
 
-        var belegWuensche = new HashSet<BelegWunsch>();
+        var belegWuensche = new HashSet<ProfundumBelegWunsch>();
         foreach (var (stufe, instanzen) in wuenscheDict)
         {
             foreach (var angebot in instanzen)
@@ -197,7 +197,7 @@ public class EnrollmentService
         {
             foreach (var angebot in instanzen)
             {
-                var belegWunsch = new BelegWunsch
+                var belegWunsch = new ProfundumBelegWunsch
                 {
                     BetroffenePerson = student,
                     ProfundumInstanz = angebot,
@@ -288,14 +288,14 @@ public class EnrollmentService
         var objective = LinearExpr.NewBuilder();
         var objectiveWithoutLimits = LinearExpr.NewBuilder();
 
-        var weights = new Dictionary<BelegWunschStufe, int> {
-            { BelegWunschStufe.ErstWunsch, 100 },
-            { BelegWunschStufe.ZweitWunsch, 50 },
-            { BelegWunschStufe.DrittWunsch, 25 },
+        var weights = new Dictionary<ProfundumBelegWunschStufe, int> {
+            { ProfundumBelegWunschStufe.ErstWunsch, 100 },
+            { ProfundumBelegWunschStufe.ZweitWunsch, 50 },
+            { ProfundumBelegWunschStufe.DrittWunsch, 25 },
         }.AsReadOnly();
 
-        var belegVariables = new Dictionary<BelegWunsch, BoolVar>();
-        var belegVariablesWithoutLimits = new Dictionary<BelegWunsch, BoolVar>();
+        var belegVariables = new Dictionary<ProfundumBelegWunsch, BoolVar>();
+        var belegVariablesWithoutLimits = new Dictionary<ProfundumBelegWunsch, BoolVar>();
         foreach (var wunsch in belegwünsche)
         {
             belegVariables[wunsch] = model.NewBoolVar($"beleg-{wunsch.BetroffenePerson.Id}-{wunsch.ProfundumInstanz.Id}");
@@ -372,7 +372,7 @@ public class EnrollmentService
             var bw_var = belegVariables[bw];
             if (solver.Value(bw_var) > 0)
             {
-                _dbContext.ProfundaEinschreibungen.Add(new Einschreibung()
+                _dbContext.ProfundaEinschreibungen.Add(new ProfundumEinschreibung()
                 {
                     ProfundumInstanz = bw.ProfundumInstanz,
                     BetroffenePerson = bw.BetroffenePerson

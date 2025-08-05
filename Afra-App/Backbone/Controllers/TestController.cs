@@ -6,8 +6,8 @@ using Bogus;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using OtiumTermin = Afra_App.Otium.Domain.Models.OtiumTermin;
 using Person = Afra_App.User.Domain.Models.Person;
-using Termin = Afra_App.Otium.Domain.Models.Termin;
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 // Sorry, this is a test controller, not worth the effort.
@@ -36,11 +36,14 @@ public class TestController(AfraAppContext dbContext, UserSigninService userSign
     [HttpGet("seed")]
     public async Task<ActionResult> SeedDb(bool seedUsers = false)
     {
-        var akademisches = new Kategorie
+        var akademisches = new OtiumKategorie
         {
-            Bezeichnung = "Akademisches", Icon = "pi pi-graduation-cap", CssColor = "var(--p-blue-500)", Required = true
+            Bezeichnung = "Akademisches",
+            Icon = "pi pi-graduation-cap",
+            CssColor = "var(--p-blue-500)",
+            Required = true
         };
-        var otiumsKategorien = new List<Kategorie>
+        var otiumsKategorien = new List<OtiumKategorie>
         {
             akademisches,
             new() { Bezeichnung = "Bewegung", Icon = "pi pi-heart", CssColor = "var(--p-teal-500)" },
@@ -58,7 +61,7 @@ public class TestController(AfraAppContext dbContext, UserSigninService userSign
             "102", "103", "104", "105", "106", "108", "109", "110", "202", "203", "204", "205", "206",
             "207", "208", "209", "211", "212", "213", "214", "215", "216", "217", "301", "307", "308"
         ];
-        List<(string, Kategorie)> possibleOtia =
+        List<(string, OtiumKategorie)> possibleOtia =
         [
             ("Schreibwerkstatt", otiumsKategorien[6]),
             ("Studienzeit Mathematik", otiumsKategorien[6]),
@@ -133,7 +136,7 @@ public class TestController(AfraAppContext dbContext, UserSigninService userSign
 
         var otia = otiumGenerator.Generate(possibleOtia.Count);
 
-        var otiumTerminGenerator = new Faker<Termin>("de")
+        var otiumTerminGenerator = new Faker<OtiumTermin>("de")
             .RuleFor(t => t.Otium, f => f.PickRandom(otia))
             .RuleFor(t => t.Tutor, (_, t) => t.Otium.Verantwortliche.FirstOrDefault())
             .RuleFor(t => t.IstAbgesagt, f => f.Random.Bool(0.1f))

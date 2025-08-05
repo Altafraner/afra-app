@@ -3,7 +3,7 @@ namespace Afra_App.Otium.Domain.Models;
 /// <summary>
 ///     An enum representing the status of a person's attendence
 /// </summary>
-public enum AnwesenheitsStatus
+public enum OtiumAnwesenheitsStatus
 {
     /// <summary>
     ///     The person has attended
