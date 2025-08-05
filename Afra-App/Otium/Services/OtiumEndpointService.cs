@@ -251,6 +251,7 @@ public class OtiumEndpointService
                 var enrollmentsForDay = enrollmentsByDay.TryGetValue(day.Datum, out var list) ? list : [];
                 var missingEnrollmentsForDay =
                     _enrollmentService.GetNotEnrolledBlocks(enrollmentsForDay, day.Blocks)
+                        .Where(b => _blockHelper.Get(b.SchemaId)!.Verpflichtend)
                         .OrderBy(b => b.SchemaId)
                         .ToList();
 
