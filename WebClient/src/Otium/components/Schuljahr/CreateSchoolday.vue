@@ -6,11 +6,13 @@ import {Button, Message, MultiSelect, Select, useConfirm, useToast} from "primev
 import Form from "@primevue/forms/form";
 import {formatMachineDate} from "@/helpers/formatters.js";
 import {mande} from "mande";
+import {useOtiumStore} from "@/Otium/stores/otium.js";
 
 const dialogRef = inject('dialogRef');
 const emit = defineEmits(['update'])
 const toast = useToast();
 const confirm = useConfirm();
+const otiumStore = useOtiumStore();
 
 const date = ref(null);
 const wochentyp = ref(null);
@@ -19,11 +21,7 @@ const loading = ref(false);
 const initialFormValues = ref(null);
 const submitter = ref(null);
 
-const blocksAvailable = ref([
-  {label: 'Block 1', value: '1'},
-  {label: 'Block 2', value: '2'},
-  {label: 'Abendsport', value: 'P'},
-])
+const blocksAvailable = otiumStore.blocks;
 
 function resolve({values}) {
   const errors = {}
@@ -100,13 +98,14 @@ function setup() {
 
   date.value = new Date(initialValues.datum);
   wochentyp.value = initialValues.wochentyp;
-  blocks.value = initialValues.blocks;
+  blocks.value = initialValues.blocks.map(b => b.schemaId);
 
   initialFormValues.value = {
     date: date.value,
     wochentyp: wochentyp.value,
     blocks: blocks.value
   }
+  console.log(initialFormValues);
 }
 
 setup()
@@ -141,8 +140,8 @@ setup()
     <div class="w-full">
       <FloatLabel variant="on">
         <MultiSelect id="blocks" v-model="blocks" :options="blocksAvailable"
-                     :showToggleAll="false" fluid name="blocks" option-label="label"
-                     option-value="value"/>
+                     :showToggleAll="false" fluid name="blocks" option-label="bezeichnung"
+                     option-value="schemaId"/>
         <label for="blocks">Blöcke</label>
       </FloatLabel>
       <Message v-if="$form.blocks?.invalid" severity="error" size="small"

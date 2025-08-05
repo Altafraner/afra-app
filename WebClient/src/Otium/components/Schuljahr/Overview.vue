@@ -15,6 +15,7 @@ const router = useRouter();
 
 async function setup() {
   await settings.updateSchuljahr(true);
+  await settings.updateBlocks();
 }
 
 function addDay() {

@@ -11,9 +11,12 @@ import Form from "@primevue/forms/form";
 import {formatDate, formatMachineDate} from "@/helpers/formatters.js";
 import {mande} from "mande";
 import {useRouter} from "vue-router";
+import {useOtiumStore} from "@/Otium/stores/otium.js";
 
 const toast = useToast();
 const router = useRouter();
+const otium = useOtiumStore();
+await otium.updateBlocks();
 
 const stepperStatus = ref("0");
 
@@ -28,28 +31,28 @@ const weeks = ref([]);
 const angeboteProWochentag = ref([
   {
     tag: "Montag",
-    blocksH: ['1', '2', 'P'],
-    blocksN: ['1', '2', 'P'],
+    blocksH: [],
+    blocksN: [],
   },
   {
     tag: "Dienstag",
-    blocksH: ['P'],
-    blocksN: ['P'],
+    blocksH: [],
+    blocksN: [],
   },
   {
     tag: "Mittwoch",
-    blocksH: ['P'],
-    blocksN: ['P'],
+    blocksH: [],
+    blocksN: [],
   },
   {
     tag: "Donnerstag",
-    blocksH: ['P'],
-    blocksN: ['P'],
+    blocksH: [],
+    blocksN: [],
   },
   {
     tag: "Freitag",
-    blocksH: ['1', '2', 'P'],
-    blocksN: ['1', '2', 'P'],
+    blocksH: [],
+    blocksN: [],
   },
   {
     tag: "Samstag",
@@ -83,11 +86,7 @@ const datesDisabled = computed(() => {
 
   return dates;
 })
-const blocksAvailable = ref([
-  {label: 'Block 1', value: '1'},
-  {label: 'Block 2', value: '2'},
-  {label: 'Abendsport', value: 'P'},
-])
+const blocksAvailable = otium.blocks;
 
 function resolveStep1({values}) {
   const errors = {}
@@ -369,14 +368,14 @@ async function submit() {
           <Column header="H-Woche">
             <template #body="{data}">
               <MultiSelect v-model="data.blocksH" :options="blocksAvailable" :showToggleAll="false"
-                           fluid option-label="label" option-value="value"
+                           fluid option-label="bezeichnung" option-value="schemaId"
                            placeholder="Keine Blöcke gewählt"/>
             </template>
           </Column>
           <Column header="N-Woche">
             <template #body="{data}">
               <MultiSelect v-model="data.blocksN" :options="blocksAvailable" :showToggleAll="false"
-                           fluid option-label="label" option-value="value"
+                           fluid option-label="bezeichnung" option-value="schemaId"
                            placeholder="Keine Blöcke gewählt"/>
             </template>
           </Column>
