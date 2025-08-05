@@ -167,9 +167,9 @@ public class OtiumEndpointService
                         e.BetroffenePerson.Id == user.Id)
             .ToListAsync();
 
-        // Find all times on date the user is not enrolled in
+        // Find all times on date the user is not enrolled in but should be
         var timeline = _enrollmentService.GetNotEnrolledTimes(
-            blocks.Where(b => b.SchultagKey == date),
+            blocks.Where(b => b.SchultagKey == date && _blockHelper.Get(b.SchemaId)!.Verpflichtend),
             user);
 
         messages.AddRange(timeline.GetIntervals().Select(interval =>
@@ -304,15 +304,15 @@ public class OtiumEndpointService
         }));
 
         return enrollments.Select(e => (e.Termin.Block.SchemaId, new DTO_Einschreibung
-        {
-            Block = _blockHelper.Get(e.Termin.Block.SchemaId)!.Bezeichnung,
-            Datum = e.Termin.Block.SchultagKey,
-            KategorieId = e.Termin.Otium.Kategorie.Id,
-            Ort = e.Termin.Ort,
-            Otium = e.Termin.Otium.Bezeichnung,
-            TerminId = e.Termin.Id,
-            Anwesenheit = blocksDoneOrRunning.Contains(e.Termin.Block.Id) ? attendances[e.Termin.Block.Id] : null
-        }))
+            {
+                Block = _blockHelper.Get(e.Termin.Block.SchemaId)!.Bezeichnung,
+                Datum = e.Termin.Block.SchultagKey,
+                KategorieId = e.Termin.Otium.Kategorie.Id,
+                Ort = e.Termin.Ort,
+                Otium = e.Termin.Otium.Bezeichnung,
+                TerminId = e.Termin.Id,
+                Anwesenheit = blocksDoneOrRunning.Contains(e.Termin.Block.Id) ? attendances[e.Termin.Block.Id] : null
+            }))
             .Concat(additionalEnrollments)
             .OrderBy(e => e.Item2.Datum)
             .ThenBy(e => e.SchemaId)
