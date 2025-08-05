@@ -203,11 +203,14 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
         });
         modelBuilder.Entity<Profundum.Domain.Models.Einschreibung>(e =>
         {
+            e.HasOne(e => e.ProfundumInstanz).WithMany(pi => pi.Einschreibungen);
+            e.HasOne(e => e.BetroffenePerson).WithMany(pe => pe.ProfundaEinschreibungen);
             e.HasKey(b => new { b.BetroffenePersonId, b.ProfundumInstanzId, });
         });
         modelBuilder.Entity<Profundum.Domain.Models.BelegWunsch>(w =>
         {
             w.HasKey(b => new { b.ProfundumInstanzId, b.BetroffenePersonId, b.Stufe });
+            w.HasOne(b => b.BetroffenePerson).WithMany(p => p.ProfundaBelegwuensche);
         });
 
         /*
