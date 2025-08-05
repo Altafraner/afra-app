@@ -346,8 +346,8 @@ public class OtiumEndpointService
             .Include(e => e.Termin)
             .ThenInclude(t => t.Otium)
             .ThenInclude(o => o.Kategorie)
-            .GroupBy(e => e.BetroffenePerson)
-            .ToDictionaryAsync(e => e.Key.Id, e => e.AsEnumerable());
+            .GroupBy(e => e.BetroffenePerson.Id)
+            .ToDictionaryAsync(e => e.Key, e => e.AsEnumerable());
 
         var schultage = _dbContext.Schultage
             .Include(s => s.Blocks)
