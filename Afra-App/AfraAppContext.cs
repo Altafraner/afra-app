@@ -1,6 +1,7 @@
 using Afra_App.Backbone.Domain.Email;
 using Afra_App.Otium.Domain.Models;
 using Afra_App.Otium.Domain.Models.Schuljahr;
+using Afra_App.Profundum.Domain.Models;
 using Afra_App.User.Domain.Models;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -31,7 +32,7 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
     /// <summary>
     ///     All the Otia in the application.
     /// </summary>
-    public DbSet<Otium.Domain.Models.Otium> Otia { get; set; }
+    public DbSet<OtiumDefinition> Otia { get; set; }
 
     /// <summary>
     ///     All instances of Otia
@@ -51,7 +52,7 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
     /// <summary>
     ///     All enrollments for Otia
     /// </summary>
-    public DbSet<Otium.Domain.Models.OtiumEinschreibung> OtiaEinschreibungen { get; set; }
+    public DbSet<OtiumEinschreibung> OtiaEinschreibungen { get; set; }
 
     /// <summary>
     ///     All attendances for Otia
@@ -76,27 +77,27 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
     /// <summary>
     ///     All registered Profunda
     /// </summary>
-    public DbSet<Profundum.Domain.Models.Profundum> Profunda { get; set; }
+    public DbSet<ProfundumDefinition> Profunda { get; set; }
 
     /// <summary>
     ///     The slot instances op all registered Profunda
     /// </summary>
-    public DbSet<Profundum.Domain.Models.ProfundumInstanz> ProfundaInstanzen { get; set; }
+    public DbSet<ProfundumInstanz> ProfundaInstanzen { get; set; }
 
     /// <summary>
     ///     All finally matched Enrollments for Profunda
     /// </summary>
-    public DbSet<Profundum.Domain.Models.ProfundumEinschreibung> ProfundaEinschreibungen { get; set; }
+    public DbSet<ProfundumEinschreibung> ProfundaEinschreibungen { get; set; }
 
     /// <summary>
     ///     All enrollment wishes for produnda submitted by students
     /// </summary>
-    public DbSet<Profundum.Domain.Models.ProfundumBelegWunsch> ProfundaBelegWuensche { get; set; }
+    public DbSet<ProfundumBelegWunsch> ProfundaBelegWuensche { get; set; }
 
     /// <summary>
     ///     All slots for profunda to have ProfundaInstanzen in
     /// </summary>
-    public DbSet<Profundum.Domain.Models.ProfundumSlot> ProfundaSlots { get; set; }
+    public DbSet<ProfundumSlot> ProfundaSlots { get; set; }
 
     /// <summary>
     ///     Configures the npgsql specific options for the context
@@ -129,7 +130,7 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
         modelBuilder.Entity<MentorMenteeRelation>()
             .HasKey(r => new { r.MentorId, r.StudentId });
 
-        modelBuilder.Entity<Otium.Domain.Models.Otium>(o =>
+        modelBuilder.Entity<OtiumDefinition>(o =>
         {
             o.HasOne(e => e.Kategorie)
                 .WithMany(k => k.Otia);
@@ -158,7 +159,7 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
         });
 
         // record structs do not work with the [ComplexType] attribute.
-        modelBuilder.Entity<Otium.Domain.Models.OtiumEinschreibung>()
+        modelBuilder.Entity<OtiumEinschreibung>()
             .ComplexProperty(e => e.Interval);
 
         modelBuilder.Entity<OtiumAnwesenheit>(e =>
@@ -190,24 +191,24 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
                 .IsUnique();
         });
 
-        modelBuilder.Entity<Profundum.Domain.Models.Profundum>(p =>
+        modelBuilder.Entity<ProfundumDefinition>(p =>
         {
             p.HasOne(p => p.Kategorie)
                 .WithMany(k => k.Profunda);
         });
-        modelBuilder.Entity<Profundum.Domain.Models.ProfundumInstanz>(p =>
+        modelBuilder.Entity<ProfundumInstanz>(p =>
         {
             p.HasOne(i => i.Profundum)
                 .WithMany(p => p.Instanzen);
             p.HasMany(p => p.Slots).WithMany();
         });
-        modelBuilder.Entity<Profundum.Domain.Models.ProfundumEinschreibung>(e =>
+        modelBuilder.Entity<ProfundumEinschreibung>(e =>
         {
             e.HasOne(e => e.ProfundumInstanz).WithMany(pi => pi.Einschreibungen);
             e.HasOne(e => e.BetroffenePerson).WithMany(pe => pe.ProfundaEinschreibungen);
             e.HasKey(b => new { b.BetroffenePersonId, b.ProfundumInstanzId, });
         });
-        modelBuilder.Entity<Profundum.Domain.Models.ProfundumBelegWunsch>(w =>
+        modelBuilder.Entity<ProfundumBelegWunsch>(w =>
         {
             w.HasKey(b => new { b.ProfundumInstanzId, b.BetroffenePersonId, b.Stufe });
             w.HasOne(b => b.BetroffenePerson).WithMany(p => p.ProfundaBelegwuensche);

@@ -6,7 +6,6 @@ using Bogus;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using OtiumTermin = Afra_App.Otium.Domain.Models.OtiumTermin;
 using Person = Afra_App.User.Domain.Models.Person;
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
@@ -128,7 +127,7 @@ public class TestController(AfraAppContext dbContext, UserSigninService userSign
             });
         }
 
-        var otiumGenerator = new Faker<Otium.Domain.Models.Otium>("de")
+        var otiumGenerator = new Faker<OtiumDefinition>("de")
             .RuleFor(o => o.Bezeichnung, f => possibleOtia[f.IndexFaker].Item1)
             .RuleFor(o => o.Beschreibung, f => f.Commerce.ProductDescription())
             .RuleFor(o => o.Verantwortliche, f => f.Random.Bool(0.7f) ? [f.PickRandom(mentoren)] : [])

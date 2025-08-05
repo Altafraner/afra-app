@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Afra_App.Otium.Domain.Models;
+using Afra_App.Profundum.Domain.Models;
 
 namespace Afra_App.User.Domain.Models;
 
@@ -77,7 +78,7 @@ public class Person
     /// <summary>
     ///     A list of all Otia the person is responsible for.
     /// </summary>
-    public ICollection<Otium.Domain.Models.Otium> VerwalteteOtia { get; set; } = new List<Otium.Domain.Models.Otium>();
+    public ICollection<Otium.Domain.Models.OtiumDefinition> VerwalteteOtia { get; set; } = new List<Otium.Domain.Models.OtiumDefinition>();
 
     /// <summary>
     ///     A list of all Otia the person is enrolled in.
@@ -85,10 +86,10 @@ public class Person
     public ICollection<OtiumEinschreibung> OtiaEinschreibungen { get; set; } = new List<OtiumEinschreibung>();
 
     ///
-    public ICollection<Profundum.Domain.Models.ProfundumEinschreibung> ProfundaEinschreibungen { get; set; } = [];
+    public ICollection<ProfundumEinschreibung> ProfundaEinschreibungen { get; set; } = [];
 
     ///
-    public ICollection<Profundum.Domain.Models.ProfundumBelegWunsch> ProfundaBelegwuensche { get; set; } = [];
+    public ICollection<ProfundumBelegWunsch> ProfundaBelegwuensche { get; set; } = [];
 
     /// <inheritdoc />
     public override string ToString()

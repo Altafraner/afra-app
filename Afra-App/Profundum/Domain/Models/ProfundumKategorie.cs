@@ -23,7 +23,7 @@ public class ProfundumKategorie
     /// A helper collection for navigating to all Profunda with this Kategorie.
     /// </summary>
     [JsonIgnore]
-    public ICollection<Profundum> Profunda { get; init; } = new List<Profundum>();
+    public ICollection<ProfundumDefinition> Profunda { get; init; } = new List<ProfundumDefinition>();
 
     /// <summary>
     /// A boolean indicating that Profunda of this Kategorie correspond to Profilprofunda

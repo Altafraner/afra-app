@@ -9,7 +9,7 @@ public class ProfundumInstanz
     public Guid Id { get; set; }
 
     ///
-    public required Profundum Profundum { get; set; }
+    public required ProfundumDefinition Profundum { get; set; }
 
     ///
     public required ICollection<ProfundumSlot> Slots { get; set; }
