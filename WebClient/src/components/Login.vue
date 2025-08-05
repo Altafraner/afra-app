@@ -29,6 +29,13 @@ const submit = async (evt) => {
         detail: "Fehlerhafte Anmeldedaten",
         life: 5000
       });
+    } else if (error.response.status === 429) {
+      toast.add({
+        severity: "error",
+        summary: "Zu viele Anmeldeversuche",
+        detail: "Bitte warten Sie 5 Minuten, bevor Sie es erneut versuchen.",
+        life: 5000
+      });
     } else {
       toast.add({
         severity: "error",

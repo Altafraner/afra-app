@@ -4,6 +4,7 @@ using Afra_App.User.Services.LDAP;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Person = Afra_App.User.Domain.Models.Person;
 
 namespace Afra_App.User.Services;
@@ -13,6 +14,7 @@ namespace Afra_App.User.Services;
 /// </summary>
 public class UserSigninService
 {
+    private readonly IMemoryCache _cache;
     private readonly AfraAppContext _dbContext;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly LdapService _ldapService;
@@ -23,12 +25,13 @@ public class UserSigninService
     /// </summary>
     public UserSigninService(AfraAppContext dbContext, LdapService ldapService,
         IHttpContextAccessor httpContextAccessor,
-        UserAccessor userAccessor)
+        UserAccessor userAccessor, IMemoryCache cache)
     {
         _dbContext = dbContext;
         _ldapService = ldapService;
         _httpContextAccessor = httpContextAccessor;
         _userAccessor = userAccessor;
+        _cache = cache;
     }
 
     /// <summary>
@@ -60,6 +63,16 @@ public class UserSigninService
     /// <returns>Ok, if the credentials are valid; Otherwise, unauthorized</returns>
     public async Task<IResult> HandleSignInRequestAsync(SignInRequest request, IWebHostEnvironment environment)
     {
+        var cacheResults = _cache.GetOrCreate($"user:login:{request.Username.ToLower()}", _ => new List<DateTime>()) ??
+                           [];
+        var now = DateTime.Now;
+
+        // Check if the user has tried to log in too many times in the last 5 minutes
+        cacheResults.RemoveAll(t => t < now.AddMinutes(-5));
+        if (cacheResults.Count >= 5)
+            return Results.Problem("Zu viele Anmeldeversuche. Bitte versuchen Sie es später erneut.",
+                statusCode: StatusCodes.Status429TooManyRequests);
+
         var user = (_ldapService.IsEnabled, environment.IsDevelopment()) switch
         {
             (true, _) => await _ldapService.VerifyUserAsync(request.Username.Trim(), request.Password.Trim()),
@@ -68,7 +81,12 @@ public class UserSigninService
             _ => null
         };
 
-        if (user is null) return Results.Unauthorized();
+        if (user is null)
+        {
+            cacheResults.Add(now);
+            _cache.Set($"user:login:{request.Username.ToLower()}", cacheResults, TimeSpan.FromMinutes(10));
+            return Results.Unauthorized();
+        }
 
         await SignInAsync(user);
         return Results.Ok();
