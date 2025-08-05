@@ -69,7 +69,7 @@ public class EnrollmentService
     public ICollection<BlockKatalog> GetKatalog(Person student)
     {
         var katalog = new List<BlockKatalog>() { };
-        var slots = _dbContext.ProfundaSlots.Where(s => s.EinwahlMöglich).Order(new ProfundumSlotComparer());
+        var slots = _dbContext.ProfundaSlots.Where(s => s.EinwahlMöglich).ToArray().Order(new ProfundumSlotComparer());
 
         var angebote = GetAvailableProfundaInstanzen(student, slots);
 
