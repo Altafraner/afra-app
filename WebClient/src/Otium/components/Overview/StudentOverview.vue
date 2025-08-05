@@ -45,11 +45,13 @@ const formatedEnrollments = computed(() => {
     let lastBlock = null;
     let lastDate = null;
     const result = week.einschreibungen.map(enrollment => {
+      const datumVisible = enrollment.datum !== lastDate;
+      const blockVisible = datumVisible || enrollment.block !== lastBlock;
       const innerResult = {
         datum: enrollment.datum,
-        datumVisible: enrollment.datum !== lastDate,
+        datumVisible: datumVisible,
         block: enrollment.block,
-        blockVisible: enrollment.block !== lastBlock,
+        blockVisible: blockVisible,
         otium: enrollment.otium,
         ort: enrollment.ort,
         terminId: enrollment.terminId,
@@ -126,10 +128,13 @@ const isOs = computed(() => {
                 <AfraKategorieTag v-if="data.kategorieId" :value="findKategorie(data.kategorieId)"
                                   hide-name
                                   minimal/>
-                <Button :label="data.otium" :to="{name: 'Katalog-Datum-Termin', params: {datum: data.datum, terminId: data.terminId}}" as="RouterLink"
+                <Button :label="data.otium"
+                        :to="{name: 'Katalog-Datum-Termin', params: {datum: data.datum, terminId: data.terminId}}"
+                        as="RouterLink"
                         variant="text"/>
               </span>
-              <Button v-else-if="props.showKatalog" :to="{name: 'Katalog-Datum', params: {datum: data.datum}}" as="RouterLink"
+              <Button v-else-if="props.showKatalog"
+                      :to="{name: 'Katalog-Datum', params: {datum: data.datum}}" as="RouterLink"
                       class="w-full justify-start" icon="pi pi-list" label="Katalog"
                       size="small"/>
               <span v-else>Keine Einschreibung</span>
