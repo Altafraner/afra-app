@@ -53,5 +53,5 @@ public class OtiumKategorie
     /// </summary>
     /// <remarks>Does not list Otia with this Kategorie transitively.</remarks>
     [JsonIgnore]
-    public ICollection<Otium> Otia { get; init; } = new List<Otium>();
+    public ICollection<OtiumDefinition> Otia { get; init; } = new List<OtiumDefinition>();
 }

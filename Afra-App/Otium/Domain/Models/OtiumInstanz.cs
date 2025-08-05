@@ -12,7 +12,7 @@ public abstract class OtiumInstanz
     /// <summary>
     ///     A reference to the Otium this instance is for.
     /// </summary>
-    public required Otium Otium { get; set; }
+    public required OtiumDefinition Otium { get; set; }
 
     /// <summary>
     ///     A reference to the tutor of the Otium. Could be a student or a teacher.

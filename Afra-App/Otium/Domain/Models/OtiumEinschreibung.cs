@@ -5,7 +5,7 @@ using Afra_App.User.Domain.Models;
 namespace Afra_App.Otium.Domain.Models;
 
 /// <summary>
-///     A record representing an enrollment for a <see cref="Otium" />.
+///     A record representing an enrollment for a <see cref="OtiumDefinition" />.
 /// </summary>
 public class OtiumEinschreibung
 {

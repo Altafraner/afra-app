@@ -2,7 +2,7 @@ using Afra_App.Otium.Domain.Models;
 using Afra_App.Otium.Domain.Models.Schuljahr;
 using Afra_App.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
-using DB_Otium = Afra_App.Otium.Domain.Models.Otium;
+using DB_Otium = Afra_App.Otium.Domain.Models.OtiumDefinition;
 
 namespace Afra_App.Otium.Services;
 

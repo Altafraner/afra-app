@@ -5,7 +5,7 @@ namespace Afra_App.Profundum.Domain.Models;
 /// <summary>
 ///     A db record representing a Profundum.
 /// </summary>
-public class Profundum
+public class ProfundumDefinition
 {
     /// <summary>
     ///     A unique identifier for the Profundum

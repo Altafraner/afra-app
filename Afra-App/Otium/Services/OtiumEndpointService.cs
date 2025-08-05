@@ -10,7 +10,7 @@ using Afra_App.User.Domain.Models;
 using Afra_App.User.Services;
 using Microsoft.EntityFrameworkCore;
 using DB_Einschreibung = Afra_App.Otium.Domain.Models.OtiumEinschreibung;
-using DB_Otium = Afra_App.Otium.Domain.Models.Otium;
+using DB_Otium = Afra_App.Otium.Domain.Models.OtiumDefinition;
 using DB_Schultag = Afra_App.Otium.Domain.Models.Schuljahr.Schultag;
 using DB_Termin = Afra_App.Otium.Domain.Models.OtiumTermin;
 using DB_Wiederholung = Afra_App.Otium.Domain.Models.OtiumWiederholung;

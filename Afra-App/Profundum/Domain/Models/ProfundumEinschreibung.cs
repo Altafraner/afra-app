@@ -3,7 +3,7 @@ using Afra_App.User.Domain.Models;
 namespace Afra_App.Profundum.Domain.Models;
 
 /// <summary>
-///     A record representing an enrollment for a <see cref="Profundum" />.
+///     A record representing an enrollment for a <see cref="ProfundumDefinition" />.
 /// </summary>
 public class ProfundumEinschreibung
 {

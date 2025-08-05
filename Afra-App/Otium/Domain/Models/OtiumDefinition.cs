@@ -6,7 +6,7 @@ namespace Afra_App.Otium.Domain.Models;
 /// <summary>
 ///     A db record representing an Otium.
 /// </summary>
-public class Otium
+public class OtiumDefinition
 {
     /// <summary>
     ///     A unique identifier for the Otium
