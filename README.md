@@ -2,6 +2,7 @@
 
 ![backend build](https://github.com/Altafraner/afra-app/actions/workflows/backend.yml/badge.svg)
 ![frontend build](https://github.com/Altafraner/afra-app/actions/workflows/webclient.yml/badge.svg)
+![docker image build](https://github.com/Altafraner/afra-app/actions/workflows/docker.yml/badge.svg)
 
 ## Überblick
 Dies ist ein Programm, welches am [Sächsischen Landesgymnasium Sankt-Afra](https://sankt-afra.de) die Einwahl in die Nachmittagsangebote ermöglichen soll.
