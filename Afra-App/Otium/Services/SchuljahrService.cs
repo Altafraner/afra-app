@@ -61,7 +61,7 @@ public class SchuljahrService
             .OrderBy(s => s.Datum)
             .FirstOrDefaultAsync(s => s.Datum == DateOnly.FromDateTime(now));
 
-        if (schultag == null) throw new KeyNotFoundException("No schultag found for today");
+        if (schultag == null) return null;
 
         var time = TimeOnly.FromDateTime(DateTime.Now);
         var currentSchemas = GetCurrentSchemas(time);
