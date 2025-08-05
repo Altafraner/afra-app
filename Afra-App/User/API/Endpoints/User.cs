@@ -1,3 +1,4 @@
+using Afra_App.Backbone.Authentication;
 using Afra_App.User.Domain.DTO;
 using Afra_App.User.Services;
 
@@ -40,5 +41,13 @@ public static class User
         app.MapGet("/api/user/logout",
                 async (UserSigninService userSigninService) => await userSigninService.SignOutAsync())
             .RequireAuthorization();
+
+        app.MapGet("/api/user/{id:guid}/impersonate",
+                async (UserSigninService userSigninService, ILogger<Program> logger, Guid id) =>
+                {
+                    logger.LogWarning("Impersonating user with ID {Id}", id);
+                    await userSigninService.SignInAsync(id);
+                })
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly);
     }
 }

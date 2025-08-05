@@ -9,6 +9,11 @@ const routes = [
     name: "Home",
     component: Home
   },
+  {
+    path: "/admin",
+    name: "Admin",
+    component: () => import('@/views/Admin.vue'),
+  },
   ...otium,
   ...profundum,
   {

@@ -21,6 +21,11 @@ public static class AuthorizationPolicies
     public const string AdminOnly = "AdminOnly";
 
     /// <summary>
+    /// Teachers and admins may both access this endpoint.
+    /// </summary>
+    public const string TeacherOrAdmin = "TeacherOrAdmin";
+
+    /// <summary>
     /// Only users with the permission "Otiumsverantwortliche:r" may access this endpoint.
     /// </summary>
     public const string Otiumsverantwortlich = "Otiumsverantwortliche:r";

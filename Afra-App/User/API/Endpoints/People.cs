@@ -17,7 +17,7 @@ public static class People
     {
         app.MapGet("/api/people", GetPeople)
             .WithName("GetPeople")
-            .RequireAuthorization(AuthorizationPolicies.TutorOnly);
+            .RequireAuthorization(AuthorizationPolicies.TeacherOrAdmin);
     }
 
     private static Ok<IAsyncEnumerable<PersonInfoMinimal>> GetPeople(AfraAppContext dbContext,

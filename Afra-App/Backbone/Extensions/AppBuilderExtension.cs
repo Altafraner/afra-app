@@ -85,7 +85,11 @@ public static class AppBuilderExtension
                     nameof(GlobalPermission.Profundumsverantwortlich)))
             .AddPolicy(AuthorizationPolicies.AdminOnly,
                 policy => policy.RequireClaim(AfraAppClaimTypes.GlobalPermission,
-                    nameof(GlobalPermission.Admin)));
+                    nameof(GlobalPermission.Admin)))
+            .AddPolicy(AuthorizationPolicies.TeacherOrAdmin,
+                policy => policy.RequireAssertion(context =>
+                    context.User.HasClaim(AfraAppClaimTypes.GlobalPermission, nameof(GlobalPermission.Admin))
+                    || context.User.HasClaim(AfraAppClaimTypes.Role, nameof(Rolle.Tutor))));
     }
 
     private static void ConfigureDataProtection(this WebApplicationBuilder builder)
