@@ -28,3 +28,19 @@ public record ProfundumSlot
         return $"{Jahr}-{Quartal.ToString()}-{Wochentag.ToString()}";
     }
 }
+
+///
+public class ProfundumSlotComparer : IComparer<ProfundumSlot>
+{
+    ///
+    public int Compare(ProfundumSlot? slot1, ProfundumSlot? slot2)
+    => (slot1, slot2) switch
+    {
+        (null, null) => 0,
+        (null, var s2) => 1,
+        (var s1, null) => -1,
+        (var s1, var s2) =>
+        ((s1.Jahr * 10 + (int)s1.Quartal) * 10 + (int)s1.Wochentag)
+        .CompareTo((s2.Jahr * 10 + (int)s2.Quartal) * 10 + (int)s2.Wochentag),
+    };
+}
