@@ -18,6 +18,6 @@ public static class AppBuilderExtension
             .Validate(ProfundumConfiguration.Validate)
             .ValidateOnStart();
 
-        builder.Services.AddScoped<EnrollmentService>();
+        builder.Services.AddScoped<ProfundumEnrollmentService>();
     }
 }
