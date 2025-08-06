@@ -4,12 +4,12 @@ using Afra_App.User.Services;
 namespace Afra_App.Profundum.API.Endpoints;
 
 /// <summary>
-///     Contains endpoints for managing kategories.
+///     Contains endpoints for managing Profunda Enrollments.
 /// </summary>
 public static class Enrollment
 {
     /// <summary>
-    ///     Maps the kategorie endpoints to the given <see cref="IEndpointRouteBuilder" />.
+    ///     Maps the Profunda Enrollment endpoints to the given <see cref="IEndpointRouteBuilder" />.
     /// </summary>
     public static void MapEnrollmentEndpoints(this IEndpointRouteBuilder app)
     {
@@ -21,8 +21,8 @@ public static class Enrollment
     }
 
     ///
-    private static async Task<IResult> GetOptionsAsync(EnrollmentService enrollmentService,
-        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<EnrollmentService> logger)
+    private static async Task<IResult> GetOptionsAsync(ProfundumEnrollmentService enrollmentService,
+        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
     {
         var user = await userAccessor.GetUserAsync();
         if (user is not { Rolle: User.Domain.Models.Rolle.Mittelstufe })
@@ -36,8 +36,8 @@ public static class Enrollment
     }
 
     ///
-    private static async Task<IResult> AddBelegWuenscheAsync(EnrollmentService enrollmentService,
-        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<EnrollmentService> logger,
+    private static async Task<IResult> AddBelegWuenscheAsync(ProfundumEnrollmentService enrollmentService,
+        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger,
         Dictionary<String, Guid[]> wuensche)
     {
         var user = await userAccessor.GetUserAsync();
@@ -51,8 +51,8 @@ public static class Enrollment
     }
 
     ///
-    private static async Task<IResult> MatchingAsync(EnrollmentService enrollmentService,
-           UserAccessor userAccessor, AfraAppContext dbContext, ILogger<EnrollmentService> logger)
+    private static async Task<IResult> MatchingAsync(ProfundumEnrollmentService enrollmentService,
+           UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
     {
         var user = await userAccessor.GetUserAsync();
         if (user is not { Rolle: User.Domain.Models.Rolle.Tutor })
@@ -73,8 +73,8 @@ public static class Enrollment
     }
 
     ///
-    private static async Task<IResult> MatchingAsyncCSV(EnrollmentService enrollmentService,
-           UserAccessor userAccessor, AfraAppContext dbContext, ILogger<EnrollmentService> logger)
+    private static async Task<IResult> MatchingAsyncCSV(ProfundumEnrollmentService enrollmentService,
+           UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
     {
         var user = await userAccessor.GetUserAsync();
         if (user is not { Rolle: User.Domain.Models.Rolle.Tutor })
@@ -96,8 +96,8 @@ public static class Enrollment
     }
 
     ///
-    private static async Task<IResult> GetUnenrolledAsync(EnrollmentService enrollmentService,
-           UserAccessor userAccessor, AfraAppContext dbContext, ILogger<EnrollmentService> logger, Guid[] slots)
+    private static async Task<IResult> GetUnenrolledAsync(ProfundumEnrollmentService enrollmentService,
+           UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger, Guid[] slots)
     {
         var user = await userAccessor.GetUserAsync();
         if (user is not { Rolle: User.Domain.Models.Rolle.Tutor })
