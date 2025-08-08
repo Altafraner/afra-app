@@ -20,7 +20,7 @@ public record ProfundumSlot
     public required DayOfWeek Wochentag { get; set; }
 
     ///
-    public required bool EinwahlMöglich { get; set; }
+    public required ProfundumEinwahlZeitraum EinwahlZeitraum { get; set; }
 
     ///
     public override string ToString()

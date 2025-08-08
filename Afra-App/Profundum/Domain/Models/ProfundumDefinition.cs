@@ -15,7 +15,7 @@ public class ProfundumDefinition
     /// <summary>
     ///     A name for the Profundum
     /// </summary>
-    [MaxLength(50)]
+    [MaxLength(100)]
     public required string Bezeichnung { get; set; }
 
     ///

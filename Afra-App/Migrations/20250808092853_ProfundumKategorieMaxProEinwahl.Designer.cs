@@ -7,6 +7,7 @@ using Afra_App.Otium.Domain.Models.Schuljahr;
 using Afra_App.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -15,9 +16,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Afra_App.Migrations
 {
     [DbContext(typeof(AfraAppContext))]
-    partial class AfraAppContextModelSnapshot : ModelSnapshot
+    [Migration("20250808092853_ProfundumKategorieMaxProEinwahl")]
+    partial class ProfundumKategorieMaxProEinwahl
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -314,8 +317,8 @@ namespace Afra_App.Migrations
 
                     b.Property<string>("Bezeichnung")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<Guid>("KategorieId")
                         .HasColumnType("uuid");
@@ -346,23 +349,6 @@ namespace Afra_App.Migrations
                     b.HasIndex("ProfundumInstanzId");
 
                     b.ToTable("ProfundaEinschreibungen");
-                });
-
-            modelBuilder.Entity("Afra_App.Profundum.Domain.Models.ProfundumEinwahlZeitraum", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("EinwahlStart")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("EinwahlStop")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ProfundumEinwahlZeitraeume");
                 });
 
             modelBuilder.Entity("Afra_App.Profundum.Domain.Models.ProfundumInstanz", b =>
@@ -412,8 +398,8 @@ namespace Afra_App.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("EinwahlZeitraumId")
-                        .HasColumnType("uuid");
+                    b.Property<bool>("EinwahlMöglich")
+                        .HasColumnType("boolean");
 
                     b.Property<int>("Jahr")
                         .HasColumnType("integer");
@@ -425,8 +411,6 @@ namespace Afra_App.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("EinwahlZeitraumId");
 
                     b.ToTable("ProfundaSlots");
                 });
@@ -730,17 +714,6 @@ namespace Afra_App.Migrations
                     b.Navigation("Profundum");
                 });
 
-            modelBuilder.Entity("Afra_App.Profundum.Domain.Models.ProfundumSlot", b =>
-                {
-                    b.HasOne("Afra_App.Profundum.Domain.Models.ProfundumEinwahlZeitraum", "EinwahlZeitraum")
-                        .WithMany("Slots")
-                        .HasForeignKey("EinwahlZeitraumId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("EinwahlZeitraum");
-                });
-
             modelBuilder.Entity("Afra_App.User.Domain.Models.MentorMenteeRelation", b =>
                 {
                     b.HasOne("Afra_App.User.Domain.Models.Person", null)
@@ -818,11 +791,6 @@ namespace Afra_App.Migrations
             modelBuilder.Entity("Afra_App.Profundum.Domain.Models.ProfundumDefinition", b =>
                 {
                     b.Navigation("Instanzen");
-                });
-
-            modelBuilder.Entity("Afra_App.Profundum.Domain.Models.ProfundumEinwahlZeitraum", b =>
-                {
-                    b.Navigation("Slots");
                 });
 
             modelBuilder.Entity("Afra_App.Profundum.Domain.Models.ProfundumInstanz", b =>
