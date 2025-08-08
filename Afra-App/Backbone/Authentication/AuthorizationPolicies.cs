@@ -16,6 +16,11 @@ public static class AuthorizationPolicies
     public const string StudentOnly = "StudentOnly";
 
     /// <summary>
+    /// Only students of the Mittelstufe may access this endpoint.
+    /// </summary>
+    public const string MittelStufeStudentOnly = "MittelStufeStudentOnly";
+
+    /// <summary>
     /// Only admins may access this endpoint.
     /// </summary>
     public const string AdminOnly = "AdminOnly";
