@@ -12,7 +12,7 @@ const options = ref([]);
 const results = ref({});
 
 async function get() {
-  const api = mande('/api/profundum');
+  const api = mande('/api/profundum/sus/wuensche');
   const profunda = await api.get();
   options.value = profunda;
 
@@ -23,7 +23,7 @@ async function get() {
 
 async function send() {
   console.log('Sending, ...', results);
-  const api = mande('/api/profundum');
+  const api = mande('/api/profundum/sus/wuensche');
 
   try {
     await api.post(results.value);
@@ -34,6 +34,7 @@ async function send() {
       summary: "Fehler",
       detail: "Deine Belegwünsche sind fehlerhaft. \n" + (e.body ? e.body.split('(')[0] : '')
     })
+    return
   }
 
   toast.add({

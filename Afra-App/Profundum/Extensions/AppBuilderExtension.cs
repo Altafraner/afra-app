@@ -19,5 +19,6 @@ public static class AppBuilderExtension
             .ValidateOnStart();
 
         builder.Services.AddScoped<ProfundumEnrollmentService>();
+        builder.Services.AddScoped<ProfundumManagementService>();
     }
 }
