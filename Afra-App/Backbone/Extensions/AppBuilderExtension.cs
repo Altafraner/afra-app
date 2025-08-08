@@ -74,6 +74,9 @@ public static class AppBuilderExtension
             .AddPolicy(AuthorizationPolicies.StudentOnly,
                 policy => policy.RequireClaim(AfraAppClaimTypes.Role,
                     nameof(Rolle.Oberstufe), nameof(Rolle.Mittelstufe)))
+            .AddPolicy(AuthorizationPolicies.MittelStufeStudentOnly,
+                policy => policy.RequireClaim(AfraAppClaimTypes.Role,
+                    nameof(Rolle.Mittelstufe)))
             .AddPolicy(AuthorizationPolicies.TutorOnly,
                 policy => policy.RequireClaim(AfraAppClaimTypes.Role,
                     nameof(Rolle.Tutor)))
