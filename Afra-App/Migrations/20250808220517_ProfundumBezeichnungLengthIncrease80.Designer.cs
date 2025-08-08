@@ -7,6 +7,7 @@ using Afra_App.Otium.Domain.Models.Schuljahr;
 using Afra_App.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -15,9 +16,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Afra_App.Migrations
 {
     [DbContext(typeof(AfraAppContext))]
-    partial class AfraAppContextModelSnapshot : ModelSnapshot
+    [Migration("20250808220517_ProfundumBezeichnungLengthIncrease80")]
+    partial class ProfundumBezeichnungLengthIncrease80
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -314,8 +317,8 @@ namespace Afra_App.Migrations
 
                     b.Property<string>("Bezeichnung")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
 
                     b.Property<Guid>("KategorieId")
                         .HasColumnType("uuid");

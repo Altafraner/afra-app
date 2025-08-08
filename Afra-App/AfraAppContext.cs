@@ -100,6 +100,16 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
     public DbSet<ProfundumSlot> ProfundaSlots { get; set; }
 
     /// <summary>
+    ///     All Einwahlzeiträume for Profundum
+    /// </summary>
+    public DbSet<ProfundumEinwahlZeitraum> ProfundumEinwahlZeitraeume { get; set; }
+
+    /// <summary>
+    ///     All Kategorien for Profunda
+    /// </summary>
+    public DbSet<ProfundumKategorie> ProfundaKategorien { get; set; }
+
+    /// <summary>
     ///     Configures the npgsql specific options for the context
     /// </summary>
     internal static Action<NpgsqlDbContextOptionsBuilder> ConfigureNpgsql =>
