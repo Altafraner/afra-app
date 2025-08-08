@@ -18,6 +18,7 @@ public record struct PersonInfoMinimal
         Nachname = person.Nachname;
         Id = person.Id;
         Rolle = person.Rolle;
+        Gruppe = person.Gruppe;
     }
 
     /// <inheritdoc cref="User.Domain.DTO.Person.Id" />
@@ -32,4 +33,7 @@ public record struct PersonInfoMinimal
     /// <inheritdoc cref="User.Domain.DTO.Person.Rolle" />
     [JsonConverter(typeof(JsonStringEnumConverter<Rolle>))]
     public Rolle Rolle { get; set; }
+
+    /// <inheritdoc cref="User.Domain.Models.Person.Gruppe" />
+    public string? Gruppe { get; set; }
 }

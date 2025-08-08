@@ -67,9 +67,13 @@ public class ProfundumEnrollmentService
     /// </summary>
     public ICollection<BlockKatalog> GetKatalog(Person student)
     {
-        var katalog = new List<BlockKatalog>() { };
-        var slots = _dbContext.ProfundaSlots.Where(s => s.EinwahlMöglich).ToArray().Order(new ProfundumSlotComparer());
+        var now = DateTime.UtcNow;
+        var einwahlZeitraum = _dbContext.ProfundumEinwahlZeitraeume
+            .Include(ez => ez.Slots)
+            .Where(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop).First();
+        var slots = einwahlZeitraum.Slots;
 
+        var katalog = new List<BlockKatalog>() { };
         var angebote = GetAvailableProfundaInstanzen(student, slots);
 
         foreach (var slot in slots)
@@ -102,13 +106,19 @@ public class ProfundumEnrollmentService
     /// <param name="wuensche">A dictionary containing the ordered ids of ProdundumInstanzen given the slot</param>
     public async Task<IResult> RegisterBelegWunschAsync(Person student, Dictionary<String, Guid[]> wuensche)
     {
-        var slots = (await _dbContext.ProfundaSlots.Where(s => s.EinwahlMöglich).ToArrayAsync()).Order(new ProfundumSlotComparer()).ToArray();
+        var now = DateTime.UtcNow;
+        var einwahlZeitraum = _dbContext.ProfundumEinwahlZeitraeume
+            .Include(ez => ez.Slots)
+            .Where(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop).First();
+        var slots = einwahlZeitraum.Slots;
+
         var angebote = GetAvailableProfundaInstanzen(student, slots).ToHashSet();
         var angeboteUsed = new HashSet<ProfundumInstanz>();
 
         var konflikte = _dbContext.ProfundaBelegWuensche
             .Include(bw => bw.ProfundumInstanz)
-            .Where(p => p.ProfundumInstanz.Slots.Any(s => s.EinwahlMöglich))
+            .Where(p => p.ProfundumInstanz.Slots
+                    .Intersect(slots, new ProfundumSlotComparer()).Any())
             .Where(p => p.BetroffenePerson.Id == student.Id);
         if (konflikte.Any())
         {
@@ -209,6 +219,16 @@ public class ProfundumEnrollmentService
         if (isProfilPflichtig(student, slots.Select(s => s.Quartal)) && !belegWuensche.Any(w => w.ProfundumInstanz.Profundum.Kategorie.ProfilProfundum))
         {
             return Results.BadRequest("Profilprofundum nicht in auswahl enthalten");
+        }
+
+        var kategorien = await _dbContext.ProfundaKategorien.Where(k => k.MaxProEinwahl != null).ToArrayAsync();
+        foreach (var kat in kategorien)
+        {
+            int n = belegWuensche.Count(b => b.ProfundumInstanz.Profundum.Kategorie == kat);
+            if (n > kat.MaxProEinwahl)
+            {
+                return Results.BadRequest($"Nur {kat.MaxProEinwahl} Profunda der Kategorie {kat.Bezeichnung} wählbar");
+            }
         }
 
         _dbContext.ProfundaBelegWuensche.AddRange(belegWuensche);
@@ -446,5 +466,17 @@ public class ProfundumEnrollmentService
                     .Where(bw => !bw.ProfundumInstanz.Slots.Any(s => !slotIds.Any(sl => sl == s.Id)))
                     .Any())
             .AsSplitQuery().ToArrayAsync()).Select(p => new User.Domain.DTO.PersonInfoMinimal(p));
+    }
+
+    ///
+    public async Task<Dictionary<string, DTOProfundumDefinition>> GetEnrollment(Person student, ICollection<Guid> slotIds)
+    {
+        return (await _dbContext.ProfundaSlots.Where(s => slotIds.Contains(s.Id)).ToArrayAsync()).ToDictionary(s => s.ToString(), s =>
+                    _dbContext.ProfundaEinschreibungen
+                    .Include(pe => pe.ProfundumInstanz).ThenInclude(pi => pi.Profundum).ThenInclude(p => p.Kategorie)
+                    .Where(pe => pe.BetroffenePerson.Id == student.Id)
+                    .Where(p => p.ProfundumInstanz.Slots.Contains(s))
+                    .Select(pe => new DTOProfundumDefinition { Bezeichnung = pe.ProfundumInstanz.Profundum.Bezeichnung })
+                    .First());
     }
 }

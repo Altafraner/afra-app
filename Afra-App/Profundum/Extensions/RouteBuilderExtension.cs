@@ -13,8 +13,8 @@ public static class RouteBuilderExtension
     public static void MapProfundum(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/profundum")
-            .WithOpenApi()
-            .RequireAuthorization();
+            .WithOpenApi();
         group.MapEnrollmentEndpoints();
+        group.MapManagementEndpoints();
     }
 }
