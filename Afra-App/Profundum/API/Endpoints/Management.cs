@@ -124,7 +124,7 @@ public static class Management
         try
         {
             await enrollmentService.PerformMatching(einwahlZeitraum);
-            var csv = await enrollmentService.GetStudentMatchingCSV(einwahlZeitraum.Slots.Select(s => s.Id).ToArray());
+            var csv = await enrollmentService.GetStudentMatchingCSV(einwahlZeitraum);
             return Results.File(System.Text.Encoding.UTF8.GetBytes(csv), "text/csv");
         }
         catch (ArgumentException e)

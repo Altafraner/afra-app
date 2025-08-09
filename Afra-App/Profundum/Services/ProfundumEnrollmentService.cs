@@ -111,7 +111,7 @@ public class ProfundumEnrollmentService
             return [];
         }
 
-        var slots = einwahlZeitraum.Slots;
+        var slots = einwahlZeitraum.Slots.Order(new ProfundumSlotComparer());
 
         var katalog = new List<BlockKatalog>() { };
         var angebote = GetAvailableProfundaInstanzen(student, slots);
@@ -123,7 +123,17 @@ public class ProfundumEnrollmentService
 
             katalog.Add(new BlockKatalog
             {
-                label = slot.ToString(),
+                label = $"{slot.Jahr} {slot.Quartal} {slot.Wochentag switch
+                {
+                    DayOfWeek.Monday => "Montag",
+                    DayOfWeek.Tuesday => "Dienstag",
+                    DayOfWeek.Wednesday => "Mittwoch",
+                    DayOfWeek.Thursday => "Donnerstag",
+                    DayOfWeek.Friday => "Freitag",
+                    DayOfWeek.Saturday => "Samstag",
+                    DayOfWeek.Sunday => "Sonntag",
+                    _ => "",
+                }}",
                 id = slot.ToString(),
                 options = profundumInstanzenBeginningInSlot.Select(p => new BlockOption
                 {
@@ -282,17 +292,14 @@ public class ProfundumEnrollmentService
     }
 
     ///
-    public async Task<string> GetStudentMatchingCSV(ICollection<Guid> slotIds)
+    public async Task<string> GetStudentMatchingCSV(ProfundumEinwahlZeitraum einwahlZeitraum)
     {
         var personen = await _dbContext.Personen
             .Where(p => p.Rolle == User.Domain.Models.Rolle.Mittelstufe)
             .Where(p => p.ProfundaEinschreibungen.Any())
             .ToArrayAsync();
 
-        var slots = await _dbContext.ProfundaSlots
-            .Where(s => slotIds.Contains(s.Id))
-            .OrderBy(s => ((int)s.Jahr * 10 + (int)s.Quartal) * 10 + (int)s.Wochentag)
-            .ToArrayAsync();
+        var slots = einwahlZeitraum.Slots;
 
         var sb = new StringBuilder();
         sb.AppendLine($"Klasse, Name, Vorname{slots.Select(s => s.ToString()).Aggregate("", (r, c) => $"{r}, {c}")}");
@@ -302,9 +309,9 @@ public class ProfundumEnrollmentService
             var enrollments = _dbContext.ProfundaEinschreibungen.Where(e => e.BetroffenePersonId == student.Id)
                 .Include(e => e.ProfundumInstanz).ThenInclude(pi => pi.Slots);
 
-            sb.AppendLine($"{student.Gruppe}, {student.Nachname}, {student.Vorname}{slotIds.Select(sId =>
+            sb.AppendLine($"{student.Gruppe}, {student.Nachname}, {student.Vorname}{slots.Select(s =>
                 student.ProfundaEinschreibungen
-                .Where(e => e.ProfundumInstanz.Slots.Any(s => s.Id == sId))
+                .Where(e => e.ProfundumInstanz.Slots.Any(sl => sl.Id == s.Id))
                 .Select(e => e.ProfundumInstanz.Profundum.Bezeichnung)
                 .First()
             ).Aggregate("", (r, c) => $"{r}, {c}")}");
