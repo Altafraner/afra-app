@@ -15,6 +15,9 @@ public class ProfundumConfiguration
     public required Dictionary<int, ProfundumQuartal[]> ProfilPflichtigkeit { get; set; }
 
     ///
+    public required Dictionary<string, ProfundumQuartal[]> ProfilZulassung { get; set; }
+
+    ///
     public static bool Validate(ProfundumConfiguration config)
     {
         return true;
