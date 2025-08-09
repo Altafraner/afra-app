@@ -1,4 +1,4 @@
-﻿import {defineStore} from "pinia";
+import {defineStore} from "pinia";
 import {mande} from "mande";
 
 export const useUser = defineStore('user', {
@@ -9,6 +9,7 @@ export const useUser = defineStore('user', {
   }),
   getters: {
     isStudent: (state) => state.user.rolle === "Oberstufe" || state.user.rolle === "Mittelstufe",
+    isMittelstufe: (state) => state.user.rolle === "Mittelstufe",
     isTeacher: (state) => state.user.rolle === "Tutor"
   },
   actions: {
