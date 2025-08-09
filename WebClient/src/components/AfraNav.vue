@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import Menubar from 'primevue/menubar';
 import {ref} from "vue";
 import {Button, Image, useToast} from "primevue";
@@ -44,6 +44,16 @@ const items_student = [
   },
 ]
 
+const items_mittelstufe = [
+  {
+    label: "Profundum",
+    route: {
+      name: "Profundum-Einwahl"
+    },
+    icon: "pi pi-check-square"
+  },
+]
+
 const items_otium_manager = [
   {
     label: "Verwaltung",
@@ -84,6 +94,9 @@ async function setup(update = true) {
   if (user.loading) return;
   if (user.isStudent) {
     items.value = items_student
+    if(user.isMittelstufe) {
+      items.value = [...items.value, ...items_mittelstufe]
+    }
   } else if (user.isTeacher) {
     items.value = items_teacher
   } else {
