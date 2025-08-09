@@ -55,16 +55,34 @@ public class ProfundumEnrollmentService
     }
 
     ///
+    public bool isProfilZulässig(Person student, IEnumerable<ProfundumQuartal> quartale)
+    {
+        var klasse = student.Gruppe;
+        if (klasse is null)
+        {
+            return false;
+        }
+        var profilQuartale = _profundumConfiguration.Value.ProfilZulassung.GetValueOrDefault(klasse);
+        if (profilQuartale is null)
+        {
+            return false;
+        }
+        var ret = profilQuartale.Intersect(quartale).Any();
+        return ret;
+    }
+
+    ///
     public IEnumerable<ProfundumInstanz> GetAvailableProfundaInstanzen(Person student, IEnumerable<ProfundumSlot> slots)
     {
         var klasse = _userService.GetKlassenstufe(student);
         var profilPflichtig = isProfilPflichtig(student, slots.Select(s => s.Quartal));
+        var profilZulässig = isProfilZulässig(student, slots.Select(s => s.Quartal));
         var profundaInstanzen = _dbContext.ProfundaInstanzen
             .Include(p => p.Slots)
             .Include(p => p.Profundum).ThenInclude(p => p.Kategorie)
             .Where(p => (p.Profundum.minKlasse == null || klasse >= p.Profundum.minKlasse)
                     && (p.Profundum.maxKlasse == null || klasse <= p.Profundum.maxKlasse))
-            .Where(p => !p.Profundum.Kategorie.ProfilProfundum || profilPflichtig)
+            .Where(p => !p.Profundum.Kategorie.ProfilProfundum || profilPflichtig || profilZulässig)
             .ToArray()
             .Where(p => p.Slots.Any(s => slots.Any(sl => sl.Id == s.Id)))
             .Where(p => !p.Slots.Any(s => !slots.Any(sl => sl.Id == s.Id)));
