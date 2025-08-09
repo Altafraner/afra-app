@@ -411,6 +411,27 @@ public class ProfundumEnrollmentService
             }
         }
 
+        // Maximal eine Instanz eines Profundums pro Schüler
+        foreach (var p in personen)
+        {
+            var profundaDefinitionenIds = belegwünsche
+                .Where(b => b.BetroffenePerson.Id == p.Id)
+                .Select(b => b.ProfundumInstanz.Profundum.Id)
+                .ToHashSet();
+
+            foreach (var defId in profundaDefinitionenIds)
+            {
+                var psBeleg = belegwünsche
+                    .Where(b => b.BetroffenePerson.Id == p.Id)
+                    .Where(b => b.ProfundumInstanz.Profundum.Id == defId);
+                var psBelegVar = psBeleg.Select(b => belegVariables[b]).ToArray();
+                var psBelegVarWithoutLimits = psBeleg.Select(b => belegVariablesWithoutLimits[b]).ToArray();
+
+                model.AddAtMostOne(psBelegVar);
+                modelWithoutLimits.AddAtMostOne(psBelegVarWithoutLimits);
+            }
+        }
+
         model.Maximize(objective);
         modelWithoutLimits.Maximize(objectiveWithoutLimits);
         var solver = new CpSolver();
