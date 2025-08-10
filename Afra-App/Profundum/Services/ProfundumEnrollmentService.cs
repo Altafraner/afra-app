@@ -490,7 +490,7 @@ public class ProfundumEnrollmentService
             ResultStatus = resultStatus,
             ObjectiveValue = solver.ObjectiveValue,
             ObjectiveValueNoLimits = solverWithoutLimits.ObjectiveValue,
-            Optim = solver.ObjectiveValue / solverWithoutLimits.ObjectiveValue,
+            Optim = solverWithoutLimits.ObjectiveValue == 0 ? 0 : solver.ObjectiveValue / solverWithoutLimits.ObjectiveValue,
             Students = personen.ToDictionary(
                     p => $"{p.Gruppe}: {p.Vorname} {p.Nachname}",
                     p =>
@@ -503,7 +503,7 @@ public class ProfundumEnrollmentService
                             .Select(bw => solverWithoutLimits.Value(belegVariablesWithoutLimits[bw]) * weights[bw.Stufe] * bw.ProfundumInstanz.Slots.Count()).Sum();
                         return new StudentMatchingStats
                         {
-                            optim = score / scorePossible,
+                            optim = scorePossible == 0 ? 0 : score / scorePossible,
                             einschreibungen = slots.ToDictionary(s => s.ToString(),
                                 s => _dbContext.ProfundaEinschreibungen.
                                 Include(e => e.ProfundumInstanz).ThenInclude(p => p.Profundum)
