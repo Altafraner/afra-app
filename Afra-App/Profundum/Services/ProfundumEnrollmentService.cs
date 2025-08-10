@@ -135,7 +135,17 @@ public class ProfundumEnrollmentService
                     _ => "",
                 }}",
                 id = slot.ToString(),
-                options = profundumInstanzenBeginningInSlot.Select(p => new BlockOption
+                options = profundumInstanzenBeginningInSlot
+                .OrderBy(x => x.Profundum.Bezeichnung)
+                .OrderBy(x =>
+                {
+                    if (x.Profundum.Kategorie.ProfilProfundum)
+                    {
+                        return 0;
+                    }
+                    return 1;
+                })
+                .Select(p => new BlockOption
                 {
                     label = p.Profundum.Bezeichnung,
                     value = p.Id,
