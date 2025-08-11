@@ -85,12 +85,53 @@ startup();
 
 <template>
   <h1>Profundums-Einwahl</h1>
+
+  <p>
+    Bitte lest euch die Folgenden Hinweise aufmerksam durch. Beachtet vor allem die Informationen,
+    die ihr zum Profundum erhalten habt.
+    <strong> Der Zeitpunkt der Abgabe </strong> innerhalb des Einwahlfensters ist <strong> kein Kriterium </strong> zur Belegung.
+  </p>
+
+
+  <h2>Kriterien</h2>
+
+  <p>
+    Im folgenden Formular könnt ihr Wünsche für das Profundum im folgenden Halbjahr abgeben.
+    Bitte beachtet das Profundarium für ausführliche Informationen zu jedem Angebot.
+  </p>
+
+  <p>
+    Um eure Wünsche abgeben zu können, wählt ihr für jeden Slot eure drei Favoriten in absteigender
+    Reihenfolge.
+    Profunda, die sich über mehrere Quartale erstrecken, werden automatisch dort eingetragen.
+    Sie sind nur in ihrem ersten Quartal in der Liste zu finden.
+  </p>
+
+  <p>
+    Weitere Einschränkungen werden euch möglicherweise in einem Fenster angezeigt, nachdem ihr auf "abgeben" geklickt habt.
+    In diesem Fall nehmt ihr bitte entsprechende Änderungen vor und versucht es erneut. Diese Kriterien sind vom Konzept-Team vorgegeben.
+    Wurden eure Wünsche übernommen, so seht ihr das an einer Bestätigung in einem grünen Fenster.
+  </p>
+
+  <h2>Matching</h2>
+
+  <p>
+    Nach dem Zeitfenster zur Einwahl berechnen wir aus den abgegebenen Wünschen eine Belegung, die oben genannte Kriterien erfüllt.
+    Wir bevorzugen Erstwünsche vor Zweitwünschen und diese vor Drittwünschen nach <a
+      class="text-blue-500 hover:underline cursor-pointer"
+      href="https://github.com/Altafraner/afra-app" target="_blank">veröffentlichter
+    Berechnungsvorschrift</a>.
+    Jeder soll immer einen seiner drei Wünsche erhalten.
+  </p>
+
+  <hr class="my-3"/>
+
   <div v-for="option in options" :key="option.id" class="mb-4">
     <h2>{{ option.label }}</h2>
     <EinwahlSelectorGroup v-model="results[option.id]" :options="option.options"
                           :pre-selected="preSelected[option.id]"/>
   </div>
-  <Button :disabled="!maySend" class="mb-4" fluid label="Wünsche abgeben" @click="send"/>
+  <Button :disabled="!maySend" class="mb-4" fluid label="Überprüfen und abgeben" @click="send"/>
 </template>
 
 <style scoped>
