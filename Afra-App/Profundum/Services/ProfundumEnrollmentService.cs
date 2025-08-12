@@ -336,20 +336,22 @@ public class ProfundumEnrollmentService
 
         var slots = einwahlZeitraum.Slots;
 
+        const char sep = '\t';
+
         var sb = new StringBuilder();
-        sb.AppendLine($"Klasse, Name, Vorname{slots.Select(s => s.ToString()).Aggregate("", (r, c) => $"{r}, {c}")}");
+        sb.AppendLine($"Klasse{sep} Name{sep} Vorname{slots.Select(s => s.ToString()).Aggregate("", (r, c) => $"{r}{sep} {c}")}");
 
         foreach (var student in personen)
         {
             var enrollments = _dbContext.ProfundaEinschreibungen.Where(e => e.BetroffenePersonId == student.Id)
                 .Include(e => e.ProfundumInstanz).ThenInclude(pi => pi.Slots);
 
-            sb.AppendLine($"{student.Gruppe}, {student.Nachname}, {student.Vorname}{slots.Select(s =>
+            sb.AppendLine($"{student.Gruppe}{sep} {student.Nachname}{sep} {student.Vorname}{slots.Select(s =>
                 student.ProfundaEinschreibungen
                 .Where(e => e.ProfundumInstanz.Slots.Any(sl => sl.Id == s.Id))
                 .Select(e => e.ProfundumInstanz.Profundum.Bezeichnung)
                 .First()
-            ).Aggregate("", (r, c) => $"{r}, {c}")}");
+            ).Aggregate("", (r, c) => $"{r}{sep} {c}")}");
         }
 
         return sb.ToString();
@@ -430,7 +432,6 @@ public class ProfundumEnrollmentService
         }
 
         // Mindestens ein Profilprofundum pro Semester für die hälfte der Schüler
-        ProfundumQuartal[] QuartaleWintersemester = [ProfundumQuartal.Q1, ProfundumQuartal.Q2];
         var ProfilProfundumPflichtige = personen.Where(p => isProfilPflichtig(p, slots.Select(s => s.Quartal)));
 
         foreach (var profundumPflichtigePerson in ProfilProfundumPflichtige)
