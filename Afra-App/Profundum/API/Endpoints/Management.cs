@@ -129,14 +129,7 @@ public static class Management
             .Where(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop).First();
         var slots = einwahlZeitraum.Slots.Select(s => s.Id).ToArray();
 
-        try
-        {
-            var result = await enrollmentService.GetMissingStudents(slots);
-            return Results.Ok(result);
-        }
-        catch (ArgumentException e)
-        {
-            return Results.BadRequest(e.Message);
-        }
+        var result = await enrollmentService.GetMissingStudents(slots);
+        return Results.Ok(result);
     }
 }
