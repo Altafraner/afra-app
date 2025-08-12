@@ -101,15 +101,8 @@ public static class Management
             .Include(ez => ez.Slots)
             .Where(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop).First();
 
-        try
-        {
-            var result = await enrollmentService.PerformMatching(einwahlZeitraum);
-            return Results.Ok(result);
-        }
-        catch (ArgumentException e)
-        {
-            return Results.BadRequest(e.Message);
-        }
+        var result = await enrollmentService.PerformMatching(einwahlZeitraum);
+        return Results.Ok(result);
     }
 
     ///
@@ -121,16 +114,9 @@ public static class Management
             .Include(ez => ez.Slots)
             .Where(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop).First();
 
-        try
-        {
-            await enrollmentService.PerformMatching(einwahlZeitraum);
-            var csv = await enrollmentService.GetStudentMatchingCSV(einwahlZeitraum);
-            return Results.File(System.Text.Encoding.UTF8.GetBytes(csv), "text/csv");
-        }
-        catch (ArgumentException e)
-        {
-            return Results.BadRequest(e.Message);
-        }
+        await enrollmentService.PerformMatching(einwahlZeitraum);
+        var csv = await enrollmentService.GetStudentMatchingCSV(einwahlZeitraum);
+        return Results.File(System.Text.Encoding.UTF8.GetBytes(csv), "text/csv");
     }
 
     ///
