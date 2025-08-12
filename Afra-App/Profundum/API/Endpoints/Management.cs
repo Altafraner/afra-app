@@ -97,9 +97,15 @@ public static class Management
            UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
     {
         var now = DateTime.UtcNow;
-        var einwahlZeitraum = dbContext.ProfundumEinwahlZeitraeume
+        var einwahlZeitraum = (await dbContext.ProfundumEinwahlZeitraeume
             .Include(ez => ez.Slots)
-            .Where(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop).First();
+            .Where(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop)
+            .ToArrayAsync())
+            .FirstOrDefault((ProfundumEinwahlZeitraum?)null);
+        if (einwahlZeitraum is null)
+        {
+            return Results.NotFound("Kein offener Einwahlzeitraum");
+        }
 
         var result = await enrollmentService.PerformMatching(einwahlZeitraum);
         return Results.Ok(result);
@@ -110,9 +116,15 @@ public static class Management
            UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
     {
         var now = DateTime.UtcNow;
-        var einwahlZeitraum = dbContext.ProfundumEinwahlZeitraeume
+        var einwahlZeitraum = (await dbContext.ProfundumEinwahlZeitraeume
             .Include(ez => ez.Slots)
-            .Where(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop).First();
+            .Where(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop)
+            .ToArrayAsync())
+            .FirstOrDefault((ProfundumEinwahlZeitraum?)null);
+        if (einwahlZeitraum is null)
+        {
+            return Results.NotFound("Kein offener Einwahlzeitraum");
+        }
 
         await enrollmentService.PerformMatching(einwahlZeitraum);
         var csv = await enrollmentService.GetStudentMatchingCSV(einwahlZeitraum);
@@ -124,9 +136,15 @@ public static class Management
            UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
     {
         var now = DateTime.UtcNow;
-        var einwahlZeitraum = dbContext.ProfundumEinwahlZeitraeume
+        var einwahlZeitraum = (await dbContext.ProfundumEinwahlZeitraeume
             .Include(ez => ez.Slots)
-            .Where(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop).First();
+            .Where(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop)
+            .ToArrayAsync())
+            .FirstOrDefault((ProfundumEinwahlZeitraum?)null);
+        if (einwahlZeitraum is null)
+        {
+            return Results.NotFound("Kein offener Einwahlzeitraum");
+        }
         var slots = einwahlZeitraum.Slots.Select(s => s.Id).ToArray();
 
         var result = await enrollmentService.GetMissingStudents(slots);
