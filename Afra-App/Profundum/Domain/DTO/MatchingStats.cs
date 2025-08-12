@@ -1,6 +1,17 @@
 namespace Afra_App.Profundum.Domain.DTO;
 
-using Google.OrTools.Sat;
+///
+public enum MatchingResultStatus
+{
+    ///
+    MatchingFound,
+
+    ///
+    MatchingIncompleteDueToCapacity,
+
+    ///
+    MatchingIncompleteDueToHardConstraints,
+}
 
 ///
 public record StudentMatchingStats
@@ -29,7 +40,7 @@ public record MatchingStats
     public required double CalculationTime { get; set; }
 
     ///
-    public required CpSolverStatus ResultStatus { get; set; }
+    public MatchingResultStatus Result { get; set; }
 
     ///
     public required double ObjectiveValue { get; set; }
@@ -45,4 +56,7 @@ public record MatchingStats
 
     ///
     public Dictionary<string, ProfundumMatchingStats>? Profunda { get; set; }
+
+    ///
+    public List<string>? NotMatchedStudents { get; set; }
 }
