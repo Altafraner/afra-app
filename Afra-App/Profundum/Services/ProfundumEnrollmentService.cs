@@ -200,10 +200,10 @@ public class ProfundumEnrollmentService
             .Include(bw => bw.BetroffenePerson)
             .Where(p => p.BetroffenePerson.Id == student.Id)
             .ToArray()
-            .Where(p => p.ProfundumInstanz.Slots.Any(s => slots.Any(sl => sl.Id == s.Id)));
+            .Where(p => p.ProfundumInstanz.Slots.Any(s => s.EinwahlZeitraum.Id == einwahlZeitraum.Id));
         if (konflikte.Any())
         {
-            throw new ProfundumEinwahlWunschException("Bereits abgegeben");
+            _dbContext.ProfundaBelegWuensche.RemoveRange(konflikte);
         }
 
         var angebote = GetAvailableProfundaInstanzen(student, slots).ToHashSet();
