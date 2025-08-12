@@ -159,7 +159,7 @@ public class ProfundumEnrollmentService
                 .ThenBy(x => x.Profundum.Bezeichnung)
                 .Select(p => new BlockOption
                 {
-                    label = p.Profundum.Bezeichnung,
+                    label = p.Slots.Count() <= 1 ? p.Profundum.Bezeichnung : $"{p.Profundum.Bezeichnung} ({p.Slots.Count()} Quartale)",
                     value = p.Id,
                     alsoIncludes = p.Slots.Order(new ProfundumSlotComparer()).Skip(1)
                     .Select(s => s.ToString()).ToArray(),
@@ -566,7 +566,7 @@ public class ProfundumEnrollmentService
                             .Include(e => e.ProfundumInstanz)
                             .Where(e => e.ProfundumInstanz.Id == a.Id)
                             .Count() > 0)
-            .ToDictionary(a => $"{a.Slots.First().ToString()} {a.Profundum.Bezeichnung}", a => new ProfundumMatchingStats
+            .ToDictionary(a => $"{a.Slots.First().ToString()} {a.Profundum.Bezeichnung} {a.Id}", a => new ProfundumMatchingStats
             {
                 Einschreibungen = _dbContext.ProfundaEinschreibungen
                             .Include(e => e.ProfundumInstanz)
