@@ -1,4 +1,5 @@
 using System.Text;
+using Afra_App.Backbone.Services.Email;
 using Afra_App.Profundum.Configuration;
 using Afra_App.Profundum.Domain.DTO;
 using Afra_App.Profundum.Domain.Models;
@@ -27,18 +28,20 @@ public class ProfundumEnrollmentService
     private readonly AfraAppContext _dbContext;
     private readonly ILogger _logger;
     private readonly UserService _userService;
+    private readonly IEmailOutbox _emailOutbox;
     private readonly IOptions<ProfundumConfiguration> _profundumConfiguration;
 
     /// <summary>
     ///     Constructs the EnrollmentService. Usually called by the DI container.
     /// </summary>
     public ProfundumEnrollmentService(AfraAppContext dbContext,
-        ILogger<ProfundumEnrollmentService> logger, UserService userService, IOptions<ProfundumConfiguration> profundumConfiguration)
+        ILogger<ProfundumEnrollmentService> logger, UserService userService, IOptions<ProfundumConfiguration> profundumConfiguration, IEmailOutbox emailOutbox)
     {
         _dbContext = dbContext;
         _logger = logger;
         _userService = userService;
         _profundumConfiguration = profundumConfiguration;
+        _emailOutbox = emailOutbox;
     }
 
     ///
@@ -314,6 +317,32 @@ public class ProfundumEnrollmentService
                 throw new ProfundumEinwahlWunschException($"Nur {kat.MaxProEinwahl} Profunda der Kategorie {kat.Bezeichnung} wählbar");
             }
         }
+
+        var wuenscheString = new StringBuilder();
+        wuenscheString.AppendLine("Du hast die folgenden Wünsche zur Profundumseinwahl abgegeben.");
+        wuenscheString.AppendLine("Falls du eine Änderung vornehmen möchtest, fülle das Formular neu aus.");
+        wuenscheString.AppendLine();
+        foreach (var slot in slots)
+        {
+            var slotString = $"{slot.Jahr} {slot.Quartal} {slot.Wochentag switch
+            {
+                DayOfWeek.Monday => "Montag",
+                DayOfWeek.Tuesday => "Dienstag",
+                DayOfWeek.Wednesday => "Mittwoch",
+                DayOfWeek.Thursday => "Donnerstag",
+                DayOfWeek.Friday => "Freitag",
+                DayOfWeek.Saturday => "Samstag",
+                DayOfWeek.Sunday => "Sonntag",
+                _ => "",
+            }}";
+            wuenscheString.AppendLine($"{slotString}: ");
+
+            foreach (var b in belegWuensche.Where(b => b.ProfundumInstanz.Slots.Contains(slot)))
+            {
+                wuenscheString.AppendLine($"    {(int)b.Stufe}. {b.ProfundumInstanz.Profundum.Bezeichnung}");
+            }
+        }
+        await _emailOutbox.ScheduleNotificationAsync(student, "Deine Profunda Einwahl-Wünsche", wuenscheString.ToString(), TimeSpan.Zero);
 
         _dbContext.ProfundaBelegWuensche.AddRange(belegWuensche);
         await _dbContext.SaveChangesAsync();
