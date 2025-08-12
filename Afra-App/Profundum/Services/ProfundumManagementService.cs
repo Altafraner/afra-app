@@ -1,10 +1,7 @@
-using System.Text;
 using Afra_App.Profundum.Configuration;
 using Afra_App.Profundum.Domain.DTO;
 using Afra_App.Profundum.Domain.Models;
-using Afra_App.User.Domain.Models;
 using Afra_App.User.Services;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 namespace Afra_App.Profundum.Services;
