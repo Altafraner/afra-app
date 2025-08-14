@@ -383,8 +383,14 @@ public class ProfundumEnrollmentService
     ///     Perform a matching for the given slots and return information about the result
     /// </summary>
     /// <param name="einwahlZeitraum">The einwahlZeitraum to apply the matching to</param>
-    public async Task<MatchingStats> PerformMatching(ProfundumEinwahlZeitraum einwahlZeitraum)
+    /// <param name="writeBackOnSuccess">Whether to write the enrollments to db on complete matching</param>
+    public async Task<MatchingStats> PerformMatching(ProfundumEinwahlZeitraum einwahlZeitraum, bool writeBackOnSuccess = false)
     {
+        if (einwahlZeitraum.HasBeenMatched)
+        {
+            throw new ArgumentException("Final matching has been already performed.");
+        }
+
         var slots = einwahlZeitraum.Slots.ToArray();
 
         var alteEinschreibungen = _dbContext.ProfundaEinschreibungen
@@ -536,21 +542,27 @@ public class ProfundumEnrollmentService
             _ => throw new System.Diagnostics.UnreachableException()
         };
 
-        // Ergebnis rückschreiben
-        foreach (var bw in belegwünsche)
+
+        if (writeBackOnSuccess && matchingResultStatus == MatchingResultStatus.MatchingFound)
         {
-            var bw_var = belegVariables[bw];
-            if (solver.Value(bw_var) > 0)
+            // Ergebnis rückschreiben
+            foreach (var bw in belegwünsche)
             {
-                _dbContext.ProfundaEinschreibungen.Add(new ProfundumEinschreibung()
+                var bw_var = belegVariables[bw];
+                if (solver.Value(bw_var) > 0)
                 {
-                    ProfundumInstanz = bw.ProfundumInstanz,
-                    BetroffenePerson = bw.BetroffenePerson
-                });
+                    _dbContext.ProfundaEinschreibungen.Add(new ProfundumEinschreibung()
+                    {
+                        ProfundumInstanz = bw.ProfundumInstanz,
+                        BetroffenePerson = bw.BetroffenePerson
+                    });
+                }
             }
+
+            einwahlZeitraum.HasBeenMatched = true;
+            await _dbContext.SaveChangesAsync();
         }
 
-        await _dbContext.SaveChangesAsync();
 
         return new MatchingStats
         {

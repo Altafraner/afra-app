@@ -28,7 +28,8 @@ public static class Management
 
         group.MapGet("/missing", GetUnenrolledAsync);
         group.MapGet("/missing/emails", GetUnenrolledEmailsAsync);
-        group.MapGet("/matching", MatchingAsync);
+        group.MapPost("/matching", DoMatchingAsync);
+        group.MapPost("/matching/final", DoFinalMatchingAsync);
         group.MapGet("/matching.csv", MatchingAsyncCSV);
     }
 
@@ -94,7 +95,7 @@ public static class Management
 
 
     ///
-    private static async Task<IResult> MatchingAsync(ProfundumEnrollmentService enrollmentService,
+    private static async Task<IResult> DoMatchingAsync(ProfundumEnrollmentService enrollmentService,
            UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
     {
         var now = DateTime.UtcNow;
@@ -113,6 +114,25 @@ public static class Management
     }
 
     ///
+    private static async Task<IResult> DoFinalMatchingAsync(ProfundumEnrollmentService enrollmentService,
+           UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
+    {
+        var now = DateTime.UtcNow;
+        var einwahlZeitraum = (await dbContext.ProfundumEinwahlZeitraeume
+            .Include(ez => ez.Slots)
+            .Where(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop)
+            .ToArrayAsync())
+            .FirstOrDefault((ProfundumEinwahlZeitraum?)null);
+        if (einwahlZeitraum is null)
+        {
+            return Results.NotFound("Kein offener Einwahlzeitraum");
+        }
+
+        var result = await enrollmentService.PerformMatching(einwahlZeitraum, writeBackOnSuccess: true);
+        return Results.Ok(result);
+    }
+
+    ///
     private static async Task<IResult> MatchingAsyncCSV(ProfundumEnrollmentService enrollmentService,
            UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
     {
@@ -127,7 +147,6 @@ public static class Management
             return Results.NotFound("Kein offener Einwahlzeitraum");
         }
 
-        await enrollmentService.PerformMatching(einwahlZeitraum);
         var csv = await enrollmentService.GetStudentMatchingCSV(einwahlZeitraum);
         return Results.File(System.Text.Encoding.UTF8.GetBytes(csv), "text/csv");
     }
