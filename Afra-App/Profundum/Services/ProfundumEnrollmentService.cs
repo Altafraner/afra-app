@@ -352,7 +352,14 @@ public class ProfundumEnrollmentService
     public async Task<string> GetStudentMatchingCSV(ProfundumEinwahlZeitraum einwahlZeitraum)
     {
         var personen = await _dbContext.Personen
-            .Where(p => p.Rolle == User.Domain.Models.Rolle.Mittelstufe)
+            .AsSplitQuery()
+            .Include(s => s.ProfundaEinschreibungen)
+            .ThenInclude(e => e.ProfundumInstanz)
+            .ThenInclude(e => e.Profundum)
+            .Include(person => person.ProfundaEinschreibungen)
+            .ThenInclude(profundumEinschreibung => profundumEinschreibung.ProfundumInstanz)
+            .ThenInclude(profundumInstanz => profundumInstanz.Slots)
+            .Where(p => p.Rolle == Rolle.Mittelstufe)
             .Where(p => p.ProfundaEinschreibungen.Any())
             .ToArrayAsync();
 
