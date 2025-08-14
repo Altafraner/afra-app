@@ -18,7 +18,7 @@ public static class Management
     public static void MapManagementEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/management")
-            .RequireAuthorization(AuthorizationPolicies.TeacherOrAdmin);
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly);
 
         group.MapPut("/einwahlzeitraum", AddEinwahlZeitraumAsync);
         group.MapPut("/slot", AddSlotAsync);
