@@ -1,13 +1,16 @@
+using System.Diagnostics;
 using System.Text;
 using Afra_App.Backbone.Services.Email;
 using Afra_App.Profundum.Configuration;
 using Afra_App.Profundum.Domain.DTO;
 using Afra_App.Profundum.Domain.Models;
+using Afra_App.User.Domain.DTO;
 using Afra_App.User.Domain.Models;
 using Afra_App.User.Services;
 using Google.OrTools.Sat;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Person = Afra_App.User.Domain.Models.Person;
 
 namespace Afra_App.Profundum.Services;
 
@@ -17,7 +20,8 @@ public class ProfundumEinwahlWunschException : Exception
     ///
     public ProfundumEinwahlWunschException(string message)
         : base(message)
-    { }
+    {
+    }
 }
 
 /// <summary>
@@ -26,16 +30,17 @@ public class ProfundumEinwahlWunschException : Exception
 public class ProfundumEnrollmentService
 {
     private readonly AfraAppContext _dbContext;
-    private readonly ILogger _logger;
-    private readonly UserService _userService;
     private readonly IEmailOutbox _emailOutbox;
+    private readonly ILogger _logger;
     private readonly IOptions<ProfundumConfiguration> _profundumConfiguration;
+    private readonly UserService _userService;
 
     /// <summary>
     ///     Constructs the EnrollmentService. Usually called by the DI container.
     /// </summary>
     public ProfundumEnrollmentService(AfraAppContext dbContext,
-        ILogger<ProfundumEnrollmentService> logger, UserService userService, IOptions<ProfundumConfiguration> profundumConfiguration, IEmailOutbox emailOutbox)
+        ILogger<ProfundumEnrollmentService> logger, UserService userService,
+        IOptions<ProfundumConfiguration> profundumConfiguration, IEmailOutbox emailOutbox)
     {
         _dbContext = dbContext;
         _logger = logger;
@@ -53,6 +58,7 @@ public class ProfundumEnrollmentService
         {
             return false;
         }
+
         var ret = blockiertQuartale.Intersect(quartale).Any();
         return ret;
     }
@@ -66,6 +72,7 @@ public class ProfundumEnrollmentService
         {
             return false;
         }
+
         var ret = profilQuartale.Intersect(quartale).Any();
         return ret;
     }
@@ -78,11 +85,13 @@ public class ProfundumEnrollmentService
         {
             return false;
         }
+
         var profilQuartale = _profundumConfiguration.Value.ProfilZulassung.GetValueOrDefault(klasse);
         if (profilQuartale is null)
         {
             return false;
         }
+
         var ret = profilQuartale.Intersect(quartale).Any();
         return ret;
     }
@@ -97,7 +106,7 @@ public class ProfundumEnrollmentService
             .Include(p => p.Slots)
             .Include(p => p.Profundum).ThenInclude(p => p.Kategorie)
             .Where(p => (p.Profundum.minKlasse == null || klasse >= p.Profundum.minKlasse)
-                    && (p.Profundum.maxKlasse == null || klasse <= p.Profundum.maxKlasse))
+                        && (p.Profundum.maxKlasse == null || klasse <= p.Profundum.maxKlasse))
             .Where(p => !p.Profundum.Kategorie.ProfilProfundum || profilPflichtig || profilZulässig)
             .ToArray()
             .Where(p => p.Slots.Any(s => slots.Any(sl => sl.Id == s.Id)))
@@ -110,10 +119,10 @@ public class ProfundumEnrollmentService
     {
         var now = DateTime.UtcNow;
         return _dbContext.ProfundumEinwahlZeitraeume
-        .Include(ez => ez.Slots)
-        .Where(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop)
-        .ToArray()
-        .FirstOrDefault(defaultValue: null);
+            .Include(ez => ez.Slots)
+            .Where(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop)
+            .ToArray()
+            .FirstOrDefault(defaultValue: null);
     }
 
     /// <summary>
@@ -158,15 +167,17 @@ public class ProfundumEnrollmentService
                 }}",
                 id = slot.ToString(),
                 options = profundumInstanzenBeginningInSlot
-                .OrderBy(x => !x.Profundum.Kategorie.ProfilProfundum)
-                .ThenBy(x => x.Profundum.Bezeichnung)
-                .Select(p => new BlockOption
-                {
-                    label = p.Slots.Count() <= 1 ? p.Profundum.Bezeichnung : $"{p.Profundum.Bezeichnung} ({p.Slots.Count()} Quartale)",
-                    value = p.Id,
-                    alsoIncludes = p.Slots.Order(new ProfundumSlotComparer()).Skip(1)
-                    .Select(s => s.ToString()).ToArray(),
-                }).ToArray(),
+                    .OrderBy(x => !x.Profundum.Kategorie.ProfilProfundum)
+                    .ThenBy(x => x.Profundum.Bezeichnung)
+                    .Select(p => new BlockOption
+                    {
+                        label = p.Slots.Count() <= 1
+                            ? p.Profundum.Bezeichnung
+                            : $"{p.Profundum.Bezeichnung} ({p.Slots.Count()} Quartale)",
+                        value = p.Id,
+                        alsoIncludes = p.Slots.Order(new ProfundumSlotComparer()).Skip(1)
+                            .Select(s => s.ToString()).ToArray()
+                    }).ToArray()
             });
         }
 
@@ -186,6 +197,7 @@ public class ProfundumEnrollmentService
         {
             throw new ProfundumEinwahlWunschException("Momentan keine offene Einschreibung");
         }
+
         var slots = einwahlZeitraum.Slots;
         if (slots is null)
         {
@@ -236,6 +248,7 @@ public class ProfundumEnrollmentService
                 {
                     throw new ProfundumEinwahlWunschException("Belegwunschstufe nicht definiert.");
                 }
+
                 var stufe = (ProfundumBelegWunschStufe)(i + 1);
 
                 if (angeboteUsed.Where(a => a.Id == l[i]).FirstOrDefault() is not null)
@@ -273,6 +286,7 @@ public class ProfundumEnrollmentService
                     {
                         throw new ProfundumEinwahlWunschException("Überlappende Slots in der Einwahl.");
                     }
+
                     einwahl[angebotSlot][stufeIndex] = angebot;
                 }
             }
@@ -303,7 +317,8 @@ public class ProfundumEnrollmentService
             }
         }
 
-        if (isProfilPflichtig(student, slots.Select(s => s.Quartal)) && !belegWuensche.Any(w => w.ProfundumInstanz.Profundum.Kategorie.ProfilProfundum))
+        if (isProfilPflichtig(student, slots.Select(s => s.Quartal)) &&
+            !belegWuensche.Any(w => w.ProfundumInstanz.Profundum.Kategorie.ProfilProfundum))
         {
             throw new ProfundumEinwahlWunschException("Profilprofundum nicht in auswahl enthalten");
         }
@@ -314,7 +329,8 @@ public class ProfundumEnrollmentService
             int n = belegWuensche.Count(b => b.ProfundumInstanz.Profundum.Kategorie == kat);
             if (n > kat.MaxProEinwahl)
             {
-                throw new ProfundumEinwahlWunschException($"Nur {kat.MaxProEinwahl} Profunda der Kategorie {kat.Bezeichnung} wählbar");
+                throw new ProfundumEinwahlWunschException(
+                    $"Nur {kat.MaxProEinwahl} Profunda der Kategorie {kat.Bezeichnung} wählbar");
             }
         }
 
@@ -342,7 +358,9 @@ public class ProfundumEnrollmentService
                 wuenscheString.AppendLine($"    {(int)b.Stufe}. {b.ProfundumInstanz.Profundum.Bezeichnung}");
             }
         }
-        await _emailOutbox.ScheduleNotificationAsync(student, "Deine Profunda Einwahl-Wünsche", wuenscheString.ToString(), TimeSpan.Zero);
+
+        await _emailOutbox.ScheduleNotificationAsync(student, "Deine Profunda Einwahl-Wünsche",
+            wuenscheString.ToString(), TimeSpan.Zero);
 
         _dbContext.ProfundaBelegWuensche.AddRange(belegWuensche);
         await _dbContext.SaveChangesAsync();
@@ -368,7 +386,8 @@ public class ProfundumEnrollmentService
         const char sep = '\t';
 
         var sb = new StringBuilder();
-        sb.AppendLine($"Klasse{sep} Name{sep} Vorname{slots.Select(s => s.ToString()).Aggregate("", (r, c) => $"{r}{sep} {c}")}");
+        sb.AppendLine(
+            $"Klasse{sep} Name{sep} Vorname{slots.Select(s => s.ToString()).Aggregate("", (r, c) => $"{r}{sep} {c}")}");
 
         foreach (var student in personen)
         {
@@ -377,9 +396,9 @@ public class ProfundumEnrollmentService
 
             sb.AppendLine($"{student.Gruppe}{sep} {student.Nachname}{sep} {student.Vorname}{slots.Select(s =>
                 student.ProfundaEinschreibungen
-                .Where(e => e.ProfundumInstanz.Slots.Any(sl => sl.Id == s.Id))
-                .Select(e => e.ProfundumInstanz.Profundum.Bezeichnung)
-                .First()
+                    .Where(e => e.ProfundumInstanz.Slots.Any(sl => sl.Id == s.Id))
+                    .Select(e => e.ProfundumInstanz.Profundum.Bezeichnung)
+                    .First()
             ).Aggregate("", (r, c) => $"{r}{sep} {c}")}");
         }
 
@@ -391,7 +410,8 @@ public class ProfundumEnrollmentService
     /// </summary>
     /// <param name="einwahlZeitraum">The einwahlZeitraum to apply the matching to</param>
     /// <param name="writeBackOnSuccess">Whether to write the enrollments to db on complete matching</param>
-    public async Task<MatchingStats> PerformMatching(ProfundumEinwahlZeitraum einwahlZeitraum, bool writeBackOnSuccess = false)
+    public async Task<MatchingStats> PerformMatching(ProfundumEinwahlZeitraum einwahlZeitraum,
+        bool writeBackOnSuccess = false)
     {
         if (einwahlZeitraum.HasBeenMatched)
         {
@@ -407,9 +427,9 @@ public class ProfundumEnrollmentService
         await _dbContext.SaveChangesAsync();
 
         var angebote = (await _dbContext.ProfundaInstanzen
-            .Include(pi => pi.Slots)
-            .Include(pi => pi.Profundum)
-            .ToArrayAsync())
+                .Include(pi => pi.Slots)
+                .Include(pi => pi.Profundum)
+                .ToArrayAsync())
             .Where(pi => pi.Slots.Any(s => slots.Any(sl => sl.Id == s.Id)))
             .ToArray();
         var belegwünsche = await _dbContext.ProfundaBelegWuensche
@@ -431,7 +451,8 @@ public class ProfundumEnrollmentService
         var objective = LinearExpr.NewBuilder();
         var objectiveWithoutLimits = LinearExpr.NewBuilder();
 
-        var weights = new Dictionary<ProfundumBelegWunschStufe, int> {
+        var weights = new Dictionary<ProfundumBelegWunschStufe, int>
+        {
             { ProfundumBelegWunschStufe.ErstWunsch, 100 },
             { ProfundumBelegWunschStufe.ZweitWunsch, 50 },
             { ProfundumBelegWunschStufe.DrittWunsch, 25 },
@@ -441,18 +462,22 @@ public class ProfundumEnrollmentService
         var belegVariablesWithoutLimits = new Dictionary<ProfundumBelegWunsch, BoolVar>();
         foreach (var wunsch in belegwünsche)
         {
-            belegVariables[wunsch] = model.NewBoolVar($"beleg-{wunsch.BetroffenePerson.Id}-{wunsch.ProfundumInstanz.Id}");
-            belegVariablesWithoutLimits[wunsch] = modelWithoutLimits.NewBoolVar($"beleg-{wunsch.BetroffenePerson.Id}-{wunsch.ProfundumInstanz.Id}");
+            belegVariables[wunsch] =
+                model.NewBoolVar($"beleg-{wunsch.BetroffenePerson.Id}-{wunsch.ProfundumInstanz.Id}");
+            belegVariablesWithoutLimits[wunsch] =
+                modelWithoutLimits.NewBoolVar($"beleg-{wunsch.BetroffenePerson.Id}-{wunsch.ProfundumInstanz.Id}");
         }
 
-        long notMatchedPenalty = einwahlZeitraum.Slots.Count() * weights[ProfundumBelegWunschStufe.ErstWunsch] * personen.Count();
+        long notMatchedPenalty = einwahlZeitraum.Slots.Count() * weights[ProfundumBelegWunschStufe.ErstWunsch] *
+                                 personen.Count();
         var PersonNotEnrolledVariables = new Dictionary<Person, BoolVar>();
         var PersonNotEnrolledVariablesWithoutLimits = new Dictionary<Person, BoolVar>();
         foreach (var student in personen)
         {
             PersonNotEnrolledVariables[student] = model.NewBoolVar($"beleg-{student.Id}-not-enrolled");
             objective.AddTerm(PersonNotEnrolledVariables[student], -notMatchedPenalty);
-            PersonNotEnrolledVariablesWithoutLimits[student] = modelWithoutLimits.NewBoolVar($"beleg-{student.Id}-not-enrolled");
+            PersonNotEnrolledVariablesWithoutLimits[student] =
+                modelWithoutLimits.NewBoolVar($"beleg-{student.Id}-not-enrolled");
             objectiveWithoutLimits.AddTerm(PersonNotEnrolledVariablesWithoutLimits[student], -notMatchedPenalty);
         }
 
@@ -466,7 +491,8 @@ public class ProfundumEnrollmentService
                     .Where(b => b.BetroffenePerson.Id == p.Id)
                     .Where(b => b.ProfundumInstanz.Slots.Contains(s)).ToArray();
                 var psBelegVar = psBeleg.Select(b => belegVariables[b]).Append(PersonNotEnrolledVariables[p]).ToArray();
-                var psBelegVarWithoutLimits = psBeleg.Select(b => belegVariablesWithoutLimits[b]).Append(PersonNotEnrolledVariablesWithoutLimits[p]).ToArray();
+                var psBelegVarWithoutLimits = psBeleg.Select(b => belegVariablesWithoutLimits[b])
+                    .Append(PersonNotEnrolledVariablesWithoutLimits[p]).ToArray();
                 model.AddExactlyOne(psBelegVar);
                 modelWithoutLimits.AddExactlyOne(psBelegVarWithoutLimits);
                 for (int i = 0; i < psBeleg.Length; ++i)
@@ -485,8 +511,10 @@ public class ProfundumEnrollmentService
             var pBeleg = belegwünsche
                 .Where(b => b.BetroffenePerson.Id == profundumPflichtigePerson.Id)
                 .Where(b => b.ProfundumInstanz.Profundum.Kategorie.ProfilProfundum);
-            model.AddAtLeastOne(pBeleg.Select(b => belegVariables[b]).Append(PersonNotEnrolledVariables[profundumPflichtigePerson]));
-            modelWithoutLimits.AddAtLeastOne(pBeleg.Select(b => belegVariablesWithoutLimits[b]).Append(PersonNotEnrolledVariablesWithoutLimits[profundumPflichtigePerson]));
+            model.AddAtLeastOne(pBeleg.Select(b => belegVariables[b])
+                .Append(PersonNotEnrolledVariables[profundumPflichtigePerson]));
+            modelWithoutLimits.AddAtLeastOne(pBeleg.Select(b => belegVariablesWithoutLimits[b])
+                .Append(PersonNotEnrolledVariablesWithoutLimits[profundumPflichtigePerson]));
         }
 
         // Maximal MaxEinschreibungen Einschreibungen pro ProfundumInstanz
@@ -530,9 +558,11 @@ public class ProfundumEnrollmentService
 
         if (resultStatus != CpSolverStatus.Optimal && resultStatus != CpSolverStatus.Feasible)
         {
-            if (resultStatusWithoutLimits != CpSolverStatus.Optimal && resultStatusWithoutLimits != CpSolverStatus.Feasible)
+            if (resultStatusWithoutLimits != CpSolverStatus.Optimal &&
+                resultStatusWithoutLimits != CpSolverStatus.Feasible)
             {
-                throw new ArgumentException("No solution found in Matching likely due to errors in non-capacity constraints.");
+                throw new ArgumentException(
+                    "No solution found in Matching likely due to errors in non-capacity constraints.");
             }
             else
             {
@@ -543,10 +573,10 @@ public class ProfundumEnrollmentService
 
         var matchingResultStatus = (solver.ObjectiveValue, solverWithoutLimits.ObjectiveValue) switch
         {
-            ( >= 0, >= 0) => MatchingResultStatus.MatchingFound,
-            ( < 0, >= 0) => MatchingResultStatus.MatchingIncompleteDueToCapacity,
-            ( < 0, < 0) => MatchingResultStatus.MatchingIncompleteDueToHardConstraints,
-            _ => throw new System.Diagnostics.UnreachableException()
+            (>= 0, >= 0) => MatchingResultStatus.MatchingFound,
+            (< 0, >= 0) => MatchingResultStatus.MatchingIncompleteDueToCapacity,
+            (< 0, < 0) => MatchingResultStatus.MatchingIncompleteDueToHardConstraints,
+            _ => throw new UnreachableException()
         };
 
 
@@ -577,70 +607,78 @@ public class ProfundumEnrollmentService
             Result = matchingResultStatus,
             ObjectiveValue = solver.ObjectiveValue,
             ObjectiveValueNoLimits = solverWithoutLimits.ObjectiveValue,
-            Optim = solverWithoutLimits.ObjectiveValue == 0 ? 0 : solver.ObjectiveValue / solverWithoutLimits.ObjectiveValue,
+            Optim = solverWithoutLimits.ObjectiveValue == 0
+                ? 0
+                : solver.ObjectiveValue / solverWithoutLimits.ObjectiveValue,
             Students = personen.ToDictionary(
-                    p => $"{p.Gruppe}: {p.Vorname} {p.Nachname}",
-                    p =>
+                p => $"{p.Gruppe}: {p.Vorname} {p.Nachname}",
+                p =>
+                {
+                    double score = belegwünsche
+                        .Where(x => x.BetroffenePerson.Id == p.Id)
+                        .Select(bw =>
+                            solver.Value(belegVariables[bw]) * weights[bw.Stufe] * bw.ProfundumInstanz.Slots.Count())
+                        .Sum();
+                    double scorePossible = belegwünsche
+                        .Where(x => x.BetroffenePerson.Id == p.Id)
+                        .Select(bw =>
+                            solverWithoutLimits.Value(belegVariablesWithoutLimits[bw]) * weights[bw.Stufe] *
+                            bw.ProfundumInstanz.Slots.Count()).Sum();
+                    return new StudentMatchingStats
                     {
-                        double score = belegwünsche
-                            .Where(x => x.BetroffenePerson.Id == p.Id)
-                            .Select(bw => solver.Value(belegVariables[bw]) * weights[bw.Stufe] * bw.ProfundumInstanz.Slots.Count()).Sum();
-                        double scorePossible = belegwünsche
-                            .Where(x => x.BetroffenePerson.Id == p.Id)
-                            .Select(bw => solverWithoutLimits.Value(belegVariablesWithoutLimits[bw]) * weights[bw.Stufe] * bw.ProfundumInstanz.Slots.Count()).Sum();
-                        return new StudentMatchingStats
-                        {
-                            optim = scorePossible == 0 ? 0 : score / scorePossible,
-                            einschreibungen = slots.ToDictionary(s => s.ToString(),
-                                s => _dbContext.ProfundaEinschreibungen.
-                                Include(e => e.ProfundumInstanz).ThenInclude(p => p.Profundum)
+                        optim = scorePossible == 0 ? 0 : score / scorePossible,
+                        einschreibungen = slots.ToDictionary(s => s.ToString(),
+                            s => _dbContext.ProfundaEinschreibungen.Include(e => e.ProfundumInstanz)
+                                .ThenInclude(p => p.Profundum)
                                 .Where(e => e.BetroffenePerson == p)
                                 .Where(e => e.ProfundumInstanz.Slots.Contains(s))
                                 .Select(e => e.ProfundumInstanz.Profundum.Bezeichnung).ToArray()
-                                ),
-                            Wuensche = slots.ToDictionary(s => s.ToString(),
-                                s => _dbContext.ProfundaBelegWuensche
+                        ),
+                        Wuensche = slots.ToDictionary(s => s.ToString(),
+                            s => _dbContext.ProfundaBelegWuensche
                                 .Include(e => e.ProfundumInstanz).ThenInclude(p => p.Profundum)
                                 .Where(e => e.BetroffenePerson == p)
                                 .Where(e => e.ProfundumInstanz.Slots.Contains(s))
                                 .ToArray()
                                 .OrderBy(e => (int)e.Stufe)
                                 .Select(e => e.ProfundumInstanz.Profundum.Bezeichnung).ToArray()
-                                )
-                        };
-                    }),
+                        )
+                    };
+                }),
             Profunda = angebote
-            .Where(a => _dbContext.ProfundaEinschreibungen
-                            .Include(e => e.ProfundumInstanz)
-                            .Where(e => e.ProfundumInstanz.Id == a.Id)
-                            .Count() > 0)
-            .ToDictionary(a => $"{a.Slots.First().ToString()} {a.Profundum.Bezeichnung} {a.Id}", a => new ProfundumMatchingStats
-            {
-                Einschreibungen = _dbContext.ProfundaEinschreibungen
+                .Where(a => _dbContext.ProfundaEinschreibungen
+                    .Include(e => e.ProfundumInstanz)
+                    .Where(e => e.ProfundumInstanz.Id == a.Id)
+                    .Count() > 0)
+                .ToDictionary(a => $"{a.Slots.First().ToString()} {a.Profundum.Bezeichnung} {a.Id}", a =>
+                    new ProfundumMatchingStats
+                    {
+                        Einschreibungen = _dbContext.ProfundaEinschreibungen
                             .Include(e => e.ProfundumInstanz)
                             .Where(e => e.ProfundumInstanz.Id == a.Id)
                             .Count(),
-                MaxEinschreibungen = a.MaxEinschreibungen,
-            }),
-            NotMatchedStudents = personen.Where(p => solver.Value(PersonNotEnrolledVariables[p]) > 0).Select(
-                    p => $"{p.Gruppe}: {p.Vorname} {p.Nachname}").ToList(),
+                        MaxEinschreibungen = a.MaxEinschreibungen
+                    }),
+            NotMatchedStudents = personen.Where(p => solver.Value(PersonNotEnrolledVariables[p]) > 0)
+                .Select(p => $"{p.Gruppe}: {p.Vorname} {p.Nachname}").ToList()
         };
     }
 
     ///
-    public async Task<IEnumerable<User.Domain.DTO.PersonInfoMinimal>> GetMissingStudentsAsync(ICollection<Guid> slotIds)
+    public async Task<IEnumerable<PersonInfoMinimal>> GetMissingStudentsAsync(ICollection<Guid> slotIds)
     {
         var slots = await _dbContext.ProfundaSlots.Where(s => slotIds.Contains(s.Id)).ToArrayAsync();
         return (await _dbContext.Personen
-            .Include(p => p.ProfundaBelegwuensche).ThenInclude(bw => bw.ProfundumInstanz).ThenInclude(pi => pi.Slots)
-            .Where(p => p.Rolle == User.Domain.Models.Rolle.Mittelstufe)
-            .Where(p => !p.ProfundaBelegwuensche
+                .Include(p => p.ProfundaBelegwuensche).ThenInclude(bw => bw.ProfundumInstanz)
+                .ThenInclude(pi => pi.Slots)
+                .Where(p => p.Rolle == Rolle.Mittelstufe)
+                .Where(p => !p.ProfundaBelegwuensche
                     .Where(bw => bw.ProfundumInstanz.Slots.Any(s => slotIds.Any(sl => sl == s.Id)))
                     .Where(bw => !bw.ProfundumInstanz.Slots.Any(s => !slotIds.Any(sl => sl == s.Id)))
                     .Any())
-            .AsSplitQuery().ToArrayAsync())
+                .AsSplitQuery().ToArrayAsync())
             .Where(p => !isProfundumBlockiert(p, slots.Select(s => s.Quartal)))
-            .Select(p => new User.Domain.DTO.PersonInfoMinimal(p));
+            .Select(p => new PersonInfoMinimal(p));
     }
 
     ///
@@ -648,26 +686,30 @@ public class ProfundumEnrollmentService
     {
         var slots = await _dbContext.ProfundaSlots.Where(s => slotIds.Contains(s.Id)).ToArrayAsync();
         return (await _dbContext.Personen
-            .Include(p => p.ProfundaBelegwuensche).ThenInclude(bw => bw.ProfundumInstanz).ThenInclude(pi => pi.Slots)
-            .Where(p => p.Rolle == User.Domain.Models.Rolle.Mittelstufe)
-            .Where(p => !p.ProfundaBelegwuensche
+                .Include(p => p.ProfundaBelegwuensche).ThenInclude(bw => bw.ProfundumInstanz)
+                .ThenInclude(pi => pi.Slots)
+                .Where(p => p.Rolle == Rolle.Mittelstufe)
+                .Where(p => !p.ProfundaBelegwuensche
                     .Where(bw => bw.ProfundumInstanz.Slots.Any(s => slotIds.Any(sl => sl == s.Id)))
                     .Where(bw => !bw.ProfundumInstanz.Slots.Any(s => !slotIds.Any(sl => sl == s.Id)))
                     .Any())
-            .AsSplitQuery().ToArrayAsync())
+                .AsSplitQuery().ToArrayAsync())
             .Where(p => !isProfundumBlockiert(p, slots.Select(s => s.Quartal)))
             .Select(p => p.Email);
     }
 
     ///
-    public async Task<Dictionary<string, DTOProfundumDefinition>> GetEnrollment(Person student, ICollection<Guid> slotIds)
+    public async Task<Dictionary<string, DTOProfundumDefinition>> GetEnrollment(Person student,
+        ICollection<Guid> slotIds)
     {
-        return (await _dbContext.ProfundaSlots.Where(s => slotIds.Contains(s.Id)).ToArrayAsync()).ToDictionary(s => s.ToString(), s =>
-                    _dbContext.ProfundaEinschreibungen
+        return (await _dbContext.ProfundaSlots.Where(s => slotIds.Contains(s.Id)).ToArrayAsync()).ToDictionary(
+            s => s.ToString(), s =>
+                _dbContext.ProfundaEinschreibungen
                     .Include(pe => pe.ProfundumInstanz).ThenInclude(pi => pi.Profundum).ThenInclude(p => p.Kategorie)
                     .Where(pe => pe.BetroffenePerson.Id == student.Id)
                     .Where(p => p.ProfundumInstanz.Slots.Contains(s))
-                    .Select(pe => new DTOProfundumDefinition { Bezeichnung = pe.ProfundumInstanz.Profundum.Bezeichnung })
+                    .Select(pe => new DTOProfundumDefinition
+                        { Bezeichnung = pe.ProfundumInstanz.Profundum.Bezeichnung })
                     .First());
     }
 }
