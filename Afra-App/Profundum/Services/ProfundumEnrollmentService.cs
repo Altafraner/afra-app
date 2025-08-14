@@ -609,7 +609,7 @@ public class ProfundumEnrollmentService
     }
 
     ///
-    public async Task<IEnumerable<User.Domain.DTO.PersonInfoMinimal>> GetMissingStudents(ICollection<Guid> slotIds)
+    public async Task<IEnumerable<User.Domain.DTO.PersonInfoMinimal>> GetMissingStudentsAsync(ICollection<Guid> slotIds)
     {
         var slots = await _dbContext.ProfundaSlots.Where(s => slotIds.Contains(s.Id)).ToArrayAsync();
         return (await _dbContext.Personen
@@ -622,6 +622,22 @@ public class ProfundumEnrollmentService
             .AsSplitQuery().ToArrayAsync())
             .Where(p => !isProfundumBlockiert(p, slots.Select(s => s.Quartal)))
             .Select(p => new User.Domain.DTO.PersonInfoMinimal(p));
+    }
+
+    ///
+    public async Task<IEnumerable<string>> GetMissingStudentsEmailsAsync(ICollection<Guid> slotIds)
+    {
+        var slots = await _dbContext.ProfundaSlots.Where(s => slotIds.Contains(s.Id)).ToArrayAsync();
+        return (await _dbContext.Personen
+            .Include(p => p.ProfundaBelegwuensche).ThenInclude(bw => bw.ProfundumInstanz).ThenInclude(pi => pi.Slots)
+            .Where(p => p.Rolle == User.Domain.Models.Rolle.Mittelstufe)
+            .Where(p => !p.ProfundaBelegwuensche
+                    .Where(bw => bw.ProfundumInstanz.Slots.Any(s => slotIds.Any(sl => sl == s.Id)))
+                    .Where(bw => !bw.ProfundumInstanz.Slots.Any(s => !slotIds.Any(sl => sl == s.Id)))
+                    .Any())
+            .AsSplitQuery().ToArrayAsync())
+            .Where(p => !isProfundumBlockiert(p, slots.Select(s => s.Quartal)))
+            .Select(p => p.Email);
     }
 
     ///

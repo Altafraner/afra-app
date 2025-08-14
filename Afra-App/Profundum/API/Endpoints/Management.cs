@@ -27,6 +27,7 @@ public static class Management
         group.MapPut("/instanz", AddInstanzAsync);
 
         group.MapGet("/missing", GetUnenrolledAsync);
+        group.MapGet("/missing/emails", GetUnenrolledEmailsAsync);
         group.MapGet("/matching", MatchingAsync);
         group.MapGet("/matching.csv", MatchingAsyncCSV);
     }
@@ -147,7 +148,27 @@ public static class Management
         }
         var slots = einwahlZeitraum.Slots.Select(s => s.Id).ToArray();
 
-        var result = await enrollmentService.GetMissingStudents(slots);
+        var result = await enrollmentService.GetMissingStudentsAsync(slots);
+        return Results.Ok(result);
+    }
+
+    ///
+    private static async Task<IResult> GetUnenrolledEmailsAsync(ProfundumEnrollmentService enrollmentService,
+           UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
+    {
+        var now = DateTime.UtcNow;
+        var einwahlZeitraum = (await dbContext.ProfundumEinwahlZeitraeume
+            .Include(ez => ez.Slots)
+            .Where(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop)
+            .ToArrayAsync())
+            .FirstOrDefault((ProfundumEinwahlZeitraum?)null);
+        if (einwahlZeitraum is null)
+        {
+            return Results.NotFound("Kein offener Einwahlzeitraum");
+        }
+        var slots = einwahlZeitraum.Slots.Select(s => s.Id).ToArray();
+
+        var result = await enrollmentService.GetMissingStudentsEmailsAsync(slots);
         return Results.Ok(result);
     }
 }
