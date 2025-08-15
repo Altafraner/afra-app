@@ -305,15 +305,15 @@ public class OtiumEndpointService
         }));
 
         return enrollments.Select(e => (e.Termin.Block.SchemaId, new DTO_Einschreibung
-        {
-            Block = _blockHelper.Get(e.Termin.Block.SchemaId)!.Bezeichnung,
-            Datum = e.Termin.Block.SchultagKey,
-            KategorieId = e.Termin.Otium.Kategorie.Id,
-            Ort = e.Termin.Ort,
-            Otium = e.Termin.Otium.Bezeichnung,
-            TerminId = e.Termin.Id,
-            Anwesenheit = blocksDoneOrRunning.Contains(e.Termin.Block.Id) ? attendances[e.Termin.Block.Id] : null
-        }))
+            {
+                Block = _blockHelper.Get(e.Termin.Block.SchemaId)!.Bezeichnung,
+                Datum = e.Termin.Block.SchultagKey,
+                KategorieId = e.Termin.Otium.Kategorie.Id,
+                Ort = e.Termin.Ort,
+                Otium = e.Termin.Otium.Bezeichnung,
+                TerminId = e.Termin.Id,
+                Anwesenheit = blocksDoneOrRunning.Contains(e.Termin.Block.Id) ? attendances[e.Termin.Block.Id] : null
+            }))
             .Concat(additionalEnrollments)
             .OrderBy(e => e.Item2.Datum)
             .ThenBy(e => e.SchemaId)
@@ -379,7 +379,8 @@ public class OtiumEndpointService
         foreach (var termin in termine)
             terminPreviews.Add(
                 new LehrerTerminPreview(termin.Id, termin.Otium.Bezeichnung, termin.Ort,
-                    await _enrollmentService.GetLoadPercent(termin), termin.Block.Schultag.Datum, termin.Block.SchemaId)
+                    await _enrollmentService.GetLoadPercent(termin), termin.Block.Schultag.Datum,
+                    _blockHelper.Get(termin.Block.SchemaId)!.Bezeichnung)
             );
 
         return new LehrerUebersicht(terminPreviews, menteePreviews);
