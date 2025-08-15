@@ -1,9 +1,10 @@
 ﻿FROM node:alpine AS build
 WORKDIR /app
 
-COPY ./ .
-
+COPY package.json package-lock.json ./
 RUN npm install
+
+COPY ./ .
 RUN npm run build
 
 FROM docker.io/nginx:alpine
