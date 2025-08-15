@@ -260,9 +260,9 @@ await fetchData()
   </grid>
   <div class="flex justify-between items-end gap-3 flex-wrap mt-3">
     <h2>Einschreibungen</h2>
-    <Button v-if="!aufsichtRunning" icon="pi pi-eye" label="Aufsicht" severity="secondary"
-            @click="startAufsicht"/>
-    <Button v-else icon="pi pi-stop" label="Aufsicht beenden" severity="success"
+    <Button v-if="!aufsichtRunning" icon="pi pi-eye" label="Anwesenheitskontrolle"
+            severity="secondary" @click="startAufsicht"/>
+    <Button v-else icon="pi pi-stop" label="Anwesenheitskontrolle abschließen" severity="success"
             @click="stopAufsicht"/>
   </div>
   <AfraOtiumEnrollmentTable :enrollments="otium.einschreibungen"
