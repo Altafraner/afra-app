@@ -419,7 +419,7 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
 
         var metadata = _blockHelper.Get(block.SchemaId)!;
         return TimeOnly.FromDateTime(DateTime.Now)
-            .IsBetween(metadata.Interval.Start, metadata.Interval.Start.AddMinutes(25));
+            .IsBetween(metadata.Interval.Start.AddMinutes(-10), metadata.Interval.End.AddMinutes(3));
     }
 
     internal static string TerminGroupName(Guid terminId)
