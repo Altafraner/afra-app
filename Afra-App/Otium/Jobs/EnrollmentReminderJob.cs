@@ -34,6 +34,8 @@ internal sealed class EnrollmentReminderJob : RetryJob
 
     protected override async Task ExecuteAsync(IJobExecutionContext context, int _)
     {
+        if (!_otiumConfiguration.Value.EnrollmentReminder.Enabled) return;
+
         var now = DateTime.Now;
         var tomorrow = DateOnly.FromDateTime(now.AddDays(1));
         var hasRun = context.JobDetail.JobDataMap.TryGetDateTime("last_run", out var lastRun);

@@ -43,6 +43,8 @@ internal sealed class MissingStudentNotificationJob : RetryJob
 
     protected override async Task ExecuteAsync(IJobExecutionContext context, int _)
     {
+        if (!_otiumConfiguration.Value.MissingStudentsReport.Enabled) return;
+
         var blockId = context.MergedJobDataMap.GetGuidValueFromString("block");
         var schemaId = context.MergedJobDataMap.GetChar("block_schema");
         var schema = _blockHelper.Get(schemaId)!;

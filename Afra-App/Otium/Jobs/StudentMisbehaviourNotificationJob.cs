@@ -53,9 +53,11 @@ internal sealed class StudentMisbehaviourNotificationJob : RetryJob
     /// <inheritdoc />
     protected override async Task ExecuteAsync(IJobExecutionContext context, int _)
     {
+        if (!_otiumConfiguration.Value.StudentMisbehaviourNotification.Enabled) return;
+
         var now = DateTime.Now;
         var hasRun = context.JobDetail.JobDataMap.TryGetDateTime("last_run", out var lastRun);
-        if (!hasRun && TimeOnly.FromDateTime(now) < _otiumConfiguration.Value.EnrollmentReminder.Time)
+        if (!hasRun && TimeOnly.FromDateTime(now) < _otiumConfiguration.Value.StudentMisbehaviourNotification.Time)
         {
             _logger.LogWarning(
                 "Student Misbehaviour job was scheduled before the default reminder time. Skipping execution.");
