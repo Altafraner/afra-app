@@ -50,7 +50,16 @@ var app = builder.Build();
 
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
-    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor
+                       | ForwardedHeaders.XForwardedProto
+                       | ForwardedHeaders.XForwardedHost,
+    KnownNetworks =
+    {
+        IPNetwork.Parse("10.0.0.0/8"),
+        IPNetwork.Parse("172.16.0.0/12"),
+        IPNetwork.Parse("192.168.0.0/16"),
+        IPNetwork.Parse("fc00::/7")
+    }
 });
 
 app.MapPrometheusScrapingEndpoint();
