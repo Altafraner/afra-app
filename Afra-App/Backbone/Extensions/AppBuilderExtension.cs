@@ -1,14 +1,13 @@
 using System.Security.Cryptography;
 using Afra_App.Backbone.Authentication;
 using Afra_App.Backbone.Email.Extensions;
+using Afra_App.Backbone.Scheduler.Extensions;
 using Afra_App.Backbone.Utilities;
 using Afra_App.User.Domain.Models;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-using Quartz;
-using Quartz.AspNetCore;
 
 namespace Afra_App.Backbone.Extensions;
 
@@ -105,24 +104,6 @@ public static class AppBuilderExtension
             Console.WriteLine($"Could not load certificate for Domain Protection {exception.Message}");
             Environment.Exit(1);
         }
-    }
-
-    private static void AddScheduler(this WebApplicationBuilder builder)
-    {
-        builder.Services.AddQuartz(q =>
-            {
-                q.UsePersistentStore(storeOptions =>
-                    {
-                        var conString = builder.Configuration.GetConnectionString("DefaultConnection")!;
-                        storeOptions.UsePostgres(pgOptions =>
-                            pgOptions.ConnectionString = conString
-                        );
-                        storeOptions.UseSystemTextJsonSerializer();
-                    }
-                );
-            }
-        );
-        builder.Services.AddQuartzServer(options => { options.WaitForJobsToComplete = true; });
     }
 
     private static void AddDatabase(this WebApplicationBuilder builder)
