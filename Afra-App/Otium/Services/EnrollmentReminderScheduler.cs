@@ -1,4 +1,5 @@
 using Afra_App.Otium.Configuration;
+using Afra_App.Otium.Jobs;
 using Microsoft.Extensions.Options;
 using Quartz;
 

@@ -60,20 +60,3 @@ public class LdapAutoSyncScheduler : BackgroundService
         _logger.LogInformation("LDAP Sync Job scheduled.");
     }
 }
-
-internal class LdapAutoSyncJob : IJob
-{
-    private readonly IServiceProvider _serviceProvider;
-
-    public LdapAutoSyncJob(IServiceProvider serviceProvider)
-    {
-        _serviceProvider = serviceProvider;
-    }
-
-    public async Task Execute(IJobExecutionContext context)
-    {
-        using var scope = _serviceProvider.CreateScope();
-        var ldapService = scope.ServiceProvider.GetRequiredService<LdapService>();
-        await ldapService.SynchronizeAsync();
-    }
-}

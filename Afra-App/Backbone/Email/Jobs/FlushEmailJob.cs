@@ -1,4 +1,5 @@
 using Afra_App.Backbone.Email.Services.Contracts;
+using Afra_App.Backbone.Scheduler.Templates;
 using Quartz;
 
 namespace Afra_App.Backbone.Email.Jobs;
@@ -6,50 +7,28 @@ namespace Afra_App.Backbone.Email.Jobs;
 /// <summary>
 /// A job that sends a report via email.
 /// </summary>
-[PersistJobDataAfterExecution]
-public class FlushEmailJob : IJob
+internal sealed class FlushEmailJob : RetryJob
 {
     private readonly IEmailService _emailService;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="FlushEmailJob"/> class. Called by DI.
-    /// </summary>
-    public FlushEmailJob(IEmailService emailService)
+    public FlushEmailJob(IEmailService emailService, ILogger<FlushEmailJob> logger) : base(logger)
     {
         _emailService = emailService;
     }
 
-    /// <inheritdoc />
-    public async Task Execute(IJobExecutionContext context)
+    protected override int MaxRetryCount => 3;
+
+    protected override async Task ExecuteAsync(IJobExecutionContext context, int _)
     {
-        try
-        {
-            var subject = context.MergedJobDataMap.GetString("subject");
-            var body = context.MergedJobDataMap.GetString("body");
-            var recipient = context.MergedJobDataMap.GetString("recipient");
-            if (string.IsNullOrEmpty(subject) || string.IsNullOrEmpty(body) || string.IsNullOrEmpty(recipient))
-                throw new JobExecutionException("Subject, body, and recipient must be provided for the report job.")
-                {
-                    RefireImmediately = false
-                };
-
-            await _emailService.SendEmailAsync(recipient, subject, body);
-        }
-        catch (Exception e) when (e is not JobExecutionException)
-        {
-            var hasRetryCount = context.MergedJobDataMap.TryGetIntValue("retryCount", out var retryCount);
-            if (!hasRetryCount) retryCount = 0;
-            if (retryCount < 3)
+        var subject = context.MergedJobDataMap.GetString("subject");
+        var body = context.MergedJobDataMap.GetString("body");
+        var recipient = context.MergedJobDataMap.GetString("recipient");
+        if (string.IsNullOrEmpty(subject) || string.IsNullOrEmpty(body) || string.IsNullOrEmpty(recipient))
+            throw new JobExecutionException("Subject, body, and recipient must be provided for the report job.")
             {
-                context.JobDetail.JobDataMap.Put("retryCount", retryCount + 1);
-                var trigger = TriggerBuilder.Create()
-                    .ForJob(context.JobDetail.Key)
-                    .UsingJobData("retryCount", retryCount + 1)
-                    .StartAt(DateTimeOffset.Now.AddMinutes(3 * (retryCount + 1)));
-                await context.Scheduler.RescheduleJob(context.Trigger.Key, trigger.Build());
-            }
+                RefireImmediately = false
+            };
 
-            throw new JobExecutionException(e, false);
-        }
+        await _emailService.SendEmailAsync(recipient, subject, body);
     }
 }

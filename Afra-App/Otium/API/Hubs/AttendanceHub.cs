@@ -3,6 +3,7 @@ using Afra_App.Otium.Domain.DTO;
 using Afra_App.Otium.Domain.HubClients;
 using Afra_App.Otium.Domain.Models;
 using Afra_App.Otium.Domain.Models.Schuljahr;
+using Afra_App.Otium.Jobs;
 using Afra_App.Otium.Services;
 using Afra_App.User.Domain.DTO;
 using Afra_App.User.Domain.Models;

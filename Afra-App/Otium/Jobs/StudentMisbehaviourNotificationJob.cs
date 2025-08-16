@@ -1,21 +1,22 @@
 using System.Runtime.CompilerServices;
 using System.Text;
 using Afra_App.Backbone.Email.Services.Contracts;
+using Afra_App.Backbone.Scheduler.Templates;
 using Afra_App.Otium.Configuration;
 using Afra_App.Otium.Domain.Models;
 using Afra_App.Otium.Domain.Models.Schuljahr;
+using Afra_App.Otium.Services;
 using Afra_App.User.Domain.Models;
 using Afra_App.User.Services;
 using Microsoft.Extensions.Options;
 using Quartz;
 
-namespace Afra_App.Otium.Services;
+namespace Afra_App.Otium.Jobs;
 
 /// <summary>
 ///     A job that notifies mentors about student misbehaviour.
 /// </summary>
-[PersistJobDataAfterExecution]
-public class StudentMisbehaviourNotificationJob : IJob
+internal sealed class StudentMisbehaviourNotificationJob : RetryJob
 {
     private readonly IAttendanceService _attendanceService;
     private readonly BlockHelper _blockHelper;
@@ -33,7 +34,7 @@ public class StudentMisbehaviourNotificationJob : IJob
     public StudentMisbehaviourNotificationJob(ILogger<StudentMisbehaviourNotificationJob> logger,
         IEmailOutbox emailOutbox, IAttendanceService attendanceService, EnrollmentService enrollmentService,
         SchuljahrService schuljahrService, UserService userService, BlockHelper blockHelper, AfraAppContext dbContext,
-        IOptions<OtiumConfiguration> otiumConfiguration)
+        IOptions<OtiumConfiguration> otiumConfiguration) : base(logger)
     {
         _logger = logger;
         _emailOutbox = emailOutbox;
@@ -46,9 +47,11 @@ public class StudentMisbehaviourNotificationJob : IJob
         _otiumConfiguration = otiumConfiguration;
     }
 
+    protected override int MaxRetryCount => 3;
+
     /// <exception cref="ArgumentOutOfRangeException"></exception>
     /// <inheritdoc />
-    public async Task Execute(IJobExecutionContext context)
+    protected override async Task ExecuteAsync(IJobExecutionContext context, int _)
     {
         var now = DateTime.Now;
         var hasRun = context.JobDetail.JobDataMap.TryGetDateTime("last_run", out var lastRun);
@@ -67,25 +70,9 @@ public class StudentMisbehaviourNotificationJob : IJob
 
         _logger.LogInformation("Running student misbehaviour job at {Time}", now);
 
-        try
-        {
-            await DoWork(context);
-            context.JobDetail.JobDataMap.Put("last_run", now);
-            _logger.LogInformation("Student misbehaviour job completed successfully.");
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "An error occurred while executing the StudentMisbehaviourNotificationJob");
-            context.JobDetail.JobDataMap.TryGetIntValue("retry_count", out var retryCount);
-            var retry = retryCount < 2;
-            context.JobDetail.JobDataMap.Put("retry_count", retry ? retryCount + 1 : 0);
-            if (retry) _logger.LogInformation("Retrying job execution, attempt {RetryCount}", retryCount + 1);
-            throw new JobExecutionException(e, retry)
-            {
-                UnscheduleAllTriggers = false,
-                UnscheduleFiringTrigger = false
-            };
-        }
+        await DoWork(context);
+        context.JobDetail.JobDataMap.Put("last_run", now);
+        _logger.LogInformation("Student misbehaviour job completed successfully.");
     }
 
     private async Task DoWork(IJobExecutionContext context)

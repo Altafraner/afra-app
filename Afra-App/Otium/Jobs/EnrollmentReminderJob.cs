@@ -1,15 +1,17 @@
 using Afra_App.Backbone.Email.Services.Contracts;
+using Afra_App.Backbone.Scheduler.Templates;
 using Afra_App.Otium.Configuration;
+using Afra_App.Otium.Services;
 using Afra_App.User.Domain.Models;
 using Microsoft.Extensions.Options;
 using Quartz;
 
-namespace Afra_App.Otium.Services;
+namespace Afra_App.Otium.Jobs;
 
 /// <summary>
 /// A background job that sends reminders to users about their missing enrollments in Otium events.
 /// </summary>
-public class EnrollmentReminderJob : IJob
+internal sealed class EnrollmentReminderJob : RetryJob
 {
     private readonly IEmailOutbox _emailOutbox;
     private readonly EnrollmentService _enrollmentService;
@@ -20,7 +22,7 @@ public class EnrollmentReminderJob : IJob
     /// Constructor for the EnrollmentReminderJob. Called by the DI container.
     /// </summary>
     public EnrollmentReminderJob(ILogger<EnrollmentReminderJob> logger, EnrollmentService enrollmentService,
-        IEmailOutbox emailOutbox, IOptions<OtiumConfiguration> otiumConfiguration)
+        IEmailOutbox emailOutbox, IOptions<OtiumConfiguration> otiumConfiguration) : base(logger)
     {
         _logger = logger;
         _enrollmentService = enrollmentService;
@@ -28,8 +30,9 @@ public class EnrollmentReminderJob : IJob
         _otiumConfiguration = otiumConfiguration;
     }
 
-    /// <inheritdoc />
-    public async Task Execute(IJobExecutionContext context)
+    protected override int MaxRetryCount => 3;
+
+    protected override async Task ExecuteAsync(IJobExecutionContext context, int _)
     {
         var now = DateTime.Now;
         var tomorrow = DateOnly.FromDateTime(now.AddDays(1));
@@ -49,34 +52,21 @@ public class EnrollmentReminderJob : IJob
 
         _logger.LogInformation("Running enrollment reminder job at {Time}", now);
 
-        try
+        var missing = (await _enrollmentService.GetNotEnrolledPersonsForDayAsync(tomorrow))
+            .Where(p => p.Rolle == Rolle.Mittelstufe)
+            .ToList();
+        _logger.LogInformation("Found {Count} persons without enrollments for tomorrow.", missing.Count);
+
+        foreach (var person in missing)
         {
-            var missing = (await _enrollmentService.GetNotEnrolledPersonsForDayAsync(tomorrow))
-                .Where(p => p.Rolle == Rolle.Mittelstufe)
-                .ToList();
-            _logger.LogInformation("Found {Count} persons without enrollments for tomorrow.", missing.Count);
+            const string subject = "Fehlende Anmeldungen zum Otium";
+            const string body =
+                "Du hast dich für morgen noch nicht für alle Otiums-Blöcke eingeschrieben. Bitte hole das schnellstmöglich nach.";
 
-            foreach (var person in missing)
-            {
-                const string subject = "Fehlende Anmeldungen zum Otium";
-                const string body =
-                    "Du hast dich für morgen noch nicht für alle Otiums-Blöcke eingeschrieben. Bitte hole das schnellstmöglich nach.";
-
-                await _emailOutbox.ScheduleNotificationAsync(person.Id, subject, body, TimeSpan.FromMinutes(5));
-            }
-
-            context.JobDetail.JobDataMap.Put("last_run", now);
-            _logger.LogInformation("Enrollment reminder job completed successfully.");
+            await _emailOutbox.ScheduleNotificationAsync(person.Id, subject, body, TimeSpan.FromMinutes(5));
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "An error occurred while executing the enrollment reminder job.");
-            throw new JobExecutionException(ex)
-            {
-                RefireImmediately = false,
-                UnscheduleFiringTrigger = false,
-                UnscheduleAllTriggers = false
-            };
-        }
+
+        context.JobDetail.JobDataMap.Put("last_run", now);
+        _logger.LogInformation("Enrollment reminder job completed successfully.");
     }
 }

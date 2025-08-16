@@ -31,7 +31,7 @@
         <PackageReference Include="Quartz.Serialization.SystemTextJson" Version="3.14.0"/>
         <PackageReference Include="Swashbuckle.AspNetCore" Version="7.3.1"/>
         <PackageReference Include="System.DirectoryServices.Protocols" Version="9.0.3"/>
-        <PackageReference Include="Google.OrTools" Version="9.13.4784" />
+        <PackageReference Include="Google.OrTools" Version="9.13.4784"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -42,6 +42,12 @@
 
     <ItemGroup>
         <Folder Include="Migrations\"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Update="Backbone\Scheduler\Templates\RetryJob.Client.cs">
+            <DependentUpon>RetryJob.cs</DependentUpon>
+        </Compile>
     </ItemGroup>
 
 </Project>
