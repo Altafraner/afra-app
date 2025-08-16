@@ -198,12 +198,12 @@ public class EnrollmentService
         var blockList = blocks.ToList();
 
         var notEnrolledBlocks = from block in _dbContext.Blocks
-                                where blockList.Contains(block)
-                                join einschreibung in _dbContext.OtiaEinschreibungen
-                                    on block.Id equals einschreibung.Termin.Block.Id
-                                    into einschreibungen
-                                where einschreibungen.All(e => e.BetroffenePerson != user)
-                                select block.SchemaId;
+            where blockList.Contains(block)
+            join einschreibung in _dbContext.OtiaEinschreibungen
+                on block.Id equals einschreibung.Termin.Block.Id
+                into einschreibungen
+            where einschreibungen.All(e => e.BetroffenePerson != user)
+            select block.SchemaId;
 
         foreach (var schemaId in notEnrolledBlocks)
         {
@@ -220,7 +220,8 @@ public class EnrollmentService
     /// <param name="blocks">The blocks to check for</param>
     /// <param name="einschreibungen">The enrollments the user is enrolled in</param>
     /// <returns>A timeline containing all times the user must enroll in but has not done so.</returns>
-    public Timeline<TimeOnly> GetNotEnrolledTimes(IEnumerable<Block> blocks, IEnumerable<OtiumEinschreibung> einschreibungen)
+    public Timeline<TimeOnly> GetNotEnrolledTimes(IEnumerable<Block> blocks,
+        IEnumerable<OtiumEinschreibung> einschreibungen)
     {
         var timeline = new Timeline<TimeOnly>();
         var enrolledBlocks = einschreibungen
@@ -242,7 +243,8 @@ public class EnrollmentService
     /// </summary>
     /// <param name="enrollments">The users enrollment</param>
     /// <param name="blocks">All blocks the user should be enrolled in</param>
-    public IEnumerable<Block> GetNotEnrolledBlocks(IEnumerable<OtiumEinschreibung> enrollments, IEnumerable<Block> blocks)
+    public IEnumerable<Block> GetNotEnrolledBlocks(IEnumerable<OtiumEinschreibung> enrollments,
+        IEnumerable<Block> blocks)
     {
         var enrolledBlocks = enrollments
             .Select(e => e.Termin.Block.Id)
@@ -597,8 +599,14 @@ public class EnrollmentService
             return (false, "Ein interner Fehler ist aufgetreten");
         }
 
+        var now = DateTime.Now;
+
         var startDateTime = new DateTime(termin.Block.Schultag.Datum, schema.Interval.Start);
-        if (startDateTime <= DateTime.Now) return (false, "Der Termin hat bereits begonnen.");
+        if (startDateTime <= now) return (false, "Der Termin hat bereits begonnen.");
+
+        var einschreibungsDateTime = new DateTime(termin.Block.Schultag.Datum, schema.EinschreibenBis);
+        if (einschreibungsDateTime < now)
+            return (false, "Die Einschreibung für diesen Block ist bereits beendet.");
 
         if (user.Rolle is not Rolle.Mittelstufe and not Rolle.Oberstufe)
             return (false, "Nur Schüler:innen können sich einschreiben.");
