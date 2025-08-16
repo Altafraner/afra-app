@@ -1,7 +1,6 @@
 using System.Security.Cryptography;
 using Afra_App.Backbone.Authentication;
-using Afra_App.Backbone.Configuration;
-using Afra_App.Backbone.Services.Email;
+using Afra_App.Backbone.Email.Extensions;
 using Afra_App.Backbone.Utilities;
 using Afra_App.User.Domain.Models;
 using Microsoft.AspNetCore.DataProtection;
@@ -23,17 +22,12 @@ public static class AppBuilderExtension
     /// </summary>
     public static void AddBackbone(this WebApplicationBuilder builder)
     {
-        builder.Services.AddOptions<EmailConfiguration>()
-            .Bind(builder.Configuration.GetSection("SMTP"))
-            .Validate(EmailConfiguration.Validate)
-            .ValidateOnStart();
         builder.AddAuthentication();
         builder.AddAuthorization();
         builder.AddScheduler();
         builder.AddDatabase();
+        builder.AddEmail();
         builder.ConfigureDataProtection();
-        builder.Services.AddTransient<IEmailService, SmtpEmailService>();
-        builder.Services.AddTransient<IEmailOutbox, EmailOutbox>();
     }
 
     private static void AddAuthentication(this WebApplicationBuilder builder)

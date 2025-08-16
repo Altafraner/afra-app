@@ -1,6 +1,6 @@
 using System.Text;
 using Afra_App.Backbone.Domain.TimeInterval;
-using Afra_App.Backbone.Services.Email;
+using Afra_App.Backbone.Email.Services.Contracts;
 using Afra_App.Otium.Domain.DTO;
 using Afra_App.Otium.Domain.DTO.Dashboard;
 using Afra_App.Otium.Domain.DTO.Katalog;

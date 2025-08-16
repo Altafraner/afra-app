@@ -1,6 +1,6 @@
 using Afra_App.User.Domain.Models;
 
-namespace Afra_App.Backbone.Services.Email;
+namespace Afra_App.Backbone.Email.Services.Contracts;
 
 /// <summary>
 ///     An interface representing a batching email notification sender

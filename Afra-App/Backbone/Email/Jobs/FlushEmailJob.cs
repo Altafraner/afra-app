@@ -1,6 +1,7 @@
+using Afra_App.Backbone.Email.Services.Contracts;
 using Quartz;
 
-namespace Afra_App.Backbone.Services.Email;
+namespace Afra_App.Backbone.Email.Jobs;
 
 /// <summary>
 /// A job that sends a report via email.

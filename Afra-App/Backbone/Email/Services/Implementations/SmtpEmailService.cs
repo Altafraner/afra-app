@@ -1,10 +1,11 @@
-using Afra_App.Backbone.Configuration;
+using Afra_App.Backbone.Email.Configuration;
+using Afra_App.Backbone.Email.Services.Contracts;
 using MailKit.Net.Smtp;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using MimeKit.Text;
 
-namespace Afra_App.Backbone.Services.Email;
+namespace Afra_App.Backbone.Email.Services.Implementations;
 
 /// <summary>
 ///     An email sending service

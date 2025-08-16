@@ -1,4 +1,4 @@
-using Afra_App.Backbone.Services.Email;
+using Afra_App.Backbone.Email.Services.Contracts;
 using Afra_App.Otium.Configuration;
 using Afra_App.User.Domain.Models;
 using Microsoft.Extensions.Options;

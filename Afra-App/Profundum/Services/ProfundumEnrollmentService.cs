@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using System.Text;
-using Afra_App.Backbone.Services.Email;
+using Afra_App.Backbone.Email.Services.Contracts;
 using Afra_App.Profundum.Configuration;
 using Afra_App.Profundum.Domain.DTO;
 using Afra_App.Profundum.Domain.Models;

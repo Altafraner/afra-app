@@ -1,4 +1,4 @@
-using Afra_App.Backbone.Domain.Email;
+using Afra_App.Backbone.Email.Domain.Models;
 using Afra_App.Otium.Domain.Models;
 using Afra_App.Otium.Domain.Models.Schuljahr;
 using Afra_App.Profundum.Domain.Models;

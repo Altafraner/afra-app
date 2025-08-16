@@ -1,4 +1,4 @@
-namespace Afra_App.Backbone.Services.Email;
+namespace Afra_App.Backbone.Email.Services.Contracts;
 
 /// <summary>
 ///     An interface representing an email sender

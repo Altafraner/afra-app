@@ -1,6 +1,6 @@
 using System.DirectoryServices.Protocols;
 using System.Net;
-using Afra_App.Backbone.Services.Email;
+using Afra_App.Backbone.Email.Services.Contracts;
 using Afra_App.Backbone.Utilities;
 using Afra_App.User.Configuration.LDAP;
 using Afra_App.User.Domain.Models;
