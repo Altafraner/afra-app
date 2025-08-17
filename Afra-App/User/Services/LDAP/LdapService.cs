@@ -282,7 +282,7 @@ public class LdapService
     {
         if (!entry.TryGetGuid(out var objGuid))
         {
-            _logger.LogError("Failed to obtain objectGuid, skipping");
+            _logger.LogError("Failed to obtain objectGuid for user {dn}, skipping", entry.DistinguishedName);
             user = null;
             return false;
         }
@@ -292,7 +292,7 @@ public class LdapService
         var mail = entry.GetSingleAttribute("mail");
 
         if (givenName is null || surname is null || mail is null)
-            _logger.LogWarning("User {guid} has missing attributes, filling with empty strings", objGuid);
+            _logger.LogWarning("User {dn} has missing attributes, filling with empty strings", entry.DistinguishedName);
 
         givenName ??= "";
         surname ??= "";
