@@ -390,7 +390,7 @@ public class EnrollmentService
 
         return termin.MaxEinschreibungen == null
             ? null
-            : (int)Math.Round((double)numEnrollments / termin.MaxEinschreibungen.Value) * 100;
+            : (int)Math.Round((double)numEnrollments / termin.MaxEinschreibungen.Value * 100);
     }
 
     /// <summary>
