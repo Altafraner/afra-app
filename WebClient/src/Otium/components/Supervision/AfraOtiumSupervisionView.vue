@@ -79,7 +79,7 @@ function initMove(student, terminId) {
     },
     data: {
       student,
-      angebote: computed(() => attendance.value.filter(termin => termin.terminId !== '00000000-0000-0000-0000-000000000000')),
+      angebote: attendance.value,
       canMoveNow: !useDataFromQuery.value
     },
     onClose: move
@@ -87,6 +87,10 @@ function initMove(student, terminId) {
 
   function move({data}) {
     if (!data) return;
+    if (data.all && data.destination === "00000000-0000-0000-0000-000000000000") {
+      attendanceService.unenroll(student.id, terminId)
+      return
+    }
     if (data.all) {
       attendanceService.moveStudent(student.id, data.destination)
       return

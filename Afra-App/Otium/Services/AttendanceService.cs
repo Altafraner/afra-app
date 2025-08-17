@@ -56,26 +56,38 @@ public class AttendanceService : IAttendanceService
         var blockIdWrapper = await _dbContext.OtiaTermine
             .AsNoTracking()
             .Where(t => t.Id == terminId)
-            .Select(t => new { t.Block.Id })
+            .Select(t => new { t.Block.Id, t.Block.SchemaId })
             .FirstOrDefaultAsync();
         if (blockIdWrapper is null)
             throw new KeyNotFoundException($"Termin ID {terminId} not found");
 
         var blockId = blockIdWrapper.Id;
+        var schema = _blockHelper.Get(blockIdWrapper.SchemaId)!;
 
-        var persons = await _dbContext.OtiaEinschreibungen
-            .AsNoTracking()
-            .Include(e => e.BetroffenePerson)
-            .Where(e => e.Termin.Id == terminId)
-            .Select(e => e.BetroffenePerson)
-            .OrderBy(e => e.Vorname)
-            .ThenBy(e => e.Nachname)
-            .ToListAsync();
+        var now = DateTime.Now;
+        var time = TimeOnly.FromDateTime(now);
+        var isBlockRunning = schema.Interval.ToDateTimeInterval(DateOnly.FromDateTime(now)).Contains(now);
+
+        var personsQuery = (await _dbContext.OtiaEinschreibungen
+                .AsNoTracking()
+                .Include(e => e.BetroffenePerson)
+                .Where(e => e.Termin.Id == terminId)
+                .Select(e => new { e.BetroffenePerson, e.Interval })
+                .OrderBy(e => e.BetroffenePerson.Vorname)
+                .ThenBy(e => e.BetroffenePerson.Nachname)
+                .ToListAsync())
+            .AsEnumerable();
+
+
+        if (isBlockRunning)
+            personsQuery = personsQuery
+                .Where(e => e.Interval.Start <= time && e.Interval.End >= time);
+
+        var persons = personsQuery.Select(e => e.BetroffenePerson);
 
         var attendances = await _dbContext.OtiaAnwesenheiten
             .AsNoTracking()
-            .Where(a => persons.Select(e => e.Id).Contains(a.StudentId) &&
-                        a.BlockId == blockId)
+            .Where(a => persons.Select(e => e.Id).Contains(a.StudentId) && a.BlockId == blockId)
             .ToDictionaryAsync(a => a.StudentId, a => new { a.Status });
 
         return persons.ToDictionary(p => p,
@@ -91,7 +103,7 @@ public class AttendanceService : IAttendanceService
             .AsNoTracking()
             .Where(b => b.Id == blockId)
             .Select(b => new
-            { b.SchemaId, SindAnwesenheitenFehlernderErfasst = b.SindAnwesenheitenFehlernderKontrolliert })
+                { b.SchemaId, SindAnwesenheitenFehlernderErfasst = b.SindAnwesenheitenFehlernderKontrolliert })
             .FirstOrDefaultAsync();
 
         if (block is null)

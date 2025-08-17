@@ -480,7 +480,10 @@ public class EnrollmentService
             .FirstOrDefaultAsync(t => t.Id == toTerminId);
 
         if (toTermin == null)
-            throw new KeyNotFoundException("Der Termin konnte nicht gefunden werden.");
+        {
+            await _dbContext.SaveChangesAsync();
+            return;
+        }
 
         if (toTermin.Block.SchultagKey != today)
             throw new InvalidOperationException(

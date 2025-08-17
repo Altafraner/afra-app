@@ -130,6 +130,10 @@ export function useAttendance(scope, id, toastService = {add: () => undefined}) 
     await sendMessage('MoveStudent', studentId, terminId)
   }
 
+  async function sendUnenroll(studentId, terminId) {
+    await sendMessage('ForceUnenroll', studentId, terminId)
+  }
+
   async function sendMoveNow(studentId, fromTerminId, toTerminId) {
     await sendMessage('MoveStudentNow', studentId, fromTerminId, toTerminId)
   }
@@ -149,6 +153,7 @@ export function useAttendance(scope, id, toastService = {add: () => undefined}) 
     updateAlternatives,
     moveStudent: sendMove,
     moveStudentNow: sendMoveNow,
+    unenroll: sendUnenroll,
     stop: close
   };
 }

@@ -7,6 +7,7 @@ using Afra_App.Otium.Jobs;
 using Afra_App.Otium.Services;
 using Afra_App.User.Domain.DTO;
 using Afra_App.User.Domain.Models;
+using Afra_App.User.Services;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Quartz;
@@ -225,7 +226,7 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
     /// <param name="terminId">The id of the termin to find alternatives to</param>
     /// <param name="dbContext">From DI</param>
     /// <returns></returns>
-    public async Task<List<MinimalTermin>> GetTerminAlternatives(Guid terminId, AfraAppContext dbContext)
+    public async Task<IEnumerable<MinimalTermin>> GetTerminAlternatives(Guid terminId, AfraAppContext dbContext)
     {
         var termin = await dbContext.OtiaTermine
             .Include(t => t.Block)
@@ -244,7 +245,8 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
                 t.Tutor != null ? new PersonInfoMinimal(t.Tutor) : null, t.Ort))
             .ToListAsync();
 
-        return alternatives;
+        return alternatives
+            .Prepend(new MinimalTermin(Guid.Empty, "Nicht eingeschrieben", null, "FEHLEND"));
     }
 
     /// <summary>
@@ -346,6 +348,24 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
         }
     }
 
+    /// <summary>
+    /// Unenrolls a student from a specific termin.
+    /// </summary>
+    public async Task ForceUnenroll(Guid studentId, Guid fromTerminId, EnrollmentService enrollmentService,
+        UserService userService, AfraAppContext dbContext)
+    {
+        var block = await dbContext.OtiaTermine
+            .Where(t => t.Id == fromTerminId)
+            .Select(t => t.Block)
+            .FirstOrDefaultAsync();
+        if (block is null || !HasAuthorityOverBlockAsync(block))
+            throw new HubException("You do not have permission to unenroll students in this block.");
+
+        var user = await userService.GetUserByIdAsync(studentId);
+        await enrollmentService.UnenrollAsync(fromTerminId, user, true);
+        await SendUpdateToAffected(block.Id, fromTerminId);
+    }
+
     private async Task UpdateAttendance(OtiumAnwesenheitsStatus status, Guid studentId, Guid blockId, Guid terminId)
     {
         await _attendanceService.SetAttendanceForStudentInBlockAsync(studentId, blockId, status);
@@ -388,6 +408,11 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
         var enrollments = await _attendanceService.GetAttendanceForTerminAsync(terminId);
         return enrollments.Select(entry => new LehrerEinschreibung(new PersonInfoMinimal(entry.Key), entry.Value))
             .ToList();
+    }
+
+    private Task SendUpdateToAffected(Guid blockId, Guid terminId)
+    {
+        return SendUpdateToAffected(blockId, Guid.Empty, terminId);
     }
 
     private async Task SendUpdateToAffected(Guid blockId, Guid fromTerminId, Guid toTerminId)

@@ -34,6 +34,7 @@ const aufsichtRunning = ref(false);
 const alternatives = ref([]);
 const moveStudent = ref(() => undefined);
 const moveStudentNow = ref(() => undefined);
+const unenroll = ref(() => undefined);
 const updateAlternatives = ref(() => undefined);
 
 const maxEnrollmentsSetzenSelected = ref(false)
@@ -41,7 +42,7 @@ const maxEnrollmentsSelected = ref(null)
 const betreuerZuweisenSelected = ref(false)
 const ort = ref()
 const personSelected = ref(null)
-const updateStatusFunction = ref((studentId, status) => undefined);
+const updateStatusFunction = ref(() => undefined);
 const stopAufsicht = ref(() => undefined);
 
 const navItems = computed(() => [
@@ -124,6 +125,7 @@ async function startAufsicht() {
   });
   moveStudent.value = aufsicht.moveStudent;
   moveStudentNow.value = aufsicht.moveStudentNow;
+  unenroll.value = aufsicht.unenroll;
   updateStatusFunction.value = aufsicht.updateAttendance;
   updateAlternatives.value = aufsicht.updateAlternatives;
   stopAufsicht.value = async () => {
@@ -138,6 +140,7 @@ async function startAufsicht() {
     updateStatusFunction.value = () => undefined;
     moveStudent.value = () => undefined;
     moveStudentNow.value = () => undefined;
+    unenroll.value = () => undefined;
     updateAlternatives.value = () => undefined;
   }
 }
@@ -179,6 +182,10 @@ const initMove = async (student) => {
   async function move({data}) {
     console.log(data)
     if (!data) return;
+    if (data.all && data.destination === "00000000-0000-0000-0000-000000000000") {
+      unenroll.value(student.id, otium.value.id)
+      return
+    }
     if (data.all) {
       moveStudent.value(student.id, data.destination)
       return
@@ -260,10 +267,12 @@ await fetchData()
   </grid>
   <div class="flex justify-between items-end gap-3 flex-wrap mt-3">
     <h2>Einschreibungen</h2>
-    <Button v-if="!aufsichtRunning" icon="pi pi-eye" label="Anwesenheitskontrolle"
-            severity="secondary" @click="startAufsicht"/>
-    <Button v-else icon="pi pi-stop" label="Anwesenheitskontrolle abschließen" severity="success"
-            @click="stopAufsicht"/>
+    <template v-if="otium.isRunning || user.user.berechtigungen.includes('Otiumsverantwortlich')">
+      <Button v-if="!aufsichtRunning" icon="pi pi-eye" label="Anwesenheitskontrolle"
+              severity="secondary" @click="startAufsicht"/>
+      <Button v-else icon="pi pi-stop" label="Anwesenheitskontrolle abschließen" severity="success"
+              @click="stopAufsicht"/>
+    </template>
   </div>
   <AfraOtiumEnrollmentTable :enrollments="otium.einschreibungen"
                             :may-edit-attendance="aufsichtRunning"
