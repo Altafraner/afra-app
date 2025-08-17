@@ -83,11 +83,12 @@ public class AttendanceService : IAttendanceService
             personsQuery = personsQuery
                 .Where(e => e.Interval.Start <= time && e.Interval.End >= time);
 
-        var persons = personsQuery.Select(e => e.BetroffenePerson);
+        var persons = personsQuery.Select(e => e.BetroffenePerson).ToList();
+        var personIds = persons.Select(p => p.Id).ToHashSet();
 
         var attendances = await _dbContext.OtiaAnwesenheiten
             .AsNoTracking()
-            .Where(a => persons.Select(e => e.Id).Contains(a.StudentId) && a.BlockId == blockId)
+            .Where(a => personIds.Contains(a.StudentId) && a.BlockId == blockId)
             .ToDictionaryAsync(a => a.StudentId, a => new { a.Status });
 
         return persons.ToDictionary(p => p,

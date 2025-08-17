@@ -462,7 +462,11 @@ public class OtiumEndpointService
             currentBlock = null;
         }
 
+        var today = DateOnly.FromDateTime(DateTime.Today);
+
         var isRunning = currentBlock is not null && currentBlock.Id == termin.Block.Id;
+        var isDoneOrRunning = today >= termin.Block.SchultagKey
+                              && _blockHelper.IsBlockDoneOrRunning(termin.Block);
 
         return new LehrerTermin
         {
@@ -477,6 +481,7 @@ public class OtiumEndpointService
             MaxEinschreibungen = termin.MaxEinschreibungen,
             IstAbgesagt = termin.IstAbgesagt,
             IsRunning = isRunning,
+            IsDoneOrRunning = isDoneOrRunning,
             Tutor = termin.Tutor is not null ? new PersonInfoMinimal(termin.Tutor) : null,
             Einschreibungen = anwesenheiten.Select(e =>
                 new LehrerEinschreibung(new PersonInfoMinimal(e.Key), e.Value))

@@ -157,7 +157,7 @@ public class EnrollmentService
     ///     system components only.
     /// </param>
     /// <param name="save">If true, will persist changes to database. Useful for bulk operations.</param>
-    /// <returns>null, if the user may not enroll with the given parameters; Otherwise the termin the user has enrolled in.</returns>
+    /// <returns>null, if the user may not enroll with the given parameters; Otherwise the termin the user has unenrolled from.</returns>
     public async Task<OtiumTermin?> UnenrollAsync(Guid terminId, Person student, bool force = false, bool save = true)
     {
         var enrollment = await _dbContext.OtiaEinschreibungen

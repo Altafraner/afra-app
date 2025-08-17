@@ -7,6 +7,7 @@ import {
   InputNumber,
   InputText,
   ToggleSwitch,
+  useConfirm,
   useDialog,
   useToast
 } from "primevue";
@@ -28,6 +29,7 @@ const loading = ref(true);
 const user = useUser()
 const toast = useToast()
 const dialog = useDialog();
+const confirm = useConfirm();
 const otium = ref(null);
 
 const aufsichtRunning = ref(false);
@@ -194,6 +196,33 @@ const initMove = async (student) => {
   }
 }
 
+const openConfirmDialog = (event, callback, message, severity = "danger") => {
+  confirm.require({
+    target: event.currentTarget,
+    message: message,
+    icon: 'pi pi-exclamation-triangle',
+    acceptProps: {
+      label: 'Ja',
+      severity: severity
+    },
+    rejectProps: {
+      label: 'Nein',
+      severity: 'secondary'
+    },
+    accept: callback
+  });
+}
+
+const initRemove = async (evt, student) => {
+  openConfirmDialog(evt, remove.bind(this, student), "Schüler:in ausschreiben?");
+
+  async function remove(student) {
+    const api = mande(`/api/otium/management/termin/${props.terminId}/student`);
+    await api.post({value: student.id});
+    await fetchData();
+  }
+}
+
 await fetchData()
 </script>
 
@@ -277,7 +306,9 @@ await fetchData()
   <AfraOtiumEnrollmentTable :enrollments="otium.einschreibungen"
                             :may-edit-attendance="aufsichtRunning"
                             :update-function="updateAttendanceCallback"
-                            show-attendance show-transfer @init-move="initMove"/>
+                            :show-remove="!otium.isDoneOrRunning"
+                            show-attendance show-transfer
+                            @remove="initRemove" @init-move="initMove"/>
 </template>
 
 <style scoped>
