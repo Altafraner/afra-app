@@ -1,4 +1,5 @@
 using Afra_App.Backbone.Domain.TimeInterval;
+using Afra_App.Backbone.Email.Services.Contracts;
 using Afra_App.Otium.Domain.DTO.Katalog;
 using Afra_App.Otium.Domain.Models;
 using Afra_App.Otium.Domain.Models.Schuljahr;
@@ -22,6 +23,7 @@ public class EnrollmentService
     private readonly AfraAppContext _dbContext;
     private readonly KategorieService _kategorieService;
     private readonly ILogger _logger;
+    private readonly IEmailOutbox _outbox;
     private readonly UserService _userService;
 
     /// <summary>
@@ -30,13 +32,15 @@ public class EnrollmentService
     public EnrollmentService(AfraAppContext dbContext,
         KategorieService kategorieService,
         ILogger<EnrollmentService> logger,
-        BlockHelper blockHelper, UserService userService)
+        BlockHelper blockHelper, UserService userService,
+        IEmailOutbox outbox)
     {
         _dbContext = dbContext;
         _kategorieService = kategorieService;
         _logger = logger;
         _blockHelper = blockHelper;
         _userService = userService;
+        _outbox = outbox;
     }
 
     /// <summary>
@@ -164,6 +168,9 @@ public class EnrollmentService
             .Include(e => e.Termin)
             .ThenInclude(t => t.Block)
             .ThenInclude(b => b.Schultag)
+            .Include(e => e.Termin)
+            .ThenInclude(t => t.Otium)
+            .Include(e => e.BetroffenePerson)
             .FirstOrDefaultAsync(e => e.BetroffenePerson.Id == student.Id && e.Termin.Id == terminId);
 
         if (enrollment == null) return null;
@@ -181,7 +188,20 @@ public class EnrollmentService
 
         _dbContext.OtiaEinschreibungen.Remove(enrollment);
 
-        if (save) await _dbContext.SaveChangesAsync();
+        if (!save) return enrollment.Termin;
+
+        await _dbContext.SaveChangesAsync();
+
+        var sendNotification = force && !_blockHelper.IsBlockDoneOrRunning(enrollment.Termin.Block);
+        if (sendNotification)
+            await _outbox.ScheduleNotificationAsync(enrollment.BetroffenePerson, "Abmeldung von Termin",
+                $"""
+                 Du wurdest aus dem Termin {enrollment.Termin.Otium.Bezeichnung} am {enrollment.Termin.Block.Schultag.Datum:dd.MM.yyyy} im Block {_blockHelper.Get(enrollment.Termin.Block.SchemaId)?.Bezeichnung ?? "unbekannt"} abgemeldet.
+
+                 Schreibe dich für den Block ggf. erneut ein.
+                 """,
+                TimeSpan.FromMinutes(5));
+
         return enrollment.Termin;
     }
 

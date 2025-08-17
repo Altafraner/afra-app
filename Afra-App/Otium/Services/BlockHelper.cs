@@ -49,7 +49,7 @@ public class BlockHelper
         var today = DateOnly.FromDateTime(now);
         var nowTime = TimeOnly.FromDateTime(now);
 
-        return block.SchultagKey < today ||
-               (block.SchultagKey == today && Get(block.SchemaId)!.Interval.Start < nowTime);
+        return block.SchultagKey < today
+               || (block.SchultagKey == today && Get(block.SchemaId)!.Interval.Start <= nowTime);
     }
 }
