@@ -260,8 +260,9 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
     /// <param name="toTerminId">The id of the termin to move the student to</param>
     /// <param name="enrollmentService">From DI</param>
     /// <param name="dbContext">From DI</param>
+    /// <param name="userService">From DI</param>
     public async Task MoveStudentNow(Guid studentId, Guid fromTerminId, Guid toTerminId,
-        EnrollmentService enrollmentService, AfraAppContext dbContext)
+        EnrollmentService enrollmentService, AfraAppContext dbContext, UserService userService)
     {
         if (fromTerminId == toTerminId)
             return;
@@ -270,14 +271,16 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
             .Where(t => t.Id == fromTerminId)
             .Select(t => t.Block)
             .FirstOrDefaultAsync();
-        var toBlock = await dbContext.OtiaTermine
+        var toData = await dbContext.OtiaTermine
             .Where(t => t.Id == toTerminId)
-            .Select(t => t.Block)
+            .Select(t => new { t.Block, t.Otium.Bezeichnung })
             .FirstOrDefaultAsync();
-        if ((fromBlock is null && fromTerminId != Guid.Empty) || (toBlock is null && toTerminId != Guid.Empty))
+
+        var blockId = fromBlock?.Id ?? toData?.Block.Id;
+        if ((fromBlock is null && fromTerminId != Guid.Empty) || (toData is null && toTerminId != Guid.Empty))
             throw new HubException("One of the termin IDs provided was not found in the database.");
-        if ((fromBlock is not null && toBlock is not null && fromBlock.Id != toBlock.Id) ||
-            (fromBlock is null && toBlock is null))
+        if ((fromBlock is not null && toData is not null && fromBlock.Id != toData.Block.Id) ||
+            blockId is null)
         {
             _logger.LogWarning(
                 "Someone tried to move a student ({studentId}) from a termin ({fromTerminId}) to a termin ({toTerminId}) that is not in the same block",
@@ -285,7 +288,7 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
             throw new HubException("The termin is not in the same block as the target termin.");
         }
 
-        if (fromBlock is not null ? !HasAuthorityOverBlockAsync(fromBlock) : !HasAuthorityOverBlockAsync(toBlock!))
+        if (fromBlock is not null ? !HasAuthorityOverBlockAsync(fromBlock) : !HasAuthorityOverBlockAsync(toData!.Block))
         {
             _logger.LogWarning(
                 "User {userId} tried to move student {studentId} from termin {fromTerminId} to termin {toTerminId} without authority",
@@ -296,7 +299,19 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
         try
         {
             await enrollmentService.ForceMoveNow(studentId, fromTerminId, toTerminId);
-            await SendUpdateToAffected(fromBlock?.Id ?? toBlock!.Id, fromTerminId, toTerminId);
+            await _attendanceService.SetAttendanceForStudentInBlockAsync(studentId, blockId.Value,
+                OtiumAnwesenheitsStatus.Fehlend);
+            if (toTerminId != Guid.Empty)
+                await _attendanceService.SetStatusForTerminAsync(toTerminId, false);
+            else
+                await _attendanceService.SetStatusForMissingPersonsAsync(blockId.Value, false);
+
+            var student = await userService.GetUserByIdAsync(studentId);
+            await SendNotificationToAffected("Schüler:in verschoben", toData is not null
+                    ? $"{student.Vorname} {student.Nachname} wurde zum Termin „{toData.Bezeichnung}“ verschoben."
+                    : $"{student.Vorname} {student.Nachname} wurde ausgetragen.",
+                blockId.Value, fromTerminId, toTerminId);
+            await SendUpdateToAffected(blockId.Value, fromTerminId, toTerminId);
         }
         catch (KeyNotFoundException)
         {
@@ -318,18 +333,19 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
     /// <param name="toTerminId">The id of the termin to move the user to</param>
     /// <param name="enrollmentService">From DI</param>
     /// <param name="dbContext">From DI</param>
+    /// <param name="userService">From DI</param>
     public async Task MoveStudent(Guid studentId, Guid toTerminId, EnrollmentService enrollmentService,
-        AfraAppContext dbContext)
+        AfraAppContext dbContext, UserService userService)
     {
-        var toBlock = await dbContext.OtiaTermine
+        var toData = await dbContext.OtiaTermine
             .Where(t => t.Id == toTerminId)
-            .Select(t => t.Block)
+            .Select(t => new { t.Block, t.Otium.Bezeichnung })
             .FirstOrDefaultAsync();
 
-        if (toBlock is null)
+        if (toData is null)
             throw new HubException("One of the termin IDs provided was not found in the database.");
 
-        if (!HasAuthorityOverBlockAsync(toBlock))
+        if (!HasAuthorityOverBlockAsync(toData.Block))
         {
             _logger.LogWarning(
                 "User {userId} tried to move student {studentId} to termin {toTerminId} without authority",
@@ -340,7 +356,12 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
         try
         {
             var (fromTerminId, blockId) = await enrollmentService.ForceMove(studentId, toTerminId);
+            await _attendanceService.SetStatusForTerminAsync(toTerminId, false);
+            var student = await userService.GetUserByIdAsync(studentId);
             await SendUpdateToAffected(blockId, fromTerminId, toTerminId);
+            await SendNotificationToAffected("Schüler:in verschoben",
+                $"{student.Vorname} {student.Nachname} wurde zum Termin „{toData.Bezeichnung}“ verschoben.",
+                blockId, fromTerminId, toTerminId);
         }
         catch (KeyNotFoundException)
         {
@@ -363,7 +384,11 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
 
         var user = await userService.GetUserByIdAsync(studentId);
         await enrollmentService.UnenrollAsync(fromTerminId, user, true);
+        await _attendanceService.SetStatusForMissingPersonsAsync(block.Id, false);
         await SendUpdateToAffected(block.Id, fromTerminId);
+        await SendNotificationToAffected("Schüler:in verschoben",
+            $"{user.Vorname} {user.Nachname} wurde ausgetragen.",
+            block.Id, fromTerminId, Guid.Empty);
     }
 
     private async Task UpdateAttendance(OtiumAnwesenheitsStatus status, Guid studentId, Guid blockId, Guid terminId)
@@ -413,6 +438,18 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
     private Task SendUpdateToAffected(Guid blockId, Guid terminId)
     {
         return SendUpdateToAffected(blockId, Guid.Empty, terminId);
+    }
+
+    private async Task SendNotificationToAffected(string subject, string message, Guid blockId, Guid fromTerminId,
+        Guid toTerminId)
+    {
+        var notification =
+            new IAttendanceHubClient.Notification(subject, message, IAttendanceHubClient.NotificationSeverity.Info);
+        await Clients.Groups(BlockGroupName(blockId)).Notify(notification);
+        if (fromTerminId != Guid.Empty)
+            await Clients.Groups(TerminGroupName(fromTerminId)).Notify(notification);
+        if (toTerminId != Guid.Empty)
+            await Clients.Groups(TerminGroupName(toTerminId)).Notify(notification);
     }
 
     private async Task SendUpdateToAffected(Guid blockId, Guid fromTerminId, Guid toTerminId)
