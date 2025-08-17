@@ -159,7 +159,7 @@ await setup();
     </p>
     <Button v-if="otium.istAbgesagt" disabled icon="pi pi-exclamation-triangle" label="Abgesagt"
             severity="danger" variant="text"/>
-    <template v-else-if="otium.einschreibung.eingeschrieben">
+    <div v-else-if="otium.einschreibung.eingeschrieben" class="flex flex-col gap-3 items-end">
       <Button v-if="otium.einschreibung.kannBearbeiten" :disabled="buttonLoading"
               :loading="buttonLoading"
               icon="pi pi-times"
@@ -167,7 +167,14 @@ await setup();
               variant="text" @click="() => unenroll()"/>
       <Button v-else v-tooltip.left="otium.einschreibung.grund" disabled icon="pi pi-times"
               label="Austragen" severity="danger" variant="text"/>
-    </template>
+      <Button v-tooltip="'Coming soon!'"
+              :loading="buttonLoading"
+              disabled
+              icon="pi pi-clipboard"
+              label="Notiz hinzufügen"
+              severity="secondary"
+              variant="text"/>
+    </div>
     <template v-else>
       <div v-if="otium.einschreibung.kannBearbeiten" class="flex flex-col gap-3 items-end">
         <Button :disabled="buttonLoading"
