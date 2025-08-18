@@ -94,7 +94,7 @@ public class ManagementService
     /// </summary>
     public async Task<List<Person>> GetVerantwortlicheAsync(DB_Otium otium)
     {
-        await _dbContext.Entry(otium).Reference(o => o.Verantwortliche).LoadAsync();
+        await _dbContext.Entry(otium).Collection(o => o.Verantwortliche).LoadAsync();
         return otium.Verantwortliche.ToList();
     }
 
