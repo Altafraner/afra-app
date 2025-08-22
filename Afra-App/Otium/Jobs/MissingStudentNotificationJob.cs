@@ -21,6 +21,7 @@ internal sealed class MissingStudentNotificationJob : RetryJob
     private readonly IAttendanceService _attendanceService;
     private readonly BlockHelper _blockHelper;
     private readonly IEmailOutbox _emailOutbox;
+    private readonly ILogger<MissingStudentNotificationJob> _logger;
     private readonly IOptions<OtiumConfiguration> _otiumConfiguration;
 
     public MissingStudentNotificationJob(
@@ -35,6 +36,7 @@ internal sealed class MissingStudentNotificationJob : RetryJob
         _emailOutbox = emailOutbox;
         _attendanceHub = attendanceHub;
         _otiumConfiguration = otiumConfiguration;
+        _logger = logger;
         _blockHelper = blockHelper;
     }
 
@@ -43,7 +45,11 @@ internal sealed class MissingStudentNotificationJob : RetryJob
 
     protected override async Task ExecuteAsync(IJobExecutionContext context, int _)
     {
-        if (!_otiumConfiguration.Value.MissingStudentsReport.Enabled) return;
+        if (!_otiumConfiguration.Value.MissingStudentsReport.Enabled)
+        {
+            _logger.LogInformation("Missing students report is disabled, skipping job execution.");
+            return;
+        }
 
         var blockId = context.MergedJobDataMap.GetGuidValueFromString("block");
         var schemaId = context.MergedJobDataMap.GetChar("block_schema");
@@ -76,6 +82,7 @@ internal sealed class MissingStudentNotificationJob : RetryJob
 
         if (!context.MergedJobDataMap.TryGetBoolean("warning_send", out var warningSend) || !warningSend)
         {
+            _logger.LogInformation("Sending warning notification for supervisors of block {BlockId}", blockId);
             var fireAfter = TimeOnly.Parse(context.MergedJobDataMap.GetString("fire_after")!);
             var now = TimeOnly.FromDateTime(DateTime.Now);
 
@@ -99,6 +106,7 @@ internal sealed class MissingStudentNotificationJob : RetryJob
             return;
         }
 
+        _logger.LogWarning("Sending report for missing students in block {BlockId}", blockId);
         const string subject = "Fehlende Personen zum Otium";
         var len = (int)Math.Ceiling(Math.Log10(allMissing.Count));
         var body = $"""
@@ -118,5 +126,6 @@ internal sealed class MissingStudentNotificationJob : RetryJob
         foreach (var termin in terminAttendance.Keys)
             await _attendanceHub.Clients.Group(AttendanceHub.TerminGroupName(termin.Id))
                 .Notify(successNotification);
+        _logger.LogInformation("Successfully sent missing students report for block {BlockId}", blockId);
     }
 }
