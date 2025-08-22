@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import {
   Accordion,
   AccordionContent,
@@ -109,8 +109,11 @@ function initMove(student, terminId) {
                      :value="room.terminId">
       <accordion-header>
         <div class="flex justify-between w-full items-center" style="margin-right: 1rem">
-          <span>
+          <span class="flex-1">
             {{ room.ort }} - {{ room.otium }}
+          </span>
+          <span class="text-right pr-4">
+            {{ room.einschreibungen.length }} Schüler:innen
           </span>
           <Button :label="room.sindAnwesenheitenErfasst ? 'Fertig' : 'Ausstehend'"
                   :severity="room.sindAnwesenheitenErfasst ? 'success' : 'danger'"
