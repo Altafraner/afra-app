@@ -31,7 +31,11 @@ public class ProfundumManagementService
     ///
     public async Task<ProfundumEinwahlZeitraum> CreateEinwahlZeitraumAsync(DTOProfundumEinwahlZeitraum zeitraum)
     {
-        _logger.LogWarning("API called");
+        if (zeitraum.EinwahlStart is null || zeitraum.EinwahlStop is null)
+        {
+            throw new ArgumentNullException();
+        }
+
         var einwahlZeitraum = new ProfundumEinwahlZeitraum
         {
             EinwahlStart = DateTime.SpecifyKind(DateTime.Parse(zeitraum.EinwahlStart), DateTimeKind.Utc),
