@@ -1,5 +1,6 @@
 using Afra_App.Backbone.Authentication;
 using Afra_App.User.Domain.DTO;
+using Afra_App.User.Services;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,6 +19,9 @@ public static class People
         app.MapGet("/api/people", GetPeople)
             .WithName("GetPeople")
             .RequireAuthorization(AuthorizationPolicies.TeacherOrAdmin);
+        app.MapGet("/api/people/{id:guid}/mentor", GetPersonMentors)
+            .WithName("GetPersonMentors")
+            .RequireAuthorization(AuthorizationPolicies.TeacherOrAdmin);
     }
 
     private static Ok<IAsyncEnumerable<PersonInfoMinimal>> GetPeople(AfraAppContext dbContext,
@@ -30,5 +34,23 @@ public static class People
             .AsAsyncEnumerable();
 
         return TypedResults.Ok(people);
+    }
+
+    private static async Task<IResult> GetPersonMentors(AfraAppContext dbContext, UserService userService, Guid id)
+    {
+        var student = (await dbContext.Personen
+            .Include(p => p.Mentors)
+            .Where(p => p.Id == id)
+            .ToArrayAsync())
+            .FirstOrDefault(defaultValue: null);
+
+        if (student is null)
+        {
+            return Results.NotFound();
+        }
+
+        var mentors = student.Mentors
+            .Select(m => new PersonInfoMinimal(m));
+        return Results.Ok(mentors);
     }
 }

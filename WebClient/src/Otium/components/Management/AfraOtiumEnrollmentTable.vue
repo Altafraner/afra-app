@@ -1,8 +1,8 @@
-﻿<script setup>
+<script setup>
 
 import {Badge, Button, Column, DataTable} from "primevue";
 import AfraOtiumAnwesenheit from "@/Otium/components/Shared/AfraOtiumAnwesenheit.vue";
-import {formatStudent} from "@/helpers/formatters.js";
+import UserPeek from "@/components/UserPeek.vue";
 
 const props = defineProps({
   enrollments: Array,
@@ -25,7 +25,7 @@ function initMove(student) {
   <DataTable :value="props.enrollments">
     <Column header="Schüler:in">
       <template #body="{data}">
-        {{ formatStudent(data.student) }}
+        <UserPeek :person="data.student"/>
       </template>
     </Column>
     <Column header="Anwesenheit" v-if="props.showAttendance || props.mayEditAttendance"
