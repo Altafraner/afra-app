@@ -53,7 +53,8 @@ public static class Management
 
         group.MapPost("/wiederholung", CreateOtiumWiederholung);
         group.MapDelete("/wiederholung/{otiumWiederholungId:guid}", DeleteOtiumWiederholung);
-        group.MapPatch("/wiederholung/{otiumWiederholungId:guid}/discontinue", OtiumWiederholungDiscontinue);
+        group.MapPatch("/wiederholung/{otiumWiederholungId:guid}/discontinue", DiscontinueOtiumWiederholung);
+        group.MapPut("/wiederholung/{otiumWiederholungId:guid}", UpdateOtiumWiederholung);
     }
 
     private static async Task<IResult> GetTerminForTeacher(
@@ -235,7 +236,7 @@ public static class Management
         }
     }
 
-    private static async Task<IResult> OtiumWiederholungDiscontinue(ManagementService managementService,
+    private static async Task<IResult> DiscontinueOtiumWiederholung(ManagementService managementService,
         UserAuthorizationHelper authHelper, OtiumEndpointService service,
         Guid otiumWiederholungId, DateOnlyWrapper firstDayAfter)
     {
@@ -253,7 +254,7 @@ public static class Management
         if (!await MayEditAsync(authHelper, managementService, otium)) return Results.Forbid();
         try
         {
-            await service.OtiumWiederholungDiscontinueAsync(otiumWiederholungId, firstDayAfter.Value);
+            await service.DiscontinueOtiumWiederholungAsync(otiumWiederholungId, firstDayAfter.Value);
             return Results.Ok();
         }
         catch (OtiumEndpointService.EntityNotFoundException)
@@ -267,6 +268,44 @@ public static class Management
         catch (ArgumentException e)
         {
             return Results.BadRequest(e.Message);
+        }
+    }
+
+    private static async Task<IResult> UpdateOtiumWiederholung(ManagementService managementService,
+        UserAuthorizationHelper authHelper, OtiumEndpointService service,
+        Guid otiumWiederholungId, DTO_Wiederholung_Creation otiumWiederholung)
+    {
+        DB_Otium otium;
+        OtiumWiederholung wiederholung;
+        try
+        {
+            wiederholung = await managementService.GetWiederholungByIdAsync(otiumWiederholungId);
+            otium = await managementService.GetOtiumOfWiederholungAsync(wiederholung);
+        }
+        catch (KeyNotFoundException)
+        {
+            return Results.NotFound("Otium not found.");
+        }
+
+        if (!await MayEditAsync(authHelper, managementService, otium)) return Results.Forbid();
+
+        try
+        {
+            if (wiederholung.MaxEinschreibungen != otiumWiederholung.MaxEinschreibungen)
+            {
+                await service.OtiumWiederholungSetFutureMaxEinschreibungenAsync(
+                        otiumWiederholungId, DateOnly.FromDateTime(DateTime.Now), otiumWiederholung.MaxEinschreibungen);
+            }
+            if (wiederholung.Ort != otiumWiederholung.Ort)
+            {
+                await service.OtiumWiederholungSetFutureOrtAsync(
+                        otiumWiederholungId, DateOnly.FromDateTime(DateTime.Now), otiumWiederholung.Ort);
+            }
+            return Results.Ok();
+        }
+        catch (ArgumentException e)
+        {
+            return Results.Conflict(e.Message);
         }
     }
 
