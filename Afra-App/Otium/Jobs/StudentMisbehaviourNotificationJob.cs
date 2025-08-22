@@ -57,7 +57,7 @@ internal sealed class StudentMisbehaviourNotificationJob : RetryJob
 
         var now = DateTime.Now;
         var hasRun = context.JobDetail.JobDataMap.TryGetDateTime("last_run", out var lastRun);
-        if (!hasRun && TimeOnly.FromDateTime(now) < _otiumConfiguration.Value.StudentMisbehaviourNotification.Time)
+        if (TimeOnly.FromDateTime(now) < _otiumConfiguration.Value.StudentMisbehaviourNotification.Time.AddMinutes(-5))
         {
             _logger.LogWarning(
                 "Student Misbehaviour job was scheduled before the default reminder time. Skipping execution.");
