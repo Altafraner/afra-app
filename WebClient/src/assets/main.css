@@ -1,5 +1,5 @@
-﻿@import "tailwindcss";
-@import "tailwindcss-primeui";
+﻿@import 'tailwindcss';
+@import 'tailwindcss-primeui';
 
 @layer base {
     h1 {
@@ -32,7 +32,7 @@
 }
 
 :root {
-    font-family: 'Inter', "Segoe UI", 'Helvetica', 'Arial', sans-serif;
+    font-family: 'Inter', 'Segoe UI', 'Helvetica', 'Arial', sans-serif;
 }
 
 @layer theme {

@@ -1,50 +1,51 @@
 ﻿<script setup>
-import {Tag} from "primevue";
+import { Tag } from 'primevue';
 
 const props = defineProps({
-  value: Object,
-  minimal: Boolean,
-  hideName: Boolean
-})
-
+    value: Object,
+    minimal: Boolean,
+    hideName: Boolean,
+});
 </script>
 
 <template>
-  <Tag v-if="!minimal" severity="secondary">
-    <span v-if="props.value.icon"
-          :class="`ot-angebot-icon ${props.value.cssColor ? 'ot-angebot-white' : ''}`"
-          :style="`background-color: ${props.value.cssColor ?? 'unset'}`">
-      <i :class="props.value.icon"/>
+    <Tag v-if="!minimal" severity="secondary">
+        <span
+            v-if="props.value.icon"
+            :class="`ot-angebot-icon ${props.value.cssColor ? 'ot-angebot-white' : ''}`"
+            :style="`background-color: ${props.value.cssColor ?? 'unset'}`"
+        >
+            <i :class="props.value.icon" />
+        </span>
+        <span v-if="!hideName">
+            {{ props.value.bezeichnung }}
+        </span>
+    </Tag>
+    <span v-else class="inline-flex items-baseline justify-center gap-1">
+        <i :class="props.value.icon" :style="`color: ${props.value.cssColor ?? 'inherit'}`" />
+        <span v-if="!hideName">
+            {{ props.value.bezeichnung }}
+        </span>
     </span>
-    <span v-if="!hideName">
-      {{ props.value.bezeichnung }}
-    </span>
-  </Tag>
-  <span v-else class="inline-flex items-baseline justify-center gap-1">
-    <i :class="props.value.icon" :style="`color: ${props.value.cssColor ?? 'inherit'}`"/>
-    <span v-if="!hideName">
-      {{ props.value.bezeichnung }}
-    </span>
-  </span>
 </template>
 
 <style scoped>
 .ot-angebot-icon {
-  font-size: 0.8em;
-  width: 2em;
-  height: 2em;
-  border-radius: 1em;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
+    font-size: 0.8em;
+    width: 2em;
+    height: 2em;
+    border-radius: 1em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
 }
 
 .ot-angebot-icon i {
-  font-size: 1.1em;
+    font-size: 1.1em;
 }
 
 .ot-angebot-white {
-  color: #fff;
+    color: #fff;
 }
 </style>
