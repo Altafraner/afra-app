@@ -65,7 +65,7 @@ const toggle = async (event) => {
             @click="toggle($event)"
         />
 
-        <Popover ref="pop" :dismissable="true" :showCloseIcon="true" style="min-width: 320px">
+        <Popover ref="pop" :dismissable="true" :showCloseIcon="true" style="min-width: 15rem">
             <div class="p-3">
                 <div class="flex align-items-center gap-3 mb-3">
                     <div class="font-bold">{{ formatStudent(person) }}</div>

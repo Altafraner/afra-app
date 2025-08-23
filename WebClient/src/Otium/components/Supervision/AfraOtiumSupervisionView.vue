@@ -116,23 +116,23 @@ function initMove(student, terminId) {
                     style="margin-right: 1rem"
                 >
                     <span class="flex-1"> {{ room.ort }} - {{ room.otium }} </span>
-                    <span class="text-right pr-4">
+                    <span class="inline-flex gap-3">
                         {{ room.einschreibungen.length }} Schüler:innen
+                        <Button
+                            :label="room.sindAnwesenheitenErfasst ? 'Fertig' : 'Ausstehend'"
+                            :severity="room.sindAnwesenheitenErfasst ? 'success' : 'danger'"
+                            class="confirm-button"
+                            size="small"
+                            @click="
+                                (evt) =>
+                                    updateStatusCallback(
+                                        evt,
+                                        room.terminId,
+                                        !room.sindAnwesenheitenErfasst,
+                                    )
+                            "
+                        />
                     </span>
-                    <Button
-                        :label="room.sindAnwesenheitenErfasst ? 'Fertig' : 'Ausstehend'"
-                        :severity="room.sindAnwesenheitenErfasst ? 'success' : 'danger'"
-                        class="confirm-button"
-                        size="small"
-                        @click="
-                            (evt) =>
-                                updateStatusCallback(
-                                    evt,
-                                    room.terminId,
-                                    !room.sindAnwesenheitenErfasst,
-                                )
-                        "
-                    />
                 </div>
             </accordion-header>
             <accordion-content>
