@@ -1,16 +1,17 @@
 <script setup>
 import { ref } from 'vue';
-import { Button, Column, DataTable, Dialog } from 'primevue';
+import { Button, Column, DataTable, Dialog, useDialog } from 'primevue';
 import { formatDate, formatDayOfWeek, formatTutor } from '@/helpers/formatters.js';
 import CreateWiederholungForm from '@/Otium/components/Management/CreateWiederholungForm.vue';
 import CancelWiederholungForm from '@/Otium/components/Management/CancelWiederholungForm.vue';
 
-const emits = defineEmits(['create', 'delete', 'cancel']);
+const emits = defineEmits(['create', 'delete', 'cancel', 'edit']);
 const props = defineProps({
     regs: Array,
     allowEnrollment: Boolean,
     allowEdit: Boolean,
 });
+const dialog = useDialog();
 
 const createDialogVisible = ref(false);
 const cancelDialogVisible = ref(false);
@@ -34,6 +35,26 @@ function showCreateDialog() {
 function showCancelDialog(data) {
     wiederholungToCancel.value = data;
     cancelDialogVisible.value = true;
+}
+
+function edit(data) {
+    console.log('edit', data);
+    dialog.open(CreateWiederholungForm, {
+        props: {
+            header: 'Regelmäßigkeit bearbeiten',
+            style: { width: '35rem' },
+            modal: true,
+            closable: true,
+        },
+        data: {
+            initialValues: data,
+        },
+        onClose: (result) => {
+            console.log(result);
+            if (result === null) return;
+            emits('edit', Object.assign(result.data, { id: data.id }));
+        },
+    });
 }
 </script>
 
@@ -76,7 +97,25 @@ function showCancelDialog(data) {
                 />
             </template>
             <template #body="{ data }">
-                <span class="inline-flex gap-1">
+                <span class="inline-flex gap-0.5">
+                    <Button
+                        v-tooltip="'Bearbeiten'"
+                        aria-label="Bearbeiten"
+                        icon="pi pi-pencil"
+                        severity="primary"
+                        size="small"
+                        variant="text"
+                        @click="() => edit(data)"
+                    />
+                    <Button
+                        v-tooltip="'Einkürzen'"
+                        aria-label="Löschen"
+                        icon="pi pi-stop"
+                        severity="warn"
+                        size="small"
+                        variant="text"
+                        @click="() => showCancelDialog(data)"
+                    />
                     <Button
                         v-tooltip="'Löschen'"
                         aria-label="Löschen"
@@ -85,15 +124,6 @@ function showCancelDialog(data) {
                         size="small"
                         variant="text"
                         @click="() => emits('delete', data.id)"
-                    />
-                    <Button
-                        v-tooltip="'Einkürzen'"
-                        aria-label="Löschen"
-                        icon="pi pi-stop"
-                        severity="danger"
-                        size="small"
-                        variant="text"
-                        @click="() => showCancelDialog(data)"
                     />
                 </span>
             </template>

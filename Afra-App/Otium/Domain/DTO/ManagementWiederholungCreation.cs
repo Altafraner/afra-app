@@ -5,7 +5,7 @@ namespace Afra_App.Otium.Domain.DTO;
 /// <summary>
 ///     A DTO for the creation of a Wiederholung
 /// </summary>
-public record ManagementWiederholungCreation
+public record ManagementWiederholungCreation : ManagementWiederholungEdit
 {
     /// <summary>
     ///     The Id of the otium the wiederholung belongs to
@@ -13,19 +13,9 @@ public record ManagementWiederholungCreation
     public required Guid OtiumId { get; set; }
 
     /// <summary>
-    ///     A maximum number of concurrent enrollments for the Oium. If null, no limit is set.
-    /// </summary>
-    public int? MaxEinschreibungen { get; set; }
-
-    /// <summary>
     ///     The Id of the tutor of the Otium. Could be a student or a teacher.
     /// </summary>
     public Guid? Tutor { get; set; }
-
-    /// <summary>
-    ///     The location for the Otium.
-    /// </summary>
-    public required string Ort { get; set; }
 
     /// <summary>
     ///     The number of the Block the Wiederholung is on.
