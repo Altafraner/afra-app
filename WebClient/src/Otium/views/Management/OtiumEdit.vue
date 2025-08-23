@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import {
     Accordion,
     AccordionContent,
@@ -219,7 +219,6 @@ async function createTermin(data) {
 }
 
 async function createReg(data) {
-    console.log(data);
     const api = mande(`/api/otium/management/wiederholung`);
     try {
         await api.post({
@@ -240,6 +239,27 @@ async function createReg(data) {
             summary: 'Fehler',
             detail:
                 'Die Regelmäßigkeit konnte nicht erstellt werden. \n' +
+                (e.body ? e.body.split('(')[0] : ''),
+        });
+    } finally {
+        await getOtium(false);
+    }
+}
+
+async function editReg(data) {
+    const api = mande(`/api/otium/management/wiederholung/` + data.id);
+    try {
+        await api.put({
+            ort: data.ort,
+            maxEinschreibungen: data.maxEnrollments,
+        });
+    } catch (e) {
+        console.log(e.response);
+        toast.add({
+            severity: 'error',
+            summary: 'Fehler',
+            detail:
+                'Die Regelmäßigkeit konnte nicht bearbeitet werden. \n' +
                 (e.body ? e.body.split('(')[0] : ''),
         });
     } finally {
@@ -328,10 +348,11 @@ setup();
                 <AccordionContent>
                     <afra-otium-reg-table
                         :regs="otium.wiederholungen"
-                        @cancel="cancelReg"
                         allowEdit
+                        @cancel="cancelReg"
                         @create="createReg"
                         @delete="deleteReg"
+                        @edit="editReg"
                     />
                 </AccordionContent>
             </AccordionPanel>
