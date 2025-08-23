@@ -34,6 +34,7 @@ public record ManagementWiederholungView
         EndDate = dbWiederholung.EndDate;
         BlockSchemaId = dbWiederholung.Block;
         Block = block;
+        MaxEinschreibungen = dbWiederholung.MaxEinschreibungen;
     }
 
     /// <summary>
@@ -55,6 +56,11 @@ public record ManagementWiederholungView
     ///     The location for the Otium.
     /// </summary>
     public required string Ort { get; set; }
+
+    /// <summary>
+    ///     The maximum number of enrollments.
+    /// </summary>
+    public required int? MaxEinschreibungen { get; set; }
 
     /// <summary>
     ///     The name of the Block the Wiederholung is in.

@@ -1,4 +1,5 @@
 using Afra_App.Backbone.Authentication;
+using Afra_App.Otium.Domain.DTO;
 using Afra_App.Otium.Domain.Models;
 using Afra_App.Otium.Services;
 using Afra_App.User.Domain.Models;
@@ -273,7 +274,7 @@ public static class Management
 
     private static async Task<IResult> UpdateOtiumWiederholung(ManagementService managementService,
         UserAuthorizationHelper authHelper, OtiumEndpointService service,
-        Guid otiumWiederholungId, DTO_Wiederholung_Creation otiumWiederholung)
+        Guid otiumWiederholungId, ManagementWiederholungEdit otiumWiederholung)
     {
         DB_Otium otium;
         OtiumWiederholung wiederholung;
@@ -292,15 +293,13 @@ public static class Management
         try
         {
             if (wiederholung.MaxEinschreibungen != otiumWiederholung.MaxEinschreibungen)
-            {
                 await service.OtiumWiederholungSetFutureMaxEinschreibungenAsync(
-                        otiumWiederholungId, DateOnly.FromDateTime(DateTime.Now), otiumWiederholung.MaxEinschreibungen);
-            }
+                    otiumWiederholungId, DateOnly.FromDateTime(DateTime.Now), otiumWiederholung.MaxEinschreibungen);
+
             if (wiederholung.Ort != otiumWiederholung.Ort)
-            {
                 await service.OtiumWiederholungSetFutureOrtAsync(
-                        otiumWiederholungId, DateOnly.FromDateTime(DateTime.Now), otiumWiederholung.Ort);
-            }
+                    otiumWiederholungId, DateOnly.FromDateTime(DateTime.Now), otiumWiederholung.Ort);
+
             return Results.Ok();
         }
         catch (ArgumentException e)
