@@ -9,8 +9,8 @@ public record DTOProfundumEinwahlZeitraum
     public Guid? Id { get; set; }
 
     /// <inheritdoc cref="ProfundumEinwahlZeitraum.EinwahlStart"/>
-    public string EinwahlStart { get; set; }
+    public string? EinwahlStart { get; set; }
 
     /// <inheritdoc cref="ProfundumEinwahlZeitraum.EinwahlStop"/>
-    public string EinwahlStop { get; set; }
+    public string? EinwahlStop { get; set; }
 }

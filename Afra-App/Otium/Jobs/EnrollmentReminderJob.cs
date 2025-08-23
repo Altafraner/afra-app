@@ -39,7 +39,7 @@ internal sealed class EnrollmentReminderJob : RetryJob
         var now = DateTime.Now;
         var tomorrow = DateOnly.FromDateTime(now.AddDays(1));
         var hasRun = context.JobDetail.JobDataMap.TryGetDateTime("last_run", out var lastRun);
-        if (!hasRun && TimeOnly.FromDateTime(now) < _otiumConfiguration.Value.EnrollmentReminder.Time)
+        if (TimeOnly.FromDateTime(now) < _otiumConfiguration.Value.EnrollmentReminder.Time.AddMinutes(-5))
         {
             _logger.LogWarning(
                 "Enrollment reminder job was scheduled before the default reminder time. Skipping execution.");
