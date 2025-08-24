@@ -16,3 +16,15 @@ services:
     ports:
       - "8090:1080"
       - "1025:1025"
+  emergency:
+    build: ./emergency
+    environment:
+      - BASIC_AUTH_USER=admin
+      - BASIC_AUTH_PASS=admin
+      - FILE_DIR=/data
+      - RETENTION_SECONDS=86400
+      - SWEEP_INTERVAL_SECONDS=60
+    volumes:
+      - ./emergency-data:/data
+    ports:
+      - "8000:8000"
