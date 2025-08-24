@@ -94,11 +94,12 @@ internal sealed class StudentMisbehaviourNotificationJob : RetryJob
         foreach (var block in blocks)
         {
             var attendanceForBlock = await _attendanceService.GetAttendanceForBlockAsync(block.Id);
-            foreach (var missingPerson in attendanceForBlock.missingPersons.Keys)
+            foreach (var (missingPerson, status) in attendanceForBlock.missingPersons)
             {
+                if (status == OtiumAnwesenheitsStatus.Entschuldigt) continue;
+
                 if (!blockProblems.ContainsKey(missingPerson))
                     blockProblems[missingPerson] = [];
-
                 blockProblems[missingPerson].Add(new BlockProblem(ProblemType.Unenrolled, block));
             }
 
@@ -134,17 +135,14 @@ internal sealed class StudentMisbehaviourNotificationJob : RetryJob
 
         foreach (var student in studentsWithProblems)
         {
-            var subject = $"{student.Vorname} {student.Nachname}: Nicht erlaubtes Verhalten im Otium";
+            var subject = $"{student.Vorname} {student.Nachname}: Information zum Otium";
             var contentBuilder = new StringBuilder();
-            contentBuilder.AppendLine(
-                $"Die Afra-App hat ein Problem im Bezug auf ihren Mentee {student.Vorname} {student.Nachname} festgestellt:");
-            contentBuilder.AppendLine();
             foreach (var problem in blockProblems.GetValueOrDefault(student, []))
             {
                 var blockName = _blockHelper.Get(problem.Block.SchemaId)!.Bezeichnung;
                 contentBuilder.AppendLine(problem.ProblemType switch
                 {
-                    ProblemType.Missing => $"- Fehlte im {blockName}",
+                    ProblemType.Missing => $"- Fehlte unentschuldigt im {blockName}",
                     ProblemType.Unenrolled => $"- War nicht für den {blockName} eingeschrieben",
                     _ => throw new SwitchExpressionException("Unbekannter Problemtyp: " + problem.ProblemType)
                 });
