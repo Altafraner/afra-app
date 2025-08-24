@@ -28,6 +28,11 @@ public class OtiumConfiguration
     public required MissingStudentsReportInfo MissingStudentsReport { get; init; }
 
     /// <summary>
+    ///     Indicates whether the emergency backup functionality is enabled.
+    /// </summary>
+    public required bool EnableEmergencyBackup { get; init; }
+
+    /// <summary>
     ///     A static method to validate the configuration
     /// </summary>
     /// <returns>True, iff the configuration looks valid</returns>
