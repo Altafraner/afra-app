@@ -32,7 +32,7 @@ public class FilePostEmergencyBackup : IEmergencyBackupService
         byteContent.Headers.ContentType = new MediaTypeHeaderValue("text/html");
 
         // Sanitize the file name by replacing non-alphanumeric characters with hyphens
-        var fileName = string.Concat(name.Select(c => char.IsAsciiLetterOrDigit(c) ? c : '-'), ".html");
+        var fileName = string.Concat(name.Select(c => char.IsAsciiLetterOrDigit(c) ? c : '-')) + ".html";
 
         var formData = new MultipartFormDataContent();
         formData.Add(byteContent, "file", fileName);
