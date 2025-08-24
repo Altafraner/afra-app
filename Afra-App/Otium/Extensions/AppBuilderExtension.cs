@@ -29,5 +29,6 @@ public static class AppBuilderExtension
 
         builder.Services.AddHostedService<EnrollmentReminderScheduler>();
         builder.Services.AddHostedService<StudentMisbehaviourNotificationScheduler>();
+        builder.Services.AddHostedService<EmergencyBackupScheduler>();
     }
 }
