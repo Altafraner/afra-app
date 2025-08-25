@@ -8,6 +8,7 @@ using DB_Otium = Afra_App.Otium.Domain.Models.OtiumDefinition;
 using DTO_Otium_Creation = Afra_App.Otium.Domain.DTO.ManagementOtiumCreation;
 using DTO_Termin_Creation = Afra_App.Otium.Domain.DTO.ManagementTerminCreation;
 using DTO_Wiederholung_Creation = Afra_App.Otium.Domain.DTO.ManagementWiederholungCreation;
+using DTO_Wiederholung_Edit = Afra_App.Otium.Domain.DTO.ManagementWiederholungEdit;
 
 namespace Afra_App.Otium.API.Endpoints;
 
@@ -53,7 +54,8 @@ public static class Management
 
         group.MapPost("/wiederholung", CreateOtiumWiederholung);
         group.MapDelete("/wiederholung/{otiumWiederholungId:guid}", DeleteOtiumWiederholung);
-        group.MapPatch("/wiederholung/{otiumWiederholungId:guid}/discontinue", OtiumWiederholungDiscontinue);
+        group.MapPatch("/wiederholung/{otiumWiederholungId:guid}/discontinue", DiscontinueOtiumWiederholung);
+        group.MapPut("/wiederholung/{otiumWiederholungId:guid}", UpdateOtiumWiederholung);
     }
 
     private static async Task<IResult> GetTerminForTeacher(
@@ -235,7 +237,7 @@ public static class Management
         }
     }
 
-    private static async Task<IResult> OtiumWiederholungDiscontinue(ManagementService managementService,
+    private static async Task<IResult> DiscontinueOtiumWiederholung(ManagementService managementService,
         UserAuthorizationHelper authHelper, OtiumEndpointService service,
         Guid otiumWiederholungId, DateOnlyWrapper firstDayAfter)
     {
@@ -253,7 +255,7 @@ public static class Management
         if (!await MayEditAsync(authHelper, managementService, otium)) return Results.Forbid();
         try
         {
-            await service.OtiumWiederholungDiscontinueAsync(otiumWiederholungId, firstDayAfter.Value);
+            await service.DiscontinueOtiumWiederholungAsync(otiumWiederholungId, firstDayAfter.Value);
             return Results.Ok();
         }
         catch (OtiumEndpointService.EntityNotFoundException)
@@ -267,6 +269,35 @@ public static class Management
         catch (ArgumentException e)
         {
             return Results.BadRequest(e.Message);
+        }
+    }
+
+    private static async Task<IResult> UpdateOtiumWiederholung(ManagementService managementService,
+        UserAuthorizationHelper authHelper, OtiumEndpointService service,
+        Guid otiumWiederholungId, DTO_Wiederholung_Edit otiumWiederholung)
+    {
+        DB_Otium otium;
+
+        try
+        {
+            var wdh = await managementService.GetWiederholungByIdAsync(otiumWiederholungId);
+            otium = await managementService.GetOtiumOfWiederholungAsync(wdh);
+        }
+        catch (KeyNotFoundException)
+        {
+            return Results.NotFound("Otium not found.");
+        }
+
+        if (!await MayEditAsync(authHelper, managementService, otium)) return Results.Forbid();
+
+        try
+        {
+            await service.UpdateOtiumWiederholungAsync(otiumWiederholungId, otiumWiederholung, DateOnly.FromDateTime(DateTime.Today));
+            return Results.Ok();
+        }
+        catch (ArgumentException e)
+        {
+            return Results.Conflict(e.Message);
         }
     }
 

@@ -30,7 +30,7 @@ const navItems = ref([
   <template v-else>
 
     <NavBreadcrumb :items="navItems"/>
-    <Tabs value="0">
+    <Tabs lazy value="0">
       <TabList>
         <Tab value="0">Otium</Tab>
         <Tab value="1">Schultage</Tab>

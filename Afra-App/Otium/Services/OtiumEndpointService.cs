@@ -19,6 +19,7 @@ using DTO_Otium_Creation = Afra_App.Otium.Domain.DTO.ManagementOtiumCreation;
 using DTO_Otium_View = Afra_App.Otium.Domain.DTO.ManagementOtiumView;
 using DTO_Termin_Creation = Afra_App.Otium.Domain.DTO.ManagementTerminCreation;
 using DTO_Wiederholung_Creation = Afra_App.Otium.Domain.DTO.ManagementWiederholungCreation;
+using DTO_Wiederholung_Edit = Afra_App.Otium.Domain.DTO.ManagementWiederholungEdit;
 using Person = Afra_App.User.Domain.Models.Person;
 using Termin = Afra_App.Otium.Domain.DTO.Katalog.Termin;
 
@@ -305,15 +306,15 @@ public class OtiumEndpointService
         }));
 
         return enrollments.Select(e => (e.Termin.Block.SchemaId, new DTO_Einschreibung
-            {
-                Block = _blockHelper.Get(e.Termin.Block.SchemaId)!.Bezeichnung,
-                Datum = e.Termin.Block.SchultagKey,
-                KategorieId = e.Termin.Otium.Kategorie.Id,
-                Ort = e.Termin.Ort,
-                Otium = e.Termin.Otium.Bezeichnung,
-                TerminId = e.Termin.Id,
-                Anwesenheit = blocksDoneOrRunning.Contains(e.Termin.Block.Id) ? attendances[e.Termin.Block.Id] : null
-            }))
+        {
+            Block = _blockHelper.Get(e.Termin.Block.SchemaId)!.Bezeichnung,
+            Datum = e.Termin.Block.SchultagKey,
+            KategorieId = e.Termin.Otium.Kategorie.Id,
+            Ort = e.Termin.Ort,
+            Otium = e.Termin.Otium.Bezeichnung,
+            TerminId = e.Termin.Id,
+            Anwesenheit = blocksDoneOrRunning.Contains(e.Termin.Block.Id) ? attendances[e.Termin.Block.Id] : null
+        }))
             .Concat(additionalEnrollments)
             .OrderBy(e => e.Item2.Datum)
             .ThenBy(e => e.SchemaId)
@@ -334,7 +335,13 @@ public class OtiumEndpointService
         var endDate = startDate.AddDays(21);
 
         var mentees = (await _userService.GetMenteesAsync(user))
-            .OrderBy(s => s.Vorname)
+            .OrderBy(s => s.Rolle switch
+            {
+                Rolle.Mittelstufe => 0,
+                Rolle.Oberstufe => 1,
+                _ => -1,
+            })
+            .ThenBy(s => s.Vorname)
             .ThenBy(s => s.Nachname);
 
         var menteesEnrollments = await _dbContext.OtiaEinschreibungen
@@ -759,7 +766,7 @@ public class OtiumEndpointService
     /// </summary>
     /// <param name="otiumWiederholungId">The ID of the OtiumWiederholung to discontinue.</param>
     /// <param name="firstDayAfter">The first date from which on the recurrence will not be scheduled.</param>
-    public async Task OtiumWiederholungDiscontinueAsync(Guid otiumWiederholungId, DateOnly firstDayAfter)
+    public async Task DiscontinueOtiumWiederholungAsync(Guid otiumWiederholungId, DateOnly firstDayAfter)
     {
         if (firstDayAfter < DateOnly.FromDateTime(DateTime.Today))
             throw new ArgumentException("Das Datum muss in der Zukunft liegen.");
@@ -780,6 +787,36 @@ public class OtiumEndpointService
             await OtiumTerminAbsagenAsync(t.Id);
 
         _dbContext.OtiaTermine.RemoveRange(termine);
+        await _dbContext.SaveChangesAsync();
+    }
+
+    ///
+    public async Task UpdateOtiumWiederholungAsync(Guid otiumWiederholungId, DTO_Wiederholung_Edit wiederholungEdit, DateOnly firstDay)
+    {
+        if (firstDay < DateOnly.FromDateTime(DateTime.Today))
+            throw new ArgumentException("Das Datum muss in der Zukunft liegen.");
+
+        var otiumWiederholung = await _dbContext.OtiaWiederholungen
+            .AsSplitQuery()
+            .Include(x => x.Otium)
+            .Include(x => x.Termine.Where(t => t.Block.Schultag.Datum > firstDay))
+            .FirstOrDefaultAsync(o => o.Id == otiumWiederholungId);
+        if (otiumWiederholung is null)
+            throw new EntityNotFoundException("Keine Wiederholung mit dieser Id");
+
+        var termine = otiumWiederholung.Termine.ToList();
+
+        foreach (var t in termine)
+        {
+            await OtiumTerminSetOrtAsync(t.Id, wiederholungEdit.Ort, commit: false);
+        }
+        otiumWiederholung.Ort = wiederholungEdit.Ort;
+
+        foreach (var t in termine)
+        {
+            await OtiumTerminSetMaxEinschreibungenAsync(t.Id, wiederholungEdit.MaxEinschreibungen, commit: false);
+        }
+        otiumWiederholung.MaxEinschreibungen = wiederholungEdit.MaxEinschreibungen;
         await _dbContext.SaveChangesAsync();
     }
 
@@ -924,7 +961,8 @@ public class OtiumEndpointService
     /// </summary>
     /// <param name="otiumTerminId">The ID of the OtiumTermin to set maxEinschreibungen on.</param>
     /// <param name="maxEinschreibungen">The new value of MaxEinschreibungen.</param>
-    public async Task OtiumTerminSetMaxEinschreibungenAsync(Guid otiumTerminId, int? maxEinschreibungen)
+    /// <param name="commit">Whether to commit the db changes</param>
+    public async Task OtiumTerminSetMaxEinschreibungenAsync(Guid otiumTerminId, int? maxEinschreibungen, bool commit = true)
     {
         var otiumTermin = await _dbContext.OtiaTermine
             .Include(x => x.Enrollments).ThenInclude(e => e.BetroffenePerson).Include(termin => termin.Otium)
@@ -964,7 +1002,11 @@ public class OtiumEndpointService
         }
 
         otiumTermin.MaxEinschreibungen = maxEinschreibungen;
-        await _dbContext.SaveChangesAsync();
+
+        if (commit)
+        {
+            await _dbContext.SaveChangesAsync();
+        }
     }
 
     /// <summary>
@@ -998,7 +1040,8 @@ public class OtiumEndpointService
     /// </summary>
     /// <param name="otiumTerminId">The ID of the OtiumTermin to set the ort on.</param>
     /// <param name="ort">The new ort.</param>
-    public async Task OtiumTerminSetOrtAsync(Guid otiumTerminId, string ort)
+    /// <param name="commit">Whether to commit the db changes</param>
+    public async Task OtiumTerminSetOrtAsync(Guid otiumTerminId, string ort, bool commit = true)
     {
         var otiumTermin = await _dbContext.OtiaTermine
             .FindAsync(otiumTerminId);
@@ -1006,7 +1049,11 @@ public class OtiumEndpointService
             throw new EntityNotFoundException("Kein Termin mit dieser Id");
 
         otiumTermin.Ort = ort;
-        await _dbContext.SaveChangesAsync();
+
+        if (commit)
+        {
+            await _dbContext.SaveChangesAsync();
+        }
     }
 
     private class TerminWithLoad

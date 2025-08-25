@@ -19,6 +19,7 @@ public record struct PersonInfoMinimal
         Id = person.Id;
         Rolle = person.Rolle;
         Gruppe = person.Gruppe;
+        Email = person.Email;
     }
 
     /// <inheritdoc cref="User.Domain.DTO.Person.Id" />
@@ -36,4 +37,7 @@ public record struct PersonInfoMinimal
 
     /// <inheritdoc cref="User.Domain.Models.Person.Gruppe" />
     public string? Gruppe { get; set; }
+
+    /// <inheritdoc cref="User.Domain.Models.Person.Email" />
+    public string Email { get; set; }
 }

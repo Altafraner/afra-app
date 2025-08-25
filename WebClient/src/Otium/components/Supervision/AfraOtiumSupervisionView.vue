@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import {
   Accordion,
   AccordionContent,
@@ -104,19 +104,26 @@ function initMove(student, terminId) {
   <div v-if="inactive" class="flex justify-center">
     <span>Aktuell findet kein Otium statt. Der / die Otiumsbeauftragte(n) kann / können Anwesenheiten im Nachhinein in der Verwaltungsansicht des Termins ändern.</span>
   </div>
-  <accordion v-else>
+  <accordion v-else lazy>
     <accordion-panel v-for="room of attendance" :key="room.terminId"
                      :value="room.terminId">
       <accordion-header>
         <div class="flex justify-between w-full items-center" style="margin-right: 1rem">
-          <span>
+          <span class="flex-1">
             {{ room.ort }} - {{ room.otium }}
           </span>
-          <Button :label="room.sindAnwesenheitenErfasst ? 'Fertig' : 'Ausstehend'"
-                  :severity="room.sindAnwesenheitenErfasst ? 'success' : 'danger'"
-                  class="confirm-button"
-                  size="small"
-                  @click="(evt) => updateStatusCallback(evt, room.terminId, !room.sindAnwesenheitenErfasst)"/>
+          <span class="inline-flex gap-3 items-baseline">
+            {{ room.einschreibungen.length }} Schüler:innen
+            <Button :label="room.sindAnwesenheitenErfasst ? 'Fertig' : 'Ausstehend'"
+                    :severity="room.sindAnwesenheitenErfasst
+                      ? (room.einschreibungen.some(e=>e.anwesenheit==='Fehlend')
+                        ? 'warn'
+                        : 'success')
+                      : 'danger'"
+                    class="confirm-button"
+                    size="small"
+                    @click="(evt) => updateStatusCallback(evt, room.terminId, !room.sindAnwesenheitenErfasst)"/>
+          </span>
         </div>
       </accordion-header>
       <accordion-content>

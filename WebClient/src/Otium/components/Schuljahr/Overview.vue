@@ -125,7 +125,7 @@ setup();
       mehrere Termine anlegen.
     </Button>
   </p>
-  <DataTable :value="settings.schuljahr">
+  <DataTable :value="settings.schuljahr" data-key="datum">
     <Column header="Datum">
       <template #body="{data}">{{
           new Date(data.datum).toLocaleDateString('de-DE', {
