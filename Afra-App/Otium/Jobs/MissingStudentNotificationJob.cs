@@ -112,7 +112,7 @@ internal sealed class MissingStudentNotificationJob : RetryJob
         var body = $"""
                     Hallo,
 
-                    es fehlen folgede Personen im aktuellen Otiums-Block:
+                    es fehlen folgende Personen im aktuellen Otiums-Block:
                     {string.Join("\r\n", allMissing.Select((p, i) => $"{(i + 1).ToString().PadLeft(len)}. {p.Vorname} {p.Nachname}"))}
                     """;
         foreach (var recipient in _otiumConfiguration.Value.MissingStudentsReport.Recipients)
