@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using System.Text;
 using Afra_App.Backbone.Email.Services.Contracts;
 using Afra_App.Backbone.Scheduler.Templates;
@@ -20,7 +19,6 @@ internal sealed class StudentMisbehaviourNotificationJob : RetryJob
 {
     private readonly IAttendanceService _attendanceService;
     private readonly BlockHelper _blockHelper;
-    private readonly AfraAppContext _dbContext;
     private readonly IEmailOutbox _emailOutbox;
     private readonly EnrollmentService _enrollmentService;
     private readonly ILogger<StudentMisbehaviourNotificationJob> _logger;
@@ -33,7 +31,7 @@ internal sealed class StudentMisbehaviourNotificationJob : RetryJob
     /// </summary>
     public StudentMisbehaviourNotificationJob(ILogger<StudentMisbehaviourNotificationJob> logger,
         IEmailOutbox emailOutbox, IAttendanceService attendanceService, EnrollmentService enrollmentService,
-        SchuljahrService schuljahrService, UserService userService, BlockHelper blockHelper, AfraAppContext dbContext,
+        SchuljahrService schuljahrService, UserService userService, BlockHelper blockHelper,
         IOptions<OtiumConfiguration> otiumConfiguration) : base(logger)
     {
         _logger = logger;
@@ -43,7 +41,6 @@ internal sealed class StudentMisbehaviourNotificationJob : RetryJob
         _schuljahrService = schuljahrService;
         _userService = userService;
         _blockHelper = blockHelper;
-        _dbContext = dbContext;
         _otiumConfiguration = otiumConfiguration;
     }
 
@@ -72,12 +69,12 @@ internal sealed class StudentMisbehaviourNotificationJob : RetryJob
 
         _logger.LogInformation("Running student misbehaviour job at {Time}", now);
 
-        await DoWork(context);
+        await DoWork();
         context.JobDetail.JobDataMap.Put("last_run", now);
         _logger.LogInformation("Student misbehaviour job completed successfully.");
     }
 
-    private async Task DoWork(IJobExecutionContext context)
+    private async Task DoWork()
     {
         var today = DateOnly.FromDateTime(DateTime.Now);
         var blocks = await _schuljahrService.GetBlocksAsync(today);
@@ -89,39 +86,32 @@ internal sealed class StudentMisbehaviourNotificationJob : RetryJob
             return;
         }
 
-        var blockProblems = new Dictionary<Person, List<BlockProblem>>();
+        var unenrolledProblems = new Dictionary<Person, List<Block>>();
+        var missingInTerminProblems = new Dictionary<Person, List<(OtiumTermin termin, Block block)>>();
+        var missingInBlockProblems = new Dictionary<Person, List<Block>>();
 
         foreach (var block in blocks)
         {
-            var attendanceForBlock = await _attendanceService.GetAttendanceForBlockAsync(block.Id);
-            foreach (var (missingPerson, status) in attendanceForBlock.missingPersons)
+            var (termineInBlock, unenrolledForBlock, _) = await _attendanceService.GetAttendanceForBlockAsync(block.Id);
+            foreach (var (missingPerson, status) in unenrolledForBlock)
             {
                 if (status == OtiumAnwesenheitsStatus.Entschuldigt) continue;
 
-                if (!blockProblems.ContainsKey(missingPerson))
-                    blockProblems[missingPerson] = [];
-                blockProblems[missingPerson].Add(new BlockProblem(ProblemType.Unenrolled, block));
+                if (!unenrolledProblems.ContainsKey(missingPerson))
+                    unenrolledProblems[missingPerson] = [];
+                unenrolledProblems[missingPerson].Add(block);
+
+                if (status != OtiumAnwesenheitsStatus.Fehlend) continue;
+                if (!missingInBlockProblems.ContainsKey(missingPerson))
+                    missingInBlockProblems[missingPerson] = [];
+                missingInBlockProblems[missingPerson].Add(block);
             }
 
-            var missingButEnrolled = attendanceForBlock.termine
-                .ToDictionary(t => t.Key,
-                    t => t.Value.Where(e => e.Value == OtiumAnwesenheitsStatus.Fehlend));
-
-            foreach (var (termin, anwesenheiten) in missingButEnrolled)
-            foreach (var (person, _) in anwesenheiten)
-                await _enrollmentService.UnenrollAsync(termin.Id, person, true, false);
-            await _dbContext.SaveChangesAsync(context.CancellationToken);
-
-            var missingStudentsInBlock = attendanceForBlock.missingPersons
-                .Where(s => s.Value == OtiumAnwesenheitsStatus.Fehlend)
-                .Concat(missingButEnrolled.SelectMany(t => t.Value))
-                .DistinctBy(s => s.Key.Id)
-                .Select(s => s.Key);
-
-            foreach (var missingStudent in missingStudentsInBlock)
+            foreach (var (termin, anwesenheiten) in termineInBlock)
+            foreach (var (person, _) in anwesenheiten.Where(a => a.Value == OtiumAnwesenheitsStatus.Fehlend))
             {
-                if (!blockProblems.ContainsKey(missingStudent)) blockProblems[missingStudent] = [];
-                blockProblems[missingStudent].Add(new BlockProblem(ProblemType.Missing, block));
+                if (!missingInTerminProblems.ContainsKey(person)) missingInTerminProblems[person] = [];
+                missingInTerminProblems[person].Add((termin, block));
             }
         }
 
@@ -129,27 +119,37 @@ internal sealed class StudentMisbehaviourNotificationJob : RetryJob
             ? await _enrollmentService.GetStudentsWithMissingCategoriesInWeek(today.AddDays(-(int)today.DayOfWeek))
             : [];
 
-        var studentsWithProblems = blockProblems.Keys
+        var studentsWithProblems = unenrolledProblems.Keys
+            .Concat(missingInTerminProblems.Keys)
             .Concat(kategorieProblems.Keys)
             .DistinctBy(s => s.Id);
 
         foreach (var student in studentsWithProblems)
         {
+            if (student.Rolle != Rolle.Mittelstufe) continue;
             var subject = $"{student.Vorname} {student.Nachname}: Information zum Otium";
             var contentBuilder = new StringBuilder();
-            foreach (var problem in blockProblems.GetValueOrDefault(student, []))
+            foreach (var block in unenrolledProblems.GetValueOrDefault(student, []))
             {
-                var blockName = _blockHelper.Get(problem.Block.SchemaId)!.Bezeichnung;
-                contentBuilder.AppendLine(problem.ProblemType switch
-                {
-                    ProblemType.Missing => $"- Fehlte unentschuldigt im {blockName}",
-                    ProblemType.Unenrolled => $"- War nicht für den {blockName} eingeschrieben",
-                    _ => throw new SwitchExpressionException("Unbekannter Problemtyp: " + problem.ProblemType)
-                });
+                var blockName = _blockHelper.Get(block.SchemaId)!.Bezeichnung;
+                contentBuilder.AppendLine($"- War nicht für den {blockName} eingeschrieben");
+            }
+
+            foreach (var block in missingInBlockProblems.GetValueOrDefault(student, []))
+            {
+                var blockName = _blockHelper.Get(block.SchemaId)!.Bezeichnung;
+                contentBuilder.AppendLine($"- Fehlte unentschuldigt im {blockName}");
+            }
+
+            foreach (var termin in missingInTerminProblems.GetValueOrDefault(student, []))
+            {
+                var blockName = _blockHelper.Get(termin.block.SchemaId)!.Bezeichnung;
+                contentBuilder.AppendLine(
+                    $"- Fehlte unentschuldigt im Angebot „{termin.termin.Otium.Bezeichnung}“ im {blockName}");
             }
 
             foreach (var kategorie in kategorieProblems.GetValueOrDefault(student, []))
-                contentBuilder.AppendLine($"- Fehlte in der verpflichtenden Kategorie {kategorie}");
+                contentBuilder.AppendLine($"- War diese Woche zu keinem Angebot der Kategorie „{kategorie}“");
 
             var body = contentBuilder.ToString();
             var mentoren = await _userService.GetMentorsAsync(student);
@@ -157,13 +157,5 @@ internal sealed class StudentMisbehaviourNotificationJob : RetryJob
             foreach (var mentor in mentoren)
                 await _emailOutbox.ScheduleNotificationAsync(mentor, subject, body, TimeSpan.FromMinutes(10));
         }
-    }
-
-    private record BlockProblem(ProblemType ProblemType, Block Block);
-
-    private enum ProblemType
-    {
-        Missing,
-        Unenrolled
     }
 }
