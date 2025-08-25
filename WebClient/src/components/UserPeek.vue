@@ -62,8 +62,8 @@ const toggle = async (event) => {
     <span>
         <Button
             :label="displayFunction(props.person)"
-            link
-            class="p-0 font-semibold"
+            class="py-1 font-semibold"
+            variant="text"
             @click="toggle($event)"
         />
 
