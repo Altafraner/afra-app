@@ -115,7 +115,11 @@ function initMove(student, terminId) {
           <span class="inline-flex gap-3 items-baseline">
             {{ room.einschreibungen.length }} Schüler:innen
             <Button :label="room.sindAnwesenheitenErfasst ? 'Fertig' : 'Ausstehend'"
-                    :severity="room.sindAnwesenheitenErfasst ? 'success' : 'danger'"
+                    :severity="room.sindAnwesenheitenErfasst
+                      ? (room.einschreibungen.some(e=>e.anwesenheit==='Fehlend')
+                        ? 'warn'
+                        : 'success')
+                      : 'danger'"
                     class="confirm-button"
                     size="small"
                     @click="(evt) => updateStatusCallback(evt, room.terminId, !room.sindAnwesenheitenErfasst)"/>
