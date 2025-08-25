@@ -19,6 +19,7 @@ using DTO_Otium_Creation = Afra_App.Otium.Domain.DTO.ManagementOtiumCreation;
 using DTO_Otium_View = Afra_App.Otium.Domain.DTO.ManagementOtiumView;
 using DTO_Termin_Creation = Afra_App.Otium.Domain.DTO.ManagementTerminCreation;
 using DTO_Wiederholung_Creation = Afra_App.Otium.Domain.DTO.ManagementWiederholungCreation;
+using DTO_Wiederholung_Edit = Afra_App.Otium.Domain.DTO.ManagementWiederholungEdit;
 using Person = Afra_App.User.Domain.Models.Person;
 using Termin = Afra_App.Otium.Domain.DTO.Katalog.Termin;
 
@@ -790,7 +791,7 @@ public class OtiumEndpointService
     }
 
     ///
-    public async Task OtiumWiederholungSetFutureOrtAsync(Guid otiumWiederholungId, DateOnly firstDay, string Ort)
+    public async Task UpdateOtiumWiederholungAsync(Guid otiumWiederholungId, DTO_Wiederholung_Edit wiederholungEdit, DateOnly firstDay)
     {
         if (firstDay < DateOnly.FromDateTime(DateTime.Today))
             throw new ArgumentException("Das Datum muss in der Zukunft liegen.");
@@ -798,8 +799,6 @@ public class OtiumEndpointService
         var otiumWiederholung = await _dbContext.OtiaWiederholungen
             .AsSplitQuery()
             .Include(x => x.Otium)
-            .Include(x => x.Termine)
-            .ThenInclude(t => t.Enrollments)
             .Include(x => x.Termine.Where(t => t.Block.Schultag.Datum > firstDay))
             .FirstOrDefaultAsync(o => o.Id == otiumWiederholungId);
         if (otiumWiederholung is null)
@@ -809,35 +808,15 @@ public class OtiumEndpointService
 
         foreach (var t in termine)
         {
-            await OtiumTerminSetOrtAsync(t.Id, Ort);
+            await OtiumTerminSetOrtAsync(t.Id, wiederholungEdit.Ort, commit: false);
         }
-        otiumWiederholung.Ort = Ort;
-        await _dbContext.SaveChangesAsync();
-    }
-
-    ///
-    public async Task OtiumWiederholungSetFutureMaxEinschreibungenAsync(Guid otiumWiederholungId, DateOnly firstDay, int? maxEinschreibungen)
-    {
-        if (firstDay < DateOnly.FromDateTime(DateTime.Today))
-            throw new ArgumentException("Das Datum muss in der Zukunft liegen.");
-
-        var otiumWiederholung = await _dbContext.OtiaWiederholungen
-            .AsSplitQuery()
-            .Include(x => x.Otium)
-            .Include(x => x.Termine)
-            .ThenInclude(t => t.Enrollments)
-            .Include(x => x.Termine.Where(t => t.Block.Schultag.Datum > firstDay))
-            .FirstOrDefaultAsync(o => o.Id == otiumWiederholungId);
-        if (otiumWiederholung is null)
-            throw new EntityNotFoundException("Keine Wiederholung mit dieser Id");
-
-        var termine = otiumWiederholung.Termine.ToList();
+        otiumWiederholung.Ort = wiederholungEdit.Ort;
 
         foreach (var t in termine)
         {
-            await OtiumTerminSetMaxEinschreibungenAsync(t.Id, maxEinschreibungen);
+            await OtiumTerminSetMaxEinschreibungenAsync(t.Id, wiederholungEdit.MaxEinschreibungen, commit: false);
         }
-        otiumWiederholung.MaxEinschreibungen = maxEinschreibungen;
+        otiumWiederholung.MaxEinschreibungen = wiederholungEdit.MaxEinschreibungen;
         await _dbContext.SaveChangesAsync();
     }
 
@@ -982,7 +961,8 @@ public class OtiumEndpointService
     /// </summary>
     /// <param name="otiumTerminId">The ID of the OtiumTermin to set maxEinschreibungen on.</param>
     /// <param name="maxEinschreibungen">The new value of MaxEinschreibungen.</param>
-    public async Task OtiumTerminSetMaxEinschreibungenAsync(Guid otiumTerminId, int? maxEinschreibungen)
+    /// <param name="commit">Whether to commit the db changes</param>
+    public async Task OtiumTerminSetMaxEinschreibungenAsync(Guid otiumTerminId, int? maxEinschreibungen, bool commit = true)
     {
         var otiumTermin = await _dbContext.OtiaTermine
             .Include(x => x.Enrollments).ThenInclude(e => e.BetroffenePerson).Include(termin => termin.Otium)
@@ -1022,7 +1002,11 @@ public class OtiumEndpointService
         }
 
         otiumTermin.MaxEinschreibungen = maxEinschreibungen;
-        await _dbContext.SaveChangesAsync();
+
+        if (commit)
+        {
+            await _dbContext.SaveChangesAsync();
+        }
     }
 
     /// <summary>
@@ -1056,7 +1040,8 @@ public class OtiumEndpointService
     /// </summary>
     /// <param name="otiumTerminId">The ID of the OtiumTermin to set the ort on.</param>
     /// <param name="ort">The new ort.</param>
-    public async Task OtiumTerminSetOrtAsync(Guid otiumTerminId, string ort)
+    /// <param name="commit">Whether to commit the db changes</param>
+    public async Task OtiumTerminSetOrtAsync(Guid otiumTerminId, string ort, bool commit = true)
     {
         var otiumTermin = await _dbContext.OtiaTermine
             .FindAsync(otiumTerminId);
@@ -1064,7 +1049,11 @@ public class OtiumEndpointService
             throw new EntityNotFoundException("Kein Termin mit dieser Id");
 
         otiumTermin.Ort = ort;
-        await _dbContext.SaveChangesAsync();
+
+        if (commit)
+        {
+            await _dbContext.SaveChangesAsync();
+        }
     }
 
     private class TerminWithLoad

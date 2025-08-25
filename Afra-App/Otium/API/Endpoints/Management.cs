@@ -1,5 +1,4 @@
 using Afra_App.Backbone.Authentication;
-using Afra_App.Otium.Domain.DTO;
 using Afra_App.Otium.Domain.Models;
 using Afra_App.Otium.Services;
 using Afra_App.User.Domain.Models;
@@ -9,6 +8,7 @@ using DB_Otium = Afra_App.Otium.Domain.Models.OtiumDefinition;
 using DTO_Otium_Creation = Afra_App.Otium.Domain.DTO.ManagementOtiumCreation;
 using DTO_Termin_Creation = Afra_App.Otium.Domain.DTO.ManagementTerminCreation;
 using DTO_Wiederholung_Creation = Afra_App.Otium.Domain.DTO.ManagementWiederholungCreation;
+using DTO_Wiederholung_Edit = Afra_App.Otium.Domain.DTO.ManagementWiederholungEdit;
 
 namespace Afra_App.Otium.API.Endpoints;
 
@@ -274,14 +274,14 @@ public static class Management
 
     private static async Task<IResult> UpdateOtiumWiederholung(ManagementService managementService,
         UserAuthorizationHelper authHelper, OtiumEndpointService service,
-        Guid otiumWiederholungId, ManagementWiederholungEdit otiumWiederholung)
+        Guid otiumWiederholungId, DTO_Wiederholung_Edit otiumWiederholung)
     {
         DB_Otium otium;
-        OtiumWiederholung wiederholung;
+
         try
         {
-            wiederholung = await managementService.GetWiederholungByIdAsync(otiumWiederholungId);
-            otium = await managementService.GetOtiumOfWiederholungAsync(wiederholung);
+            var wdh = await managementService.GetWiederholungByIdAsync(otiumWiederholungId);
+            otium = await managementService.GetOtiumOfWiederholungAsync(wdh);
         }
         catch (KeyNotFoundException)
         {
@@ -292,14 +292,7 @@ public static class Management
 
         try
         {
-            if (wiederholung.MaxEinschreibungen != otiumWiederholung.MaxEinschreibungen)
-                await service.OtiumWiederholungSetFutureMaxEinschreibungenAsync(
-                    otiumWiederholungId, DateOnly.FromDateTime(DateTime.Now), otiumWiederholung.MaxEinschreibungen);
-
-            if (wiederholung.Ort != otiumWiederholung.Ort)
-                await service.OtiumWiederholungSetFutureOrtAsync(
-                    otiumWiederholungId, DateOnly.FromDateTime(DateTime.Now), otiumWiederholung.Ort);
-
+            await service.UpdateOtiumWiederholungAsync(otiumWiederholungId, otiumWiederholung, DateOnly.FromDateTime(DateTime.Today));
             return Results.Ok();
         }
         catch (ArgumentException e)
