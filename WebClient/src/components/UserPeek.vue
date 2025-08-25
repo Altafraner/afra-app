@@ -1,18 +1,15 @@
 <script setup>
 import { ref } from 'vue';
-import { Button } from 'primevue';
-import { Popover } from 'primevue';
-import { Tag } from 'primevue';
-import { Divider } from 'primevue';
-import { useToast } from 'primevue';
+import { Button, Divider, Popover, Tag, useToast } from 'primevue';
 import { mande } from 'mande';
-import { formatStudent } from '@/helpers/formatters.js';
+import { formatStudent, formatTutor } from '@/helpers/formatters.js';
 
 defineOptions({ name: 'UserPeek' });
 
 const props = defineProps({
     person: { type: Object, required: true },
     label: { type: String, default: '' },
+    displayFunction: { type: Function, default: formatStudent },
 });
 
 const toast = useToast();
@@ -21,7 +18,12 @@ const pop = ref();
 const copy = async (text) => {
     try {
         await navigator.clipboard.writeText(text);
-        toast.add({ severity: 'success', summary: 'Kopiert', detail: text, life: 2000 });
+        toast.add({
+            severity: 'success',
+            summary: 'Kopiert',
+            detail: 'Die E-Mail-Adresse wurde in die Zwischenablage kopiert.',
+            life: 2000,
+        });
     } catch {
         toast.add({ severity: 'error', summary: 'Fehler beim Kopieren', life: 2000 });
     }
@@ -59,7 +61,7 @@ const toggle = async (event) => {
 <template>
     <span>
         <Button
-            :label="formatStudent(props.person)"
+            :label="displayFunction(props.person)"
             link
             class="p-0 font-semibold"
             @click="toggle($event)"
@@ -67,28 +69,45 @@ const toggle = async (event) => {
 
         <Popover ref="pop" :dismissable="true" :showCloseIcon="true" style="min-width: 15rem">
             <div class="p-3">
-                <div class="flex align-items-center gap-3 mb-3">
-                    <div class="font-bold">{{ formatStudent(person) }}</div>
-                    <Tag v-if="person?.rolle" :value="person.rolle" severity="info" rounded />
-                    <Tag v-if="person?.gruppe" :value="person.gruppe" severity="info" rounded />
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="font-bold">{{ displayFunction(person) }}</div>
+                    <Tag
+                        v-if="!person?.gruppe && person?.rolle"
+                        :value="person.rolle"
+                        rounded
+                        severity="info"
+                    />
+                    <Tag v-if="person?.gruppe" :value="person.gruppe" rounded severity="info" />
                 </div>
 
                 <Divider />
 
-                <div v-if="person?.email" class="mb-2">
-                    <i class="pi pi-envelope mr-2"></i>
-                    <a href="#" @click.prevent="copy(person.email)">{{ person.email }}</a>
-                </div>
+                <Button
+                    v-if="person?.email"
+                    :label="person.email"
+                    class="-ml-2"
+                    icon="pi pi-envelope"
+                    size="small"
+                    variant="text"
+                    @click.prevent="copy(person.email)"
+                />
 
                 <template v-if="mentorsLoaded && mentors.length">
                     <Divider />
-                    <div class="mt-2">
+                    <div class="mt-2 flex flex-col gap-2">
                         <div class="text-700 text-sm mb-2 font-medium">Mentor:innen</div>
-                        <ul class="list-none p-0 m-0 flex flex-column gap-2">
-                            <li v-for="m in mentors" :key="m.id">
-                                <UserPeek :person="m" />
-                            </li>
-                        </ul>
+                        <div v-for="mentor in mentors" :key="mentor.id">
+                            <div>{{ formatTutor(mentor) }}</div>
+                            <Button
+                                v-if="mentor.email"
+                                :label="mentor.email"
+                                class="-ml-2"
+                                icon="pi pi-envelope"
+                                size="small"
+                                variant="text"
+                                @click.prevent="copy(mentor.email)"
+                            />
+                        </div>
                     </div>
                 </template>
             </div>
