@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { useOtiumStore } from '@/Otium/stores/otium.js';
 import { Button, Column, DataTable, useConfirm, useDialog, useToast } from 'primevue';
 import { mande } from 'mande';
@@ -128,7 +128,7 @@ setup();
             mehrere Termine anlegen.
         </Button>
     </p>
-    <DataTable :value="settings.schuljahr">
+    <DataTable :value="settings.schuljahr" data-key="datum">
         <Column header="Datum">
             <template #body="{ data }"
                 >{{

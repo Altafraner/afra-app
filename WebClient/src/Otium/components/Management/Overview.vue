@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { useUser } from '@/stores/user.js';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
 import { Button, Column, DataTable, Dialog, Skeleton, useConfirm, useToast } from 'primevue';
@@ -104,7 +104,7 @@ setup();
     <template v-if="!loading">
         <h2>Alle Otia</h2>
         <p>Klicken sie auf ein Otium, um Details zu sehen oder es zu Bearbeiten.</p>
-        <DataTable :value="otia">
+        <DataTable :value="otia" data-key="id">
             <Column header="Bezeichnung">
                 <template #body="{ data }">
                     <Button

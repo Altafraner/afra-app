@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { useUser } from '@/stores/user.js';
 import OtiumOverview from '@/Otium/components/Management/Overview.vue';
 import SchuljahrOverview from '@/Otium/components/Schuljahr/Overview.vue';
@@ -28,7 +28,7 @@ const navItems = ref([
     </template>
     <template v-else>
         <NavBreadcrumb :items="navItems" />
-        <Tabs value="0">
+        <Tabs lazy value="0">
             <TabList>
                 <Tab value="0">Otium</Tab>
                 <Tab value="1">Schultage</Tab>
