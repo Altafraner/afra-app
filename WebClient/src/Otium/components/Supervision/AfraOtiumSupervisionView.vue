@@ -120,7 +120,15 @@ function initMove(student, terminId) {
                         {{ room.einschreibungen.length }} Schüler:innen
                         <Button
                             :label="room.sindAnwesenheitenErfasst ? 'Fertig' : 'Ausstehend'"
-                            :severity="room.sindAnwesenheitenErfasst ? 'success' : 'danger'"
+                            :severity="
+                                room.sindAnwesenheitenErfasst
+                                    ? room.einschreibungen.some(
+                                          (e) => e.anwesenheit === 'Fehlend',
+                                      )
+                                        ? 'warn'
+                                        : 'success'
+                                    : 'danger'
+                            "
                             class="confirm-button"
                             size="small"
                             @click="
