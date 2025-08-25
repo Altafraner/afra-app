@@ -108,7 +108,7 @@ function initMove(student, terminId) {
             Anwesenheiten im Nachhinein in der Verwaltungsansicht des Termins ändern.</span
         >
     </div>
-    <accordion v-else>
+    <accordion v-else lazy>
         <accordion-panel v-for="room of attendance" :key="room.terminId" :value="room.terminId">
             <accordion-header>
                 <div

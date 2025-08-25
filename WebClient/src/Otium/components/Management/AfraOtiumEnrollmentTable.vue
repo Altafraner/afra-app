@@ -20,7 +20,7 @@ function initMove(student) {
 </script>
 
 <template>
-    <DataTable :value="props.enrollments">
+    <DataTable :data-key="(value) => value.student.id" :value="props.enrollments">
         <Column header="Schüler:in">
             <template #body="{ data }">
                 <UserPeek :person="data.student" />
