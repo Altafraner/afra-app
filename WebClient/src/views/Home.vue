@@ -1,27 +1,27 @@
 ﻿<script setup>
-import {useUser} from "@/stores/user.js";
-import {defineAsyncComponent} from "vue";
-import {useOtiumStore} from "@/Otium/stores/otium.js";
+import { useUser } from '@/stores/user.js';
+import { defineAsyncComponent } from 'vue';
+import { useOtiumStore } from '@/Otium/stores/otium.js';
 
-const Student = defineAsyncComponent(() => import("@/Otium/views/Dashboard/Student.vue"));
-const Teacher = defineAsyncComponent(() => import("@/Otium/views/Dashboard/Teacher.vue"));
+const Student = defineAsyncComponent(() => import('@/Otium/views/Dashboard/Student.vue'));
+const Teacher = defineAsyncComponent(() => import('@/Otium/views/Dashboard/Teacher.vue'));
 
-const user = useUser()
+const user = useUser();
 const otiumStore = useOtiumStore();
 await otiumStore.updateKategorien();
 </script>
 
 <template>
-  <Student v-if="user.isStudent"/>
-  <Teacher v-if="user.isTeacher"/>
+    <Student v-if="user.isStudent" />
+    <Teacher v-if="user.isTeacher" />
 </template>
 
 <style scoped>
 p a {
-  color: var(--p-primary-500);
+    color: var(--p-primary-500);
 }
 
 p a:visited {
-  color: var(--p-primary-700);
+    color: var(--p-primary-700);
 }
 </style>
