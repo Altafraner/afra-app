@@ -116,7 +116,7 @@ function initMove(student, terminId) {
                     style="margin-right: 1rem"
                 >
                     <span class="flex-1"> {{ room.ort }} - {{ room.otium }} </span>
-                    <span class="inline-flex gap-3">
+                    <span class="inline-flex gap-3 items-baseline">
                         {{ room.einschreibungen.length }} Schüler:innen
                         <Button
                             :label="room.sindAnwesenheitenErfasst ? 'Fertig' : 'Ausstehend'"
