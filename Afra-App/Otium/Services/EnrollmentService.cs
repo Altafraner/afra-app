@@ -218,12 +218,12 @@ public class EnrollmentService
         var blockList = blocks.ToList();
 
         var notEnrolledBlocks = from block in _dbContext.Blocks
-            where blockList.Contains(block)
-            join einschreibung in _dbContext.OtiaEinschreibungen
-                on block.Id equals einschreibung.Termin.Block.Id
-                into einschreibungen
-            where einschreibungen.All(e => e.BetroffenePerson != user)
-            select block.SchemaId;
+                                where blockList.Contains(block)
+                                join einschreibung in _dbContext.OtiaEinschreibungen
+                                    on block.Id equals einschreibung.Termin.Block.Id
+                                    into einschreibungen
+                                where einschreibungen.All(e => e.BetroffenePerson != user)
+                                select block.SchemaId;
 
         foreach (var schemaId in notEnrolledBlocks)
         {
@@ -281,13 +281,9 @@ public class EnrollmentService
     /// <returns>True, iff all non optional blocks are enrolled</returns>
     public bool AreAllNonOptionalBlocksEnrolled(Schultag schultag, IEnumerable<OtiumEinschreibung> einschreibungen)
     {
-        var blocksOnSchoolday = schultag.Blocks;
-        var blocksEnrolled = einschreibungen
-            .Select(e => e.Termin.Block)
-            .Where(b => b.Schultag == schultag)
-            .Distinct();
-
-        return blocksOnSchoolday.Count == blocksEnrolled.Count();
+        return !schultag.Blocks
+            .Where(b => _blockHelper.Get(b.SchemaId)!.Verpflichtend)
+            .Any(b => !einschreibungen.Any(e => e.Termin.Block.SchemaId == b.SchemaId));
     }
 
     /// <summary>
