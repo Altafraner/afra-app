@@ -334,7 +334,13 @@ public class OtiumEndpointService
         var endDate = startDate.AddDays(21);
 
         var mentees = (await _userService.GetMenteesAsync(user))
-            .OrderBy(s => s.Vorname)
+            .OrderBy(s => s.Rolle switch
+            {
+                Rolle.Mittelstufe => 0,
+                Rolle.Oberstufe => 1,
+                _ => -1,
+            })
+            .ThenBy(s => s.Vorname)
             .ThenBy(s => s.Nachname);
 
         var menteesEnrollments = await _dbContext.OtiaEinschreibungen
