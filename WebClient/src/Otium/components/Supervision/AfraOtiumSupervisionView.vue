@@ -104,7 +104,7 @@ function initMove(student, terminId) {
   <div v-if="inactive" class="flex justify-center">
     <span>Aktuell findet kein Otium statt. Der / die Otiumsbeauftragte(n) kann / können Anwesenheiten im Nachhinein in der Verwaltungsansicht des Termins ändern.</span>
   </div>
-  <accordion v-else>
+  <accordion v-else lazy>
     <accordion-panel v-for="room of attendance" :key="room.terminId"
                      :value="room.terminId">
       <accordion-header>
