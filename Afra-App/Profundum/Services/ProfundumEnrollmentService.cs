@@ -573,9 +573,9 @@ public class ProfundumEnrollmentService
 
         var matchingResultStatus = (solver.ObjectiveValue, solverWithoutLimits.ObjectiveValue) switch
         {
-            (>= 0, >= 0) => MatchingResultStatus.MatchingFound,
-            (< 0, >= 0) => MatchingResultStatus.MatchingIncompleteDueToCapacity,
-            (< 0, < 0) => MatchingResultStatus.MatchingIncompleteDueToHardConstraints,
+            ( >= 0, >= 0) => MatchingResultStatus.MatchingFound,
+            ( < 0, >= 0) => MatchingResultStatus.MatchingIncompleteDueToCapacity,
+            ( < 0, < 0) => MatchingResultStatus.MatchingIncompleteDueToHardConstraints,
             _ => throw new UnreachableException()
         };
 
@@ -709,7 +709,7 @@ public class ProfundumEnrollmentService
                     .Where(pe => pe.BetroffenePerson.Id == student.Id)
                     .Where(p => p.ProfundumInstanz.Slots.Contains(s))
                     .Select(pe => new DTOProfundumDefinition
-                        { Bezeichnung = pe.ProfundumInstanz.Profundum.Bezeichnung })
+                    { Bezeichnung = pe.ProfundumInstanz.Profundum.Bezeichnung })
                     .First());
     }
 }
