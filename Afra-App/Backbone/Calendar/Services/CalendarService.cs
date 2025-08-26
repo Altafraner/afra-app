@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using Afra_App.Backbone.Calendar.Domain.Models;
 using Afra_App.Otium.Services;
 using Afra_App.User.Domain.Models;
@@ -27,7 +28,9 @@ public class CalendarService
     ///
     public async Task<Guid> addCalendarSubscriptonAsync(Person user)
     {
-        var sub = new CalendarSubscription { BetroffenePerson = user };
+        byte[] randBytes = RandomNumberGenerator.GetBytes(16);
+        var key = new Guid(randBytes);
+        var sub = new CalendarSubscription { BetroffenePerson = user, Id = key };
         _dbContext.CalendarSubscriptions.Add(sub);
         await _dbContext.SaveChangesAsync();
         return sub.Id;
