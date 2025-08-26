@@ -3,10 +3,15 @@ using Afra_App.User.Services;
 
 namespace Afra_App.Backbone.Calendar.API.Endpoints;
 
-///
+/// <summary>
+///     A class containing the endpoints for the management and usage of calendar subscriptions
+/// </summary>
 public static class Calendar
 {
-    ///
+    /// <summary>
+    ///     Maps the calendar endpoints to the given <see cref="IEndpointRouteBuilder" />.
+    /// </summary>
+    /// <param name="app"></param>
     public static void MapCalendarEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapGet("/api/calendar/subscribe", SubscribeCalendarAsync).RequireAuthorization();

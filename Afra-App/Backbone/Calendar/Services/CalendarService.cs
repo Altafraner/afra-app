@@ -10,14 +10,18 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Afra_App.Backbone.Calendar.Services;
 
-///
+/// <summary>
+///     A Service for Calendar Subscriptions to Events
+/// </summary>
 public class CalendarService
 {
     private readonly AfraAppContext _dbContext;
     private readonly UserService _userService;
     private readonly BlockHelper _blockHelper;
 
-    ///
+    /// <summary>
+    ///     Constructor for the CalendarService. Usually called by the DI container.
+    /// </summary>
     public CalendarService(AfraAppContext dbContext, UserService userService, BlockHelper blockHelper)
     {
         _dbContext = dbContext;
@@ -25,7 +29,10 @@ public class CalendarService
         _blockHelper = blockHelper;
     }
 
-    ///
+    /// <summary>
+    ///     Creates a new Calendar Subscription and returns the key
+    /// </summary>
+    /// <param name="user">The person the generate the subscription for</param>
     public async Task<Guid> addCalendarSubscriptonAsync(Person user)
     {
         byte[] randBytes = RandomNumberGenerator.GetBytes(16);
@@ -36,7 +43,10 @@ public class CalendarService
         return sub.Id;
     }
 
-    ///
+    /// <summary>
+    ///     Gets the current ical for a calendar subcription from the subscription key
+    /// </summary>
+    /// <param name="subscriptionId">The Id of the Calendar Subscription</param>
     public async Task<string?> getCalendarAsync(Guid subscriptionId)
     {
         var sub = await _dbContext.CalendarSubscriptions
