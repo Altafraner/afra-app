@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using Afra_App.Backbone.Authentication;
+using Afra_App.Backbone.Calendar.Extensions;
 using Afra_App.Backbone.Email.Extensions;
 using Afra_App.Backbone.EmergencyBackup.Extensions;
 using Afra_App.Backbone.Scheduler.Extensions;
@@ -27,6 +28,7 @@ public static class AppBuilderExtension
         builder.AddScheduler();
         builder.AddDatabase();
         builder.AddEmail();
+        builder.AddCalendar();
         builder.AddEmergencyPostBackup();
         builder.ConfigureDataProtection();
     }

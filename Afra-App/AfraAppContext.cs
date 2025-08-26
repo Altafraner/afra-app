@@ -3,6 +3,7 @@ using Afra_App.Otium.Domain.Models;
 using Afra_App.Otium.Domain.Models.Schuljahr;
 using Afra_App.Profundum.Domain.Models;
 using Afra_App.User.Domain.Models;
+using Afra_App.Backbone.Calendar.Domain.Models;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure;
@@ -108,6 +109,11 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
     ///     All Kategorien for Profunda
     /// </summary>
     public DbSet<ProfundumKategorie> ProfundaKategorien { get; set; }
+
+    /// <summary>
+    ///     All Calendar Subscription
+    /// </summary>
+    public DbSet<CalendarSubscription> CalendarSubscriptions { get; set; }
 
     /// <summary>
     ///     Configures the npgsql specific options for the context
@@ -222,6 +228,11 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
         {
             w.HasKey(b => new { b.ProfundumInstanzId, b.BetroffenePersonId, b.Stufe });
             w.HasOne(b => b.BetroffenePerson).WithMany(p => p.ProfundaBelegwuensche);
+        });
+
+        modelBuilder.Entity<CalendarSubscription>(s =>
+        {
+            s.HasOne(b => b.BetroffenePerson).WithMany();
         });
 
         /*
