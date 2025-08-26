@@ -1,0 +1,35 @@
+*.cs      text eol=lf working-tree-encoding=UTF-8
+*.csproj  text eol=lf working-tree-encoding=UTF-8
+*.sln     text eol=lf working-tree-encoding=UTF-8
+*.json    text eol=lf working-tree-encoding=UTF-8
+*.xml     text eol=lf working-tree-encoding=UTF-8
+*.config  text eol=lf working-tree-encoding=UTF-8
+*.md      text eol=lf working-tree-encoding=UTF-8
+*.js      text eol=lf working-tree-encoding=UTF-8
+*.ts      text eol=lf working-tree-encoding=UTF-8
+*.vue     text eol=lf working-tree-encoding=UTF-8
+*.css     text eol=lf working-tree-encoding=UTF-8
+*.scss    text eol=lf working-tree-encoding=UTF-8
+*.html    text eol=lf working-tree-encoding=UTF-8
+*.yml     text eol=lf working-tree-encoding=UTF-8
+*.yaml    text eol=lf working-tree-encoding=UTF-8
+
+*.png     binary
+*.jpg     binary
+*.jpeg    binary
+*.gif     binary
+*.ico     binary
+*.pdf     binary
+*.exe     binary
+*.dll     binary
+*.so      binary
+*.zip     binary
+*.tar     binary
+*.gz      binary
+*.7z      binary
+*.woff    binary
+*.woff2   binary
+*.ttf     binary
+*.eot     binary
+
+*         text=auto eol=lf working-tree-encoding=UTF-8
