@@ -38,19 +38,20 @@ public static class People
 
     private static async Task<IResult> GetPersonMentors(AfraAppContext dbContext, UserService userService, Guid id)
     {
-        var student = (await dbContext.Personen
-            .Include(p => p.Mentors)
-            .Where(p => p.Id == id)
-            .ToArrayAsync())
-            .FirstOrDefault(defaultValue: null);
-
+        var student = await userService.GetUserByIdAsync(id);
         if (student is null)
         {
             return Results.NotFound();
         }
 
-        var mentors = student.Mentors
-            .Select(m => new PersonInfoMinimal(m));
-        return Results.Ok(mentors);
+        try
+        {
+            var mentors = await userService.GetMentorsAsync(student);
+            return Results.Ok(mentors.Select(s => new PersonInfoMinimal(s)));
+        }
+        catch (InvalidOperationException)
+        {
+            return Results.Ok(new List<Domain.DTO.PersonInfoMinimal>());
+        }
     }
 }
