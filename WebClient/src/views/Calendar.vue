@@ -40,6 +40,7 @@ async function deleteKeys() {
             severity: 'success',
             summary: 'Löschung erfolgreich',
             detail: 'Alle deine Kalender-Links wurden erfolgreich gelöscht.',
+            life: 2000,
         });
     } catch (e) {
         await user.update();
