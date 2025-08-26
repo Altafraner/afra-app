@@ -14,6 +14,11 @@ const routes = [
         name: 'Admin',
         component: () => import('@/views/Admin.vue'),
     },
+    {
+        path: '/calendar',
+        name: 'Calendar',
+        component: () => import('@/views/Calendar.vue'),
+    },
     ...otium,
     ...profundum,
     {
