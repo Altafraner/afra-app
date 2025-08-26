@@ -23,7 +23,6 @@ function createRepeating(data) {
 }
 
 function cancelRepeating(data) {
-    console.log('Cancelling', data);
     cancelDialogVisible.value = false;
     emits('cancel', wiederholungToCancel.value.id, data);
 }
@@ -38,7 +37,6 @@ function showCancelDialog(data) {
 }
 
 function edit(data) {
-    console.log('edit', data);
     dialog.open(CreateWiederholungForm, {
         props: {
             header: 'Regelmäßigkeit bearbeiten',
@@ -50,7 +48,6 @@ function edit(data) {
             initialValues: data,
         },
         onClose: (result) => {
-            console.log(result);
             if (result === null) return;
             emits('edit', Object.assign(result.data, { id: data.id }));
         },
