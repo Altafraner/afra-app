@@ -32,7 +32,7 @@ public class CalendarService
     /// <summary>
     ///     Creates a new Calendar Subscription and returns the key
     /// </summary>
-    /// <param name="user">The person the generate the subscription for</param>
+    /// <param name="user">The person to generate the subscription for</param>
     public async Task<Guid> addCalendarSubscriptonAsync(Person user)
     {
         byte[] randBytes = RandomNumberGenerator.GetBytes(16);
@@ -41,6 +41,16 @@ public class CalendarService
         _dbContext.CalendarSubscriptions.Add(sub);
         await _dbContext.SaveChangesAsync();
         return sub.Id;
+    }
+
+    /// <summary>
+    ///     Deletes all Calendar Subscriptions for the user
+    /// </summary>
+    /// <param name="user">The person to delete the subscriptions for</param>
+    public async Task deleteAllCalendarSubscriptonAsync(Person user)
+    {
+        _dbContext.CalendarSubscriptions.Where(s => s.BetroffenePerson.Id == user.Id).ExecuteDelete();
+        await _dbContext.SaveChangesAsync();
     }
 
     /// <summary>
