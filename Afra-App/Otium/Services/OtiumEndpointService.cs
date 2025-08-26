@@ -306,15 +306,15 @@ public class OtiumEndpointService
         }));
 
         return enrollments.Select(e => (e.Termin.Block.SchemaId, new DTO_Einschreibung
-        {
-            Block = _blockHelper.Get(e.Termin.Block.SchemaId)!.Bezeichnung,
-            Datum = e.Termin.Block.SchultagKey,
-            KategorieId = e.Termin.Otium.Kategorie.Id,
-            Ort = e.Termin.Ort,
-            Otium = e.Termin.Otium.Bezeichnung,
-            TerminId = e.Termin.Id,
-            Anwesenheit = blocksDoneOrRunning.Contains(e.Termin.Block.Id) ? attendances[e.Termin.Block.Id] : null
-        }))
+            {
+                Block = _blockHelper.Get(e.Termin.Block.SchemaId)!.Bezeichnung,
+                Datum = e.Termin.Block.SchultagKey,
+                KategorieId = e.Termin.Otium.Kategorie.Id,
+                Ort = e.Termin.Ort,
+                Otium = e.Termin.Otium.Bezeichnung,
+                TerminId = e.Termin.Id,
+                Anwesenheit = blocksDoneOrRunning.Contains(e.Termin.Block.Id) ? attendances[e.Termin.Block.Id] : null
+            }))
             .Concat(additionalEnrollments)
             .OrderBy(e => e.Item2.Datum)
             .ThenBy(e => e.SchemaId)
@@ -791,7 +791,8 @@ public class OtiumEndpointService
     }
 
     ///
-    public async Task UpdateOtiumWiederholungAsync(Guid otiumWiederholungId, DTO_Wiederholung_Edit wiederholungEdit, DateOnly firstDay)
+    public async Task UpdateOtiumWiederholungAsync(Guid otiumWiederholungId, DTO_Wiederholung_Edit wiederholungEdit,
+        DateOnly firstDay)
     {
         if (firstDay < DateOnly.FromDateTime(DateTime.Today))
             throw new ArgumentException("Das Datum muss in der Zukunft liegen.");
@@ -807,15 +808,11 @@ public class OtiumEndpointService
         var termine = otiumWiederholung.Termine.ToList();
 
         foreach (var t in termine)
-        {
             await OtiumTerminSetOrtAsync(t.Id, wiederholungEdit.Ort, commit: false);
-        }
         otiumWiederholung.Ort = wiederholungEdit.Ort;
 
         foreach (var t in termine)
-        {
             await OtiumTerminSetMaxEinschreibungenAsync(t.Id, wiederholungEdit.MaxEinschreibungen, commit: false);
-        }
         otiumWiederholung.MaxEinschreibungen = wiederholungEdit.MaxEinschreibungen;
         await _dbContext.SaveChangesAsync();
     }
@@ -962,7 +959,8 @@ public class OtiumEndpointService
     /// <param name="otiumTerminId">The ID of the OtiumTermin to set maxEinschreibungen on.</param>
     /// <param name="maxEinschreibungen">The new value of MaxEinschreibungen.</param>
     /// <param name="commit">Whether to commit the db changes</param>
-    public async Task OtiumTerminSetMaxEinschreibungenAsync(Guid otiumTerminId, int? maxEinschreibungen, bool commit = true)
+    public async Task OtiumTerminSetMaxEinschreibungenAsync(Guid otiumTerminId, int? maxEinschreibungen,
+        bool commit = true)
     {
         var otiumTermin = await _dbContext.OtiaTermine
             .Include(x => x.Enrollments).ThenInclude(e => e.BetroffenePerson).Include(termin => termin.Otium)
@@ -1003,10 +1001,7 @@ public class OtiumEndpointService
 
         otiumTermin.MaxEinschreibungen = maxEinschreibungen;
 
-        if (commit)
-        {
-            await _dbContext.SaveChangesAsync();
-        }
+        if (commit) await _dbContext.SaveChangesAsync();
     }
 
     /// <summary>
