@@ -1,6 +1,6 @@
-<script lang="ts" setup>
+<script setup>
 import FloatLabel from 'primevue/floatlabel';
-import { Select } from 'primevue';
+import {Select} from 'primevue';
 
 const props = defineProps({
     options: {
