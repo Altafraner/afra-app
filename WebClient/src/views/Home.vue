@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { useUser } from '@/stores/user.js';
 import { defineAsyncComponent } from 'vue';
 import { useOtiumStore } from '@/Otium/stores/otium.js';

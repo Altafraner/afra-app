@@ -1,4 +1,4 @@
-﻿using System.Net.Http.Headers;
+using System.Net.Http.Headers;
 using System.Text;
 using Afra_App.Backbone.EmergencyBackup.Configuration;
 using Afra_App.Backbone.EmergencyBackup.Services.Contracts;

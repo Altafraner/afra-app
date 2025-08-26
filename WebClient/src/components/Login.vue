@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { Form } from '@primevue/forms';
 import { Button, FloatLabel, InputText, Password, useToast } from 'primevue';
 import { ref } from 'vue';

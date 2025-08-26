@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { ref } from 'vue';
 import { Form } from '@primevue/forms';
 import { Button, FloatLabel, InputText, Message, Textarea } from 'primevue';

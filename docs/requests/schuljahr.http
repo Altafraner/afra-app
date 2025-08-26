@@ -1,4 +1,4 @@
-﻿### Get All Schooldays
+### Get All Schooldays
 GET {{hostAddress}}/api/schuljahr
 Accept: application/json
 

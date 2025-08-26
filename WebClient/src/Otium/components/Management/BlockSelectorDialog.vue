@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { computed, inject } from 'vue';
 import { Button, Menu } from 'primevue';
 

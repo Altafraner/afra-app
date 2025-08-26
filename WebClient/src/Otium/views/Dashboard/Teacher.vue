@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { Button, Column, DataTable, Skeleton, Tag, useToast } from 'primevue';
 import { formatDate, formatStudent } from '@/helpers/formatters.js';
 import { ref } from 'vue';

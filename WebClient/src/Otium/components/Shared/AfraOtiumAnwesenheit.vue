@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { Badge, Button, Message } from 'primevue';
 import InputGroup from 'primevue/inputgroup';
 

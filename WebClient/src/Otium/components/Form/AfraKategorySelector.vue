@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { ref } from 'vue';
 import { TreeSelect } from 'primevue';
 import { findPath } from '@/helpers/tree.js';

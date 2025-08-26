@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { Tag } from 'primevue';
 
 const props = defineProps({

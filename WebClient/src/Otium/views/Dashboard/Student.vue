@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { Button, useToast } from 'primevue';
 import { ref } from 'vue';
 import { mande } from 'mande';

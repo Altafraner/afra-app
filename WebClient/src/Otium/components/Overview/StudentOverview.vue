@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { formatDate } from '@/helpers/formatters.js';
 import {
     Accordion,

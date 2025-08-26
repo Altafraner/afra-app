@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { ref, Suspense } from 'vue';
 import { Button } from 'primevue';
 import AfraOtiumSupervisionView from '@/Otium/components/Supervision/AfraOtiumSupervisionView.vue';

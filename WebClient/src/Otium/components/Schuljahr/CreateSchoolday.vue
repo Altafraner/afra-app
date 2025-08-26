@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { inject, ref } from 'vue';
 import FloatLabel from 'primevue/floatlabel';
 import DatePicker from 'primevue/datepicker';

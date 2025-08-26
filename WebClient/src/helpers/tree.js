@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Finds a node in a tree structure by its ID. Uses depth-first search.
  * @param nodes The tree to search through.
  * @param id The ID of the node to find.

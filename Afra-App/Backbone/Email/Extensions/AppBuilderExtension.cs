@@ -1,4 +1,4 @@
-﻿using Afra_App.Backbone.Email.Configuration;
+using Afra_App.Backbone.Email.Configuration;
 using Afra_App.Backbone.Email.Services.Contracts;
 using Afra_App.Backbone.Email.Services.Implementations;
 

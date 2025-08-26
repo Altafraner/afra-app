@@ -1,4 +1,4 @@
-﻿import { ref, toValue } from 'vue';
+import { ref, toValue } from 'vue';
 import { useSignalR } from '@/composables/signalr.js';
 
 /**

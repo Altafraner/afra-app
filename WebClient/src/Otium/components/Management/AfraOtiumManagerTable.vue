@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { Button, Column, DataTable } from 'primevue';
 
 const props = defineProps({

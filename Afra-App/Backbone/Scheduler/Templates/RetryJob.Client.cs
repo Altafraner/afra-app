@@ -1,4 +1,4 @@
-﻿using Quartz;
+using Quartz;
 
 namespace Afra_App.Backbone.Scheduler.Templates;
 

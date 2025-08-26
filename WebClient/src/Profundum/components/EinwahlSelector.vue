@@ -1,4 +1,4 @@
-﻿<script lang="ts" setup>
+<script lang="ts" setup>
 import FloatLabel from 'primevue/floatlabel';
 import { Select } from 'primevue';
 

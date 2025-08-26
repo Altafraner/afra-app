@@ -1,4 +1,4 @@
-﻿const wochentage = [
+const wochentage = [
     'Sonntag',
     'Montag',
     'Dienstag',

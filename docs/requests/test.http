@@ -1,4 +1,4 @@
-﻿### Reset db
+### Reset db
 GET {{hostAddress}}/api/Test/reset
 
 ### Seed db with users

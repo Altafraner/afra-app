@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { chooseSeverity } from '@/helpers/formatters.js';
 import { Tag } from 'primevue';
 

@@ -1,4 +1,4 @@
-﻿using Afra_App.Backbone.Email.Services.Contracts;
+using Afra_App.Backbone.Email.Services.Contracts;
 using Afra_App.Backbone.Scheduler.Templates;
 using Afra_App.User.Configuration.LDAP;
 using Microsoft.Extensions.Options;

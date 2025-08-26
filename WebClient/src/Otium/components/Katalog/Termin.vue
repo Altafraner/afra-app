@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { Button, Tag, useDialog, useToast } from 'primevue';
 import { ref } from 'vue';
 import { formatDate, formatTime, formatTutor } from '@/helpers/formatters.js';

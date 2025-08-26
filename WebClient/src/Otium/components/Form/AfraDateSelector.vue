@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { Button, FloatLabel, InputGroup, Select } from 'primevue';
 import InputGroupAddon from 'primevue/inputgroupaddon';
 import { formatDate } from '@/helpers/formatters.js';
