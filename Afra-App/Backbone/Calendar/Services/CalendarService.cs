@@ -1,4 +1,5 @@
 using Afra_App.Backbone.Calendar.Domain.Models;
+using Afra_App.Otium.Services;
 using Afra_App.User.Domain.Models;
 using Afra_App.User.Services;
 using Ical.Net.CalendarComponents;
@@ -13,12 +14,14 @@ public class CalendarService
 {
     private readonly AfraAppContext _dbContext;
     private readonly UserService _userService;
+    private readonly BlockHelper _blockHelper;
 
     ///
-    public CalendarService(AfraAppContext dbContext, UserService userService)
+    public CalendarService(AfraAppContext dbContext, UserService userService, BlockHelper blockHelper)
     {
         _dbContext = dbContext;
         _userService = userService;
+        _blockHelper = blockHelper;
     }
 
     ///
@@ -45,8 +48,7 @@ public class CalendarService
             .Where(e => e.BetroffenePerson.Id == sub.BetroffenePerson.Id)
             .Include(e => e.Termin).ThenInclude(t => t.Otium)
             .Include(e => e.Termin).ThenInclude(t => t.Block).ThenInclude(b => b.Schultag);
-
-        var calEvents = enrollments.Select(e => new CalendarEvent
+        var enrolledEvents = enrollments.Select(e => new CalendarEvent
         {
             Summary = e.Termin.Otium.Bezeichnung,
             Description = e.Termin.Otium.Beschreibung,
@@ -55,9 +57,23 @@ public class CalendarService
             End = new CalDateTime(new DateTime(e.Termin.Block.Schultag.Datum, e.Interval.End), true),
         });
 
+        var taught = _dbContext.OtiaTermine
+            .Where(e => e.Tutor != null && e.Tutor.Id == sub.BetroffenePerson.Id)
+            .Include(t => t.Otium)
+            .Include(t => t.Block).ThenInclude(b => b.Schultag);
+        var taughtEvents = taught.Select(e => new CalendarEvent
+        {
+            Summary = e.Otium.Bezeichnung,
+            Description = e.Otium.Beschreibung,
+            Location = e.Ort,
+            Start = new CalDateTime(new DateTime(e.Block.Schultag.Datum, _blockHelper.Get(e.Block.SchemaId)!.Interval.Start), true),
+            End = new CalDateTime(new DateTime(e.Block.Schultag.Datum, _blockHelper.Get(e.Block.SchemaId)!.Interval.End), true),
+        });
+
         var calendar = new Ical.Net.Calendar();
 
-        calendar.Events.AddRange(calEvents);
+        calendar.Events.AddRange(enrolledEvents);
+        calendar.Events.AddRange(taughtEvents);
         calendar.AddTimeZone(new VTimeZone("Europe/Berlin"));
 
         var serializer = new CalendarSerializer();
