@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Afra_App.Backbone.Calendar.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace Afra_App.Backbone.Extensions;
@@ -17,6 +18,8 @@ public static class RouteBuilderExtension
         app.UseAuthorization();
         using var scope = app.Services.CreateScope();
         using var context = scope.ServiceProvider.GetService<AfraAppContext>()!;
+
+        app.MapCalendar();
 
         if (!context.Database.GetPendingMigrations().Any()) return;
         if (!app.Configuration.GetValue<bool>("MigrateOnStartup"))
