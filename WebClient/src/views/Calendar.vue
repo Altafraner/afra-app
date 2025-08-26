@@ -9,6 +9,8 @@ const user = useUser();
 const toast = useToast();
 const calLink = ref(null);
 
+const baseUrl = import.meta.env.BASE_URL;
+
 async function fetchKey() {
     loading.value = true;
     const dataGetter = mande('/api/calendar/subscribe');
@@ -69,9 +71,9 @@ const copy = async (text) => {
         <h3>Dein persönlicher Link (anklicken um ihn zu kopieren):</h3>
         <p>Dieser Link ist ein Passwort. Teile ihn nicht mit Dritten.</p>
         <Button
-            :label="`https://afra.altafraner.de/api/calendar/${calLink}.ics`"
+            :label="`${baseUrl}api/calendar/${calLink}.ics`"
             variant="text"
-            @click.prevent="copy(`https://afra.altafraner.de/api/calendar/${calLink}.ics`)"
+            @click.prevent="copy(`${baseUrl}api/calendar/${calLink}.ics`)"
         />
     </div>
 </template>
