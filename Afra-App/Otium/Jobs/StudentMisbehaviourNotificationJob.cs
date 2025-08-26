@@ -108,11 +108,11 @@ internal sealed class StudentMisbehaviourNotificationJob : RetryJob
             }
 
             foreach (var (termin, anwesenheiten) in termineInBlock)
-            foreach (var (person, _) in anwesenheiten.Where(a => a.Value == OtiumAnwesenheitsStatus.Fehlend))
-            {
-                if (!missingInTerminProblems.ContainsKey(person)) missingInTerminProblems[person] = [];
-                missingInTerminProblems[person].Add((termin, block));
-            }
+                foreach (var (person, _) in anwesenheiten.Where(a => a.Value == OtiumAnwesenheitsStatus.Fehlend))
+                {
+                    if (!missingInTerminProblems.ContainsKey(person)) missingInTerminProblems[person] = [];
+                    missingInTerminProblems[person].Add((termin, block));
+                }
         }
 
         var kategorieProblems = today == lastDayWithBlocks
