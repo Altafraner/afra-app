@@ -27,6 +27,13 @@ const items_teacher = [
         },
         icon: 'pi pi-eye',
     },
+    {
+        label: 'Kalender',
+        route: {
+            name: 'Calendar',
+        },
+        icon: 'pi pi-calendar-clock',
+    },
 ];
 
 const items_student = [
@@ -41,6 +48,13 @@ const items_student = [
             name: 'Katalog',
         },
         icon: 'pi pi-list',
+    },
+    {
+        label: 'Kalender',
+        route: {
+            name: 'Calendar',
+        },
+        icon: 'pi pi-calendar-clock',
     },
 ];
 

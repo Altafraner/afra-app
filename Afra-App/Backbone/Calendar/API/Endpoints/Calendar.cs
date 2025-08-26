@@ -15,7 +15,7 @@ public static class Calendar
     public static void MapCalendarEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapGet("/api/calendar/subscribe", SubscribeCalendarAsync).RequireAuthorization();
-        app.MapGet("/api/calendar/{subId:guid}", GetCalendarAsync);
+        app.MapGet("/api/calendar/{subId:guid}.ics", GetCalendarAsync);
     }
 
     private static async Task<IResult> SubscribeCalendarAsync(UserAccessor userAccessor, CalendarService calendarService)
