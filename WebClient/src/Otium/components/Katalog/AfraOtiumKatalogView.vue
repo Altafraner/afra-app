@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { Button, Column, DataTable, Skeleton } from 'primevue';
 import { formatPerson } from '@/helpers/formatters.js';
 import AuslastungsTag from '@/Otium/components/Shared/AuslastungsTag.vue';

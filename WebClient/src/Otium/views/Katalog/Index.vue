@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { computed, ref, Suspense, watch } from 'vue';
 import { Column, DataTable, Message, Skeleton, useToast } from 'primevue';
 import AfraDateSelector from '@/Otium/components/Form/AfraDateSelector.vue';

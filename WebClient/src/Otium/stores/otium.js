@@ -1,4 +1,4 @@
-﻿import { defineStore } from 'pinia';
+import { defineStore } from 'pinia';
 import { mande } from 'mande';
 
 export const useOtiumStore = defineStore('otium', {

@@ -1,4 +1,4 @@
-﻿export const routes = [
+export const routes = [
     {
         path: '/profundum/katalog',
         name: 'Profundum-Einwahl',

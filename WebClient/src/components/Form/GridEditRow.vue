@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { Button } from 'primevue';
 import { ref } from 'vue';
 

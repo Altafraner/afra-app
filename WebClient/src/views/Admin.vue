@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { useUser } from '@/stores/user.js';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
 import { computed } from 'vue';

@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { useOtiumStore } from '@/Otium/stores/otium.js';
 import { computed, ref } from 'vue';
 import { Form } from '@primevue/forms';

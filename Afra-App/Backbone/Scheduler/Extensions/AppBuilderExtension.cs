@@ -1,4 +1,4 @@
-﻿using Quartz;
+using Quartz;
 using Quartz.AspNetCore;
 
 namespace Afra_App.Backbone.Scheduler.Extensions;

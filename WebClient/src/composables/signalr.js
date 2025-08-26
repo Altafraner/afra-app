@@ -1,4 +1,4 @@
-﻿import { ref } from 'vue';
+import { ref } from 'vue';
 import * as signalR from '@microsoft/signalr';
 
 /**

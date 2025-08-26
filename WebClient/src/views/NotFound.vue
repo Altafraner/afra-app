@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { Button, Image } from 'primevue';
 import wappen from '/vdaa/favicon.svg?url';
 </script>

@@ -1,4 +1,4 @@
-﻿namespace Afra_App.Backbone.EmergencyBackup.Configuration;
+namespace Afra_App.Backbone.EmergencyBackup.Configuration;
 
 /// <summary>
 /// Configuration settings for posting files to an external endpoint for emergency backup purposes.

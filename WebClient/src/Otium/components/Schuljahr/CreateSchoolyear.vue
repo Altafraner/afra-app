@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { computed, ref } from 'vue';
 import Stepper from 'primevue/stepper';
 import StepItem from 'primevue/stepitem';

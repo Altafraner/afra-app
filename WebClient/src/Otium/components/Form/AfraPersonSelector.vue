@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { formatTutor } from '@/helpers/formatters.js';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
 import { ref } from 'vue';

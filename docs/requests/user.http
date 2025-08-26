@@ -1,4 +1,4 @@
-﻿### GET current user
+### GET current user
 GET {{hostAddress}}/api/user
 Accept: application/json
 

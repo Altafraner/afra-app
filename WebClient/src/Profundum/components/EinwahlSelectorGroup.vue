@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import EinwahlSelector from '@/Profundum/components/EinwahlSelector.vue';
 import { computed, ref, watch } from 'vue';
 

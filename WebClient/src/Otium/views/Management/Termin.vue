@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { computed, ref, watch } from 'vue';
 import { useUser } from '@/stores/user.js';
 import {

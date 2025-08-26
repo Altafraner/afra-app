@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { computed, inject, ref } from 'vue';
 import Form from '@primevue/forms/form';
 import { formatStudent } from '@/helpers/formatters.js';

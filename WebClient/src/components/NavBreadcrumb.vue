@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { Breadcrumb } from 'primevue';
 import { RouterLink } from 'vue-router';
 
