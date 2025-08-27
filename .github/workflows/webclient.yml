@@ -1,5 +1,9 @@
 name: webclient
 
+permissions:
+  contents: read
+  pull-requests: read
+
 on:
   push:
     branches: [ "*" ]
