@@ -33,7 +33,7 @@ public class CalendarService
     ///     Creates a new Calendar Subscription and returns the key
     /// </summary>
     /// <param name="user">The person to generate the subscription for</param>
-    public async Task<Guid> addCalendarSubscriptonAsync(Person user)
+    public async Task<Guid> AddCalendarSubscriptionAsync(Person user)
     {
         byte[] randBytes = RandomNumberGenerator.GetBytes(16);
         var key = new Guid(randBytes);
@@ -47,7 +47,7 @@ public class CalendarService
     ///     Deletes all Calendar Subscriptions for the user
     /// </summary>
     /// <param name="user">The person to delete the subscriptions for</param>
-    public async Task deleteAllCalendarSubscriptonAsync(Person user)
+    public async Task DeleteAllCalendarSubscriptionAsync(Person user)
     {
         _dbContext.CalendarSubscriptions.Where(s => s.BetroffenePerson.Id == user.Id).ExecuteDelete();
         await _dbContext.SaveChangesAsync();
@@ -57,7 +57,7 @@ public class CalendarService
     ///     Gets the current ical for a calendar subcription from the subscription key
     /// </summary>
     /// <param name="subscriptionId">The Id of the Calendar Subscription</param>
-    public async Task<string?> getCalendarAsync(Guid subscriptionId)
+    public async Task<string?> GetCalendarAsync(Guid subscriptionId)
     {
         var sub = await _dbContext.CalendarSubscriptions
             .Where(s => s.Id == subscriptionId)
