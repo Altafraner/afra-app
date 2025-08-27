@@ -18,7 +18,7 @@
         "marked": "^15.0.12",
         "pinia": "^3.0.1",
         "primeicons": "^7.0.0",
-        "primelocale": "^1.4.0",
+        "primelocale": "^2.1.6",
         "primevue": "^4.3.4",
         "tailwindcss": "^4.0.12",
         "tailwindcss-primeui": "^0.5.1",
