@@ -84,9 +84,9 @@ const copy = async (text) => {
     </p>
 
     <p>
-        Generiere einen Link und füge ihn in solchem als Kalender-Abbonement ein. Solltest du
-        den Link verlieren oder er aufhören zu funktionieren, kannst du beliebig oft einen neuen
-        erstellen.
+        Generiere einen Link und füge ihn in ein solches Programm als Kalender-Abbonement ein.
+        Solltest du den Link verlieren oder er aufhören zu funktionieren, kannst du beliebig oft
+        einen neuen erstellen.
     </p>
 
     <span class="inline-flex gap-1">
