@@ -22,20 +22,20 @@ public static class Calendar
     private static async Task<IResult> SubscribeCalendarAsync(UserAccessor userAccessor, CalendarService calendarService)
     {
         var user = await userAccessor.GetUserAsync();
-        var subId = await calendarService.addCalendarSubscriptonAsync(user)!;
+        var subId = await calendarService.AddCalendarSubscriptionAsync(user)!;
         return Results.Ok(subId);
     }
 
     private static async Task<IResult> DeleteAllSubscriptionsAsync(UserAccessor userAccessor, CalendarService calendarService)
     {
         var user = await userAccessor.GetUserAsync();
-        await calendarService.deleteAllCalendarSubscriptonAsync(user)!;
+        await calendarService.DeleteAllCalendarSubscriptionAsync(user)!;
         return Results.Ok();
     }
 
     private static async Task<IResult> GetCalendarAsync(UserAccessor userAccessor, CalendarService calendarService, Guid subId)
     {
-        var cal = await calendarService.getCalendarAsync(subId);
+        var cal = await calendarService.GetCalendarAsync(subId);
         if (cal is null)
         {
             return Results.NotFound("No subscription found");
