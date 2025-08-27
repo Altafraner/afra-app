@@ -10,7 +10,7 @@
         "lint": "eslint . --fix"
     },
     "dependencies": {
-        "@microsoft/signalr": "^8.0.7",
+        "@microsoft/signalr": "^9.0.6",
         "@primevue/forms": "^4.3.4",
         "@primevue/themes": "^4.3.4",
         "@tailwindcss/vite": "^4.0.12",
