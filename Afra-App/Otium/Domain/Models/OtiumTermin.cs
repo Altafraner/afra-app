@@ -1,11 +1,12 @@
 using Afra_App.Otium.Domain.Models.Schuljahr;
+using Afra_App.Backbone.Database.Contracts;
 
 namespace Afra_App.Otium.Domain.Models;
 
 /// <summary>
 ///     A record representing a one-time instance of an Otium.
 /// </summary>
-public class OtiumTermin : OtiumInstanz
+public class OtiumTermin : OtiumInstanz, IHasTimestamps
 {
     /// <summary>
     ///     A unique identifier for the Termin
@@ -36,4 +37,10 @@ public class OtiumTermin : OtiumInstanz
     ///     True, iff a supervisor has checked the attendance for this Termin.
     /// </summary>
     public bool SindAnwesenheitenKontrolliert { get; set; } = false;
+
+    /// <inheritdoc/>
+    public DateTime CreatedAt { get; set; }
+
+    /// <inheritdoc/>
+    public DateTime LastModified { get; set; }
 }

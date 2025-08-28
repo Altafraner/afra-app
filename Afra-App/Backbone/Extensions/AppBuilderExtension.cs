@@ -5,6 +5,7 @@ using Afra_App.Backbone.Email.Extensions;
 using Afra_App.Backbone.EmergencyBackup.Extensions;
 using Afra_App.Backbone.Scheduler.Extensions;
 using Afra_App.Backbone.Utilities;
+using Afra_App.Backbone.Database.Interceptors;
 using Afra_App.User.Domain.Models;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
@@ -114,6 +115,7 @@ public static class AppBuilderExtension
     {
         builder.Services.AddDbContext<AfraAppContext>(options =>
         {
+            options.AddInterceptors(new TimestampInterceptor());
             options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"),
                 AfraAppContext.ConfigureNpgsql);
             options.ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning));
