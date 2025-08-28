@@ -116,7 +116,7 @@ fetchNum();
         einen neuen erstellen.
     </p>
 
-    <span class="inline-flex gap-1">
+    <span class="inline-flex gap-1 justify-between w-full">
         <Button
             label="Kalender-Link erstellen"
             :loading="loading"
@@ -125,18 +125,18 @@ fetchNum();
         />
 
         <Button
-          :label="`Alle erstellten (${numSubs}) Kalender-Links löschen`"
+            v-if="numSubs > 0"
+            :label="`Alle erstellten Kalender-Links (${numSubs}) löschen`"
             severity="danger"
-            :loading="loading"
             @click="deleteKeys"
             class="p-button-primary"
         />
     </span>
 
     <div v-if="calLink" class="key-display">
-        <h3>Dein persönlicher Link:</h3>
+        <h3>Dein persönlicher Link</h3>
 
-        <p>Dieser Link ist ein Passwort. Teile ihn nicht mit Dritten.</p>
+        <p>Dieser Link ist ein wie Passwort. Teile ihn nicht mit Dritten.</p>
 
         <Button
             icon="pi pi-clipboard"
