@@ -9,7 +9,28 @@ const user = useUser();
 const toast = useToast();
 const calLink = ref(null);
 
+const numSubs = ref(null);
+
 const baseUrl = import.meta.env.BASE_URL;
+
+async function fetchNum() {
+    loading.value = true;
+    const dataGetter = mande('/api/calendar/count');
+    try {
+        const response = await dataGetter.get();
+        numSubs.value = response;
+    } catch (e) {
+        await user.update();
+        toast.add({
+            severity: 'error',
+            summary: 'Fehler',
+            detail: 'Es ist ein Fehler beim Laden der Anzahl aktiver Links aufgetreten.',
+        });
+        console.error(e);
+    } finally {
+        loading.value = false;
+    }
+}
 
 async function fetchKey() {
     loading.value = true;
@@ -26,6 +47,7 @@ async function fetchKey() {
         });
         console.error(e);
     } finally {
+        fetchNum();
         loading.value = false;
     }
 }
@@ -51,6 +73,7 @@ async function deleteKeys() {
         });
         console.error(e);
     } finally {
+        fetchNum();
         loading.value = false;
     }
 }
@@ -68,6 +91,8 @@ const copy = async (text) => {
         toast.add({ severity: 'error', summary: 'Fehler beim Kopieren', life: 2000 });
     }
 };
+
+fetchNum();
 </script>
 
 <template>
@@ -100,7 +125,7 @@ const copy = async (text) => {
         />
 
         <Button
-            label="Alle erstellten Kalender-Links löschen"
+          :label="`Alle erstellten (${numSubs}) Kalender-Links löschen`"
             severity="danger"
             :loading="loading"
             @click="deleteKeys"
@@ -111,11 +136,10 @@ const copy = async (text) => {
     <div v-if="calLink" class="key-display">
         <h3>Dein persönlicher Link:</h3>
 
-        <p>Klicke auf den Link, um ihn zu kopieren.</p>
-
         <p>Dieser Link ist ein Passwort. Teile ihn nicht mit Dritten.</p>
 
         <Button
+            icon="pi pi-clipboard"
             :label="`${baseUrl}api/calendar/${calLink}.ics`"
             variant="text"
             @click.prevent="copy(`${baseUrl}api/calendar/${calLink}.ics`)"

@@ -54,6 +54,15 @@ public class CalendarService
     }
 
     /// <summary>
+    ///     Gets the number of active calendar subscriptions for a user
+    /// </summary>
+    /// <param name="user">The person to get the count for</param>
+    public async Task<int> GetNumCalendarSubscriptionAsync(Person user)
+    {
+        return await _dbContext.CalendarSubscriptions.Where(s => s.BetroffenePerson.Id == user.Id).CountAsync();
+    }
+
+    /// <summary>
     ///     Gets the current ical for a calendar subcription from the subscription key
     /// </summary>
     /// <param name="subscriptionId">The Id of the Calendar Subscription</param>
