@@ -72,7 +72,9 @@ const copy = async (text) => {
 
 <template>
     <NavBreadcrumb :items="navItems" />
-    <h1>Kalender abonnieren</h1>
+    <h1>Einstellungen</h1>
+
+    <h2>Kalender abonnieren</h2>
 
     <p v-if="user.isStudent">
         Hier kannst du deine Otia-Einschreibungen in einem externen Kalender-Programm anzeigen

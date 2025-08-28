@@ -28,11 +28,11 @@ const items_teacher = [
         icon: 'pi pi-eye',
     },
     {
-        label: 'Kalender',
+        label: 'Einstellungen',
         route: {
-            name: 'Calendar',
+            name: 'Settings',
         },
-        icon: 'pi pi-calendar-clock',
+        icon: 'pi pi-cog',
     },
 ];
 
@@ -50,11 +50,11 @@ const items_student = [
         icon: 'pi pi-list',
     },
     {
-        label: 'Kalender',
+        label: 'Einstellungen',
         route: {
-            name: 'Calendar',
+            name: 'Settings',
         },
-        icon: 'pi pi-calendar-clock',
+        icon: 'pi pi-cog',
     },
 ];
 
@@ -74,7 +74,7 @@ const items_otium_manager = [
         route: {
             name: 'Verwaltung',
         },
-        icon: 'pi pi-cog',
+        icon: 'pi pi-wrench',
     },
 ];
 
