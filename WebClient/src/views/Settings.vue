@@ -136,7 +136,7 @@ fetchNum();
     <div v-if="calLink" class="key-display">
         <h3>Dein persönlicher Link</h3>
 
-        <p>Dieser Link ist ein wie Passwort. Teile ihn nicht mit Dritten.</p>
+        <p>Dieser Link ist wie ein Passwort. Teile ihn nicht mit Dritten.</p>
 
         <Button
             icon="pi pi-clipboard"
