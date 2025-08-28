@@ -15,6 +15,7 @@ public static class Calendar
     public static void MapCalendarEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapGet("/api/calendar", SubscribeCalendarAsync).RequireAuthorization();
+        app.MapGet("/api/calendar/count", GetNumberOfSubscriptionsAsync).RequireAuthorization();
         app.MapDelete("/api/calendar", DeleteAllSubscriptionsAsync).RequireAuthorization();
         app.MapGet("/api/calendar/{subId:guid}.ics", GetCalendarAsync);
     }
@@ -31,6 +32,13 @@ public static class Calendar
         var user = await userAccessor.GetUserAsync();
         await calendarService.DeleteAllCalendarSubscriptionAsync(user)!;
         return Results.Ok();
+    }
+
+    private static async Task<IResult> GetNumberOfSubscriptionsAsync(UserAccessor userAccessor, CalendarService calendarService)
+    {
+        var user = await userAccessor.GetUserAsync();
+        var subId = await calendarService.GetNumCalendarSubscriptionAsync(user)!;
+        return Results.Ok(subId);
     }
 
     private static async Task<IResult> GetCalendarAsync(UserAccessor userAccessor, CalendarService calendarService, Guid subId)
