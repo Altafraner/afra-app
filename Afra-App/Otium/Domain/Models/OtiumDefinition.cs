@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
-using Afra_App.User.Domain.Models;
 using Afra_App.Backbone.Database.Contracts;
+using Afra_App.User.Domain.Models;
 
 namespace Afra_App.Otium.Domain.Models;
 

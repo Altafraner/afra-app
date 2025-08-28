@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
+using Afra_App.Backbone.Database.Contracts;
 using Afra_App.Backbone.Domain.TimeInterval;
 using Afra_App.User.Domain.Models;
-using Afra_App.Backbone.Database.Contracts;
 
 namespace Afra_App.Otium.Domain.Models;
 

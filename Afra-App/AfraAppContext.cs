@@ -1,5 +1,5 @@
-using Afra_App.Backbone.Calendar.Domain.Models;
 using Afra_App.Backbone.Email.Domain.Models;
+using Afra_App.Calendar.Domain.Models;
 using Afra_App.Otium.Domain.Models;
 using Afra_App.Otium.Domain.Models.Schuljahr;
 using Afra_App.Profundum.Domain.Models;
@@ -111,7 +111,7 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
     public DbSet<ProfundumKategorie> ProfundaKategorien { get; set; }
 
     /// <summary>
-    ///     All Calendar Subscription
+    ///     All Calendar Subscriptions
     /// </summary>
     public DbSet<CalendarSubscription> CalendarSubscriptions { get; set; }
 

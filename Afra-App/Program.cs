@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Afra_App.Backbone.Extensions;
 using Afra_App.Backbone.Utilities;
+using Afra_App.Calendar.Extensions;
 using Afra_App.Otium.Extensions;
 using Afra_App.Profundum.Extensions;
 using Afra_App.User.Extensions;
@@ -41,6 +42,7 @@ builder.Services.AddCors(options =>
 });
 
 builder.AddBackbone();
+builder.AddCalendar();
 builder.AddOtium();
 builder.AddProfundum();
 builder.AddUser();
@@ -79,6 +81,7 @@ if (app.Environment.IsDevelopment())
 app.MapOtium();
 app.MapProfundum();
 app.MapUser();
+app.MapCalendar();
 
 app.Run();
 return;

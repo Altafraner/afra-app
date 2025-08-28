@@ -1,7 +1,7 @@
-using Afra_App.Backbone.Calendar.Services;
+using Afra_App.Calendar.Services;
 using Afra_App.User.Services;
 
-namespace Afra_App.Backbone.Calendar.API.Endpoints;
+namespace Afra_App.Calendar.API.Endpoints;
 
 /// <summary>
 ///     A class containing the endpoints for the management and usage of calendar subscriptions

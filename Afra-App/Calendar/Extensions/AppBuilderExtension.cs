@@ -1,6 +1,6 @@
-using Afra_App.Backbone.Calendar.Services;
+using Afra_App.Calendar.Services;
 
-namespace Afra_App.Backbone.Calendar.Extensions;
+namespace Afra_App.Calendar.Extensions;
 
 /// <summary>
 ///     A static class that provides extension methods for <see cref="WebApplicationBuilder"/> to add calendar services.
