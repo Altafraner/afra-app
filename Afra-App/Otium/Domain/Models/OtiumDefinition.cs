@@ -1,12 +1,13 @@
 using System.ComponentModel.DataAnnotations;
 using Afra_App.User.Domain.Models;
+using Afra_App.Backbone.Database.Contracts;
 
 namespace Afra_App.Otium.Domain.Models;
 
 /// <summary>
 ///     A db record representing an Otium.
 /// </summary>
-public class OtiumDefinition
+public class OtiumDefinition : IHasTimestamps
 {
     /// <summary>
     ///     A unique identifier for the Otium
@@ -44,4 +45,10 @@ public class OtiumDefinition
     ///     All instances of the Otium
     /// </summary>
     public ICollection<OtiumTermin> Termine { get; set; } = new List<OtiumTermin>();
+
+    /// <inheritdoc/>
+    public DateTime CreatedAt { get; set; }
+
+    /// <inheritdoc/>
+    public DateTime LastModified { get; set; }
 }

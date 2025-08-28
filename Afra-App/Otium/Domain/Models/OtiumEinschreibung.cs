@@ -1,13 +1,14 @@
 using System.ComponentModel.DataAnnotations;
 using Afra_App.Backbone.Domain.TimeInterval;
 using Afra_App.User.Domain.Models;
+using Afra_App.Backbone.Database.Contracts;
 
 namespace Afra_App.Otium.Domain.Models;
 
 /// <summary>
 ///     A record representing an enrollment for a <see cref="OtiumDefinition" />.
 /// </summary>
-public class OtiumEinschreibung
+public class OtiumEinschreibung : IHasTimestamps
 {
     /// <summary>
     ///     The unique identifier of the enrollment.
@@ -29,4 +30,10 @@ public class OtiumEinschreibung
     /// The time the enrollment is in. Usually, this is the full duration of the <see cref="Termin"/>.
     /// </summary>
     public required TimeOnlyInterval Interval { get; set; }
+
+    /// <inheritdoc/>
+    public DateTime CreatedAt { get; set; }
+
+    /// <inheritdoc/>
+    public DateTime LastModified { get; set; }
 }

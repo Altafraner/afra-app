@@ -73,11 +73,14 @@ public class CalendarService
             .Include(e => e.Termin).ThenInclude(t => t.Block).ThenInclude(b => b.Schultag);
         var enrolledEvents = enrollments.Select(e => new CalendarEvent
         {
+            Uid = e.Id.ToString(),
             Summary = e.Termin.Otium.Bezeichnung,
             Description = e.Termin.Otium.Beschreibung,
             Location = e.Termin.Ort,
             Start = new CalDateTime(new DateTime(e.Termin.Block.Schultag.Datum, e.Interval.Start), true),
             End = new CalDateTime(new DateTime(e.Termin.Block.Schultag.Datum, e.Interval.End), true),
+            LastModified = new CalDateTime(new DateTime[] { e.LastModified, e.Termin.LastModified, e.Termin.Otium.LastModified }.Max(), true),
+            Created = new CalDateTime(e.CreatedAt, true),
         });
 
         var taught = _dbContext.OtiaTermine
@@ -86,11 +89,14 @@ public class CalendarService
             .Include(t => t.Block).ThenInclude(b => b.Schultag);
         var taughtEvents = taught.Select(e => new CalendarEvent
         {
+            Uid = e.Id.ToString(),
             Summary = e.Otium.Bezeichnung,
             Description = e.Otium.Beschreibung,
             Location = e.Ort,
             Start = new CalDateTime(new DateTime(e.Block.Schultag.Datum, _blockHelper.Get(e.Block.SchemaId)!.Interval.Start), true),
             End = new CalDateTime(new DateTime(e.Block.Schultag.Datum, _blockHelper.Get(e.Block.SchemaId)!.Interval.End), true),
+            LastModified = new CalDateTime(new DateTime[] { e.LastModified, e.Otium.LastModified }.Max(), true),
+            Created = new CalDateTime(e.CreatedAt, true),
         });
 
         var calendar = new Ical.Net.Calendar();
