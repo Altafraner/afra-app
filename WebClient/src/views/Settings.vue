@@ -133,7 +133,7 @@ fetchNum();
         />
     </span>
 
-    <div v-if="calLink" class="key-display">
+    <div v-if="calLink" class="mt-4 p-4 rounded-[6px] bg-gray-200 dark:bg-gray-800">
         <h3>Dein persönlicher Link</h3>
 
         <p>Dieser Link ist wie ein Passwort. Teile ihn nicht mit Dritten.</p>
@@ -147,11 +147,4 @@ fetchNum();
     </div>
 </template>
 
-<style scoped>
-.key-display {
-    margin-top: 1rem;
-    padding: 1rem;
-    background: #f4f4f4;
-    border-radius: 6px;
-}
-</style>
+<style scoped></style>
