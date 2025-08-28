@@ -7,6 +7,7 @@ import { formatStudent, formatTutor } from '@/helpers/formatters.js';
 defineOptions({ name: 'UserPeek' });
 
 const props = defineProps({
+    showGroup: { type: Boolean, default: false },
     person: { type: Object, required: true },
     label: { type: String, default: '' },
     displayFunction: { type: Function, default: formatStudent },
@@ -61,10 +62,23 @@ const toggle = async (event) => {
 <template>
     <span>
         <Button
-            :label="displayFunction(props.person)"
+            :label="displayFunction(person)"
             class="py-1 font-semibold"
             variant="text"
             @click="toggle($event)"
+        />
+
+        <Tag
+            v-if="!person?.gruppe && person?.rolle && showGroup"
+            :value="person.rolle"
+            rounded
+            severity="info"
+        />
+        <Tag
+            v-if="person?.gruppe && showGroup"
+            :value="person.gruppe"
+            rounded
+            severity="info"
         />
 
         <Popover ref="pop" :dismissable="true" :showCloseIcon="true" style="min-width: 15rem">

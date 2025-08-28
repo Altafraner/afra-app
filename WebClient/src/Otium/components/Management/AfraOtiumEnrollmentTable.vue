@@ -23,7 +23,7 @@ function initMove(student) {
     <DataTable :data-key="(value) => value.student.id" :value="props.enrollments">
         <Column header="Schüler:in">
             <template #body="{ data }">
-                <UserPeek :person="data.student" />
+                <UserPeek :person="data.student" :showGroup="true" />
             </template>
         </Column>
         <Column
