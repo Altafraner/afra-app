@@ -4,10 +4,12 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace Afra_App.Backbone.Database.Interceptors;
 
-///
+/// <summary>
+///     An Interceptor saving created and modified times for entities
+/// </summary>
 public class TimestampInterceptor : SaveChangesInterceptor
 {
-    ///
+    /// <inheritdoc/>
     public override InterceptionResult<int> SavingChanges(
         DbContextEventData eventData,
         InterceptionResult<int> result)
