@@ -5,7 +5,9 @@ import 'primeicons/primeicons.css';
 import DynamicDialog from 'primevue/dynamicdialog';
 import AfraNav from '@/components/AfraNav.vue';
 import { useUser } from '@/stores/user.js';
-import wappen from '/vdaa/favicon.svg?url';
+import { computed, ref } from 'vue';
+import wappenLight from '/vdaa/favicon.svg?url';
+import wappenDark from '/vdaa/favicon-dark.svg?url';
 import { ConfirmPopup, Image, Skeleton, Toast, useToast } from 'primevue';
 import Login from '@/components/Login.vue';
 
@@ -18,6 +20,14 @@ user.update().catch(() => {
         detail: 'Ein unerwarteter Fehler ist beim Laden der Nutzerdaten aufgetreten',
     });
 });
+
+const isDark = ref(window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+    isDark.value = e.matches;
+});
+
+const logo = computed(() => (isDark.value ? wappenDark : wappenLight));
 </script>
 
 <template>
@@ -38,7 +48,11 @@ user.update().catch(() => {
             </div>
             <div class="min-container" v-else>
                 <div class="flex justify-center">
-                    <Image :src="wappen" alt="Logo des Verein der Altafraner" height="200" />
+                    <Image
+                        :src="logo"
+                        alt="Logo des Verein der Altafraner"
+                        height="200"
+                    ></Image>
                 </div>
                 <h1>Willkommen bei der Afra-App</h1>
                 <p>Bitte logge dich ein, um die Afra-App zu nutzen.</p>

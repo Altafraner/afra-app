@@ -1,9 +1,10 @@
 <script setup>
 import Menubar from 'primevue/menubar';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { Button, Image, useToast } from 'primevue';
 
-import wappen from '/vdaa/Vereinswappen.jpg?url';
+import wappenLight from '/vdaa/favicon.svg?url';
+import wappenDark from '/vdaa/favicon-dark.svg?url';
 import { useUser } from '@/stores/user.js';
 import { useRouter } from 'vue-router';
 
@@ -140,12 +141,20 @@ setup();
 user.$subscribe(() => {
     setup(false);
 });
+
+const isDark = ref(window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+    isDark.value = e.matches;
+});
+
+const logo = computed(() => (isDark.value ? wappenDark : wappenLight));
 </script>
 
 <template>
     <Menubar :model="items">
         <template #start>
-            <Image :src="wappen" alt="Verein der Altafraner" height="50" />
+            <Image :src="logo" alt="Verein der Altafraner" height="50"></Image>
         </template>
         <template #item="{ item, props, hasSubmenu }">
             <router-link v-if="item.route" v-slot="{ href, navigate }" :to="item.route" custom>

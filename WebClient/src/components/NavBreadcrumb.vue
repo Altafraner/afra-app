@@ -23,8 +23,8 @@ const props = defineProps({
                     v-bind="props.action"
                     @click="navigate"
                 >
-                    <i v-if="item.icon" :class="[item.icon, 'text-surface-700']" />
-                    <span v-if="item.label" class="text-surface-700">{{ item.label }}</span>
+                    <i v-if="item.icon" :class="[item.icon, 'text-color']" />
+                    <span v-if="item.label" class="text-color">{{ item.label }}</span>
                 </a>
             </router-link>
             <a
@@ -34,8 +34,8 @@ const props = defineProps({
                 :target="item.target"
                 v-bind="props.action"
             >
-                <i v-if="item.icon" :class="[item.icon, 'text-surface-700']" />
-                <span v-if="item.label" class="text-surface-700">{{ item.label }}</span>
+                <i v-if="item.icon" :class="[item.icon, 'text-color']" />
+                <span v-if="item.label" class="text-color">{{ item.label }}</span>
             </a>
         </template>
     </Breadcrumb>
