@@ -33,7 +33,7 @@ namespace Afra_App.Migrations
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "wochentyp", new[] { "h", "n" });
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Afra_App.Backbone.Calendar.Domain.Models.CalendarSubscription", b =>
+            modelBuilder.Entity("Afra_App.Calendar.Domain.Models.CalendarSubscription", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -563,7 +563,7 @@ namespace Afra_App.Migrations
                     b.ToTable("ProfundumInstanzProfundumSlot");
                 });
 
-            modelBuilder.Entity("Afra_App.Backbone.Calendar.Domain.Models.CalendarSubscription", b =>
+            modelBuilder.Entity("Afra_App.Calendar.Domain.Models.CalendarSubscription", b =>
                 {
                     b.HasOne("Afra_App.User.Domain.Models.Person", "BetroffenePerson")
                         .WithMany()

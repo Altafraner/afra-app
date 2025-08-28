@@ -1,11 +1,10 @@
 using System.Security.Cryptography;
 using Afra_App.Backbone.Authentication;
-using Afra_App.Backbone.Calendar.Extensions;
+using Afra_App.Backbone.Database.Interceptors;
 using Afra_App.Backbone.Email.Extensions;
 using Afra_App.Backbone.EmergencyBackup.Extensions;
 using Afra_App.Backbone.Scheduler.Extensions;
 using Afra_App.Backbone.Utilities;
-using Afra_App.Backbone.Database.Interceptors;
 using Afra_App.User.Domain.Models;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
@@ -29,7 +28,6 @@ public static class AppBuilderExtension
         builder.AddScheduler();
         builder.AddDatabase();
         builder.AddEmail();
-        builder.AddCalendar();
         builder.AddEmergencyPostBackup();
         builder.ConfigureDataProtection();
     }

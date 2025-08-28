@@ -1,6 +1,6 @@
+using Afra_App.Backbone.Database.Contracts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-using Afra_App.Backbone.Database.Contracts;
 
 namespace Afra_App.Backbone.Database.Interceptors;
 

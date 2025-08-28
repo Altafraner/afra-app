@@ -1,6 +1,6 @@
-using Afra_App.Backbone.Calendar.API.Endpoints;
+using Afra_App.Calendar.API.Endpoints;
 
-namespace Afra_App.Backbone.Calendar.Extensions;
+namespace Afra_App.Calendar.Extensions;
 
 /// <summary>
 ///     A static class that contains extension methods for <see cref="WebApplication"/> to map calendar endpoints.
