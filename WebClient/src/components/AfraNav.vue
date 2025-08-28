@@ -78,6 +78,16 @@ const items_otium_manager = [
     },
 ];
 
+const items_admin = [
+    {
+        label: 'Admin',
+        route: {
+            name: 'Admin',
+        },
+        icon: 'pi pi-asterisk',
+    },
+];
+
 const toast = useToast();
 const router = useRouter();
 const items = ref([]);
@@ -119,6 +129,9 @@ async function setup(update = true) {
 
     if (user.user.berechtigungen.includes('Otiumsverantwortlich')) {
         items.value = [...items.value, ...items_otium_manager];
+    }
+    if (user.user.berechtigungen.includes('Admin')) {
+        items.value = [...items.value, ...items_admin];
     }
 }
 
