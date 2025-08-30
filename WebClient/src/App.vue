@@ -11,6 +11,7 @@ import wappenDark from '/vdaa/favicon-dark.svg?url';
 import { ConfirmPopup, Image, Skeleton, Toast, useToast } from 'primevue';
 import Login from '@/components/Login.vue';
 import { isDark } from '@/helpers/isdark.js';
+import ReloadPrompt from '@/components/ReloadPrompt.vue';
 
 const user = useUser();
 const toast = useToast();
@@ -29,6 +30,7 @@ const logo = computed(() => (isDark().value ? wappenDark : wappenLight));
     <Toast />
     <ConfirmPopup />
     <DynamicDialog />
+    <ReloadPrompt />
     <template v-if="!user.loading">
         <afra-nav v-if="user.loggedIn" />
         <main class="flex justify-center min-h-[90vh] mt-4">
