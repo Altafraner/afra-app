@@ -38,7 +38,7 @@ user.update().catch(() => {
             </div>
             <div class="min-container" v-else>
                 <div class="flex justify-center">
-                    <Image :src="wappen" height="200"></Image>
+                    <Image :src="wappen" alt="Logo des Verein der Altafraner" height="200" />
                 </div>
                 <h1>Willkommen bei der Afra-App</h1>
                 <p>Bitte logge dich ein, um die Afra-App zu nutzen.</p>
@@ -81,7 +81,7 @@ user.update().catch(() => {
             >
         </p>
         <span class="text-right">
-            <a href="https://github.com/Altafraner/afra-app" target="_blank"
+            <a aria-label="GitHub" href="https://github.com/Altafraner/afra-app" target="_blank"
                 ><i class="pi pi-github"
             /></a>
         </span>

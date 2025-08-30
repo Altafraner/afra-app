@@ -137,6 +137,7 @@ setup();
                     <Button
                         v-tooltip="'Neues Otium'"
                         icon="pi pi-plus"
+                        aria-label="Neues Otium"
                         @click="openCreateDialog"
                     />
                 </template>
@@ -147,6 +148,7 @@ setup();
                         icon="pi pi-times"
                         severity="danger"
                         variant="text"
+                        aria-label="Löschen"
                         @click="(event) => confirmDelete(event, data.id)"
                     />
                     <Button
@@ -156,6 +158,8 @@ setup();
                         icon="pi pi-times"
                         severity="secondary"
                         variant="text"
+                        aria-disabled
+                        aria-label="Löschen"
                     />
                 </template>
             </Column>

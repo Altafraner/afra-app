@@ -106,7 +106,7 @@ function edit(data) {
                     />
                     <Button
                         v-tooltip="'Einkürzen'"
-                        aria-label="Löschen"
+                        aria-label="Einkürzen"
                         icon="pi pi-stop"
                         severity="warn"
                         size="small"

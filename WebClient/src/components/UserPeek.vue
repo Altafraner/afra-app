@@ -81,7 +81,13 @@ const toggle = async (event) => {
             severity="info"
         />
 
-        <Popover ref="pop" :dismissable="true" :showCloseIcon="true" style="min-width: 15rem">
+        <Popover
+            ref="pop"
+            :aria-label="displayFunction(person)"
+            dismissable
+            showCloseIcon
+            style="min-width: 15rem"
+        >
             <div class="p-3">
                 <div class="flex items-center gap-3 mb-3">
                     <div class="font-bold">{{ displayFunction(person) }}</div>

@@ -39,6 +39,7 @@ function confirm() {
                 icon="pi pi-pencil"
                 severity="secondary"
                 size="small"
+                aria-label="Bearbeiten"
                 @click="edit"
             />
             <Button
@@ -46,6 +47,7 @@ function confirm() {
                 icon="pi pi-check"
                 severity="success"
                 size="small"
+                aria-label="Bestätigen"
                 @click="confirm"
             />
         </span>

@@ -53,6 +53,7 @@ function initMove(student) {
                         severity="secondary"
                         size="small"
                         variant="text"
+                        aria-label="Verschieben"
                         @click="() => initMove(data.student)"
                     />
                     <Button
@@ -62,6 +63,7 @@ function initMove(student) {
                         severity="danger"
                         size="small"
                         variant="text"
+                        aria-label="Ausschreiben"
                         @click="(evt) => emit('remove', evt, data.student)"
                     />
                 </span>

@@ -145,7 +145,7 @@ user.$subscribe(() => {
 <template>
     <Menubar :model="items">
         <template #start>
-            <Image :src="wappen" height="50"></Image>
+            <Image :src="wappen" alt="Verein der Altafraner" height="50" />
         </template>
         <template #item="{ item, props, hasSubmenu }">
             <router-link v-if="item.route" v-slot="{ href, navigate }" :to="item.route" custom>

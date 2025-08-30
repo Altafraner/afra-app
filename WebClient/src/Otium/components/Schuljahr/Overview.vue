@@ -162,6 +162,7 @@ setup();
                     v-tooltip="'Tag hinzufügen'"
                     icon="pi pi-plus"
                     size="small"
+                    aria-label="Tag hinzufügen"
                     @click="addDay"
                 />
             </template>
@@ -172,6 +173,7 @@ setup();
                     severity="secondary"
                     size="small"
                     variant="text"
+                    aria-label="Aufsicht"
                     @click="() => showAttendance(data)"
                 />
                 <Button
@@ -180,6 +182,7 @@ setup();
                     severity="secondary"
                     size="small"
                     variant="text"
+                    aria-label="Bearbeiten"
                     @click="() => updateDay(data)"
                 />
                 <Button
@@ -188,11 +191,12 @@ setup();
                     severity="danger"
                     size="small"
                     variant="text"
+                    aria-label="Löschen"
                     @click="(evt) => deleteDay(evt, data)"
                 />
             </template>
         </Column>
-        <template #empty> Keine Schultage angelegt. </template>
+        <template #empty> Keine Schultage angelegt.</template>
     </DataTable>
 </template>
 

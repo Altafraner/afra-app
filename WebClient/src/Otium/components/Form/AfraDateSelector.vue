@@ -57,6 +57,7 @@ function date_to_label(data) {
                 rounded
                 icon="pi pi-chevron-left"
                 variant="text"
+                aria-label="Vorheriger Tag"
                 @click="decrement_date"
             />
         </input-group-addon>
@@ -78,7 +79,7 @@ function date_to_label(data) {
                     >{{ formatDate(date_to_label(option)) }} |
                     {{ option.wochentyp }}
                 </template>
-                <template #empty> Kein Datum verfügbar. </template>
+                <template #empty> Kein Datum verfügbar.</template>
             </Select>
             <label v-if="showLabel" for="datum">{{ label }}</label>
         </FloatLabel>
@@ -98,6 +99,7 @@ function date_to_label(data) {
                 rounded
                 icon="pi pi-chevron-right"
                 variant="text"
+                aria-label="Nächster Tag"
                 @click="increment_date"
             />
         </input-group-addon>
