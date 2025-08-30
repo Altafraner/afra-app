@@ -1,6 +1,7 @@
 using System.Text;
 using Afra_App.Backbone.Email.Services.Contracts;
 using Afra_App.Backbone.Scheduler.Templates;
+using Afra_App.Backbone.Utilities;
 using Afra_App.Otium.Configuration;
 using Afra_App.Otium.Domain.Models;
 using Afra_App.Otium.Domain.Models.Schuljahr;
@@ -108,15 +109,15 @@ internal sealed class StudentMisbehaviourNotificationJob : RetryJob
             }
 
             foreach (var (termin, anwesenheiten) in termineInBlock)
-                foreach (var (person, _) in anwesenheiten.Where(a => a.Value == OtiumAnwesenheitsStatus.Fehlend))
-                {
-                    if (!missingInTerminProblems.ContainsKey(person)) missingInTerminProblems[person] = [];
-                    missingInTerminProblems[person].Add((termin, block));
-                }
+            foreach (var (person, _) in anwesenheiten.Where(a => a.Value == OtiumAnwesenheitsStatus.Fehlend))
+            {
+                if (!missingInTerminProblems.ContainsKey(person)) missingInTerminProblems[person] = [];
+                missingInTerminProblems[person].Add((termin, block));
+            }
         }
 
         var kategorieProblems = today == lastDayWithBlocks
-            ? await _enrollmentService.GetStudentsWithMissingCategoriesInWeek(today.AddDays(-(int)today.DayOfWeek))
+            ? await _enrollmentService.GetStudentsWithMissingCategoriesInWeek(today.GetStartOfWeek())
             : [];
 
         var studentsWithProblems = unenrolledProblems.Keys

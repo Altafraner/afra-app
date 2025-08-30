@@ -1,6 +1,7 @@
 using System.Text;
 using Afra_App.Backbone.Domain.TimeInterval;
 using Afra_App.Backbone.Email.Services.Contracts;
+using Afra_App.Backbone.Utilities;
 using Afra_App.Otium.Domain.DTO;
 using Afra_App.Otium.Domain.DTO.Dashboard;
 using Afra_App.Otium.Domain.DTO.Katalog;
@@ -146,7 +147,7 @@ public class OtiumEndpointService
         List<string> messages = [];
 
         // Week Start and End
-        var weekStart = date.AddDays(-(int)date.DayOfWeek + 1);
+        var weekStart = date.GetStartOfWeek();
         var weekEnd = weekStart.AddDays(7);
 
         // Get all blocks for the given week
@@ -193,7 +194,7 @@ public class OtiumEndpointService
     public async IAsyncEnumerable<Week> GetStudentDashboardAsyncEnumerable(Person user,
         bool all)
     {
-        var thisMonday = GetMonday(DateOnly.FromDateTime(DateTime.Today));
+        var thisMonday = DateOnly.FromDateTime(DateTime.Today).GetStartOfWeek();
 
         var startDate = thisMonday;
         var endDate = startDate.AddDays(7 * 3);
@@ -220,7 +221,7 @@ public class OtiumEndpointService
             .Where(e => schultage.Contains(e.Termin.Block.Schultag))
             .ToListAsync();
 
-        var weeks = schultage.GroupBy(s => GetMonday(s.Datum));
+        var weeks = schultage.GroupBy(s => s.Datum.GetStartOfWeek());
 
         foreach (var week in weeks)
         {
@@ -321,17 +322,12 @@ public class OtiumEndpointService
             .Select(e => e.Item2);
     }
 
-    private DateOnly GetMonday(DateOnly date)
-    {
-        return date.AddDays(-(int)date.DayOfWeek + 1);
-    }
-
     /// <summary>
     ///     Returns an overview of termine and mentees for a teacher.
     /// </summary>
     public async Task<LehrerUebersicht> GetTeacherDashboardAsync(Person user)
     {
-        var startDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek - 6));
+        var startDate = DateOnly.FromDateTime(DateTime.Today).GetStartOfWeek();
         var endDate = startDate.AddDays(21);
 
         var mentees = (await _userService.GetMenteesAsync(user))

@@ -1,3 +1,4 @@
+using Afra_App.Backbone.Utilities;
 using Afra_App.Otium.Configuration;
 using Afra_App.Otium.Domain.DTO;
 using Afra_App.Otium.Domain.Models.Schuljahr;
@@ -149,7 +150,7 @@ public class SchuljahrService
     /// <returns>The last day of the week that has any scheduled blocks. Null iff there are no scheduled blocks for the week</returns>
     public async Task<DateOnly?> GetLastDayWithBlocksAsync(DateOnly datum)
     {
-        var monday = datum.DayOfWeek == DayOfWeek.Sunday ? datum.AddDays(-6) : datum.AddDays(-(int)datum.DayOfWeek + 1);
+        var monday = datum.GetStartOfWeek();
         var endOfWeek = monday.AddDays(7);
 
         var day = await _dbContext.Blocks

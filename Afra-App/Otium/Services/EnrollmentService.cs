@@ -1,5 +1,6 @@
 using Afra_App.Backbone.Domain.TimeInterval;
 using Afra_App.Backbone.Email.Services.Contracts;
+using Afra_App.Backbone.Utilities;
 using Afra_App.Otium.Domain.DTO.Katalog;
 using Afra_App.Otium.Domain.Models;
 using Afra_App.Otium.Domain.Models.Schuljahr;
@@ -218,12 +219,12 @@ public class EnrollmentService
         var blockList = blocks.ToList();
 
         var notEnrolledBlocks = from block in _dbContext.Blocks
-                                where blockList.Contains(block)
-                                join einschreibung in _dbContext.OtiaEinschreibungen
-                                    on block.Id equals einschreibung.Termin.Block.Id
-                                    into einschreibungen
-                                where einschreibungen.All(e => e.BetroffenePerson != user)
-                                select block.SchemaId;
+            where blockList.Contains(block)
+            join einschreibung in _dbContext.OtiaEinschreibungen
+                on block.Id equals einschreibung.Termin.Block.Id
+                into einschreibungen
+            where einschreibungen.All(e => e.BetroffenePerson != user)
+            select block.SchemaId;
 
         foreach (var schemaId in notEnrolledBlocks)
         {
@@ -333,7 +334,7 @@ public class EnrollmentService
         foreach (var einschreibung in allEinschreibungen)
         {
             var day = einschreibung.Termin.Block.Schultag.Datum;
-            var monday = day.AddDays(-(int)day.DayOfWeek + 1);
+            var monday = day.GetStartOfWeek();
             einschreibungenByWeek.TryAdd(monday, []);
             einschreibungenByWeek[monday].Add(einschreibung);
         }
@@ -711,7 +712,7 @@ public class EnrollmentService
         var now = DateTime.Now;
         var time = TimeOnly.FromDateTime(now);
         var today = DateOnly.FromDateTime(now);
-        var firstDayOfWeek = termin.Block.Schultag.Datum.AddDays(-(int)termin.Block.Schultag.Datum.DayOfWeek + 1);
+        var firstDayOfWeek = termin.Block.Schultag.Datum.GetStartOfWeek();
         var lastDayOfWeek = firstDayOfWeek.AddDays(7);
         var weekInterval = new DateTimeInterval(new DateTime(firstDayOfWeek, TimeOnly.MinValue),
             TimeSpan.FromDays(7));
