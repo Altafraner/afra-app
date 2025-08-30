@@ -6,6 +6,7 @@ import { formatTutor } from '@/helpers/formatters.js';
 import { Button } from 'primevue';
 import { mande } from 'mande';
 import { useRouter } from 'vue-router';
+import UserPeek from '@/components/UserPeek.vue';
 
 const user = useUser();
 const otium = useOtiumStore();
@@ -14,14 +15,51 @@ const router = useRouter();
 await otium.updatePersonen();
 
 const isAdmin = computed(() => user.loggedIn && user.user.berechtigungen.includes('Admin'));
-const personen = computed(() =>
-    otium.personen.sort((a, b) =>
-        formatTutor(a).toLowerCase() < formatTutor(b).toLowerCase() ? -1 : 1,
-    ),
-);
+
+const personen = computed(() => {
+    const sorted = [...otium.personen].sort((a, b) => {
+        const A = (formatTutor(a) || '').toLowerCase();
+        const B = (formatTutor(b) || '').toLowerCase();
+        return A < B ? -1 : A > B ? 1 : 0;
+    });
+
+    const grouped = sorted.reduce((acc, p) => {
+        const key = p.gruppe && p.gruppe.trim() !== '' ? p.gruppe : p.rolle;
+        (acc[key] ??= []).push(p);
+        return acc;
+    }, {});
+
+    const parseGroup = (str) => {
+        const match = /^(\d+)(.*)$/i.exec(str);
+        if (match) {
+            return {
+                num: parseInt(match[1], 10),
+                suffix: match[2].trim().toLowerCase(),
+                hasNum: true,
+            };
+        }
+        return { num: null, suffix: str.toLowerCase(), hasNum: false };
+    };
+
+    return Object.entries(grouped).sort(([a], [b]) => {
+        const pa = parseGroup(a);
+        const pb = parseGroup(b);
+
+        if (pa.hasNum && !pb.hasNum) return 1;
+        if (!pa.hasNum && pb.hasNum) return -1;
+
+        if (!pa.hasNum && !pb.hasNum) {
+            return pa.suffix.localeCompare(pb.suffix, 'de', { sensitivity: 'base' });
+        }
+
+        if (pa.num !== pb.num) return pa.num - pb.num;
+        return pa.suffix.localeCompare(pb.suffix, 'de', { sensitivity: 'base' });
+    });
+});
+
 const impersonate = async (userToImpersonate) => {
     console.log(userToImpersonate);
-    await mande('/api/user/' + userToImpersonate.id + '/impersonate').get();
+    await mande(`/api/user/${userToImpersonate.id}/impersonate`).get();
     await user.update();
     await router.push('/');
 };
@@ -32,14 +70,16 @@ const impersonate = async (userToImpersonate) => {
         <h1>Admin-Bereich</h1>
         <h2>Impersonieren</h2>
         <ul>
-            <li v-for="user in personen" :key="user.id">
-                <Button
-                    :label="formatTutor(user)"
-                    class="mt-2 min-w-[15rem]"
-                    size="small"
-                    variant="secondary"
-                    @click="() => impersonate(user)"
-                />
+            <li v-for="[gruppe, users] in personen" :key="gruppe" class="mb-4">
+                <ul>
+                    <h3 class="font-bold mb-2">{{ gruppe }}</h3>
+                    <li class="flex flex-col gap-2">
+                        <div v-for="u in users" :key="u.id">
+                            <Button icon="pi pi-users" size="small" @click="impersonate(u)" />
+                            <UserPeek :person="u" />
+                        </div>
+                    </li>
+                </ul>
             </li>
         </ul>
     </template>
