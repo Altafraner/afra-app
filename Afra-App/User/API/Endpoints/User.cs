@@ -46,7 +46,7 @@ public static class User
                 async (UserSigninService userSigninService, ILogger<Program> logger, Guid id) =>
                 {
                     logger.LogWarning("Impersonating user with ID {Id}", id);
-                    await userSigninService.SignInAsync(id);
+                    await userSigninService.SignInAsync(id, rememberMe: false);
                 })
             .RequireAuthorization(AuthorizationPolicies.AdminOnly);
     }

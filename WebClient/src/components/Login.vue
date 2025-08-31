@@ -1,6 +1,6 @@
 <script setup>
 import { Form } from '@primevue/forms';
-import { Button, FloatLabel, InputText, Password, useToast } from 'primevue';
+import { Button, FloatLabel, InputText, Password, Checkbox, useToast } from 'primevue';
 import { ref } from 'vue';
 import { mande } from 'mande';
 import { useUser } from '@/stores/user.js';
@@ -13,6 +13,7 @@ const submit = async (evt) => {
     if (loading.value) return;
     const username = evt.states['username'].value;
     const password = evt.states['password'].value;
+    const remember = !!evt.states['remember'].value;
     if (!(username && password)) return;
     loading.value = true;
     try {
@@ -20,6 +21,7 @@ const submit = async (evt) => {
             {
                 username: username,
                 password: password,
+                rememberMe: remember,
             },
             { responseAs: 'response' },
         );
@@ -63,6 +65,10 @@ const submit = async (evt) => {
             <Password name="password" :feedback="false" fluid toggle-mask input-id="password" />
             <label for="password">Passwort</label>
         </FloatLabel>
+        <div class="flex items-center gap-2">
+            <Checkbox name="remember" input-id="remember" binary />
+            <label for="remember">Angemeldet bleiben</label>
+        </div>
         <Button :loading="loading" fluid label="Einloggen" severity="secondary" type="submit" />
     </Form>
 </template>
