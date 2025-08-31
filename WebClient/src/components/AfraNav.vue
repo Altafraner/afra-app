@@ -7,6 +7,7 @@ import wappenLight from '/vdaa/favicon.svg?url';
 import wappenDark from '/vdaa/favicon-dark.svg?url';
 import { useUser } from '@/stores/user.js';
 import { useRouter } from 'vue-router';
+import { isDark } from '@/helpers/isdark.js';
 
 const items_teacher = [
     {
@@ -142,13 +143,7 @@ user.$subscribe(() => {
     setup(false);
 });
 
-const isDark = ref(window.matchMedia('(prefers-color-scheme: dark)').matches);
-
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-    isDark.value = e.matches;
-});
-
-const logo = computed(() => (isDark.value ? wappenDark : wappenLight));
+const logo = computed(() => (isDark().value ? wappenDark : wappenLight));
 </script>
 
 <template>
