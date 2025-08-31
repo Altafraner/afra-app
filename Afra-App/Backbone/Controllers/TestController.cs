@@ -167,7 +167,7 @@ public class TestController(AfraAppContext dbContext, UserSigninService userSign
     {
         try
         {
-            await userSigninService.SignInAsync(id);
+            await userSigninService.SignInAsync(id, rememberMe: false);
         }
         catch (InvalidOperationException e)
         {

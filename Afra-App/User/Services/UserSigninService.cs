@@ -38,12 +38,13 @@ public class UserSigninService
     ///     Signs in the <see cref="Person" /> with the given id for the given <see cref="HttpContent" />
     /// </summary>
     /// <param name="userId">The id of the <see cref="Person" /> to sign in</param>
+    /// <param name="rememberMe">Whether to issue a persistent cookie</param>
     /// <exception cref="InvalidOperationException">The user with the given id does not exist.</exception>
-    public async Task SignInAsync(Guid userId)
+    public async Task SignInAsync(Guid userId, bool rememberMe)
     {
         var user = await _dbContext.Personen.FindAsync(userId);
         if (user is null) throw new InvalidOperationException("The user does not exist");
-        await SignInAsync(user);
+        await SignInAsync(user, rememberMe);
     }
 
     /// <summary>
@@ -88,14 +89,21 @@ public class UserSigninService
             return Results.Unauthorized();
         }
 
-        await SignInAsync(user);
+        await SignInAsync(user, request.RememberMe);
         return Results.Ok();
     }
 
-    private async Task SignInAsync(Person user)
+    private async Task SignInAsync(Person user, bool rememberMe)
     {
         var claimsPrincipal = GenerateClaimsPrincipal(user);
-        await _httpContextAccessor.HttpContext!.SignInAsync(claimsPrincipal);
+
+        var props = new AuthenticationProperties
+        {
+            IsPersistent = rememberMe,
+            ExpiresUtc = rememberMe ? DateTime.UtcNow.AddDays(30) : (DateTime?)null,
+            AllowRefresh = true,
+        };
+        await _httpContextAccessor.HttpContext!.SignInAsync(claimsPrincipal, props);
     }
 
     /// <summary>
@@ -151,5 +159,6 @@ public class UserSigninService
     /// </summary>
     /// <param name="Username">The username of the user.</param>
     /// <param name="Password">The password of the user.</param>
-    public record SignInRequest(string Username, string Password);
+    /// <param name="RememberMe">Whether to issue a persistent cookie</param>
+    public record SignInRequest(string Username, string Password, bool RememberMe);
 }
