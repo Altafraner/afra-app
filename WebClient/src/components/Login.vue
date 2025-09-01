@@ -67,7 +67,7 @@ const submit = async (evt) => {
         </FloatLabel>
         <div class="flex items-center gap-2">
             <Checkbox name="remember" input-id="remember" binary />
-            <label for="remember">Angemeldet bleiben</label>
+            <label for="remember" class="cursor-pointer font-medium text-surface-500">Angemeldet bleiben</label>
         </div>
         <Button :loading="loading" fluid label="Einloggen" severity="secondary" type="submit" />
     </Form>
