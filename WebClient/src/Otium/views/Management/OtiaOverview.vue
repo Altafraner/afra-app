@@ -28,6 +28,8 @@ const navItems = ref([
     </template>
     <template v-else>
         <NavBreadcrumb :items="navItems" />
+        <h1>Otia-Verwaltung</h1>
+
         <Tabs lazy value="0">
             <TabList>
                 <Tab value="0">Otium</Tab>
