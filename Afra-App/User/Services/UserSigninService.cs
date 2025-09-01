@@ -100,7 +100,7 @@ public class UserSigninService
         var props = new AuthenticationProperties
         {
             IsPersistent = rememberMe,
-            ExpiresUtc = rememberMe ? DateTime.UtcNow.AddDays(30) : (DateTime?)null,
+            ExpiresUtc = rememberMe ? DateTime.UtcNow.AddDays(30) : DateTime.UtcNow.AddMinutes(100),
             AllowRefresh = true,
         };
         await _httpContextAccessor.HttpContext!.SignInAsync(claimsPrincipal, props);
