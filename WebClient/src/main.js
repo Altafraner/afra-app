@@ -130,7 +130,7 @@ const AfraAppPreset = definePreset(Aura, {
             },
             dark: {
                 primary: {
-                    color: '{blue.900}',
+                    color: '{blue.400}',
                     contrastColor: '{surface.200}',
                     inverseColor: '{surface.950}',
                     hoverColor: '{sky.300}',

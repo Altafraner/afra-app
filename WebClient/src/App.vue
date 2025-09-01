@@ -77,7 +77,7 @@ const logo = computed(() => (isDark().value ? wappenDark : wappenLight));
         </main>
     </template>
     <footer
-        class="bg-primary w-full py-6 px-8 mt-[1rem] text-center text-primary-contrast sm:grid sm:grid-cols-[1fr_auto_1fr] items-center gap-3 flex flex-wrap justify-between"
+        class="bg-primary dark:bg-blue-950 w-full py-6 px-8 mt-[1rem] text-center text-primary-contrast sm:grid sm:grid-cols-[1fr_auto_1fr] items-center gap-3 flex flex-wrap justify-between"
     >
         <span></span>
         <p class="min-h-[1.2em]">
