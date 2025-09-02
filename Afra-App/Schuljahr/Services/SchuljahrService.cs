@@ -146,6 +146,17 @@ public class SchuljahrService
     }
 
     /// <summary>
+    ///     Gets a schultag by its date.
+    /// </summary>
+    public async Task<Schultag?> GetSchultagAsync(DateOnly datum)
+    {
+        var schultag = await _dbContext.Schultage
+            .Include(s => s.Blocks)
+            .FirstOrDefaultAsync(s => s.Datum == datum);
+        return schultag;
+    }
+
+    /// <summary>
     ///     Gets the last day with blocks in the current week.
     /// </summary>
     /// <param name="datum">A date of a day in the week</param>

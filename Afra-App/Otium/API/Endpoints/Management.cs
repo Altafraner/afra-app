@@ -65,7 +65,7 @@ public static class Management
     {
         var user = await userAccessor.GetUserAsync();
 
-        var otium = await service.GetTerminForTeacher(otiumTerminId, user);
+        var otium = await service.GetTerminForTeacher(otiumTerminId);
 
         return otium is null ? Results.BadRequest() : Results.Ok(otium);
     }
@@ -292,7 +292,8 @@ public static class Management
 
         try
         {
-            await service.UpdateOtiumWiederholungAsync(otiumWiederholungId, otiumWiederholung, DateOnly.FromDateTime(DateTime.Today));
+            await service.UpdateOtiumWiederholungAsync(otiumWiederholungId, otiumWiederholung,
+                DateOnly.FromDateTime(DateTime.Today));
             return Results.Ok();
         }
         catch (ArgumentException e)
