@@ -1,4 +1,5 @@
 using Afra_App.Otium.Domain.Contracts.Rules;
+using Afra_App.Otium.Domain.Contracts.Services;
 using Afra_App.Otium.Services.Rules;
 
 namespace Afra_App.Otium.Extensions;
@@ -23,5 +24,7 @@ public static class AddRulesExtension
         services.AddScoped<IIndependentRule, NotCancelledRule>();
 
         services.AddScoped<IWeekRule, RequiredKategorienRule>();
+
+        services.AddScoped<IRulesFactory, ServiceProviderRulesFactory>();
     }
 }
