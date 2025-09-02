@@ -66,17 +66,18 @@ await settings.updateKategorien();
                     @click="() => expand(data.id)"
                 >
                     <i
-                        :class="
-                            (rowsExpanded[data.id] ?? false)
-                                ? 'pi pi-angle-down text-lg'
-                                : 'pi pi-angle-right text-lg'
-                        "
+                        :class="{
+                            'pi-angle-down': rowsExpanded[data.id] ?? false,
+                            'pi-angle-right': !(rowsExpanded[data.id] ?? false),
+                        }"
+                        class="pi text-lg w-[1rem]"
                     />
                     <afra-kategorie-tag
-                        v-if="findKategorie(data)"
+                        v-if="findKategorie(data)?.icon ?? false"
                         :value="findKategorie(data)"
                         hide-name
                         minimal
+                        class="w-[1rm]"
                     />
                     <span class="font-semibold text-left">{{ data.otium }}</span>
                 </Button>
@@ -99,22 +100,24 @@ await settings.updateKategorien();
             </template>
         </Column>
         <template #expansion="{ data }">
-            <Suspense>
-                <Termin :termin-id="data.id" @update="() => emit('reload')" />
-                <template #fallback>
-                    <div>
-                        <h1>
-                            <Skeleton height="3rem" width="60%" />
-                        </h1>
-                        <p>
-                            <Skeleton width="40%" />
-                        </p>
-                        <h3 class="mt-[3rem]">
-                            <Skeleton height="2rem" width="55%" />
-                        </h3>
-                    </div>
-                </template>
-            </Suspense>
+            <div class="w-full px-4">
+                <Suspense>
+                    <Termin :termin-id="data.id" @update="() => emit('reload')" />
+                    <template #fallback>
+                        <div>
+                            <h1>
+                                <Skeleton height="3rem" width="60%" />
+                            </h1>
+                            <p>
+                                <Skeleton width="40%" />
+                            </p>
+                            <h3 class="mt-[3rem]">
+                                <Skeleton height="2rem" width="55%" />
+                            </h3>
+                        </div>
+                    </template>
+                </Suspense>
+            </div>
         </template>
         <template #groupheader="{ data }">
             <h3 class="text-base ml-4">{{ data.block }}</h3>
