@@ -48,7 +48,7 @@ const AfraAppPreset = definePreset(Aura, {
                         },
                         success: {
                             hoverBackground: 'color-mix(in srgb, {green.700}, transparent 80%)',
-                            color: '{green.200}',
+                            color: '{green.300}',
                             hoverColor: '{surface.200}',
                             activeColor: '{surface.100}',
                         },
@@ -99,6 +99,15 @@ const AfraAppPreset = definePreset(Aura, {
                             color: '{surface.300}',
                             hoverColor: '{surface.200}',
                             activeColor: '{surface.100}',
+                        },
+                    },
+                },
+                light: {
+                    text: {
+                        success: {
+                            hoverBackground: '{green.50}',
+                            activeBackground: '{green.100}',
+                            color: '{green.700}',
                         },
                     },
                 },

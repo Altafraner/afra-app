@@ -63,6 +63,7 @@ await settings.updateKategorien();
                     :disabled="data.istAbgesagt"
                     :label="data.otium"
                     variant="text"
+                    :severity="data.istEingeschrieben ? 'success' : 'primary'"
                     @click="() => expand(data.id)"
                 >
                     <i
