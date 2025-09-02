@@ -78,7 +78,7 @@ await settings.updateKategorien();
                         :value="findKategorie(data)"
                         hide-name
                         minimal
-                        class="w-[1rm]"
+                        class="w-[1rem]"
                     />
                     <span class="font-semibold text-left">{{ data.otium }}</span>
                 </Button>
