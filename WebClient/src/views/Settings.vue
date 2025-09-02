@@ -3,6 +3,7 @@ import { Button, useToast } from 'primevue';
 import { ref } from 'vue';
 import { mande } from 'mande';
 import { useUser } from '@/stores/user.js';
+import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
 
 const loading = ref(false);
 const user = useUser();
@@ -17,8 +18,7 @@ async function fetchNum() {
     loading.value = true;
     const dataGetter = mande('/api/calendar/count');
     try {
-        const response = await dataGetter.get();
-        numSubs.value = response;
+        numSubs.value = await dataGetter.get();
     } catch (e) {
         await user.update();
         toast.add({
@@ -36,8 +36,7 @@ async function fetchKey() {
     loading.value = true;
     const dataGetter = mande('/api/calendar');
     try {
-        const response = await dataGetter.get();
-        calLink.value = response;
+        calLink.value = await dataGetter.get();
     } catch (e) {
         await user.update();
         toast.add({
@@ -47,7 +46,7 @@ async function fetchKey() {
         });
         console.error(e);
     } finally {
-        fetchNum();
+        await fetchNum();
         loading.value = false;
     }
 }
@@ -56,7 +55,7 @@ async function deleteKeys() {
     loading.value = true;
     const dataGetter = mande('/api/calendar');
     try {
-        const response = await dataGetter.delete();
+        await dataGetter.delete();
         calLink.value = null;
         toast.add({
             severity: 'success',
@@ -73,7 +72,7 @@ async function deleteKeys() {
         });
         console.error(e);
     } finally {
-        fetchNum();
+        await fetchNum();
         loading.value = false;
     }
 }
@@ -92,7 +91,13 @@ const copy = async (text) => {
     }
 };
 
-fetchNum();
+await fetchNum();
+
+const navItems = [
+    {
+        label: 'Einstellungen',
+    },
+];
 </script>
 
 <template>
