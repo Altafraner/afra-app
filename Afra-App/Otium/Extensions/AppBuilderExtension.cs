@@ -1,4 +1,5 @@
 using Afra_App.Otium.Configuration;
+using Afra_App.Otium.Domain.Contracts.Services;
 using Afra_App.Otium.Services;
 
 namespace Afra_App.Otium.Extensions;

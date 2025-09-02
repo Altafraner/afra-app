@@ -2,7 +2,7 @@ using Afra_App.Otium.Domain.Models;
 using Afra_App.Schuljahr.Domain.Models;
 using Afra_App.User.Domain.Models;
 
-namespace Afra_App.Otium.Services;
+namespace Afra_App.Otium.Domain.Contracts.Services;
 
 /// <summary>
 ///     A service interface for managing attendance in the Otium module

@@ -3,6 +3,7 @@ using Afra_App.Backbone.Email.Services.Contracts;
 using Afra_App.Backbone.Scheduler.Templates;
 using Afra_App.Backbone.Utilities;
 using Afra_App.Otium.Configuration;
+using Afra_App.Otium.Domain.Contracts.Services;
 using Afra_App.Otium.Domain.Models;
 using Afra_App.Otium.Services;
 using Afra_App.Schuljahr.Domain.Models;
