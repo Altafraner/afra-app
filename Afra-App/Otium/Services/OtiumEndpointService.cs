@@ -66,7 +66,7 @@ public class OtiumEndpointService
     /// <param name="date">The date to get the <see cref="TerminPreview" />s for</param>
     public async Task<Tag> GetKatalogForDay(Person person, DateOnly date)
     {
-        return new Tag(GetTerminPreviewsForDay(date),
+        return new Tag(GetTerminPreviewsForDay(date, person),
             person.Rolle != Rolle.Oberstufe ? await GetStatusForDayAsync(person, date) : []);
     }
 
@@ -74,8 +74,9 @@ public class OtiumEndpointService
     ///     Retrieves the Otium data for a given date.
     /// </summary>
     /// <param name="date">The date for which to retrieve the Otium data.</param>
+    /// <param name="user">The user the preview ist for</param>
     /// <returns>A List of all Otia happening at that time.</returns>
-    private async IAsyncEnumerable<TerminPreview> GetTerminPreviewsForDay(DateOnly date)
+    private async IAsyncEnumerable<TerminPreview> GetTerminPreviewsForDay(DateOnly date, Person user)
     {
         // Get the schultag for the given date and block
         var blocks = await _dbContext.Blocks
@@ -101,7 +102,8 @@ public class OtiumEndpointService
                 Termin = t,
                 Auslasung = t.MaxEinschreibungen == null
                     ? null
-                    : (int)Math.Round((double)t.Enrollments.Count * 100 / t.MaxEinschreibungen.Value)
+                    : (int)Math.Round((double)t.Enrollments.Count * 100 / t.MaxEinschreibungen.Value),
+                IstEingeschrieben = t.Enrollments.Any(e => e.BetroffenePerson.Id == user.Id)
             })
             .ToListAsync();
 
@@ -110,6 +112,7 @@ public class OtiumEndpointService
         foreach (var termin in termine)
             yield return new TerminPreview(termin.Termin,
                 termin.Auslasung,
+                termin.IstEingeschrieben,
                 _kategorieService.GetTransitiveKategoriesIdsAsyncEnumerable(termin.Termin.Otium.Kategorie),
                 _blockHelper.Get(termin.Termin.Block.SchemaId)!.Bezeichnung);
     }
@@ -1052,6 +1055,7 @@ public class OtiumEndpointService
     {
         public required int? Auslasung { get; init; }
         public required DB_Termin Termin { get; init; }
+        public bool IstEingeschrieben { get; set; }
     }
 
     /// <summary>
