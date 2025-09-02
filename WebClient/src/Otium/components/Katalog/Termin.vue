@@ -141,8 +141,9 @@ await setup();
 </script>
 
 <template>
-    <div class="flex justify-between flex-wrap">
-        <p class="flex flex-row gap-4 ml-2">
+    <div class="grid grid-rows-[1fr_1fr] grid-cols-[1fr_auto] items-center">
+        <!-- Row 1 Column 1 -->
+        <div class="flex flex-row gap-4 flex-wrap">
             <Tag v-if="otium.istAbgesagt" icon="pi pi-exclamation-triangle" severity="danger"
                 >Abgesagt
             </Tag>
@@ -156,7 +157,9 @@ await setup();
                 {{ formatDate(new Date(otium.datum)) }},
                 {{ formatTime(new Date(otium.datum)) }} Uhr
             </span>
-        </p>
+        </div>
+
+        <!-- Row 1 Column 2 -->
         <Button
             v-if="otium.istAbgesagt"
             disabled
@@ -188,42 +191,19 @@ await setup();
                 severity="danger"
                 variant="text"
             />
-            <Button
-                v-tooltip="'Coming soon!'"
-                :loading="buttonLoading"
-                disabled
-                icon="pi pi-clipboard"
-                label="Notiz hinzufügen"
-                severity="secondary"
-                variant="text"
-            />
         </div>
         <template v-else>
-            <div
+            <Button
                 v-if="otium.einschreibung.kannBearbeiten"
-                class="flex flex-col gap-3 items-end"
-            >
-                <Button
-                    :disabled="buttonLoading"
-                    :loading="buttonLoading"
-                    class="justify-end"
-                    fluid
-                    icon="pi pi-plus"
-                    label="Einschreiben"
-                    variant="text"
-                    @click="() => enroll()"
-                />
-                <Button
-                    v-if="otium.wiederholungen.length > 0"
-                    :disabled="buttonLoading"
-                    :loading="buttonLoading"
-                    icon="pi pi-refresh"
-                    label="Mehrmals Einschreiben"
-                    severity="secondary"
-                    variant="text"
-                    @click="() => multiEnroll()"
-                />
-            </div>
+                :disabled="buttonLoading"
+                :loading="buttonLoading"
+                class="justify-end"
+                fluid
+                icon="pi pi-plus"
+                label="Einschreiben"
+                variant="text"
+                @click="() => enroll()"
+            />
             <Button
                 v-else
                 v-tooltip.left="otium.einschreibung.grund"
@@ -234,14 +214,41 @@ await setup();
                 variant="text"
             />
         </template>
+        <!-- Row 2 Column 1 -->
+        <SimpleBreadcrumb :model="findPath(settings.kategorien, otium.kategorie)" wrap>
+            <template #item="{ item }">
+                <AfraKategorieTag :value="item" minimal />
+            </template>
+        </SimpleBreadcrumb>
+
+        <!-- Row 2 Column 2 -->
+        <Button
+            v-if="otium.einschreibung.eingeschrieben"
+            v-tooltip="'Coming soon!'"
+            :loading="buttonLoading"
+            disabled
+            icon="pi pi-clipboard"
+            label="Notiz hinzufügen"
+            severity="secondary"
+            variant="text"
+        />
+        <Button
+            v-else-if="
+                !otium.einschreibung.eingeschrieben &&
+                otium.einschreibung.kannBearbeiten &&
+                otium.wiederholungen.length > 0
+            "
+            :disabled="buttonLoading"
+            :loading="buttonLoading"
+            icon="pi pi-refresh"
+            label="Mehrmals Einschreiben"
+            severity="secondary"
+            variant="text"
+            @click="() => multiEnroll()"
+        />
     </div>
 
     <h3 class="font-bold mt-4 text-lg">Beschreibung</h3>
-    <SimpleBreadcrumb :model="findPath(settings.kategorien, otium.kategorie)" wrap>
-        <template #item="{ item }">
-            <AfraKategorieTag :value="item" minimal />
-        </template>
-    </SimpleBreadcrumb>
     <p
         v-for="beschreibung in otium.beschreibung.split('\n').filter((desc) => desc)"
         v-if="!props.minimal && otium.beschreibung"
