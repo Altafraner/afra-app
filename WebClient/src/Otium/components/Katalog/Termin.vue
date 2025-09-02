@@ -1,5 +1,5 @@
 <script setup>
-import { Button, Tag, useDialog, useToast } from 'primevue';
+import { Button, Message, Tag, useDialog, useToast } from 'primevue';
 import { ref } from 'vue';
 import { formatDate, formatTime, formatTutor } from '@/helpers/formatters.js';
 import { mande } from 'mande';
@@ -255,6 +255,10 @@ await setup();
     >
         {{ beschreibung }}
     </p>
+
+    <Message v-if="otium.einschreibung.grund" class="mt-4" severity="warn"
+        >{{ otium.einschreibung.grund }}
+    </Message>
 </template>
 
 <style scoped></style>
