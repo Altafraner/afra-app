@@ -1,4 +1,5 @@
 using Afra_App.Backbone.Authentication;
+using Afra_App.Otium.Domain.Contracts.Services;
 using Afra_App.Otium.Domain.DTO;
 using Afra_App.Otium.Domain.HubClients;
 using Afra_App.Otium.Domain.Models;
