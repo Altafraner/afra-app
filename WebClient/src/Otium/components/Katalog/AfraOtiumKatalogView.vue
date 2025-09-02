@@ -16,7 +16,7 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits('reload');
+const emit = defineEmits(['reload']);
 
 const settings = useOtiumStore();
 const rowsExpanded = ref({});
