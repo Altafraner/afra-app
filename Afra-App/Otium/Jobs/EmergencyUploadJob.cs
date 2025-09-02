@@ -1,4 +1,5 @@
 using Afra_App.Backbone.EmergencyBackup.Services.Contracts;
+using Afra_App.Otium.Domain.Contracts.Services;
 using Afra_App.Otium.Domain.Models;
 using Afra_App.Otium.Services;
 using Afra_App.Schuljahr.Services;
@@ -73,7 +74,7 @@ public class EmergencyUploadJob : IJob
                           <h3>Fehlende</h3>
                           {{GenerateHtmlTable(missingPersons)}}
                           {{termine.Select(t => $"<h3>{t.Key.Ort} {t.Key.Otium.Bezeichnung}</h3>" + GenerateHtmlTable(t.Value))
-                                  .Aggregate("", (current, next) => current + next)}}
+                              .Aggregate("", (current, next) => current + next)}}
                       </body>
                   </html>
                   """;

@@ -1,4 +1,5 @@
 using Afra_App.Otium.Domain.Contracts.Rules;
+using Afra_App.Otium.Domain.Contracts.Services;
 using Afra_App.Otium.Domain.Models;
 using Afra_App.Otium.Domain.Models.Schuljahr;
 using Afra_App.User.Domain.Models;
