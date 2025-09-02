@@ -22,7 +22,5 @@ export function findPath(nodes, id) {
         const children = findPath(node.children, id);
         if (children.length > 0) return [node, ...children];
     }
-
-    console.log('Nothing here');
     return [];
 }
