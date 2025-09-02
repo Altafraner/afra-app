@@ -1,17 +1,16 @@
 using Afra_App.Backbone.Domain.TimeInterval;
 using Afra_App.Backbone.Email.Services.Contracts;
 using Afra_App.Backbone.Utilities;
+using Afra_App.Otium.Domain.Contracts.Rules;
+using Afra_App.Otium.Domain.Contracts.Services;
 using Afra_App.Otium.Domain.DTO.Katalog;
-using Afra_App.Otium.Domain.Models;
 using Afra_App.Schuljahr.Domain.Models;
 using Afra_App.User.Domain.DTO;
 using Afra_App.User.Domain.Models;
-using Afra_App.User.Services;
 using Microsoft.EntityFrameworkCore;
 using OtiumEinschreibung = Afra_App.Otium.Domain.Models.OtiumEinschreibung;
 using OtiumTermin = Afra_App.Otium.Domain.Models.OtiumTermin;
 using Person = Afra_App.User.Domain.Models.Person;
-using Schultag = Afra_App.Schuljahr.Domain.Models.Schultag;
 
 namespace Afra_App.Otium.Services;
 
@@ -22,26 +21,23 @@ public class EnrollmentService
 {
     private readonly BlockHelper _blockHelper;
     private readonly AfraAppContext _dbContext;
-    private readonly KategorieService _kategorieService;
     private readonly ILogger _logger;
     private readonly IEmailOutbox _outbox;
-    private readonly UserService _userService;
+    private readonly IRulesFactory _rulesFactory;
 
     /// <summary>
     ///     Constructs the EnrollmentService. Usually called by the DI container.
     /// </summary>
     public EnrollmentService(AfraAppContext dbContext,
-        KategorieService kategorieService,
         ILogger<EnrollmentService> logger,
-        BlockHelper blockHelper, UserService userService,
-        IEmailOutbox outbox)
+        BlockHelper blockHelper,
+        IEmailOutbox outbox, IRulesFactory rulesFactory)
     {
         _dbContext = dbContext;
-        _kategorieService = kategorieService;
         _logger = logger;
         _blockHelper = blockHelper;
-        _userService = userService;
         _outbox = outbox;
+        _rulesFactory = rulesFactory;
     }
 
     /// <summary>
@@ -62,8 +58,8 @@ public class EnrollmentService
 
         if (termin == null) return null;
 
-        var (mayEnroll, _) = await MayEnroll(student, termin);
-        if (!mayEnroll) return null;
+        var mayEnroll = await MayEnroll(student, termin);
+        if (!mayEnroll.IsValid) return null;
 
         var einschreibung = new OtiumEinschreibung
         {
@@ -109,9 +105,9 @@ public class EnrollmentService
             .FirstOrDefaultAsync(t => t.Id == terminId);
 
         if (startingTermin == null) throw new KeyNotFoundException("Der Termin konnte nicht gefunden werden.");
-        var (mayEnroll, _) = await MayEnroll(student, startingTermin);
+        var mayEnroll = await MayEnroll(student, startingTermin);
 
-        if (!mayEnroll) throw new InvalidOperationException("Der Nutzer darf sich nicht einschreiben.");
+        if (!mayEnroll.IsValid) throw new InvalidOperationException("Der Nutzer darf sich nicht einschreiben.");
         var einschreibung = new OtiumEinschreibung
         {
             Termin = startingTermin,
@@ -131,8 +127,8 @@ public class EnrollmentService
                 continue;
             }
 
-            var (mayEnrollRec, _) = await MayEnroll(student, recurringTermin);
-            if (!mayEnrollRec)
+            var mayEnrollReg = await MayEnroll(student, recurringTermin);
+            if (!mayEnrollReg.IsValid)
             {
                 failure.Add(date);
                 continue;
@@ -179,8 +175,8 @@ public class EnrollmentService
         if (!force)
             try
             {
-                var (mayUnenroll, _) = await MayUnenroll(student, enrollment.Termin);
-                if (!mayUnenroll) return null;
+                var mayUnenroll = await MayUnenroll(student, enrollment.Termin);
+                if (!mayUnenroll.IsValid) return null;
             }
             catch (InvalidOperationException)
             {
@@ -207,59 +203,6 @@ public class EnrollmentService
     }
 
     /// <summary>
-    ///     Gets the times of all non-optional blocks that the student is not enrolled in.
-    /// </summary>
-    /// <param name="blocks">The blocks to check for</param>
-    /// <param name="user">The users to get the times the user is not enrolled in</param>
-    /// <returns>A timeline containing all times the user must enroll in but has not done so.</returns>
-    public Timeline<TimeOnly> GetNotEnrolledTimes(IEnumerable<Block> blocks, Person user)
-    {
-        var timeline = new Timeline<TimeOnly>();
-
-        var blockList = blocks.ToList();
-
-        var notEnrolledBlocks = from block in _dbContext.Blocks
-            where blockList.Contains(block)
-            join einschreibung in _dbContext.OtiaEinschreibungen
-                on block.Id equals einschreibung.Termin.Block.Id
-                into einschreibungen
-            where einschreibungen.All(e => e.BetroffenePerson != user)
-            select block.SchemaId;
-
-        foreach (var schemaId in notEnrolledBlocks)
-        {
-            var schema = _blockHelper.Get(schemaId)!;
-            if (schema.Verpflichtend) timeline.Add(schema.Interval);
-        }
-
-        return timeline;
-    }
-
-    /// <summary>
-    ///     Gets the times of all non-optional blocks that the student is not enrolled in.
-    /// </summary>
-    /// <param name="blocks">The blocks to check for</param>
-    /// <param name="einschreibungen">The enrollments the user is enrolled in</param>
-    /// <returns>A timeline containing all times the user must enroll in but has not done so.</returns>
-    public Timeline<TimeOnly> GetNotEnrolledTimes(IEnumerable<Block> blocks,
-        IEnumerable<OtiumEinschreibung> einschreibungen)
-    {
-        var timeline = new Timeline<TimeOnly>();
-        var enrolledBlocks = einschreibungen
-            .Select(e => e.Termin.Block)
-            .DistinctBy(e => e.Id);
-
-        var notEnrolledBlocks = blocks.Where(b => !enrolledBlocks.Contains(b));
-        foreach (var block in notEnrolledBlocks)
-        {
-            var schema = _blockHelper.Get(block.SchemaId)!;
-            if (schema.Verpflichtend) timeline.Add(schema.Interval);
-        }
-
-        return timeline;
-    }
-
-    /// <summary>
     ///     Gets all blocks that the user is not enrolled in.
     /// </summary>
     /// <param name="enrollments">The users enrollment</param>
@@ -272,92 +215,6 @@ public class EnrollmentService
             .Distinct();
 
         return blocks.Where(b => !enrolledBlocks.Contains(b.Id));
-    }
-
-    /// <summary>
-    ///     Checks if a set of einschreibungen covers all non-optional blocks of a schultag.
-    /// </summary>
-    /// <param name="schultag">The day to check for</param>
-    /// <param name="einschreibungen">The set of enrollments to aggregate the intervals from</param>
-    /// <returns>True, iff all non optional blocks are enrolled</returns>
-    public bool AreAllNonOptionalBlocksEnrolled(Schultag schultag, IEnumerable<OtiumEinschreibung> einschreibungen)
-    {
-        return !schultag.Blocks
-            .Where(b => _blockHelper.Get(b.SchemaId)!.Verpflichtend)
-            .Any(b => !einschreibungen.Any(e => e.Termin.Block.SchemaId == b.SchemaId));
-    }
-
-    /// <summary>
-    ///     Gets all categories that are required for a set of enrollments and not included in the categories of enrollments.
-    /// </summary>
-    /// <param name="enrollments">The enrollments to exclude the (transitive) categories from</param>
-    /// <returns>
-    ///     A List of all Bezeichnungen of <see cref="OtiumKategorie">Kategorien</see> that are required but not covered by the
-    ///     <paramref name="enrollments" />
-    /// </returns>
-    public async Task<List<string>> GetMissingKategories(IEnumerable<OtiumEinschreibung> enrollments)
-    {
-        // Get required categories
-        var requiredKategories = (await _kategorieService.GetRequiredKategorienAsync()).Select(c => c.Id).ToHashSet();
-        foreach (var enrollment in enrollments)
-        {
-            if (enrollment.Interval.Duration < _blockHelper.Get(enrollment.Termin.Block.SchemaId)!.Interval.Duration)
-                continue;
-            var requiredParent = await _kategorieService.GetRequiredParentIdAsync(enrollment.Termin.Otium.Kategorie);
-            if (requiredParent != null) requiredKategories.Remove(requiredParent.Value);
-        }
-
-        return await _dbContext.OtiaKategorien
-            .Where(k => requiredKategories.Contains(k.Id))
-            .Select(k => k.Bezeichnung)
-            .ToListAsync();
-    }
-
-    /// <summary>
-    ///     Checks if a set of einschreibungen fulfills the required kategories for each week.
-    /// </summary>
-    /// <param name="allEinschreibungen">A list of einschreibungen to check if it fulfils the required Kategorien</param>
-    /// <returns>
-    ///     A <see cref="Dictionary{TKey,TValue}" /> with <see cref="DateTimeInterval" />s representing the weeks as keys
-    ///     and a boolean value that is true iff the rule is fulfilled
-    /// </returns>
-    public async Task<Dictionary<DateOnly, bool>> CheckAllKategoriesInWeeks(
-        List<OtiumEinschreibung> allEinschreibungen)
-    {
-        var requiredKategories = (await _kategorieService.GetRequiredKategorienAsync())
-            .Select(k => k.Id)
-            .ToList();
-
-        var einschreibungenByWeek = new Dictionary<DateOnly, List<OtiumEinschreibung>>();
-        var blockDurations = allEinschreibungen.Select(e => e.Termin.Block.SchemaId).Distinct()
-            .ToDictionary(id => id, id => _blockHelper.Get(id)!.Interval.Duration);
-        foreach (var einschreibung in allEinschreibungen)
-        {
-            var day = einschreibung.Termin.Block.Schultag.Datum;
-            var monday = day.GetStartOfWeek();
-            einschreibungenByWeek.TryAdd(monday, []);
-            einschreibungenByWeek[monday].Add(einschreibung);
-        }
-
-        var resultByWeek = new Dictionary<DateOnly, bool>();
-        foreach (var (week, weekEinschreibungen) in einschreibungenByWeek)
-        {
-            // Check if the user is enrolled in all required kategories
-            var localRequiredKategories = requiredKategories.ToHashSet();
-            foreach (var einschreibung in weekEinschreibungen)
-            {
-                if (einschreibung.Interval.Duration < blockDurations[einschreibung.Termin.Block.SchemaId])
-                    continue;
-                var requiredParent =
-                    await _kategorieService.GetRequiredParentIdAsync(einschreibung.Termin.Otium.Kategorie);
-                if (requiredParent != null) localRequiredKategories.Remove(requiredParent.Value);
-            }
-
-            var kategorieRuleFulfilled = localRequiredKategories.Count == 0;
-            resultByWeek[week] = kategorieRuleFulfilled;
-        }
-
-        return resultByWeek;
     }
 
     /// <summary>
@@ -385,10 +242,13 @@ public class EnrollmentService
         var countEnrolled = terminEinschreibungen.Count;
         var usersEnrollment = await _dbContext.OtiaEinschreibungen
             .FirstOrDefaultAsync(e => e.Termin == termin && e.BetroffenePerson == user);
-        var (mayEdit, reason) = usersEnrollment != null
+        var changeResult = usersEnrollment != null
             ? await MayUnenroll(user, termin)
-            : await MayEnroll(user, termin, countEnrolled);
-        return new EinschreibungsPreview(countEnrolled, mayEdit, reason, usersEnrollment != null,
+            : await MayEnroll(user, termin);
+        return new EinschreibungsPreview(countEnrolled,
+            changeResult.IsValid,
+            string.Join(Environment.NewLine, changeResult.Messages),
+            usersEnrollment != null,
             schema.Interval);
     }
 
@@ -474,7 +334,7 @@ public class EnrollmentService
         var today = DateOnly.FromDateTime(now);
         if (fromTerminId != Guid.Empty)
         {
-            // EF Core struggles with the OrderBy here, so i'll load all the einschreibungen and order them in memory.
+            // EF Core struggles with the OrderBy here, so I'll load all the einschreibungen and order them in memory.
             var fromEinschreibung = (await _dbContext.OtiaEinschreibungen
                     .Include(e => e.Termin)
                     .ThenInclude(e => e.Block)
@@ -566,278 +426,76 @@ public class EnrollmentService
         return missingPersons;
     }
 
-    /// <summary>
-    ///     Gets a list of all students that are missing required categories in a week starting at the given monday.
-    /// </summary>
-    /// <param name="monday">The monday the week starts on</param>
-    public async Task<Dictionary<Person, HashSet<string>>> GetStudentsWithMissingCategoriesInWeek(DateOnly monday)
+    private Task<RuleStatus> MayUnenroll(Person user, OtiumTermin termin)
     {
-        var endOfWeek = monday.AddDays(7);
-        var einschreibungenByUser = await _dbContext.Personen
-            .Where(person => person.Rolle == Rolle.Mittelstufe)
-            .GroupJoin(
-                _dbContext.OtiaEinschreibungen
-                    .Include(e => e.Termin)
-                    .ThenInclude(e => e.Otium)
-                    .ThenInclude(o => o.Kategorie)
-                    .Include(e => e.Termin)
-                    .ThenInclude(e => e.Block)
-                    .Where(e => e.Termin.Block.SchultagKey >= monday && e.Termin.Block.SchultagKey < endOfWeek),
-                person => person,
-                einschreibung => einschreibung.BetroffenePerson,
-                (person, einschreibungen) => new { person, einschreibungen })
-            .ToListAsync();
+        return MayDoSomething(user, termin, ChangeAction.Unenroll);
+    }
 
-        var result = new Dictionary<Person, HashSet<string>>();
-        foreach (var userWithEnrollments in einschreibungenByUser)
+    private Task<RuleStatus> MayEnroll(Person user, OtiumTermin termin)
+    {
+        return MayDoSomething(user, termin, ChangeAction.Enroll);
+    }
+
+    private async Task<RuleStatus> MayDoSomething(Person user, OtiumTermin termin, ChangeAction action)
+    {
+        var independentRules = _rulesFactory.GetIndependentRules();
+        foreach (var rule in independentRules)
         {
-            var missingCategories = await GetMissingKategories(userWithEnrollments.einschreibungen);
-            if (missingCategories.Count == 0)
-                continue;
-            if (!result.ContainsKey(userWithEnrollments.person)) result[userWithEnrollments.person] = [];
-            result[userWithEnrollments.person].UnionWith(missingCategories);
+            var result = await (action == ChangeAction.Enroll
+                ? rule.MayEnrollAsync(user, termin)
+                : rule.MayUnenrollAsync(user, termin));
+            if (!result.IsValid) return result;
         }
 
-        var allUsers = await _userService.GetUsersWithRoleAsync(Rolle.Mittelstufe);
-        var allCategories = (await _kategorieService.GetRequiredKategorienAsync())
-            .Select(c => c.Bezeichnung)
-            .ToHashSet();
-
-        // Ensure all users without enrollments are included
-        foreach (var user in allUsers) result.TryAdd(user, allCategories);
-
-        return result;
-    }
-
-    private (bool MayUnEnroll, string? Reason) CommonMayUnEnroll(Person user, OtiumTermin termin)
-    {
-        var schema = _blockHelper.Get(termin.Block.SchemaId);
-
-        if (schema == null)
-        {
-            _logger.LogWarning("A specified block id {id} cannot be found. Denying enrollment.", termin.Block.SchemaId);
-            return (false, "Ein interner Fehler ist aufgetreten");
-        }
-
-        var now = DateTime.Now;
-
-        var startDateTime = new DateTime(termin.Block.Schultag.Datum, schema.Interval.Start);
-        if (startDateTime <= now) return (false, "Der Termin hat bereits begonnen.");
-
-        var einschreibungsDateTime = new DateTime(termin.Block.Schultag.Datum, schema.EinschreibenBis);
-        if (einschreibungsDateTime < now)
-            return (false, "Die Einschreibung für diesen Block ist bereits beendet.");
-
-        if (user.Rolle is not Rolle.Mittelstufe and not Rolle.Oberstufe)
-            return (false, "Nur Schüler:innen können sich einschreiben.");
-
-        return (true, null);
-    }
-
-    private Task<(bool MayUnenroll, string? Reason)> MayUnenroll(Person user, OtiumTermin termin)
-    {
-        var common = CommonMayUnEnroll(user, termin);
-        if (!common.MayUnEnroll) return Task.FromResult(common);
-
-        return Task.FromResult<(bool MayUnenroll, string? Reason)>((true, null));
-    }
-
-    private async Task<(bool, string?)> MayEnroll(Person user, OtiumTermin termin)
-    {
-        var countEnrolled = await _dbContext.OtiaEinschreibungen.AsNoTracking()
-            .CountAsync(e => e.Termin == termin);
-
-        return await MayEnroll(user, termin, countEnrolled);
-    }
-
-    /// <remarks>
-    ///     This is quite an annoying Problem. I try to maintain compatability with changing Block sizes and durations.
-    ///     <para>
-    ///         It will check for the following conditions:
-    ///         <list type="bullet">
-    ///             <item>The user is not enrolled in another termin at the same time</item>
-    ///             <item>The termin hasn't already started</item>
-    ///             <item>The user isn't enrolling in a timeframe smaller than 30 minutes</item>
-    ///             <item>
-    ///                 The user isn't enrolling in the last available subBlock >= 30 min for a given week, the Otium
-    ///                 does not have the academic category and the user is not enrolled in an academic Otium in the given week
-    ///             </item>
-    ///         </list>
-    ///     </para>
-    ///     <para>
-    ///         If called for different SubBlocks of the same Termin, this will make the same SQL-Query multiple times.
-    ///     </para>
-    /// </remarks>
-    private async Task<(bool MayEnroll, string? Reason)> MayEnroll(Person user, OtiumTermin termin,
-        int countEnrolled)
-    {
-        var common = CommonMayUnEnroll(user, termin);
-        // Check common conditions with unenrollment
-        if (!common.MayUnEnroll) return common;
-
-        // Check if canceled
-        if (termin.IstAbgesagt)
-            return (false, "Der Termin wurde abgesagt.");
-
-        // Check if the termin is already full
-        if (termin.MaxEinschreibungen is not null && countEnrolled >= termin.MaxEinschreibungen)
-            return (false, "Der Termin ist bereits vollständig belegt.");
-
-        // Get enrollments for the same block
-        var parallelEnrollment = await _dbContext.OtiaEinschreibungen
-            .AnyAsync(e => e.BetroffenePerson == user && e.Termin.Block.Id == termin.Block.Id);
-
-        if (parallelEnrollment)
-            return (false, "Du bist bereits zur selben Zeit eingeschrieben");
-
-        // Further rules do not apply to students in the Oberstufe
-        if (user.Rolle == Rolle.Oberstufe)
-            return (true, null);
-
-        // Check if the user is adhering to the required categories
-        var lastAvailableBlockRuleFulfilled = await LastAvailableBlockRuleFulfilled(user, termin);
-        return lastAvailableBlockRuleFulfilled is LastAvailableBlockRuleStatus.Fulfillable
-            or LastAvailableBlockRuleStatus.ImpossibleButHelping
-            ? (true, null)
-            : (false,
-                "Du bist nicht in allen erforderlichen Kategorien eingeschrieben. Durch diese Einschreibung wäre das nicht mehr möglich.");
-    }
-
-    // Come here for some hideous shit; Optimizing this is a problem for future me.
-    // This currently needs three separate SQL-Queries + loading all categories.
-    private async Task<LastAvailableBlockRuleStatus> LastAvailableBlockRuleFulfilled(Person user, OtiumTermin termin)
-    {
-        // Find all required categories the user is not enrolled to. -> notEnrolled[]
-        // This will break if we start having blocks on sundays
-        var now = DateTime.Now;
-        var time = TimeOnly.FromDateTime(now);
-        var today = DateOnly.FromDateTime(now);
-        var firstDayOfWeek = termin.Block.Schultag.Datum.GetStartOfWeek();
-        var lastDayOfWeek = firstDayOfWeek.AddDays(7);
-        var weekInterval = new DateTimeInterval(new DateTime(firstDayOfWeek, TimeOnly.MinValue),
-            TimeSpan.FromDays(7));
-
-        var usersEnrollmentsInWeek = await _dbContext.OtiaEinschreibungen
-            .Where(e => e.BetroffenePerson == user)
+        var blockRules = _rulesFactory.GetBlockRules();
+        var usersEnrollmentsInBlock = await _dbContext.OtiaEinschreibungen
             .Include(e => e.Termin)
             .ThenInclude(t => t.Block)
             .Include(e => e.Termin)
-            .ThenInclude(e => e.Otium)
-            .ThenInclude(e => e.Kategorie)
-            .Where(e => DateOnly.FromDateTime(weekInterval.Start) <= e.Termin.Block.Schultag.Datum &&
-                        e.Termin.Block.Schultag.Datum < DateOnly.FromDateTime(weekInterval.End))
+            .ThenInclude(t => t.Otium)
+            .ThenInclude(o => o.Kategorie)
+            .Where(e => e.BetroffenePerson == user && e.Termin.Block == termin.Block)
             .ToListAsync();
 
-        var usersBlocks = usersEnrollmentsInWeek.Select(e => e.Termin.Block.Id);
-        var blockDurations = usersEnrollmentsInWeek
-            .ToDictionary(e => e.Termin.Block.Id, e => _blockHelper.Get(e.Termin.Block.SchemaId)!.Interval.Duration);
+        foreach (var rule in blockRules)
+        {
+            var result = await (action == ChangeAction.Enroll
+                ? rule.MayEnrollAsync(user, usersEnrollmentsInBlock, termin)
+                : rule.MayUnenrollAsync(user, usersEnrollmentsInBlock, termin));
+            if (!result.IsValid) return result;
+        }
 
-        var usersCategoriesInWeek = usersEnrollmentsInWeek
-            .Where(e => e.Interval.Duration >= blockDurations[e.Termin.Block.Id])
-            .Select(e => e.Termin.Otium.Kategorie)
-            .Distinct()
-            .ToList();
-
-        var requiredCategories = (await _kategorieService.GetRequiredKategorienAsync())
-            .Select(k => k.Id)
-            .ToHashSet();
-
-        // Once we have async linq we can do this with a set minus
-        foreach (var cat in usersCategoriesInWeek)
-            if (await _kategorieService.GetRequiredParentIdAsync(cat) is { } required)
-                requiredCategories.Remove(required);
-
-        if (requiredCategories.Count == 0)
-            return LastAvailableBlockRuleStatus.Fulfillable;
-
-        var allowedSchemas = _blockHelper.GetAll()
-            .Where(b => b.Interval.Start > time)
-            .Select(b => b.Id)
-            .ToHashSet();
-
-        var openBlocksInWeekWhenUnenrolled = await _dbContext.Blocks
-            .Where(b => b.Schultag.Datum >= firstDayOfWeek && b.Schultag.Datum < lastDayOfWeek &&
-                        (b.Schultag.Datum > today ||
-                         (b.Schultag.Datum == today && allowedSchemas.Contains(b.SchemaId))))
-            .Where(b => !usersBlocks.Contains(b.Id))
-            .Include(b => b.Schultag)
+        var monday = termin.Block.SchultagKey.GetStartOfWeek();
+        var endOfWeek = monday.AddDays(7);
+        var usersEnrollmentsInWeek = await _dbContext.OtiaEinschreibungen
+            .Include(e => e.Termin)
+            .ThenInclude(t => t.Block)
+            .Include(e => e.Termin)
+            .ThenInclude(t => t.Otium)
+            .ThenInclude(o => o.Kategorie)
+            .Where(e => e.BetroffenePerson == user)
+            .Where(e => e.Termin.Block.SchultagKey >= monday && e.Termin.Block.SchultagKey < endOfWeek)
             .ToListAsync();
+        var schultageInWeek = await _dbContext.Schultage
+            .Include(s => s.Blocks)
+            .Where(s => s.Datum >= monday && s.Datum < endOfWeek)
+            .ToListAsync();
+        var weekRules = _rulesFactory.GetWeekRules();
 
-        var openBlocksInWeekWhenEnrolled = openBlocksInWeekWhenUnenrolled
-            .Where(b => b.Id != termin.Block.Id)
-            .ToList();
-
-        var terminsRequiredCategory = await _kategorieService.GetRequiredParentIdAsync(termin.Otium.Kategorie);
-
-        var blockCategories = new Dictionary<Guid, HashSet<Guid>>();
-
-        var catsByBlock = await _dbContext.OtiaTermine
-            .Where(t => !t.IstAbgesagt)
-            .Where(t => openBlocksInWeekWhenUnenrolled.Contains(t.Block))
-            .GroupBy(t => t.Block.Id)
-            .Select(e => new { Block = e.Key, Category = e.Select(t => t.Otium.Kategorie).Distinct().ToHashSet() })
-            .ToDictionaryAsync(t => t.Block, t => t.Category);
-
-        foreach (var block in openBlocksInWeekWhenUnenrolled)
+        foreach (var rule in weekRules)
         {
-            blockCategories.TryAdd(block.Id, []);
-            var cats = catsByBlock.TryGetValue(block.Id, out var set) ? set : [];
-
-            foreach (var cat in cats)
-            {
-                var reqCat = await _kategorieService.GetRequiredParentIdAsync(cat);
-                if (reqCat is not null && requiredCategories.Contains(reqCat.Value))
-                    blockCategories[block.Id].Add(reqCat.Value);
-            }
+            var result = await (action == ChangeAction.Enroll
+                ? rule.MayEnrollAsync(user, schultageInWeek, usersEnrollmentsInWeek, termin)
+                : rule.MayUnenrollAsync(user, schultageInWeek, usersEnrollmentsInWeek, termin));
+            if (!result.IsValid) return result;
         }
 
-        var blockIds = openBlocksInWeekWhenEnrolled.Select(b => b.Id).ToArray();
-
-        var terminsRequiredCategoryStillRequired = terminsRequiredCategory is not null &&
-                                                   requiredCategories.Contains(terminsRequiredCategory.Value);
-        if (terminsRequiredCategory != null) requiredCategories.Remove(terminsRequiredCategory.Value);
-
-        // Check if fulfillment is possible when enrolled
-        if (Backtrack([])) return LastAvailableBlockRuleStatus.Fulfillable;
-
-        // Check if fulfillment is at all possible
-        if (terminsRequiredCategoryStillRequired) requiredCategories.Add(terminsRequiredCategory!.Value);
-        blockIds = openBlocksInWeekWhenUnenrolled.Select(b => b.Id).ToArray();
-        if (Backtrack([])) return LastAvailableBlockRuleStatus.Blocking;
-
-        var stillRequiredCategoriesFulfillableInBlock = blockCategories[termin.Block.Id].Intersect(requiredCategories);
-
-        if (terminsRequiredCategoryStillRequired || stillRequiredCategoriesFulfillableInBlock.Any())
-            return LastAvailableBlockRuleStatus.ImpossibleButHelping;
-
-        return LastAvailableBlockRuleStatus.ImpossibleButBetterOptionsAvailable;
-
-
-        bool Backtrack(HashSet<Guid> catsSelected, int blockIndex = 0)
-        {
-            if (requiredCategories.All(catsSelected.Contains)) return true;
-            if (blockIndex >= blockIds.Length) return false;
-
-            foreach (var cat in blockCategories[blockIds[blockIndex]])
-            {
-                if (!catsSelected.Add(cat)) continue;
-
-                if (Backtrack(catsSelected, blockIndex + 1))
-                    return true;
-                catsSelected.Remove(cat);
-            }
-
-            // If there are no required categories in this block, we can skip it. Otherwise, we can always choose one and the problem gets easier
-            return blockCategories[blockIds[blockIndex]].Count == 0 &&
-                   Backtrack(catsSelected, blockIndex + 1);
-        }
+        return RuleStatus.Valid;
     }
 
-    private enum LastAvailableBlockRuleStatus
+    private enum ChangeAction
     {
-        Fulfillable,
-        Blocking,
-        ImpossibleButHelping,
-        ImpossibleButBetterOptionsAvailable
+        Enroll,
+        Unenroll
     }
 }

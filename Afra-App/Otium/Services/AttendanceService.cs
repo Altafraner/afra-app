@@ -24,13 +24,13 @@ public class AttendanceService : IAttendanceService
     }
 
     /// <inheritdoc />
-    public async Task<OtiumAnwesenheitsStatus> GetAttendanceForEnrollmentAsync(Guid blockId)
+    public async Task<OtiumAnwesenheitsStatus> GetAttendanceForEnrollmentAsync(Guid enrollmentId)
     {
         var enrollment = await _dbContext.OtiaEinschreibungen
             .Include(e => e.Termin)
             .ThenInclude(t => t.Block)
             .Include(t => t.BetroffenePerson)
-            .Where(e => e.Id == blockId)
+            .Where(e => e.Id == enrollmentId)
             .Select(e => new
             {
                 PersonId = e.BetroffenePerson.Id,
@@ -39,7 +39,7 @@ public class AttendanceService : IAttendanceService
             .FirstOrDefaultAsync();
 
         if (enrollment == null)
-            throw new KeyNotFoundException($"Enrollment ID {blockId} not found");
+            throw new KeyNotFoundException($"Enrollment ID {enrollmentId} not found");
 
         // If we were to Select (a => a.Status), we could not check for null, as it would return the default value of AnwesenheitsStatus and not null;
         var attendance = await _dbContext.OtiaAnwesenheiten

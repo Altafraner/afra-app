@@ -39,6 +39,7 @@ public class OtiumEndpointService
     private readonly IEmailOutbox _emailOutbox;
     private readonly EnrollmentService _enrollmentService;
     private readonly KategorieService _kategorieService;
+    private readonly RulesValidationService _rulesValidationService;
     private readonly SchuljahrService _schuljahrService;
     private readonly UserService _userService;
 
@@ -48,7 +49,7 @@ public class OtiumEndpointService
     public OtiumEndpointService(AfraAppContext dbContext, KategorieService kategorieService,
         EnrollmentService enrollmentService,
         IEmailOutbox emailOutbox, BlockHelper blockHelper, IAttendanceService attendanceService,
-        SchuljahrService schuljahrService, UserService userService)
+        SchuljahrService schuljahrService, UserService userService, RulesValidationService rulesValidationService)
     {
         _dbContext = dbContext;
         _kategorieService = kategorieService;
@@ -58,6 +59,7 @@ public class OtiumEndpointService
         _attendanceService = attendanceService;
         _schuljahrService = schuljahrService;
         _userService = userService;
+        _rulesValidationService = rulesValidationService;
     }
 
     /// <summary>
@@ -151,17 +153,18 @@ public class OtiumEndpointService
     {
         List<string> messages = [];
 
-        // Week Start and End
         var weekStart = date.GetStartOfWeek();
         var weekEnd = weekStart.AddDays(7);
 
         // Get all blocks for the given week
-        var blocks = await _dbContext.Schultage
+        var schultage = await _dbContext.Schultage
             .Where(s => s.Datum >= weekStart && s.Datum < weekEnd)
-            .SelectMany(s => s.Blocks)
-            .OrderBy(b => b.SchultagKey)
-            .ThenBy(b => b.SchemaId)
+            .Include(s => s.Blocks
+                .OrderBy(b => b.SchultagKey)
+                .ThenBy(b => b.SchemaId)
+            )
             .ToListAsync();
+        var blocks = schultage.SelectMany(s => s.Blocks);
 
         // Get all enrollments for the given week
         var weeksEnrollments = await _dbContext.OtiaEinschreibungen
@@ -173,19 +176,13 @@ public class OtiumEndpointService
             .Where(e => blocks.Contains(e.Termin.Block) &&
                         e.BetroffenePerson.Id == user.Id)
             .ToListAsync();
+        var datesEnrollments = weeksEnrollments.Where(e => e.Termin.Block.SchultagKey == date).ToList();
 
-        // Find all times on date the user is not enrolled in but should be
-        var timeline = _enrollmentService.GetNotEnrolledTimes(
-            blocks.Where(b => b.SchultagKey == date && _blockHelper.Get(b.SchemaId)!.Verpflichtend),
-            user);
-
-        messages.AddRange(timeline.GetIntervals().Select(interval =>
-            $"Es fehlen Einschreibungen von {interval.Start:t} bis {interval.End:t}."));
-
-        var missingCategories = await _enrollmentService.GetMissingKategories(weeksEnrollments);
-
-        messages.AddRange(missingCategories.Select(category =>
-            $"Es muss mindestens ein Angebot der Kategorie \"{category}\" pro Woche für einen vollen Block belegt werden."));
+        messages.AddRange(await _rulesValidationService.GetMessagesForEnrollmentsAsync(user, datesEnrollments));
+        messages.AddRange(await _rulesValidationService.GetMessagesForDayAsync(user,
+            schultage.First(s => s.Datum == date),
+            datesEnrollments));
+        messages.AddRange(await _rulesValidationService.GetMessagesForWeekAsync(user, schultage, weeksEnrollments));
 
         return messages;
     }
@@ -239,36 +236,25 @@ public class OtiumEndpointService
 
             var messageBuilder = new StringBuilder();
 
-            var kategorieRule = await _enrollmentService.GetMissingKategories(einschreibungenForWeek);
-            if (kategorieRule.Count > 0)
+            foreach (var schultag in week)
             {
-                messageBuilder.AppendLine("**Fehlende Kategorien**");
-                foreach (var kategorie in kategorieRule)
-                    messageBuilder.AppendLine(
-                        $"""- Es muss mindestens ein Angebot der Kategorie *"{kategorie}"* pro Woche für einen vollen Block belegt werden.""");
-
+                var messagesForBlocksOnDay =
+                    await _rulesValidationService.GetMessagesForDayAsync(user, schultag, einschreibungenForWeek);
+                if (messagesForBlocksOnDay.Count == 0) continue;
                 messageBuilder.AppendLine();
+                messageBuilder.AppendLine($"**{schultag.Datum:dddd, dd.MM.yyyy}**");
+                foreach (var message in messagesForBlocksOnDay)
+                    messageBuilder.AppendLine($"- {message}");
             }
 
-            var enrollmentsByDay = einschreibungenForWeek.GroupBy(e => e.Termin.Block.SchultagKey)
-                .ToDictionary(e => e.Key, e => e.ToList());
-
-            foreach (var day in week)
+            var messagesForWeek =
+                await _rulesValidationService.GetMessagesForWeekAsync(user, week.ToList(), einschreibungenForWeek);
+            if (messagesForWeek.Count > 0)
             {
-                var enrollmentsForDay = enrollmentsByDay.TryGetValue(day.Datum, out var list) ? list : [];
-                var missingEnrollmentsForDay =
-                    _enrollmentService.GetNotEnrolledBlocks(enrollmentsForDay, day.Blocks)
-                        .Where(b => _blockHelper.Get(b.SchemaId)!.Verpflichtend)
-                        .OrderBy(b => b.SchemaId)
-                        .ToList();
-
-                if (missingEnrollmentsForDay.Count <= 0) continue;
-                messageBuilder.AppendLine($"**Fehlende Einschreibungen am {day.Datum.ToString("dd.MM.yyyy")}**");
-                foreach (var block in missingEnrollmentsForDay)
-                    messageBuilder.AppendLine(
-                        $"- Es fehlen Einschreibungen im Block: *{_blockHelper.Get(block.SchemaId)!.Bezeichnung}*");
-
-                messageBuilder.AppendLine();
+                if (messageBuilder.Length > 0) messageBuilder.AppendLine();
+                messageBuilder.AppendLine("**Wöchentliche Bedingungen**");
+                foreach (var message in messagesForWeek)
+                    messageBuilder.AppendLine($"- {message}");
             }
 
             yield return new Week(
@@ -357,9 +343,10 @@ public class OtiumEndpointService
             .GroupBy(e => e.BetroffenePerson.Id)
             .ToDictionaryAsync(e => e.Key, e => e.AsEnumerable());
 
-        var schultage = _dbContext.Schultage
+        var schultage = await _dbContext.Schultage
             .Include(s => s.Blocks)
-            .Where(s => s.Datum >= startDate && s.Datum < endDate);
+            .Where(s => s.Datum >= startDate && s.Datum < endDate)
+            .ToListAsync();
 
         List<MenteePreview> menteePreviews = [];
 
@@ -402,31 +389,33 @@ public class OtiumEndpointService
                     MenteePreviewStatus.Okay,
                     MenteePreviewStatus.Okay);
 
-            var enrollmentsList = enrollments.ToList(); // Prevent multiple enumerations
-            var enrollmentsPerDay = enrollmentsList.GroupBy(e => e.Termin.Block.Schultag.Datum)
-                .ToDictionary(g => g.Key, g => g.ToList());
-            var isFullyEnrolledPerDay = new Dictionary<DateOnly, bool>();
-
-            foreach (var schultag in schultage)
-                isFullyEnrolledPerDay[schultag.Datum] = _enrollmentService.AreAllNonOptionalBlocksEnrolled(schultag,
-                    enrollmentsPerDay.TryGetValue(schultag.Datum, out var value) ? value : []);
-
-            var kategorieRuleByWeek =
-                await _enrollmentService.CheckAllKategoriesInWeeks(enrollmentsList.ToList());
+            var enrollmentsList = enrollments as DB_Einschreibung[] ?? enrollments.ToArray();
 
             return new MenteePreview(new PersonInfoMinimal(mentee),
-                IsWeekOkay(lastWeekInterval) ? MenteePreviewStatus.Okay : MenteePreviewStatus.Auffaellig,
-                IsWeekOkay(thisWeekInterval) ? MenteePreviewStatus.Okay : MenteePreviewStatus.Auffaellig,
-                IsWeekOkay(nextWeekInterval) ? MenteePreviewStatus.Okay : MenteePreviewStatus.Auffaellig
+                await IsWeekOkay(lastWeekInterval),
+                await IsWeekOkay(thisWeekInterval),
+                await IsWeekOkay(nextWeekInterval)
             );
 
-            bool IsWeekOkay(DateTimeInterval week)
+            async Task<MenteePreviewStatus> IsWeekOkay(DateTimeInterval week)
             {
-                return isFullyEnrolledPerDay
-                           .Where(group => week.Contains(group.Key.ToDateTime(TimeOnly.MinValue)))
-                           .All(group => group.Value) &&
-                       kategorieRuleByWeek.ContainsKey(DateOnly.FromDateTime(week.Start)) &&
-                       kategorieRuleByWeek[DateOnly.FromDateTime(week.Start)];
+                var schultageInWeek = schultage.Where(s =>
+                    week.Contains(s.Datum.ToDateTime(new TimeOnly(0, 0)))).ToList();
+                var weeksMessages = await _rulesValidationService.GetMessagesForWeekAsync(mentee,
+                    schultage.Where(s => schultageInWeek.Contains(s)).ToList(),
+                    enrollmentsList.Where(e => schultageInWeek.Contains(e.Termin.Block.Schultag)).ToList());
+                if (weeksMessages.Count > 0) return MenteePreviewStatus.Auffaellig;
+
+                foreach (var schultag in schultageInWeek)
+                {
+                    var daysMessages = await _rulesValidationService.GetMessagesForDayAsync(mentee, schultag,
+                        enrollmentsList.Where(e => e.Termin.Block.Schultag == schultag).ToList());
+                    if (daysMessages.Count > 0) return MenteePreviewStatus.Auffaellig;
+                }
+
+                var enrollmentsMessages =
+                    await _rulesValidationService.GetMessagesForEnrollmentsAsync(mentee, enrollmentsList.ToList());
+                return enrollmentsMessages.Count > 0 ? MenteePreviewStatus.Auffaellig : MenteePreviewStatus.Okay;
             }
         }
     }
@@ -444,8 +433,7 @@ public class OtiumEndpointService
     /// <summary>
     ///     Gets the detailed information about a termin for a teacher.
     /// </summary>
-    // The param teacher is still here as we need it later for checking if the teacher is allowed to see this termin.
-    public async Task<LehrerTermin?> GetTerminForTeacher(Guid terminId, Person teacher)
+    public async Task<LehrerTermin?> GetTerminForTeacher(Guid terminId)
     {
         var termin = await _dbContext.OtiaTermine
             .Include(t => t.Tutor)

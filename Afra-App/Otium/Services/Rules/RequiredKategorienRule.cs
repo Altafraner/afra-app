@@ -1,7 +1,7 @@
 using Afra_App.Backbone.Domain.TimeInterval;
 using Afra_App.Otium.Domain.Contracts.Rules;
 using Afra_App.Otium.Domain.Models;
-using Afra_App.Otium.Domain.Models.Schuljahr;
+using Afra_App.Schuljahr.Domain.Models;
 using Afra_App.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 
