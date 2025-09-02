@@ -23,13 +23,13 @@ public class AttendanceService : IAttendanceService
     }
 
     /// <inheritdoc />
-    public async Task<OtiumAnwesenheitsStatus> GetAttendanceForEnrollmentAsync(Guid enrollmentId)
+    public async Task<OtiumAnwesenheitsStatus> GetAttendanceForEnrollmentAsync(Guid blockId)
     {
         var enrollment = await _dbContext.OtiaEinschreibungen
             .Include(e => e.Termin)
             .ThenInclude(t => t.Block)
             .Include(t => t.BetroffenePerson)
-            .Where(e => e.Id == enrollmentId)
+            .Where(e => e.Id == blockId)
             .Select(e => new
             {
                 PersonId = e.BetroffenePerson.Id,
@@ -38,7 +38,7 @@ public class AttendanceService : IAttendanceService
             .FirstOrDefaultAsync();
 
         if (enrollment == null)
-            throw new KeyNotFoundException($"Enrollment ID {enrollmentId} not found");
+            throw new KeyNotFoundException($"Enrollment ID {blockId} not found");
 
         // If we were to Select (a => a.Status), we could not check for null, as it would return the default value of AnwesenheitsStatus and not null;
         var attendance = await _dbContext.OtiaAnwesenheiten
@@ -47,6 +47,16 @@ public class AttendanceService : IAttendanceService
             .Select(a => new { a.Status })
             .FirstOrDefaultAsync();
 
+        return attendance?.Status ?? DefaultAttendanceStatus;
+    }
+
+    /// <inheritdoc />
+    public async Task<OtiumAnwesenheitsStatus> GetAttendanceForStudentInBlockAsync(Guid blockId, Guid personId)
+    {
+        var attendance = await _dbContext.OtiaAnwesenheiten
+            .Where(a => a.StudentId == personId && a.BlockId == blockId)
+            .Select(a => new { a.Status })
+            .FirstOrDefaultAsync();
         return attendance?.Status ?? DefaultAttendanceStatus;
     }
 
@@ -104,7 +114,7 @@ public class AttendanceService : IAttendanceService
             .AsNoTracking()
             .Where(b => b.Id == blockId)
             .Select(b => new
-            { b.SchemaId, SindAnwesenheitenFehlernderErfasst = b.SindAnwesenheitenFehlernderKontrolliert })
+                { b.SchemaId, SindAnwesenheitenFehlernderErfasst = b.SindAnwesenheitenFehlernderKontrolliert })
             .FirstOrDefaultAsync();
 
         if (block is null)

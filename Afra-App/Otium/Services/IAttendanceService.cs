@@ -18,6 +18,14 @@ public interface IAttendanceService
     public Task<OtiumAnwesenheitsStatus> GetAttendanceForEnrollmentAsync(Guid enrollmentId);
 
     /// <summary>
+    ///     Gets the attendance status for a person in a specific block
+    /// </summary>
+    /// <param name="blockId">The id of the block the attendance is for.</param>
+    /// <param name="personId">The id of the person the attendace is for.</param>
+    /// <returns>The <see cref="OtiumAnwesenheitsStatus" /> for the enrollment.</returns>
+    Task<OtiumAnwesenheitsStatus> GetAttendanceForStudentInBlockAsync(Guid blockId, Guid personId);
+
+    /// <summary>
     ///     Gets the attendance status for all enrollments in a specific termin
     /// </summary>
     /// <param name="terminId">The termin to get all enrollments for</param>
