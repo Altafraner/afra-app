@@ -1,3 +1,4 @@
+using Afra_App.Otium.Domain.Models;
 using Afra_App.User.Domain.DTO;
 
 namespace Afra_App.Otium.Domain.DTO.Katalog;
@@ -12,9 +13,11 @@ public record TerminPreview : ITermin
     /// </summary>
     /// <param name="termin">The termins DB entry</param>
     /// <param name="auslastung">The load of the termin</param>
+    /// <param name="istEingeschrieben">Indicates whether the requesting user is enrolled to the termin the preview ist for</param>
     /// <param name="kategorien">A list of all categories the otium for the termin is in.</param>
     /// <param name="block">The block the termin is in</param>
-    public TerminPreview(Models.OtiumTermin termin, int? auslastung, IAsyncEnumerable<Guid> kategorien, string block)
+    public TerminPreview(OtiumTermin termin, int? auslastung, bool istEingeschrieben,
+        IAsyncEnumerable<Guid> kategorien, string block)
     {
         Id = termin.Id;
         Otium = termin.Otium.Bezeichnung;
@@ -23,6 +26,7 @@ public record TerminPreview : ITermin
         BlockSchemaId = termin.Block.SchemaId;
         Kategorien = kategorien;
         IstAbgesagt = termin.IstAbgesagt;
+        IstEingeschrieben = istEingeschrieben;
         Tutor = termin.Tutor is null ? null : new PersonInfoMinimal(termin.Tutor);
         Auslastung = auslastung;
         MaxEinschreibungen = termin.MaxEinschreibungen;
@@ -42,6 +46,11 @@ public record TerminPreview : ITermin
     ///     A list of all categories the termin is in
     /// </summary>
     public IAsyncEnumerable<Guid> Kategorien { get; set; }
+
+    /// <summary>
+    /// True, iff the current user is enrolled in the termin
+    /// </summary>
+    public bool IstEingeschrieben { get; set; }
 
     /// <summary>
     ///     A unique identifier for the termin
