@@ -7,7 +7,6 @@ import {
     InputNumber,
     InputText,
     ToggleSwitch,
-    useConfirm,
     useDialog,
     useToast,
 } from 'primevue';
@@ -20,6 +19,7 @@ import AfraPersonSelector from '@/Otium/components/Form/AfraPersonSelector.vue';
 import AfraOtiumEnrollmentTable from '@/Otium/components/Management/AfraOtiumEnrollmentTable.vue';
 import { useAttendance } from '@/Otium/composables/attendanceHubClient.js';
 import MoveStudentForm from '@/Otium/components/Supervision/MoveStudentForm.vue';
+import { useConfirmPopover } from '@/composables/confirmPopover.js';
 
 const props = defineProps({
     terminId: String,
@@ -29,7 +29,7 @@ const loading = ref(true);
 const user = useUser();
 const toast = useToast();
 const dialog = useDialog();
-const confirm = useConfirm();
+const { openConfirmDialog } = useConfirmPopover();
 const otium = ref(null);
 
 const aufsichtRunning = ref(false);
@@ -203,23 +203,6 @@ const initMove = async (student) => {
         }
         await moveStudentNow.value(student.id, otium.value.id, data.destination);
     }
-};
-
-const openConfirmDialog = (event, callback, message, severity = 'danger') => {
-    confirm.require({
-        target: event.currentTarget,
-        message: message,
-        icon: 'pi pi-exclamation-triangle',
-        acceptProps: {
-            label: 'Ja',
-            severity: severity,
-        },
-        rejectProps: {
-            label: 'Nein',
-            severity: 'secondary',
-        },
-        accept: callback,
-    });
 };
 
 const initRemove = async (evt, student) => {

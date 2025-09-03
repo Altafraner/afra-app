@@ -7,11 +7,12 @@ import Form from '@primevue/forms/form';
 import { formatMachineDate } from '@/helpers/formatters.js';
 import { mande } from 'mande';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
+import { useConfirmPopover } from '@/composables/confirmPopover.js';
 
 const dialogRef = inject('dialogRef');
 const emit = defineEmits(['update']);
 const toast = useToast();
-const confirm = useConfirm();
+const { openConfirmDialogWithReject } = useConfirmPopover();
 const otiumStore = useOtiumStore();
 
 const date = ref(null);
@@ -19,7 +20,6 @@ const wochentyp = ref(null);
 const blocks = ref([]);
 const loading = ref(false);
 const initialFormValues = ref(null);
-const submitter = ref(null);
 
 const blocksAvailable = otiumStore.blocks;
 
@@ -45,16 +45,13 @@ async function trySubmit({ valid, originalEvent }) {
     }
     loading.value = true;
 
-    confirm.require({
-        target: originalEvent.submitter,
-        blockScroll: true,
-        message:
-            'Es werden möglicherweise Schüler:innen ausgeschrieben. Möchten Sie den Termin wirklich speichern?',
-        header: 'Termin speichern',
-        icon: 'pi pi-exclamation-triangle',
-        accept: submit,
-        reject: () => (loading.value = false),
-    });
+    openConfirmDialogWithReject(
+        originalEvent,
+        submit,
+        () => (loading.value = false),
+        'Termin speichern',
+        'Es werden möglicherweise Schüler:innen ausgeschrieben. Möchten Sie den Termin wirklich speichern?',
+    );
 }
 
 async function submit() {

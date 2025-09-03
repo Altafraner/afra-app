@@ -1,7 +1,7 @@
 <script setup>
 import { useUser } from '@/stores/user.js';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
-import { Button, Column, DataTable, Dialog, Skeleton, useConfirm, useToast } from 'primevue';
+import { Button, Column, DataTable, Dialog, Skeleton, useToast } from 'primevue';
 import { ref } from 'vue';
 import { mande } from 'mande';
 import { findPath } from '@/helpers/tree.js';
@@ -9,12 +9,12 @@ import SimpleBreadcrumb from '@/components/SimpleBreadcrumb.vue';
 import { RouterLink } from 'vue-router';
 import AfraKategorieTag from '@/Otium/components/Shared/AfraKategorieTag.vue';
 import CreateOtiumForm from '@/Otium/components/Management/CreateOtiumForm.vue';
+import { useConfirmPopover } from '@/composables/confirmPopover.js';
 
 const user = useUser();
 const settings = useOtiumStore();
 const toast = useToast();
-const confirm = useConfirm();
-
+const { openConfirmDialog } = useConfirmPopover();
 const loading = ref(true);
 const createDialogOpen = ref(false);
 
@@ -59,23 +59,6 @@ async function createOtium(data) {
 function openCreateDialog() {
     createDialogOpen.value = true;
 }
-
-const openConfirmDialog = (event, callback, message) => {
-    confirm.require({
-        target: event.currentTarget,
-        message: message,
-        icon: 'pi pi-exclamation-triangle',
-        acceptProps: {
-            label: 'Ja',
-            severity: 'danger',
-        },
-        rejectProps: {
-            label: 'Nein',
-            severity: 'secondary',
-        },
-        accept: callback,
-    });
-};
 
 const confirmDelete = (event, id) => {
     const onConfirm = () => deleteOtium(id);
