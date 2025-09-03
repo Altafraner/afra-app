@@ -300,7 +300,7 @@ await fetchData();
             </template>
         </GridEditRow>
     </grid>
-    <div class="flex justify-between items-end gap-3 flex-wrap mt-3">
+    <div class="flex justify-between items-baseline gap-3 flex-wrap mt-3 mb-1">
         <h2>Einschreibungen</h2>
         <template v-if="otium.isRunning || user.isOtiumsverantwortlich">
             <Button
