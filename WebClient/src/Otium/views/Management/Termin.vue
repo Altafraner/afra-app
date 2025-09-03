@@ -319,9 +319,7 @@ await fetchData();
     </grid>
     <div class="flex justify-between items-end gap-3 flex-wrap mt-3">
         <h2>Einschreibungen</h2>
-        <template
-            v-if="otium.isRunning || user.user.berechtigungen.includes('Otiumsverantwortlich')"
-        >
+        <template v-if="otium.isRunning || user.isOtiumsverantwortlich">
             <Button
                 v-if="!aufsichtRunning"
                 icon="pi pi-eye"

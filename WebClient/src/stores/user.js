@@ -12,6 +12,9 @@ export const useUser = defineStore('user', {
             state.user.rolle === 'Oberstufe' || state.user.rolle === 'Mittelstufe',
         isMittelstufe: (state) => state.user.rolle === 'Mittelstufe',
         isTeacher: (state) => state.user.rolle === 'Tutor',
+        isOtiumsverantwortlich: (state) =>
+            state.user.berechtigungen.includes('Otiumsverantwortlich'),
+        isAdmin: (state) => state.user.berechtigungen.includes('Admin'),
     },
     actions: {
         async update() {
