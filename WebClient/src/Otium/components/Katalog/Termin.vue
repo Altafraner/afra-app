@@ -1,5 +1,5 @@
 <script setup>
-import { Button, Message, Tag, useDialog, useToast } from 'primevue';
+import { Button, InputGroup, Message, Tag, useConfirm, useDialog, useToast } from 'primevue';
 import { ref } from 'vue';
 import { formatDate, formatTime, formatTutor } from '@/helpers/formatters.js';
 import { mande } from 'mande';
@@ -10,9 +10,11 @@ import AfraKategorieTag from '@/Otium/components/Shared/AfraKategorieTag.vue';
 import { findPath } from '@/helpers/tree.js';
 import SimpleBreadcrumb from '@/components/SimpleBreadcrumb.vue';
 import MultipleEnrollmentForm from '@/Otium/components/Katalog/Forms/MultipleEnrollmentForm.vue';
+import { useConfirmPopover } from '@/composables/confirmPopover.js';
 
 const settings = useOtiumStore();
 const user = useUser();
+const { openConfirmDialog } = useConfirmPopover();
 const toast = useToast();
 const router = useRouter();
 const dialog = useDialog();
@@ -129,6 +131,30 @@ async function loadKategorien() {
     kategorien.value = settings.kategorien;
 }
 
+async function edit(termin) {
+    await router.push({
+        name: 'Verwaltung-Termin',
+        params: { terminId: termin.id },
+    });
+}
+
+async function cancel(evt, termin) {
+    const callback = async () => {
+        const api = mande(`/api/otium/management/termin/${termin.id}/cancel`);
+        try {
+            await api.put();
+            emit('update');
+        } catch {
+            toast.add({
+                severity: 'error',
+                summary: 'Fehler',
+                detail: 'Der Termin konnte nicht abgesagt werden.',
+            });
+        }
+    };
+    openConfirmDialog(evt, callback, 'Termin absagen?');
+}
+
 async function setup() {
     connection.value = mande('/api/otium/' + props.terminId);
     const terminPromise = loadTermin();
@@ -141,9 +167,9 @@ await setup();
 </script>
 
 <template>
-    <div class="grid grid-rows-[1fr_1fr] grid-cols-[1fr_auto] items-center">
+    <div class="grid auto-rows-[1fr] grid-cols-[1fr_auto] items-center">
         <!-- Row 1 Column 1 -->
-        <div class="flex flex-row gap-4 flex-wrap">
+        <div class="flex flex-row gap-4 flex-wrap min-h-8">
             <Tag v-if="otium.istAbgesagt" icon="pi pi-exclamation-triangle" severity="danger"
                 >Abgesagt
             </Tag>
@@ -160,60 +186,65 @@ await setup();
         </div>
 
         <!-- Row 1 Column 2 -->
-        <Button
-            v-if="otium.istAbgesagt"
-            disabled
-            icon="pi pi-exclamation-triangle"
-            label="Abgesagt"
-            severity="danger"
-            variant="text"
-        />
-        <div
-            v-else-if="otium.einschreibung.eingeschrieben"
-            class="flex flex-col gap-3 items-end"
-        >
+        <template v-if="user.isStudent">
             <Button
-                v-if="otium.einschreibung.kannBearbeiten"
-                :disabled="buttonLoading"
-                :loading="buttonLoading"
-                icon="pi pi-times"
-                label="Austragen"
-                severity="danger"
-                variant="text"
-                @click="() => unenroll()"
-            />
-            <Button
-                v-else
-                v-tooltip.left="otium.einschreibung.grund"
+                v-if="otium.istAbgesagt"
                 disabled
-                icon="pi pi-times"
-                label="Austragen"
+                icon="pi pi-exclamation-triangle"
+                label="Abgesagt"
                 severity="danger"
                 variant="text"
             />
-        </div>
-        <template v-else>
-            <Button
-                v-if="otium.einschreibung.kannBearbeiten"
-                :disabled="buttonLoading"
-                :loading="buttonLoading"
-                class="justify-end"
-                fluid
-                icon="pi pi-plus"
-                label="Einschreiben"
-                variant="text"
-                @click="() => enroll()"
-            />
-            <Button
-                v-else
-                v-tooltip.left="otium.einschreibung.grund"
-                :loading="buttonLoading"
-                disabled
-                icon="pi pi-plus"
-                label="Einschreiben"
-                variant="text"
-            />
+            <div
+                v-else-if="otium.einschreibung.eingeschrieben"
+                class="flex flex-col gap-3 items-end"
+            >
+                <Button
+                    v-if="otium.einschreibung.kannBearbeiten"
+                    :disabled="buttonLoading"
+                    :loading="buttonLoading"
+                    icon="pi pi-times"
+                    label="Austragen"
+                    severity="danger"
+                    variant="text"
+                    @click="() => unenroll()"
+                />
+                <Button
+                    v-else
+                    v-tooltip.left="otium.einschreibung.grund"
+                    disabled
+                    icon="pi pi-times"
+                    label="Austragen"
+                    severity="danger"
+                    variant="text"
+                />
+            </div>
+            <template v-else>
+                <Button
+                    v-if="otium.einschreibung.kannBearbeiten"
+                    :disabled="buttonLoading"
+                    :loading="buttonLoading"
+                    class="justify-end"
+                    fluid
+                    icon="pi pi-plus"
+                    label="Einschreiben"
+                    variant="text"
+                    @click="() => enroll()"
+                />
+                <Button
+                    v-else
+                    v-tooltip.left="otium.einschreibung.grund"
+                    :loading="buttonLoading"
+                    disabled
+                    icon="pi pi-plus"
+                    label="Einschreiben"
+                    variant="text"
+                />
+            </template>
         </template>
+        <span v-else>
+            <!-- At some point we'll add functionality to force enroll a student here -->
+        </span>
         <!-- Row 2 Column 1 -->
         <SimpleBreadcrumb :model="findPath(settings.kategorien, otium.kategorie)" wrap>
             <template #item="{ item }">
@@ -222,30 +253,53 @@ await setup();
         </SimpleBreadcrumb>
 
         <!-- Row 2 Column 2 -->
-        <Button
-            v-if="otium.einschreibung.eingeschrieben"
-            v-tooltip="'Coming soon!'"
-            :loading="buttonLoading"
-            disabled
-            icon="pi pi-clipboard"
-            label="Notiz hinzufügen"
-            severity="secondary"
-            variant="text"
-        />
-        <Button
-            v-else-if="
-                !otium.einschreibung.eingeschrieben &&
-                otium.einschreibung.kannBearbeiten &&
-                otium.wiederholungen.length > 0
-            "
-            :disabled="buttonLoading"
-            :loading="buttonLoading"
-            icon="pi pi-refresh"
-            label="Mehrmals Einschreiben"
-            severity="secondary"
-            variant="text"
-            @click="() => multiEnroll()"
-        />
+        <template v-if="user.isStudent">
+            <Button
+                v-if="otium.einschreibung.eingeschrieben"
+                v-tooltip="'Coming soon!'"
+                :loading="buttonLoading"
+                disabled
+                icon="pi pi-clipboard"
+                label="Notiz hinzufügen"
+                severity="secondary"
+                variant="text"
+            />
+            <Button
+                v-else-if="
+                    !otium.einschreibung.eingeschrieben &&
+                    otium.einschreibung.kannBearbeiten &&
+                    otium.wiederholungen.length > 0
+                "
+                :disabled="buttonLoading"
+                :loading="buttonLoading"
+                icon="pi pi-refresh"
+                label="Mehrmals Einschreiben"
+                severity="secondary"
+                variant="text"
+                @click="() => multiEnroll()"
+            />
+        </template>
+        <template v-else-if="user.isOtiumsverantwortlich">
+            <InputGroup>
+                <Button
+                    v-tooltip.top="'Bearbeiten'"
+                    aria-label="Bearbeiten"
+                    icon="pi pi-pencil"
+                    severity="secondary"
+                    variant="text"
+                    @click="() => edit(otium)"
+                />
+                <Button
+                    v-tooltip.top="'Absagen'"
+                    aria-label="Absagen"
+                    icon="pi pi-stop"
+                    severity="danger"
+                    variant="text"
+                    @click="(evt) => cancel(evt, otium)"
+                />
+            </InputGroup>
+        </template>
+        <span v-else />
     </div>
 
     <h3 class="font-bold mt-4 text-lg">Beschreibung</h3>
@@ -256,7 +310,7 @@ await setup();
         {{ beschreibung }}
     </p>
 
-    <Message v-if="otium.einschreibung.grund" class="mt-4" severity="warn"
+    <Message v-if="user.isStudent && otium.einschreibung.grund" class="mt-4" severity="warn"
         >{{ otium.einschreibung.grund }}
     </Message>
 </template>

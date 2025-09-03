@@ -129,10 +129,10 @@ async function setup(update = true) {
         items.value = [];
     }
 
-    if (user.user.berechtigungen.includes('Otiumsverantwortlich')) {
+    if (user.isOtiumsverantwortlich) {
         items.value = [...items.value, ...items_otium_manager];
     }
-    if (user.user.berechtigungen.includes('Admin')) {
+    if (user.isAdmin) {
         items.value = [...items.value, ...items_admin];
     }
 }

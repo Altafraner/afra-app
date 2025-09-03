@@ -14,7 +14,7 @@ const router = useRouter();
 
 await otium.updatePersonen();
 
-const isAdmin = computed(() => user.loggedIn && user.user.berechtigungen.includes('Admin'));
+const isAdmin = computed(() => user.loggedIn && user.isAdmin);
 
 const personen = computed(() => {
     const sorted = [...otium.personen].sort((a, b) => {
