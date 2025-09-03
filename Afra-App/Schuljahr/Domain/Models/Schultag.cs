@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
-namespace Afra_App.Otium.Domain.Models.Schuljahr;
+namespace Afra_App.Schuljahr.Domain.Models;
 
 /// <summary>
 ///     Represents a school day

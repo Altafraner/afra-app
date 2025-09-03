@@ -1,10 +1,11 @@
 using Afra_App.Backbone.Authentication;
-using Afra_App.Otium.Domain.DTO;
 using Afra_App.Otium.Services;
+using Afra_App.Schuljahr.Domain.DTO;
+using Afra_App.Schuljahr.Services;
 using Microsoft.AspNetCore.Mvc;
-using DtoSchultag = Afra_App.Otium.Domain.DTO.Schultag;
+using DtoSchultag = Afra_App.Schuljahr.Domain.DTO.Schultag;
 
-namespace Afra_App.Otium.API.Endpoints;
+namespace Afra_App.Schuljahr.API.Endpoints;
 
 /// <summary>
 ///     A class containing extension methods for the school year endpoint.
@@ -15,7 +16,7 @@ public static class Schuljahr
     ///     Maps the school year endpoint to the given <see cref="IEndpointRouteBuilder" />.
     /// </summary>
     /// <param name="app"></param>
-    public static void MapSchuljahr(this IEndpointRouteBuilder app)
+    public static void MapSchuljahrEndpoints(this IEndpointRouteBuilder app)
     {
         var general = app.MapGroup("/api/schuljahr")
             .RequireAuthorization();

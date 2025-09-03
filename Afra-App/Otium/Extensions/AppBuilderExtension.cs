@@ -23,7 +23,6 @@ public static class AppBuilderExtension
         builder.Services.AddScoped<KategorieService>();
         builder.Services.AddScoped<OtiumEndpointService>();
         builder.Services.AddScoped<EnrollmentService>();
-        builder.Services.AddScoped<SchuljahrService>();
         builder.Services.AddScoped<ManagementService>();
         builder.Services.AddScoped<IAttendanceService, AttendanceService>();
 

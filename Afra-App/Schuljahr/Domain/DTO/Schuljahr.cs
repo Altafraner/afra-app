@@ -1,6 +1,6 @@
-using Afra_App.Otium.Domain.Models.Schuljahr;
+using Afra_App.Schuljahr.Domain.Models;
 
-namespace Afra_App.Otium.Domain.DTO;
+namespace Afra_App.Schuljahr.Domain.DTO;
 
 /// <summary>
 ///     A DTO for sending schooldays to the client.

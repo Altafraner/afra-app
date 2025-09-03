@@ -1,5 +1,5 @@
 using Afra_App.Otium.Domain.Models;
-using Afra_App.Otium.Domain.Models.Schuljahr;
+using Afra_App.Schuljahr.Domain.Models;
 using Afra_App.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using DB_Otium = Afra_App.Otium.Domain.Models.OtiumDefinition;

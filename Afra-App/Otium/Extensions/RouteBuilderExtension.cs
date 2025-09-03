@@ -17,7 +17,6 @@ public static class RouteBuilderExtension
         var group = app.MapGroup("/api/otium")
             .WithOpenApi()
             .RequireAuthorization();
-        app.MapSchuljahr();
         group.MapKategorienEndpoints();
         group.MapKatalogEndpoints();
         group.MapDashboardEndpoints();

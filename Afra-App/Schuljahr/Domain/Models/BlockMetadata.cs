@@ -1,6 +1,6 @@
 using Afra_App.Backbone.Domain.TimeInterval;
 
-namespace Afra_App.Otium.Domain.Models.Schuljahr;
+namespace Afra_App.Schuljahr.Domain.Models;
 
 /// <summary>
 ///     A subdivision of a <see cref="Block" />

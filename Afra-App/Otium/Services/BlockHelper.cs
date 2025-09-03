@@ -1,6 +1,6 @@
 using System.Diagnostics.Contracts;
 using Afra_App.Otium.Configuration;
-using Afra_App.Otium.Domain.Models.Schuljahr;
+using Afra_App.Schuljahr.Domain.Models;
 using Microsoft.Extensions.Options;
 
 namespace Afra_App.Otium.Services;

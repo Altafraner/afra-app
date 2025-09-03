@@ -1,13 +1,15 @@
 using Afra_App.Backbone.Utilities;
 using Afra_App.Otium.Configuration;
-using Afra_App.Otium.Domain.DTO;
-using Afra_App.Otium.Domain.Models.Schuljahr;
+using Afra_App.Otium.Services;
+using Afra_App.Schuljahr.Domain.DTO;
+using Afra_App.Schuljahr.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using DtoSchultag = Afra_App.Otium.Domain.DTO.Schultag;
-using Schultag = Afra_App.Otium.Domain.Models.Schuljahr.Schultag;
+using DtoSchuljahr = Afra_App.Schuljahr.Domain.DTO.Schuljahr;
+using DtoSchultag = Afra_App.Schuljahr.Domain.DTO.Schultag;
+using Schultag = Afra_App.Schuljahr.Domain.Models.Schultag;
 
-namespace Afra_App.Otium.Services;
+namespace Afra_App.Schuljahr.Services;
 
 /// <summary>
 ///     A service for managing school years and school days.
@@ -33,7 +35,7 @@ public class SchuljahrService
     ///     Gets the current school year, including all school days and the next day.
     /// </summary>
     /// <returns></returns>
-    public async Task<Schuljahr> GetSchuljahrAsync()
+    public async Task<DtoSchuljahr> GetSchuljahrAsync()
     {
         var schultage = await _dbContext.Schultage
             .Include(s => s.Blocks)
@@ -45,7 +47,7 @@ public class SchuljahrService
         var next = schultage.FirstOrDefault(s => s.Datum >= DateOnly.FromDateTime(DateTime.Now)) ??
                    schultage.LastOrDefault();
 
-        return new Schuljahr(next, schultage);
+        return new DtoSchuljahr(next, schultage);
     }
 
     /// <summary>

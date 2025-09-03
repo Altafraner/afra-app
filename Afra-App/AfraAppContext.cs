@@ -1,8 +1,8 @@
 using Afra_App.Backbone.Email.Domain.Models;
 using Afra_App.Calendar.Domain.Models;
 using Afra_App.Otium.Domain.Models;
-using Afra_App.Otium.Domain.Models.Schuljahr;
 using Afra_App.Profundum.Domain.Models;
+using Afra_App.Schuljahr.Domain.Models;
 using Afra_App.User.Domain.Models;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;

@@ -1,5 +1,5 @@
 using Afra_App.Backbone.Database.Contracts;
-using Afra_App.Otium.Domain.Models.Schuljahr;
+using Afra_App.Schuljahr.Domain.Models;
 
 namespace Afra_App.Otium.Domain.Models;
 

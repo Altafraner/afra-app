@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using Afra_App;
 using Afra_App.Otium.Domain.Models;
-using Afra_App.Otium.Domain.Models.Schuljahr;
+using Afra_App.Schuljahr.Domain.Models;
 using Afra_App.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -281,7 +281,7 @@ namespace Afra_App.Migrations
                     b.ToTable("OtiaWiederholungen");
                 });
 
-            modelBuilder.Entity("Afra_App.Otium.Domain.Models.Schuljahr.Block", b =>
+            modelBuilder.Entity("Afra_App.Schuljahr.Domain.Models.Block", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -306,7 +306,7 @@ namespace Afra_App.Migrations
                     b.ToTable("Blocks");
                 });
 
-            modelBuilder.Entity("Afra_App.Otium.Domain.Models.Schuljahr.Schultag", b =>
+            modelBuilder.Entity("Afra_App.Schuljahr.Domain.Models.Schultag", b =>
                 {
                     b.Property<DateOnly>("Datum")
                         .HasColumnType("date");
@@ -599,7 +599,7 @@ namespace Afra_App.Migrations
 
             modelBuilder.Entity("Afra_App.Otium.Domain.Models.OtiumAnwesenheit", b =>
                 {
-                    b.HasOne("Afra_App.Otium.Domain.Models.Schuljahr.Block", "Block")
+                    b.HasOne("Afra_App.Schuljahr.Domain.Models.Block", "Block")
                         .WithMany()
                         .HasForeignKey("BlockId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -657,7 +657,7 @@ namespace Afra_App.Migrations
 
             modelBuilder.Entity("Afra_App.Otium.Domain.Models.OtiumTermin", b =>
                 {
-                    b.HasOne("Afra_App.Otium.Domain.Models.Schuljahr.Block", "Block")
+                    b.HasOne("Afra_App.Schuljahr.Domain.Models.Block", "Block")
                         .WithMany()
                         .HasForeignKey("BlockId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -704,9 +704,9 @@ namespace Afra_App.Migrations
                     b.Navigation("Tutor");
                 });
 
-            modelBuilder.Entity("Afra_App.Otium.Domain.Models.Schuljahr.Block", b =>
+            modelBuilder.Entity("Afra_App.Schuljahr.Domain.Models.Block", b =>
                 {
-                    b.HasOne("Afra_App.Otium.Domain.Models.Schuljahr.Schultag", "Schultag")
+                    b.HasOne("Afra_App.Schuljahr.Domain.Models.Schultag", "Schultag")
                         .WithMany("Blocks")
                         .HasForeignKey("SchultagKey")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -855,7 +855,7 @@ namespace Afra_App.Migrations
                     b.Navigation("Termine");
                 });
 
-            modelBuilder.Entity("Afra_App.Otium.Domain.Models.Schuljahr.Schultag", b =>
+            modelBuilder.Entity("Afra_App.Schuljahr.Domain.Models.Schultag", b =>
                 {
                     b.Navigation("Blocks");
                 });

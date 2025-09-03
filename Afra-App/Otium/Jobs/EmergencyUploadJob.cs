@@ -1,6 +1,7 @@
 using Afra_App.Backbone.EmergencyBackup.Services.Contracts;
 using Afra_App.Otium.Domain.Models;
 using Afra_App.Otium.Services;
+using Afra_App.Schuljahr.Services;
 using Afra_App.User.Domain.Models;
 using Quartz;
 

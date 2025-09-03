@@ -3,7 +3,7 @@ using Afra_App.Backbone.Email.Services.Contracts;
 using Afra_App.Backbone.Utilities;
 using Afra_App.Otium.Domain.DTO.Katalog;
 using Afra_App.Otium.Domain.Models;
-using Afra_App.Otium.Domain.Models.Schuljahr;
+using Afra_App.Schuljahr.Domain.Models;
 using Afra_App.User.Domain.DTO;
 using Afra_App.User.Domain.Models;
 using Afra_App.User.Services;
@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using OtiumEinschreibung = Afra_App.Otium.Domain.Models.OtiumEinschreibung;
 using OtiumTermin = Afra_App.Otium.Domain.Models.OtiumTermin;
 using Person = Afra_App.User.Domain.Models.Person;
-using Schultag = Afra_App.Otium.Domain.Models.Schuljahr.Schultag;
+using Schultag = Afra_App.Schuljahr.Domain.Models.Schultag;
 
 namespace Afra_App.Otium.Services;
 

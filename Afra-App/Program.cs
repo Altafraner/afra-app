@@ -6,6 +6,7 @@ using Afra_App.Backbone.Utilities;
 using Afra_App.Calendar.Extensions;
 using Afra_App.Otium.Extensions;
 using Afra_App.Profundum.Extensions;
+using Afra_App.Schuljahr.Extensions;
 using Afra_App.User.Extensions;
 using Microsoft.AspNetCore.HttpOverrides;
 using OpenTelemetry.Metrics;
@@ -44,6 +45,7 @@ builder.Services.AddCors(options =>
 builder.AddBackbone();
 builder.AddCalendar();
 builder.AddOtium();
+builder.AddSchuljahr();
 builder.AddProfundum();
 builder.AddUser();
 
@@ -79,6 +81,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapOtium();
+app.MapSchuljahr();
 app.MapProfundum();
 app.MapUser();
 app.MapCalendar();

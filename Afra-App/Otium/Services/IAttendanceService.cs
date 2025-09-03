@@ -1,5 +1,5 @@
 using Afra_App.Otium.Domain.Models;
-using Afra_App.Otium.Domain.Models.Schuljahr;
+using Afra_App.Schuljahr.Domain.Models;
 using Afra_App.User.Domain.Models;
 
 namespace Afra_App.Otium.Services;
