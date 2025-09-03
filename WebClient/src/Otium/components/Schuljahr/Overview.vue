@@ -1,14 +1,15 @@
 <script setup>
 import { useOtiumStore } from '@/Otium/stores/otium.js';
-import { Button, Column, DataTable, useConfirm, useDialog, useToast } from 'primevue';
+import { Button, Column, DataTable, useDialog, useToast } from 'primevue';
 import { mande } from 'mande';
 import CreateSchoolday from '@/Otium/components/Schuljahr/CreateSchoolday.vue';
 import { useRouter } from 'vue-router';
 import BlockSelectorDialog from '@/Otium/components/Management/BlockSelectorDialog.vue';
+import { useConfirmPopover } from '@/composables/confirmPopover.js';
 
 const settings = useOtiumStore();
 const dialog = useDialog();
-const confirm = useConfirm();
+const { openConfirmDialog } = useConfirmPopover();
 const toast = useToast();
 const router = useRouter();
 
@@ -51,35 +52,22 @@ function updateDay(data) {
 }
 
 function deleteDay(event, data) {
-    confirm.require({
-        target: event.currentTarget,
-        message: 'Möchten Sie den Tag wirklich löschen?',
-        header: 'Tag löschen',
-        icon: 'pi pi-exclamation-triangle',
-        acceptProps: {
-            label: 'Ja',
-            severity: 'danger',
-        },
-        rejectProps: {
-            label: 'Nein',
-            severity: 'secondary',
-        },
-        accept: async () => {
-            const api = mande('/api/management/schuljahr/' + data.datum);
-            try {
-                await api.delete();
-            } catch (error) {
-                console.error(error);
-                toast.add({
-                    severity: 'error',
-                    summary: 'Fehler',
-                    detail: 'Der Tag konnte nicht gelöscht werden.',
-                });
-            } finally {
-                await settings.updateSchuljahr(true);
-            }
-        },
-    });
+    const callback = async () => {
+        const api = mande('/api/management/schuljahr/' + data.datum);
+        try {
+            await api.delete();
+        } catch (error) {
+            console.error(error);
+            toast.add({
+                severity: 'error',
+                summary: 'Fehler',
+                detail: 'Der Tag konnte nicht gelöscht werden.',
+            });
+        } finally {
+            await settings.updateSchuljahr(true);
+        }
+    };
+    openConfirmDialog(event, callback, 'Tag Löschen', 'Möchten Sie den Tag wirklich löschen');
 }
 
 async function showAttendance(data) {

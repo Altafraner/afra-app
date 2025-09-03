@@ -1,14 +1,15 @@
 <script setup>
-import { Button, Column, DataTable, Dialog, useConfirm } from 'primevue';
+import { Button, Column, DataTable, Dialog } from 'primevue';
 import { formatDate, formatPerson } from '@/helpers/formatters.js';
 import { RouterLink } from 'vue-router';
 import { defineAsyncComponent, ref } from 'vue';
+import { useConfirmPopover } from '@/composables/confirmPopover.js';
 
 const CreateTerminForm = defineAsyncComponent(
     () => import('@/Otium/components/Management/CreateTerminForm.vue'),
 );
 
-const confirm = useConfirm();
+const { openConfirmDialog } = useConfirmPopover();
 
 const props = defineProps({
     dates: Array,
@@ -18,23 +19,6 @@ const props = defineProps({
 const emit = defineEmits(['delete', 'cancel', 'create', 'continue']);
 
 const createDialogVisible = ref(false);
-
-const openConfirmDialog = (event, callback, message, severity = 'danger') => {
-    confirm.require({
-        target: event.currentTarget,
-        message: message,
-        icon: 'pi pi-exclamation-triangle',
-        acceptProps: {
-            label: 'Ja',
-            severity: severity,
-        },
-        rejectProps: {
-            label: 'Nein',
-            severity: 'secondary',
-        },
-        accept: callback,
-    });
-};
 
 const confirmCancel = (event, id) => {
     const onConfirm = () => emit('cancel', id);
@@ -48,7 +32,7 @@ const confirmDelete = (event, id) => {
 
 const confirmContinue = (event, id) => {
     const onConfirm = () => emit('continue', id);
-    openConfirmDialog(event, onConfirm, 'Termin nicht mehr abbrechen?', 'success');
+    openConfirmDialog(event, onConfirm, 'Termin nicht mehr abbrechen?', null, 'success');
 };
 
 const triggerCreateDialog = () => {
