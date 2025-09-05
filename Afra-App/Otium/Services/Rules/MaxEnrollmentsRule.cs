@@ -27,16 +27,4 @@ public class MaxEnrollmentsRule : IIndependentRule
             ? RuleStatus.Valid
             : RuleStatus.Invalid("Der Termin ist bereits voll.");
     }
-
-    /// <inheritdoc />
-    public ValueTask<RuleStatus> IsValidAsync(Person person, OtiumEinschreibung enrollment)
-    {
-        return new ValueTask<RuleStatus>(RuleStatus.Valid);
-    }
-
-    /// <inheritdoc />
-    public ValueTask<RuleStatus> MayUnenrollAsync(Person person, OtiumTermin termin)
-    {
-        return new ValueTask<RuleStatus>(RuleStatus.Valid);
-    }
 }

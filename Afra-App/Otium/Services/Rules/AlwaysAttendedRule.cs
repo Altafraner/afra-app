@@ -39,18 +39,4 @@ public class AlwaysAttendedRule : IBlockRule
             ? RuleStatus.Valid
             : RuleStatus.Invalid($"Unentschuldigtes Fehlen im Block „{blockSchema.Bezeichnung}“");
     }
-
-    /// <inheritdoc />
-    public ValueTask<RuleStatus> MayEnrollAsync(Person person, IEnumerable<OtiumEinschreibung> einschreibungen,
-        OtiumTermin termin)
-    {
-        return new ValueTask<RuleStatus>(RuleStatus.Valid);
-    }
-
-    /// <inheritdoc />
-    public ValueTask<RuleStatus> MayUnenrollAsync(Person person, IEnumerable<OtiumEinschreibung> einschreibungen,
-        OtiumTermin termin)
-    {
-        return new ValueTask<RuleStatus>(RuleStatus.Valid);
-    }
 }

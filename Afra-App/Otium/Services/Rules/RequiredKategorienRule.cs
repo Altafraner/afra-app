@@ -113,13 +113,6 @@ public class RequiredKategorienRule : IWeekRule
                 "Es ist nicht mehr möglich, alle Pflichtkategorien zu erfüllen. Mit einer anderen Einschreibung in diesem Block kannst du aber noch mehr Pflichtkategorien wahrnehmen.");
     }
 
-    /// <inheritdoc />
-    public ValueTask<RuleStatus> MayUnenrollAsync(Person person, IEnumerable<Schultag> schultage,
-        IEnumerable<OtiumEinschreibung> einschreibungen, OtiumTermin termin)
-    {
-        return new ValueTask<RuleStatus>(RuleStatus.Valid);
-    }
-
     private async Task<HashSet<Guid>> GetUnfulfilledRequiredCategories(IEnumerable<Guid> categories)
     {
         _requiredCategories ??= await _kategorieService.GetRequiredKategorienIdsAsync();

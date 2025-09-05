@@ -14,7 +14,8 @@ public interface IWeekRule
     /// </summary>
     /// <returns>True, if the enrollments are valid in retrospective</returns>
     ValueTask<RuleStatus> IsValidAsync(Person person, IEnumerable<Schultag> schultage,
-        IEnumerable<OtiumEinschreibung> einschreibungen);
+        IEnumerable<OtiumEinschreibung> einschreibungen)
+        => new ValueTask<RuleStatus>(RuleStatus.Valid);
 
     /// <summary>
     ///     Checks if the person may enroll to the given termin.
@@ -26,7 +27,8 @@ public interface IWeekRule
     /// <returns></returns>
     ValueTask<RuleStatus> MayEnrollAsync(Person person, IEnumerable<Schultag> schultage,
         IEnumerable<OtiumEinschreibung> einschreibungen,
-        OtiumTermin termin);
+        OtiumTermin termin)
+        => new ValueTask<RuleStatus>(RuleStatus.Valid);
 
     /// <summary>
     ///     Checks if the person may unenroll from the given termin.
@@ -38,5 +40,6 @@ public interface IWeekRule
     /// <returns></returns>
     ValueTask<RuleStatus> MayUnenrollAsync(Person person, IEnumerable<Schultag> schultage,
         IEnumerable<OtiumEinschreibung> einschreibungen,
-        OtiumTermin termin);
+        OtiumTermin termin)
+        => new ValueTask<RuleStatus>(RuleStatus.Valid);
 }
