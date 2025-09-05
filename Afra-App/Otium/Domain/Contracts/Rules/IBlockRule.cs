@@ -13,7 +13,8 @@ public interface IBlockRule
     ///     Checks if the rule is valid for the given person and enrollments during a block.
     /// </summary>
     /// <returns>True, if the enrollments are valid in retrospective</returns>
-    ValueTask<RuleStatus> IsValidAsync(Person person, Block block, IEnumerable<OtiumEinschreibung> einschreibungen);
+    ValueTask<RuleStatus> IsValidAsync(Person person, Block block, IEnumerable<OtiumEinschreibung> einschreibungen)
+        => new ValueTask<RuleStatus>(RuleStatus.Valid);
 
     /// <summary>
     ///     Checks if the person may enroll to the given termin.
@@ -23,7 +24,8 @@ public interface IBlockRule
     /// <param name="termin">The termin the person wants to enroll to</param>
     /// <returns></returns>
     ValueTask<RuleStatus> MayEnrollAsync(Person person, IEnumerable<OtiumEinschreibung> einschreibungen,
-        OtiumTermin termin);
+        OtiumTermin termin)
+        => new ValueTask<RuleStatus>(RuleStatus.Valid);
 
     /// <summary>
     ///     Checks if the person may unenroll from the given termin.
@@ -33,5 +35,6 @@ public interface IBlockRule
     /// <param name="termin">The termin the person wants to unenroll from</param>
     /// <returns></returns>
     ValueTask<RuleStatus> MayUnenrollAsync(Person person, IEnumerable<OtiumEinschreibung> einschreibungen,
-        OtiumTermin termin);
+        OtiumTermin termin)
+        => new ValueTask<RuleStatus>(RuleStatus.Valid);
 }
