@@ -44,18 +44,4 @@ public class MustEnrollRule : IBlockRule
                 return new ValueTask<RuleStatus>(RuleStatus.Valid);
         }
     }
-
-    /// <inheritdoc />
-    public ValueTask<RuleStatus> MayEnrollAsync(Person person, IEnumerable<OtiumEinschreibung> einschreibungen,
-        OtiumTermin termin)
-    {
-        return new ValueTask<RuleStatus>(RuleStatus.Valid);
-    }
-
-    /// <inheritdoc />
-    public ValueTask<RuleStatus> MayUnenrollAsync(Person person, IEnumerable<OtiumEinschreibung> einschreibungen,
-        OtiumTermin termin)
-    {
-        return new ValueTask<RuleStatus>(RuleStatus.Valid);
-    }
 }

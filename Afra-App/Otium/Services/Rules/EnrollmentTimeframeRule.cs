@@ -18,12 +18,6 @@ public class EnrollmentTimeframeRule : IIndependentRule
     }
 
     /// <inheritdoc />
-    public ValueTask<RuleStatus> IsValidAsync(Person person, OtiumEinschreibung enrollment)
-    {
-        return new ValueTask<RuleStatus>(RuleStatus.Valid);
-    }
-
-    /// <inheritdoc />
     public ValueTask<RuleStatus> MayEnrollAsync(Person person, OtiumTermin termin)
     {
         var block = _blockHelper.Get(termin.Block.SchemaId)!;
