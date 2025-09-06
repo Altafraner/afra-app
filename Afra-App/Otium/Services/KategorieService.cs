@@ -22,22 +22,31 @@ public class KategorieService
     }
 
     /// <summary>
+    ///     Gets a category by its ID.
+    /// </summary>
+    public async Task<OtiumKategorie?> GetKategorieByIdAsync(Guid id)
+    {
+        return await _dbContext.OtiaKategorien.FindAsync(id);
+    }
+
+    /// <summary>
     ///     Return all required categories.
     /// </summary>
-    public async Task<List<OtiumKategorie>> GetRequiredKategorienAsync()
+    public async Task<List<Guid>> GetRequiredKategorienIdsAsync()
     {
         return await _cache.GetOrCreateAsync("otium-kategorie-required",
             async _ => await FetchRequiredKategorienAsync()) ?? throw new Exception(
             "Somehow we could neither fetch nor retrieve from cache the required categories. This should never happen.");
     }
 
-    private async Task<List<OtiumKategorie>> FetchRequiredKategorienAsync()
+    private async Task<List<Guid>> FetchRequiredKategorienAsync()
     {
         return await _dbContext.OtiaKategorien
             .AsNoTracking()
             .Include(k => k.Children)
             .Include(kategorie => kategorie.Parent)
             .Where(k => k.Required)
+            .Select(k => k.Id)
             .ToListAsync();
     }
 

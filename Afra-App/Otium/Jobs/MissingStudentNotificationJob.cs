@@ -2,6 +2,7 @@ using Afra_App.Backbone.Email.Services.Contracts;
 using Afra_App.Backbone.Scheduler.Templates;
 using Afra_App.Otium.API.Hubs;
 using Afra_App.Otium.Configuration;
+using Afra_App.Otium.Domain.Contracts.Services;
 using Afra_App.Otium.Domain.HubClients;
 using Afra_App.Otium.Domain.Models;
 using Afra_App.Otium.Services;

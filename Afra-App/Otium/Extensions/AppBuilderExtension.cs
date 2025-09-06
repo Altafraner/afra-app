@@ -1,4 +1,5 @@
 using Afra_App.Otium.Configuration;
+using Afra_App.Otium.Domain.Contracts.Services;
 using Afra_App.Otium.Services;
 
 namespace Afra_App.Otium.Extensions;
@@ -29,5 +30,7 @@ public static class AppBuilderExtension
         builder.Services.AddHostedService<EnrollmentReminderScheduler>();
         builder.Services.AddHostedService<StudentMisbehaviourNotificationScheduler>();
         builder.Services.AddHostedService<EmergencyBackupScheduler>();
+
+        builder.Services.AddRules();
     }
 }

@@ -66,6 +66,14 @@ public class Timeline<T> where T : struct
     }
 
     /// <summary>
+    ///     Checks if the timeline contains the given interval.
+    /// </summary>
+    public bool Contains(ITimeInterval<T> interval)
+    {
+        return _intervals.Any(i => i.Contains(interval));
+    }
+
+    /// <summary>
     ///     Get a list of all intervals in the timeline.
     /// </summary>
     /// <returns>A list of all intervals in the timeline</returns>

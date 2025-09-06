@@ -2,7 +2,7 @@ using Afra_App.Otium.Domain.Models;
 using Afra_App.Schuljahr.Domain.Models;
 using Afra_App.User.Domain.Models;
 
-namespace Afra_App.Otium.Services;
+namespace Afra_App.Otium.Domain.Contracts.Services;
 
 /// <summary>
 ///     A service interface for managing attendance in the Otium module
@@ -16,6 +16,14 @@ public interface IAttendanceService
     /// <returns>The <see cref="OtiumAnwesenheitsStatus" /> for the enrollment.</returns>
     /// <exception cref="KeyNotFoundException">The enrollmentId could not be found.</exception>
     public Task<OtiumAnwesenheitsStatus> GetAttendanceForEnrollmentAsync(Guid enrollmentId);
+
+    /// <summary>
+    ///     Gets the attendance status for a person in a specific block
+    /// </summary>
+    /// <param name="blockId">The id of the block the attendance is for.</param>
+    /// <param name="personId">The id of the person the attendace is for.</param>
+    /// <returns>The <see cref="OtiumAnwesenheitsStatus" /> for the enrollment.</returns>
+    Task<OtiumAnwesenheitsStatus> GetAttendanceForStudentInBlockAsync(Guid blockId, Guid personId);
 
     /// <summary>
     ///     Gets the attendance status for all enrollments in a specific termin

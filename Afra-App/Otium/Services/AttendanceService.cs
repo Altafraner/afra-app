@@ -1,3 +1,4 @@
+using Afra_App.Otium.Domain.Contracts.Services;
 using Afra_App.Otium.Domain.Models;
 using Afra_App.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
@@ -47,6 +48,16 @@ public class AttendanceService : IAttendanceService
             .Select(a => new { a.Status })
             .FirstOrDefaultAsync();
 
+        return attendance?.Status ?? DefaultAttendanceStatus;
+    }
+
+    /// <inheritdoc />
+    public async Task<OtiumAnwesenheitsStatus> GetAttendanceForStudentInBlockAsync(Guid blockId, Guid personId)
+    {
+        var attendance = await _dbContext.OtiaAnwesenheiten
+            .Where(a => a.StudentId == personId && a.BlockId == blockId)
+            .Select(a => new { a.Status })
+            .FirstOrDefaultAsync();
         return attendance?.Status ?? DefaultAttendanceStatus;
     }
 
@@ -104,7 +115,7 @@ public class AttendanceService : IAttendanceService
             .AsNoTracking()
             .Where(b => b.Id == blockId)
             .Select(b => new
-            { b.SchemaId, SindAnwesenheitenFehlernderErfasst = b.SindAnwesenheitenFehlernderKontrolliert })
+                { b.SchemaId, SindAnwesenheitenFehlernderErfasst = b.SindAnwesenheitenFehlernderKontrolliert })
             .FirstOrDefaultAsync();
 
         if (block is null)
