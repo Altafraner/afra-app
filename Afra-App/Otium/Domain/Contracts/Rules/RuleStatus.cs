@@ -22,6 +22,11 @@ public record struct RuleStatus
     /// </summary>
     public IEnumerable<string> Messages { get; init; } = [];
 
+    /// <summary>
+    /// If true, other rules will be ignored. If multiple rules set this flag, the first one wins.
+    /// </summary>
+    public bool IgnoreOtherRules { get; init; } = false;
+
     [Pure] internal static RuleStatus Valid => new() { IsValid = true };
 
     [Pure]

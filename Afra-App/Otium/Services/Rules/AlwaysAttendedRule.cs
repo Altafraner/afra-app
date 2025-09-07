@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Afra_App.Otium.Domain.Contracts.Rules;
 using Afra_App.Otium.Domain.Contracts.Services;
 using Afra_App.Otium.Domain.Models;
@@ -35,8 +36,13 @@ public class AlwaysAttendedRule : IBlockRule
             return RuleStatus.Valid;
 
         var attendance = await _attendanceService.GetAttendanceForStudentInBlockAsync(block.Id, person.Id);
-        return attendance is OtiumAnwesenheitsStatus.Anwesend or OtiumAnwesenheitsStatus.Entschuldigt
-            ? RuleStatus.Valid
-            : RuleStatus.Invalid($"Unentschuldigtes Fehlen im Block „{blockSchema.Bezeichnung}“");
+        return attendance switch
+        {
+            OtiumAnwesenheitsStatus.Anwesend => RuleStatus.Valid,
+            OtiumAnwesenheitsStatus.Entschuldigt => RuleStatus.Valid with { IgnoreOtherRules = true },
+            OtiumAnwesenheitsStatus.Fehlend => RuleStatus.Invalid(
+                $"Unentschuldigtes Fehlen im Block „{blockSchema.Bezeichnung}“"),
+            _ => throw new InvalidEnumArgumentException("Unrecognized attendance status")
+        };
     }
 }
