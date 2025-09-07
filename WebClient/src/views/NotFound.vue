@@ -1,11 +1,16 @@
 <script setup>
 import { Button, Image } from 'primevue';
-import wappen from '/vdaa/favicon.svg?url';
+import { computed } from 'vue';
+import wappenLight from '/vdaa/favicon.svg?url';
+import wappenDark from '/vdaa/favicon-dark.svg?url';
+import { isDark } from '@/helpers/isdark.js';
+
+const logo = computed(() => (isDark().value ? wappenDark : wappenLight));
 </script>
 
 <template>
     <div class="flex justify-center">
-        <Image :src="wappen" height="200"></Image>
+        <Image :src="logo" height="200"></Image>
     </div>
     <h1>Seite nicht gefunden</h1>
     <p>Die Seite, die sie angefordert haben, konnte nicht gefunden werden.</p>
