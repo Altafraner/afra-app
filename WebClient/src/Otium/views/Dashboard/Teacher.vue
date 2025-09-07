@@ -21,6 +21,14 @@ const severity = {
         severity: 'danger',
         label: 'Auffällig',
     },
+    NichtVerfuegbar: {
+        severity: 'secondary',
+        label: 'N/A',
+    },
+    Offen: {
+        severity: 'warn',
+        label: 'Offen',
+    },
 };
 
 async function update() {
@@ -119,20 +127,8 @@ update();
             :header="field.header"
         >
             <template #body="{ data }">
-                <Tag
-                    v-if="data.mentee.rolle !== 'Oberstufe'"
-                    :severity="severity[data[field.field]].severity"
-                >
+                <Tag :severity="severity[data[field.field]].severity">
                     {{ severity[data[field.field]].label }}
-                </Tag>
-                <Tag
-                    v-else
-                    v-tooltip="
-                        'Schüler:innen der Oberstufe sind nicht an die üblichen Regeln gebungen.'
-                    "
-                    severity="secondary"
-                >
-                    N/A
                 </Tag>
             </template>
         </Column>

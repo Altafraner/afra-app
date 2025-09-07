@@ -385,9 +385,9 @@ public class OtiumEndpointService
         {
             if (mentee.Rolle == Rolle.Oberstufe)
                 return new MenteePreview(new PersonInfoMinimal(mentee),
-                    MenteePreviewStatus.Okay,
-                    MenteePreviewStatus.Okay,
-                    MenteePreviewStatus.Okay);
+                    MenteePreviewStatus.NichtVerfuegbar,
+                    MenteePreviewStatus.NichtVerfuegbar,
+                    MenteePreviewStatus.NichtVerfuegbar);
 
             var enrollmentsList = enrollments as DB_Einschreibung[] ?? enrollments.ToArray();
 
@@ -401,21 +401,34 @@ public class OtiumEndpointService
             {
                 var schultageInWeek = schultage.Where(s =>
                     week.Contains(s.Datum.ToDateTime(new TimeOnly(0, 0)))).ToList();
+                if (schultageInWeek.Count == 0) return MenteePreviewStatus.NichtVerfuegbar;
+
                 var weeksMessages = await _rulesValidationService.GetMessagesForWeekAsync(mentee,
                     schultage.Where(s => schultageInWeek.Contains(s)).ToList(),
                     enrollmentsList.Where(e => schultageInWeek.Contains(e.Termin.Block.Schultag)).ToList());
-                if (weeksMessages.Count > 0) return MenteePreviewStatus.Auffaellig;
+                if (weeksMessages.Count > 0) return DecideBetweenOpenAndConspicuous(schultageInWeek);
 
                 foreach (var schultag in schultageInWeek)
                 {
                     var daysMessages = await _rulesValidationService.GetMessagesForDayAsync(mentee, schultag,
                         enrollmentsList.Where(e => e.Termin.Block.Schultag == schultag).ToList());
-                    if (daysMessages.Count > 0) return MenteePreviewStatus.Auffaellig;
+                    if (daysMessages.Count > 0) return DecideBetweenOpenAndConspicuous(schultageInWeek);
                 }
 
                 var enrollmentsMessages =
                     await _rulesValidationService.GetMessagesForEnrollmentsAsync(mentee, enrollmentsList.ToList());
-                return enrollmentsMessages.Count > 0 ? MenteePreviewStatus.Auffaellig : MenteePreviewStatus.Okay;
+                return enrollmentsMessages.Count > 0
+                    ? DecideBetweenOpenAndConspicuous(schultageInWeek)
+                    : MenteePreviewStatus.Okay;
+            }
+
+            MenteePreviewStatus DecideBetweenOpenAndConspicuous(List<DB_Schultag> daysInWeek)
+            {
+                var today = DateOnly.FromDateTime(DateTime.Now);
+                var lastDayWithBlocks = daysInWeek.Where(s => s.Blocks.Count > 0).MaxBy(s => s.Datum)?.Datum;
+                if (lastDayWithBlocks is null) return MenteePreviewStatus.NichtVerfuegbar;
+                if (lastDayWithBlocks >= today) return MenteePreviewStatus.Offen;
+                return MenteePreviewStatus.Auffaellig;
             }
         }
     }
