@@ -20,5 +20,7 @@ public static class AppBuilderExtension
 
         builder.Services.AddScoped<ProfundumEnrollmentService>();
         builder.Services.AddScoped<ProfundumManagementService>();
+
+        builder.Services.AddRules();
     }
 }
