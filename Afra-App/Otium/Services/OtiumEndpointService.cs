@@ -318,7 +318,7 @@ public class OtiumEndpointService
     /// </summary>
     public async Task<LehrerUebersicht> GetTeacherDashboardAsync(Person user)
     {
-        var startDate = DateOnly.FromDateTime(DateTime.Today).GetStartOfWeek();
+        var startDate = DateOnly.FromDateTime(DateTime.Today).GetStartOfWeek().AddDays(-7);
         var endDate = startDate.AddDays(21);
 
         var mentees = (await _userService.GetMenteesAsync(user))
