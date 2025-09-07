@@ -1,3 +1,4 @@
+using Afra_App.Otium.Domain.Contracts.Rules;
 using Afra_App.Otium.Domain.Contracts.Services;
 using Afra_App.Otium.Domain.Models;
 using Afra_App.Schuljahr.Domain.Models;
@@ -28,12 +29,14 @@ public class RulesValidationService
         List<string> messages = [];
         var independentRules = _rulesFactory.GetIndependentRules();
         foreach (var enrollment in einschreibungen)
-            foreach (var rule in independentRules)
-            {
-                var result = await rule.IsValidAsync(user, enrollment);
-                if (!result.IsValid)
-                    messages.AddRange(result.Messages);
-            }
+        foreach (var rule in independentRules)
+        {
+            var result = await rule.IsValidAsync(user, enrollment);
+            if (result.IgnoreOtherRules)
+                return result.IsValid ? [] : result.Messages.ToList();
+            if (!result.IsValid)
+                messages.AddRange(result.Messages);
+        }
 
         return messages;
     }
@@ -50,6 +53,8 @@ public class RulesValidationService
         foreach (var rule in weekRules)
         {
             var result = await rule.IsValidAsync(user, schultage, einschreibungen);
+            if (result.IgnoreOtherRules)
+                return result.IsValid ? [] : result.Messages.ToList();
             if (!result.IsValid)
                 messages.AddRange(result.Messages);
         }
@@ -64,17 +69,32 @@ public class RulesValidationService
     public async Task<List<string>> GetMessagesForDayAsync(Person user, Schultag schultag,
         List<OtiumEinschreibung> einschreibungen)
     {
-        List<string> messages = [];
+        List<MessageWithBlock> messages = [];
+        var priorityResults = new List<ResultWithBlock>();
         var orderedBlocks = schultag.Blocks.OrderBy(b => b.SchemaId).ToList();
         var blockRules = _rulesFactory.GetBlockRules();
         foreach (var rule in blockRules)
-            foreach (var block in orderedBlocks)
-            {
-                var result = await rule.IsValidAsync(user, block, einschreibungen.Where(e => e.Termin.Block == block));
-                if (!result.IsValid)
-                    messages.AddRange(result.Messages);
-            }
+        foreach (var block in orderedBlocks)
+        {
+            var result = await rule.IsValidAsync(user, block, einschreibungen.Where(e => e.Termin.Block == block));
+            if (!result.IsValid)
+                messages.AddRange(result.Messages.Select(m => new MessageWithBlock(m, block.Id)));
+            if (result.IgnoreOtherRules)
+                priorityResults.Add(new ResultWithBlock(result, block.Id));
+        }
 
-        return messages;
+        foreach (var priorityResult in priorityResults)
+        {
+            messages.RemoveAll(m => m.BlockId == priorityResult.BlockId);
+            if (!priorityResult.Result.IsValid)
+                messages.AddRange(
+                    priorityResult.Result.Messages.Select(m => new MessageWithBlock(m, priorityResult.BlockId)));
+        }
+
+        return messages.Select(m => m.Message).ToList();
     }
+
+    record struct MessageWithBlock(string Message, Guid BlockId);
+
+    record struct ResultWithBlock(RuleStatus Result, Guid BlockId);
 }
