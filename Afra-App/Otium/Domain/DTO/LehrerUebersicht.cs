@@ -46,5 +46,15 @@ public enum MenteePreviewStatus
     /// <summary>
     /// Either the student was absent or the enrollments are not okay.
     /// </summary>
-    Auffaellig
+    Auffaellig,
+
+    /// <summary>
+    /// The day is in the future and the student does not fulfill all rules.
+    /// </summary>
+    Offen,
+
+    /// <summary>
+    /// No information is available for this day
+    /// </summary>
+    NichtVerfuegbar
 }
