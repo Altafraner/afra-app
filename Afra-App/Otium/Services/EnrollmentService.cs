@@ -175,7 +175,7 @@ public class EnrollmentService
         if (!force)
             try
             {
-                var mayUnenroll = await MayUnenroll(student, enrollment.Termin);
+                var mayUnenroll = await MayUnenroll(student, enrollment);
                 if (!mayUnenroll.IsValid) return null;
             }
             catch (InvalidOperationException)
@@ -241,9 +241,11 @@ public class EnrollmentService
 
         var countEnrolled = terminEinschreibungen.Count;
         var usersEnrollment = await _dbContext.OtiaEinschreibungen
+            .Include(e => e.Termin)
+            .ThenInclude(e => e.Block)
             .FirstOrDefaultAsync(e => e.Termin == termin && e.BetroffenePerson == user);
         var changeResult = usersEnrollment != null
-            ? await MayUnenroll(user, termin)
+            ? await MayUnenroll(user, usersEnrollment)
             : await MayEnroll(user, termin);
         return new EinschreibungsPreview(countEnrolled,
             changeResult.IsValid,
@@ -426,46 +428,82 @@ public class EnrollmentService
         return missingPersons;
     }
 
-    private Task<RuleStatus> MayUnenroll(Person user, OtiumTermin termin)
-    {
-        return MayDoSomething(user, termin, ChangeAction.Unenroll);
-    }
-
-    private Task<RuleStatus> MayEnroll(Person user, OtiumTermin termin)
-    {
-        return MayDoSomething(user, termin, ChangeAction.Enroll);
-    }
-
-    private async Task<RuleStatus> MayDoSomething(Person user, OtiumTermin termin, ChangeAction action)
+    private async Task<RuleStatus> MayUnenroll(Person user, OtiumEinschreibung einschreibung)
     {
         var independentRules = _rulesFactory.GetIndependentRules();
         foreach (var rule in independentRules)
         {
-            var result = await (action == ChangeAction.Enroll
-                ? rule.MayEnrollAsync(user, termin)
-                : rule.MayUnenrollAsync(user, termin));
+            var result = await rule.MayUnenrollAsync(user, einschreibung);
             if (!result.IsValid) return result;
         }
 
         var blockRules = _rulesFactory.GetBlockRules();
-        var usersEnrollmentsInBlock = await _dbContext.OtiaEinschreibungen
+        var usersEnrollmentsInBlock = await GetPersonsEnrollmentsInBlock(user, einschreibung.Termin.Block);
+        foreach (var rule in blockRules)
+        {
+            var result = await rule.MayUnenrollAsync(user, usersEnrollmentsInBlock, einschreibung);
+            if (!result.IsValid) return result;
+        }
+
+        var (schultageInWeek, usersEnrollmentsInWeek) =
+            await GetSchultageAndPersonsEnrollmentsInWeek(user, einschreibung.Termin.Block.SchultagKey);
+        var weekRules = _rulesFactory.GetWeekRules();
+
+        foreach (var rule in weekRules)
+        {
+            var result = await rule.MayUnenrollAsync(user, schultageInWeek, usersEnrollmentsInWeek, einschreibung);
+            if (!result.IsValid) return result;
+        }
+
+        return RuleStatus.Valid;
+    }
+
+    private async Task<RuleStatus> MayEnroll(Person user, OtiumTermin termin)
+    {
+        var independentRules = _rulesFactory.GetIndependentRules();
+        foreach (var rule in independentRules)
+        {
+            var result = await rule.MayEnrollAsync(user, termin);
+            if (!result.IsValid) return result;
+        }
+
+        var blockRules = _rulesFactory.GetBlockRules();
+        var usersEnrollmentsInBlock = await GetPersonsEnrollmentsInBlock(user, termin.Block);
+        foreach (var rule in blockRules)
+        {
+            var result = await rule.MayEnrollAsync(user, usersEnrollmentsInBlock, termin);
+            if (!result.IsValid) return result;
+        }
+
+        var (schultageInWeek, usersEnrollmentsInWeek) =
+            await GetSchultageAndPersonsEnrollmentsInWeek(user, termin.Block.SchultagKey);
+        var weekRules = _rulesFactory.GetWeekRules();
+
+        foreach (var rule in weekRules)
+        {
+            var result = await rule.MayEnrollAsync(user, schultageInWeek, usersEnrollmentsInWeek, termin);
+            if (!result.IsValid) return result;
+        }
+
+        return RuleStatus.Valid;
+    }
+
+    private async Task<List<OtiumEinschreibung>> GetPersonsEnrollmentsInBlock(Person user, Block block)
+    {
+        return await _dbContext.OtiaEinschreibungen
             .Include(e => e.Termin)
             .ThenInclude(t => t.Block)
             .Include(e => e.Termin)
             .ThenInclude(t => t.Otium)
             .ThenInclude(o => o.Kategorie)
-            .Where(e => e.BetroffenePerson == user && e.Termin.Block == termin.Block)
+            .Where(e => e.BetroffenePerson == user && e.Termin.Block == block)
             .ToListAsync();
+    }
 
-        foreach (var rule in blockRules)
-        {
-            var result = await (action == ChangeAction.Enroll
-                ? rule.MayEnrollAsync(user, usersEnrollmentsInBlock, termin)
-                : rule.MayUnenrollAsync(user, usersEnrollmentsInBlock, termin));
-            if (!result.IsValid) return result;
-        }
-
-        var monday = termin.Block.SchultagKey.GetStartOfWeek();
+    private async Task<(List<Schultag> schultage, List<OtiumEinschreibung>)> GetSchultageAndPersonsEnrollmentsInWeek(
+        Person user, DateOnly dateInWeek)
+    {
+        var monday = dateInWeek.GetStartOfWeek();
         var endOfWeek = monday.AddDays(7);
         var usersEnrollmentsInWeek = await _dbContext.OtiaEinschreibungen
             .Include(e => e.Termin)
@@ -480,22 +518,6 @@ public class EnrollmentService
             .Include(s => s.Blocks)
             .Where(s => s.Datum >= monday && s.Datum < endOfWeek)
             .ToListAsync();
-        var weekRules = _rulesFactory.GetWeekRules();
-
-        foreach (var rule in weekRules)
-        {
-            var result = await (action == ChangeAction.Enroll
-                ? rule.MayEnrollAsync(user, schultageInWeek, usersEnrollmentsInWeek, termin)
-                : rule.MayUnenrollAsync(user, schultageInWeek, usersEnrollmentsInWeek, termin));
-            if (!result.IsValid) return result;
-        }
-
-        return RuleStatus.Valid;
-    }
-
-    private enum ChangeAction
-    {
-        Enroll,
-        Unenroll
+        return (schultageInWeek, usersEnrollmentsInWeek);
     }
 }

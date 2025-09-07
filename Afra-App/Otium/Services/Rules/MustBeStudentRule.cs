@@ -22,7 +22,7 @@ public class MustBeStudentRule : IIndependentRule
     }
 
     /// <inheritdoc />
-    public ValueTask<RuleStatus> MayUnenrollAsync(Person person, OtiumTermin termin)
+    public ValueTask<RuleStatus> MayUnenrollAsync(Person person, OtiumEinschreibung einschreibung)
     {
         return new ValueTask<RuleStatus>(Rule(person));
     }

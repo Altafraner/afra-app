@@ -33,8 +33,8 @@ public class EnrollmentTimeframeRule : IIndependentRule
     }
 
     /// <inheritdoc />
-    public ValueTask<RuleStatus> MayUnenrollAsync(Person person, OtiumTermin termin)
+    public ValueTask<RuleStatus> MayUnenrollAsync(Person person, OtiumEinschreibung einschreibung)
     {
-        return MayEnrollAsync(person, termin);
+        return MayEnrollAsync(person, einschreibung.Termin);
     }
 }

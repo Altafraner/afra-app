@@ -13,7 +13,9 @@ public interface IIndependentRule
     /// </summary>
     /// <returns>True, if the enrollment is valid in retrospective</returns>
     ValueTask<RuleStatus> IsValidAsync(Person person, OtiumEinschreibung enrollment)
-        => new ValueTask<RuleStatus>(RuleStatus.Valid);
+    {
+        return new ValueTask<RuleStatus>(RuleStatus.Valid);
+    }
 
     /// <summary>
     ///     Checks if the person may enroll to the given termin.
@@ -22,14 +24,18 @@ public interface IIndependentRule
     /// <param name="termin">The termin the person wants to enroll to</param>
     /// <returns></returns>
     ValueTask<RuleStatus> MayEnrollAsync(Person person, OtiumTermin termin)
-        => new ValueTask<RuleStatus>(RuleStatus.Valid);
+    {
+        return new ValueTask<RuleStatus>(RuleStatus.Valid);
+    }
 
     /// <summary>
     ///     Checks if the person may unenroll from the given termin.
     /// </summary>
     /// <param name="person">The person wanting to unenroll</param>
-    /// <param name="termin">The termin the person wants to unenroll from</param>
+    /// <param name="einschreibung">The enrollment the person wants to unenroll from</param>
     /// <returns></returns>
-    ValueTask<RuleStatus> MayUnenrollAsync(Person person, OtiumTermin termin)
-        => new ValueTask<RuleStatus>(RuleStatus.Valid);
+    ValueTask<RuleStatus> MayUnenrollAsync(Person person, OtiumEinschreibung einschreibung)
+    {
+        return new ValueTask<RuleStatus>(RuleStatus.Valid);
+    }
 }
