@@ -21,12 +21,6 @@ public class NotCancelledRule : IIndependentRule
         return new ValueTask<RuleStatus>(Rule(termin));
     }
 
-    /// <inheritdoc />
-    public ValueTask<RuleStatus> MayUnenrollAsync(Person person, OtiumTermin termin)
-    {
-        return new ValueTask<RuleStatus>(Rule(termin));
-    }
-
     private static RuleStatus Rule(OtiumTermin termin)
     {
         return termin.IstAbgesagt
