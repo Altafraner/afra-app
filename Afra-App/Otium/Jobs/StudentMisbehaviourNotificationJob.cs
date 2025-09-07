@@ -95,12 +95,12 @@ internal sealed class StudentMisbehaviourNotificationJob : RetryJob
             .Include(e => e.Termin)
             .ThenInclude(t => t.Otium)
             .ThenInclude(o => o.Kategorie)
-            .GroupBy(e => e.BetroffenePerson)
+            .GroupBy(e => e.BetroffenePerson.Id)
             .ToDictionaryAsync(e => e.Key, e => e.ToList());
         var students = await _userService.GetUsersWithRoleAsync(Rolle.Mittelstufe);
 
         List<Schultag> schultageInWeek = [];
-        Dictionary<Person, List<OtiumEinschreibung>> weeksEnrollments = [];
+        Dictionary<Guid, List<OtiumEinschreibung>> weeksEnrollments = [];
 
         if (lastDayWithBlocks)
         {
@@ -117,13 +117,13 @@ internal sealed class StudentMisbehaviourNotificationJob : RetryJob
                 .Include(e => e.Termin)
                 .ThenInclude(t => t.Otium)
                 .ThenInclude(o => o.Kategorie)
-                .GroupBy(e => e.BetroffenePerson)
+                .GroupBy(e => e.BetroffenePerson.Id)
                 .ToDictionaryAsync(e => e.Key, e => e.ToList());
         }
 
         foreach (var student in students)
         {
-            var studentsEnrollments = todaysEnrollments.GetValueOrDefault(student, []);
+            var studentsEnrollments = todaysEnrollments.GetValueOrDefault(student.Id, []);
             List<string> messages = [];
 
             messages.AddRange(
@@ -132,7 +132,7 @@ internal sealed class StudentMisbehaviourNotificationJob : RetryJob
                 await _rulesValidationService.GetMessagesForDayAsync(student, schultag, studentsEnrollments));
             if (lastDayWithBlocks)
             {
-                var studentsEnrollmentsInWeek = weeksEnrollments.GetValueOrDefault(student, []);
+                var studentsEnrollmentsInWeek = weeksEnrollments.GetValueOrDefault(student.Id, []);
                 messages.AddRange(await _rulesValidationService.GetMessagesForWeekAsync(student, schultageInWeek,
                     studentsEnrollmentsInWeek));
             }
