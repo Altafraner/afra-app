@@ -2,6 +2,7 @@ using Afra_App.Profundum.Configuration;
 using Afra_App.Profundum.Domain.DTO;
 using Afra_App.Profundum.Domain.Models;
 using Afra_App.User.Services;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 namespace Afra_App.Profundum.Services;
@@ -46,6 +47,14 @@ public class ProfundumManagementService
         return einwahlZeitraum;
     }
 
+    ///
+    public Task<DTOProfundumEinwahlZeitraum[]> GetEinwahlZeiträumeAsync()
+    {
+        return _dbContext.ProfundumEinwahlZeitraeume
+            .Select(e => new DTOProfundumEinwahlZeitraum(e))
+            .ToArrayAsync();
+    }
+
 
     ///
     public async Task<ProfundumSlot?> CreateSlotAsync(DTOProfundumSlot dtoSlot)
@@ -68,7 +77,7 @@ public class ProfundumManagementService
     }
 
     ///
-    public async Task<ProfundumKategorie?> CreateKategorieAsync(DTOProfundumKategorie dtoKategorie)
+    public async Task<ProfundumKategorie?> CreateKategorieAsync(DTOProfundumKategorieCreation dtoKategorie)
     {
         var kategorie = new ProfundumKategorie
         {
@@ -83,7 +92,40 @@ public class ProfundumManagementService
     }
 
     ///
-    public async Task<ProfundumDefinition?> CreateProfundumAsync(DTOProfundumDefinition dtoProfundum)
+    public async Task<ProfundumKategorie?> UpdateKategorieAsync(Guid kategorieId, DTOProfundumKategorieCreation dtoKategorie)
+    {
+        var kategorie = await _dbContext.ProfundaKategorien.FindAsync(kategorieId);
+        if (kategorie is null)
+        {
+            throw new ArgumentException();
+        }
+
+        if (dtoKategorie.MaxProEinwahl != kategorie.MaxProEinwahl)
+            kategorie.MaxProEinwahl = dtoKategorie.MaxProEinwahl;
+        if (dtoKategorie.Bezeichnung != kategorie.Bezeichnung)
+            kategorie.Bezeichnung = dtoKategorie.Bezeichnung;
+        if (dtoKategorie.ProfilProfundum != kategorie.ProfilProfundum)
+            kategorie.ProfilProfundum = dtoKategorie.ProfilProfundum;
+
+        await _dbContext.SaveChangesAsync();
+        return kategorie;
+    }
+
+    ///
+    public async Task DeleteKategorieAsync(Guid kategorieId)
+    {
+        _dbContext.ProfundaKategorien.Where(k => k.Id == kategorieId).ExecuteDelete();
+        await _dbContext.SaveChangesAsync();
+    }
+
+    ///
+    public Task<DTOProfundumKategorie[]> GetKategorienAsync()
+    {
+        return _dbContext.ProfundaKategorien.Select(k => new DTOProfundumKategorie(k)).ToArrayAsync();
+    }
+
+    ///
+    public async Task<ProfundumDefinition?> CreateProfundumAsync(DTOProfundumDefinitionCreation dtoProfundum)
     {
         var kat = await _dbContext.ProfundaKategorien.FindAsync(dtoProfundum.KategorieId);
         if (kat is null)
@@ -100,6 +142,49 @@ public class ProfundumManagementService
         _dbContext.Profunda.Add(def);
         await _dbContext.SaveChangesAsync();
         return def;
+    }
+
+    ///
+    public async Task<ProfundumDefinition?> UpdateProfundumAsync(Guid profundumId, DTOProfundumDefinitionCreation dtoProfundum)
+    {
+        var profundum = await _dbContext.Profunda.FindAsync(profundumId);
+        if (profundum is null)
+        {
+            return null;
+        }
+
+        if (dtoProfundum.Bezeichnung != profundum.Bezeichnung)
+            profundum.Bezeichnung = dtoProfundum.Bezeichnung;
+        if (dtoProfundum.minKlasse != profundum.minKlasse)
+            profundum.minKlasse = dtoProfundum.minKlasse;
+        if (dtoProfundum.maxKlasse != profundum.maxKlasse)
+            profundum.maxKlasse = dtoProfundum.maxKlasse;
+
+        var kat = await _dbContext.ProfundaKategorien.FindAsync(dtoProfundum.KategorieId);
+        if (kat is null)
+        {
+            return null;
+        }
+        profundum.Kategorie = kat;
+
+        await _dbContext.SaveChangesAsync();
+        return profundum;
+    }
+
+    ///
+    public Task DeleteProfundumAsync(Guid profundumId)
+    {
+        _dbContext.Profunda.Where(p => p.Id == profundumId).ExecuteDelete();
+        return _dbContext.SaveChangesAsync();
+    }
+
+    ///
+    public Task<DTOProfundumDefinition[]> GetProfundaAsync()
+    {
+        return _dbContext.Profunda
+            .Include(p => p.Kategorie)
+            .Select(p => new DTOProfundumDefinition(p))
+            .ToArrayAsync();
     }
 
     ///

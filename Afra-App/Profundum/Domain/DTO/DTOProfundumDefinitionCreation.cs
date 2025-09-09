@@ -3,23 +3,13 @@ namespace Afra_App.Profundum.Domain.DTO;
 using Afra_App.Profundum.Domain.Models;
 
 ///
-public record DTOProfundumDefinition
+public record DTOProfundumDefinitionCreation
 {
-    ///
-    public DTOProfundumDefinition(ProfundumDefinition dbProfundumDefinition)
-    {
-        Id = dbProfundumDefinition.Id;
-        Bezeichnung = dbProfundumDefinition.Bezeichnung;
-        KategorieId = dbProfundumDefinition.Kategorie.Id;
-        minKlasse = dbProfundumDefinition.minKlasse;
-        maxKlasse = dbProfundumDefinition.maxKlasse;
-    }
-
     /// <inheritdoc cref="ProfundumDefinition.Id"/>
     public Guid Id { get; set; }
 
     /// <inheritdoc cref="ProfundumDefinition.Bezeichnung"/>
-    public string Bezeichnung { get; set; }
+    public required string Bezeichnung { get; set; }
 
     /// <inheritdoc cref="ProfundumDefinition.Kategorie"/>
     public Guid KategorieId { get; set; }

@@ -699,8 +699,7 @@ public class ProfundumEnrollmentService
                     .Include(pe => pe.ProfundumInstanz).ThenInclude(pi => pi.Profundum).ThenInclude(p => p.Kategorie)
                     .Where(pe => pe.BetroffenePerson.Id == student.Id)
                     .Where(p => p.ProfundumInstanz.Slots.Contains(s))
-                    .Select(pe => new DTOProfundumDefinition
-                    { Bezeichnung = pe.ProfundumInstanz.Profundum.Bezeichnung })
+                    .Select(pe => new DTOProfundumDefinition(pe.ProfundumInstanz.Profundum))
                     .First());
     }
 }

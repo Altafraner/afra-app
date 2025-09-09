@@ -5,6 +5,14 @@ using Afra_App.Profundum.Domain.Models;
 ///
 public record DTOProfundumEinwahlZeitraum
 {
+    ///
+    public DTOProfundumEinwahlZeitraum(ProfundumEinwahlZeitraum dbEinwahlZeitraum)
+    {
+        Id = dbEinwahlZeitraum.Id;
+        EinwahlStart = dbEinwahlZeitraum.EinwahlStart.ToString();
+        EinwahlStop = dbEinwahlZeitraum.EinwahlStop.ToString();
+    }
+
     /// <inheritdoc cref="ProfundumEinwahlZeitraum.Id"/>
     public Guid? Id { get; set; }
 
