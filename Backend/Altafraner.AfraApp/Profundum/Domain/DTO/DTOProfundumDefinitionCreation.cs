@@ -1,25 +1,15 @@
-namespace Altafraner.AfraApp.Profundum.Domain.DTO;
-
 using Altafraner.AfraApp.Profundum.Domain.Models;
 
-///
-public record DTOProfundumDefinition
-{
-    ///
-    public DTOProfundumDefinition(ProfundumDefinition dbProfundumDefinition)
-    {
-        Id = dbProfundumDefinition.Id;
-        Bezeichnung = dbProfundumDefinition.Bezeichnung;
-        KategorieId = dbProfundumDefinition.Kategorie.Id;
-        minKlasse = dbProfundumDefinition.MinKlasse;
-        maxKlasse = dbProfundumDefinition.MaxKlasse;
-    }
+namespace Altafraner.AfraApp.Profundum.Domain.DTO;
 
+///
+public record DTOProfundumDefinitionCreation
+{
     /// <inheritdoc cref="ProfundumDefinition.Id"/>
     public Guid Id { get; set; }
 
     /// <inheritdoc cref="ProfundumDefinition.Bezeichnung"/>
-    public string Bezeichnung { get; set; }
+    public required string Bezeichnung { get; set; }
 
     /// <inheritdoc cref="ProfundumDefinition.Kategorie"/>
     public Guid KategorieId { get; set; }

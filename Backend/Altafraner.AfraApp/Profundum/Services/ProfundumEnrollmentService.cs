@@ -687,7 +687,7 @@ public class ProfundumEnrollmentService
     }
 
     ///
-    public async Task<Dictionary<string, DtoProfundumDefinition>> GetEnrollment(Models_Person student,
+    public async Task<Dictionary<string, DTOProfundumDefinition>> GetEnrollment(Models_Person student,
         ICollection<Guid> slotIds)
     {
         return (await _dbContext.ProfundaSlots.Where(s => slotIds.Contains(s.Id)).ToArrayAsync()).ToDictionary(
@@ -696,8 +696,7 @@ public class ProfundumEnrollmentService
                     .Include(pe => pe.ProfundumInstanz).ThenInclude(pi => pi.Profundum).ThenInclude(p => p.Kategorie)
                     .Where(pe => pe.BetroffenePerson.Id == student.Id)
                     .Where(p => p.ProfundumInstanz.Slots.Contains(s))
-                    .Select(pe => new DtoProfundumDefinition
-                    { Bezeichnung = pe.ProfundumInstanz.Profundum.Bezeichnung })
+                    .Select(pe => new DTOProfundumDefinition(pe.ProfundumInstanz.Profundum))
                     .First());
     }
 }

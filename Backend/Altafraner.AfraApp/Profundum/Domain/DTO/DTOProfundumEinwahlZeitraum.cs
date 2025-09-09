@@ -3,8 +3,16 @@ using Altafraner.AfraApp.Profundum.Domain.Models;
 namespace Altafraner.AfraApp.Profundum.Domain.DTO;
 
 ///
-public record DtoProfundumEinwahlZeitraum
+public record DTOProfundumEinwahlZeitraum
 {
+    ///
+    public DTOProfundumEinwahlZeitraum(ProfundumEinwahlZeitraum dbEinwahlZeitraum)
+    {
+        Id = dbEinwahlZeitraum.Id;
+        EinwahlStart = dbEinwahlZeitraum.EinwahlStart.ToString();
+        EinwahlStop = dbEinwahlZeitraum.EinwahlStop.ToString();
+    }
+
     /// <inheritdoc cref="ProfundumEinwahlZeitraum.Id"/>
     public Guid? Id { get; set; }
 
