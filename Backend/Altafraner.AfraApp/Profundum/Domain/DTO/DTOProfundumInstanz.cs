@@ -3,7 +3,7 @@ using Altafraner.AfraApp.Profundum.Domain.Models;
 namespace Altafraner.AfraApp.Profundum.Domain.DTO;
 
 ///
-public record DtoProfundumInstanz
+public record DTOProfundumInstanz
 {
     /// <inheritdoc cref="ProfundumInstanz.Id"/>
     public Guid? Id { get; set; }
