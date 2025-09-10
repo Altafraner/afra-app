@@ -30,7 +30,7 @@
         <PackageReference Include="Quartz.AspNetCore" Version="3.15.0"/>
         <PackageReference Include="Quartz.Serialization.SystemTextJson" Version="3.15.0"/>
         <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.4"/>
-        <PackageReference Include="System.DirectoryServices.Protocols" Version="9.0.8"/>
+        <PackageReference Include="System.DirectoryServices.Protocols" Version="9.0.9"/>
         <PackageReference Include="Google.OrTools" Version="9.14.6206"/>
     </ItemGroup>
 
