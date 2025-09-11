@@ -49,6 +49,8 @@ public class RequiredKategorienRule : IWeekRule
     public async ValueTask<RuleStatus> MayEnrollAsync(Person person, IEnumerable<Schultag> schultage,
         IEnumerable<OtiumEinschreibung> einschreibungen, OtiumTermin termin)
     {
+        if (termin.Otium.Kategorie.IgnoreEnrollmentRule) return RuleStatus.Valid;
+
         var tage = schultage as Schultag[] ?? schultage.ToArray();
         var einschreibungsArray = einschreibungen as OtiumEinschreibung[] ?? einschreibungen.ToArray();
         var fulfilledCategories =

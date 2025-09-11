@@ -39,6 +39,11 @@ public class OtiumKategorie
     public bool Required { get; set; } = false;
 
     /// <summary>
+    ///     If set, ignores the kategorie enrollment rule for enrollment into otia with this categoriy.
+    /// </summary>
+    public bool IgnoreEnrollmentRule { get; set; } = false;
+
+    /// <summary>
     ///     A parent Kategorie for this Kategorie. Used to build a tree of Kategories.
     /// </summary>
     public OtiumKategorie? Parent { get; set; }
