@@ -29,6 +29,8 @@ public class RequiredKategorienRule : IWeekRule
     public async ValueTask<RuleStatus> IsValidAsync(Person person, IEnumerable<Schultag> schultage,
         IEnumerable<OtiumEinschreibung> einschreibungen)
     {
+        if (schultage.Any(d => d.Wochentyp == Wochentyp.H)) return RuleStatus.Valid;
+
         var fulfilledCategories =
             await GetFulfilledCategoriesFromEnrollments(einschreibungen, schultage);
         var missingCategories = await GetUnfulfilledRequiredCategories(fulfilledCategories);
@@ -50,6 +52,8 @@ public class RequiredKategorienRule : IWeekRule
         IEnumerable<OtiumEinschreibung> einschreibungen, OtiumTermin termin)
     {
         if (termin.Otium.Kategorie.IgnoreEnrollmentRule) return RuleStatus.Valid;
+
+        if (termin.Block.Schultag.Wochentyp == Wochentyp.H) return RuleStatus.Valid;
 
         var tage = schultage as Schultag[] ?? schultage.ToArray();
         var einschreibungsArray = einschreibungen as OtiumEinschreibung[] ?? einschreibungen.ToArray();
