@@ -14,11 +14,22 @@ public class TimestampInterceptor : SaveChangesInterceptor
         DbContextEventData eventData,
         InterceptionResult<int> result)
     {
-        SetTimestamps(eventData.Context);
+        SetTimestamps(eventData.Context!);
         return base.SavingChanges(eventData, result);
     }
 
-    private void SetTimestamps(DbContext? context)
+    /// <inheritdoc/>
+    public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
+        DbContextEventData eventData,
+        InterceptionResult<int> result,
+        CancellationToken cancellationToken = default)
+    {
+        SetTimestamps(eventData.Context!);
+        return base.SavingChangesAsync(eventData, result, cancellationToken);
+    }
+
+
+    private void SetTimestamps(DbContext context)
     {
         if (context == null) return;
 
