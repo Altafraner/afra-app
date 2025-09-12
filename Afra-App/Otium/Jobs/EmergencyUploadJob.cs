@@ -1,3 +1,5 @@
+using System.Text;
+using System.Web;
 using Afra_App.Backbone.EmergencyBackup.Services.Contracts;
 using Afra_App.Otium.Domain.Contracts.Services;
 using Afra_App.Otium.Domain.Models;
@@ -43,13 +45,13 @@ public class EmergencyUploadJob : IJob
             var (termine, missingPersons, _) = await _attendanceService.GetAttendanceForBlockAsync(block.Id);
 
             var html =
-                $$"""
+                $$$"""
                   <!DOCTYPE html>
                   <html lang="de">
                       <head>
                           <meta charset="UTF-8">
                           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                          <title>Otium Notfall-Backup {{DateTime.Now:yyyy-MM-dd HH:mm}}</title>
+                          <title>Otium Notfall-Backup {{{HttpUtility.HtmlEncode($"{DateTime.Now:yyyy-MM-dd HH:mm}")}}}</title>
                           <style>
                               body {
                                   font-family: Arial, sans-serif;
@@ -68,13 +70,13 @@ public class EmergencyUploadJob : IJob
                           </style>
                       </head>
                       <body>
-                          <h1>Otium Notfall-Backup {{DateTime.Now:yyyy-MM-dd HH:mm}}</h1>
-                          <p>Block: {{_blockHelper.Get(block.SchemaId)!.Bezeichnung}}</p>
+                          <h1>Otium Notfall-Backup {{{HttpUtility.HtmlEncode($"{DateTime.Now:yyyy-MM-dd HH:mm}")}}}</h1>
+                          <p>Block: {{{HttpUtility.HtmlEncode(_blockHelper.Get(block.SchemaId)!.Bezeichnung)}}}</p>
                           <h2>Termine</h2>
                           <h3>Fehlende</h3>
-                          {{GenerateHtmlTable(missingPersons)}}
-                          {{termine.Select(t => $"<h3>{t.Key.Ort} {t.Key.Otium.Bezeichnung}</h3>" + GenerateHtmlTable(t.Value))
-                              .Aggregate("", (current, next) => current + next)}}
+                          {{{GenerateHtmlTable(missingPersons)}}}
+                          {{{termine.Select(t => $"<h3>{HttpUtility.HtmlEncode(t.Key.Ort)} {HttpUtility.HtmlEncode(t.Key.Otium.Bezeichnung)}</h3>"
+                              + GenerateHtmlTable(t.Value)).Aggregate(new StringBuilder(), (current, next) => current.Append(next)).ToString()}}}
                       </body>
                   </html>
                   """;
@@ -99,7 +101,7 @@ public class EmergencyUploadJob : IJob
             .OrderBy(a => a.Key.Nachname)
             .ThenBy(a => a.Key.Vorname)
             .Select(attendance =>
-                $"<tr><td>{attendance.Key.Nachname}, {attendance.Key.Vorname}</td><td>{attendance.Value}</td></tr>")
+                $"<tr><td>{HttpUtility.HtmlEncode(attendance.Key.Nachname)}, {HttpUtility.HtmlEncode(attendance.Key.Vorname)}</td><td>{HttpUtility.HtmlEncode(attendance.Value)}</td></tr>")
             .Aggregate("<table><tr><th>Name</th><th>Status</th></tr>", (current, row) => current + row) + "</table>";
     }
 }
