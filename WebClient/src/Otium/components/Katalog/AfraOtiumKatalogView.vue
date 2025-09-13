@@ -56,12 +56,14 @@ await settings.updateKategorien();
                         hide-name
                         minimal
                     />
-                    <span class="font-semibold text-left">{{ data.otium }}</span>
+                    <span class="font-semibold text-left">{{
+                        data.bezeichnung ?? data.otium
+                    }}</span>
                 </Button>
                 <Button
                     v-else
                     :disabled="data.istAbgesagt"
-                    :label="data.otium"
+                    :label="data.bezeichnung ?? data.otium"
                     variant="text"
                     :severity="data.istEingeschrieben ? 'success' : 'primary'"
                     @click="() => expand(data.id)"
@@ -80,7 +82,9 @@ await settings.updateKategorien();
                         minimal
                         class="w-[1rem]"
                     />
-                    <span class="font-semibold text-left">{{ data.otium }}</span>
+                    <span class="font-semibold text-left">{{
+                        data.bezeichnung ?? data.otium
+                    }}</span>
                 </Button>
             </template>
         </Column>

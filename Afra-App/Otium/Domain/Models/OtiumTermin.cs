@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Afra_App.Backbone.Database.Contracts;
 using Afra_App.Schuljahr.Domain.Models;
 
@@ -12,6 +13,13 @@ public class OtiumTermin : OtiumInstanz, IHasTimestamps
     ///     A unique identifier for the Termin
     /// </summary>
     public Guid Id { get; set; }
+
+    /// <summary>
+    ///     A name for the Otium Instanz. Null to use the OtiumDefinitions Bezeichnung
+    /// </summary>
+    [MaxLength(70)]
+    public string? OverrideBezeichnung { get; set; }
+
 
     /// <summary>
     ///     A reference to the recurrence rule for the Termin. May be null.

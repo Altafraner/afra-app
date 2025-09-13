@@ -36,6 +36,7 @@ public record Termin : ITermin
             .Order()
             .SkipWhile(d => d <= termin.Block.SchultagKey) ?? [];
         Block = block;
+        Bezeichnung = termin.OverrideBezeichnung;
     }
 
     /// <summary>
@@ -91,4 +92,9 @@ public record Termin : ITermin
 
     /// <inheritdoc />
     public bool IstAbgesagt { get; set; }
+
+    /// <summary>
+    ///     A one time override name for the Otium Termin
+    /// </summary>
+    public string? Bezeichnung { get; set; }
 }

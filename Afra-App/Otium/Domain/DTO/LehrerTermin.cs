@@ -63,6 +63,11 @@ public record LehrerTermin : ITermin
 
     /// <inheritdoc />
     public required PersonInfoMinimal? Tutor { get; set; }
+
+    /// <summary>
+    ///     A one time override name for the Otium Termin
+    /// </summary>
+    public string? Bezeichnung { get; set; }
 }
 
 /// <summary>

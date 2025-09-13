@@ -31,6 +31,7 @@ public record TerminPreview : ITermin
         Auslastung = auslastung;
         MaxEinschreibungen = termin.MaxEinschreibungen;
         Block = block;
+        Bezeichnung = termin.OverrideBezeichnung;
     }
 
     /// <summary>
@@ -88,4 +89,9 @@ public record TerminPreview : ITermin
 
     /// <inheritdoc />
     public bool IstAbgesagt { get; set; }
+
+    /// <summary>
+    ///     A one time override name for the Otium Termin
+    /// </summary>
+    public string? Bezeichnung { get; set; }
 }

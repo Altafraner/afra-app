@@ -83,7 +83,7 @@ public class CalendarService
         var enrolledEvents = enrollments.Select(e => new CalendarEvent
         {
             Uid = e.Id.ToString(),
-            Summary = e.Termin.Otium.Bezeichnung,
+            Summary = (e.Termin.OverrideBezeichnung != null) ? e.Termin.OverrideBezeichnung : e.Termin.Otium.Bezeichnung,
             Description = e.Termin.Otium.Beschreibung,
             Location = e.Termin.Ort,
             Start = new CalDateTime(new DateTime(e.Termin.Block.Schultag.Datum, e.Interval.Start), true),
@@ -99,7 +99,7 @@ public class CalendarService
         var taughtEvents = taught.Select(e => new CalendarEvent
         {
             Uid = e.Id.ToString(),
-            Summary = e.Otium.Bezeichnung,
+            Summary = (e.OverrideBezeichnung != null) ? e.OverrideBezeichnung : e.Otium.Bezeichnung,
             Description = e.Otium.Beschreibung,
             Location = e.Ort,
             Start = new CalDateTime(new DateTime(e.Block.Schultag.Datum, _blockHelper.Get(e.Block.SchemaId)!.Interval.Start), true),

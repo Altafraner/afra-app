@@ -43,6 +43,7 @@ const maxEnrollmentsSetzenSelected = ref(false);
 const maxEnrollmentsSelected = ref(null);
 const betreuerZuweisenSelected = ref(false);
 const ort = ref();
+const bezeichnung = ref();
 const personSelected = ref(null);
 const updateStatusFunction = ref(() => undefined);
 const stopAufsicht = ref(() => undefined);
@@ -96,18 +97,35 @@ async function updateMaxEnrollments() {
     await simpleUpdate(
         'maxEinschreibungen',
         maxEnrollmentsSetzenSelected.value ? maxEnrollmentsSelected.value : null,
+        'Es ist ein Fehler beim Aktualisieren der maximalen Teilnehmerzahl aufgetreten.',
     );
 }
 
 async function updateTutor() {
-    await simpleUpdate('tutor', betreuerZuweisenSelected.value ? personSelected.value : null);
+    await simpleUpdate(
+        'tutor',
+        betreuerZuweisenSelected.value ? personSelected.value : null,
+        'Es ist ein Fehler beim Aktualisieren des Tutors aufgetreten.',
+    );
 }
 
 async function updateOrt() {
-    await simpleUpdate('ort', ort.value);
+    await simpleUpdate(
+        'ort',
+        ort.value,
+        'Es ist ein Fehler beim Aktualisieren des Ortes aufgetreten.',
+    );
 }
 
-async function simpleUpdate(name, value) {
+async function updateBezeichnung() {
+    await simpleUpdate(
+        'bezeichnung',
+        bezeichnung.value,
+        'Es ist ein Fehler beim Aktualisieren der Bezeichnung aufgetreten.',
+    );
+}
+
+async function simpleUpdate(name, value, errmsg) {
     const api = mande(`/api/otium/management/termin/${props.terminId}/${name}`);
     try {
         await api.patch({ value });
@@ -115,7 +133,7 @@ async function simpleUpdate(name, value) {
         toast.add({
             severity: 'error',
             summary: 'Fehler',
-            detail: 'Es ist ein Fehler beim Aktualisieren der maximalen Teilnehmerzahl aufgetreten.',
+            detail: errmsg,
         });
         console.error(e);
     } finally {
@@ -172,6 +190,10 @@ const startEditTutor = () => {
 
 const startEditOrt = () => {
     ort.value = otium.value.ort;
+};
+
+const startEditBezeichnung = () => {
+    bezeichnung.value = otium.value.bezeichnung;
 };
 
 const initMove = async (student) => {
@@ -297,6 +319,21 @@ await fetchData();
                         <label for="maxEnrollmentInput">max. Teilnehmer:innen</label>
                     </FloatLabel>
                 </div>
+            </template>
+        </GridEditRow>
+        <GridEditRow
+            header="Bezeichnung einmalig überschreiben"
+            @edit="startEditBezeichnung"
+            @update="updateBezeichnung"
+        >
+            <template #body>
+                {{ otium.bezeichnung }}
+            </template>
+            <template #edit>
+                <FloatLabel class="w-full" variant="on">
+                    <InputText id="bezeichnung" v-model="bezeichnung" fluid maxlength="20" name="ort" />
+                    <label for="Bezeichnung">Bezeichnung</label>
+                </FloatLabel>
             </template>
         </GridEditRow>
     </grid>

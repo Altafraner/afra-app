@@ -79,6 +79,13 @@ const create = (data) => {
                 </template>
             </template>
         </Column>
+        <Column field="bezeichnung" header="Umbenennung">
+            <template #body="{ data }">
+                <template v-if="data.bezeichnung">
+                    {{ data.bezeichnung }}
+                </template>
+            </template>
+        </Column>
         <Column v-if="allowEdit" class="text-right afra-col-action">
             <template #header v-if="allowEdit">
                 <Button

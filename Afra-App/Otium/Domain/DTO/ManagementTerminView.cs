@@ -32,6 +32,7 @@ public record ManagementTerminView
         IstAbgesagt = termin.IstAbgesagt;
         WiederholungId = termin.Wiederholung?.Id;
         Block = block;
+        Bezeichnung = termin.OverrideBezeichnung;
     }
 
     /// <summary>
@@ -83,4 +84,9 @@ public record ManagementTerminView
     ///     Whether the Termin is cancelled or not.
     /// </summary>
     public required bool IstAbgesagt { get; set; }
+
+    /// <summary>
+    ///     A one time override name for the Otium Termin
+    /// </summary>
+    public string? Bezeichnung { get; set; }
 }
