@@ -9,6 +9,8 @@ using DTO_Otium_Creation = Afra_App.Otium.Domain.DTO.ManagementOtiumCreation;
 using DTO_Termin_Creation = Afra_App.Otium.Domain.DTO.ManagementTerminCreation;
 using DTO_Wiederholung_Creation = Afra_App.Otium.Domain.DTO.ManagementWiederholungCreation;
 using DTO_Wiederholung_Edit = Afra_App.Otium.Domain.DTO.ManagementWiederholungEdit;
+using DTO_KlassenLimits = Afra_App.Otium.Domain.DTO.KlassenLimits;
+using System.ComponentModel.DataAnnotations;
 
 namespace Afra_App.Otium.API.Endpoints;
 
@@ -40,6 +42,7 @@ public static class Management
             .RequireAuthorization(AuthorizationPolicies.Otiumsverantwortlich);
         group.MapDelete("/otium/{otiumId:guid}/verantwortliche/{persId:guid}", OtiumRemoveVerantwortlich)
             .RequireAuthorization(AuthorizationPolicies.Otiumsverantwortlich);
+        group.MapPatch("/otium/{otiumId:guid}/klassenLimits", OtiumSetKlassenLimits);
 
         var termin = group.MapGroup("/termin");
         termin.MapGet("/{otiumTerminId:guid}", GetTerminForTeacher);
@@ -389,6 +392,40 @@ public static class Management
         try
         {
             await service.OtiumSetBezeichnungAsync(otiumId, value.Value);
+            return Results.Ok();
+        }
+        catch (OtiumEndpointService.EntityNotFoundException)
+        {
+            return Results.NotFound();
+        }
+    }
+
+    private static async Task<IResult> OtiumSetKlassenLimits(ManagementService managementService,
+        UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumId,
+        DTO_KlassenLimits limits)
+    {
+        DB_Otium otium;
+        try
+        {
+            otium = await managementService.GetOtiumByIdAsync(otiumId);
+        }
+        catch (KeyNotFoundException)
+        {
+            return Results.NotFound("Otium not found.");
+        }
+
+        if (!await MayEditAsync(authHelper, managementService, otium)) return Results.Forbid();
+
+        var validationContext = new ValidationContext(limits);
+        var validationResults = new List<ValidationResult>();
+        if (!Validator.TryValidateObject(limits, validationContext, validationResults, true))
+        {
+            return Results.BadRequest(validationResults.Select(v => v.ErrorMessage));
+        }
+
+        try
+        {
+            await service.OtiumSetKlassenLimitsAsync(otiumId, limits);
             return Results.Ok();
         }
         catch (OtiumEndpointService.EntityNotFoundException)

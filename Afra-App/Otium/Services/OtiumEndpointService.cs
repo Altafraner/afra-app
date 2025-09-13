@@ -550,7 +550,9 @@ public class OtiumEndpointService
             Termine = otium.Termine.Select(t =>
                 new ManagementTerminView(t, _blockHelper.Get(t.Block.SchemaId)!.Bezeichnung)),
             Wiederholungen = otium.Wiederholungen.Select(r =>
-                new ManagementWiederholungView(r, _blockHelper.Get(r.Block)!.Bezeichnung))
+                new ManagementWiederholungView(r, _blockHelper.Get(r.Block)!.Bezeichnung)),
+            MinKlasse = otium.MinKlasse,
+            MaxKlasse = otium.MaxKlasse,
         };
     }
 
@@ -863,7 +865,7 @@ public class OtiumEndpointService
     }
 
     /// <summary>
-    ///     Sets the Bezeichnung of an OtiumTermin
+    ///     Sets the Bezeichnung of an Otium
     /// </summary>
     /// <param name="otiumId">The ID of the Otium to change the Bezeichnung of.</param>
     /// <param name="bezeichnung">The new Bezeichnung</param>
@@ -877,7 +879,7 @@ public class OtiumEndpointService
     }
 
     /// <summary>
-    ///     Sets the Beschreibung of an OtiumTermin
+    ///     Sets the Beschreibung of an Otium
     /// </summary>
     /// <param name="otiumId">The ID of the Otium to change the Beschreibung> of.</param>
     /// <param name="beschreibung">The new Beschreibung</param>
@@ -893,6 +895,21 @@ public class OtiumEndpointService
                 beschreibungBuilder.AppendLine(line.Trim());
 
         otium.Beschreibung = beschreibungBuilder.ToString();
+        await _dbContext.SaveChangesAsync();
+    }
+
+    /// <summary>
+    ///     Sets the grade limits of an Otium
+    /// </summary>
+    /// <param name="otiumId">The ID of the Otium to change the Bezeichnung of.</param>
+    /// <param name="limits">The new grade limits</param>
+    public async Task OtiumSetKlassenLimitsAsync(Guid otiumId, KlassenLimits limits)
+    {
+        var otium = await _dbContext.Otia.FindAsync(otiumId);
+        if (otium is null) throw new ArgumentException("Kein Otium mit dieser Id existiert.");
+
+        otium.MinKlasse = limits.MinKlasse;
+        otium.MaxKlasse = limits.MaxKlasse;
         await _dbContext.SaveChangesAsync();
     }
 

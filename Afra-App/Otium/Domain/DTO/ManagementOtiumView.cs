@@ -1,4 +1,5 @@
 using Afra_App.User.Domain.DTO;
+using Afra_App.Otium.Domain.Models;
 
 namespace Afra_App.Otium.Domain.DTO;
 
@@ -7,38 +8,30 @@ namespace Afra_App.Otium.Domain.DTO;
 /// </summary>
 public record ManagementOtiumView
 {
-    /// <summary>
-    ///     A unique identifier for the Otium
-    /// </summary>
+    /// <inheritdoc cref="OtiumDefinition.Id"/>
     public Guid Id { get; set; }
 
-    /// <summary>
-    ///     A name for the Otium
-    /// </summary>
+    /// <inheritdoc cref="OtiumDefinition.Bezeichnung"/>
     public required string Bezeichnung { get; set; }
 
-    /// <summary>
-    ///     A description for the Otium. May contain multiple lines.
-    /// </summary>
+    /// <inheritdoc cref="OtiumDefinition.Beschreibung"/>
     public required string Beschreibung { get; set; }
 
-    /// <summary>
-    ///     A reference to the category of the Otium. Categories are transitive.
-    /// </summary>
+    /// <inheritdoc cref="OtiumDefinition.Kategorie"/>
     public required Guid Kategorie { get; set; }
 
-    /// <summary>
-    ///     A list of all people responsible for the Otium.
-    /// </summary>
+    /// <inheritdoc cref="OtiumDefinition.Verantwortliche"/>
     public required IEnumerable<PersonInfoMinimal> Verantwortliche { get; set; }
 
-    /// <summary>
-    ///     All instances of the Otium
-    /// </summary>
+    /// <inheritdoc cref="OtiumDefinition.Termine"/>
     public IEnumerable<ManagementTerminView>? Termine { get; set; }
 
-    /// <summary>
-    ///     All repetition rules of the Otium
-    /// </summary>
+    /// <inheritdoc cref="OtiumDefinition.Wiederholungen"/>
     public IEnumerable<ManagementWiederholungView>? Wiederholungen { get; set; }
+
+    /// <inheritdoc cref="OtiumDefinition.MinKlasse"/>
+    public int? MinKlasse { get; set; } = null;
+
+    /// <inheritdoc cref="OtiumDefinition.MaxKlasse"/>
+    public int? MaxKlasse { get; set; } = null;
 }

@@ -23,6 +23,7 @@ public static class AddRulesExtension
         services.AddScoped<IIndependentRule, MaxEnrollmentsRule>();
         services.AddScoped<IIndependentRule, MustBeStudentRule>();
         services.AddScoped<IIndependentRule, NotCancelledRule>();
+        services.AddScoped<IIndependentRule, KlassenLimitsRule>();
 
         services.AddScoped<IWeekRule, RequiredKategorienRule>();
 

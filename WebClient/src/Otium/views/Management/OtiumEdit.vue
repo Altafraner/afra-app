@@ -7,6 +7,7 @@ import {
     InputText,
     Textarea,
     useToast,
+    Select,
 } from 'primevue';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
 import { useUser } from '@/stores/user.js';
@@ -36,6 +37,12 @@ const otium = ref({});
 const bezeichnung = ref('');
 const beschreibung = ref('');
 const kategorie = ref(null);
+const minKlasse = ref(null);
+const maxKlasse = ref(null);
+const klassenstufen = [
+    { label: '–', value: null },
+    ...[7, 8, 9, 10, 11, 12].map((x) => ({ label: x.toString(), value: x })),
+];
 
 const navItems = computed(() => [
     {
@@ -57,6 +64,8 @@ async function getOtium(setInternal = true) {
         const kategorieId = findChildren(settings.kategorien, otium.value.kategorie).id;
         kategorie.value = { [kategorieId]: true };
         beschreibung.value = otium.value.beschreibung.replaceAll('\n', '\n\n').trim();
+        minKlasse.value = otium.value.minKlasse ?? null;
+        maxKlasse.value = otium.value.maxKlasse ?? null;
     }
 }
 
@@ -101,11 +110,40 @@ async function updateKategorie() {
 }
 
 async function updateBeschreibung() {
-    if (beschreibung.value.replaceAll('\n\n', '\n') === otium.value.bezeichnung) return;
+    if (beschreibung.value.replaceAll('\n\n', '\n') === otium.value.beschreibung) return;
     try {
         await simpleUpdate('beschreibung', beschreibung.value);
     } finally {
         beschreibung.value = otium.value.beschreibung.replaceAll('\n', '\n\n').trim();
+    }
+}
+
+async function updateKlassenLimits() {
+    const minVal = minKlasse.value != null ? Number(minKlasse.value) : null;
+    const maxVal = maxKlasse.value != null ? Number(maxKlasse.value) : null;
+
+    if (
+        minVal === (otium.value.minKlasse ?? null) &&
+        maxVal === (otium.value.maxKlasse ?? null)
+    ) {
+        return;
+    }
+
+    try {
+        const api = mande(`/api/otium/management/otium/${otium.value.id}/klassenLimits`);
+        try {
+            await api.patch({ minKlasse: minVal, maxKlasse: maxVal });
+        } catch (e) {
+            toast.add({
+                severity: 'error',
+                summary: 'Fehler',
+                detail:
+                    'Ein unerwarteter Fehler ist beim Speichern der Daten aufgetreten: ' +
+                    e.body,
+            });
+        }
+    } finally {
+        await getOtium();
     }
 }
 
@@ -326,6 +364,53 @@ setup();
                         maxlength="500"
                         rows="2"
                     />
+                </template>
+            </GridEditRow>
+            <GridEditRow
+                header="Klassenstufen"
+                header-class="self-start"
+                @update="updateKlassenLimits"
+            >
+                <template #body>
+                    <div class="flex gap-2 items-center">
+                        <template v-if="!otium.maxKlasse && !otium.minKlasse"> alle </template>
+                        <template v-else>
+                            <template v-if="otium.maxKlasse === otium.minKlasse">
+                                nur Klasse {{ otium.minKlasse }}
+                            </template>
+                            <template v-else>
+                                <div v-if="otium.minKlasse">
+                                    ab Klasse {{ otium.minKlasse }}
+                                </div>
+                                <div v-if="otium.maxKlasse">
+                                    bis Klasse {{ otium.maxKlasse }}
+                                </div>
+                            </template>
+                        </template>
+                    </div>
+                </template>
+                <template #edit>
+                    <div class="flex gap-2 items-center">
+                        <Select
+                            id="minKlasseSelect"
+                            v-model="minKlasse"
+                            :options="klassenstufen"
+                            optionLabel="label"
+                            optionValue="value"
+                            placeholder="min"
+                            fluid
+                        />
+                        –
+                        <Select
+                            id="maxKlasseSelect"
+                            v-model="maxKlasse"
+                            :options="klassenstufen"
+                            optionLabel="label"
+                            optionValue="value"
+                            placeholder="max"
+                            fluid
+                        />
+                    </div>
                 </template>
             </GridEditRow>
         </Grid>

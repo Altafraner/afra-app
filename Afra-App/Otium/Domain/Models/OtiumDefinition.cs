@@ -51,4 +51,16 @@ public class OtiumDefinition : IHasTimestamps
 
     /// <inheritdoc/>
     public DateTime LastModified { get; set; }
+
+    /// <summary>
+    ///     The youngest grade allowed enrollment to this Otium. Null for no lower limit
+    /// </summary>
+    [Range(7, 12)]
+    public int? MinKlasse { get; set; } = null;
+
+    /// <summary>
+    ///     The oldest grade allowed enrollment to this Otium. Null for no upper limit
+    /// </summary>
+    [Range(7, 12)]
+    public int? MaxKlasse { get; set; } = null;
 }
