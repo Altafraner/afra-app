@@ -105,4 +105,7 @@ public class Person : IEmailRecipient
     {
         return $"{FirstName} {LastName}";
     }
+
+    ///
+    public string Greeting { get; set; } = "Guten Tag";
 }

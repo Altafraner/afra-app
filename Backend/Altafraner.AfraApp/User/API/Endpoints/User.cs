@@ -38,6 +38,7 @@ public static class User
                         Rolle = user.Rolle,
                         Berechtigungen = user.GlobalPermissions.ToArray(),
                         ImpersonationId = impersonationId
+                        Greeting = user.Greeting,
                     });
                 }
                 catch (InvalidOperationException)
@@ -66,5 +67,20 @@ public static class User
                     await userSigninService.SignInAsync(id, false, currentUserId);
                 })
             .RequireAuthorization(AuthorizationPolicies.AdminOnly);
+
+        app.MapPatch("/api/user/greeting", async (AfraAppContext dbContext, UserAccessor userAccessor, StringWrapper greeting) =>
+        {
+            string[] allowedGreetings = ["Servus", "Moin", "Hallo", "Guten Tag",];
+            if (!allowedGreetings.Contains(greeting.Value))
+            {
+                return Results.BadRequest();
+            }
+
+            var user = await userAccessor.GetUserAsync();
+            user.Greeting = greeting.Value;
+            await dbContext.SaveChangesAsync();
+            return Results.Ok();
+        }).RequireAuthorization();
     }
+    private record StringWrapper(string Value);
 }
