@@ -54,7 +54,7 @@ update();
 </script>
 
 <template>
-    <h1>Guten Tag {{ formatStudent(user.user) }}</h1>
+    <h1>{{ user.user.greeting }} {{ formatStudent(user.user) }}</h1>
     <h2>Betreute Otia</h2>
     <DataTable :value="termine" v-if="!loading">
         <Column header="Otium">

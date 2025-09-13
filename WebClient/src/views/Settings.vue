@@ -1,5 +1,5 @@
 <script setup>
-import { Button, useToast } from 'primevue';
+import { Button, useToast, RadioButton } from 'primevue';
 import { ref } from 'vue';
 import { mande } from 'mande';
 import { useUser } from '@/stores/user.js';
@@ -12,7 +12,36 @@ const calLink = ref(null);
 
 const numSubs = ref(null);
 
+const greeting = ref(user.user.greeting);
+
 const baseUrl = import.meta.env.BASE_URL;
+
+async function updateGreeting(newGreeting) {
+    const dataPoster = mande('/api/user/greeting');
+    try {
+        await dataPoster.patch({ value: newGreeting });
+        await user.update();
+        toast.add({
+            severity: 'success',
+            summary: 'Gespeichert',
+            detail: `Deine Begrüßung wurde auf "${newGreeting}" aktualisiert.`,
+            life: 2000,
+        });
+    } catch (e) {
+        console.error(e);
+        toast.add({
+            severity: 'error',
+            summary: 'Fehler',
+            detail: 'Begrüßung konnte nicht gespeichert werden.',
+            life: 2000,
+        });
+        greeting.value = user.user.greeting;
+    }
+}
+
+function onGreetingChange(val) {
+    updateGreeting(val);
+}
 
 async function fetchNum() {
     loading.value = true;
@@ -93,16 +122,57 @@ const copy = async (text) => {
 
 await fetchNum();
 
-const navItems = [
-    {
-        label: 'Einstellungen',
-    },
-];
+const navItems = [{ label: 'Einstellungen' }];
 </script>
 
 <template>
     <NavBreadcrumb :items="navItems" />
     <h1>Einstellungen</h1>
+
+    <h2>Begrüßung</h2>
+
+    <div class="flex flex-wrap gap-4">
+        <div class="flex items-center gap-2">
+            <RadioButton
+                v-model="greeting"
+                inputId="servus"
+                name="greeting"
+                value="Servus"
+                @update:modelValue="onGreetingChange"
+            />
+            <label for="servus">Servus</label>
+        </div>
+        <div class="flex items-center gap-2">
+            <RadioButton
+                v-model="greeting"
+                inputId="moin"
+                name="greeting"
+                value="Moin"
+                @update:modelValue="onGreetingChange"
+            />
+            <label for="moin">Moin</label>
+        </div>
+        <div class="flex items-center gap-2">
+            <RadioButton
+                v-model="greeting"
+                inputId="hallo"
+                name="greeting"
+                value="Hallo"
+                @update:modelValue="onGreetingChange"
+            />
+            <label for="hallo">Hallo</label>
+        </div>
+        <div class="flex items-center gap-2">
+            <RadioButton
+                v-model="greeting"
+                inputId="gutenTag"
+                name="greeting"
+                value="Guten Tag"
+                @update:modelValue="onGreetingChange"
+            />
+            <label for="gutenTag">Guten Tag</label>
+        </div>
+    </div>
 
     <h2>Kalender abonnieren</h2>
 

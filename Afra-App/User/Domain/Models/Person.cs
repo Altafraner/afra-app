@@ -96,4 +96,7 @@ public class Person
     {
         return $"{Vorname} {Nachname}";
     }
+
+    ///
+    public string Greeting { get; set; } = "Guten Tag";
 }
