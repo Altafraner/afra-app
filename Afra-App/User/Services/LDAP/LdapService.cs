@@ -224,6 +224,10 @@ public class LdapService
         if (!_configuration.Enabled)
             throw new InvalidOperationException("Ldap is not enabled");
 
+        // See https://datatracker.ietf.org/doc/html/rfc4513#section-5.1.2
+        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+            return null;
+
         using var connection = _configuration.BuildConnection(_logger);
         var request = new SearchRequest(_configuration.GlobalScope.BaseDn,
             $"(&{_configuration.GlobalScope.Filter}(sAMAccountName={LdapSanitizer.Sanitize(username)}))",
