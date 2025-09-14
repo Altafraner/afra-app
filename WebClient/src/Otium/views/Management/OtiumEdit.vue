@@ -242,6 +242,7 @@ async function createTermin(data) {
             block: data.block,
             tutor: data.person,
             maxEinschreibungen: data.maxEnrollments,
+            overrideBezeichnung: data.overrideBezeichnung,
         });
     } catch (e) {
         console.log(e.response);

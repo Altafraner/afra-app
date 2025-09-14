@@ -20,7 +20,6 @@ public class OtiumTermin : OtiumInstanz, IHasTimestamps
     [MaxLength(70)]
     public string? OverrideBezeichnung { get; set; }
 
-
     /// <summary>
     ///     A reference to the recurrence rule for the Termin. May be null.
     /// </summary>

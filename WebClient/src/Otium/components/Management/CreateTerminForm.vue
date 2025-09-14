@@ -24,6 +24,8 @@ const ortSelected = ref(null);
 const dateSelected = ref(null);
 const blockSelected = ref(null);
 const personSelected = ref(null);
+const bezeichnungSelected = ref(null);
+const bezeichnungSetzenSelected = ref(false);
 const maxEnrollmentsSelected = ref(null);
 const maxEnrollmentsSetzenSelected = ref(false);
 const betreuerZuweisenSelected = ref(false);
@@ -74,6 +76,8 @@ async function setup() {
     maxEnrollmentsSelected.value = null;
     maxEnrollmentsSetzenSelected.value = false;
     betreuerZuweisenSelected.value = false;
+    bezeichnungSelected.value = null;
+    bezeichnungSetzenSelected.value = false;
     const personPromise = getPersonen();
     const terminePromise = getTermine();
 
@@ -89,6 +93,7 @@ function submit({ valid }) {
         ort: ortSelected.value,
         person: personSelected.value,
         maxEnrollments: maxEnrollmentsSelected.value,
+        overrideBezeichnung: bezeichnungSelected.value,
     });
 }
 
@@ -101,6 +106,11 @@ watch(betreuerZuweisenSelected, () => {
 watch(maxEnrollmentsSetzenSelected, () => {
     if (!maxEnrollmentsSetzenSelected.value) {
         maxEnrollmentsSelected.value = null;
+    }
+});
+watch(bezeichnungSetzenSelected, () => {
+    if (!bezeichnungSetzenSelected.value) {
+        bezeichnungSelected.value = null;
     }
 });
 
@@ -165,6 +175,20 @@ setup();
                 name="maxEnrollments"
             />
             <label for="maxEnrollmentInput">max. Teilnehmer:innen</label>
+        </FloatLabel>
+        <div class="flex justify-between mt-4">
+            <label for="bezeichnungSwitch">Bezeichnung überschreiben</label>
+            <ToggleSwitch v-model="bezeichnungSetzenSelected" if="bezeichnungSwitch" />
+        </div>
+        <FloatLabel class="w-full" variant="on">
+            <InputText
+                id="bezeichnungInput"
+                v-model="bezeichnungSelected"
+                :disabled="!bezeichnungSetzenSelected"
+                fluid
+                name="bezeichnung"
+            />
+            <label for="bezeichnungInput">Bezeichnung</label>
         </FloatLabel>
         <Button class="mt-4" label="Erstellen" severity="primary" type="submit" />
     </Form>

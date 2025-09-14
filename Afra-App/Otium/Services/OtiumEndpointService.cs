@@ -644,7 +644,8 @@ public class OtiumEndpointService
             Tutor = tutor,
             MaxEinschreibungen = otiumTermin.MaxEinschreibungen,
             IstAbgesagt = false,
-            Wiederholung = null
+            Wiederholung = null,
+            OverrideBezeichnung = otiumTermin.OverrideBezeichnung,
         };
 
         _dbContext.OtiaTermine.Add(dbOtiumTermin);

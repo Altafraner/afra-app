@@ -1,3 +1,5 @@
+using Afra_App.Otium.Domain.Models;
+
 namespace Afra_App.Otium.Domain.DTO;
 
 /// <summary>
@@ -34,4 +36,7 @@ public record ManagementTerminCreation
     ///     The location for the Otium.
     /// </summary>
     public required string Ort { get; set; }
+
+    /// <inheritdoc cref="OtiumTermin.OverrideBezeichnung"/>
+    public string? OverrideBezeichnung { get; set; }
 }
