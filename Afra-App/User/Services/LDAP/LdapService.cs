@@ -225,7 +225,10 @@ public class LdapService
             throw new InvalidOperationException("Ldap is not enabled");
 
         // See https://datatracker.ietf.org/doc/html/rfc4513#section-5.1.2
-        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+        if (string.IsNullOrWhiteSpace(username)
+            || string.IsNullOrWhiteSpace(password)
+            || username.Contains('\0')
+            || password.Contains('\0'))
             return null;
 
         using var connection = _configuration.BuildConnection(_logger);
