@@ -617,7 +617,7 @@ public static class Management
 
     private static async Task<IResult> OtiumTerminSetBezeichnung(ManagementService managementService,
         UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumTerminId,
-        StringWrapper bezeichnung)
+        StringOrNullWrapper bezeichnung)
     {
         DB_Otium otium;
         try
@@ -704,6 +704,8 @@ public static class Management
     }
 
     private record StringWrapper(string Value);
+
+    private record StringOrNullWrapper(string? Value);
 
     private record IntOrNullWrapper(int? Value);
 

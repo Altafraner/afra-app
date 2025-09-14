@@ -1037,14 +1037,7 @@ public class OtiumEndpointService
         if (otiumTermin is null)
             throw new EntityNotFoundException("Kein Termin mit dieser Id");
 
-        if (string.IsNullOrWhiteSpace(bezeichnung) || otiumTermin.Otium.Bezeichnung.Trim() == bezeichnung.Trim())
-        {
-            otiumTermin.OverrideBezeichnung = null;
-        }
-        else
-        {
-            otiumTermin.OverrideBezeichnung = bezeichnung.Trim();
-        }
+        otiumTermin.OverrideBezeichnung = bezeichnung?.Trim();
 
         await _dbContext.SaveChangesAsync();
     }

@@ -44,6 +44,7 @@ const maxEnrollmentsSelected = ref(null);
 const betreuerZuweisenSelected = ref(false);
 const ort = ref();
 const bezeichnung = ref();
+const bezeichnungSelected = ref();
 const personSelected = ref(null);
 const updateStatusFunction = ref(() => undefined);
 const stopAufsicht = ref(() => undefined);
@@ -120,7 +121,7 @@ async function updateOrt() {
 async function updateBezeichnung() {
     await simpleUpdate(
         'bezeichnung',
-        bezeichnung.value,
+        bezeichnungSelected.value ? bezeichnung.value : null,
         'Es ist ein Fehler beim Aktualisieren der Bezeichnung aufgetreten.',
     );
 }
@@ -193,6 +194,7 @@ const startEditOrt = () => {
 };
 
 const startEditBezeichnung = () => {
+    bezeichnungSelected.value = otium.value.bezeichnung !== null;
     bezeichnung.value = otium.value.bezeichnung;
 };
 
@@ -295,7 +297,7 @@ await fetchData();
             @update="updateMaxEnrollments"
         >
             <template #body>
-                {{ otium.maxEinschreibungen ? otium.maxEinschreibungen : 'Unbegrenzt' }}
+                {{ otium.maxEinschreibungen ?? 'Unbegrenzt' }}
             </template>
             <template #edit>
                 <div class="w-full flex flex-col gap-3">
@@ -308,7 +310,7 @@ await fetchData();
                             if="maxEnrollmentSwitch"
                         />
                     </div>
-                    <FloatLabel class="w-full" variant="on">
+                    <FloatLabel v-if="maxEnrollmentsSetzenSelected" class="w-full" variant="on">
                         <InputNumber
                             id="maxEnrollmentInput"
                             v-model="maxEnrollmentsSelected"
@@ -322,18 +324,30 @@ await fetchData();
             </template>
         </GridEditRow>
         <GridEditRow
-            header="Bezeichnung einmalig überschreiben"
+            header="Bezeichnung (Termin)"
             @edit="startEditBezeichnung"
             @update="updateBezeichnung"
         >
             <template #body>
-                {{ otium.bezeichnung }}
+                {{ otium.bezeichnung ?? 'Unverändert' }}
             </template>
             <template #edit>
-                <FloatLabel class="w-full" variant="on">
-                    <InputText id="bezeichnung" v-model="bezeichnung" fluid maxlength="20" name="ort" />
-                    <label for="Bezeichnung">Bezeichnung</label>
-                </FloatLabel>
+                <div class="w-full flex flex-col gap-3">
+                    <div class="flex justify-between">
+                        <label for="bezeichnungSwitch">Bezeichnung überschreiben</label>
+                        <ToggleSwitch v-model="bezeichnungSelected" if="bezeichnungSwitch" />
+                    </div>
+                    <FloatLabel v-if="bezeichnungSelected" class="w-full" variant="on">
+                        <InputText
+                            id="bezeichnung"
+                            v-model="bezeichnung"
+                            fluid
+                            maxlength="20"
+                            name="ort"
+                        />
+                        <label for="Bezeichnung">Bezeichnung</label>
+                    </FloatLabel>
+                </div>
             </template>
         </GridEditRow>
     </grid>
