@@ -39,10 +39,12 @@ const beschreibung = ref('');
 const kategorie = ref(null);
 const minKlasse = ref(null);
 const maxKlasse = ref(null);
-const klassenstufen = [
+const klassenstufen = ref([]);
+const klassenStufenSelects = computed(()=>[
     { label: '–', value: null },
-    ...[7, 8, 9, 10, 11, 12].map((x) => ({ label: x.toString(), value: x })),
-];
+    ...klassenstufen.value.map((x) => ({ label: x.toString(), value: x })),
+]);
+
 
 const navItems = computed(() => [
     {
@@ -69,10 +71,17 @@ async function getOtium(setInternal = true) {
     }
 }
 
+async function getKlassen() {
+    const getter = mande('/api/klassen');
+    klassenstufen.value = await getter.get();
+    console.log(klassenstufen.value)
+}
+
 async function setup() {
     try {
         await settings.updateKategorien();
         await getOtium();
+        await getKlassen();
         loading.value = false;
     } catch {
         toast.add({
@@ -395,7 +404,7 @@ setup();
                         <Select
                             id="minKlasseSelect"
                             v-model="minKlasse"
-                            :options="klassenstufen"
+                            :options="klassenStufenSelects"
                             optionLabel="label"
                             optionValue="value"
                             placeholder="min"
@@ -405,7 +414,7 @@ setup();
                         <Select
                             id="maxKlasseSelect"
                             v-model="maxKlasse"
-                            :options="klassenstufen"
+                            :options="klassenStufenSelects"
                             optionLabel="label"
                             optionValue="value"
                             placeholder="max"

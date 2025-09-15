@@ -1,5 +1,7 @@
 using Afra_App.User.Domain.Models;
+using Afra_App.User.Configuration.LDAP;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace Afra_App.User.Services;
 
@@ -9,13 +11,15 @@ namespace Afra_App.User.Services;
 public class UserService
 {
     private readonly AfraAppContext _dbContext;
+    private readonly LdapConfiguration _ldapConfiguration;
 
     /// <summary>
     ///     Called by DI
     /// </summary>
-    public UserService(AfraAppContext dbContext)
+    public UserService(AfraAppContext dbContext, IOptions<LdapConfiguration> ldapConfiguration)
     {
         _dbContext = dbContext;
+        _ldapConfiguration = ldapConfiguration.Value;
     }
 
     /// <summary>
@@ -100,5 +104,18 @@ public class UserService
             throw new InvalidDataException("The person does not have a valid group.");
 
         return Convert.ToInt32(person.Gruppe.TakeWhile(char.IsAsciiDigit).Aggregate("", (r, c) => r + c));
+    }
+
+    /// <summary>
+    ///     Gets all grade levels
+    /// </summary>
+    public IEnumerable<int> GetKlassenstufen()
+    {
+        return _ldapConfiguration.UserGroups.Select(x => x.Group)
+            .Select(s => s.TakeWhile(char.IsAsciiDigit).Aggregate("", (r, c) => r + c))
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .Select(s => int.Parse(s))
+            .Order()
+            .Distinct();
     }
 }

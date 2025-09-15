@@ -7,11 +7,9 @@ namespace Afra_App.Otium.Domain.DTO;
 public record KlassenLimits : IValidatableObject
 {
     ///
-    [Range(7, 12)]
     public int? MinKlasse { get; set; } = null;
 
     ///
-    [Range(7, 12)]
     public int? MaxKlasse { get; set; } = null;
 
     /// <inheritdoc/>

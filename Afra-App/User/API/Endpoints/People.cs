@@ -22,6 +22,8 @@ public static class People
         app.MapGet("/api/people/{id:guid}/mentor", GetPersonMentors)
             .WithName("GetPersonMentors")
             .RequireAuthorization(AuthorizationPolicies.TeacherOrAdmin);
+        app.MapGet("/api/klassen", GetKlassen)
+            .RequireAuthorization();
     }
 
     private static Ok<IAsyncEnumerable<PersonInfoMinimal>> GetPeople(AfraAppContext dbContext,
@@ -52,5 +54,10 @@ public static class People
         {
             return Results.Ok(new List<PersonInfoMinimal>());
         }
+    }
+
+    private static IResult GetKlassen(AfraAppContext dbContext, UserService userService)
+    {
+        return Results.Ok(userService.GetKlassenstufen());
     }
 }
