@@ -342,7 +342,7 @@ await fetchData();
                             id="bezeichnung"
                             v-model="bezeichnung"
                             fluid
-                            maxlength="20"
+                            maxlength="70"
                             name="ort"
                         />
                         <label for="Bezeichnung">Bezeichnung</label>

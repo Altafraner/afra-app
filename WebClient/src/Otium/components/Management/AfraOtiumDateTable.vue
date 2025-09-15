@@ -79,10 +79,16 @@ const create = (data) => {
                 </template>
             </template>
         </Column>
-        <Column field="bezeichnung" header="Umbenennung">
+        <Column
+            v-if="dates.some((d) => d.bezeichnung)"
+            field="bezeichnung"
+            header="Umbenennung"
+        >
             <template #body="{ data }">
                 <template v-if="data.bezeichnung">
-                    {{ data.bezeichnung }}
+                    <span class="truncate" :title="data.bezeichnung">
+                        {{ data.bezeichnung }}
+                    </span>
                 </template>
             </template>
         </Column>
@@ -155,4 +161,12 @@ const create = (data) => {
     </Dialog>
 </template>
 
-<style scoped></style>
+<style scoped>
+.truncate {
+    display: inline-block;
+    max-width: 15ch;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+</style>

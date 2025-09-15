@@ -40,11 +40,10 @@ const kategorie = ref(null);
 const minKlasse = ref(null);
 const maxKlasse = ref(null);
 const klassenstufen = ref([]);
-const klassenStufenSelects = computed(()=>[
+const klassenStufenSelects = computed(() => [
     { label: '–', value: null },
     ...klassenstufen.value.map((x) => ({ label: x.toString(), value: x })),
 ]);
-
 
 const navItems = computed(() => [
     {
@@ -74,7 +73,7 @@ async function getOtium(setInternal = true) {
 async function getKlassen() {
     const getter = mande('/api/klassen');
     klassenstufen.value = await getter.get();
-    console.log(klassenstufen.value)
+    console.log(klassenstufen.value);
 }
 
 async function setup() {
@@ -350,6 +349,44 @@ setup();
                         fluid
                         hide-clear
                     />
+                </template> </GridEditRow
+            ><GridEditRow
+                header="Klassenstufen"
+                header-class="self-start"
+                @update="updateKlassenLimits"
+            >
+                <template #body>
+                    <template v-if="!otium.maxKlasse && !otium.minKlasse"> alle </template>
+                    <template v-else>
+                        <template v-if="otium.maxKlasse === otium.minKlasse">
+                            nur Klasse {{ otium.minKlasse }}
+                        </template>
+                        <template v-else>
+                            <div v-if="otium.minKlasse">ab Klasse {{ otium.minKlasse }}</div>
+                            <div v-if="otium.maxKlasse">bis Klasse {{ otium.maxKlasse }}</div>
+                        </template>
+                    </template>
+                </template>
+                <template #edit>
+                    <Select
+                        id="minKlasseSelect"
+                        v-model="minKlasse"
+                        :options="klassenStufenSelects"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="min"
+                        fluid
+                    />
+                    –
+                    <Select
+                        id="maxKlasseSelect"
+                        v-model="maxKlasse"
+                        :options="klassenStufenSelects"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="max"
+                        fluid
+                    />
                 </template>
             </GridEditRow>
             <GridEditRow
@@ -374,53 +411,6 @@ setup();
                         maxlength="500"
                         rows="2"
                     />
-                </template>
-            </GridEditRow>
-            <GridEditRow
-                header="Klassenstufen"
-                header-class="self-start"
-                @update="updateKlassenLimits"
-            >
-                <template #body>
-                    <div class="flex gap-2 items-center">
-                        <template v-if="!otium.maxKlasse && !otium.minKlasse"> alle </template>
-                        <template v-else>
-                            <template v-if="otium.maxKlasse === otium.minKlasse">
-                                nur Klasse {{ otium.minKlasse }}
-                            </template>
-                            <template v-else>
-                                <div v-if="otium.minKlasse">
-                                    ab Klasse {{ otium.minKlasse }}
-                                </div>
-                                <div v-if="otium.maxKlasse">
-                                    bis Klasse {{ otium.maxKlasse }}
-                                </div>
-                            </template>
-                        </template>
-                    </div>
-                </template>
-                <template #edit>
-                    <div class="flex gap-2 items-center">
-                        <Select
-                            id="minKlasseSelect"
-                            v-model="minKlasse"
-                            :options="klassenStufenSelects"
-                            optionLabel="label"
-                            optionValue="value"
-                            placeholder="min"
-                            fluid
-                        />
-                        –
-                        <Select
-                            id="maxKlasseSelect"
-                            v-model="maxKlasse"
-                            :options="klassenStufenSelects"
-                            optionLabel="label"
-                            optionValue="value"
-                            placeholder="max"
-                            fluid
-                        />
-                    </div>
                 </template>
             </GridEditRow>
         </Grid>

@@ -186,6 +186,7 @@ setup();
                 v-model="bezeichnungSelected"
                 :disabled="!bezeichnungSetzenSelected"
                 fluid
+                maxlength="70"
                 name="bezeichnung"
             />
             <label for="bezeichnungInput">Bezeichnung</label>
