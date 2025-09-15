@@ -49,10 +49,10 @@ internal sealed class BatchEmailsJob : RetryJob
         var userEmail = user.Email;
 
         var batchSubject = emailsForUser.Count == 1 ? emailsForUser.First().Subject : "Neue Benachrichtigungen";
-        var begrüßung = user.Rolle == Rolle.Tutor ? "Sehr geehrte:r" : "Liebe:r";
+        var begrüßung = user.Greeting;
         var anrede = user.Rolle == Rolle.Tutor ? "Sie haben" : "Du hast";
         var batchText = $"""
-                         {begrüßung} {user.Vorname} {user.Nachname},
+                         {begrüßung} {user.Vorname} {user.Nachname}.
 
                          {anrede} neue Benachrichtigungen in der Afra-App. Diese sind im folgenden aufgelistet.
 
