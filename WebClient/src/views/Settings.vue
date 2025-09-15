@@ -135,6 +135,26 @@ const navItems = [{ label: 'Einstellungen' }];
         <div class="flex items-center gap-2">
             <RadioButton
                 v-model="greeting"
+                inputId="gutenTag"
+                name="greeting"
+                value="Guten Tag"
+                @update:modelValue="onGreetingChange"
+            />
+            <label for="gutenTag">Guten Tag</label>
+        </div>
+        <div class="flex items-center gap-2">
+            <RadioButton
+                v-model="greeting"
+                inputId="hallo"
+                name="greeting"
+                value="Hallo"
+                @update:modelValue="onGreetingChange"
+            />
+            <label for="hallo">Hallo</label>
+        </div>
+        <div class="flex items-center gap-2">
+            <RadioButton
+                v-model="greeting"
                 inputId="servus"
                 name="greeting"
                 value="Servus"
@@ -151,26 +171,6 @@ const navItems = [{ label: 'Einstellungen' }];
                 @update:modelValue="onGreetingChange"
             />
             <label for="moin">Moin</label>
-        </div>
-        <div class="flex items-center gap-2">
-            <RadioButton
-                v-model="greeting"
-                inputId="hallo"
-                name="greeting"
-                value="Hallo"
-                @update:modelValue="onGreetingChange"
-            />
-            <label for="hallo">Hallo</label>
-        </div>
-        <div class="flex items-center gap-2">
-            <RadioButton
-                v-model="greeting"
-                inputId="gutenTag"
-                name="greeting"
-                value="Guten Tag"
-                @update:modelValue="onGreetingChange"
-            />
-            <label for="gutenTag">Guten Tag</label>
         </div>
     </div>
 
