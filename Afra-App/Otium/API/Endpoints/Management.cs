@@ -244,7 +244,7 @@ public static class Management
 
     private static async Task<IResult> DiscontinueOtiumWiederholung(ManagementService managementService,
         UserAuthorizationHelper authHelper, OtiumEndpointService service,
-        Guid otiumWiederholungId, DateOnlyWrapper firstDayAfter)
+        Guid otiumWiederholungId, ValueWrapper<DateOnly> firstDayAfter)
     {
         DB_Otium otium;
         try
@@ -373,7 +373,7 @@ public static class Management
 
     private static async Task<IResult> OtiumSetBezeichnung(ManagementService managementService,
         UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumId,
-        StringWrapper value)
+        ValueWrapper<string> value)
     {
         DB_Otium otium;
         try
@@ -437,7 +437,7 @@ public static class Management
 
     private static async Task<IResult> OtiumSetBeschreibung(ManagementService managementService,
         UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumId,
-        StringWrapper value)
+        ValueWrapper<string> value)
     {
         DB_Otium otium;
         try
@@ -491,7 +491,7 @@ public static class Management
 
     private static async Task<IResult> OtiumSetKategorie(ManagementService managementService,
         UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumId,
-        GuidWrapper kategorie)
+        ValueWrapper<Guid> kategorie)
     {
         DB_Otium otium;
         try
@@ -522,7 +522,7 @@ public static class Management
 
     private static async Task<IResult> OtiumTerminSetMaxEinschreibungen(ManagementService managementService,
         UserAuthorizationHelper authHelper, OtiumEndpointService service,
-        Guid otiumTerminId, IntOrNullWrapper maxEinschreibungen)
+        Guid otiumTerminId, ValueWrapper<int?> maxEinschreibungen)
     {
         DB_Otium otium;
         try
@@ -554,7 +554,7 @@ public static class Management
 
     private static async Task<IResult> OtiumTerminSetTutor(ManagementService managementService,
         UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumTerminId,
-        GuidOrNullWrapper personId)
+        ValueWrapper<Guid?> personId)
     {
         DB_Otium otium;
         try
@@ -586,7 +586,7 @@ public static class Management
 
     private static async Task<IResult> OtiumTerminSetOrt(ManagementService managementService,
         UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumTerminId,
-        StringWrapper ort)
+        ValueWrapper<string> ort)
     {
         DB_Otium otium;
         try
@@ -618,7 +618,7 @@ public static class Management
 
     private static async Task<IResult> OtiumTerminSetBezeichnung(ManagementService managementService,
         UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumTerminId,
-        StringOrNullWrapper bezeichnung)
+        ValueWrapper<string?> bezeichnung)
     {
         DB_Otium otium;
         try
@@ -650,7 +650,7 @@ public static class Management
 
     private static async Task<IResult> OtiumTerminSetBeschreibung(ManagementService managementService,
         UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumTerminId,
-        StringOrNullWrapper beschreibung)
+        ValueWrapper<string?> beschreibung)
     {
         DB_Otium otium;
         try
@@ -680,7 +680,7 @@ public static class Management
         }
     }
 
-    private static async Task<IResult> OtiumTerminForceUnenroll(Guid otiumTerminId, GuidWrapper personIdWrapper,
+    private static async Task<IResult> OtiumTerminForceUnenroll(Guid otiumTerminId, ValueWrapper<Guid> personIdWrapper,
         UserAuthorizationHelper authHelper, AfraAppContext dbContext, UserService userService,
         EnrollmentService enrollmentService, BlockHelper blockHelper)
     {
@@ -736,15 +736,5 @@ public static class Management
         return verantwortliche.Any(p => p.Id == user.Id);
     }
 
-    private record StringWrapper(string Value);
-
-    private record StringOrNullWrapper(string? Value);
-
-    private record IntOrNullWrapper(int? Value);
-
-    private record GuidWrapper(Guid Value);
-
-    private record GuidOrNullWrapper(Guid? Value);
-
-    private record DateOnlyWrapper(DateOnly Value);
+    private record ValueWrapper<T>(T Value);
 }
