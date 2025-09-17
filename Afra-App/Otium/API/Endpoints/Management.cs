@@ -54,6 +54,7 @@ public static class Management
         termin.MapPatch("/{otiumTerminId:guid}/tutor", OtiumTerminSetTutor);
         termin.MapPatch("/{otiumTerminId:guid}/ort", OtiumTerminSetOrt);
         termin.MapPatch("/{otiumTerminId:guid}/bezeichnung", OtiumTerminSetBezeichnung);
+        termin.MapPatch("/{otiumTerminId:guid}/beschreibung", OtiumTerminSetBeschreibung);
         termin.MapPost("/{otiumTerminId:guid}/student", OtiumTerminForceUnenroll);
 
         group.MapPost("/wiederholung", CreateOtiumWiederholung);
@@ -635,6 +636,38 @@ public static class Management
         try
         {
             await service.OtiumTerminSetOverrideBezeichnungAsync(otiumTerminId, bezeichnung.Value);
+            return Results.Ok();
+        }
+        catch (OtiumEndpointService.EntityNotFoundException)
+        {
+            return Results.NotFound();
+        }
+        catch (InvalidOperationException)
+        {
+            return Results.BadRequest();
+        }
+    }
+
+    private static async Task<IResult> OtiumTerminSetBeschreibung(ManagementService managementService,
+        UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumTerminId,
+        StringOrNullWrapper beschreibung)
+    {
+        DB_Otium otium;
+        try
+        {
+            var termin = await managementService.GetTerminByIdAsync(otiumTerminId);
+            otium = await managementService.GetOtiumOfTerminAsync(termin);
+        }
+        catch (KeyNotFoundException)
+        {
+            return Results.NotFound("Otium not found.");
+        }
+
+        if (!await MayEditAsync(authHelper, managementService, otium)) return Results.Forbid();
+
+        try
+        {
+            await service.OtiumTerminSetOverrideBeschreibungAsync(otiumTerminId, beschreibung.Value);
             return Results.Ok();
         }
         catch (OtiumEndpointService.EntityNotFoundException)

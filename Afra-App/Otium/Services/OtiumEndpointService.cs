@@ -494,7 +494,8 @@ public class OtiumEndpointService
             Tutor = termin.Tutor is not null ? new PersonInfoMinimal(termin.Tutor) : null,
             Einschreibungen = anwesenheiten.Select(e =>
                 new LehrerEinschreibung(new PersonInfoMinimal(e.Key), e.Value)),
-            Bezeichnung = termin.OverrideBezeichnung
+            Bezeichnung = termin.OverrideBezeichnung,
+            Beschreibung = termin.OverrideBeschreibung,
         };
     }
 
@@ -646,6 +647,7 @@ public class OtiumEndpointService
             IstAbgesagt = false,
             Wiederholung = null,
             OverrideBezeichnung = otiumTermin.OverrideBezeichnung,
+            OverrideBeschreibung = otiumTermin.OverrideBeschreibung,
         };
 
         _dbContext.OtiaTermine.Add(dbOtiumTermin);
@@ -1029,7 +1031,7 @@ public class OtiumEndpointService
     ///     Overrides the Bezeichnung of an OtiumTermin.
     /// </summary>
     /// <param name="otiumTerminId">The ID of the OtiumTermin to set maxEinschreibungen on.</param>
-    /// <param name="bezeichnung">The new value of MaxEinschreibungen.</param>
+    /// <param name="bezeichnung">The new Bezeichnung.</param>
     public async Task OtiumTerminSetOverrideBezeichnungAsync(Guid otiumTerminId, string? bezeichnung)
     {
         var otiumTermin = await _dbContext.OtiaTermine
@@ -1039,6 +1041,24 @@ public class OtiumEndpointService
             throw new EntityNotFoundException("Kein Termin mit dieser Id");
 
         otiumTermin.OverrideBezeichnung = bezeichnung?.Trim();
+
+        await _dbContext.SaveChangesAsync();
+    }
+
+    /// <summary>
+    ///     Overrides the Bezeichnung of an OtiumTermin.
+    /// </summary>
+    /// <param name="otiumTerminId">The ID of the OtiumTermin to set maxEinschreibungen on.</param>
+    /// <param name="beschreibung">The new Beschreibung.</param>
+    public async Task OtiumTerminSetOverrideBeschreibungAsync(Guid otiumTerminId, string? beschreibung)
+    {
+        var otiumTermin = await _dbContext.OtiaTermine
+            .Include(t => t.Otium)
+            .FirstOrDefaultAsync(o => o.Id == otiumTerminId);
+        if (otiumTermin is null)
+            throw new EntityNotFoundException("Kein Termin mit dieser Id");
+
+        otiumTermin.OverrideBeschreibung = beschreibung?.Trim();
 
         await _dbContext.SaveChangesAsync();
     }

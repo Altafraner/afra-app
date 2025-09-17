@@ -6,6 +6,7 @@ import {
     FloatLabel,
     InputNumber,
     InputText,
+    Textarea,
     ToggleSwitch,
     useDialog,
     useToast,
@@ -45,6 +46,8 @@ const betreuerZuweisenSelected = ref(false);
 const ort = ref();
 const bezeichnung = ref();
 const bezeichnungSelected = ref();
+const beschreibung = ref('');
+const beschreibungSelected = ref();
 const personSelected = ref(null);
 const updateStatusFunction = ref(() => undefined);
 const stopAufsicht = ref(() => undefined);
@@ -126,6 +129,16 @@ async function updateBezeichnung() {
     );
 }
 
+async function updateBeschreibung() {
+console.log(beschreibungSelected.value);
+console.log(beschreibung.value);
+    await simpleUpdate(
+        'beschreibung',
+        beschreibungSelected.value ? beschreibung.value : null,
+        'Es ist ein Fehler beim Aktualisieren der Beschreibung aufgetreten.',
+    );
+}
+
 async function simpleUpdate(name, value, errmsg) {
     const api = mande(`/api/otium/management/termin/${props.terminId}/${name}`);
     try {
@@ -196,6 +209,11 @@ const startEditOrt = () => {
 const startEditBezeichnung = () => {
     bezeichnungSelected.value = otium.value.bezeichnung !== null;
     bezeichnung.value = otium.value.bezeichnung;
+};
+
+const startEditBeschreibung = () => {
+    beschreibungSelected.value = otium.value.beschreibung !== null;
+    beschreibung.value = otium.value.beschreibung;
 };
 
 const initMove = async (student) => {
@@ -335,17 +353,39 @@ await fetchData();
                 <div class="w-full flex flex-col gap-3">
                     <div class="flex justify-between">
                         <label for="bezeichnungSwitch">Bezeichnung überschreiben</label>
-                        <ToggleSwitch v-model="bezeichnungSelected" if="bezeichnungSwitch" />
+                        <ToggleSwitch v-model="bezeichnungSelected" id="bezeichnungSwitch" />
                     </div>
                     <FloatLabel v-if="bezeichnungSelected" class="w-full" variant="on">
-                        <InputText
-                            id="bezeichnung"
-                            v-model="bezeichnung"
-                            fluid
-                            maxlength="70"
-                            name="ort"
-                        />
-                        <label for="Bezeichnung">Bezeichnung</label>
+                        <InputText id="bezeichnung" v-model="bezeichnung" fluid />
+                        <label for="bezeichnung">Bezeichnung</label>
+                    </FloatLabel>
+                </div>
+            </template>
+        </GridEditRow>
+        <GridEditRow
+            header="Beschreibung (Termin)"
+            @edit="startEditBeschreibung"
+            @update="updateBeschreibung"
+        >
+            <template v-if="otium.beschreibung" #body>
+                <p
+                    v-for="line in otium.beschreibung.split('\n')"
+                    :key="line"
+                    class="first:mt-0"
+                >
+                    {{ line }}
+                </p>
+            </template>
+            <template #body v-else> Unverändert </template>
+            <template #edit>
+                <div class="w-full flex flex-col gap-3">
+                    <div class="flex justify-between">
+                        <label for="beschreibungSwitch">Beschreibung überschreiben</label>
+                        <ToggleSwitch v-model="beschreibungSelected" id="beschreibungSwitch" />
+                    </div>
+                    <FloatLabel v-if="beschreibungSelected" class="w-full" variant="on">
+                        <Textarea id="beschreibung" v-model="beschreibung" auto-resize fluid />
+                        <label for="beschreibung">Beschreibung</label>
                     </FloatLabel>
                 </div>
             </template>

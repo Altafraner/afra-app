@@ -39,4 +39,7 @@ public record ManagementTerminCreation
 
     /// <inheritdoc cref="OtiumTermin.OverrideBezeichnung"/>
     public string? OverrideBezeichnung { get; set; }
+
+    /// <inheritdoc cref="OtiumTermin.OverrideBeschreibung"/>
+    public string? OverrideBeschreibung { get; set; }
 }

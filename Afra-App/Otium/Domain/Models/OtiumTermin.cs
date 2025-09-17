@@ -21,6 +21,12 @@ public class OtiumTermin : OtiumInstanz, IHasTimestamps
     public string? OverrideBezeichnung { get; set; }
 
     /// <summary>
+    ///     A description for the Otium Instanz. Null to use the OtiumDefinitions Bezeichnung
+    /// </summary>
+    [MaxLength(500)]
+    public string? OverrideBeschreibung { get; set; }
+
+    /// <summary>
     ///     A reference to the recurrence rule for the Termin. May be null.
     /// </summary>
     public OtiumWiederholung? Wiederholung { get; set; }

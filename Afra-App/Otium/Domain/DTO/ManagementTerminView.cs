@@ -33,6 +33,7 @@ public record ManagementTerminView
         WiederholungId = termin.Wiederholung?.Id;
         Block = block;
         Bezeichnung = termin.OverrideBezeichnung;
+        Beschreibung = termin.OverrideBeschreibung;
     }
 
     /// <summary>
@@ -89,4 +90,9 @@ public record ManagementTerminView
     ///     A one time override name for the Otium Termin
     /// </summary>
     public string? Bezeichnung { get; set; }
+
+    /// <summary>
+    ///     A one time override description for the Otium Termin
+    /// </summary>
+    public string? Beschreibung { get; set; }
 }

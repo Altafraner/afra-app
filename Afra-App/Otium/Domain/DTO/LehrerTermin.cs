@@ -68,6 +68,11 @@ public record LehrerTermin : ITermin
     ///     A one time override name for the Otium Termin
     /// </summary>
     public string? Bezeichnung { get; set; }
+
+    /// <summary>
+    ///     A one time override description for the Otium Termin
+    /// </summary>
+    public string? Beschreibung { get; set; }
 }
 
 /// <summary>

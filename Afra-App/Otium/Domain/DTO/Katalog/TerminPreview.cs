@@ -20,7 +20,7 @@ public record TerminPreview : ITermin
         IAsyncEnumerable<Guid> kategorien, string block)
     {
         Id = termin.Id;
-        Otium = termin.Otium.Bezeichnung;
+        Otium = termin.OverrideBezeichnung != null ? termin.OverrideBezeichnung : termin.Otium.Bezeichnung;
         OtiumId = termin.Otium.Id;
         Ort = termin.Ort;
         BlockSchemaId = termin.Block.SchemaId;
@@ -31,7 +31,6 @@ public record TerminPreview : ITermin
         Auslastung = auslastung;
         MaxEinschreibungen = termin.MaxEinschreibungen;
         Block = block;
-        Bezeichnung = termin.OverrideBezeichnung;
     }
 
     /// <summary>

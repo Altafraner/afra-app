@@ -84,7 +84,7 @@ public class CalendarService
         {
             Uid = e.Id.ToString(),
             Summary = (e.Termin.OverrideBezeichnung != null) ? e.Termin.OverrideBezeichnung : e.Termin.Otium.Bezeichnung,
-            Description = e.Termin.Otium.Beschreibung,
+            Description = (e.Termin.OverrideBeschreibung != null) ? e.Termin.OverrideBeschreibung : e.Termin.Otium.Beschreibung,
             Location = e.Termin.Ort,
             Start = new CalDateTime(new DateTime(e.Termin.Block.Schultag.Datum, e.Interval.Start), true),
             End = new CalDateTime(new DateTime(e.Termin.Block.Schultag.Datum, e.Interval.End), true),
@@ -100,7 +100,7 @@ public class CalendarService
         {
             Uid = e.Id.ToString(),
             Summary = (e.OverrideBezeichnung != null) ? e.OverrideBezeichnung : e.Otium.Bezeichnung,
-            Description = e.Otium.Beschreibung,
+            Description = (e.OverrideBeschreibung != null) ? e.OverrideBeschreibung : e.Otium.Beschreibung,
             Location = e.Ort,
             Start = new CalDateTime(new DateTime(e.Block.Schultag.Datum, _blockHelper.Get(e.Block.SchemaId)!.Interval.Start), true),
             End = new CalDateTime(new DateTime(e.Block.Schultag.Datum, _blockHelper.Get(e.Block.SchemaId)!.Interval.End), true),

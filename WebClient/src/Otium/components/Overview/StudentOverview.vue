@@ -130,7 +130,7 @@ const isOs = computed(() => {
                     </Column>
                     <Column header="Angebot">
                         <template #body="{ data }">
-                            <span v-if="data.bezeichnung ?? data.otium">
+                            <span v-if="data.otium">
                                 <AfraKategorieTag
                                     v-if="data.kategorieId"
                                     :value="findKategorie(data.kategorieId)"
@@ -138,7 +138,7 @@ const isOs = computed(() => {
                                     minimal
                                 />
                                 <Button
-                                    :label="data.bezeichnung ?? data.otium"
+                                    :label="data.otium"
                                     :to="{
                                         name: 'Katalog-Datum-Termin',
                                         params: { datum: data.datum, terminId: data.terminId },

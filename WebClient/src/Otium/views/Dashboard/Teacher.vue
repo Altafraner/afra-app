@@ -60,7 +60,7 @@ update();
         <Column header="Otium">
             <template #body="{ data }">
                 <Button
-                    :label="data.bezeichnung ?? data.otium"
+                    :label="data.otium"
                     :to="{ name: 'Verwaltung-Termin', params: { terminId: data.id } }"
                     as="RouterLink"
                     variant="text"

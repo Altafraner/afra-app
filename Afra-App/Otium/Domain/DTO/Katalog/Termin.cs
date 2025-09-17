@@ -19,7 +19,8 @@ public record Termin : ITermin
         Guid kategorie, TimeOnly startTime, string block)
     {
         Id = termin.Id;
-        Otium = termin.Otium.Bezeichnung;
+        Otium = termin.OverrideBezeichnung != null ? termin.OverrideBezeichnung : termin.Otium.Bezeichnung;
+        Beschreibung = termin.OverrideBeschreibung != null ? termin.OverrideBeschreibung : termin.Otium.Beschreibung;
         OtiumId = termin.Otium.Id;
         Ort = termin.Ort;
         Kategorie = kategorie;
@@ -29,14 +30,12 @@ public record Termin : ITermin
         Einschreibung = einschreibung;
         BlockSchemaId = termin.Block.SchemaId;
         Datum = termin.Block.Schultag.Datum.ToDateTime(startTime);
-        Beschreibung = termin.Otium.Beschreibung;
         Wiederholungen = termin.Wiederholung?.Termine
             .Select(t => t.Block.SchultagKey)
             .Distinct()
             .Order()
             .SkipWhile(d => d <= termin.Block.SchultagKey) ?? [];
         Block = block;
-        Bezeichnung = termin.OverrideBezeichnung;
     }
 
     /// <summary>
