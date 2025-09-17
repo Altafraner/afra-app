@@ -21,6 +21,7 @@ import AfraOtiumEnrollmentTable from '@/Otium/components/Management/AfraOtiumEnr
 import { useAttendance } from '@/Otium/composables/attendanceHubClient.js';
 import MoveStudentForm from '@/Otium/components/Supervision/MoveStudentForm.vue';
 import { useConfirmPopover } from '@/composables/confirmPopover.js';
+import { isNowInInterval } from '@/helpers/time.js';
 
 const props = defineProps({
     terminId: String,
@@ -225,7 +226,7 @@ const initMove = async (student) => {
         data: {
             student,
             angebote: alternatives,
-            canMoveNow: otium.value.isRunning,
+            canMoveNow: isNowInInterval(otium.value.datum, otium.value.uhrzeit),
         },
         onClose: move,
     });

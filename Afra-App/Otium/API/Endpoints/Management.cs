@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Afra_App.Backbone.Authentication;
+using Afra_App.Otium.Domain.Contracts.Services;
+using Afra_App.Otium.Domain.DTO;
 using Afra_App.Otium.Domain.Models;
 using Afra_App.Otium.Services;
 using Afra_App.User.Domain.Models;
@@ -28,6 +30,8 @@ public static class Management
         var group = app.MapGroup("/management")
             .WithOpenApi()
             .RequireAuthorization(AuthorizationPolicies.TutorOnly);
+
+        group.MapGet("/supervision/now", GetNowSupervising);
 
         group.MapGet("/otium", GetOtia);
         group.MapGet("/otium/{otiumId:guid}", GetOtium);
@@ -65,14 +69,14 @@ public static class Management
 
     private static async Task<IResult> GetTerminForTeacher(
         OtiumEndpointService service,
+        ManagementService managementService,
         UserAccessor userAccessor,
+        UserAuthorizationHelper authHelper,
+        HttpContext httpContext,
         Guid otiumTerminId)
     {
-        var user = await userAccessor.GetUserAsync();
-
-        var otium = await service.GetTerminForTeacher(otiumTerminId);
-
-        return otium is null ? Results.BadRequest() : Results.Ok(otium);
+        var terminForTeacher = await service.GetTerminForTeacher(otiumTerminId, httpContext.User);
+        return terminForTeacher is null ? Results.BadRequest() : Results.Ok(terminForTeacher);
     }
 
     private static IResult GetOtia(OtiumEndpointService service)
@@ -717,6 +721,31 @@ public static class Management
         {
             return Results.NotFound();
         }
+    }
+
+    private static async Task<IEnumerable<BlockInfo>> GetNowSupervising(AfraAppContext dbContext,
+        BlockHelper blockHelper, IAttendanceService attendanceService, HttpContext context)
+    {
+        var today = DateOnly.FromDateTime(DateTime.Now);
+        var blocksToday = await dbContext.Blocks
+            .AsNoTracking()
+            .Where(b => b.SchultagKey == today)
+            .OrderBy(b => b.SchemaId)
+            .ToListAsync();
+
+        return blocksToday.Where(b => attendanceService.MaySupervise(context.User, b))
+            .Select(b =>
+            {
+                var schema = blockHelper.Get(b.SchemaId)!;
+                return new BlockInfo
+                {
+                    Id = b.Id,
+                    SchemaId = b.SchemaId,
+                    Name = schema.Bezeichnung,
+                    Uhrzeit = schema.Interval,
+                    Datum = b.SchultagKey
+                };
+            });
     }
 
     private static async Task<bool> MayEditAsync(UserAuthorizationHelper authHelper,
