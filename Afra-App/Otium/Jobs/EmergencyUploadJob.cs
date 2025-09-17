@@ -75,7 +75,7 @@ public class EmergencyUploadJob : IJob
                           <h2>Termine</h2>
                           <h3>Fehlende</h3>
                           {{{GenerateHtmlTable(missingPersons)}}}
-                          {{{termine.Select(t => $"<h3>{HttpUtility.HtmlEncode(t.Key.Ort)} {HttpUtility.HtmlEncode(t.Key.Otium.Bezeichnung)}</h3>"
+                          {{{termine.Select(t => $"<h3>{HttpUtility.HtmlEncode(t.Key.Ort)} {HttpUtility.HtmlEncode(t.Key.Bezeichnung)}</h3>"
                               + GenerateHtmlTable(t.Value)).Aggregate(new StringBuilder(), (current, next) => current.Append(next)).ToString()}}}
                       </body>
                   </html>

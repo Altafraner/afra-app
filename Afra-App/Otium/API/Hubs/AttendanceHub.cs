@@ -241,8 +241,8 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
             .Include(t => t.Block)
             .Include(t => t.Otium)
             .Where(t => t.Block.Id == termin.Block.Id && t.Id != terminId)
-            .OrderBy(t => t.Otium.Bezeichnung)
-            .Select(t => new MinimalTermin(t.Id, t.Otium.Bezeichnung,
+            .OrderBy(t => t.Bezeichnung)
+            .Select(t => new MinimalTermin(t.Id, t.Bezeichnung,
                 t.Tutor != null ? new PersonInfoMinimal(t.Tutor) : null, t.Ort))
             .ToListAsync();
 
@@ -274,7 +274,7 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
             .FirstOrDefaultAsync();
         var toData = await dbContext.OtiaTermine
             .Where(t => t.Id == toTerminId)
-            .Select(t => new { t.Block, t.Otium.Bezeichnung })
+            .Select(t => new { t.Block, t.Bezeichnung })
             .FirstOrDefaultAsync();
 
         var blockId = fromBlock?.Id ?? toData?.Block.Id;
@@ -340,7 +340,7 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
     {
         var toData = await dbContext.OtiaTermine
             .Where(t => t.Id == toTerminId)
-            .Select(t => new { t.Block, t.Otium.Bezeichnung })
+            .Select(t => new { t.Block, t.Bezeichnung })
             .FirstOrDefaultAsync();
 
         if (toData is null)
@@ -412,7 +412,7 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
                 .OrderBy(e => e.Student?.Vorname)
                 .ThenBy(e => e.Student?.Nachname)
                 .ToList();
-            updates.Add(new IAttendanceHubClient.TerminInformation(termin.Id, termin.Otium.Bezeichnung, termin.Ort,
+            updates.Add(new IAttendanceHubClient.TerminInformation(termin.Id, termin.Bezeichnung, termin.Ort,
                 enrollments, termin.SindAnwesenheitenKontrolliert));
         }
 

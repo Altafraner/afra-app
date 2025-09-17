@@ -99,7 +99,7 @@ public class OtiumEndpointService
             .Include(t => t.Tutor)
             .OrderBy(t => t.IstAbgesagt)
             .ThenBy(t => t.Block.SchemaId)
-            .ThenBy(t => t.Otium.Bezeichnung)
+            .ThenBy(t => t.Bezeichnung)
             .Select(t => new TerminWithLoad
             {
                 Termin = t,
@@ -303,7 +303,7 @@ public class OtiumEndpointService
             Datum = e.Termin.Block.SchultagKey,
             KategorieId = e.Termin.Otium.Kategorie.Id,
             Ort = e.Termin.Ort,
-            Otium = e.Termin.OverrideBezeichnung != null ? e.Termin.OverrideBezeichnung : e.Termin.Otium.Bezeichnung,
+            Otium = e.Termin.OverrideBezeichnung != null ? e.Termin.OverrideBezeichnung : e.Termin.Bezeichnung,
             TerminId = e.Termin.Id,
             Anwesenheit = blocksDoneOrRunning.Contains(e.Termin.Block.Id) ? attendances[e.Termin.Block.Id] : null
         }))
@@ -373,7 +373,7 @@ public class OtiumEndpointService
 
         foreach (var termin in termine)
             terminPreviews.Add(
-                new LehrerTerminPreview(termin.Id, termin.OverrideBezeichnung != null ? termin.OverrideBezeichnung : termin.Otium.Bezeichnung, termin.Ort,
+                new LehrerTerminPreview(termin.Id, termin.OverrideBezeichnung != null ? termin.OverrideBezeichnung : termin.Bezeichnung, termin.Ort,
                     await _enrollmentService.GetLoadPercent(termin), termin.Block.Schultag.Datum,
                     _blockHelper.Get(termin.Block.SchemaId)!.Bezeichnung)
             );
@@ -481,7 +481,7 @@ public class OtiumEndpointService
         {
             Id = termin.Id,
             Ort = termin.Ort,
-            Otium = termin.Otium.Bezeichnung,
+            Otium = termin.Bezeichnung,
             OtiumId = termin.Otium.Id,
             BlockSchemaId = termin.Block.SchemaId,
             BlockId = termin.Block.Id,
@@ -859,7 +859,7 @@ public class OtiumEndpointService
                 t,
                 "Otium Termin abgesagt",
                 $"""
-                 Das Otium {otiumTermin.Otium.Bezeichnung} wurde
+                 Das Otium {otiumTermin.Bezeichnung} wurde
                  am {otiumTermin.Block.Schultag.Datum} abgesagt.
                  Schreibe dich gegebenenfalls um.
                  """,
@@ -1014,7 +1014,7 @@ public class OtiumEndpointService
                     t,
                     "Otium Einschreibung Abgesagt",
                     $"""
-                     Für das Otium {otiumTermin.Otium.Bezeichnung} wurde
+                     Für das Otium {otiumTermin.Bezeichnung} wurde
                      am {otiumTermin.Block.Schultag.Datum} die Teilnehmerbegrenzung reduziert.
                      Deine Einschreibung wurde nach dem Losverfahren gelöscht. Schreibe dich bitte neu ein.
                      """,

@@ -15,6 +15,16 @@ public class OtiumTermin : OtiumInstanz, IHasTimestamps
     public Guid Id { get; set; }
 
     /// <summary>
+    ///     The name of the otium respecting overrides for the Termin
+    /// </summary>
+    public string Bezeichnung => OverrideBezeichnung != null ? OverrideBezeichnung : Otium.Bezeichnung;
+
+    /// <summary>
+    ///     The description of the otium respecting overrides for the Termin
+    /// </summary>
+    public string Beschreibung => OverrideBeschreibung != null ? OverrideBeschreibung : Otium.Beschreibung;
+
+    /// <summary>
     ///     A name for the Otium Instanz. Null to use the OtiumDefinitions Bezeichnung
     /// </summary>
     [MaxLength(70)]

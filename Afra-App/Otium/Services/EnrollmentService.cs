@@ -193,7 +193,7 @@ public class EnrollmentService
         if (sendNotification)
             await _outbox.ScheduleNotificationAsync(enrollment.BetroffenePerson, "Abmeldung von Termin",
                 $"""
-                 Du wurdest aus dem Termin {enrollment.Termin.Otium.Bezeichnung} am {enrollment.Termin.Block.Schultag.Datum:dd.MM.yyyy} im Block {_blockHelper.Get(enrollment.Termin.Block.SchemaId)?.Bezeichnung ?? "unbekannt"} abgemeldet.
+                 Du wurdest aus dem Termin {enrollment.Termin.Bezeichnung} am {enrollment.Termin.Block.Schultag.Datum:dd.MM.yyyy} im Block {_blockHelper.Get(enrollment.Termin.Block.SchemaId)?.Bezeichnung ?? "unbekannt"} abgemeldet.
 
                  Schreibe dich für den Block ggf. erneut ein.
                  """,

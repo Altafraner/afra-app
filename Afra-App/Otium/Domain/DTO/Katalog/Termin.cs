@@ -19,8 +19,8 @@ public record Termin : ITermin
         Guid kategorie, TimeOnly startTime, string block)
     {
         Id = termin.Id;
-        Otium = termin.OverrideBezeichnung != null ? termin.OverrideBezeichnung : termin.Otium.Bezeichnung;
-        Beschreibung = termin.OverrideBeschreibung != null ? termin.OverrideBeschreibung : termin.Otium.Beschreibung;
+        Otium = termin.Bezeichnung;
+        Beschreibung = termin.Beschreibung;
         OtiumId = termin.Otium.Id;
         Ort = termin.Ort;
         Kategorie = kategorie;
