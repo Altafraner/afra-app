@@ -103,7 +103,7 @@ public class UserService
         if (string.IsNullOrWhiteSpace(person.Gruppe) || !char.IsAsciiDigit(person.Gruppe[0]))
             throw new InvalidDataException("The person does not have a valid group.");
 
-        return Convert.ToInt32(person.Gruppe.TakeWhile(char.IsAsciiDigit).Aggregate("", (r, c) => r + c));
+        return Convert.ToInt32(String.Concat(person.Gruppe.TakeWhile(char.IsAsciiDigit)));
     }
 
     /// <summary>
@@ -112,9 +112,9 @@ public class UserService
     public IEnumerable<int> GetKlassenstufen()
     {
         return _ldapConfiguration.UserGroups.Select(x => x.Group)
-            .Select(s => s.TakeWhile(char.IsAsciiDigit).Aggregate("", (r, c) => r + c))
+            .Select(s => string.Concat(s.TakeWhile(char.IsAsciiDigit)))
             .Where(s => !string.IsNullOrWhiteSpace(s))
-            .Select(s => int.Parse(s))
+            .Select(int.Parse)
             .Order()
             .Distinct();
     }
