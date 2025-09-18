@@ -481,7 +481,7 @@ public class OtiumEndpointService
         {
             Id = termin.Id,
             Ort = termin.Ort,
-            Otium = termin.Bezeichnung,
+            Otium = termin.Otium.Bezeichnung,
             OtiumId = termin.Otium.Id,
             BlockSchemaId = termin.Block.SchemaId,
             BlockId = termin.Block.Id,

@@ -130,8 +130,6 @@ async function updateBezeichnung() {
 }
 
 async function updateBeschreibung() {
-console.log(beschreibungSelected.value);
-console.log(beschreibung.value);
     await simpleUpdate(
         'beschreibung',
         beschreibungSelected.value ? beschreibung.value : null,
@@ -263,7 +261,7 @@ await fetchData();
 <template>
     <NavBreadcrumb :items="navItems" />
     <h1>
-        {{ otium.otium }}
+        {{ otium.bezeichnung ?? otium.otium }}
     </h1>
     <grid>
         <GridEditRow header="Datum" hide-edit>
@@ -384,7 +382,14 @@ await fetchData();
                         <ToggleSwitch v-model="beschreibungSelected" id="beschreibungSwitch" />
                     </div>
                     <FloatLabel v-if="beschreibungSelected" class="w-full" variant="on">
-                        <Textarea id="beschreibung" v-model="beschreibung" auto-resize fluid />
+                        <Textarea
+                            id="beschreibung"
+                            v-model="beschreibung"
+                            auto-resize
+                            fluid
+                            maxlength="500"
+                            rows="2"
+                        />
                         <label for="beschreibung">Beschreibung</label>
                     </FloatLabel>
                 </div>

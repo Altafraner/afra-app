@@ -56,9 +56,7 @@ await settings.updateKategorien();
                         hide-name
                         minimal
                     />
-                    <span class="font-semibold text-left">{{
-                        data.otium
-                    }}</span>
+                    <span class="font-semibold text-left">{{ data.otium }}</span>
                 </Button>
                 <Button
                     v-else
@@ -82,9 +80,7 @@ await settings.updateKategorien();
                         minimal
                         class="w-[1rem]"
                     />
-                    <span class="font-semibold text-left">{{
-                        data.otium
-                    }}</span>
+                    <span class="font-semibold text-left">{{ data.otium }}</span>
                 </Button>
             </template>
         </Column>
