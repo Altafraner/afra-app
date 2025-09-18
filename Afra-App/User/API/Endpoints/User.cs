@@ -34,7 +34,8 @@ public static class User
                         Vorname = user.Vorname,
                         Nachname = user.Nachname,
                         Rolle = user.Rolle,
-                        Berechtigungen = user.GlobalPermissions.ToArray()
+                        Berechtigungen = user.GlobalPermissions.ToArray(),
+                        Greeting = user.Greeting,
                     });
             });
 
@@ -49,5 +50,20 @@ public static class User
                     await userSigninService.SignInAsync(id, rememberMe: false);
                 })
             .RequireAuthorization(AuthorizationPolicies.AdminOnly);
+
+        app.MapPatch("/api/user/greeting", async (AfraAppContext dbContext, UserAccessor userAccessor, StringWrapper greeting) =>
+        {
+            string[] allowedGreetings = ["Servus", "Moin", "Hallo", "Guten Tag",];
+            if (!allowedGreetings.Contains(greeting.Value))
+            {
+                return Results.BadRequest();
+            }
+
+            var user = await userAccessor.GetUserAsync();
+            user.Greeting = greeting.Value;
+            await dbContext.SaveChangesAsync();
+            return Results.Ok();
+        }).RequireAuthorization();
     }
+    private record StringWrapper(string Value);
 }

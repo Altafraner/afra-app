@@ -34,7 +34,7 @@ fetchData();
 </script>
 
 <template>
-    <h1>Hallo {{ user.user.vorname }}</h1>
+    <h1>{{ user.user.greeting }} {{ user.user.vorname }}</h1>
     <!-- TODO: Introduce view for students that are tutors of otia. -->
     <h2 v-if="!all">Deine nächsten Veranstaltungen</h2>
     <p v-if="!all">Gezeigt werden die Veranstaltungen der nächsten drei Wochen.</p>

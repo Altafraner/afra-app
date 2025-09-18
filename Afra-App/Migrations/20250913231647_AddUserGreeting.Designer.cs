@@ -7,6 +7,7 @@ using Afra_App.Schuljahr.Domain.Models;
 using Afra_App.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -15,9 +16,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Afra_App.Migrations
 {
     [DbContext(typeof(AfraAppContext))]
-    partial class AfraAppContextModelSnapshot : ModelSnapshot
+    [Migration("20250913231647_AddUserGreeting")]
+    partial class AddUserGreeting
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -117,12 +120,6 @@ namespace Afra_App.Migrations
 
                     b.Property<DateTime>("LastModified")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("MaxKlasse")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("MinKlasse")
-                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -230,14 +227,6 @@ namespace Afra_App.Migrations
 
                     b.Property<Guid>("OtiumId")
                         .HasColumnType("uuid");
-
-                    b.Property<string>("OverrideBeschreibung")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<string>("OverrideBezeichnung")
-                        .HasMaxLength(70)
-                        .HasColumnType("character varying(70)");
 
                     b.Property<bool>("SindAnwesenheitenKontrolliert")
                         .HasColumnType("boolean");
