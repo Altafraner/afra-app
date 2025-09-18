@@ -241,8 +241,8 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
             .Include(t => t.Block)
             .Include(t => t.Otium)
             .Where(t => t.Block.Id == termin.Block.Id && t.Id != terminId)
-            .OrderBy(t => t.Bezeichnung)
-            .Select(t => new MinimalTermin(t.Id, t.Bezeichnung,
+            .OrderBy(t => t.OverrideBezeichnung != null ? t.OverrideBezeichnung : t.Otium.Bezeichnung)
+            .Select(t => new MinimalTermin(t.Id, t.OverrideBezeichnung != null ? t.OverrideBezeichnung : t.Otium.Bezeichnung,
                 t.Tutor != null ? new PersonInfoMinimal(t.Tutor) : null, t.Ort))
             .ToListAsync();
 
@@ -274,7 +274,11 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
             .FirstOrDefaultAsync();
         var toData = await dbContext.OtiaTermine
             .Where(t => t.Id == toTerminId)
-            .Select(t => new { t.Block, t.Bezeichnung })
+            .Select(t => new
+            {
+                t.Block,
+                Bezeichnung = t.OverrideBezeichnung != null ? t.OverrideBezeichnung : t.Otium.Bezeichnung
+            })
             .FirstOrDefaultAsync();
 
         var blockId = fromBlock?.Id ?? toData?.Block.Id;
@@ -338,10 +342,16 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
     public async Task MoveStudent(Guid studentId, Guid toTerminId, EnrollmentService enrollmentService,
         AfraAppContext dbContext, UserService userService)
     {
-        var toData = await dbContext.OtiaTermine
+        var toData = dbContext.OtiaTermine
             .Where(t => t.Id == toTerminId)
-            .Select(t => new { t.Block, t.Bezeichnung })
-            .FirstOrDefaultAsync();
+            .Include(t => t.Otium)
+            .AsEnumerable()
+            .Select(t => new
+            {
+                t.Block,
+                Bezeichnung = t.OverrideBezeichnung != null ? t.OverrideBezeichnung : t.Otium.Bezeichnung
+            })
+            .FirstOrDefault();
 
         if (toData is null)
             throw new HubException("One of the termin IDs provided was not found in the database.");

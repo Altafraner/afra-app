@@ -99,7 +99,7 @@ public class OtiumEndpointService
             .Include(t => t.Tutor)
             .OrderBy(t => t.IstAbgesagt)
             .ThenBy(t => t.Block.SchemaId)
-            .ThenBy(t => t.Bezeichnung)
+            .ThenBy(t => t.OverrideBezeichnung != null ? t.OverrideBezeichnung : t.Otium.Bezeichnung)
             .Select(t => new TerminWithLoad
             {
                 Termin = t,
@@ -303,7 +303,7 @@ public class OtiumEndpointService
             Datum = e.Termin.Block.SchultagKey,
             KategorieId = e.Termin.Otium.Kategorie.Id,
             Ort = e.Termin.Ort,
-            Otium = e.Termin.OverrideBezeichnung != null ? e.Termin.OverrideBezeichnung : e.Termin.Bezeichnung,
+            Otium = e.Termin.Bezeichnung,
             TerminId = e.Termin.Id,
             Anwesenheit = blocksDoneOrRunning.Contains(e.Termin.Block.Id) ? attendances[e.Termin.Block.Id] : null
         }))
