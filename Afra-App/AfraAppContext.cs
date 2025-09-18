@@ -111,6 +111,16 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
     public DbSet<ProfundumKategorie> ProfundaKategorien { get; set; }
 
     /// <summary>
+    ///    All Bewertungskriterien for Profunda
+    /// </summary>
+    public DbSet<ProfundumBewertungKriterium> ProfundumBewertungKriterien { get; set; }
+
+    /// <summary>
+    ///    All Bewertungen for Profunda
+    /// </summary>
+    public DbSet<ProfundumBewertung> ProfundumBewertungen { get; set; }
+
+    /// <summary>
     ///     All Calendar Subscriptions
     /// </summary>
     public DbSet<CalendarSubscription> CalendarSubscriptions { get; set; }
