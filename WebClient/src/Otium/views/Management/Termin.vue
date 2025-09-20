@@ -399,7 +399,7 @@ await fetchData();
     </grid>
     <div class="flex justify-between items-baseline gap-3 flex-wrap mt-3 mb-1">
         <h2>Einschreibungen</h2>
-        <template v-if="otium.isRunning || user.isOtiumsverantwortlich">
+        <template v-if="otium.isSupervisionEnabled || user.isOtiumsverantwortlich">
             <Button
                 v-if="!aufsichtRunning"
                 icon="pi pi-eye"
@@ -420,7 +420,7 @@ await fetchData();
         :enrollments="otium.einschreibungen"
         :may-edit-attendance="aufsichtRunning"
         :update-function="updateAttendanceCallback"
-        :show-remove="!otium.isDoneOrRunning"
+        :show-remove="!otium.isDoneOrRunning && !otium.isSupervisionEnabled"
         show-attendance
         show-transfer
         @remove="initRemove"
