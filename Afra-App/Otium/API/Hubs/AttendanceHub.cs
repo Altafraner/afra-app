@@ -1,4 +1,3 @@
-using Afra_App.Backbone.Authentication;
 using Afra_App.Otium.Domain.Contracts.Services;
 using Afra_App.Otium.Domain.DTO;
 using Afra_App.Otium.Domain.HubClients;
@@ -7,7 +6,6 @@ using Afra_App.Otium.Jobs;
 using Afra_App.Otium.Services;
 using Afra_App.Schuljahr.Domain.Models;
 using Afra_App.User.Domain.DTO;
-using Afra_App.User.Domain.Models;
 using Afra_App.User.Services;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -21,17 +19,15 @@ namespace Afra_App.Otium.API.Hubs;
 public class AttendanceHub : Hub<IAttendanceHubClient>
 {
     private readonly IAttendanceService _attendanceService;
-    private readonly BlockHelper _blockHelper;
     private readonly ILogger<AttendanceHub> _logger;
 
     /// <summary>
     ///     Constructs a new instance of the <see cref="AttendanceHub" /> class.
     /// </summary>
-    public AttendanceHub(IAttendanceService attendanceService, ILogger<AttendanceHub> logger, BlockHelper blockHelper)
+    public AttendanceHub(IAttendanceService attendanceService, ILogger<AttendanceHub> logger)
     {
         _attendanceService = attendanceService;
         _logger = logger;
-        _blockHelper = blockHelper;
     }
 
     /// <summary>
@@ -43,7 +39,7 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
     {
         var termin = await managementService.GetTerminByIdAsync(terminId);
         var block = await managementService.GetBlockOfTerminAsync(termin);
-        if (!HasAuthorityOverBlockAsync(block))
+        if (Context.User is null || !_attendanceService.MaySupervise(Context.User, block))
         {
             _logger.LogWarning("User {userId} tried to subscribe to termin {terminId} without authority",
                 Context.UserIdentifier, terminId);
@@ -77,7 +73,7 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
         var block = await context.Blocks.FindAsync(blockId);
         if (block is null)
             throw new HubException($"Block with ID {blockId} not found");
-        if (!HasAuthorityOverBlockAsync(block))
+        if (Context.User is null || !_attendanceService.MaySupervise(Context.User, block))
         {
             _logger.LogWarning("User {userId} tried to subscribe to block {blockId} without authority",
                 Context.UserIdentifier, blockId);
@@ -142,7 +138,7 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
             .FirstOrDefaultAsync(b => b.Id == blockId);
         if (block is null)
             throw new HubException($"Block with ID {blockId} not found");
-        if (!HasAuthorityOverBlockAsync(block))
+        if (Context.User is null || !_attendanceService.MaySupervise(Context.User, block))
         {
             _logger.LogWarning("User {userId} tried to set attendance status for block {blockId} without authority",
                 Context.UserIdentifier, blockId);
@@ -175,7 +171,7 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
             .FirstOrDefaultAsync();
         if (block is null)
             throw new HubException($"Block for Termin ID {terminId} not found");
-        if (!HasAuthorityOverBlockAsync(block))
+        if (Context.User is null || !_attendanceService.MaySupervise(Context.User, block))
         {
             _logger.LogWarning("User {userId} tried to set attendance status for termin {terminId} without authority",
                 Context.UserIdentifier, terminId);
@@ -205,7 +201,7 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
             .FirstOrDefaultAsync(b => b.Id == blockId);
         if (block is null)
             throw new HubException($"Block with ID {blockId} not found");
-        if (!HasAuthorityOverBlockAsync(block))
+        if (Context.User is null || !_attendanceService.MaySupervise(Context.User, block))
         {
             _logger.LogWarning("User {userId} tried to set termin status for block {blockId} without authority",
                 Context.UserIdentifier, blockId);
@@ -293,7 +289,18 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
             throw new HubException("The termin is not in the same block as the target termin.");
         }
 
-        if (fromBlock is not null ? !HasAuthorityOverBlockAsync(fromBlock) : !HasAuthorityOverBlockAsync(toData!.Block))
+        if (toData is null && fromBlock is null)
+        {
+            _logger.LogWarning(
+                "User {userId} tried to move student {studentId} from termin {fromTerminId} to termin {toTerminId}, but i dont seem to be able to find either one.",
+                Context.UserIdentifier, studentId, fromTerminId, toTerminId);
+            throw new HubException("Can't find either termin.");
+        }
+
+        if (Context.User is null
+            || (fromBlock is not null && !_attendanceService.MaySupervise(Context.User, fromBlock))
+            || (toData is not null && !_attendanceService.MaySupervise(Context.User, toData.Block))
+            || (toData is null && fromBlock is null))
         {
             _logger.LogWarning(
                 "User {userId} tried to move student {studentId} from termin {fromTerminId} to termin {toTerminId} without authority",
@@ -356,7 +363,7 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
         if (toData is null)
             throw new HubException("One of the termin IDs provided was not found in the database.");
 
-        if (!HasAuthorityOverBlockAsync(toData.Block))
+        if (Context.User is null || !_attendanceService.MaySupervise(Context.User, toData.Block))
         {
             _logger.LogWarning(
                 "User {userId} tried to move student {studentId} to termin {toTerminId} without authority",
@@ -390,7 +397,7 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
             .Where(t => t.Id == fromTerminId)
             .Select(t => t.Block)
             .FirstOrDefaultAsync();
-        if (block is null || !HasAuthorityOverBlockAsync(block))
+        if (block is null || Context.User is null || !_attendanceService.MaySupervise(Context.User, block))
             throw new HubException("You do not have permission to unenroll students in this block.");
 
         var user = await userService.GetUserByIdAsync(studentId);
@@ -483,17 +490,6 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
                 .UpdateTerminAttendances(fromTerminUpdates.Einschreibungen);
         else
             _logger.LogWarning("Tried to update termine for {fromTerminId}, but did not find any", fromTerminId);
-    }
-
-    private bool HasAuthorityOverBlockAsync(Block block)
-    {
-        if (Context.User?.HasClaim(AfraAppClaimTypes.GlobalPermission, nameof(GlobalPermission.Otiumsverantwortlich)) ??
-            false)
-            return true;
-
-        var metadata = _blockHelper.Get(block.SchemaId)!;
-        return TimeOnly.FromDateTime(DateTime.Now)
-            .IsBetween(metadata.Interval.Start.AddMinutes(-10), metadata.Interval.End.AddMinutes(3));
     }
 
     internal static string TerminGroupName(Guid terminId)

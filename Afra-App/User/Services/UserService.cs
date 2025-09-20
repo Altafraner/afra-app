@@ -1,5 +1,5 @@
-using Afra_App.User.Domain.Models;
 using Afra_App.User.Configuration.LDAP;
+using Afra_App.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
