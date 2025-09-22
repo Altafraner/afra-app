@@ -92,8 +92,7 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
         var today = DateOnly.FromDateTime(now);
         var time = TimeOnly.FromDateTime(now);
 
-        if (!metadata.Verpflichtend || block.SchultagKey != today ||
-            !time.IsBetween(metadata.Interval.Start, metadata.Interval.Start.AddMinutes(25)))
+        if (!metadata.Verpflichtend || block.SchultagKey != today)
             return;
 
         if (await scheduler.CheckExists(jobKey))
