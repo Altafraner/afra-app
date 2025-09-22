@@ -92,7 +92,7 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
         var today = DateOnly.FromDateTime(now);
         var time = TimeOnly.FromDateTime(now);
 
-        if (!metadata.Verpflichtend || block.SchultagKey != today)
+        if (!metadata.Verpflichtend || block.SchultagKey != today || time >= metadata.Interval.Start.AddMinutes(30))
             return;
 
         if (await scheduler.CheckExists(jobKey))
@@ -237,7 +237,8 @@ public class AttendanceHub : Hub<IAttendanceHubClient>
             .Include(t => t.Otium)
             .Where(t => t.Block.Id == termin.Block.Id && t.Id != terminId)
             .OrderBy(t => t.OverrideBezeichnung != null ? t.OverrideBezeichnung : t.Otium.Bezeichnung)
-            .Select(t => new MinimalTermin(t.Id, t.OverrideBezeichnung != null ? t.OverrideBezeichnung : t.Otium.Bezeichnung,
+            .Select(t => new MinimalTermin(t.Id,
+                t.OverrideBezeichnung != null ? t.OverrideBezeichnung : t.Otium.Bezeichnung,
                 t.Tutor != null ? new PersonInfoMinimal(t.Tutor) : null, t.Ort))
             .ToListAsync();
 
