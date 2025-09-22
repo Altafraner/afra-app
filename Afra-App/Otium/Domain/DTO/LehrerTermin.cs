@@ -1,3 +1,4 @@
+using Afra_App.Backbone.Domain.TimeInterval;
 using Afra_App.Otium.Domain.Models;
 using Afra_App.User.Domain.DTO;
 
@@ -19,19 +20,24 @@ public record LehrerTermin : ITermin
     public required DateOnly Datum { get; set; }
 
     /// <summary>
+    ///     The time interval of the termin
+    /// </summary>
+    public required TimeOnlyInterval Uhrzeit { get; set; }
+
+    /// <summary>
     ///     True iff the termin has been cancelled
     /// </summary>
     public bool IstAbgesagt { get; set; }
 
     /// <summary>
-    ///     true, iff the termin is currently running
-    /// </summary>
-    public bool IsRunning { get; set; } = false;
-
-    /// <summary>
     ///     true, iff the termin is done or currently running
     /// </summary>
     public bool IsDoneOrRunning { get; set; } = false;
+
+    /// <summary>
+    ///     true, iff a supervisor may edit attendance for this termin
+    /// </summary>
+    public required bool IsSupervisionEnabled { get; set; }
 
     /// <summary>
     ///     The maximum number of people that can be at the termin concurrently. Null if there is no limit
@@ -76,7 +82,7 @@ public record LehrerTermin : ITermin
 }
 
 /// <summary>
-///     A DTO for a enrollment in a termin as seen by a tutor
+///     A DTO for an enrollment in a termin as seen by a tutor
 /// </summary>
 /// <param name="Student">The student enrolled</param>
 /// <param name="Anwesenheit">The current verification status</param>

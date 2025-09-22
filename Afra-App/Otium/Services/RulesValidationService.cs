@@ -29,14 +29,14 @@ public class RulesValidationService
         List<string> messages = [];
         var independentRules = _rulesFactory.GetIndependentRules();
         foreach (var enrollment in einschreibungen)
-        foreach (var rule in independentRules)
-        {
-            var result = await rule.IsValidAsync(user, enrollment);
-            if (result.IgnoreOtherRules)
-                return result.IsValid ? [] : result.Messages.ToList();
-            if (!result.IsValid)
-                messages.AddRange(result.Messages);
-        }
+            foreach (var rule in independentRules)
+            {
+                var result = await rule.IsValidAsync(user, enrollment);
+                if (result.IgnoreOtherRules)
+                    return result.IsValid ? [] : result.Messages.ToList();
+                if (!result.IsValid)
+                    messages.AddRange(result.Messages);
+            }
 
         return messages;
     }
@@ -74,14 +74,14 @@ public class RulesValidationService
         var orderedBlocks = schultag.Blocks.OrderBy(b => b.SchemaId).ToList();
         var blockRules = _rulesFactory.GetBlockRules();
         foreach (var rule in blockRules)
-        foreach (var block in orderedBlocks)
-        {
-            var result = await rule.IsValidAsync(user, block, einschreibungen.Where(e => e.Termin.Block == block));
-            if (!result.IsValid)
-                messages.AddRange(result.Messages.Select(m => new MessageWithBlock(m, block.Id)));
-            if (result.IgnoreOtherRules)
-                priorityResults.Add(new ResultWithBlock(result, block.Id));
-        }
+            foreach (var block in orderedBlocks)
+            {
+                var result = await rule.IsValidAsync(user, block, einschreibungen.Where(e => e.Termin.Block == block));
+                if (!result.IsValid)
+                    messages.AddRange(result.Messages.Select(m => new MessageWithBlock(m, block.Id)));
+                if (result.IgnoreOtherRules)
+                    priorityResults.Add(new ResultWithBlock(result, block.Id));
+            }
 
         foreach (var priorityResult in priorityResults)
         {

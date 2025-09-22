@@ -8,16 +8,17 @@ import {
     useDialog,
     useToast,
 } from 'primevue';
-import { mande } from 'mande';
 import { computed, onUnmounted, ref } from 'vue';
 import MoveStudentForm from '@/Otium/components/Supervision/MoveStudentForm.vue';
 import AfraOtiumEnrollmentTable from '@/Otium/components/Management/AfraOtiumEnrollmentTable.vue';
 import { useAttendance } from '@/Otium/composables/attendanceHubClient.js';
 import { useRoute } from 'vue-router';
+import { isNowInInterval } from '@/helpers/time.js';
 
 const props = defineProps({
     rooms: Array,
     useQueryBlock: Boolean,
+    block: Object,
 });
 
 const inactive = ref(false);
@@ -35,26 +36,8 @@ async function setup() {
         return useAttendance('block', route.query.blockId, toast);
     }
 
-    let currentBlock = null;
-    try {
-        currentBlock = await mande('/api/schuljahr/now').get();
-        inactive.value = false;
-        return useAttendance('block', currentBlock.id, toast);
-    } catch (e) {
-        if (e.response?.status === 404) {
-            inactive.value = true;
-        } else {
-            console.error('Error fetching current block:', e);
-            toast.add({
-                severity: 'error',
-                summary: 'Fehler',
-                detail: 'Ein unerwarteter Fehler ist beim Laden der Daten aufgetreten',
-            });
-        }
-        return {
-            attendance: [],
-        };
-    }
+    inactive.value = false;
+    return useAttendance('block', props.block.id, toast);
 }
 
 const attendanceService = await setup();
@@ -81,7 +64,9 @@ function initMove(student, terminId) {
         data: {
             student,
             angebote: attendance.value,
-            canMoveNow: !useDataFromQuery.value,
+            canMoveNow:
+                !useDataFromQuery.value &&
+                isNowInInterval(props.block.datum, props.block.uhrzeit),
         },
         onClose: move,
     });
