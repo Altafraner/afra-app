@@ -624,7 +624,7 @@ namespace Afra_App.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ProfundumBewertungKriterien");
+                    b.ToTable("ProfundumsBewertungKriterien");
                 });
 
             modelBuilder.Entity("ProfundumInstanzProfundumSlot", b =>

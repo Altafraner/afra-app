@@ -12,7 +12,7 @@ namespace Afra_App.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "ProfundumBewertungKriterien",
+                name: "ProfundumsBewertungKriterien",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -20,7 +20,7 @@ namespace Afra_App.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ProfundumBewertungKriterien", x => x.Id);
+                    table.PrimaryKey("PK_ProfundumsBewertungKriterien", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -49,9 +49,9 @@ namespace Afra_App.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_ProfundumBewertungen_ProfundumBewertungKriterien_KriteriumId",
+                        name: "FK_ProfundumBewertungen_ProfundumsBewertungKriterien_KriteriumId",
                         column: x => x.KriteriumId,
-                        principalTable: "ProfundumBewertungKriterien",
+                        principalTable: "ProfundumsBewertungKriterien",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -79,7 +79,7 @@ namespace Afra_App.Migrations
                 name: "ProfundumBewertungen");
 
             migrationBuilder.DropTable(
-                name: "ProfundumBewertungKriterien");
+                name: "ProfundumsBewertungKriterien");
         }
     }
 }
