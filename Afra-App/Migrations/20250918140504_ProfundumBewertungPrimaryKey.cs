@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Afra_App.Migrations
 {
     /// <inheritdoc />
-    public partial class ProfundumBewertung : Migration
+    public partial class ProfundumBewertungPrimaryKey : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

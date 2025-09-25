@@ -16,8 +16,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Afra_App.Migrations
 {
     [DbContext(typeof(AfraAppContext))]
-    [Migration("20250918140504_ProfundumBewertung")]
-    partial class ProfundumBewertung
+    [Migration("20250918140504_ProfundumBewertungPrimaryKey")]
+    partial class ProfundumBewertungPrimaryKey
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
