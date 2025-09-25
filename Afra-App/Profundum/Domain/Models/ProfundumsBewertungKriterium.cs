@@ -1,7 +1,7 @@
 /// <summary>
 ///  A db record representing a Profundum Bewertung Kriterium.
 /// </summary>
-public class ProfundumBewertungKriterium
+public class ProfundumsBewertungKriterium
 {
     /// <summary>
     ///  The unique identifier for the Bewertung Kriterium
@@ -11,5 +11,4 @@ public class ProfundumBewertungKriterium
     ///  A name for the Bewertung Kriterium
     /// </summary>
     public required string Bezeichnung { get; set; }
-
 }    

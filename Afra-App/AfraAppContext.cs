@@ -113,7 +113,7 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
     /// <summary>
     ///    All Bewertungskriterien for Profunda
     /// </summary>
-    public DbSet<ProfundumBewertungKriterium> ProfundumBewertungKriterien { get; set; }
+    public DbSet<ProfundumsBewertungKriterium> ProfundumsBewertungKriterien { get; set; }
 
     /// <summary>
     ///    All Bewertungen for Profunda

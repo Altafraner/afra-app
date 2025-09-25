@@ -13,7 +13,7 @@ public class ProfundumBewertung
     /// <summary>
     ///   The unique identifier for the Bewertung
     /// </summary>
-    public required ProfundumBewertungKriterium Kriterium { get; set; }
+    public required ProfundumsBewertungKriterium Kriterium { get; set; }
     /// <summary> 
     ///   The profundum instanz the Bewertung is for
     /// </summary>
