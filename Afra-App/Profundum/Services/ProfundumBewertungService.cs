@@ -9,12 +9,12 @@ using DomainDTOs = Afra_App.User.Domain.DTO.Person;
 /// <summary>
 /// An exception that is thrown when there is an error with Profundum Bewertungen.
 /// </summary>
-public class ProfundumBewertungException : Exception
+public class ProfundumsBewertungException : Exception
 {
     /// <summary>
     /// An exception that is thrown when there is an error with Profundum Bewertungen.
     /// </summary>
-    public ProfundumBewertungException(string message) : base(message)
+    public ProfundumsBewertungException(string message) : base(message)
     {
     }
 }
@@ -22,33 +22,23 @@ public class ProfundumBewertungException : Exception
 /// <summary>
 /// A service for managing Profundum Bewertungen.
 /// </summary>
-public class ProfundumBewertungService
+public class ProfundumsBewertungService
 {
     private readonly AfraAppContext _dbContext;
-    
-    /// <summary>
-    /// A service for managing Profundum Bewertungen.
-    /// </summary>
-    /// <param name="context"></param>
-    public ProfundumBewertungService(AfraAppContext context)
-    {
-        _dbContext = context;
-    }
 
     /// <summary>
     /// Gets all persons in the database.
     /// </summary>
-    /// <returns></returns>
     public async Task<List<DomainModels>> GetAllPersonsAsync()
     {
         return await _dbContext.Personen.ToListAsync();
     }
-    private readonly ILogger<ProfundumBewertungService> _logger;
+    private readonly ILogger<ProfundumsBewertungService> _logger;
 
     /// <summary>
     /// Creates a new instance of the ProfundumBewertungService.
     /// </summary>
-    public ProfundumBewertungService(AfraAppContext dbContext, ILogger<ProfundumBewertungService> logger)
+    public ProfundumsBewertungService(AfraAppContext dbContext, ILogger<ProfundumsBewertungService> logger)
     {
         _dbContext = dbContext;
         _logger = logger;
@@ -56,7 +46,7 @@ public class ProfundumBewertungService
     /// <summary>
     /// Gets all Bewertungen for a user.
     /// </summary>
-    public async Task<List<ProfundumBewertung>?> GetBewertungenAsync(Afra_App.User.Domain.Models.Person user)
+    public async Task<List<ProfundumBewertung>?> GetBewertungenAsync(DomainModels user)
     {
         var person = await _dbContext.Personen.FindAsync(user.Id);
         if (person == null)
@@ -75,26 +65,23 @@ public class ProfundumBewertungService
     /// <summary>
     /// Adds multiple Bewertungen for a user.
     /// </summary>
-    /// <param name="user"></param>
-    /// <param name="bewertungen"></param>
-    /// <returns></returns>
-    /// <exception cref="ProfundumBewertungException"></exception>
+    /// <exception cref="ProfundumsBewertungException"></exception>
     public async Task AddBewertungenAsync(DomainModels user, List<ProfundumBewertung> bewertungen)
 
     {
         var person = await _dbContext.Personen.FindAsync(user.Id);
         if (person == null)
         {
-            throw new ProfundumBewertungException("User has no associated person");
+            throw new ProfundumsBewertungException("User has no associated person");
         }
 
         foreach (var bewertung in bewertungen)
         {
             if (bewertung.Grad < 1 || bewertung.Grad > 5)
             {
-                throw new ProfundumBewertungException($"Invalid rating value: {bewertung.Grad}. Must be between 1 and 5.");
+                throw new ProfundumsBewertungException($"Invalid rating value: {bewertung.Grad}. Must be between 1 and 5.");
             }
-            
+
             bewertung.BetroffenePerson = person;
             _dbContext.ProfundumBewertungen.Add(bewertung);
         }
