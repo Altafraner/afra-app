@@ -36,6 +36,13 @@ const items_teacher = [
         },
         icon: 'pi pi-cog',
     },
+    {
+        label: 'Profundum Bewertung',
+        route: {
+            name: 'ProfundumBewertung',
+        },
+        icon: 'pi pi-star',         
+    },
 ];
 
 const items_student = [
