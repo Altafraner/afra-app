@@ -9,7 +9,7 @@ public class ProfundumBewertung
     /// <summary>
     ///  The unique identifier for the Bewertung
     /// </summary>
-    public Guid Id { get; set; }
+    public required Guid Id { get; set; }
     /// <summary>
     ///   The unique identifier for the Bewertung
     /// </summary>

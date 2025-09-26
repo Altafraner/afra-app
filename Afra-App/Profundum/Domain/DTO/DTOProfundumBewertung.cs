@@ -14,5 +14,5 @@ public class DTOProfundumBewertung
     /// <summary>
     /// An optional comment for the Bewertung
     /// </summary>
-    public int Grad { get; set; }
+    public required int Grad { get; set; }
 }
