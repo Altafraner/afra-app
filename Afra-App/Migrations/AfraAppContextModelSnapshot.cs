@@ -609,7 +609,7 @@ namespace Afra_App.Migrations
                     b.ToTable("ProfundumBewertungen");
                 });
 
-            modelBuilder.Entity("ProfundumBewertungKriterium", b =>
+            modelBuilder.Entity("ProfundumsBewertungKriterium", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
