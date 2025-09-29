@@ -57,12 +57,12 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
     ForwardedHeaders = ForwardedHeaders.XForwardedFor
                        | ForwardedHeaders.XForwardedProto
                        | ForwardedHeaders.XForwardedHost,
-    KnownNetworks =
+    KnownIPNetworks =
     {
-        IPNetwork.Parse("10.0.0.0/8"),
-        IPNetwork.Parse("172.16.0.0/12"),
-        IPNetwork.Parse("192.168.0.0/16"),
-        IPNetwork.Parse("fc00::/7")
+        System.Net.IPNetwork.Parse("10.0.0.0/8"),
+        System.Net.IPNetwork.Parse("172.16.0.0/12"),
+        System.Net.IPNetwork.Parse("192.168.0.0/16"),
+        System.Net.IPNetwork.Parse("fc00::/7")
     }
 });
 
