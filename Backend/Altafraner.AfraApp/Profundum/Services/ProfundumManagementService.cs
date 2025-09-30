@@ -1,5 +1,8 @@
+using Altafraner.AfraApp.Profundum.Configuration;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Domain.Models;
+using Altafraner.AfraApp.User.Domain.DTO;
+using Altafraner.AfraApp.User.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace Altafraner.AfraApp.Profundum.Services;
@@ -45,6 +48,15 @@ public class ProfundumManagementService
     {
         return _dbContext.ProfundumEinwahlZeitraeume
             .Select(e => new DTOProfundumEinwahlZeitraum(e))
+            .ToArrayAsync();
+    }
+
+    ///
+    public Task<DTOProfundumSlot[]> GetSlotsAsync()
+    {
+        return _dbContext.ProfundaSlots
+            .Include(s => s.EinwahlZeitraum)
+            .Select(s => new DTOProfundumSlot(s))
             .ToArrayAsync();
     }
 
@@ -213,5 +225,16 @@ public class ProfundumManagementService
 
         await _dbContext.SaveChangesAsync();
         return inst;
+    }
+
+    ///
+    public Task<Dictionary<Guid, DTOProfundumEnrollment[]>> GetAllEnrollmentsAsync()
+    {
+        return _dbContext.ProfundaEinschreibungen
+            .Include(e => e.BetroffenePerson)
+            .GroupBy(e => e.BetroffenePersonId)
+            .ToDictionaryAsync(e => e.Key,
+                e => e.Select(e => new DTOProfundumEnrollment(e)).ToArray()
+                );
     }
 }
