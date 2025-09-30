@@ -127,7 +127,6 @@ public class ProfundumEnrollmentService
         var now = DateTime.UtcNow;
         return _dbContext.ProfundumEinwahlZeitraeume
             .Include(ez => ez.Slots)
-            .Where(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop)
             .ToArray()
             .FirstOrDefault(defaultValue: null);
     }
@@ -318,7 +317,8 @@ public class ProfundumEnrollmentService
                 {
                     BetroffenePerson = student,
                     ProfundumInstanz = angebot,
-                    Stufe = stufe
+                    Stufe = stufe,
+                    // EinwahlZeitraum = einwahlZeitraum,
                 };
                 belegWuensche.Add(belegWunsch);
             }
@@ -431,18 +431,15 @@ public class ProfundumEnrollmentService
     public async Task<MatchingStats> PerformMatching(ProfundumEinwahlZeitraum einwahlZeitraum,
         bool writeBackOnSuccess = false)
     {
-        if (einwahlZeitraum.HasBeenMatched)
-        {
-            throw new ArgumentException("Final matching has been already performed.");
-        }
-
         var slots = einwahlZeitraum.Slots.ToArray();
 
-        var alteEinschreibungen = _dbContext.ProfundaEinschreibungen
+        var alteAutomatischeEinschreibungen = _dbContext.ProfundaEinschreibungen
+            .Where(e => !e.IsFixed)
             .Where(e => e.ProfundumInstanz.Slots.Any(s => slots.Contains(s)));
-        _logger.LogInformation("delting {numEnrollments} old enrollments", alteEinschreibungen.Count());
-        _dbContext.RemoveRange(alteEinschreibungen);
+        _logger.LogInformation("delting {numEnrollments} old enrollments", alteAutomatischeEinschreibungen.Count());
+        _dbContext.RemoveRange(alteAutomatischeEinschreibungen);
         await _dbContext.SaveChangesAsync();
+
 
         var angebote = (await _dbContext.ProfundaInstanzen
                 .Include(pi => pi.Slots)
@@ -520,6 +517,11 @@ public class ProfundumEnrollmentService
                     objectiveOnlyIndividualRules.AddTerm(psBelegVarOnlyIndividualRules[i], weights[psBeleg[i].Stufe]);
                 }
             }
+        }
+
+        var alteEinschreibungen = _dbContext.ProfundaEinschreibungen.Where(e => e.IsFixed);
+        foreach (var e in alteEinschreibungen)
+        {
         }
 
         foreach (var r in _rulesFactory.GetIndividualRules())
@@ -652,38 +654,6 @@ public class ProfundumEnrollmentService
             NotMatchedStudents = students.Where(p => solver.Value(PersonNotEnrolledVariables[p]) > 0)
                 .Select(p => $"{p.Gruppe}: {p.FirstName} {p.LastName}").ToList()
         };
-    }
-
-    ///
-    public async Task<IEnumerable<PersonInfoMinimal>> GetMissingStudentsAsync(ICollection<Guid> slotIds)
-    {
-        var slots = await _dbContext.ProfundaSlots.Where(s => slotIds.Contains(s.Id)).ToArrayAsync();
-        return (await _dbContext.Personen
-                .Include(p => p.ProfundaBelegwuensche).ThenInclude(bw => bw.ProfundumInstanz)
-                .ThenInclude(pi => pi.Slots)
-                .Where(p => p.Rolle == Rolle.Mittelstufe)
-                .Where(p => !p.ProfundaBelegwuensche
-                    .Where(bw => bw.ProfundumInstanz.Slots.Any(s => slotIds.Any(sl => sl == s.Id)))
-                    .Any(bw => bw.ProfundumInstanz.Slots.All(s => slotIds.Any(sl => sl == s.Id))))
-                .AsSplitQuery().ToArrayAsync())
-            .Where(p => !IsProfundumBlockiert(p, slots.Select(s => s.Quartal)))
-            .Select(p => new PersonInfoMinimal(p));
-    }
-
-    ///
-    public async Task<IEnumerable<string>> GetMissingStudentsEmailsAsync(ICollection<Guid> slotIds)
-    {
-        var slots = await _dbContext.ProfundaSlots.Where(s => slotIds.Contains(s.Id)).ToArrayAsync();
-        return (await _dbContext.Personen
-                .Include(p => p.ProfundaBelegwuensche).ThenInclude(bw => bw.ProfundumInstanz)
-                .ThenInclude(pi => pi.Slots)
-                .Where(p => p.Rolle == Rolle.Mittelstufe)
-                .Where(p => !p.ProfundaBelegwuensche
-                    .Where(bw => bw.ProfundumInstanz.Slots.Any(s => slotIds.Any(sl => sl == s.Id)))
-                    .Any(bw => bw.ProfundumInstanz.Slots.All(s => slotIds.Any(sl => sl == s.Id))))
-                .AsSplitQuery().ToArrayAsync())
-            .Where(p => !IsProfundumBlockiert(p, slots.Select(s => s.Quartal)))
-            .Select(p => p.Email);
     }
 
     ///

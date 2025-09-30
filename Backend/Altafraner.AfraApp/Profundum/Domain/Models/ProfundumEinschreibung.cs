@@ -8,6 +8,12 @@ namespace Altafraner.AfraApp.Profundum.Domain.Models;
 public class ProfundumEinschreibung
 {
     /// <summary>
+    ///     False iff the Enrollment is preliminary and can be safely overwritten by matching functions
+    ///     True iff the Enrollment is part of a manual constraint or has been finalized
+    /// </summary>
+    public bool IsFixed { get; set; }
+
+    /// <summary>
     ///     A reference to the person affected by the enrollment.
     /// </summary>
     public required Person BetroffenePerson { get; set; }

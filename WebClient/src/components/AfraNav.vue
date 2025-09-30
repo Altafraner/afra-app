@@ -62,7 +62,7 @@ const items_student = [
 
 const items_mittelstufe = [
     {
-        label: 'Profundum',
+        label: 'Profundum Einwahl',
         route: {
             name: 'Profundum-Einwahl',
         },
@@ -72,9 +72,26 @@ const items_mittelstufe = [
 
 const items_otium_manager = [
     {
-        label: 'Verwaltung',
+        label: 'Otia Verwaltung',
         route: {
             name: 'Verwaltung',
+        },
+        icon: 'pi pi-wrench',
+    },
+];
+
+const items_profundum_manager = [
+    {
+        label: 'Profunda Verwaltung',
+        route: {
+            name: 'Profundum-Verwaltung',
+        },
+        icon: 'pi pi-wrench',
+    },
+    {
+        label: 'Profunda Matching',
+        route: {
+            name: 'Profundum-Matching',
         },
         icon: 'pi pi-wrench',
     },
@@ -131,6 +148,9 @@ async function setup(update = true) {
 
     if (user.isOtiumsverantwortlich) {
         items.value = [...items.value, ...items_otium_manager];
+    }
+    if (user.isProfundumsverantwortlich) {
+        items.value = [...items.value, ...items_profundum_manager];
     }
     if (user.isAdmin) {
         items.value = [...items.value, ...items_admin];

@@ -1,10 +1,22 @@
 using Altafraner.AfraApp.Profundum.Domain.Models;
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace Altafraner.AfraApp.Profundum.Domain.DTO;
 
 ///
 public record DTOProfundumInstanz
 {
+    ///
+    [SetsRequiredMembers]
+    public DTOProfundumInstanz(ProfundumInstanz dbInstanz)
+    {
+        Id = dbInstanz.Id;
+        ProfundumId = dbInstanz.Profundum.Id;
+        Slots = dbInstanz.Slots.Select(s => s.Id).ToArray();
+        MaxEinschreibungen = dbInstanz.MaxEinschreibungen;
+    }
+
     /// <inheritdoc cref="ProfundumInstanz.Id"/>
     public Guid? Id { get; set; }
 
