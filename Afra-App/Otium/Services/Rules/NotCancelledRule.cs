@@ -1,8 +1,8 @@
-using Afra_App.Otium.Domain.Contracts.Rules;
-using Afra_App.Otium.Domain.Models;
-using Person = Afra_App.User.Domain.Models.Person;
+using Altafraner.AfraApp.Otium.Domain.Contracts.Rules;
+using Altafraner.AfraApp.Otium.Domain.Models;
+using Models_Person = Altafraner.AfraApp.User.Domain.Models.Person;
 
-namespace Afra_App.Otium.Services.Rules;
+namespace Altafraner.AfraApp.Otium.Services.Rules;
 
 /// <summary>
 ///     Checks that the termin is not cancelled.
@@ -10,13 +10,13 @@ namespace Afra_App.Otium.Services.Rules;
 public class NotCancelledRule : IIndependentRule
 {
     /// <inheritdoc />
-    public ValueTask<RuleStatus> IsValidAsync(Person person, OtiumEinschreibung enrollment)
+    public ValueTask<RuleStatus> IsValidAsync(Models_Person person, OtiumEinschreibung enrollment)
     {
         return new ValueTask<RuleStatus>(Rule(enrollment.Termin));
     }
 
     /// <inheritdoc />
-    public ValueTask<RuleStatus> MayEnrollAsync(Person person, OtiumTermin termin)
+    public ValueTask<RuleStatus> MayEnrollAsync(Models_Person person, OtiumTermin termin)
     {
         return new ValueTask<RuleStatus>(Rule(termin));
     }

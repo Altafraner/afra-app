@@ -1,14 +1,14 @@
-using Afra_App.Backbone.Email.Domain.Models;
-using Afra_App.Calendar.Domain.Models;
-using Afra_App.Otium.Domain.Models;
-using Afra_App.Profundum.Domain.Models;
-using Afra_App.Schuljahr.Domain.Models;
-using Afra_App.User.Domain.Models;
+using Altafraner.AfraApp.Backbone.Email.Domain.Models;
+using Altafraner.AfraApp.Calendar.Domain.Models;
+using Altafraner.AfraApp.Otium.Domain.Models;
+using Altafraner.AfraApp.Profundum.Domain.Models;
+using Altafraner.AfraApp.Schuljahr.Domain.Models;
+using Altafraner.AfraApp.User.Domain.Models;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure;
 
-namespace Afra_App;
+namespace Altafraner.AfraApp;
 
 /// <summary>
 ///     The database context for the Afra-App

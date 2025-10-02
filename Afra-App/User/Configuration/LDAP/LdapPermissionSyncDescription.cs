@@ -1,6 +1,6 @@
-using Afra_App.User.Domain.Models;
+using Altafraner.AfraApp.User.Domain.Models;
 
-namespace Afra_App.User.Configuration.LDAP;
+namespace Altafraner.AfraApp.User.Configuration.LDAP;
 
 /// <summary>
 /// Describes the parameters for granting permissions to users from LDAP.

@@ -1,8 +1,8 @@
-using Afra_App.Otium.Configuration;
-using Afra_App.Otium.Domain.Contracts.Services;
-using Afra_App.Otium.Services;
+using Altafraner.AfraApp.Otium.Configuration;
+using Altafraner.AfraApp.Otium.Domain.Contracts.Services;
+using Altafraner.AfraApp.Otium.Services;
 
-namespace Afra_App.Otium.Extensions;
+namespace Altafraner.AfraApp.Otium.Extensions;
 
 /// <summary>
 ///     A static class that contains extension methods for <see cref="WebApplicationBuilder" /> to add Otium services and

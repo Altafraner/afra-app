@@ -1,6 +1,6 @@
-using Afra_App.User.Domain.DTO;
+using Altafraner.AfraApp.User.Domain.DTO;
 
-namespace Afra_App.Otium.Domain.DTO;
+namespace Altafraner.AfraApp.Otium.Domain.DTO;
 
 /// <summary>
 /// A DTO that represents the minimal information on a termin

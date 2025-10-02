@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Afra_App.User.Domain.Models;
+namespace Altafraner.AfraApp.User.Domain.Models;
 
 /// <summary>
 ///     Specifies the role of a person

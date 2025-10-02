@@ -1,9 +1,9 @@
-using Afra_App.Otium.Configuration;
-using Afra_App.Otium.Jobs;
+using Altafraner.AfraApp.Otium.Configuration;
+using Altafraner.AfraApp.Otium.Jobs;
 using Microsoft.Extensions.Options;
 using Quartz;
 
-namespace Afra_App.Otium.Services;
+namespace Altafraner.AfraApp.Otium.Services;
 
 /// <summary>
 ///     A background service that schedules a job to remind users about their missing enrollments in Otium events.

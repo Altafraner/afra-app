@@ -1,15 +1,14 @@
-using Afra_App.Backbone.Utilities;
-using Afra_App.Otium.Configuration;
-using Afra_App.Otium.Services;
-using Afra_App.Schuljahr.Domain.DTO;
-using Afra_App.Schuljahr.Domain.Models;
+using Altafraner.AfraApp.Backbone.Utilities;
+using Altafraner.AfraApp.Otium.Configuration;
+using Altafraner.AfraApp.Otium.Services;
+using Altafraner.AfraApp.Schuljahr.Domain.DTO;
+using Altafraner.AfraApp.Schuljahr.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using DtoSchuljahr = Afra_App.Schuljahr.Domain.DTO.Schuljahr;
-using DtoSchultag = Afra_App.Schuljahr.Domain.DTO.Schultag;
-using Schultag = Afra_App.Schuljahr.Domain.Models.Schultag;
+using DTO_Schultag = Altafraner.AfraApp.Schuljahr.Domain.DTO.Schultag;
+using Models_Schultag = Altafraner.AfraApp.Schuljahr.Domain.Models.Schultag;
 
-namespace Afra_App.Schuljahr.Services;
+namespace Altafraner.AfraApp.Schuljahr.Services;
 
 /// <summary>
 ///     A service for managing school years and school days.
@@ -35,19 +34,19 @@ public class SchuljahrService
     ///     Gets the current school year, including all school days and the next day.
     /// </summary>
     /// <returns></returns>
-    public async Task<DtoSchuljahr> GetSchuljahrAsync()
+    public async Task<Domain.DTO.Schuljahr> GetSchuljahrAsync()
     {
         var schultage = await _dbContext.Schultage
             .Include(s => s.Blocks)
             .OrderBy(s => s.Datum)
-            .Select(s => new DtoSchultag(s.Datum, s.Wochentyp,
+            .Select(s => new DTO_Schultag(s.Datum, s.Wochentyp,
                 s.Blocks.Select(b => new BlockSchema(b.SchemaId, _blockHelper.Get(b.SchemaId)!.Bezeichnung))))
             .ToListAsync();
 
         var next = schultage.FirstOrDefault(s => s.Datum >= DateOnly.FromDateTime(DateTime.Now)) ??
                    schultage.LastOrDefault();
 
-        return new DtoSchuljahr(next, schultage);
+        return new Domain.DTO.Schuljahr(next, schultage);
     }
 
     /// <summary>
@@ -92,10 +91,10 @@ public class SchuljahrService
     /// <param name="schultageIn">The schooldays to add</param>
     /// <returns>A list of the newly created schooldays</returns>
     /// <exception cref="KeyNotFoundException">An invalid BlockId was provided</exception>
-    public async Task<List<Schultag>> AddRangeAsync(IEnumerable<SchultagCreation> schultageIn)
+    public async Task<List<Models_Schultag>> AddRangeAsync(IEnumerable<SchultagCreation> schultageIn)
     {
         var blockKeys = _configuration.Value.Blocks.Select(e => e.Id).Distinct();
-        var schultage = schultageIn.Select(s => new Schultag
+        var schultage = schultageIn.Select(s => new Models_Schultag
         {
             Datum = s.Datum,
             Wochentyp = s.Wochentyp,
@@ -148,7 +147,7 @@ public class SchuljahrService
     /// <summary>
     ///     Gets a schultag by its date.
     /// </summary>
-    public async Task<Schultag?> GetSchultagAsync(DateOnly datum)
+    public async Task<Models_Schultag?> GetSchultagAsync(DateOnly datum)
     {
         var schultag = await _dbContext.Schultage
             .Include(s => s.Blocks)

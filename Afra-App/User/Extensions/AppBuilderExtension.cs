@@ -1,8 +1,8 @@
-using Afra_App.User.Configuration.LDAP;
-using Afra_App.User.Services;
-using Afra_App.User.Services.LDAP;
+using Altafraner.AfraApp.User.Configuration.LDAP;
+using Altafraner.AfraApp.User.Services;
+using Altafraner.AfraApp.User.Services.LDAP;
 
-namespace Afra_App.User.Extensions;
+namespace Altafraner.AfraApp.User.Extensions;
 
 /// <summary>
 /// A static class that provides extension methods for <see cref="WebApplicationBuilder"/> to add user-related services.

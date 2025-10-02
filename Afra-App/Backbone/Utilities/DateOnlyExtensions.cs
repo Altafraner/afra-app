@@ -1,4 +1,4 @@
-namespace Afra_App.Backbone.Utilities;
+namespace Altafraner.AfraApp.Backbone.Utilities;
 
 /// <summary>
 ///     Contains extension methods for the <see cref="DateOnly" /> struct.

@@ -1,4 +1,4 @@
-namespace Afra_App.Profundum.Domain.DTO;
+namespace Altafraner.AfraApp.Profundum.Domain.DTO;
 
 ///
 public enum MatchingResultStatus

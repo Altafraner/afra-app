@@ -1,6 +1,6 @@
 using System.Security.Cryptography.X509Certificates;
 
-namespace Afra_App.Backbone.Utilities;
+namespace Altafraner.AfraApp.Backbone.Utilities;
 
 internal static class CertificateHelper
 {

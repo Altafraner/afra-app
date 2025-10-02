@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
-using Afra_App.User.Domain.Models;
+using Altafraner.AfraApp.User.Domain.Models;
 
-namespace Afra_App.Calendar.Domain.Models;
+namespace Altafraner.AfraApp.Calendar.Domain.Models;
 
 /// <summary>
 ///     A db record representing a subscription to the calendar for a user

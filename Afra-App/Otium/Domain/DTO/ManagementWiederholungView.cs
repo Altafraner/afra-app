@@ -1,10 +1,10 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
-using Afra_App.Otium.Domain.Models;
-using Afra_App.Schuljahr.Domain.Models;
-using Afra_App.User.Domain.DTO;
+using Altafraner.AfraApp.Otium.Domain.Models;
+using Altafraner.AfraApp.Schuljahr.Domain.Models;
+using Altafraner.AfraApp.User.Domain.DTO;
 
-namespace Afra_App.Otium.Domain.DTO;
+namespace Altafraner.AfraApp.Otium.Domain.DTO;
 
 /// <summary>
 ///     A DTO for the view of a Wiederholung in the management ui

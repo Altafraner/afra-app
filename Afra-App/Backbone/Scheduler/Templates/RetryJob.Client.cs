@@ -1,6 +1,6 @@
 using Quartz;
 
-namespace Afra_App.Backbone.Scheduler.Templates;
+namespace Altafraner.AfraApp.Backbone.Scheduler.Templates;
 
 public abstract partial class RetryJob
 {

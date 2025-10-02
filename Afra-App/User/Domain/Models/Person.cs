@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
-using Afra_App.Otium.Domain.Models;
-using Afra_App.Profundum.Domain.Models;
+using Altafraner.AfraApp.Otium.Domain.Models;
+using Altafraner.AfraApp.Profundum.Domain.Models;
 
-namespace Afra_App.User.Domain.Models;
+namespace Altafraner.AfraApp.User.Domain.Models;
 
 /// <summary>
 ///     A record representing a person using the application.
@@ -78,7 +78,7 @@ public class Person
     /// <summary>
     ///     A list of all Otia the person is responsible for.
     /// </summary>
-    public ICollection<Otium.Domain.Models.OtiumDefinition> VerwalteteOtia { get; set; } = new List<Otium.Domain.Models.OtiumDefinition>();
+    public ICollection<OtiumDefinition> VerwalteteOtia { get; set; } = new List<OtiumDefinition>();
 
     /// <summary>
     ///     A list of all Otia the person is enrolled in.

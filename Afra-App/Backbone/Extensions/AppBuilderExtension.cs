@@ -1,17 +1,17 @@
 using System.Security.Cryptography;
-using Afra_App.Backbone.Authentication;
-using Afra_App.Backbone.Database.Interceptors;
-using Afra_App.Backbone.Email.Extensions;
-using Afra_App.Backbone.EmergencyBackup.Extensions;
-using Afra_App.Backbone.Scheduler.Extensions;
-using Afra_App.Backbone.Utilities;
-using Afra_App.User.Domain.Models;
+using Altafraner.AfraApp.Backbone.Authentication;
+using Altafraner.AfraApp.Backbone.Database.Interceptors;
+using Altafraner.AfraApp.Backbone.Email.Extensions;
+using Altafraner.AfraApp.Backbone.EmergencyBackup.Extensions;
+using Altafraner.AfraApp.Backbone.Scheduler.Extensions;
+using Altafraner.AfraApp.Backbone.Utilities;
+using Altafraner.AfraApp.User.Domain.Models;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
-namespace Afra_App.Backbone.Extensions;
+namespace Altafraner.AfraApp.Backbone.Extensions;
 
 /// <summary>
 /// A static class that contains extension methods for the <see cref="WebApplicationBuilder"/> to add Backbone services.

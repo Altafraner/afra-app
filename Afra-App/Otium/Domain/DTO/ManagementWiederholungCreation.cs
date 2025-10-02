@@ -1,6 +1,6 @@
-using Afra_App.Schuljahr.Domain.Models;
+using Altafraner.AfraApp.Schuljahr.Domain.Models;
 
-namespace Afra_App.Otium.Domain.DTO;
+namespace Altafraner.AfraApp.Otium.Domain.DTO;
 
 /// <summary>
 ///     A DTO for the creation of a Wiederholung

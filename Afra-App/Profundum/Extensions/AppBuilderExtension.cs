@@ -1,7 +1,7 @@
-using Afra_App.Profundum.Configuration;
-using Afra_App.Profundum.Services;
+using Altafraner.AfraApp.Profundum.Configuration;
+using Altafraner.AfraApp.Profundum.Services;
 
-namespace Afra_App.Profundum.Extensions;
+namespace Altafraner.AfraApp.Profundum.Extensions;
 
 /// <summary>
 /// A static class that contains extension methods for <see cref="WebApplicationBuilder"/> to add Profundum services and configuration.

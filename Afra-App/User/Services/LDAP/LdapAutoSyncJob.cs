@@ -1,10 +1,10 @@
-using Afra_App.Backbone.Email.Services.Contracts;
-using Afra_App.Backbone.Scheduler.Templates;
-using Afra_App.User.Configuration.LDAP;
+using Altafraner.AfraApp.Backbone.Email.Services.Contracts;
+using Altafraner.AfraApp.Backbone.Scheduler.Templates;
+using Altafraner.AfraApp.User.Configuration.LDAP;
 using Microsoft.Extensions.Options;
 using Quartz;
 
-namespace Afra_App.User.Services.LDAP;
+namespace Altafraner.AfraApp.User.Services.LDAP;
 
 internal sealed class LdapAutoSyncJob : RetryJob
 {

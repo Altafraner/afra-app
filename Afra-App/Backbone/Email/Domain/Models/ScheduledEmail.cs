@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
-using Afra_App.User.Domain.Models;
+using Altafraner.AfraApp.User.Domain.Models;
 
-namespace Afra_App.Backbone.Email.Domain.Models;
+namespace Altafraner.AfraApp.Backbone.Email.Domain.Models;
 
 /// <summary>
 /// A record representing an Email scheduled for sending

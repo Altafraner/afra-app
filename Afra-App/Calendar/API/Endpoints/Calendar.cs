@@ -1,7 +1,7 @@
-using Afra_App.Calendar.Services;
-using Afra_App.User.Services;
+using Altafraner.AfraApp.Calendar.Services;
+using Altafraner.AfraApp.User.Services;
 
-namespace Afra_App.Calendar.API.Endpoints;
+namespace Altafraner.AfraApp.Calendar.API.Endpoints;
 
 /// <summary>
 ///     A class containing the endpoints for the management and usage of calendar subscriptions

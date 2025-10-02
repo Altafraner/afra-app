@@ -1,9 +1,9 @@
-using Afra_App.User.Configuration.LDAP;
-using Afra_App.User.Domain.Models;
+using Altafraner.AfraApp.User.Configuration.LDAP;
+using Altafraner.AfraApp.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
-namespace Afra_App.User.Services;
+namespace Altafraner.AfraApp.User.Services;
 
 /// <summary>
 ///     A service for managing users in the Afra-App.

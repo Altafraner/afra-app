@@ -1,6 +1,6 @@
-using Afra_App.User.Domain.DTO;
+using Altafraner.AfraApp.User.Domain.DTO;
 
-namespace Afra_App.Otium.Domain.DTO.Katalog;
+namespace Altafraner.AfraApp.Otium.Domain.DTO.Katalog;
 
 /// <summary>
 ///     A DTO for the detailed view of a termin

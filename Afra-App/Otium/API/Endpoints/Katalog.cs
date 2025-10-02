@@ -1,9 +1,9 @@
-using Afra_App.Backbone.Authentication;
-using Afra_App.Otium.Services;
-using Afra_App.User.Services;
+using Altafraner.AfraApp.Backbone.Authentication;
+using Altafraner.AfraApp.Otium.Services;
+using Altafraner.AfraApp.User.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Afra_App.Otium.API.Endpoints;
+namespace Altafraner.AfraApp.Otium.API.Endpoints;
 
 /// <summary>
 ///     Contains endpoints for managing kategories.

@@ -1,7 +1,7 @@
-using Afra_App.Otium.Domain.Contracts.Rules;
-using Afra_App.Otium.Domain.Contracts.Services;
+using Altafraner.AfraApp.Otium.Domain.Contracts.Rules;
+using Altafraner.AfraApp.Otium.Domain.Contracts.Services;
 
-namespace Afra_App.Otium.Services.Rules;
+namespace Altafraner.AfraApp.Otium.Services.Rules;
 
 /// <inheritdoc />
 public class ServiceProviderRulesFactory : IRulesFactory

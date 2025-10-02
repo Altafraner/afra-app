@@ -1,10 +1,10 @@
-using Afra_App.Backbone.Authentication;
-using Afra_App.User.Domain.DTO;
-using Afra_App.User.Services;
+using Altafraner.AfraApp.Backbone.Authentication;
+using Altafraner.AfraApp.User.Domain.DTO;
+using Altafraner.AfraApp.User.Services;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
-namespace Afra_App.User.API.Endpoints;
+namespace Altafraner.AfraApp.User.API.Endpoints;
 
 /// <summary>
 /// A class containing extension methods for the people endpoint.

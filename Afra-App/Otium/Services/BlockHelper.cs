@@ -1,9 +1,9 @@
 using System.Diagnostics.Contracts;
-using Afra_App.Otium.Configuration;
-using Afra_App.Schuljahr.Domain.Models;
+using Altafraner.AfraApp.Otium.Configuration;
+using Altafraner.AfraApp.Schuljahr.Domain.Models;
 using Microsoft.Extensions.Options;
 
-namespace Afra_App.Otium.Services;
+namespace Altafraner.AfraApp.Otium.Services;
 
 /// <summary>
 ///     A class that provides helper methods for working with block schemas.

@@ -1,9 +1,9 @@
-using Afra_App.Backbone.Authentication;
-using Afra_App.Profundum.Services;
-using Afra_App.User.Services;
+using Altafraner.AfraApp.Backbone.Authentication;
+using Altafraner.AfraApp.Profundum.Services;
+using Altafraner.AfraApp.User.Services;
 using Microsoft.EntityFrameworkCore;
 
-namespace Afra_App.Profundum.API.Endpoints;
+namespace Altafraner.AfraApp.Profundum.API.Endpoints;
 
 /// <summary>
 ///     Contains endpoints for managing Profunda Enrollments.

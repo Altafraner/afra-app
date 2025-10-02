@@ -1,9 +1,9 @@
-using Afra_App.Otium.Domain.Contracts.Rules;
-using Afra_App.Otium.Domain.Models;
-using Afra_App.User.Services;
-using Person = Afra_App.User.Domain.Models.Person;
+using Altafraner.AfraApp.Otium.Domain.Contracts.Rules;
+using Altafraner.AfraApp.Otium.Domain.Models;
+using Altafraner.AfraApp.User.Services;
+using Models_Person = Altafraner.AfraApp.User.Domain.Models.Person;
 
-namespace Afra_App.Otium.Services.Rules;
+namespace Altafraner.AfraApp.Otium.Services.Rules;
 
 /// <summary>
 ///     Checks that the grade limits are respected
@@ -19,7 +19,7 @@ public class KlassenLimitsRule : IIndependentRule
     }
 
     /// <inheritdoc />
-    public ValueTask<RuleStatus> MayEnrollAsync(Person person, OtiumTermin termin)
+    public ValueTask<RuleStatus> MayEnrollAsync(Models_Person person, OtiumTermin termin)
     {
         var klasse = _userService.GetKlassenstufe(person);
 

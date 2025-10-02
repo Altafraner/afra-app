@@ -1,9 +1,9 @@
-using Afra_App.Otium.Domain.Contracts.Rules;
-using Afra_App.Otium.Domain.Models;
-using Afra_App.User.Domain.Models;
+using Altafraner.AfraApp.Otium.Domain.Contracts.Rules;
+using Altafraner.AfraApp.Otium.Domain.Models;
+using Altafraner.AfraApp.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace Afra_App.Otium.Services.Rules;
+namespace Altafraner.AfraApp.Otium.Services.Rules;
 
 /// <summary>
 ///     Checks if the termin is not full.

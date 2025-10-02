@@ -1,6 +1,6 @@
-using Afra_App.Schuljahr.Domain.Models;
+using Altafraner.AfraApp.Schuljahr.Domain.Models;
 
-namespace Afra_App.Otium.Configuration;
+namespace Altafraner.AfraApp.Otium.Configuration;
 
 /// <summary>
 ///     A configuration object containing the blocks in a

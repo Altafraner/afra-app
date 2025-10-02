@@ -1,6 +1,6 @@
-using Afra_App.Schuljahr.Domain.Models;
+using Altafraner.AfraApp.Schuljahr.Domain.Models;
 
-namespace Afra_App.Otium.Domain.Models;
+namespace Altafraner.AfraApp.Otium.Domain.Models;
 
 /// <summary>
 ///     A record representing a recurrence rule for an Otium.

@@ -1,4 +1,4 @@
-namespace Afra_App.Otium.Domain.Models;
+namespace Altafraner.AfraApp.Otium.Domain.Models;
 
 /// <summary>
 ///     An enum representing the status of a person's attendence

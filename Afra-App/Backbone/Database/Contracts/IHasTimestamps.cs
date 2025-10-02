@@ -1,4 +1,4 @@
-namespace Afra_App.Backbone.Database.Contracts;
+namespace Altafraner.AfraApp.Backbone.Database.Contracts;
 
 /// <summary>
 ///     An interface implemented by Database records to keep created and updated times

@@ -1,6 +1,6 @@
-using Afra_App.User.Domain.DTO;
+using Altafraner.AfraApp.User.Domain.DTO;
 
-namespace Afra_App.Otium.Domain.DTO;
+namespace Altafraner.AfraApp.Otium.Domain.DTO;
 
 /// <summary>
 ///     A interface representing the minimal basic structure of a DTO for a termin

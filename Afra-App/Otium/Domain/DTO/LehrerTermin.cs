@@ -1,8 +1,8 @@
-using Afra_App.Backbone.Domain.TimeInterval;
-using Afra_App.Otium.Domain.Models;
-using Afra_App.User.Domain.DTO;
+using Altafraner.AfraApp.Backbone.Domain.TimeInterval;
+using Altafraner.AfraApp.Otium.Domain.Models;
+using Altafraner.AfraApp.User.Domain.DTO;
 
-namespace Afra_App.Otium.Domain.DTO;
+namespace Altafraner.AfraApp.Otium.Domain.DTO;
 
 /// <summary>
 ///     A DTO for a termin as seen by a tutor

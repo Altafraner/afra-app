@@ -1,6 +1,6 @@
 using Quartz;
 
-namespace Afra_App.Backbone.Scheduler.Templates;
+namespace Altafraner.AfraApp.Backbone.Scheduler.Templates;
 
 /// <summary>
 /// A base class for jobs that should be retried in case of failure.

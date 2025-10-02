@@ -1,10 +1,10 @@
-using Afra_App.Otium.Domain.Contracts.Rules;
-using Afra_App.Otium.Domain.Contracts.Services;
-using Afra_App.Otium.Domain.Models;
-using Afra_App.Schuljahr.Domain.Models;
-using Afra_App.User.Domain.Models;
+using Altafraner.AfraApp.Otium.Domain.Contracts.Rules;
+using Altafraner.AfraApp.Otium.Domain.Contracts.Services;
+using Altafraner.AfraApp.Otium.Domain.Models;
+using Altafraner.AfraApp.Schuljahr.Domain.Models;
+using Altafraner.AfraApp.User.Domain.Models;
 
-namespace Afra_App.Otium.Services;
+namespace Altafraner.AfraApp.Otium.Services;
 
 /// <summary>
 ///     A service to validate rules for enrollments.

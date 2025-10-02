@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Afra_App.Backbone.Utilities;
+namespace Altafraner.AfraApp.Backbone.Utilities;
 
 /// <summary>
 ///     Converts a TimeOnly object to and from a string using the "t" format.

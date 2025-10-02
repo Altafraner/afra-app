@@ -1,7 +1,7 @@
 using Quartz;
 using Quartz.AspNetCore;
 
-namespace Afra_App.Backbone.Scheduler.Extensions;
+namespace Altafraner.AfraApp.Backbone.Scheduler.Extensions;
 
 internal static class AppBuilderExtension
 {

@@ -1,6 +1,6 @@
-using Afra_App.Schuljahr.API.Endpoints;
+using Altafraner.AfraApp.Schuljahr.API.Endpoints;
 
-namespace Afra_App.Schuljahr.Extensions;
+namespace Altafraner.AfraApp.Schuljahr.Extensions;
 
 /// <summary>
 /// A static class that contains extension methods for <see cref="IEndpointRouteBuilder"/> to map Schuljahr-related endpoints.

@@ -1,20 +1,14 @@
 using System.ComponentModel.DataAnnotations;
-using Afra_App.Backbone.Authentication;
-using Afra_App.Otium.Domain.Contracts.Services;
-using Afra_App.Otium.Domain.DTO;
-using Afra_App.Otium.Domain.Models;
-using Afra_App.Otium.Services;
-using Afra_App.User.Domain.Models;
-using Afra_App.User.Services;
+using Altafraner.AfraApp.Backbone.Authentication;
+using Altafraner.AfraApp.Otium.Domain.Contracts.Services;
+using Altafraner.AfraApp.Otium.Domain.DTO;
+using Altafraner.AfraApp.Otium.Domain.Models;
+using Altafraner.AfraApp.Otium.Services;
+using Altafraner.AfraApp.User.Domain.Models;
+using Altafraner.AfraApp.User.Services;
 using Microsoft.EntityFrameworkCore;
-using DB_Otium = Afra_App.Otium.Domain.Models.OtiumDefinition;
-using DTO_KlassenLimits = Afra_App.Otium.Domain.DTO.KlassenLimits;
-using DTO_Otium_Creation = Afra_App.Otium.Domain.DTO.ManagementOtiumCreation;
-using DTO_Termin_Creation = Afra_App.Otium.Domain.DTO.ManagementTerminCreation;
-using DTO_Wiederholung_Creation = Afra_App.Otium.Domain.DTO.ManagementWiederholungCreation;
-using DTO_Wiederholung_Edit = Afra_App.Otium.Domain.DTO.ManagementWiederholungEdit;
 
-namespace Afra_App.Otium.API.Endpoints;
+namespace Altafraner.AfraApp.Otium.API.Endpoints;
 
 /// <summary>
 ///     A class containing the endpoints for the management of otia.
@@ -98,7 +92,7 @@ public static class Management
         }
     }
 
-    private static async Task<IResult> CreateOtium(OtiumEndpointService service, DTO_Otium_Creation otium)
+    private static async Task<IResult> CreateOtium(OtiumEndpointService service, ManagementOtiumCreation otium)
     {
         try
         {
@@ -129,9 +123,9 @@ public static class Management
     }
 
     private static async Task<IResult> CreateOtiumTermin(ManagementService managementService,
-        UserAuthorizationHelper authHelper, OtiumEndpointService service, DTO_Termin_Creation otiumTermin)
+        UserAuthorizationHelper authHelper, OtiumEndpointService service, ManagementTerminCreation otiumTermin)
     {
-        DB_Otium otium;
+        OtiumDefinition otium;
         try
         {
             otium = await managementService.GetOtiumByIdAsync(otiumTermin.OtiumId);
@@ -161,7 +155,7 @@ public static class Management
     private static async Task<IResult> DeleteOtiumTermin(ManagementService managementService,
         UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumTerminId)
     {
-        DB_Otium otium;
+        OtiumDefinition otium;
         try
         {
             var termin = await managementService.GetTerminByIdAsync(otiumTerminId);
@@ -191,9 +185,9 @@ public static class Management
 
     private static async Task<IResult> CreateOtiumWiederholung(ManagementService managementService,
         UserAuthorizationHelper authHelper, OtiumEndpointService service,
-        DTO_Wiederholung_Creation otiumWiederholung)
+        ManagementWiederholungCreation otiumWiederholung)
     {
-        DB_Otium otium;
+        OtiumDefinition otium;
         try
         {
             otium = await managementService.GetOtiumByIdAsync(otiumWiederholung.OtiumId);
@@ -219,7 +213,7 @@ public static class Management
     private static async Task<IResult> DeleteOtiumWiederholung(ManagementService managementService,
         UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumWiederholungId)
     {
-        DB_Otium otium;
+        OtiumDefinition otium;
         try
         {
             var wdh = await managementService.GetWiederholungByIdAsync(otiumWiederholungId);
@@ -250,7 +244,7 @@ public static class Management
         UserAuthorizationHelper authHelper, OtiumEndpointService service,
         Guid otiumWiederholungId, ValueWrapper<DateOnly> firstDayAfter)
     {
-        DB_Otium otium;
+        OtiumDefinition otium;
         try
         {
             var wdh = await managementService.GetWiederholungByIdAsync(otiumWiederholungId);
@@ -283,9 +277,9 @@ public static class Management
 
     private static async Task<IResult> UpdateOtiumWiederholung(ManagementService managementService,
         UserAuthorizationHelper authHelper, OtiumEndpointService service,
-        Guid otiumWiederholungId, DTO_Wiederholung_Edit otiumWiederholung)
+        Guid otiumWiederholungId, ManagementWiederholungEdit otiumWiederholung)
     {
-        DB_Otium otium;
+        OtiumDefinition otium;
 
         try
         {
@@ -314,7 +308,7 @@ public static class Management
     private static async Task<IResult> OtiumTerminAbsagen(ManagementService managementService,
         UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumTerminId)
     {
-        DB_Otium otium;
+        OtiumDefinition otium;
         try
         {
             var termin = await managementService.GetTerminByIdAsync(otiumTerminId);
@@ -345,7 +339,7 @@ public static class Management
     private static async Task<IResult> OtiumTerminFortsetzen(ManagementService managementService,
         UserAuthorizationHelper authHelper, Guid otiumTerminId)
     {
-        DB_Otium otium;
+        OtiumDefinition otium;
         OtiumTermin termin;
         try
         {
@@ -379,7 +373,7 @@ public static class Management
         UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumId,
         ValueWrapper<string> value)
     {
-        DB_Otium otium;
+        OtiumDefinition otium;
         try
         {
             otium = await managementService.GetOtiumByIdAsync(otiumId);
@@ -407,9 +401,9 @@ public static class Management
 
     private static async Task<IResult> OtiumSetKlassenLimits(ManagementService managementService,
         UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumId,
-        DTO_KlassenLimits limits)
+        KlassenLimits limits)
     {
-        DB_Otium otium;
+        OtiumDefinition otium;
         try
         {
             otium = await managementService.GetOtiumByIdAsync(otiumId);
@@ -443,7 +437,7 @@ public static class Management
         UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumId,
         ValueWrapper<string> value)
     {
-        DB_Otium otium;
+        OtiumDefinition otium;
         try
         {
             otium = await managementService.GetOtiumByIdAsync(otiumId);
@@ -497,7 +491,7 @@ public static class Management
         UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumId,
         ValueWrapper<Guid> kategorie)
     {
-        DB_Otium otium;
+        OtiumDefinition otium;
         try
         {
             otium = await managementService.GetOtiumByIdAsync(otiumId);
@@ -528,7 +522,7 @@ public static class Management
         UserAuthorizationHelper authHelper, OtiumEndpointService service,
         Guid otiumTerminId, ValueWrapper<int?> maxEinschreibungen)
     {
-        DB_Otium otium;
+        OtiumDefinition otium;
         try
         {
             var termin = await managementService.GetTerminByIdAsync(otiumTerminId);
@@ -560,7 +554,7 @@ public static class Management
         UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumTerminId,
         ValueWrapper<Guid?> personId)
     {
-        DB_Otium otium;
+        OtiumDefinition otium;
         try
         {
             var termin = await managementService.GetTerminByIdAsync(otiumTerminId);
@@ -592,7 +586,7 @@ public static class Management
         UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumTerminId,
         ValueWrapper<string> ort)
     {
-        DB_Otium otium;
+        OtiumDefinition otium;
         try
         {
             var termin = await managementService.GetTerminByIdAsync(otiumTerminId);
@@ -624,7 +618,7 @@ public static class Management
         UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumTerminId,
         ValueWrapper<string?> bezeichnung)
     {
-        DB_Otium otium;
+        OtiumDefinition otium;
         try
         {
             var termin = await managementService.GetTerminByIdAsync(otiumTerminId);
@@ -656,7 +650,7 @@ public static class Management
         UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumTerminId,
         ValueWrapper<string?> beschreibung)
     {
-        DB_Otium otium;
+        OtiumDefinition otium;
         try
         {
             var termin = await managementService.GetTerminByIdAsync(otiumTerminId);
@@ -749,7 +743,7 @@ public static class Management
     }
 
     private static async Task<bool> MayEditAsync(UserAuthorizationHelper authHelper,
-        ManagementService managementService, DB_Otium otium)
+        ManagementService managementService, OtiumDefinition otium)
     {
         var currentUser = await authHelper.GetUserAsync();
         var verantwortliche = await managementService.GetVerantwortlicheAsync(otium);

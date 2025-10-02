@@ -1,9 +1,9 @@
 using System.Net.Http.Headers;
 using System.Text;
-using Afra_App.Backbone.EmergencyBackup.Configuration;
-using Afra_App.Backbone.EmergencyBackup.Services.Contracts;
+using Altafraner.AfraApp.Backbone.EmergencyBackup.Configuration;
+using Altafraner.AfraApp.Backbone.EmergencyBackup.Services.Contracts;
 
-namespace Afra_App.Backbone.EmergencyBackup.Services.Implementations;
+namespace Altafraner.AfraApp.Backbone.EmergencyBackup.Services.Implementations;
 
 /// <summary>
 ///     An implementation of <see cref="IEmergencyBackupService" /> that saves HTML content via HTTP POST requests to a specified endpoint.

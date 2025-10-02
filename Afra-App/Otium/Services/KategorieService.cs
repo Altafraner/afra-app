@@ -1,8 +1,8 @@
-using Afra_App.Otium.Domain.Models;
+using Altafraner.AfraApp.Otium.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 
-namespace Afra_App.Otium.Services;
+namespace Altafraner.AfraApp.Otium.Services;
 
 /// <summary>
 ///     A service for handling categories.

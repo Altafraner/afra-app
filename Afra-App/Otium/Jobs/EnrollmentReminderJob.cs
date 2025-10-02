@@ -1,12 +1,12 @@
-using Afra_App.Backbone.Email.Services.Contracts;
-using Afra_App.Backbone.Scheduler.Templates;
-using Afra_App.Otium.Configuration;
-using Afra_App.Otium.Services;
-using Afra_App.User.Domain.Models;
+using Altafraner.AfraApp.Backbone.Email.Services.Contracts;
+using Altafraner.AfraApp.Backbone.Scheduler.Templates;
+using Altafraner.AfraApp.Otium.Configuration;
+using Altafraner.AfraApp.Otium.Services;
+using Altafraner.AfraApp.User.Domain.Models;
 using Microsoft.Extensions.Options;
 using Quartz;
 
-namespace Afra_App.Otium.Jobs;
+namespace Altafraner.AfraApp.Otium.Jobs;
 
 /// <summary>
 /// A background job that sends reminders to users about their missing enrollments in Otium events.

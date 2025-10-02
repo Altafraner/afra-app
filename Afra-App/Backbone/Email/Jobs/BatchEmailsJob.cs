@@ -1,10 +1,10 @@
-using Afra_App.Backbone.Email.Services.Contracts;
-using Afra_App.Backbone.Scheduler.Templates;
-using Afra_App.User.Domain.Models;
+using Altafraner.AfraApp.Backbone.Email.Services.Contracts;
+using Altafraner.AfraApp.Backbone.Scheduler.Templates;
+using Altafraner.AfraApp.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Quartz;
 
-namespace Afra_App.Backbone.Email.Jobs;
+namespace Altafraner.AfraApp.Backbone.Email.Jobs;
 
 /// <summary>
 ///     A Job that sends a batched email with all pending notifications for a single User

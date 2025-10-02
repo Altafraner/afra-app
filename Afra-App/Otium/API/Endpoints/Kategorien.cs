@@ -1,6 +1,6 @@
-using Afra_App.Otium.Services;
+using Altafraner.AfraApp.Otium.Services;
 
-namespace Afra_App.Otium.API.Endpoints;
+namespace Altafraner.AfraApp.Otium.API.Endpoints;
 
 /// <summary>
 ///     Contains endpoints for managing kategories.

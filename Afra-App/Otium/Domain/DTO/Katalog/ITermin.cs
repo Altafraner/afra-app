@@ -1,4 +1,4 @@
-namespace Afra_App.Otium.Domain.DTO.Katalog;
+namespace Altafraner.AfraApp.Otium.Domain.DTO.Katalog;
 
 /// <summary>
 ///     A interface representing the basic structure of a DTO for a termin

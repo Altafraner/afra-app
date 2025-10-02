@@ -1,9 +1,9 @@
-using Afra_App.Otium.Domain.Contracts.Rules;
-using Afra_App.Otium.Domain.Contracts.Services;
-using Afra_App.Otium.Services;
-using Afra_App.Otium.Services.Rules;
+using Altafraner.AfraApp.Otium.Domain.Contracts.Rules;
+using Altafraner.AfraApp.Otium.Domain.Contracts.Services;
+using Altafraner.AfraApp.Otium.Services;
+using Altafraner.AfraApp.Otium.Services.Rules;
 
-namespace Afra_App.Otium.Extensions;
+namespace Altafraner.AfraApp.Otium.Extensions;
 
 /// <summary>
 /// Contains extension methods to add built-in rules to the service collection.

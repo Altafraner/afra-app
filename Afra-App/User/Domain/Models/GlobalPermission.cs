@@ -1,4 +1,4 @@
-namespace Afra_App.User.Domain.Models;
+namespace Altafraner.AfraApp.User.Domain.Models;
 
 /// <summary>
 /// A set of global permissions that can be assigned to a user.

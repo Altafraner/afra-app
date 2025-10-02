@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
-using Afra_App.User.Domain.Models;
+using Altafraner.AfraApp.User.Domain.Models;
 
-namespace Afra_App.User.Domain.DTO;
+namespace Altafraner.AfraApp.User.Domain.DTO;
 
 /// <summary>
 ///     Represents a person

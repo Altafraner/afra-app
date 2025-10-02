@@ -1,6 +1,6 @@
-using Afra_App.Backbone.Domain.TimeInterval;
+using Altafraner.AfraApp.Backbone.Domain.TimeInterval;
 
-namespace Afra_App.Schuljahr.Domain.Models;
+namespace Altafraner.AfraApp.Schuljahr.Domain.Models;
 
 /// <summary>
 ///     A subdivision of a <see cref="Block" />

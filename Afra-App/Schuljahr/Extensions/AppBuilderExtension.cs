@@ -1,6 +1,6 @@
-using Afra_App.Schuljahr.Services;
+using Altafraner.AfraApp.Schuljahr.Services;
 
-namespace Afra_App.Schuljahr.Extensions;
+namespace Altafraner.AfraApp.Schuljahr.Extensions;
 
 /// <summary>
 ///     A static class that contains extension methods for <see cref="WebApplicationBuilder" /> to add Schuljahr services and

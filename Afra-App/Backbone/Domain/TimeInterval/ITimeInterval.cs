@@ -1,4 +1,4 @@
-namespace Afra_App.Backbone.Domain.TimeInterval;
+namespace Altafraner.AfraApp.Backbone.Domain.TimeInterval;
 
 /// <summary>
 ///     A time-interval with a start and end point.

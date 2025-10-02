@@ -1,6 +1,6 @@
-using Afra_App.Backbone.Domain.TimeInterval;
+using Altafraner.AfraApp.Backbone.Domain.TimeInterval;
 
-namespace Afra_App.Otium.Domain.DTO;
+namespace Altafraner.AfraApp.Otium.Domain.DTO;
 
 /// <summary>
 ///     Contains information about a block

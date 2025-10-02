@@ -1,4 +1,4 @@
-namespace Afra_App.Profundum.Domain.Models;
+namespace Altafraner.AfraApp.Profundum.Domain.Models;
 
 /// <summary>
 ///     A db record representing a Profundum instance.

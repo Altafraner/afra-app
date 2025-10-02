@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
-using Afra_App.User.Domain.Models;
+using Altafraner.AfraApp.User.Domain.Models;
 
-namespace Afra_App.Otium.Domain.Models;
+namespace Altafraner.AfraApp.Otium.Domain.Models;
 
 /// <summary>
 ///     An abstract class representing the basic structure of an instance for an Otium. Here to ensure consistency between

@@ -1,9 +1,9 @@
-using Afra_App.Otium.Configuration;
-using Afra_App.Otium.Jobs;
+using Altafraner.AfraApp.Otium.Configuration;
+using Altafraner.AfraApp.Otium.Jobs;
 using Microsoft.Extensions.Options;
 using Quartz;
 
-namespace Afra_App.Otium.Services;
+namespace Altafraner.AfraApp.Otium.Services;
 
 /// <summary>
 /// Service that schedules emergency backups for Otium enrollments.

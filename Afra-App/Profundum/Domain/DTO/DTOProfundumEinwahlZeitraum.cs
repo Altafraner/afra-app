@@ -1,6 +1,6 @@
-namespace Afra_App.Profundum.Domain.DTO;
+namespace Altafraner.AfraApp.Profundum.Domain.DTO;
 
-using Afra_App.Profundum.Domain.Models;
+using Models;
 
 ///
 public record DTOProfundumEinwahlZeitraum

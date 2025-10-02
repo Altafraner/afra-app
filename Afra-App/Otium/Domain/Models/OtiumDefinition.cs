@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
-using Afra_App.Backbone.Database.Contracts;
-using Afra_App.User.Domain.Models;
+using Altafraner.AfraApp.Backbone.Database.Contracts;
+using Altafraner.AfraApp.User.Domain.Models;
 
-namespace Afra_App.Otium.Domain.Models;
+namespace Altafraner.AfraApp.Otium.Domain.Models;
 
 /// <summary>
 ///     A db record representing an Otium.

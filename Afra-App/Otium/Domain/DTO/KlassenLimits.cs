@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-namespace Afra_App.Otium.Domain.DTO;
+namespace Altafraner.AfraApp.Otium.Domain.DTO;
 
 /// <summary>
 ///     A DTO for sending grade ranges

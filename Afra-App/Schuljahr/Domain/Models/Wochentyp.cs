@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Afra_App.Schuljahr.Domain.Models;
+namespace Altafraner.AfraApp.Schuljahr.Domain.Models;
 
 /// <summary>
 ///     The type of week the recurrence rule applies to.
