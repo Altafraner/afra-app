@@ -17,6 +17,9 @@ public record PersonLoginInfo
     /// <inheritdoc cref="User.Domain.DTO.Person.Nachname" />
     public required string Nachname { get; set; }
 
+    ///
+    public required string Greeting { get; set; }
+
     /// <inheritdoc cref="User.Domain.DTO.Person.Rolle" />
     [JsonConverter(typeof(JsonStringEnumConverter<Rolle>))]
     public required Rolle Rolle { get; set; }
