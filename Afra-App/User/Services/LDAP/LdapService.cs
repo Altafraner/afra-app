@@ -1,13 +1,13 @@
 using System.DirectoryServices.Protocols;
 using System.Net;
-using Afra_App.Backbone.Email.Services.Contracts;
-using Afra_App.Backbone.Utilities;
-using Afra_App.User.Configuration.LDAP;
-using Afra_App.User.Domain.Models;
+using Altafraner.AfraApp.Backbone.Email.Services.Contracts;
+using Altafraner.AfraApp.Backbone.Utilities;
+using Altafraner.AfraApp.User.Configuration.LDAP;
+using Altafraner.AfraApp.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
-namespace Afra_App.User.Services.LDAP;
+namespace Altafraner.AfraApp.User.Services.LDAP;
 
 /// <summary>
 ///     A service for synchronizing with an LDAP server and authenticating users.

@@ -1,6 +1,6 @@
-using Afra_App.Backbone.Email.Services.Contracts;
+using Altafraner.AfraApp.Backbone.Email.Services.Contracts;
 
-namespace Afra_App.Backbone.Email.Services.Implementations;
+namespace Altafraner.AfraApp.Backbone.Email.Services.Implementations;
 
 /// <summary>
 ///     An email sending service for debugging that logs any emails to the console unsent

@@ -1,4 +1,4 @@
-namespace Afra_App.Schuljahr.Domain.Models;
+namespace Altafraner.AfraApp.Schuljahr.Domain.Models;
 
 /// <summary>
 ///     A Block on a <see cref="Schultag" />

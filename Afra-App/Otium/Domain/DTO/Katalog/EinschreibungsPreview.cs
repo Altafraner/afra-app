@@ -1,6 +1,6 @@
-using Afra_App.Backbone.Domain.TimeInterval;
+using Altafraner.AfraApp.Backbone.Domain.TimeInterval;
 
-namespace Afra_App.Otium.Domain.DTO.Katalog;
+namespace Altafraner.AfraApp.Otium.Domain.DTO.Katalog;
 
 /// <summary>
 ///     A DTO for previewing a time-slot

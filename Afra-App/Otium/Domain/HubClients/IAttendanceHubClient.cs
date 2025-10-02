@@ -1,8 +1,8 @@
-using Afra_App.Otium.API.Hubs;
-using Afra_App.Otium.Domain.DTO;
-using Afra_App.Otium.Domain.Models;
+using Altafraner.AfraApp.Otium.API.Hubs;
+using Altafraner.AfraApp.Otium.Domain.DTO;
+using Altafraner.AfraApp.Otium.Domain.Models;
 
-namespace Afra_App.Otium.Domain.HubClients;
+namespace Altafraner.AfraApp.Otium.Domain.HubClients;
 
 /// <summary>
 /// Represents the client interface for the <see cref="AttendanceHub"/>.

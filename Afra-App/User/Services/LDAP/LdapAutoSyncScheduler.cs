@@ -1,6 +1,6 @@
 using Quartz;
 
-namespace Afra_App.User.Services.LDAP;
+namespace Altafraner.AfraApp.User.Services.LDAP;
 
 /// <summary>
 /// A background service that schedules the LDAP synchronization job

@@ -1,13 +1,13 @@
 using System;
-using Afra_App.Otium.Domain.Models;
-using Afra_App.Schuljahr.Domain.Models;
-using Afra_App.User.Domain.Models;
+using Altafraner.AfraApp.Otium.Domain.Models;
+using Altafraner.AfraApp.Schuljahr.Domain.Models;
+using Altafraner.AfraApp.User.Domain.Models;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Afra_App.Migrations
+namespace Altafraner.AfraApp.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration

@@ -1,8 +1,8 @@
-using Afra_App.Otium.Domain.Contracts.Rules;
-using Afra_App.Otium.Domain.Models;
-using Person = Afra_App.User.Domain.Models.Person;
+using Altafraner.AfraApp.Otium.Domain.Contracts.Rules;
+using Altafraner.AfraApp.Otium.Domain.Models;
+using Models_Person = Altafraner.AfraApp.User.Domain.Models.Person;
 
-namespace Afra_App.Otium.Services.Rules;
+namespace Altafraner.AfraApp.Otium.Services.Rules;
 
 /// <summary>
 ///     Checks if the enrollment is done within the allowed timeframe.
@@ -18,7 +18,7 @@ public class EnrollmentTimeframeRule : IIndependentRule
     }
 
     /// <inheritdoc />
-    public ValueTask<RuleStatus> MayEnrollAsync(Person person, OtiumTermin termin)
+    public ValueTask<RuleStatus> MayEnrollAsync(Models_Person person, OtiumTermin termin)
     {
         var block = _blockHelper.Get(termin.Block.SchemaId)!;
         var now = DateTime.Now;
@@ -33,7 +33,7 @@ public class EnrollmentTimeframeRule : IIndependentRule
     }
 
     /// <inheritdoc />
-    public ValueTask<RuleStatus> MayUnenrollAsync(Person person, OtiumEinschreibung einschreibung)
+    public ValueTask<RuleStatus> MayUnenrollAsync(Models_Person person, OtiumEinschreibung einschreibung)
     {
         return MayEnrollAsync(person, einschreibung.Termin);
     }

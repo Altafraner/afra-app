@@ -1,8 +1,8 @@
 using System.DirectoryServices.Protocols;
 using System.Net;
-using Afra_App.User.Configuration.LDAP;
+using Altafraner.AfraApp.User.Configuration.LDAP;
 
-namespace Afra_App.User.Services.LDAP;
+namespace Altafraner.AfraApp.User.Services.LDAP;
 
 /// <summary>
 /// Provides extension methods for working with LDAP connections and entries.

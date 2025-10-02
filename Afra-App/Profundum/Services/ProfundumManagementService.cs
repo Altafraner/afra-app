@@ -1,10 +1,10 @@
-using Afra_App.Profundum.Configuration;
-using Afra_App.Profundum.Domain.DTO;
-using Afra_App.Profundum.Domain.Models;
-using Afra_App.User.Services;
+using Altafraner.AfraApp.Profundum.Configuration;
+using Altafraner.AfraApp.Profundum.Domain.DTO;
+using Altafraner.AfraApp.Profundum.Domain.Models;
+using Altafraner.AfraApp.User.Services;
 using Microsoft.Extensions.Options;
 
-namespace Afra_App.Profundum.Services;
+namespace Altafraner.AfraApp.Profundum.Services;
 
 /// <summary>
 ///     A service for managing profunda.

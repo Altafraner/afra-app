@@ -1,14 +1,14 @@
 using System.Text;
 using System.Web;
-using Afra_App.Backbone.EmergencyBackup.Services.Contracts;
-using Afra_App.Otium.Domain.Contracts.Services;
-using Afra_App.Otium.Domain.Models;
-using Afra_App.Otium.Services;
-using Afra_App.Schuljahr.Services;
-using Afra_App.User.Domain.Models;
+using Altafraner.AfraApp.Backbone.EmergencyBackup.Services.Contracts;
+using Altafraner.AfraApp.Otium.Domain.Contracts.Services;
+using Altafraner.AfraApp.Otium.Domain.Models;
+using Altafraner.AfraApp.Otium.Services;
+using Altafraner.AfraApp.Schuljahr.Services;
+using Altafraner.AfraApp.User.Domain.Models;
 using Quartz;
 
-namespace Afra_App.Otium.Jobs;
+namespace Altafraner.AfraApp.Otium.Jobs;
 
 /// <summary>
 /// A job that uploads emergency backups of currently running Otium-Blocks.

@@ -1,6 +1,6 @@
-using Afra_App.Calendar.API.Endpoints;
+using Altafraner.AfraApp.Calendar.API.Endpoints;
 
-namespace Afra_App.Calendar.Extensions;
+namespace Altafraner.AfraApp.Calendar.Extensions;
 
 /// <summary>
 ///     A static class that contains extension methods for <see cref="WebApplication"/> to map calendar endpoints.

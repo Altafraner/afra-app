@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
-using Afra_App.Backbone.Database.Contracts;
-using Afra_App.Schuljahr.Domain.Models;
+using Altafraner.AfraApp.Backbone.Database.Contracts;
+using Altafraner.AfraApp.Schuljahr.Domain.Models;
 
-namespace Afra_App.Otium.Domain.Models;
+namespace Altafraner.AfraApp.Otium.Domain.Models;
 
 /// <summary>
 ///     A record representing a one-time instance of an Otium.

@@ -1,8 +1,8 @@
-using Afra_App.Backbone.Database.Contracts;
+using Altafraner.AfraApp.Backbone.Database.Contracts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
-namespace Afra_App.Backbone.Database.Interceptors;
+namespace Altafraner.AfraApp.Backbone.Database.Interceptors;
 
 /// <summary>
 ///     An Interceptor saving created and modified times for entities

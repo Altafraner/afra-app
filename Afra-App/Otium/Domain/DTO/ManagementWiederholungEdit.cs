@@ -1,4 +1,4 @@
-namespace Afra_App.Otium.Domain.DTO;
+namespace Altafraner.AfraApp.Otium.Domain.DTO;
 
 /// <summary>
 ///     A DTO for editing a Wiederholung

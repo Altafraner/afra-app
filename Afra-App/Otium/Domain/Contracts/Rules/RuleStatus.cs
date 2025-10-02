@@ -1,6 +1,6 @@
 using System.Diagnostics.Contracts;
 
-namespace Afra_App.Otium.Domain.Contracts.Rules;
+namespace Altafraner.AfraApp.Otium.Domain.Contracts.Rules;
 
 /// <summary>
 ///     Indicates the status of a rule check.

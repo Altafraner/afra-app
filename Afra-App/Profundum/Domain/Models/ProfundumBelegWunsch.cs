@@ -1,6 +1,6 @@
-using Afra_App.User.Domain.Models;
+using Altafraner.AfraApp.User.Domain.Models;
 
-namespace Afra_App.Profundum.Domain.Models;
+namespace Altafraner.AfraApp.Profundum.Domain.Models;
 
 /// <summary>
 ///     A record representing an enrollment wish for a <see cref="ProfundumDefinition" />.

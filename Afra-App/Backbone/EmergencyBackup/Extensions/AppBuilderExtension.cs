@@ -1,11 +1,11 @@
 using System.Net.Http.Headers;
 using System.Text;
-using Afra_App.Backbone.EmergencyBackup.Configuration;
-using Afra_App.Backbone.EmergencyBackup.Services.Contracts;
-using Afra_App.Backbone.EmergencyBackup.Services.Implementations;
+using Altafraner.AfraApp.Backbone.EmergencyBackup.Configuration;
+using Altafraner.AfraApp.Backbone.EmergencyBackup.Services.Contracts;
+using Altafraner.AfraApp.Backbone.EmergencyBackup.Services.Implementations;
 using Microsoft.Extensions.Options;
 
-namespace Afra_App.Backbone.EmergencyBackup.Extensions;
+namespace Altafraner.AfraApp.Backbone.EmergencyBackup.Extensions;
 
 /// <summary>
 /// Contains a static extension method to add the Emergency Post Backup service to the WebApplicationBuilder.

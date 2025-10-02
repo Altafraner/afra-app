@@ -1,4 +1,4 @@
-namespace Afra_App.Backbone.EmergencyBackup.Services.Contracts;
+namespace Altafraner.AfraApp.Backbone.EmergencyBackup.Services.Contracts;
 
 /// <summary>
 ///     Specifies methods for saving HTML content as part of an emergency backup service.

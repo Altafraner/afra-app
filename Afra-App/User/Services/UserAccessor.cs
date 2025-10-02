@@ -1,8 +1,8 @@
 using System.Security.Claims;
-using Afra_App.Backbone.Authentication;
-using Afra_App.User.Domain.Models;
+using Altafraner.AfraApp.Backbone.Authentication;
+using Altafraner.AfraApp.User.Domain.Models;
 
-namespace Afra_App.User.Services;
+namespace Altafraner.AfraApp.User.Services;
 
 /// <summary>
 ///     A service for accessing the currently logged-in user.

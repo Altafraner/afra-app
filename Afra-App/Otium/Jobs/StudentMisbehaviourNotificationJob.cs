@@ -1,19 +1,19 @@
 using System.Text;
-using Afra_App.Backbone.Email.Services.Contracts;
-using Afra_App.Backbone.Scheduler.Templates;
-using Afra_App.Backbone.Utilities;
-using Afra_App.Otium.Configuration;
-using Afra_App.Otium.Domain.Models;
-using Afra_App.Otium.Services;
-using Afra_App.Schuljahr.Domain.Models;
-using Afra_App.Schuljahr.Services;
-using Afra_App.User.Domain.Models;
-using Afra_App.User.Services;
+using Altafraner.AfraApp.Backbone.Email.Services.Contracts;
+using Altafraner.AfraApp.Backbone.Scheduler.Templates;
+using Altafraner.AfraApp.Backbone.Utilities;
+using Altafraner.AfraApp.Otium.Configuration;
+using Altafraner.AfraApp.Otium.Domain.Models;
+using Altafraner.AfraApp.Otium.Services;
+using Altafraner.AfraApp.Schuljahr.Domain.Models;
+using Altafraner.AfraApp.Schuljahr.Services;
+using Altafraner.AfraApp.User.Domain.Models;
+using Altafraner.AfraApp.User.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Quartz;
 
-namespace Afra_App.Otium.Jobs;
+namespace Altafraner.AfraApp.Otium.Jobs;
 
 /// <summary>
 ///     A job that notifies mentors about student misbehaviour.

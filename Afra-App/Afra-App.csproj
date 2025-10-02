@@ -4,7 +4,7 @@
         <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
-        <RootNamespace>Afra_App</RootNamespace>
+        <RootNamespace>Altafraner.AfraApp</RootNamespace>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <!-- Include Docfile so compiler warns if there is a not documentet public method -->
         <GenerateDocumentationFile>true</GenerateDocumentationFile>

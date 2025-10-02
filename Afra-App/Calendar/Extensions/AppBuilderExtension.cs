@@ -1,6 +1,6 @@
-using Afra_App.Calendar.Services;
+using Altafraner.AfraApp.Calendar.Services;
 
-namespace Afra_App.Calendar.Extensions;
+namespace Altafraner.AfraApp.Calendar.Extensions;
 
 /// <summary>
 ///     A static class that provides extension methods for <see cref="WebApplicationBuilder"/> to add calendar services.

@@ -1,4 +1,4 @@
-namespace Afra_App.Profundum.Domain.Models;
+namespace Altafraner.AfraApp.Profundum.Domain.Models;
 
 ///
 public enum ProfundumQuartal

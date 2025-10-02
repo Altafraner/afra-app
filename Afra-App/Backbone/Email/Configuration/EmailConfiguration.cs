@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using MailKit.Security;
 
-namespace Afra_App.Backbone.Email.Configuration;
+namespace Altafraner.AfraApp.Backbone.Email.Configuration;
 
 /// <summary>
 ///     A configuration object for smtp settings

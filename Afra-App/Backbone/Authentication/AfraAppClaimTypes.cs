@@ -1,7 +1,7 @@
 using System.Security.Claims;
-using Afra_App.User.Domain.Models;
+using Altafraner.AfraApp.User.Domain.Models;
 
-namespace Afra_App.Backbone.Authentication;
+namespace Altafraner.AfraApp.Backbone.Authentication;
 
 /// <summary>
 ///     Specifies the claim types used in the <see cref="ClaimsPrincipal" /> for the Afra-App

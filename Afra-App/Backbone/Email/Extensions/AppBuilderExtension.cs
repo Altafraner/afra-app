@@ -1,8 +1,8 @@
-using Afra_App.Backbone.Email.Configuration;
-using Afra_App.Backbone.Email.Services.Contracts;
-using Afra_App.Backbone.Email.Services.Implementations;
+using Altafraner.AfraApp.Backbone.Email.Configuration;
+using Altafraner.AfraApp.Backbone.Email.Services.Contracts;
+using Altafraner.AfraApp.Backbone.Email.Services.Implementations;
 
-namespace Afra_App.Backbone.Email.Extensions;
+namespace Altafraner.AfraApp.Backbone.Email.Extensions;
 
 /// <summary>
 /// Contains a static extension method to add the Email service to the WebApplicationBuilder.

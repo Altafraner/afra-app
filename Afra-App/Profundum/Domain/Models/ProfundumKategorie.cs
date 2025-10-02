@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
-namespace Afra_App.Profundum.Domain.Models;
+namespace Altafraner.AfraApp.Profundum.Domain.Models;
 
 /// <summary>
 ///     A Kategorie for an Profundum.

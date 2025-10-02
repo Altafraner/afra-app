@@ -1,17 +1,17 @@
-using Afra_App.Otium.Domain.Models;
-using Afra_App.Schuljahr.Domain.Models;
-using Afra_App.User.Domain.Models;
-using Afra_App.User.Services;
+using Altafraner.AfraApp.Otium.Domain.Models;
+using Altafraner.AfraApp.Schuljahr.Domain.Models;
+using Altafraner.AfraApp.User.Domain.Models;
+using Altafraner.AfraApp.User.Services;
 using Bogus;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Person = Afra_App.User.Domain.Models.Person;
+using Models_Person = Altafraner.AfraApp.User.Domain.Models.Person;
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 // Sorry, this is a test controller, not worth the effort.
 
-namespace Afra_App.Backbone.Controllers;
+namespace Altafraner.AfraApp.Backbone.Controllers;
 
 [ApiController]
 [Route("/api/[controller]")]
@@ -81,7 +81,7 @@ public class TestController(AfraAppContext dbContext, UserSigninService userSign
             ("Lernen Lernen", otiumsKategorien[5])
         ];
 
-        var personFaker = new Faker<Person>("de")
+        var personFaker = new Faker<Models_Person>("de")
             .RuleFor(p => p.Nachname, f => f.Person.LastName)
             .RuleFor(p => p.Vorname, f => f.Person.FirstName)
             .RuleFor(p => p.Email, (_, p)

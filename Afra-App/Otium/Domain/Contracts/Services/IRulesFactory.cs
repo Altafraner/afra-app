@@ -1,6 +1,6 @@
-using Afra_App.Otium.Domain.Contracts.Rules;
+using Altafraner.AfraApp.Otium.Domain.Contracts.Rules;
 
-namespace Afra_App.Otium.Domain.Contracts.Services;
+namespace Altafraner.AfraApp.Otium.Domain.Contracts.Services;
 
 /// <summary>
 ///    Factory to get all available rules.

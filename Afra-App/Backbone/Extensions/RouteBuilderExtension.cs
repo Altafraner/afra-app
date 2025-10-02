@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 
-namespace Afra_App.Backbone.Extensions;
+namespace Altafraner.AfraApp.Backbone.Extensions;
 
 /// <summary>
 /// A static class that provides extension methods for the <see cref="WebApplication"/> class.

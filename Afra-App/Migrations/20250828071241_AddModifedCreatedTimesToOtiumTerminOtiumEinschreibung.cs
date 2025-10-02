@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Afra_App.Migrations
+namespace Altafraner.AfraApp.Migrations
 {
     /// <inheritdoc />
     public partial class AddModifedCreatedTimesToOtiumTerminOtiumEinschreibung : Migration

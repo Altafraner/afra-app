@@ -1,18 +1,18 @@
 using System.Diagnostics;
 using System.Text;
-using Afra_App.Backbone.Email.Services.Contracts;
-using Afra_App.Profundum.Configuration;
-using Afra_App.Profundum.Domain.DTO;
-using Afra_App.Profundum.Domain.Models;
-using Afra_App.User.Domain.DTO;
-using Afra_App.User.Domain.Models;
-using Afra_App.User.Services;
+using Altafraner.AfraApp.Backbone.Email.Services.Contracts;
+using Altafraner.AfraApp.Profundum.Configuration;
+using Altafraner.AfraApp.Profundum.Domain.DTO;
+using Altafraner.AfraApp.Profundum.Domain.Models;
+using Altafraner.AfraApp.User.Domain.DTO;
+using Altafraner.AfraApp.User.Domain.Models;
+using Altafraner.AfraApp.User.Services;
 using Google.OrTools.Sat;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Person = Afra_App.User.Domain.Models.Person;
+using Models_Person = Altafraner.AfraApp.User.Domain.Models.Person;
 
-namespace Afra_App.Profundum.Services;
+namespace Altafraner.AfraApp.Profundum.Services;
 
 ///
 public class ProfundumEinwahlWunschException : Exception
@@ -50,7 +50,7 @@ public class ProfundumEnrollmentService
     }
 
     ///
-    public bool isProfundumBlockiert(Person student, IEnumerable<ProfundumQuartal> quartale)
+    public bool isProfundumBlockiert(Models_Person student, IEnumerable<ProfundumQuartal> quartale)
     {
         var klasse = _userService.GetKlassenstufe(student);
         var blockiertQuartale = _profundumConfiguration.Value.ProfundumBlockiert.GetValueOrDefault(klasse);
@@ -64,7 +64,7 @@ public class ProfundumEnrollmentService
     }
 
     ///
-    public bool isProfilPflichtig(Person student, IEnumerable<ProfundumQuartal> quartale)
+    public bool isProfilPflichtig(Models_Person student, IEnumerable<ProfundumQuartal> quartale)
     {
         var klasse = _userService.GetKlassenstufe(student);
         var profilQuartale = _profundumConfiguration.Value.ProfilPflichtigkeit.GetValueOrDefault(klasse);
@@ -78,7 +78,7 @@ public class ProfundumEnrollmentService
     }
 
     ///
-    public bool isProfilZulässig(Person student, IEnumerable<ProfundumQuartal> quartale)
+    public bool isProfilZulässig(Models_Person student, IEnumerable<ProfundumQuartal> quartale)
     {
         var klasse = student.Gruppe;
         if (klasse is null)
@@ -97,7 +97,7 @@ public class ProfundumEnrollmentService
     }
 
     ///
-    public IEnumerable<ProfundumInstanz> GetAvailableProfundaInstanzen(Person student, IEnumerable<ProfundumSlot> slots)
+    public IEnumerable<ProfundumInstanz> GetAvailableProfundaInstanzen(Models_Person student, IEnumerable<ProfundumSlot> slots)
     {
         var klasse = _userService.GetKlassenstufe(student);
         var profilPflichtig = isProfilPflichtig(student, slots.Select(s => s.Quartal));
@@ -128,7 +128,7 @@ public class ProfundumEnrollmentService
     /// <summary>
     ///     Get all options for slots currently open for enrollment
     /// </summary>
-    public ICollection<BlockKatalog>? GetKatalog(Person student)
+    public ICollection<BlockKatalog>? GetKatalog(Models_Person student)
     {
         var einwahlZeitraum = getCurrentEinwahlZeitraum();
         if (einwahlZeitraum is null)
@@ -190,7 +190,7 @@ public class ProfundumEnrollmentService
     /// </summary>
     /// <param name="student">The student wanting to enroll</param>
     /// <param name="wuensche">A dictionary containing the ordered ids of ProdundumInstanzen given the slot</param>
-    public async Task RegisterBelegWunschAsync(Person student, Dictionary<String, Guid[]> wuensche)
+    public async Task RegisterBelegWunschAsync(Models_Person student, Dictionary<String, Guid[]> wuensche)
     {
         var einwahlZeitraum = getCurrentEinwahlZeitraum();
         if (einwahlZeitraum is null)
@@ -470,8 +470,8 @@ public class ProfundumEnrollmentService
 
         long notMatchedPenalty = einwahlZeitraum.Slots.Count() * weights[ProfundumBelegWunschStufe.ErstWunsch] *
                                  personen.Count();
-        var PersonNotEnrolledVariables = new Dictionary<Person, BoolVar>();
-        var PersonNotEnrolledVariablesWithoutLimits = new Dictionary<Person, BoolVar>();
+        var PersonNotEnrolledVariables = new Dictionary<Models_Person, BoolVar>();
+        var PersonNotEnrolledVariablesWithoutLimits = new Dictionary<Models_Person, BoolVar>();
         foreach (var student in personen)
         {
             PersonNotEnrolledVariables[student] = model.NewBoolVar($"beleg-{student.Id}-not-enrolled");
@@ -699,7 +699,7 @@ public class ProfundumEnrollmentService
     }
 
     ///
-    public async Task<Dictionary<string, DTOProfundumDefinition>> GetEnrollment(Person student,
+    public async Task<Dictionary<string, DTOProfundumDefinition>> GetEnrollment(Models_Person student,
         ICollection<Guid> slotIds)
     {
         return (await _dbContext.ProfundaSlots.Where(s => slotIds.Contains(s.Id)).ToArrayAsync()).ToDictionary(

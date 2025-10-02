@@ -1,14 +1,14 @@
 using System.Security.Cryptography;
-using Afra_App.Calendar.Domain.Models;
-using Afra_App.Otium.Services;
-using Afra_App.User.Domain.Models;
-using Afra_App.User.Services;
+using Altafraner.AfraApp.Calendar.Domain.Models;
+using Altafraner.AfraApp.Otium.Services;
+using Altafraner.AfraApp.User.Domain.Models;
+using Altafraner.AfraApp.User.Services;
 using Ical.Net.CalendarComponents;
 using Ical.Net.DataTypes;
 using Ical.Net.Serialization;
 using Microsoft.EntityFrameworkCore;
 
-namespace Afra_App.Calendar.Services;
+namespace Altafraner.AfraApp.Calendar.Services;
 
 /// <summary>
 ///     A Service for Calendar Subscriptions to Events

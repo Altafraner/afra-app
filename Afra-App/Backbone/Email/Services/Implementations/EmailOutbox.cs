@@ -1,9 +1,9 @@
-using Afra_App.Backbone.Email.Domain.Models;
-using Afra_App.Backbone.Email.Jobs;
-using Afra_App.Backbone.Email.Services.Contracts;
+using Altafraner.AfraApp.Backbone.Email.Domain.Models;
+using Altafraner.AfraApp.Backbone.Email.Jobs;
+using Altafraner.AfraApp.Backbone.Email.Services.Contracts;
 using Quartz;
 
-namespace Afra_App.Backbone.Email.Services.Implementations;
+namespace Altafraner.AfraApp.Backbone.Email.Services.Implementations;
 
 /// <summary>
 ///     A notification service that sends notifications to the same user in a single email.

@@ -1,8 +1,8 @@
-using Afra_App.Backbone.Authentication;
-using Afra_App.Otium.API.Endpoints;
-using Afra_App.Otium.API.Hubs;
+using Altafraner.AfraApp.Backbone.Authentication;
+using Altafraner.AfraApp.Otium.API.Endpoints;
+using Altafraner.AfraApp.Otium.API.Hubs;
 
-namespace Afra_App.Otium.Extensions;
+namespace Altafraner.AfraApp.Otium.Extensions;
 
 /// <summary>
 /// A static class that contains extension methods for <see cref="IEndpointRouteBuilder"/> to map Otium-related endpoints.

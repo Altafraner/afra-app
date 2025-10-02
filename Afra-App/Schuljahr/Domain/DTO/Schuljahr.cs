@@ -1,6 +1,6 @@
-using Afra_App.Schuljahr.Domain.Models;
+using Altafraner.AfraApp.Schuljahr.Domain.Models;
 
-namespace Afra_App.Schuljahr.Domain.DTO;
+namespace Altafraner.AfraApp.Schuljahr.Domain.DTO;
 
 /// <summary>
 ///     A DTO for sending schooldays to the client.

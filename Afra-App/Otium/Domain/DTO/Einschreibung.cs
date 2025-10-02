@@ -1,6 +1,6 @@
-using Afra_App.Otium.Domain.Models;
+using Altafraner.AfraApp.Otium.Domain.Models;
 
-namespace Afra_App.Otium.Domain.DTO;
+namespace Altafraner.AfraApp.Otium.Domain.DTO;
 
 /// <summary>
 ///     A DTO for an enrollment

@@ -1,8 +1,8 @@
-using Afra_App.Backbone.Email.Services.Contracts;
-using Afra_App.Backbone.Scheduler.Templates;
+using Altafraner.AfraApp.Backbone.Email.Services.Contracts;
+using Altafraner.AfraApp.Backbone.Scheduler.Templates;
 using Quartz;
 
-namespace Afra_App.Backbone.Email.Jobs;
+namespace Altafraner.AfraApp.Backbone.Email.Jobs;
 
 /// <summary>
 /// A job that sends a report via email.

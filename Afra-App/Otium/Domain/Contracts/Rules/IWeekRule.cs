@@ -1,8 +1,8 @@
-using Afra_App.Otium.Domain.Models;
-using Afra_App.Schuljahr.Domain.Models;
-using Afra_App.User.Domain.Models;
+using Altafraner.AfraApp.Otium.Domain.Models;
+using Altafraner.AfraApp.Schuljahr.Domain.Models;
+using Altafraner.AfraApp.User.Domain.Models;
 
-namespace Afra_App.Otium.Domain.Contracts.Rules;
+namespace Altafraner.AfraApp.Otium.Domain.Contracts.Rules;
 
 /// <summary>
 ///     A rule that may depend on other enrollments in the same week.

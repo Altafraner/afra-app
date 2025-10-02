@@ -1,31 +1,22 @@
 using System.Security.Claims;
 using System.Text;
-using Afra_App.Backbone.Domain.TimeInterval;
-using Afra_App.Backbone.Email.Services.Contracts;
-using Afra_App.Backbone.Utilities;
-using Afra_App.Otium.Domain.Contracts.Services;
-using Afra_App.Otium.Domain.DTO;
-using Afra_App.Otium.Domain.DTO.Dashboard;
-using Afra_App.Otium.Domain.DTO.Katalog;
-using Afra_App.User.Domain.DTO;
-using Afra_App.User.Domain.Models;
-using Afra_App.User.Services;
+using Altafraner.AfraApp.Backbone.Domain.TimeInterval;
+using Altafraner.AfraApp.Backbone.Email.Services.Contracts;
+using Altafraner.AfraApp.Backbone.Utilities;
+using Altafraner.AfraApp.Otium.Domain.Contracts.Services;
+using Altafraner.AfraApp.Otium.Domain.DTO;
+using Altafraner.AfraApp.Otium.Domain.DTO.Dashboard;
+using Altafraner.AfraApp.Otium.Domain.DTO.Katalog;
+using Altafraner.AfraApp.Otium.Domain.Models;
+using Altafraner.AfraApp.Schuljahr.Domain.Models;
+using Altafraner.AfraApp.User.Domain.DTO;
+using Altafraner.AfraApp.User.Domain.Models;
+using Altafraner.AfraApp.User.Services;
 using Microsoft.EntityFrameworkCore;
-using DB_Einschreibung = Afra_App.Otium.Domain.Models.OtiumEinschreibung;
-using DB_Otium = Afra_App.Otium.Domain.Models.OtiumDefinition;
-using DB_Schultag = Afra_App.Schuljahr.Domain.Models.Schultag;
-using DB_Termin = Afra_App.Otium.Domain.Models.OtiumTermin;
-using DB_Wiederholung = Afra_App.Otium.Domain.Models.OtiumWiederholung;
-using DTO_Einschreibung = Afra_App.Otium.Domain.DTO.Einschreibung;
-using DTO_Otium_Creation = Afra_App.Otium.Domain.DTO.ManagementOtiumCreation;
-using DTO_Otium_View = Afra_App.Otium.Domain.DTO.ManagementOtiumView;
-using DTO_Termin_Creation = Afra_App.Otium.Domain.DTO.ManagementTerminCreation;
-using DTO_Wiederholung_Creation = Afra_App.Otium.Domain.DTO.ManagementWiederholungCreation;
-using DTO_Wiederholung_Edit = Afra_App.Otium.Domain.DTO.ManagementWiederholungEdit;
-using Person = Afra_App.User.Domain.Models.Person;
-using Termin = Afra_App.Otium.Domain.DTO.Katalog.Termin;
+using Katalog_Termin = Altafraner.AfraApp.Otium.Domain.DTO.Katalog.Termin;
+using Models_Person = Altafraner.AfraApp.User.Domain.Models.Person;
 
-namespace Afra_App.Otium.Services;
+namespace Altafraner.AfraApp.Otium.Services;
 
 /// <summary>
 ///     A Service for handling requests to the Otium endpoint.
@@ -63,7 +54,7 @@ public class OtiumEndpointService
     /// </summary>
     /// <param name="person">The person the generate the messages for</param>
     /// <param name="date">The date to get the <see cref="TerminPreview" />s for</param>
-    public async Task<Tag> GetKatalogForDay(Person person, DateOnly date)
+    public async Task<Tag> GetKatalogForDay(Models_Person person, DateOnly date)
     {
         return new Tag(GetTerminPreviewsForDay(date, person),
             person.Rolle != Rolle.Oberstufe ? await GetStatusForDayAsync(person, date) : []);
@@ -75,7 +66,7 @@ public class OtiumEndpointService
     /// <param name="date">The date for which to retrieve the Otium data.</param>
     /// <param name="user">The user the preview ist for</param>
     /// <returns>A List of all Otia happening at that time.</returns>
-    private async IAsyncEnumerable<TerminPreview> GetTerminPreviewsForDay(DateOnly date, Person user)
+    private async IAsyncEnumerable<TerminPreview> GetTerminPreviewsForDay(DateOnly date, Models_Person user)
     {
         // Get the schultag for the given date and block
         var blocks = await _dbContext.Blocks
@@ -121,7 +112,7 @@ public class OtiumEndpointService
     /// </summary>
     /// <param name="terminId">The <see cref="Guid" /> of the termin to get details for</param>
     /// <param name="user">The user requesting the termin</param>
-    public async Task<Termin?> GetTerminAsync(Guid terminId, Person user)
+    public async Task<Katalog_Termin?> GetTerminAsync(Guid terminId, Models_Person user)
     {
         var termin = await _dbContext.OtiaTermine
             .Include(termin => termin.Tutor)
@@ -138,14 +129,14 @@ public class OtiumEndpointService
 
         var schema = _blockHelper.Get(termin.Block.SchemaId)!;
 
-        return new Termin(termin,
+        return new Katalog_Termin(termin,
             await _enrollmentService.GetEnrolmentPreview(user, termin),
             termin.Otium.Kategorie.Id,
             schema.Interval.Start,
             schema.Bezeichnung);
     }
 
-    private async Task<IEnumerable<string>> GetStatusForDayAsync(Person user, DateOnly date)
+    private async Task<IEnumerable<string>> GetStatusForDayAsync(Models_Person user, DateOnly date)
     {
         List<string> messages = [];
 
@@ -189,7 +180,7 @@ public class OtiumEndpointService
     /// <param name="user">The student to generate the dashboard for</param>
     /// <param name="all">Iff true, all available school-days are included. Otherwise, just the current and next two weeks.</param>
     // I hate myself for writing this mess of a method. Have fun!
-    public async IAsyncEnumerable<Week> GetStudentDashboardAsyncEnumerable(Person user,
+    public async IAsyncEnumerable<Week> GetStudentDashboardAsyncEnumerable(Models_Person user,
         bool all)
     {
         var thisMonday = DateOnly.FromDateTime(DateTime.Today).GetStartOfWeek();
@@ -197,7 +188,7 @@ public class OtiumEndpointService
         var startDate = thisMonday;
         var endDate = startDate.AddDays(7 * 3);
 
-        IQueryable<DB_Schultag> schultageQuery = _dbContext.Schultage
+        IQueryable<Schultag> schultageQuery = _dbContext.Schultage
             .Include(s => s.Blocks)
             .OrderBy(s => s.Datum);
         if (!all) schultageQuery = schultageQuery.Where(s => s.Datum >= startDate && s.Datum < endDate);
@@ -271,8 +262,8 @@ public class OtiumEndpointService
     ///     An enumerable containing DTOs for all enrollments and all unenrolled blocks. DTOs for unenrolled blocks only
     ///     include date and block information. The sorting is stable.
     /// </returns>
-    private async Task<IEnumerable<DTO_Einschreibung>> GenerateDtosWithPlaceholders(
-        List<DB_Einschreibung> enrollments, List<DB_Schultag> schooldays, Person user)
+    private async Task<IEnumerable<Einschreibung>> GenerateDtosWithPlaceholders(
+        List<OtiumEinschreibung> enrollments, List<Schultag> schooldays, Models_Person user)
     {
         var allBlocks = schooldays.SelectMany(s => s.Blocks).ToList();
 
@@ -286,14 +277,14 @@ public class OtiumEndpointService
             ? await _attendanceService.GetAttendanceForBlocksAsync(blocksDoneOrRunning, user.Id)
             : [];
 
-        var additionalEnrollments = blocksUnenrolled.Select(b => (b.SchemaId, new DTO_Einschreibung
+        var additionalEnrollments = blocksUnenrolled.Select(b => (b.SchemaId, new Einschreibung
         {
             Datum = b.SchultagKey,
             Block = _blockHelper.Get(b.SchemaId)!.Bezeichnung,
             Anwesenheit = blocksDoneOrRunning.Contains(b.Id) ? attendances[b.Id] : null
         }));
 
-        return enrollments.Select(e => (e.Termin.Block.SchemaId, new DTO_Einschreibung
+        return enrollments.Select(e => (e.Termin.Block.SchemaId, new Einschreibung
         {
             Block = _blockHelper.Get(e.Termin.Block.SchemaId)!.Bezeichnung,
             Datum = e.Termin.Block.SchultagKey,
@@ -312,7 +303,7 @@ public class OtiumEndpointService
     /// <summary>
     ///     Returns an overview of termine and mentees for a teacher.
     /// </summary>
-    public async Task<LehrerUebersicht> GetTeacherDashboardAsync(Person user)
+    public async Task<LehrerUebersicht> GetTeacherDashboardAsync(Models_Person user)
     {
         var startDate = DateOnly.FromDateTime(DateTime.Today).GetStartOfWeek().AddDays(-7);
         var endDate = startDate.AddDays(21);
@@ -377,7 +368,7 @@ public class OtiumEndpointService
         return new LehrerUebersicht(terminPreviews, menteePreviews);
 
 
-        async Task<MenteePreview> GenerateMenteePreview(Person mentee, IEnumerable<DB_Einschreibung> enrollments)
+        async Task<MenteePreview> GenerateMenteePreview(Models_Person mentee, IEnumerable<OtiumEinschreibung> enrollments)
         {
             if (mentee.Rolle == Rolle.Oberstufe)
                 return new MenteePreview(new PersonInfoMinimal(mentee),
@@ -385,7 +376,7 @@ public class OtiumEndpointService
                     MenteePreviewStatus.NichtVerfuegbar,
                     MenteePreviewStatus.NichtVerfuegbar);
 
-            var enrollmentsList = enrollments as DB_Einschreibung[] ?? enrollments.ToArray();
+            var enrollmentsList = enrollments as OtiumEinschreibung[] ?? enrollments.ToArray();
 
             return new MenteePreview(new PersonInfoMinimal(mentee),
                 await IsWeekOkay(lastWeekInterval),
@@ -418,7 +409,7 @@ public class OtiumEndpointService
                     : MenteePreviewStatus.Okay;
             }
 
-            MenteePreviewStatus DecideBetweenOpenAndConspicuous(List<DB_Schultag> daysInWeek)
+            MenteePreviewStatus DecideBetweenOpenAndConspicuous(List<Schultag> daysInWeek)
             {
                 var today = DateOnly.FromDateTime(DateTime.Now);
                 var lastDayWithBlocks = daysInWeek.Where(s => s.Blocks.Count > 0).MaxBy(s => s.Datum)?.Datum;
@@ -432,7 +423,7 @@ public class OtiumEndpointService
     /// <summary>
     ///     Generates the dashboard view as a mentee would see it and adds information about the mentee
     /// </summary>
-    public LehrerMenteeView GetStudentDashboardForTeacher(Person student, bool all = false)
+    public LehrerMenteeView GetStudentDashboardForTeacher(Models_Person student, bool all = false)
     {
         return new LehrerMenteeView(
             GetStudentDashboardAsyncEnumerable(student, all),
@@ -511,7 +502,7 @@ public class OtiumEndpointService
     ///     Gets a single Otium
     /// </summary>
     /// <param name="otiumId">The ID of the Otium to get.</param>
-    public DTO_Otium_View GetOtium(Guid otiumId)
+    public ManagementOtiumView GetOtium(Guid otiumId)
     {
         var otium = _dbContext.Otia
             .AsSplitQuery()
@@ -529,7 +520,7 @@ public class OtiumEndpointService
         if (otium is null)
             throw new EntityNotFoundException("Kein Otium mit dieser Id gefunden.");
 
-        return new DTO_Otium_View
+        return new ManagementOtiumView
         {
             Id = otium.Id,
             Bezeichnung = otium.Bezeichnung,
@@ -549,13 +540,13 @@ public class OtiumEndpointService
     ///     Creates a new Otium
     /// </summary>
     /// <param name="dtoOtium">The Otium data to add</param>
-    public async Task<Guid> CreateOtiumAsync(DTO_Otium_Creation dtoOtium)
+    public async Task<Guid> CreateOtiumAsync(ManagementOtiumCreation dtoOtium)
     {
         var kategorie = await _dbContext.OtiaKategorien.FindAsync(dtoOtium.Kategorie);
         if (kategorie is null)
             throw new ArgumentException("Kategorie must be valid Kategorie");
 
-        var dbOtium = new DB_Otium
+        var dbOtium = new OtiumDefinition
         {
             Kategorie = kategorie,
             Bezeichnung = dtoOtium.Bezeichnung,
@@ -595,7 +586,7 @@ public class OtiumEndpointService
     /// <param name="otiumTermin">The OtiumTermin to create.</param>
     /// <exception cref="ArgumentException">A required argument was not set</exception>
     /// <exception cref="ArgumentNullException">A referenced object could not be found</exception>
-    public async Task<Guid> CreateOtiumTerminAsync(DTO_Termin_Creation otiumTermin)
+    public async Task<Guid> CreateOtiumTerminAsync(ManagementTerminCreation otiumTermin)
     {
         if (string.IsNullOrWhiteSpace(otiumTermin.Ort))
             throw new ArgumentNullException(nameof(otiumTermin), "Sie müssen einen Ort angeben.");
@@ -608,7 +599,7 @@ public class OtiumEndpointService
             c.SchemaId == otiumTermin.Block && c.Schultag.Datum == otiumTermin.Datum);
         if (block is null) throw new ArgumentException("Kein solcher Block existiert.");
 
-        Person? tutor = null;
+        Models_Person? tutor = null;
         if (otiumTermin.Tutor is not null)
         {
             tutor = await _dbContext.Personen.FindAsync(otiumTermin.Tutor);
@@ -625,7 +616,7 @@ public class OtiumEndpointService
         if (conflict)
             throw new ArgumentException("Ein Termin mit diesen Eigenschaften existiert bereits.");
 
-        var dbOtiumTermin = new DB_Termin
+        var dbOtiumTermin = new OtiumTermin
         {
             Otium = otium,
             Block = block,
@@ -675,13 +666,13 @@ public class OtiumEndpointService
     ///     Creates an Otiumwiederholung and its OtiumTermine
     /// </summary>
     /// <param name="otiumWiederholung">The Wiederholung to create.</param>
-    public async Task<Guid> CreateOtiumWiederholungAsync(DTO_Wiederholung_Creation otiumWiederholung)
+    public async Task<Guid> CreateOtiumWiederholungAsync(ManagementWiederholungCreation otiumWiederholung)
     {
         var otium = await _dbContext.Otia.FindAsync(otiumWiederholung.OtiumId);
         if (otium is null)
             throw new ArgumentException("Kein Otium mit dieser Id existiert.");
 
-        Person? tutor = null;
+        Models_Person? tutor = null;
         if (otiumWiederholung.Tutor != null)
         {
             tutor = await _dbContext.Personen.FindAsync(otiumWiederholung.Tutor);
@@ -689,7 +680,7 @@ public class OtiumEndpointService
                 throw new ArgumentException("Kein Tutor mit dieser Id existiert.");
         }
 
-        var dbOtiumWiederholung = new DB_Wiederholung
+        var dbOtiumWiederholung = new OtiumWiederholung
         {
             Otium = otium,
             Block = otiumWiederholung.Block,
@@ -711,7 +702,7 @@ public class OtiumEndpointService
 
         await foreach (var block in blocks)
         {
-            var dbOtiumTermin = new DB_Termin
+            var dbOtiumTermin = new OtiumTermin
             {
                 Otium = otium,
                 Ort = dbOtiumWiederholung.Ort,
@@ -787,7 +778,7 @@ public class OtiumEndpointService
     }
 
     ///
-    public async Task UpdateOtiumWiederholungAsync(Guid otiumWiederholungId, DTO_Wiederholung_Edit wiederholungEdit,
+    public async Task UpdateOtiumWiederholungAsync(Guid otiumWiederholungId, ManagementWiederholungEdit wiederholungEdit,
         DateOnly firstDay)
     {
         if (firstDay < DateOnly.FromDateTime(DateTime.Today))
@@ -1065,7 +1056,7 @@ public class OtiumEndpointService
         if (otiumTermin is null)
             throw new EntityNotFoundException("Kein Termin mit dieser Id");
 
-        Person? person = null;
+        Models_Person? person = null;
         if (personId.HasValue)
         {
             person = await _dbContext.Personen.FindAsync(personId);
@@ -1101,7 +1092,7 @@ public class OtiumEndpointService
     private class TerminWithLoad
     {
         public required int? Auslasung { get; init; }
-        public required DB_Termin Termin { get; init; }
+        public required OtiumTermin Termin { get; init; }
         public bool IstEingeschrieben { get; set; }
     }
 

@@ -1,13 +1,13 @@
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Afra_App.Backbone.Extensions;
-using Afra_App.Backbone.Utilities;
-using Afra_App.Calendar.Extensions;
-using Afra_App.Otium.Extensions;
-using Afra_App.Profundum.Extensions;
-using Afra_App.Schuljahr.Extensions;
-using Afra_App.User.Extensions;
+using Altafraner.AfraApp.Backbone.Extensions;
+using Altafraner.AfraApp.Backbone.Utilities;
+using Altafraner.AfraApp.Calendar.Extensions;
+using Altafraner.AfraApp.Otium.Extensions;
+using Altafraner.AfraApp.Profundum.Extensions;
+using Altafraner.AfraApp.Schuljahr.Extensions;
+using Altafraner.AfraApp.User.Extensions;
 using Microsoft.AspNetCore.HttpOverrides;
 using OpenTelemetry.Metrics;
 

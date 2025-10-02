@@ -1,13 +1,12 @@
 using System.Security.Claims;
-using Afra_App.Backbone.Authentication;
-using Afra_App.User.Services.LDAP;
+using Altafraner.AfraApp.Backbone.Authentication;
+using Altafraner.AfraApp.User.Services.LDAP;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
-using Person = Afra_App.User.Domain.Models.Person;
-
-namespace Afra_App.User.Services;
+using Models_Person = Altafraner.AfraApp.User.Domain.Models.Person;
+namespace Altafraner.AfraApp.User.Services;
 
 /// <summary>
 ///     A Service for handling user related operations, such as signing in.
@@ -93,7 +92,7 @@ public class UserSigninService
         return Results.Ok();
     }
 
-    private async Task SignInAsync(Person user, bool rememberMe)
+    private async Task SignInAsync(Models_Person user, bool rememberMe)
     {
         var claimsPrincipal = GenerateClaimsPrincipal(user);
 
@@ -110,7 +109,7 @@ public class UserSigninService
     ///     Check whether the current user is authorized.
     /// </summary>
     /// <returns>The logged-in user if the user is authorized; Otherwise, unauthorized.</returns>
-    public async Task<Person?> GetAuthorized()
+    public async Task<Models_Person?> GetAuthorized()
     {
         // Check if the user is authenticated
         var httpContext = _httpContextAccessor.HttpContext;
@@ -136,7 +135,7 @@ public class UserSigninService
     /// </summary>
     /// <param name="user">The user to generate the <see cref="ClaimsPrincipal" /> for.</param>
     /// <returns>A <see cref="ClaimsPrincipal" /> for the user</returns>
-    private static ClaimsPrincipal GenerateClaimsPrincipal(Person user)
+    private static ClaimsPrincipal GenerateClaimsPrincipal(Models_Person user)
     {
         var claims = new List<Claim>
         {

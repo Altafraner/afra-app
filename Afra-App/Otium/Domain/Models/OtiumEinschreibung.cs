@@ -1,9 +1,9 @@
 using System.ComponentModel.DataAnnotations;
-using Afra_App.Backbone.Database.Contracts;
-using Afra_App.Backbone.Domain.TimeInterval;
-using Afra_App.User.Domain.Models;
+using Altafraner.AfraApp.Backbone.Database.Contracts;
+using Altafraner.AfraApp.Backbone.Domain.TimeInterval;
+using Altafraner.AfraApp.User.Domain.Models;
 
-namespace Afra_App.Otium.Domain.Models;
+namespace Altafraner.AfraApp.Otium.Domain.Models;
 
 /// <summary>
 ///     A record representing an enrollment for a <see cref="OtiumDefinition" />.

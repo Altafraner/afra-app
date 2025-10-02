@@ -1,6 +1,6 @@
-using Afra_App.User.Domain.Models;
+using Altafraner.AfraApp.User.Domain.Models;
 
-namespace Afra_App.User.Services;
+namespace Altafraner.AfraApp.User.Services;
 
 /// <summary>
 ///     A helper class for user authorization in the Afra-App.

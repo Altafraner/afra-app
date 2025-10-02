@@ -1,6 +1,6 @@
-using Afra_App.Profundum.API.Endpoints;
+using Altafraner.AfraApp.Profundum.API.Endpoints;
 
-namespace Afra_App.Profundum.Extensions;
+namespace Altafraner.AfraApp.Profundum.Extensions;
 
 /// <summary>
 /// A static class that contains extension methods for <see cref="IEndpointRouteBuilder"/> to map Profundum-related endpoints.

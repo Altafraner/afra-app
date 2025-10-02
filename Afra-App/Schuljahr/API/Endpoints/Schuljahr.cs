@@ -1,11 +1,10 @@
-using Afra_App.Backbone.Authentication;
-using Afra_App.Otium.Services;
-using Afra_App.Schuljahr.Domain.DTO;
-using Afra_App.Schuljahr.Services;
+using Altafraner.AfraApp.Backbone.Authentication;
+using Altafraner.AfraApp.Otium.Services;
+using Altafraner.AfraApp.Schuljahr.Domain.DTO;
+using Altafraner.AfraApp.Schuljahr.Services;
 using Microsoft.AspNetCore.Mvc;
-using DtoSchultag = Afra_App.Schuljahr.Domain.DTO.Schultag;
 
-namespace Afra_App.Schuljahr.API.Endpoints;
+namespace Altafraner.AfraApp.Schuljahr.API.Endpoints;
 
 /// <summary>
 ///     A class containing extension methods for the school year endpoint.
@@ -44,7 +43,7 @@ public static class Schuljahr
             var schultage = await schuljahrService.AddRangeAsync(schultageIn);
 
             return Results.Created(string.Empty,
-                schultage.Select(s => new DtoSchultag(s.Datum, s.Wochentyp,
+                schultage.Select(s => new Schultag(s.Datum, s.Wochentyp,
                     s.Blocks.Select(b => new BlockSchema(b.SchemaId, blockHelper.Get(b.SchemaId)!.Bezeichnung)))));
         }
         catch (KeyNotFoundException e)
@@ -54,7 +53,7 @@ public static class Schuljahr
                 Title = "Invalid Block",
                 Status = StatusCodes.Status400BadRequest,
                 Detail = e.Message,
-                Type = nameof(DtoSchultag.Blocks)
+                Type = nameof(Schultag.Blocks)
             });
         }
     }

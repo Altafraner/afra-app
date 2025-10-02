@@ -1,7 +1,7 @@
-using Afra_App.Otium.Domain.DTO.Dashboard;
-using Afra_App.User.Domain.DTO;
+using Altafraner.AfraApp.Otium.Domain.DTO.Dashboard;
+using Altafraner.AfraApp.User.Domain.DTO;
 
-namespace Afra_App.Otium.Domain.DTO;
+namespace Altafraner.AfraApp.Otium.Domain.DTO;
 
 /// <summary>
 /// A DTO that represents a information on a student for a teacher

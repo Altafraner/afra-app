@@ -1,18 +1,18 @@
-using Afra_App.Backbone.Domain.TimeInterval;
-using Afra_App.Backbone.Email.Services.Contracts;
-using Afra_App.Backbone.Utilities;
-using Afra_App.Otium.Domain.Contracts.Rules;
-using Afra_App.Otium.Domain.Contracts.Services;
-using Afra_App.Otium.Domain.DTO.Katalog;
-using Afra_App.Schuljahr.Domain.Models;
-using Afra_App.User.Domain.DTO;
-using Afra_App.User.Domain.Models;
+using Altafraner.AfraApp.Backbone.Domain.TimeInterval;
+using Altafraner.AfraApp.Backbone.Email.Services.Contracts;
+using Altafraner.AfraApp.Backbone.Utilities;
+using Altafraner.AfraApp.Otium.Domain.Contracts.Rules;
+using Altafraner.AfraApp.Otium.Domain.Contracts.Services;
+using Altafraner.AfraApp.Otium.Domain.DTO.Katalog;
+using Altafraner.AfraApp.Schuljahr.Domain.Models;
+using Altafraner.AfraApp.User.Domain.DTO;
+using Altafraner.AfraApp.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
-using OtiumEinschreibung = Afra_App.Otium.Domain.Models.OtiumEinschreibung;
-using OtiumTermin = Afra_App.Otium.Domain.Models.OtiumTermin;
-using Person = Afra_App.User.Domain.Models.Person;
+using Models_OtiumEinschreibung = Altafraner.AfraApp.Otium.Domain.Models.OtiumEinschreibung;
+using Models_OtiumTermin = Altafraner.AfraApp.Otium.Domain.Models.OtiumTermin;
+using Models_Person = Altafraner.AfraApp.User.Domain.Models.Person;
 
-namespace Afra_App.Otium.Services;
+namespace Altafraner.AfraApp.Otium.Services;
 
 /// <summary>
 ///     A service for handling enrollments.
@@ -46,7 +46,7 @@ public class EnrollmentService
     /// <param name="terminId">The is of the termin entity to enroll to</param>
     /// <param name="student">The student wanting to enroll</param>
     /// <returns>null, iff the user may not enroll into the termin; Otherwise the Termin entity.</returns>
-    public async Task<OtiumTermin?> EnrollAsync(Guid terminId, Person student)
+    public async Task<Models_OtiumTermin?> EnrollAsync(Guid terminId, Models_Person student)
     {
         var termin = await _dbContext.OtiaTermine
             .Include(termin => termin.Block)
@@ -61,7 +61,7 @@ public class EnrollmentService
         var mayEnroll = await MayEnroll(student, termin);
         if (!mayEnroll.IsValid) return null;
 
-        var einschreibung = new OtiumEinschreibung
+        var einschreibung = new Models_OtiumEinschreibung
         {
             Termin = termin,
             BetroffenePerson = student,
@@ -85,7 +85,7 @@ public class EnrollmentService
     ///     The user may not enroll for the termin with the specified
     ///     <paramref name="terminId" />
     /// </exception>
-    public async Task<MultiEnrollmentStatus> EnrollAsync(Guid terminId, IEnumerable<DateOnly> dates, Person student)
+    public async Task<MultiEnrollmentStatus> EnrollAsync(Guid terminId, IEnumerable<DateOnly> dates, Models_Person student)
     {
         // Okay, this is ugly, but it works.
         var startingTermin = await _dbContext.OtiaTermine
@@ -108,7 +108,7 @@ public class EnrollmentService
         var mayEnroll = await MayEnroll(student, startingTermin);
 
         if (!mayEnroll.IsValid) throw new InvalidOperationException("Der Nutzer darf sich nicht einschreiben.");
-        var einschreibung = new OtiumEinschreibung
+        var einschreibung = new Models_OtiumEinschreibung
         {
             Termin = startingTermin,
             BetroffenePerson = student,
@@ -134,7 +134,7 @@ public class EnrollmentService
                 continue;
             }
 
-            var einschreibungRec = new OtiumEinschreibung
+            var einschreibungRec = new Models_OtiumEinschreibung
             {
                 Termin = recurringTermin,
                 BetroffenePerson = student,
@@ -159,7 +159,7 @@ public class EnrollmentService
     /// </param>
     /// <param name="save">If true, will persist changes to database. Useful for bulk operations.</param>
     /// <returns>null, if the user may not enroll with the given parameters; Otherwise the termin the user has unenrolled from.</returns>
-    public async Task<OtiumTermin?> UnenrollAsync(Guid terminId, Person student, bool force = false, bool save = true)
+    public async Task<Models_OtiumTermin?> UnenrollAsync(Guid terminId, Models_Person student, bool force = false, bool save = true)
     {
         var enrollment = await _dbContext.OtiaEinschreibungen
             .Include(e => e.Termin)
@@ -207,7 +207,7 @@ public class EnrollmentService
     /// </summary>
     /// <param name="enrollments">The users enrollment</param>
     /// <param name="blocks">All blocks the user should be enrolled in</param>
-    public IEnumerable<Block> GetNotEnrolledBlocks(IEnumerable<OtiumEinschreibung> enrollments,
+    public IEnumerable<Block> GetNotEnrolledBlocks(IEnumerable<Models_OtiumEinschreibung> enrollments,
         IEnumerable<Block> blocks)
     {
         var enrolledBlocks = enrollments
@@ -223,7 +223,7 @@ public class EnrollmentService
     /// <param name="user">The user to check for</param>
     /// <param name="termin">The termin to check in</param>
     /// <returns></returns>
-    public async Task<EinschreibungsPreview> GetEnrolmentPreview(Person user, OtiumTermin termin)
+    public async Task<EinschreibungsPreview> GetEnrolmentPreview(Models_Person user, Models_OtiumTermin termin)
     {
         var terminEinschreibungen = await _dbContext.OtiaEinschreibungen.AsNoTracking()
             .Where(e => e.Termin == termin)
@@ -259,7 +259,7 @@ public class EnrollmentService
     /// </summary>
     /// <param name="termin">The termin for which to calculate the load.</param>
     /// <returns>The calculated load as a double, or null if MaxEinschreibungen is null.</returns>
-    public async Task<int?> GetLoadPercent(OtiumTermin termin)
+    public async Task<int?> GetLoadPercent(Models_OtiumTermin termin)
     {
         if (termin.MaxEinschreibungen is null)
             return null;
@@ -294,7 +294,7 @@ public class EnrollmentService
         _dbContext.OtiaEinschreibungen.RemoveRange(currentEnrollment);
 
         var blockSchema = _blockHelper.Get(toTermin.Block.SchemaId)!;
-        await _dbContext.OtiaEinschreibungen.AddAsync(new OtiumEinschreibung
+        await _dbContext.OtiaEinschreibungen.AddAsync(new Models_OtiumEinschreibung
         {
             BetroffenePerson = await _dbContext.Personen.FindAsync(studentId)
                                ?? throw new KeyNotFoundException("Die Person konnte nicht gefunden werden."),
@@ -373,7 +373,7 @@ public class EnrollmentService
             throw new InvalidOperationException(
                 "Sie können keine Einschreibung jetzt beginnen, wenn der Termin nicht grade stattfindet!");
 
-        _dbContext.OtiaEinschreibungen.Add(new OtiumEinschreibung
+        _dbContext.OtiaEinschreibungen.Add(new Models_OtiumEinschreibung
         {
             BetroffenePerson = await _dbContext.Personen.FindAsync(studentId)
                                ?? throw new KeyNotFoundException("Die Person konnte nicht gefunden werden."),
@@ -428,7 +428,7 @@ public class EnrollmentService
         return missingPersons;
     }
 
-    private async Task<RuleStatus> MayUnenroll(Person user, OtiumEinschreibung einschreibung)
+    private async Task<RuleStatus> MayUnenroll(Models_Person user, Models_OtiumEinschreibung einschreibung)
     {
         var independentRules = _rulesFactory.GetIndependentRules();
         foreach (var rule in independentRules)
@@ -458,7 +458,7 @@ public class EnrollmentService
         return RuleStatus.Valid;
     }
 
-    private async Task<RuleStatus> MayEnroll(Person user, OtiumTermin termin)
+    private async Task<RuleStatus> MayEnroll(Models_Person user, Models_OtiumTermin termin)
     {
         var independentRules = _rulesFactory.GetIndependentRules();
         foreach (var rule in independentRules)
@@ -488,7 +488,7 @@ public class EnrollmentService
         return RuleStatus.Valid;
     }
 
-    private async Task<List<OtiumEinschreibung>> GetPersonsEnrollmentsInBlock(Person user, Block block)
+    private async Task<List<Models_OtiumEinschreibung>> GetPersonsEnrollmentsInBlock(Models_Person user, Block block)
     {
         return await _dbContext.OtiaEinschreibungen
             .Include(e => e.Termin)
@@ -500,8 +500,8 @@ public class EnrollmentService
             .ToListAsync();
     }
 
-    private async Task<(List<Schultag> schultage, List<OtiumEinschreibung>)> GetSchultageAndPersonsEnrollmentsInWeek(
-        Person user, DateOnly dateInWeek)
+    private async Task<(List<Schultag> schultage, List<Models_OtiumEinschreibung>)> GetSchultageAndPersonsEnrollmentsInWeek(
+        Models_Person user, DateOnly dateInWeek)
     {
         var monday = dateInWeek.GetStartOfWeek();
         var endOfWeek = monday.AddDays(7);

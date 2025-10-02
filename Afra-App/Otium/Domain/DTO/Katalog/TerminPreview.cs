@@ -1,7 +1,7 @@
-using Afra_App.Otium.Domain.Models;
-using Afra_App.User.Domain.DTO;
+using Altafraner.AfraApp.Otium.Domain.Models;
+using Altafraner.AfraApp.User.Domain.DTO;
 
-namespace Afra_App.Otium.Domain.DTO.Katalog;
+namespace Altafraner.AfraApp.Otium.Domain.DTO.Katalog;
 
 /// <summary>
 ///     A DTO for sending a preview of a termin to the client.

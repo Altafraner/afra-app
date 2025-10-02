@@ -1,17 +1,17 @@
-using Afra_App.Otium.Domain.Contracts.Services;
-using Afra_App.Otium.Domain.DTO;
-using Afra_App.Otium.Domain.HubClients;
-using Afra_App.Otium.Domain.Models;
-using Afra_App.Otium.Jobs;
-using Afra_App.Otium.Services;
-using Afra_App.Schuljahr.Domain.Models;
-using Afra_App.User.Domain.DTO;
-using Afra_App.User.Services;
+using Altafraner.AfraApp.Otium.Domain.Contracts.Services;
+using Altafraner.AfraApp.Otium.Domain.DTO;
+using Altafraner.AfraApp.Otium.Domain.HubClients;
+using Altafraner.AfraApp.Otium.Domain.Models;
+using Altafraner.AfraApp.Otium.Jobs;
+using Altafraner.AfraApp.Otium.Services;
+using Altafraner.AfraApp.Schuljahr.Domain.Models;
+using Altafraner.AfraApp.User.Domain.DTO;
+using Altafraner.AfraApp.User.Services;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Quartz;
 
-namespace Afra_App.Otium.API.Hubs;
+namespace Altafraner.AfraApp.Otium.API.Hubs;
 
 /// <summary>
 ///     A hub for managing attendance updates in the Otium application.

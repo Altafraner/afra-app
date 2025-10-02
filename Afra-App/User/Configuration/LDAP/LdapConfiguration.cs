@@ -1,7 +1,7 @@
 using System.DirectoryServices.Protocols;
-using Afra_App.User.Services.LDAP;
+using Altafraner.AfraApp.User.Services.LDAP;
 
-namespace Afra_App.User.Configuration.LDAP;
+namespace Altafraner.AfraApp.User.Configuration.LDAP;
 
 /// <summary>
 ///     A configuration object containing the LDAP configuration

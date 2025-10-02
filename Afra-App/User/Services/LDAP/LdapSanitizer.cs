@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace Afra_App.User.Services.LDAP;
+namespace Altafraner.AfraApp.User.Services.LDAP;
 
 /// <summary>
 /// A helper class for building LDAP connections

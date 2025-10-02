@@ -1,6 +1,6 @@
-namespace Afra_App.Profundum.Configuration;
+namespace Altafraner.AfraApp.Profundum.Configuration;
 
-using Profundum.Domain.Models;
+using Domain.Models;
 
 ///
 public class ProfundumConfiguration
