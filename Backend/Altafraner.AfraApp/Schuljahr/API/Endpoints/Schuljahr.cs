@@ -1,4 +1,4 @@
-using Altafraner.AfraApp.Backbone.Authentication;
+using Altafraner.AfraApp.Backbone.Authorization;
 using Altafraner.AfraApp.Otium.Services;
 using Altafraner.AfraApp.Schuljahr.Domain.DTO;
 using Altafraner.AfraApp.Schuljahr.Services;

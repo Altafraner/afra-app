@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using Altafraner.AfraApp.Backbone.Domain.TimeInterval;
+using Altafraner.AfraApp.Otium.Domain.Models.TimeInterval;
 using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.Backbone.Utils;
 

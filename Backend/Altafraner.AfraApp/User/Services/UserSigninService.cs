@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using Altafraner.AfraApp.Backbone.Authentication;
+using Altafraner.AfraApp.Backbone.Authorization;
 using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.AfraApp.User.Services.LDAP;
 using Altafraner.Backbone.CookieAuthentication.Contracts;

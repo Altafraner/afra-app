@@ -1,7 +1,7 @@
-using Altafraner.AfraApp.Backbone.Domain.TimeInterval;
 using Altafraner.AfraApp.Otium.Domain.Contracts.Rules;
 using Altafraner.AfraApp.Otium.Domain.Contracts.Services;
 using Altafraner.AfraApp.Otium.Domain.DTO.Katalog;
+using Altafraner.AfraApp.Otium.Domain.Models.TimeInterval;
 using Altafraner.AfraApp.Schuljahr.Domain.Models;
 using Altafraner.AfraApp.User.Domain.DTO;
 using Altafraner.AfraApp.User.Domain.Models;

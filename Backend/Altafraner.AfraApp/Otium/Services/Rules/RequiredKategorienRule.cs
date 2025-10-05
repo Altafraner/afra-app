@@ -1,6 +1,6 @@
-using Altafraner.AfraApp.Backbone.Domain.TimeInterval;
 using Altafraner.AfraApp.Otium.Domain.Contracts.Rules;
 using Altafraner.AfraApp.Otium.Domain.Models;
+using Altafraner.AfraApp.Otium.Domain.Models.TimeInterval;
 using Altafraner.AfraApp.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Schultag = Altafraner.AfraApp.Schuljahr.Domain.Models.Schultag;

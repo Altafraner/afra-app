@@ -1,4 +1,4 @@
-using Altafraner.AfraApp.Backbone.Authentication;
+using Altafraner.AfraApp.Backbone.Authorization;
 using Altafraner.AfraApp.Profundum.Services;
 using Altafraner.AfraApp.User.Services;
 using Microsoft.EntityFrameworkCore;
@@ -51,7 +51,7 @@ public static class Enrollment
 
     ///
     private static async Task<IResult> GetEnrollmentsAsync(ProfundumEnrollmentService enrollmentService,
-           UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
+        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
     {
         var user = await userAccessor.GetUserAsync();
 
