@@ -1,4 +1,4 @@
-using Altafraner.AfraApp.Backbone.Authentication;
+using Altafraner.AfraApp.Backbone.Authorization;
 using Altafraner.AfraApp.Otium.API.Endpoints;
 using Altafraner.AfraApp.Otium.API.Hubs;
 

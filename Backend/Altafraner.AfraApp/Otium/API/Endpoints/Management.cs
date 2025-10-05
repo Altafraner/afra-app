@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using Altafraner.AfraApp.Backbone.Authentication;
+using Altafraner.AfraApp.Backbone.Authorization;
 using Altafraner.AfraApp.Otium.Domain.Contracts.Services;
 using Altafraner.AfraApp.Otium.Domain.DTO;
 using Altafraner.AfraApp.Otium.Domain.Models;

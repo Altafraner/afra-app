@@ -1,30 +1,17 @@
-using Altafraner.AfraApp.Backbone.Authentication;
-using Altafraner.AfraApp.Backbone.EmergencyBackup.Extensions;
 using Altafraner.AfraApp.User.Domain.Models;
-using Altafraner.Backbone.Utils;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
+using Altafraner.Backbone.Abstractions;
 
-namespace Altafraner.AfraApp.Backbone.Extensions;
+namespace Altafraner.AfraApp.Backbone.Authorization;
 
 /// <summary>
-/// A static class that contains extension methods for the <see cref="WebApplicationBuilder"/> to add Backbone services.
+/// A module for handling simple authorization cases
 /// </summary>
-public static class AppBuilderExtension
+public class AuthorizationModule : IModule
 {
-    /// <summary>
-    /// Adds the Backbone services to the <see cref="WebApplicationBuilder"/>.
-    /// </summary>
-    public static void AddBackbone(this WebApplicationBuilder builder)
+    /// <inheritdoc />
+    public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
     {
-        builder.AddAuthorization();
-        builder.AddDatabase();
-        builder.AddEmergencyPostBackup();
-    }
-
-    private static void AddAuthorization(this WebApplicationBuilder builder)
-    {
-        builder.Services.AddAuthorizationBuilder()
+        services.AddAuthorizationBuilder()
             .AddPolicy(AuthorizationPolicies.StudentOnly,
                 policy => policy.RequireClaim(AfraAppClaimTypes.Role,
                     nameof(Rolle.Oberstufe), nameof(Rolle.Mittelstufe)))
@@ -49,14 +36,9 @@ public static class AppBuilderExtension
                     || context.User.HasClaim(AfraAppClaimTypes.Role, nameof(Rolle.Tutor))));
     }
 
-    private static void AddDatabase(this WebApplicationBuilder builder)
+    /// <inheritdoc />
+    public void BeforeConfigure(WebApplication app)
     {
-        builder.Services.AddDbContext<AfraAppContext>(options =>
-        {
-            options.AddInterceptors(new TimestampInterceptor());
-            options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"),
-                AfraAppContext.ConfigureNpgsql);
-            options.ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning));
-        });
+        app.UseAuthorization();
     }
 }

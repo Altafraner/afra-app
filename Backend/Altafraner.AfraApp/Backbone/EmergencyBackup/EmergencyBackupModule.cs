@@ -3,25 +3,24 @@ using System.Text;
 using Altafraner.AfraApp.Backbone.EmergencyBackup.Configuration;
 using Altafraner.AfraApp.Backbone.EmergencyBackup.Services.Contracts;
 using Altafraner.AfraApp.Backbone.EmergencyBackup.Services.Implementations;
+using Altafraner.Backbone.Abstractions;
 using Microsoft.Extensions.Options;
 
-namespace Altafraner.AfraApp.Backbone.EmergencyBackup.Extensions;
+namespace Altafraner.AfraApp.Backbone.EmergencyBackup;
 
 /// <summary>
-/// Contains a static extension method to add the Emergency Post Backup service to the WebApplicationBuilder.
+/// A module for pushing emergency backups to an external service.
 /// </summary>
-public static class AppBuilderExtension
+public class EmergencyBackupModule : IModule
 {
-    /// <summary>
-    /// Adds the Emergency Post Backup service to the WebApplicationBuilder.
-    /// </summary>
-    public static void AddEmergencyPostBackup(this WebApplicationBuilder builder)
+    /// <inheritdoc />
+    public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
     {
-        builder.Services.AddOptions<FilePostConfiguration>()
-            .Bind(builder.Configuration.GetSection("EmergencyBackup"))
+        services.AddOptions<FilePostConfiguration>()
+            .Bind(config.GetSection("EmergencyBackup"))
             .ValidateOnStart();
-        builder.Services.AddTransient<IEmergencyBackupService, FilePostEmergencyBackup>();
-        builder.Services.AddHttpClient(FilePostConfiguration.HttpClientName, ConfigureHttpClient);
+        services.AddTransient<IEmergencyBackupService, FilePostEmergencyBackup>();
+        services.AddHttpClient(FilePostConfiguration.HttpClientName, ConfigureHttpClient);
     }
 
     private static void ConfigureHttpClient(IServiceProvider serviceProvider, HttpClient client)

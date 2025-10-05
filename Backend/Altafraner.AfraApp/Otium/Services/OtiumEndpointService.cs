@@ -1,11 +1,11 @@
 using System.Security.Claims;
 using System.Text;
-using Altafraner.AfraApp.Backbone.Domain.TimeInterval;
 using Altafraner.AfraApp.Otium.Domain.Contracts.Services;
 using Altafraner.AfraApp.Otium.Domain.DTO;
 using Altafraner.AfraApp.Otium.Domain.DTO.Dashboard;
 using Altafraner.AfraApp.Otium.Domain.DTO.Katalog;
 using Altafraner.AfraApp.Otium.Domain.Models;
+using Altafraner.AfraApp.Otium.Domain.Models.TimeInterval;
 using Altafraner.AfraApp.Schuljahr.Domain.Models;
 using Altafraner.AfraApp.User.Domain.DTO;
 using Altafraner.AfraApp.User.Domain.Models;

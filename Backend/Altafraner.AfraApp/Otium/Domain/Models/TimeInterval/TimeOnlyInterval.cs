@@ -1,4 +1,4 @@
-namespace Altafraner.AfraApp.Backbone.Domain.TimeInterval;
+namespace Altafraner.AfraApp.Otium.Domain.Models.TimeInterval;
 
 /// <summary>
 ///     Represents a time interval with a start <see cref="TimeOnly" /> and a duration.

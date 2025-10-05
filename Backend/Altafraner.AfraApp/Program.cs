@@ -1,6 +1,7 @@
 using System.Globalization;
 using Altafraner.AfraApp;
-using Altafraner.AfraApp.Backbone.Extensions;
+using Altafraner.AfraApp.Backbone.Authorization;
+using Altafraner.AfraApp.Backbone.EmergencyBackup;
 using Altafraner.AfraApp.Calendar.Extensions;
 using Altafraner.AfraApp.Otium.Extensions;
 using Altafraner.AfraApp.Profundum.Extensions;
@@ -21,6 +22,8 @@ CultureInfo.CurrentCulture = CultureInfo.CurrentUICulture = CultureInfo.GetCultu
 var builder = WebApplication.CreateBuilder(args);
 
 builder.UseAltafranerBackbone(configure: altafranerBuilder => altafranerBuilder
+    .AddModule<DatabaseModule>()
+    .AddModule<AuthorizationModule>()
     .AddModuleAndConfigure<CookieAuthenticationModule, CookieAuthenticationSettings>()
     .AddModule<DataProtectionModule<AfraAppContext>>()
     .AddModule<EmailOutboxModule>()
@@ -29,11 +32,11 @@ builder.UseAltafranerBackbone(configure: altafranerBuilder => altafranerBuilder
     .AddModule<DefaultsModule>()
     .AddModule<ReverseProxyHandlerModule>()
     .AddModule<SchedulingModule>()
+    .AddModule<EmergencyBackupModule>()
 );
 
 builder.Services.AddControllers();
 
-builder.AddBackbone();
 builder.AddCalendar();
 builder.AddOtium();
 builder.AddSchuljahr();
@@ -44,8 +47,6 @@ var app = builder.Build();
 
 app.AddAltafranerMiddleware();
 
-app.UseBackbone();
-
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -53,7 +54,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapAltafranerBackbone();
-app.Services.WarmupAltafranerBackbone(CancellationToken.None);
+await app.WarmupAltafranerBackbone();
 
 app.MapOtium();
 app.MapSchuljahr();

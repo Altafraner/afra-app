@@ -1,4 +1,4 @@
-using Altafraner.AfraApp.Backbone.Authentication;
+using Altafraner.AfraApp.Backbone.Authorization;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.Profundum.Services;
@@ -35,74 +35,84 @@ public static class Management
 
     ///
     private static async Task<IResult> AddEinwahlZeitraumAsync(ProfundumManagementService managementService,
-           UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger, DTOProfundumEinwahlZeitraum zeitraum)
+        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger,
+        DTOProfundumEinwahlZeitraum zeitraum)
     {
         var res = await managementService.CreateEinwahlZeitraumAsync(zeitraum);
         if (res is null)
         {
             return Results.BadRequest("Could not create einwahlZeitraum");
         }
+
         return Results.Ok(res.Id);
     }
 
     ///
     private static async Task<IResult> AddSlotAsync(ProfundumManagementService managementService,
-           UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger, DTOProfundumSlot slot)
+        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger,
+        DTOProfundumSlot slot)
     {
         var res = await managementService.CreateSlotAsync(slot);
         if (res is null)
         {
             return Results.BadRequest("Could not create slot");
         }
+
         return Results.Ok(res.Id);
     }
 
     ///
     private static async Task<IResult> AddKategorieAsync(ProfundumManagementService managementService,
-           UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger, DTOProfundumKategorie kategorie)
+        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger,
+        DTOProfundumKategorie kategorie)
     {
         var res = await managementService.CreateKategorieAsync(kategorie);
         if (res is null)
         {
             return Results.BadRequest("Could not create kategorie");
         }
+
         return Results.Ok(res.Id);
     }
 
     ///
     private static async Task<IResult> AddProfundumAsync(ProfundumManagementService managementService,
-           UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger, DTOProfundumDefinition definition)
+        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger,
+        DTOProfundumDefinition definition)
     {
         var res = await managementService.CreateProfundumAsync(definition);
         if (res is null)
         {
             return Results.BadRequest("Could not create profundum");
         }
+
         return Results.Ok(res.Id);
     }
 
     ///
     private static async Task<IResult> AddInstanzAsync(ProfundumManagementService managementService,
-           UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger, DTOProfundumInstanz instanz)
+        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger,
+        DTOProfundumInstanz instanz)
     {
         var res = await managementService.CreateInstanzAsync(instanz);
         if (res is null)
         {
             return Results.BadRequest("Could not create instanz");
         }
+
         return Results.Ok(res.Id);
     }
 
 
     ///
     private static async Task<IResult> DoMatchingAsync(ProfundumEnrollmentService enrollmentService,
-           UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
+        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
     {
         var now = DateTime.UtcNow;
         var einwahlZeitraum = (await dbContext.ProfundumEinwahlZeitraeume
-            .Include(ez => ez.Slots)
-            .Where(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop)
-            .ToArrayAsync())
+                .Include(ez => ez.Slots)
+                .Where(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop)
+                .ToArrayAsync())
             .FirstOrDefault((ProfundumEinwahlZeitraum?)null);
         if (einwahlZeitraum is null)
         {
@@ -115,13 +125,13 @@ public static class Management
 
     ///
     private static async Task<IResult> DoFinalMatchingAsync(ProfundumEnrollmentService enrollmentService,
-           UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
+        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
     {
         var now = DateTime.UtcNow;
         var einwahlZeitraum = (await dbContext.ProfundumEinwahlZeitraeume
-            .Include(ez => ez.Slots)
-            .Where(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop)
-            .ToArrayAsync())
+                .Include(ez => ez.Slots)
+                .Where(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop)
+                .ToArrayAsync())
             .FirstOrDefault((ProfundumEinwahlZeitraum?)null);
         if (einwahlZeitraum is null)
         {
@@ -134,13 +144,13 @@ public static class Management
 
     ///
     private static async Task<IResult> MatchingAsyncCSV(ProfundumEnrollmentService enrollmentService,
-           UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
+        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
     {
         var now = DateTime.UtcNow;
         var einwahlZeitraum = (await dbContext.ProfundumEinwahlZeitraeume
-            .Include(ez => ez.Slots)
-            .Where(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop)
-            .ToArrayAsync())
+                .Include(ez => ez.Slots)
+                .Where(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop)
+                .ToArrayAsync())
             .FirstOrDefault((ProfundumEinwahlZeitraum?)null);
         if (einwahlZeitraum is null)
         {
@@ -153,18 +163,19 @@ public static class Management
 
     ///
     private static async Task<IResult> GetUnenrolledAsync(ProfundumEnrollmentService enrollmentService,
-           UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
+        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
     {
         var now = DateTime.UtcNow;
         var einwahlZeitraum = (await dbContext.ProfundumEinwahlZeitraeume
-            .Include(ez => ez.Slots)
-            .Where(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop)
-            .ToArrayAsync())
+                .Include(ez => ez.Slots)
+                .Where(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop)
+                .ToArrayAsync())
             .FirstOrDefault((ProfundumEinwahlZeitraum?)null);
         if (einwahlZeitraum is null)
         {
             return Results.NotFound("Kein offener Einwahlzeitraum");
         }
+
         var slots = einwahlZeitraum.Slots.Select(s => s.Id).ToArray();
 
         var result = await enrollmentService.GetMissingStudentsAsync(slots);
@@ -173,18 +184,19 @@ public static class Management
 
     ///
     private static async Task<IResult> GetUnenrolledEmailsAsync(ProfundumEnrollmentService enrollmentService,
-           UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
+        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
     {
         var now = DateTime.UtcNow;
         var einwahlZeitraum = (await dbContext.ProfundumEinwahlZeitraeume
-            .Include(ez => ez.Slots)
-            .Where(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop)
-            .ToArrayAsync())
+                .Include(ez => ez.Slots)
+                .Where(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop)
+                .ToArrayAsync())
             .FirstOrDefault((ProfundumEinwahlZeitraum?)null);
         if (einwahlZeitraum is null)
         {
             return Results.NotFound("Kein offener Einwahlzeitraum");
         }
+
         var slots = einwahlZeitraum.Slots.Select(s => s.Id).ToArray();
 
         var result = await enrollmentService.GetMissingStudentsEmailsAsync(slots);

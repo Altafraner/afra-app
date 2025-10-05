@@ -17,7 +17,7 @@ public interface IModule
     {
     }
 
-    Task InitializeAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken) => Task.CompletedTask;
+    Task InitializeAsync(WebApplication app) => Task.CompletedTask;
 }
 
 public interface IModule<TConfig> : IModule where TConfig : class;

@@ -38,9 +38,9 @@ public static class Extensions
         foreach (var m in modules) m.Configure(app);
     }
 
-    public static void WarmupAltafranerBackbone(this IServiceProvider serviceProvider, CancellationToken token)
+    public static async Task WarmupAltafranerBackbone(this WebApplication app)
     {
-        var modules = serviceProvider.GetRequiredService<IReadOnlyList<IModule>>();
-        foreach (var m in modules) m.InitializeAsync(serviceProvider, token);
+        var modules = app.Services.GetRequiredService<IReadOnlyList<IModule>>();
+        foreach (var m in modules) await m.InitializeAsync(app);
     }
 }
