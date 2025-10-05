@@ -2,7 +2,7 @@ using System.Security.Claims;
 using Altafraner.AfraApp.Backbone.Authentication;
 using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.AfraApp.User.Services.LDAP;
-using Microsoft.AspNetCore.Authentication;
+using Altafraner.Backbone.CookieAuthentication.Contracts;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -17,22 +17,19 @@ public class UserSigninService
 {
     private readonly IMemoryCache _cache;
     private readonly AfraAppContext _dbContext;
-    private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly LdapService _ldapService;
-    private readonly UserAccessor _userAccessor;
+    private readonly IAuthenticationLifetimeService _authenticationLifetimeService;
 
     /// <summary>
     ///     Creates a new user service.
     /// </summary>
-    public UserSigninService(AfraAppContext dbContext, LdapService ldapService,
-        IHttpContextAccessor httpContextAccessor,
-        UserAccessor userAccessor, IMemoryCache cache)
+    public UserSigninService(AfraAppContext dbContext, LdapService ldapService, IMemoryCache cache,
+        IAuthenticationLifetimeService authenticationLifetimeService)
     {
         _dbContext = dbContext;
         _ldapService = ldapService;
-        _httpContextAccessor = httpContextAccessor;
-        _userAccessor = userAccessor;
         _cache = cache;
+        _authenticationLifetimeService = authenticationLifetimeService;
     }
 
     /// <summary>
@@ -46,14 +43,6 @@ public class UserSigninService
         var user = await _dbContext.Personen.FindAsync(userId);
         if (user is null) throw new InvalidOperationException("The user does not exist");
         await SignInAsync(user, rememberMe);
-    }
-
-    /// <summary>
-    ///     Signs out the current user.
-    /// </summary>
-    public async Task SignOutAsync()
-    {
-        await _httpContextAccessor.HttpContext!.SignOutAsync();
     }
 
     /// <summary>
@@ -97,39 +86,7 @@ public class UserSigninService
     private async Task SignInAsync(Models_Person user, bool rememberMe)
     {
         var claimsPrincipal = GenerateClaimsPrincipal(user);
-
-        var props = new AuthenticationProperties
-        {
-            IsPersistent = rememberMe,
-            ExpiresUtc = rememberMe ? DateTime.UtcNow.AddDays(30) : DateTime.UtcNow.AddMinutes(100),
-            AllowRefresh = true,
-        };
-        await _httpContextAccessor.HttpContext!.SignInAsync(claimsPrincipal, props);
-    }
-
-    /// <summary>
-    ///     Check whether the current user is authorized.
-    /// </summary>
-    /// <returns>The logged-in user if the user is authorized; Otherwise, unauthorized.</returns>
-    public async Task<Models_Person?> GetAuthorized()
-    {
-        // Check if the user is authenticated
-        var httpContext = _httpContextAccessor.HttpContext;
-        if (httpContext?.User.Identity is null || !httpContext.User.Identity.IsAuthenticated)
-            return null;
-
-        try
-        {
-            // Retrieve the Person associated with the current user and return it
-            var person = await _userAccessor.GetUserAsync();
-            return person;
-        }
-        catch (Exception e) when (e is InvalidOperationException or KeyNotFoundException)
-        {
-            // Sign out the user if they are (for some bizarre reason) authenticated, but the Person could not be found
-            await httpContext.SignOutAsync();
-            return null;
-        }
+        await _authenticationLifetimeService.SignInAsync(claimsPrincipal, rememberMe);
     }
 
     /// <summary>

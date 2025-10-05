@@ -1,6 +1,7 @@
 using Altafraner.AfraApp.Backbone.Authentication;
 using Altafraner.AfraApp.User.Domain.DTO;
 using Altafraner.AfraApp.User.Services;
+using Altafraner.Backbone.CookieAuthentication.Contracts;
 
 namespace Altafraner.AfraApp.User.API.Endpoints;
 
@@ -23,12 +24,12 @@ public static class User
             .AllowAnonymous();
 
         app.MapGet("/api/user",
-            async (UserSigninService userSigninService) =>
+            async (UserAccessor userAccessor) =>
             {
-                var user = await userSigninService.GetAuthorized();
-                return user is null
-                    ? Results.Unauthorized()
-                    : Results.Ok(new PersonLoginInfo
+                try
+                {
+                    var user = await userAccessor.GetUserAsync();
+                    return Results.Ok(new PersonLoginInfo
                     {
                         Id = user.Id,
                         Vorname = user.FirstName,
@@ -36,10 +37,16 @@ public static class User
                         Rolle = user.Rolle,
                         Berechtigungen = user.GlobalPermissions.ToArray()
                     });
+                }
+                catch (InvalidOperationException)
+                {
+                    return Results.Unauthorized();
+                }
             });
 
         app.MapGet("/api/user/logout",
-                async (UserSigninService userSigninService) => await userSigninService.SignOutAsync())
+                async (IAuthenticationLifetimeService authenticationLifetimeService) =>
+                    await authenticationLifetimeService.SignOutAsync())
             .RequireAuthorization();
 
         app.MapGet("/api/user/{id:guid}/impersonate",

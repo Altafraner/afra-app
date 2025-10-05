@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Altafraner.AfraApp.Backbone.Authentication;
 using Altafraner.AfraApp.User.Domain.Models;
+using Altafraner.Backbone.CookieAuthentication.Contracts;
 
 namespace Altafraner.AfraApp.User.Services;
 
@@ -60,8 +61,8 @@ public class UserAccessor
         }
 
         using var scope = _serviceScopeFactory.CreateScope();
-        var signinService = scope.ServiceProvider.GetRequiredService<UserSigninService>();
-        await signinService.SignOutAsync();
+        var authenticationLifetimeService = scope.ServiceProvider.GetRequiredService<IAuthenticationLifetimeService>();
+        await authenticationLifetimeService.SignOutAsync();
         throw new KeyNotFoundException("The specified User does not exist");
     }
 }
