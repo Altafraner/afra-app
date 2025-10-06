@@ -1,5 +1,7 @@
 using Altafraner.AfraApp.Calendar.API.Endpoints;
 using Altafraner.AfraApp.Calendar.Services;
+using Altafraner.AfraApp.Otium;
+using Altafraner.AfraApp.User;
 using Altafraner.Backbone.Abstractions;
 
 namespace Altafraner.AfraApp.Calendar;
@@ -7,6 +9,9 @@ namespace Altafraner.AfraApp.Calendar;
 /// <summary>
 ///     A Module for calendar integrations
 /// </summary>
+[DependsOn<UserModule>]
+[DependsOn<DatabaseModule>]
+[DependsOn<OtiumModule>]
 public class CalendarModule : IModule
 {
     /// <inheritdoc />

@@ -1,5 +1,6 @@
 using Altafraner.AfraApp.Schuljahr.API.Endpoints;
 using Altafraner.AfraApp.Schuljahr.Services;
+using Altafraner.AfraApp.User;
 using Altafraner.Backbone.Abstractions;
 
 namespace Altafraner.AfraApp.Schuljahr;
@@ -7,6 +8,8 @@ namespace Altafraner.AfraApp.Schuljahr;
 /// <summary>
 ///     A module for handling the school-year
 /// </summary>
+[DependsOn<UserModule>]
+[DependsOn<DatabaseModule>]
 public class SchuljahrModule : IModule
 {
     /// <inheritdoc />

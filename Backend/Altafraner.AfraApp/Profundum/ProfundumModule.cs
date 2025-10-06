@@ -1,6 +1,7 @@
 using Altafraner.AfraApp.Profundum.API.Endpoints;
 using Altafraner.AfraApp.Profundum.Configuration;
 using Altafraner.AfraApp.Profundum.Services;
+using Altafraner.AfraApp.User;
 using Altafraner.Backbone.Abstractions;
 
 namespace Altafraner.AfraApp.Profundum;
@@ -8,6 +9,8 @@ namespace Altafraner.AfraApp.Profundum;
 /// <summary>
 ///     A Module for handling the Profundum
 /// </summary>
+[DependsOn<UserModule>]
+[DependsOn<DatabaseModule>]
 public class ProfundumModule : IModule
 {
     /// <inheritdoc />
