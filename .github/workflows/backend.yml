@@ -8,11 +8,11 @@ on:
   push:
     branches: [ "*" ]
     paths:
-      - 'Afra-App/**'
+      - 'Backend/**'
   pull_request:
     branches: [ "*" ]
     paths:
-      - 'Afra-App/**'
+      - 'Backend/**'
 
 jobs:
   build:
@@ -24,6 +24,6 @@ jobs:
       with:
         dotnet-version: 9.0.x
     - name: Restore dependencies
-      run: dotnet restore Afra-App
+      run: dotnet restore Backend/Afra-App.slnx
     - name: Build
-      run: dotnet build --no-restore Afra-App
+      run: dotnet build --no-restore Backend/Altafraner.AfraApp/Altafraner.AfraApp.csproj

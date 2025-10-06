@@ -1,10 +1,13 @@
+# syntax=docker/dockerfile:1-labs
+
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
-COPY Afra-App.csproj /src/Afra-App/Afra-App.csproj
-WORKDIR /src/Afra-App
-RUN dotnet restore "Afra-App.csproj" \
+WORKDIR /src/
+COPY --link Afra-App.slnx ./
+COPY --link --parents **/*.csproj ./
+RUN dotnet restore "Afra-App.slnx" \
     --runtime linux-x64
-COPY ./ /src/Afra-App
-RUN dotnet publish "Afra-App.csproj" \
+COPY ./ ./
+RUN dotnet publish "Altafraner.AfraApp/Altafraner.AfraApp.csproj" \
     -c release \
     --no-restore \
     --self-contained \
