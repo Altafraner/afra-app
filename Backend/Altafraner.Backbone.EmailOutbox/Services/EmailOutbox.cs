@@ -1,4 +1,3 @@
-using Altafraner.Backbone.EmailOutbox.Contracts;
 using Altafraner.Backbone.EmailOutbox.Jobs;
 using Quartz;
 

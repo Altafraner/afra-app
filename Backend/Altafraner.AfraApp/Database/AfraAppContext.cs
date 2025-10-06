@@ -3,7 +3,7 @@ using Altafraner.AfraApp.Otium.Domain.Models;
 using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.Schuljahr.Domain.Models;
 using Altafraner.AfraApp.User.Domain.Models;
-using Altafraner.Backbone.EmailSchedulingModule.Contracts;
+using Altafraner.Backbone.EmailSchedulingModule;
 using Altafraner.Backbone.EmailSchedulingModule.Models;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;

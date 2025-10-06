@@ -1,4 +1,3 @@
-using Altafraner.Backbone.EmailSchedulingModule.Contracts;
 using Microsoft.EntityFrameworkCore;
 
 namespace Altafraner.Backbone.EmailSchedulingModule;

@@ -34,9 +34,4 @@ public class DataProtectionModule<T> : IModule where T : DbContext, IDataProtect
     public void Configure(WebApplication app)
     {
     }
-
-    public Task InitializeAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
-    }
 }

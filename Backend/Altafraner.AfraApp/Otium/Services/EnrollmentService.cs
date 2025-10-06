@@ -5,7 +5,7 @@ using Altafraner.AfraApp.Otium.Domain.Models.TimeInterval;
 using Altafraner.AfraApp.Schuljahr.Domain.Models;
 using Altafraner.AfraApp.User.Domain.DTO;
 using Altafraner.AfraApp.User.Domain.Models;
-using Altafraner.Backbone.EmailSchedulingModule.Contracts;
+using Altafraner.Backbone.EmailSchedulingModule;
 using Altafraner.Backbone.Utils;
 using Microsoft.EntityFrameworkCore;
 using Models_OtiumEinschreibung = Altafraner.AfraApp.Otium.Domain.Models.OtiumEinschreibung;

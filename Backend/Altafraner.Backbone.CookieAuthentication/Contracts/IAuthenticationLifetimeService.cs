@@ -1,6 +1,6 @@
 using System.Security.Claims;
 
-namespace Altafraner.Backbone.CookieAuthentication.Contracts;
+namespace Altafraner.Backbone.CookieAuthentication;
 
 public interface IAuthenticationLifetimeService
 {

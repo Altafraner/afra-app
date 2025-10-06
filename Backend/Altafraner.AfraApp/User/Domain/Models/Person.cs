@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Altafraner.AfraApp.Otium.Domain.Models;
 using Altafraner.AfraApp.Profundum.Domain.Models;
-using Altafraner.Backbone.EmailSchedulingModule.Contracts;
+using Altafraner.Backbone.EmailSchedulingModule;
 
 namespace Altafraner.AfraApp.User.Domain.Models;
 

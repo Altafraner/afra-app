@@ -1,6 +1,6 @@
 using Quartz;
 
-namespace Altafraner.Backbone.Scheduling.Templates;
+namespace Altafraner.Backbone.Scheduling;
 
 public abstract partial class RetryJob
 {

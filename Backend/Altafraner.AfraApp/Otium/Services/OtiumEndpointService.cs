@@ -10,7 +10,7 @@ using Altafraner.AfraApp.Schuljahr.Domain.Models;
 using Altafraner.AfraApp.User.Domain.DTO;
 using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.AfraApp.User.Services;
-using Altafraner.Backbone.EmailSchedulingModule.Contracts;
+using Altafraner.Backbone.EmailSchedulingModule;
 using Altafraner.Backbone.Utils;
 using Microsoft.EntityFrameworkCore;
 using Katalog_Termin = Altafraner.AfraApp.Otium.Domain.DTO.Katalog.Termin;

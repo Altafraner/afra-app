@@ -1,4 +1,4 @@
-namespace Altafraner.Backbone.EmailOutbox.Contracts;
+namespace Altafraner.Backbone.EmailOutbox;
 
 /// <summary>
 ///     An interface representing an email sender

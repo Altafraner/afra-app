@@ -1,6 +1,6 @@
 using Altafraner.AfraApp.User.Configuration.LDAP;
-using Altafraner.Backbone.EmailOutbox.Contracts;
-using Altafraner.Backbone.Scheduling.Templates;
+using Altafraner.Backbone.EmailOutbox;
+using Altafraner.Backbone.Scheduling;
 using Microsoft.Extensions.Options;
 using Quartz;
 
