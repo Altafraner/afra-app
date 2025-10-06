@@ -1,7 +1,7 @@
 using Altafraner.AfraApp.Backbone.Authorization;
 using Altafraner.AfraApp.User.Domain.DTO;
 using Altafraner.AfraApp.User.Services;
-using Altafraner.Backbone.CookieAuthentication.Contracts;
+using Altafraner.Backbone.CookieAuthentication;
 
 namespace Altafraner.AfraApp.User.API.Endpoints;
 

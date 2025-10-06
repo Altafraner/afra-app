@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Altafraner.Backbone.EmailSchedulingModule.Contracts;
+namespace Altafraner.Backbone.EmailSchedulingModule;
 
 public interface IEmailRecipient
 {

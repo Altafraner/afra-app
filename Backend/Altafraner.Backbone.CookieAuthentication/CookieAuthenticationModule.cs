@@ -1,7 +1,6 @@
 ﻿using Altafraner.Backbone.Abstractions;
-using Altafraner.Backbone.CookieAuthentication.Contracts;
 using Altafraner.Backbone.CookieAuthentication.Services;
-using Altafraner.Backbone.Defaults.Submodules;
+using Altafraner.Backbone.Defaults;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

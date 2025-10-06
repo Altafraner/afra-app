@@ -1,4 +1,3 @@
-using Altafraner.Backbone.EmailOutbox.Contracts;
 using Microsoft.Extensions.Logging;
 
 namespace Altafraner.Backbone.EmailOutbox.Services;

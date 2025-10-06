@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Quartz;
 
-namespace Altafraner.Backbone.Scheduling.Templates;
+namespace Altafraner.Backbone.Scheduling;
 
 /// <summary>
 /// A base class for jobs that should be retried in case of failure.

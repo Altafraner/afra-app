@@ -1,5 +1,4 @@
-using Altafraner.Backbone.EmailOutbox.Contracts;
-using Altafraner.Backbone.Scheduling.Templates;
+using Altafraner.Backbone.Scheduling;
 using Microsoft.Extensions.Logging;
 using Quartz;
 

@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using Altafraner.Backbone.EmailSchedulingModule.Contracts;
 
 namespace Altafraner.Backbone.EmailSchedulingModule.Models;
 

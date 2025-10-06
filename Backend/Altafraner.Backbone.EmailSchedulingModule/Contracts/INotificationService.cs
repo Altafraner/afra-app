@@ -1,4 +1,4 @@
-namespace Altafraner.Backbone.EmailSchedulingModule.Contracts;
+namespace Altafraner.Backbone.EmailSchedulingModule;
 
 public interface INotificationService
 {

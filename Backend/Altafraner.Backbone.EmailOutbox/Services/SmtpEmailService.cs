@@ -1,5 +1,4 @@
 using Altafraner.Backbone.EmailOutbox.Configuration;
-using Altafraner.Backbone.EmailOutbox.Contracts;
 using MailKit.Net.Smtp;
 using Microsoft.Extensions.Options;
 using MimeKit;

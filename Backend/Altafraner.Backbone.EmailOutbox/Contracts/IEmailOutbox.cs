@@ -1,4 +1,4 @@
-namespace Altafraner.Backbone.EmailOutbox.Contracts;
+namespace Altafraner.Backbone.EmailOutbox;
 
 /// <summary>
 ///     An interface representing a batching email notification sender

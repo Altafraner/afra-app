@@ -1,7 +1,7 @@
 using Altafraner.Backbone.EmailSchedulingModule.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace Altafraner.Backbone.EmailSchedulingModule.Contracts;
+namespace Altafraner.Backbone.EmailSchedulingModule;
 
 public interface IScheduledEmailContext<TPerson> where TPerson : class, IEmailRecipient
 {

@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using Altafraner.Backbone.CookieAuthentication.Contracts;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 

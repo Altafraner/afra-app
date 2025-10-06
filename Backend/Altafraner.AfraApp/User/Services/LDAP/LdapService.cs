@@ -2,7 +2,7 @@ using System.DirectoryServices.Protocols;
 using System.Net;
 using Altafraner.AfraApp.User.Configuration.LDAP;
 using Altafraner.AfraApp.User.Domain.Models;
-using Altafraner.Backbone.EmailOutbox.Contracts;
+using Altafraner.Backbone.EmailOutbox;
 using Altafraner.Backbone.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
