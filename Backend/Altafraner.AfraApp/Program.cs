@@ -2,7 +2,7 @@ using System.Globalization;
 using Altafraner.AfraApp;
 using Altafraner.AfraApp.Backbone.Authorization;
 using Altafraner.AfraApp.Backbone.EmergencyBackup;
-using Altafraner.AfraApp.Calendar.Extensions;
+using Altafraner.AfraApp.Calendar;
 using Altafraner.AfraApp.Otium.Extensions;
 using Altafraner.AfraApp.Profundum.Extensions;
 using Altafraner.AfraApp.Schuljahr.Extensions;
@@ -22,6 +22,7 @@ CultureInfo.CurrentCulture = CultureInfo.CurrentUICulture = CultureInfo.GetCultu
 var builder = WebApplication.CreateBuilder(args);
 
 builder.UseAltafranerBackbone(configure: altafranerBuilder => altafranerBuilder
+    .AddModule<CalendarModule>()
     .AddModule<DatabaseModule>()
     .AddModule<AuthorizationModule>()
     .AddModuleAndConfigure<CookieAuthenticationModule, CookieAuthenticationSettings>()
@@ -37,7 +38,6 @@ builder.UseAltafranerBackbone(configure: altafranerBuilder => altafranerBuilder
 
 builder.Services.AddControllers();
 
-builder.AddCalendar();
 builder.AddOtium();
 builder.AddSchuljahr();
 builder.AddProfundum();
@@ -60,6 +60,5 @@ app.MapOtium();
 app.MapSchuljahr();
 app.MapProfundum();
 app.MapUser();
-app.MapCalendar();
 
 app.Run();
