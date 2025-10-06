@@ -8,14 +8,14 @@ on:
   push:
     branches: [ "main" ]
     paths:
-      - 'Afra-App/**'
+      - 'Backend/**'
       - 'WebClient/**'
       - 'compose.yaml'
       - '.dockerignore'
   pull_request:
     branches: [ "main" ]
     paths:
-      - 'Afra-App/**'
+      - 'Backend/**'
       - 'WebClient/**'
       - 'compose.yaml'
       - '.dockerignore'
@@ -26,7 +26,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: build backend image
-      run: docker build Afra-App
+      run: docker build Backend
     - name: build frontend image
       run: docker build WebClient
     - name: build compose
