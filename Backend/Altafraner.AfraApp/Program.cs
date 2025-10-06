@@ -5,7 +5,7 @@ using Altafraner.AfraApp.Backbone.EmergencyBackup;
 using Altafraner.AfraApp.Calendar;
 using Altafraner.AfraApp.Otium;
 using Altafraner.AfraApp.Profundum.Extensions;
-using Altafraner.AfraApp.Schuljahr.Extensions;
+using Altafraner.AfraApp.Schuljahr;
 using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.AfraApp.User.Extensions;
 using Altafraner.Backbone;
@@ -25,6 +25,7 @@ builder.UseAltafranerBackbone(configure: altafranerBuilder => altafranerBuilder
     .AddModule<CalendarModule>()
     .AddModule<DatabaseModule>()
     .AddModule<OtiumModule>()
+    .AddModule<SchuljahrModule>()
     .AddModule<AuthorizationModule>()
     .AddModuleAndConfigure<CookieAuthenticationModule, CookieAuthenticationSettings>()
     .AddModule<DataProtectionModule<AfraAppContext>>()
@@ -39,7 +40,6 @@ builder.UseAltafranerBackbone(configure: altafranerBuilder => altafranerBuilder
 
 builder.Services.AddControllers();
 
-builder.AddSchuljahr();
 builder.AddProfundum();
 builder.AddUser();
 
@@ -56,7 +56,6 @@ if (app.Environment.IsDevelopment())
 app.MapAltafranerBackbone();
 await app.WarmupAltafranerBackbone();
 
-app.MapSchuljahr();
 app.MapProfundum();
 app.MapUser();
 
