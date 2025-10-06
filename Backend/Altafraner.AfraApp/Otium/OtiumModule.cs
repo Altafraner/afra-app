@@ -6,6 +6,7 @@ using Altafraner.AfraApp.Otium.Domain.Contracts.Rules;
 using Altafraner.AfraApp.Otium.Domain.Contracts.Services;
 using Altafraner.AfraApp.Otium.Services;
 using Altafraner.AfraApp.Otium.Services.Rules;
+using Altafraner.AfraApp.User;
 using Altafraner.Backbone.Abstractions;
 
 namespace Altafraner.AfraApp.Otium;
@@ -13,6 +14,8 @@ namespace Altafraner.AfraApp.Otium;
 /// <summary>
 ///     A Module for handling the Otium
 /// </summary>
+[DependsOn<UserModule>]
+[DependsOn<DatabaseModule>]
 public class OtiumModule : IModule
 {
     /// <inheritdoc />

@@ -1,3 +1,4 @@
+using Altafraner.AfraApp.Backbone.Authorization;
 using Altafraner.AfraApp.User.API.Endpoints;
 using Altafraner.AfraApp.User.Configuration.LDAP;
 using Altafraner.AfraApp.User.Services;
@@ -9,6 +10,8 @@ namespace Altafraner.AfraApp.User;
 /// <summary>
 ///     A module for handling users
 /// </summary>
+[DependsOn<DatabaseModule>]
+[DependsOn<AuthorizationModule>]
 public class UserModule : IModule
 {
     /// <inheritdoc />
