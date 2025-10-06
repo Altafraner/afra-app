@@ -19,9 +19,14 @@ using Altafraner.Backbone.Scheduling;
 
 CultureInfo.CurrentCulture = CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfoByIetfLanguageTag("de-DE");
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    ApplicationName = "Afra App",
+    Args = args
+});
 
 builder.UseAltafranerBackbone(configure: altafranerBuilder => altafranerBuilder
+// Afra-App modules
     .AddModule<CalendarModule>()
     .AddModule<DatabaseModule>()
     .AddModule<OtiumModule>()
@@ -29,6 +34,8 @@ builder.UseAltafranerBackbone(configure: altafranerBuilder => altafranerBuilder
     .AddModule<SchuljahrModule>()
     .AddModule<ProfundumModule>()
     .AddModule<AuthorizationModule>()
+    .AddModule<EmergencyBackupModule>()
+// Backbone modules
     .AddModuleAndConfigure<CookieAuthenticationModule, CookieAuthenticationSettings>()
     .AddModule<DataProtectionModule<AfraAppContext>>()
     .AddModule<EmailOutboxModule>()
@@ -37,7 +44,6 @@ builder.UseAltafranerBackbone(configure: altafranerBuilder => altafranerBuilder
     .AddModule<DefaultsModule>()
     .AddModule<ReverseProxyHandlerModule>()
     .AddModule<SchedulingModule>()
-    .AddModule<EmergencyBackupModule>()
 );
 
 builder.Services.AddControllers();
@@ -45,13 +51,8 @@ builder.Services.AddControllers();
 var app = builder.Build();
 
 app.AddAltafranerMiddleware();
-
-if (app.Environment.IsDevelopment())
-{
-    app.MapControllers();
-}
-
 app.MapAltafranerBackbone();
+if (app.Environment.IsDevelopment()) app.MapControllers();
 await app.WarmupAltafranerBackbone();
 
 app.Run();
