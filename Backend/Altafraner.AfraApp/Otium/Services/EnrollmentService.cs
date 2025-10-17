@@ -72,6 +72,17 @@ public class EnrollmentService
     }
 
     /// <summary>
+    ///     Checks if a student is enrolled to a termin
+    /// </summary>
+    /// <param name="terminId">The termin the student could be enrolled to</param>
+    /// <param name="personId">The person to check enrollment for</param>
+    public async Task<bool> IsEnrolledToAsync(Guid terminId, Guid personId)
+    {
+        return await _dbContext.OtiaEinschreibungen.AnyAsync(e =>
+            e.Termin.Id == terminId && e.BetroffenePerson.Id == personId);
+    }
+
+    /// <summary>
     ///     Enrolls a user in a termin for the date of the termin and all specified dates of the termin's recurrence.
     /// </summary>
     /// <param name="terminId">The id of the first termin to enroll in</param>

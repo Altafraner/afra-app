@@ -13,15 +13,21 @@ public static class Katalog
     /// <summary>
     ///     Maps the kategorie endpoints to the given <see cref="IEndpointRouteBuilder" />.
     /// </summary>
-    public static void MapKatalogEndpoints(this IEndpointRouteBuilder app)
+    public static void MapKatalogEndpoints(this IEndpointRouteBuilder routeBuilder)
     {
-        app.MapGet("/{date}", GetDay);
-        app.MapGet("/{terminId:guid}", GetTermin);
-        app.MapPut("/{terminId:guid}", EnrollAsync)
+        routeBuilder.MapGet("/{date}", GetDay);
+        routeBuilder.MapGet("/{terminId:guid}", GetTermin);
+        routeBuilder.MapPut("/{terminId:guid}", EnrollAsync)
             .RequireAuthorization(AuthorizationPolicies.StudentOnly);
-        app.MapPut("/{terminId:guid}/multi-enroll", MultiEnrollAsync)
+        routeBuilder.MapPost("/{terminId:guid}/note", AddNoteAsync)
             .RequireAuthorization(AuthorizationPolicies.StudentOnly);
-        app.MapDelete("/{terminId:guid}", UnenrollAsync)
+        routeBuilder.MapPut("/{terminId:guid}/note", UpdateNoteAsync)
+            .RequireAuthorization(AuthorizationPolicies.StudentOnly);
+        routeBuilder.MapDelete("/{terminId:guid}/note", RemoveNoteAsync)
+            .RequireAuthorization(AuthorizationPolicies.StudentOnly);
+        routeBuilder.MapPut("/{terminId:guid}/multi-enroll", MultiEnrollAsync)
+            .RequireAuthorization(AuthorizationPolicies.StudentOnly);
+        routeBuilder.MapDelete("/{terminId:guid}", UnenrollAsync)
             .RequireAuthorization(AuthorizationPolicies.StudentOnly);
     }
 
@@ -79,5 +85,43 @@ public static class Katalog
 
         var termin = await enrollmentService.UnenrollAsync(terminId, user);
         return termin is null ? Results.BadRequest() : Results.Ok(await service.GetTerminAsync(terminId, user));
+    }
+
+    private static async Task<IResult> AddNoteAsync(
+        ManagementService managementService,
+        NotesService notesService,
+        UserAccessor userAccessor,
+        Guid terminId,
+        ValueWrapper<string> content)
+    {
+        var blockId = await managementService.GetBlockIdOfTerminIdAsync(terminId);
+        var userId = userAccessor.GetUserId();
+        var success = await notesService.TryAddNoteAsync(content.Value, blockId, userId, userId);
+        return success ? Results.Ok() : Results.Conflict();
+    }
+
+    private static async Task<IResult> UpdateNoteAsync(
+        ManagementService managementService,
+        NotesService notesService,
+        UserAccessor userAccessor,
+        Guid terminId,
+        ValueWrapper<string> content)
+    {
+        var blockId = await managementService.GetBlockIdOfTerminIdAsync(terminId);
+        var userId = userAccessor.GetUserId();
+        var success = await notesService.UpdateNoteAsync(content.Value, blockId, userId, userId);
+        return success ? Results.Ok() : Results.NotFound();
+    }
+
+    private static async Task<IResult> RemoveNoteAsync(
+        ManagementService managementService,
+        NotesService notesService,
+        UserAccessor userAccessor,
+        Guid terminId)
+    {
+        var blockId = await managementService.GetBlockIdOfTerminIdAsync(terminId);
+        var userId = userAccessor.GetUserId();
+        var success = await notesService.RemoveNoteAsync(blockId, userId, userId);
+        return success ? Results.Ok() : Results.NotFound();
     }
 }
