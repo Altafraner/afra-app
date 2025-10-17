@@ -1,11 +1,15 @@
 using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.Backbone.Abstractions;
+using Altafraner.Backbone.CookieAuthentication;
+using Altafraner.Backbone.Defaults;
 
 namespace Altafraner.AfraApp.Backbone.Authorization;
 
 /// <summary>
 /// A module for handling simple authorization cases
 /// </summary>
+[DependsOn<ReverseProxyHandlerModule>]
+[DependsOn<CookieAuthenticationModule>]
 public class AuthorizationModule : IModule
 {
     /// <inheritdoc />
