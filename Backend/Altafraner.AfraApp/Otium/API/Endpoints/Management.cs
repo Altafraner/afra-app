@@ -758,6 +758,4 @@ public static class Management
             return true;
         return verantwortliche.Any(p => p.Id == user.Id);
     }
-
-    private record ValueWrapper<T>(T Value);
 }
