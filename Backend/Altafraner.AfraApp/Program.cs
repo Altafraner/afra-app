@@ -18,11 +18,7 @@ using Altafraner.Backbone.Scheduling;
 
 CultureInfo.CurrentCulture = CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfoByIetfLanguageTag("de-DE");
 
-var builder = WebApplication.CreateBuilder(new WebApplicationOptions
-{
-    ApplicationName = "Afra App",
-    Args = args
-});
+var builder = WebApplication.CreateBuilder(args);
 
 builder.UseAltafranerBackbone(configure: altafranerBuilder => altafranerBuilder
 // Afra-App modules
