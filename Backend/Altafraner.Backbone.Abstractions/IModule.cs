@@ -13,7 +13,7 @@ public interface IModule
     {
     }
 
-    void BeforeConfigure(WebApplication app)
+    void RegisterMiddleware(WebApplication app)
     {
     }
 

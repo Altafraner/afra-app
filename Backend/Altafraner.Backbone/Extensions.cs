@@ -29,7 +29,7 @@ public static class Extensions
     public static void AddAltafranerMiddleware(this WebApplication app)
     {
         var modules = app.Services.GetRequiredService<IReadOnlyList<IModule>>();
-        foreach (var m in modules) m.BeforeConfigure(app);
+        foreach (var m in modules) m.RegisterMiddleware(app);
     }
 
     public static void MapAltafranerBackbone(this WebApplication app)

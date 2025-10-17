@@ -37,7 +37,7 @@ public class AuthorizationModule : IModule
     }
 
     /// <inheritdoc />
-    public void BeforeConfigure(WebApplication app)
+    public void RegisterMiddleware(WebApplication app)
     {
         app.UseAuthorization();
     }

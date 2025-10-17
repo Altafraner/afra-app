@@ -1,5 +1,4 @@
 ﻿using Altafraner.Backbone.Abstractions;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -26,14 +25,5 @@ public class SchedulingModule : IModule
             }
         );
         services.AddQuartzServer(options => { options.WaitForJobsToComplete = true; });
-    }
-
-    public void Configure(WebApplication app)
-    {
-    }
-
-    public Task InitializeAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
     }
 }

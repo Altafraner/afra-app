@@ -13,7 +13,7 @@ public class ReverseProxyHandlerModule : IModule
     {
     }
 
-    public void BeforeConfigure(WebApplication app)
+    public void RegisterMiddleware(WebApplication app)
     {
         app.UseForwardedHeaders(new ForwardedHeadersOptions
         {

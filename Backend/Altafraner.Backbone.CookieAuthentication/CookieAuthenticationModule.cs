@@ -48,7 +48,7 @@ public class CookieAuthenticationModule : IModule<CookieAuthenticationSettings>
         services.AddScoped<IAuthenticationLifetimeService, AuthenticationLifetimeService>();
     }
 
-    public void BeforeConfigure(WebApplication app)
+    public void RegisterMiddleware(WebApplication app)
     {
         app.UseAuthentication();
     }
