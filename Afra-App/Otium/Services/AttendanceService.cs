@@ -1,5 +1,9 @@
+using System.Security.Claims;
+using Afra_App.Backbone.Authentication;
+using Afra_App.Backbone.Domain.TimeInterval;
 using Afra_App.Otium.Domain.Contracts.Services;
 using Afra_App.Otium.Domain.Models;
+using Afra_App.Schuljahr.Domain.Models;
 using Afra_App.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -115,7 +119,7 @@ public class AttendanceService : IAttendanceService
             .AsNoTracking()
             .Where(b => b.Id == blockId)
             .Select(b => new
-                { b.SchemaId, SindAnwesenheitenFehlernderErfasst = b.SindAnwesenheitenFehlernderKontrolliert })
+            { b.SchemaId, SindAnwesenheitenFehlernderErfasst = b.SindAnwesenheitenFehlernderKontrolliert })
             .FirstOrDefaultAsync();
 
         if (block is null)
@@ -236,6 +240,31 @@ public class AttendanceService : IAttendanceService
 
         block.SindAnwesenheitenFehlernderKontrolliert = status;
         await _dbContext.SaveChangesAsync();
+    }
+
+    /// <summary>
+    ///     Checks if the current time is within the supervision timeframe of the given block.
+    /// </summary>
+    private bool IsInSupervisionTimeframe(Block block)
+    {
+        var now = DateTime.Now;
+
+        var timeInterval = _blockHelper.Get(block.SchemaId)!.Interval;
+        var dateTimeInterval = timeInterval.ToDateTimeInterval(block.SchultagKey);
+        var supervisionInterval = new DateTimeInterval(dateTimeInterval.Start.Subtract(TimeSpan.FromHours(1)),
+            dateTimeInterval.Duration + TimeSpan.FromHours(2));
+
+        return supervisionInterval.Contains(now);
+    }
+
+    /// <summary>
+    ///     Checks if a user may supervise the attendance for a given block.
+    /// </summary>
+    public bool MaySupervise(ClaimsPrincipal user, Block block)
+    {
+        if (user.HasClaim(AfraAppClaimTypes.GlobalPermission, nameof(GlobalPermission.Otiumsverantwortlich)))
+            return true;
+        return IsInSupervisionTimeframe(block);
     }
 
     private async Task CreateOrUpdate(Guid studentId, Guid blockId, OtiumAnwesenheitsStatus status)

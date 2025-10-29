@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using System.Text;
 using Afra_App.Backbone.Domain.TimeInterval;
 using Afra_App.Backbone.Email.Services.Contracts;
@@ -6,8 +7,6 @@ using Afra_App.Otium.Domain.Contracts.Services;
 using Afra_App.Otium.Domain.DTO;
 using Afra_App.Otium.Domain.DTO.Dashboard;
 using Afra_App.Otium.Domain.DTO.Katalog;
-using Afra_App.Schuljahr.Domain.Models;
-using Afra_App.Schuljahr.Services;
 using Afra_App.User.Domain.DTO;
 using Afra_App.User.Domain.Models;
 using Afra_App.User.Services;
@@ -40,16 +39,14 @@ public class OtiumEndpointService
     private readonly EnrollmentService _enrollmentService;
     private readonly KategorieService _kategorieService;
     private readonly RulesValidationService _rulesValidationService;
-    private readonly SchuljahrService _schuljahrService;
     private readonly UserService _userService;
 
     /// <summary>
     ///     Constructor for the OtiumEndpointService. Usually called by the DI container.
     /// </summary>
     public OtiumEndpointService(AfraAppContext dbContext, KategorieService kategorieService,
-        EnrollmentService enrollmentService,
-        IEmailOutbox emailOutbox, BlockHelper blockHelper, IAttendanceService attendanceService,
-        SchuljahrService schuljahrService, UserService userService, RulesValidationService rulesValidationService)
+        EnrollmentService enrollmentService, IEmailOutbox emailOutbox, BlockHelper blockHelper,
+        IAttendanceService attendanceService, UserService userService, RulesValidationService rulesValidationService)
     {
         _dbContext = dbContext;
         _kategorieService = kategorieService;
@@ -57,7 +54,6 @@ public class OtiumEndpointService
         _emailOutbox = emailOutbox;
         _blockHelper = blockHelper;
         _attendanceService = attendanceService;
-        _schuljahrService = schuljahrService;
         _userService = userService;
         _rulesValidationService = rulesValidationService;
     }
@@ -446,7 +442,7 @@ public class OtiumEndpointService
     /// <summary>
     ///     Gets the detailed information about a termin for a teacher.
     /// </summary>
-    public async Task<LehrerTermin?> GetTerminForTeacher(Guid terminId)
+    public async Task<LehrerTermin?> GetTerminForTeacher(Guid terminId, ClaimsPrincipal user)
     {
         var termin = await _dbContext.OtiaTermine
             .Include(t => t.Tutor)
@@ -461,21 +457,9 @@ public class OtiumEndpointService
 
         var anwesenheiten = await _attendanceService.GetAttendanceForTerminAsync(terminId);
 
-        Block? currentBlock;
-        try
-        {
-            currentBlock = await _schuljahrService.GetCurrentBlockAsync();
-        }
-        catch (KeyNotFoundException)
-        {
-            currentBlock = null;
-        }
+        var isDoneOrRunning = _blockHelper.IsBlockDoneOrRunning(termin.Block);
 
-        var today = DateOnly.FromDateTime(DateTime.Today);
-
-        var isRunning = currentBlock is not null && currentBlock.Id == termin.Block.Id;
-        var isDoneOrRunning = today >= termin.Block.SchultagKey
-                              && _blockHelper.IsBlockDoneOrRunning(termin.Block);
+        var schema = _blockHelper.Get(termin.Block.SchemaId)!;
 
         return new LehrerTermin
         {
@@ -485,15 +469,19 @@ public class OtiumEndpointService
             OtiumId = termin.Otium.Id,
             BlockSchemaId = termin.Block.SchemaId,
             BlockId = termin.Block.Id,
-            Block = _blockHelper.Get(termin.Block.SchemaId)!.Bezeichnung,
+            Block = schema.Bezeichnung,
             Datum = termin.Block.Schultag.Datum,
+            Uhrzeit = schema.Interval,
             MaxEinschreibungen = termin.MaxEinschreibungen,
             IstAbgesagt = termin.IstAbgesagt,
-            IsRunning = isRunning,
+            IsSupervisionEnabled = _attendanceService.MaySupervise(user, termin.Block),
             IsDoneOrRunning = isDoneOrRunning,
-            Tutor = termin.Tutor is not null ? new PersonInfoMinimal(termin.Tutor) : null,
+            Tutor = termin.Tutor is not null
+                ? new PersonInfoMinimal(termin.Tutor)
+                : null,
             Einschreibungen = anwesenheiten.Select(e =>
-                new LehrerEinschreibung(new PersonInfoMinimal(e.Key), e.Value)),
+                new LehrerEinschreibung(new PersonInfoMinimal(e.Key),
+                    e.Value)),
             Bezeichnung = termin.OverrideBezeichnung,
             Beschreibung = termin.OverrideBeschreibung,
         };

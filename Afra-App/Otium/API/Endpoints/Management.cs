@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Afra_App.Backbone.Authentication;
+using Afra_App.Otium.Domain.Contracts.Services;
+using Afra_App.Otium.Domain.DTO;
 using Afra_App.Otium.Domain.Models;
 using Afra_App.Otium.Services;
 using Afra_App.User.Domain.Models;
@@ -28,6 +30,8 @@ public static class Management
         var group = app.MapGroup("/management")
             .WithOpenApi()
             .RequireAuthorization(AuthorizationPolicies.TutorOnly);
+
+        group.MapGet("/supervision/now", GetNowSupervising);
 
         group.MapGet("/otium", GetOtia);
         group.MapGet("/otium/{otiumId:guid}", GetOtium);
@@ -65,14 +69,14 @@ public static class Management
 
     private static async Task<IResult> GetTerminForTeacher(
         OtiumEndpointService service,
+        ManagementService managementService,
         UserAccessor userAccessor,
+        UserAuthorizationHelper authHelper,
+        HttpContext httpContext,
         Guid otiumTerminId)
     {
-        var user = await userAccessor.GetUserAsync();
-
-        var otium = await service.GetTerminForTeacher(otiumTerminId);
-
-        return otium is null ? Results.BadRequest() : Results.Ok(otium);
+        var terminForTeacher = await service.GetTerminForTeacher(otiumTerminId, httpContext.User);
+        return terminForTeacher is null ? Results.BadRequest() : Results.Ok(terminForTeacher);
     }
 
     private static IResult GetOtia(OtiumEndpointService service)
@@ -244,7 +248,7 @@ public static class Management
 
     private static async Task<IResult> DiscontinueOtiumWiederholung(ManagementService managementService,
         UserAuthorizationHelper authHelper, OtiumEndpointService service,
-        Guid otiumWiederholungId, DateOnlyWrapper firstDayAfter)
+        Guid otiumWiederholungId, ValueWrapper<DateOnly> firstDayAfter)
     {
         DB_Otium otium;
         try
@@ -373,7 +377,7 @@ public static class Management
 
     private static async Task<IResult> OtiumSetBezeichnung(ManagementService managementService,
         UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumId,
-        StringWrapper value)
+        ValueWrapper<string> value)
     {
         DB_Otium otium;
         try
@@ -437,7 +441,7 @@ public static class Management
 
     private static async Task<IResult> OtiumSetBeschreibung(ManagementService managementService,
         UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumId,
-        StringWrapper value)
+        ValueWrapper<string> value)
     {
         DB_Otium otium;
         try
@@ -491,7 +495,7 @@ public static class Management
 
     private static async Task<IResult> OtiumSetKategorie(ManagementService managementService,
         UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumId,
-        GuidWrapper kategorie)
+        ValueWrapper<Guid> kategorie)
     {
         DB_Otium otium;
         try
@@ -522,7 +526,7 @@ public static class Management
 
     private static async Task<IResult> OtiumTerminSetMaxEinschreibungen(ManagementService managementService,
         UserAuthorizationHelper authHelper, OtiumEndpointService service,
-        Guid otiumTerminId, IntOrNullWrapper maxEinschreibungen)
+        Guid otiumTerminId, ValueWrapper<int?> maxEinschreibungen)
     {
         DB_Otium otium;
         try
@@ -554,7 +558,7 @@ public static class Management
 
     private static async Task<IResult> OtiumTerminSetTutor(ManagementService managementService,
         UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumTerminId,
-        GuidOrNullWrapper personId)
+        ValueWrapper<Guid?> personId)
     {
         DB_Otium otium;
         try
@@ -586,7 +590,7 @@ public static class Management
 
     private static async Task<IResult> OtiumTerminSetOrt(ManagementService managementService,
         UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumTerminId,
-        StringWrapper ort)
+        ValueWrapper<string> ort)
     {
         DB_Otium otium;
         try
@@ -618,7 +622,7 @@ public static class Management
 
     private static async Task<IResult> OtiumTerminSetBezeichnung(ManagementService managementService,
         UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumTerminId,
-        StringOrNullWrapper bezeichnung)
+        ValueWrapper<string?> bezeichnung)
     {
         DB_Otium otium;
         try
@@ -650,7 +654,7 @@ public static class Management
 
     private static async Task<IResult> OtiumTerminSetBeschreibung(ManagementService managementService,
         UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumTerminId,
-        StringOrNullWrapper beschreibung)
+        ValueWrapper<string?> beschreibung)
     {
         DB_Otium otium;
         try
@@ -680,7 +684,7 @@ public static class Management
         }
     }
 
-    private static async Task<IResult> OtiumTerminForceUnenroll(Guid otiumTerminId, GuidWrapper personIdWrapper,
+    private static async Task<IResult> OtiumTerminForceUnenroll(Guid otiumTerminId, ValueWrapper<Guid> personIdWrapper,
         UserAuthorizationHelper authHelper, AfraAppContext dbContext, UserService userService,
         EnrollmentService enrollmentService, BlockHelper blockHelper)
     {
@@ -719,6 +723,31 @@ public static class Management
         }
     }
 
+    private static async Task<IEnumerable<BlockInfo>> GetNowSupervising(AfraAppContext dbContext,
+        BlockHelper blockHelper, IAttendanceService attendanceService, HttpContext context)
+    {
+        var today = DateOnly.FromDateTime(DateTime.Now);
+        var blocksToday = await dbContext.Blocks
+            .AsNoTracking()
+            .Where(b => b.SchultagKey == today)
+            .OrderBy(b => b.SchemaId)
+            .ToListAsync();
+
+        return blocksToday.Where(b => attendanceService.MaySupervise(context.User, b))
+            .Select(b =>
+            {
+                var schema = blockHelper.Get(b.SchemaId)!;
+                return new BlockInfo
+                {
+                    Id = b.Id,
+                    SchemaId = b.SchemaId,
+                    Name = schema.Bezeichnung,
+                    Uhrzeit = schema.Interval,
+                    Datum = b.SchultagKey
+                };
+            });
+    }
+
     private static async Task<bool> MayEditAsync(UserAuthorizationHelper authHelper,
         ManagementService managementService, DB_Otium otium)
     {
@@ -736,15 +765,5 @@ public static class Management
         return verantwortliche.Any(p => p.Id == user.Id);
     }
 
-    private record StringWrapper(string Value);
-
-    private record StringOrNullWrapper(string? Value);
-
-    private record IntOrNullWrapper(int? Value);
-
-    private record GuidWrapper(Guid Value);
-
-    private record GuidOrNullWrapper(Guid? Value);
-
-    private record DateOnlyWrapper(DateOnly Value);
+    private record ValueWrapper<T>(T Value);
 }
