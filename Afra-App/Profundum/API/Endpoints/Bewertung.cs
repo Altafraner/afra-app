@@ -2,6 +2,8 @@ using Afra_App;
 using Afra_App.Backbone.Authentication;
 using Afra_App.User.Services;
 using Afra_App.Profundum.Domain.DTO;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 /// <summary>
 ///    Contains endpoints for managing Profunda Bewertungen.
@@ -15,20 +17,58 @@ public static class Bewertung
     {
         var group = app.MapGroup("/bewertung");
 
+        group.MapGet("/kriterien", async (
+            [FromServices] AfraAppContext dbContext) =>
+        {
+            var kriterien = await dbContext.ProfundumsBewertungKriterien.ToListAsync();
+            return Results.Ok(kriterien);
+        });
+
+        group.MapPost("/create-kriterium", async (
+            [FromServices] AfraAppContext dbContext,
+            [FromBody] string bezeichnung) =>
+        {
+            if (string.IsNullOrWhiteSpace(bezeichnung))
+                return Results.BadRequest("Bezeichnung darf nicht leer sein");
+
+            var kriterium = new ProfundumsBewertungKriterium
+            {
+                Id = Guid.NewGuid(),
+                Bezeichnung = bezeichnung
+            };
+
+            dbContext.ProfundumsBewertungKriterien.Add(kriterium);
+            await dbContext.SaveChangesAsync();
+
+            return Results.Created($"/bewertung/kriterien/{kriterium.Id}", kriterium);
+        })
+        .RequireAuthorization(AuthorizationPolicies.AdminOnly);
+
+        group.MapDelete("/kriterien/{id}", async (Guid id, [FromServices] AfraAppContext dbContext) =>
+        {
+            var kriterium = await dbContext.ProfundumsBewertungKriterien.FindAsync(id);
+            if (kriterium == null) return Results.NotFound("Kriterium nicht gefunden");
+
+            dbContext.ProfundumsBewertungKriterien.Remove(kriterium);
+            await dbContext.SaveChangesAsync();
+
+            return Results.Ok("Kriterium gelöscht");
+        }).RequireAuthorization(AuthorizationPolicies.AdminOnly);
+
         group.MapGet("/me", async (
-            ProfundumsBewertungService bewertungService,
-            UserAccessor userAccessor) =>
+            [FromServices] ProfundumsBewertungService bewertungService,
+            [FromServices] UserAccessor userAccessor) =>
         {
             var user = await userAccessor.GetUserAsync();
             var bewertungen = await bewertungService.GetBewertungenAsync(user);
             return Results.Ok(bewertungen);
         })
-        .RequireAuthorization(AuthorizationPolicies.StudentOnly);
+        .RequireAuthorization(AuthorizationPolicies.MittelStufeStudentOnly);
 
         group.MapGet("/{personId}", async (
             Guid personId,
-            ProfundumsBewertungService bewertungService,
-            AfraAppContext dbContext) =>
+            [FromServices] ProfundumsBewertungService bewertungService,
+            [FromServices] AfraAppContext dbContext) =>
         {
             var person = await dbContext.Personen.FindAsync(personId);
             if (person == null)
@@ -40,8 +80,8 @@ public static class Bewertung
         .RequireAuthorization(AuthorizationPolicies.TutorOnly);
 
         group.MapPost("/", async (
-            ProfundumsBewertungService bewertungService,
-            AfraAppContext dbContext,
+            [FromServices] ProfundumsBewertungService bewertungService,
+            [FromServices] AfraAppContext dbContext,
             List<DTOProfundumBewertung> bewertungenDto) =>
         {
             var bewertungen = new List<ProfundumBewertung>();

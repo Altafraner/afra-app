@@ -8,6 +8,7 @@ using Afra_App.Otium.Extensions;
 using Afra_App.Profundum.Extensions;
 using Afra_App.Schuljahr.Extensions;
 using Afra_App.User.Extensions;
+using Afra_App.User.Services;
 using Microsoft.AspNetCore.HttpOverrides;
 using OpenTelemetry.Metrics;
 
@@ -48,6 +49,9 @@ builder.AddOtium();
 builder.AddSchuljahr();
 builder.AddProfundum();
 builder.AddUser();
+
+builder.Services.AddScoped<ProfundumsBewertungService>();
+builder.Services.AddScoped<UserAccessor>();
 
 var app = builder.Build();
 
