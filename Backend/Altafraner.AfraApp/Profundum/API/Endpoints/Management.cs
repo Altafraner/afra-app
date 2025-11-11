@@ -1,3 +1,4 @@
+using System.Text;
 using Altafraner.AfraApp.Backbone.Authorization;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Domain.Models;
@@ -30,27 +31,22 @@ public static class Management
         group.MapGet("/missing/emails", GetUnenrolledEmailsAsync);
         group.MapPost("/matching", DoMatchingAsync);
         group.MapPost("/matching/final", DoFinalMatchingAsync);
-        group.MapGet("/matching.csv", MatchingAsyncCSV);
+        group.MapGet("/matching.csv", MatchingAsyncCsv);
     }
 
     ///
     private static async Task<IResult> AddEinwahlZeitraumAsync(ProfundumManagementService managementService,
         UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger,
-        DTOProfundumEinwahlZeitraum zeitraum)
+        DtoProfundumEinwahlZeitraum zeitraum)
     {
         var res = await managementService.CreateEinwahlZeitraumAsync(zeitraum);
-        if (res is null)
-        {
-            return Results.BadRequest("Could not create einwahlZeitraum");
-        }
-
         return Results.Ok(res.Id);
     }
 
     ///
     private static async Task<IResult> AddSlotAsync(ProfundumManagementService managementService,
         UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger,
-        DTOProfundumSlot slot)
+        DtoProfundumSlot slot)
     {
         var res = await managementService.CreateSlotAsync(slot);
         if (res is null)
@@ -64,7 +60,7 @@ public static class Management
     ///
     private static async Task<IResult> AddKategorieAsync(ProfundumManagementService managementService,
         UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger,
-        DTOProfundumKategorie kategorie)
+        DtoProfundumKategorie kategorie)
     {
         var res = await managementService.CreateKategorieAsync(kategorie);
         if (res is null)
@@ -78,7 +74,7 @@ public static class Management
     ///
     private static async Task<IResult> AddProfundumAsync(ProfundumManagementService managementService,
         UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger,
-        DTOProfundumDefinition definition)
+        DtoProfundumDefinition definition)
     {
         var res = await managementService.CreateProfundumAsync(definition);
         if (res is null)
@@ -92,7 +88,7 @@ public static class Management
     ///
     private static async Task<IResult> AddInstanzAsync(ProfundumManagementService managementService,
         UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger,
-        DTOProfundumInstanz instanz)
+        DtoProfundumInstanz instanz)
     {
         var res = await managementService.CreateInstanzAsync(instanz);
         if (res is null)
@@ -143,7 +139,7 @@ public static class Management
     }
 
     ///
-    private static async Task<IResult> MatchingAsyncCSV(ProfundumEnrollmentService enrollmentService,
+    private static async Task<IResult> MatchingAsyncCsv(ProfundumEnrollmentService enrollmentService,
         UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
     {
         var now = DateTime.UtcNow;
@@ -157,8 +153,8 @@ public static class Management
             return Results.NotFound("Kein offener Einwahlzeitraum");
         }
 
-        var csv = await enrollmentService.GetStudentMatchingCSV(einwahlZeitraum);
-        return Results.File(System.Text.Encoding.UTF8.GetBytes(csv), "text/csv");
+        var csv = await enrollmentService.GetStudentMatchingCsv(einwahlZeitraum);
+        return Results.File(Encoding.UTF8.GetBytes(csv), "text/csv");
     }
 
     ///

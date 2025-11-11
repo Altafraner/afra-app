@@ -65,7 +65,7 @@ public class LdapService
 
         await _dbContext.SaveChangesAsync(); // Save here to ensure all users have a valid ID.
 
-        await UpdateMentors(_configuration.MentorGroups);
+        await UpdateMentors(_configuration.MentorGroups, connection);
 
         var unsyncedUsers = await _dbContext.Personen
             .Where(p => p.LdapObjectId != null && p.LdapSyncTime < syncTime)
@@ -156,9 +156,10 @@ public class LdapService
             foreach (var user in usersWithPermission) user.GlobalPermissions.Remove(ldapGroup.Permission);
         }
 
-        async Task UpdateMentors(LdapSearchDescription searchDescription)
+        // LdapConnection is disposable. We pass it as a parameter so we can't accidentally call it after the connection was disposed of
+        async Task UpdateMentors(LdapSearchDescription searchDescription, LdapConnection capturedConnection)
         {
-            var groups = SubtreeSearch(connection, searchDescription, "member");
+            var groups = SubtreeSearch(capturedConnection, searchDescription, "member");
             var dbEntries = await _dbContext.MentorMenteeRelations
                 .ToListAsync();
 

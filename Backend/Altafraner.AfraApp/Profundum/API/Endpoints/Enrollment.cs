@@ -28,7 +28,7 @@ public static class Enrollment
     {
         var user = await userAccessor.GetUserAsync();
         var katalog = enrollmentService.GetKatalog(user);
-        return Results.Ok(katalog!);
+        return Results.Ok(katalog);
     }
 
     ///
@@ -58,7 +58,7 @@ public static class Enrollment
         var now = DateTime.UtcNow;
         var einwahlZeitraum = dbContext.ProfundumEinwahlZeitraeume
             .Include(ez => ez.Slots)
-            .Where(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop).First();
+            .First(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop);
         var slots = einwahlZeitraum.Slots.Select(s => s.Id).ToArray();
 
         var result = await enrollmentService.GetEnrollment(user, slots);

@@ -20,4 +20,5 @@ public interface IModule
     Task InitializeAsync(WebApplication app) => Task.CompletedTask;
 }
 
+// ReSharper disable once UnusedTypeParameter
 public interface IModule<TConfig> : IModule where TConfig : class;

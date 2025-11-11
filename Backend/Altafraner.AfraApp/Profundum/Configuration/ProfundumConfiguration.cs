@@ -1,6 +1,6 @@
-namespace Altafraner.AfraApp.Profundum.Configuration;
+using Altafraner.AfraApp.Profundum.Domain.Models;
 
-using Domain.Models;
+namespace Altafraner.AfraApp.Profundum.Configuration;
 
 ///
 public class ProfundumConfiguration
@@ -9,7 +9,7 @@ public class ProfundumConfiguration
     /// When disabled all entries are randomized before a matching to improve fairness in unlikely cases.
     /// Enable for debugging only.
     /// </summary>
-    public required bool deterministicMatching { get; set; }
+    public required bool DeterministicMatching { get; set; }
 
     ///
     public required Dictionary<int, ProfundumQuartal[]> ProfundumBlockiert { get; set; }

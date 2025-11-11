@@ -1,3 +1,4 @@
+using System.Text;
 using Altafraner.AfraApp.Calendar.Services;
 using Altafraner.AfraApp.User.Services;
 
@@ -23,21 +24,21 @@ public static class Calendar
     private static async Task<IResult> SubscribeCalendarAsync(UserAccessor userAccessor, CalendarService calendarService)
     {
         var user = await userAccessor.GetUserAsync();
-        var subId = await calendarService.AddCalendarSubscriptionAsync(user)!;
+        var subId = await calendarService.AddCalendarSubscriptionAsync(user);
         return Results.Ok(subId);
     }
 
     private static async Task<IResult> DeleteAllSubscriptionsAsync(UserAccessor userAccessor, CalendarService calendarService)
     {
         var user = await userAccessor.GetUserAsync();
-        await calendarService.DeleteAllCalendarSubscriptionAsync(user)!;
+        await calendarService.DeleteAllCalendarSubscriptionAsync(user);
         return Results.Ok();
     }
 
     private static async Task<IResult> GetNumberOfSubscriptionsAsync(UserAccessor userAccessor, CalendarService calendarService)
     {
         var user = await userAccessor.GetUserAsync();
-        var subId = await calendarService.GetNumCalendarSubscriptionAsync(user)!;
+        var subId = await calendarService.GetNumCalendarSubscriptionAsync(user);
         return Results.Ok(subId);
     }
 
@@ -48,6 +49,6 @@ public static class Calendar
         {
             return Results.NotFound("No subscription found");
         }
-        return Results.File(System.Text.Encoding.UTF8.GetBytes(cal), "text/calendar");
+        return Results.File(Encoding.UTF8.GetBytes(cal), "text/calendar");
     }
 }
