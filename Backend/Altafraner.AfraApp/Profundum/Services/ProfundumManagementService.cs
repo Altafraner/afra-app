@@ -22,7 +22,7 @@ public class ProfundumManagementService
     }
 
     ///
-    public async Task<ProfundumEinwahlZeitraum> CreateEinwahlZeitraumAsync(DTOProfundumEinwahlZeitraum zeitraum)
+    public async Task<ProfundumEinwahlZeitraum> CreateEinwahlZeitraumAsync(DtoProfundumEinwahlZeitraum zeitraum)
     {
         if (zeitraum.EinwahlStart is null || zeitraum.EinwahlStop is null)
         {
@@ -41,7 +41,7 @@ public class ProfundumManagementService
 
 
     ///
-    public async Task<ProfundumSlot?> CreateSlotAsync(DTOProfundumSlot dtoSlot)
+    public async Task<ProfundumSlot?> CreateSlotAsync(DtoProfundumSlot dtoSlot)
     {
         var zeitraum = await _dbContext.ProfundumEinwahlZeitraeume.FindAsync(dtoSlot.EinwahlZeitraumId);
         if (zeitraum is null)
@@ -62,7 +62,7 @@ public class ProfundumManagementService
     }
 
     ///
-    public async Task<ProfundumKategorie?> CreateKategorieAsync(DTOProfundumKategorie dtoKategorie)
+    public async Task<ProfundumKategorie?> CreateKategorieAsync(DtoProfundumKategorie dtoKategorie)
     {
         var kategorie = new ProfundumKategorie
         {
@@ -77,7 +77,7 @@ public class ProfundumManagementService
     }
 
     ///
-    public async Task<ProfundumDefinition?> CreateProfundumAsync(DTOProfundumDefinition dtoProfundum)
+    public async Task<ProfundumDefinition?> CreateProfundumAsync(DtoProfundumDefinition dtoProfundum)
     {
         var kat = await _dbContext.ProfundaKategorien.FindAsync(dtoProfundum.KategorieId);
         if (kat is null)
@@ -89,8 +89,8 @@ public class ProfundumManagementService
         {
             Bezeichnung = dtoProfundum.Bezeichnung,
             Kategorie = kat,
-            minKlasse = dtoProfundum.minKlasse,
-            maxKlasse = dtoProfundum.maxKlasse,
+            MinKlasse = dtoProfundum.MinKlasse,
+            MaxKlasse = dtoProfundum.MaxKlasse
         };
         _dbContext.Profunda.Add(def);
         await _dbContext.SaveChangesAsync();
@@ -98,7 +98,7 @@ public class ProfundumManagementService
     }
 
     ///
-    public async Task<ProfundumInstanz?> CreateInstanzAsync(DTOProfundumInstanz dtoInstanz)
+    public async Task<ProfundumInstanz?> CreateInstanzAsync(DtoProfundumInstanz dtoInstanz)
     {
         var def = await _dbContext.Profunda.FindAsync(dtoInstanz.ProfundumId);
         if (def is null)

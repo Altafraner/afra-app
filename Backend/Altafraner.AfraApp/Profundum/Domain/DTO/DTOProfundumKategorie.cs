@@ -1,9 +1,9 @@
+using Altafraner.AfraApp.Profundum.Domain.Models;
+
 namespace Altafraner.AfraApp.Profundum.Domain.DTO;
 
-using Models;
-
 ///
-public record DTOProfundumKategorie
+public record DtoProfundumKategorie
 {
     /// <inheritdoc cref="ProfundumKategorie.Id"/>
     public Guid Id { get; set; }

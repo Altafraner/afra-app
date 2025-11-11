@@ -1,9 +1,9 @@
+using Altafraner.AfraApp.Profundum.Domain.Models;
+
 namespace Altafraner.AfraApp.Profundum.Domain.DTO;
 
-using Models;
-
 ///
-public record DTOProfundumEinwahlZeitraum
+public record DtoProfundumEinwahlZeitraum
 {
     /// <inheritdoc cref="ProfundumEinwahlZeitraum.Id"/>
     public Guid? Id { get; set; }

@@ -1,6 +1,7 @@
 using Altafraner.AfraApp.Otium.Domain.Contracts.Rules;
 using Altafraner.AfraApp.Otium.Domain.Models;
 using Altafraner.AfraApp.Otium.Domain.Models.TimeInterval;
+using Altafraner.AfraApp.Schuljahr.Domain.Models;
 using Altafraner.AfraApp.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Schultag = Altafraner.AfraApp.Schuljahr.Domain.Models.Schultag;
@@ -30,10 +31,11 @@ public class RequiredKategorienRule : IWeekRule
     public async ValueTask<RuleStatus> IsValidAsync(Person person, IEnumerable<Schultag> schultage,
         IEnumerable<OtiumEinschreibung> einschreibungen)
     {
-        if (schultage.Any(d => d.Wochentyp == Wochentyp.H)) return RuleStatus.Valid;
+        var schultageArray = schultage as Schultag[] ?? schultage.ToArray();
+        if (schultageArray.Any(d => d.Wochentyp == Wochentyp.H)) return RuleStatus.Valid;
 
         var fulfilledCategories =
-            await GetFulfilledCategoriesFromEnrollments(einschreibungen, schultage);
+            await GetFulfilledCategoriesFromEnrollments(einschreibungen, schultageArray);
         var missingCategories = await GetUnfulfilledRequiredCategories(fulfilledCategories);
         var messages = new List<string>();
         foreach (var missingCategory in missingCategories)
@@ -168,7 +170,7 @@ public class RequiredKategorienRule : IWeekRule
     }
 
     private async Task<Dictionary<Guid, HashSet<Guid>>> GetPossibleRequiredCategoriesForBlocks(
-        List<Schuljahr.Domain.Models.Block> blocks)
+        List<Block> blocks)
     {
         _requiredCategories ??= await _kategorieService.GetRequiredKategorienIdsAsync();
 

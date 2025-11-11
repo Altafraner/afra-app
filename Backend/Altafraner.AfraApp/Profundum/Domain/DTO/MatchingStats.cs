@@ -17,9 +17,9 @@ public enum MatchingResultStatus
 public record StudentMatchingStats
 {
     ///
-    public required double optim { get; set; }
+    public required double Optim { get; set; }
     ///
-    public required Dictionary<string, string[]> einschreibungen { get; set; }
+    public required Dictionary<string, string[]> Einschreibungen { get; set; }
     ///
     public required Dictionary<string, string[]> Wuensche { get; set; }
 }

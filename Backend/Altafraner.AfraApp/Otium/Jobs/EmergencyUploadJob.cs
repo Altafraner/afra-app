@@ -45,41 +45,41 @@ public class EmergencyUploadJob : IJob
             var (termine, missingPersons, _) = await _attendanceService.GetAttendanceForBlockAsync(block.Id);
 
             var html =
-                $$$"""
-                   <!DOCTYPE html>
-                   <html lang="de">
-                       <head>
-                           <meta charset="UTF-8">
-                           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                           <title>Otium Notfall-Backup {{{HttpUtility.HtmlEncode($"{DateTime.Now:yyyy-MM-dd HH:mm}")}}}</title>
-                           <style>
-                               body {
-                                   font-family: Arial, sans-serif;
-                                   margin: 20px;
-                               }
-                               table {
-                                   width: 100%;
-                                   border-collapse: collapse;
-                                   margin-bottom: 20px;
-                               }
-                               th, td {
-                                   border: 1px solid #ddd;
-                                   padding: 8px;
-                                   text-align: left;
-                               }
-                           </style>
-                       </head>
-                       <body>
-                           <h1>Otium Notfall-Backup {{{HttpUtility.HtmlEncode($"{DateTime.Now:yyyy-MM-dd HH:mm}")}}}</h1>
-                           <p>Block: {{{HttpUtility.HtmlEncode(_blockHelper.Get(block.SchemaId)!.Bezeichnung)}}}</p>
-                           <h2>Termine</h2>
-                           <h3>Fehlende</h3>
-                           {{{GenerateHtmlTable(missingPersons)}}}
-                           {{{termine.Select(t => $"<h3>{HttpUtility.HtmlEncode(t.Key.Ort)} {HttpUtility.HtmlEncode(t.Key.Bezeichnung)}</h3>"
-                                                  + GenerateHtmlTable(t.Value)).Aggregate(new StringBuilder(), (current, next) => current.Append(next)).ToString()}}}
-                       </body>
-                   </html>
-                   """;
+                $$"""
+                  <!DOCTYPE html>
+                  <html lang="de">
+                      <head>
+                          <meta charset="UTF-8">
+                          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                          <title>Otium Notfall-Backup {{HttpUtility.HtmlEncode($"{DateTime.Now:yyyy-MM-dd HH:mm}")}}</title>
+                          <style>
+                              body {
+                                  font-family: Arial, sans-serif;
+                                  margin: 20px;
+                              }
+                              table {
+                                  width: 100%;
+                                  border-collapse: collapse;
+                                  margin-bottom: 20px;
+                              }
+                              th, td {
+                                  border: 1px solid #ddd;
+                                  padding: 8px;
+                                  text-align: left;
+                              }
+                          </style>
+                      </head>
+                      <body>
+                          <h1>Otium Notfall-Backup {{HttpUtility.HtmlEncode($"{DateTime.Now:yyyy-MM-dd HH:mm}")}}</h1>
+                          <p>Block: {{HttpUtility.HtmlEncode(_blockHelper.Get(block.SchemaId)!.Bezeichnung)}}</p>
+                          <h2>Termine</h2>
+                          <h3>Fehlende</h3>
+                          {{GenerateHtmlTable(missingPersons)}}
+                          {{termine.Select(t => $"<h3>{HttpUtility.HtmlEncode(t.Key.Ort)} {HttpUtility.HtmlEncode(t.Key.Bezeichnung)}</h3>"
+                                                + GenerateHtmlTable(t.Value)).Aggregate(new StringBuilder(), (current, next) => current.Append(next))}}
+                      </body>
+                  </html>
+                  """;
             await _backupService.SaveHtmlAsync(
                 $"Otium {DateTime.Now:yyyy-MM-dd} {_blockHelper.Get(block.SchemaId)!.Bezeichnung}", html);
         }

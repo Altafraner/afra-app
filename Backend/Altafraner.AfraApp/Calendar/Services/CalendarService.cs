@@ -2,7 +2,6 @@ using System.Security.Cryptography;
 using Altafraner.AfraApp.Calendar.Domain.Models;
 using Altafraner.AfraApp.Otium.Services;
 using Altafraner.AfraApp.User.Domain.Models;
-using Altafraner.AfraApp.User.Services;
 using Ical.Net.CalendarComponents;
 using Ical.Net.DataTypes;
 using Ical.Net.Serialization;
@@ -88,8 +87,9 @@ public class CalendarService
             End = new CalDateTime(new DateTime(e.Termin.Block.Schultag.Datum, e.Interval.End), true),
             LastModified =
                 new CalDateTime(
-                    new DateTime[] { e.LastModified, e.Termin.LastModified, e.Termin.Otium.LastModified }.Max(), true),
-            Created = new CalDateTime(e.CreatedAt, true),
+                    new[] { e.LastModified, e.Termin.LastModified, e.Termin.Otium.LastModified }.Max(),
+                    true),
+            Created = new CalDateTime(e.CreatedAt, true)
         });
 
         var taught = _dbContext.OtiaTermine
@@ -106,8 +106,8 @@ public class CalendarService
                 new DateTime(e.Block.Schultag.Datum, _blockHelper.Get(e.Block.SchemaId)!.Interval.Start), true),
             End = new CalDateTime(
                 new DateTime(e.Block.Schultag.Datum, _blockHelper.Get(e.Block.SchemaId)!.Interval.End), true),
-            LastModified = new CalDateTime(new DateTime[] { e.LastModified, e.Otium.LastModified }.Max(), true),
-            Created = new CalDateTime(e.CreatedAt, true),
+            LastModified = new CalDateTime(new[] { e.LastModified, e.Otium.LastModified }.Max(), true),
+            Created = new CalDateTime(e.CreatedAt, true)
         });
 
         var calendar = new Ical.Net.Calendar();
