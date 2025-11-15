@@ -1,9 +1,10 @@
 using Afra_App;
 using Afra_App.Backbone.Authentication;
 using Afra_App.User.Services;
-using Afra_App.Profundum.Domain.DTO;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Afra_App.Profundum.Domain.Models;
+using Afra_App.User.Domain.Models;
 
 /// <summary>
 ///    Contains endpoints for managing Profunda Bewertungen.
@@ -24,7 +25,7 @@ public static class Bewertung
             return Results.Ok(kriterien);
         });
 
-        group.MapPost("/create-kriterium", async (
+        group.MapPost("/kriterium/create", async (
             [FromServices] AfraAppContext dbContext,
             [FromBody] string bezeichnung) =>
         {
@@ -44,7 +45,26 @@ public static class Bewertung
         })
         .RequireAuthorization(AuthorizationPolicies.AdminOnly);
 
-        group.MapDelete("/kriterien/{id}", async (Guid id, [FromServices] AfraAppContext dbContext) =>
+        group.MapPost("/kriterien/rename/{id}", async (
+            Guid id,
+            [FromServices] AfraAppContext dbContext,
+            [FromBody] string newBezeichnung) =>
+        {
+            var kriterium = await dbContext.ProfundumsBewertungKriterien.FindAsync(id);
+            if (kriterium == null) return Results.NotFound("Kriterium nicht gefunden");
+
+            if (string.IsNullOrWhiteSpace(newBezeichnung))
+                return Results.BadRequest("Bezeichnung darf nicht leer sein");
+
+            kriterium.Bezeichnung = newBezeichnung;
+            await dbContext.SaveChangesAsync();
+
+            return Results.Ok(kriterium);
+        }).RequireAuthorization(AuthorizationPolicies.AdminOnly);
+
+        group.MapDelete("/kriterien/delete/{id}", async (
+            Guid id,
+            [FromServices] AfraAppContext dbContext) =>
         {
             var kriterium = await dbContext.ProfundumsBewertungKriterien.FindAsync(id);
             if (kriterium == null) return Results.NotFound("Kriterium nicht gefunden");
@@ -80,34 +100,48 @@ public static class Bewertung
         .RequireAuthorization(AuthorizationPolicies.TutorOnly);
 
         group.MapPost("/", async (
-            [FromServices] ProfundumsBewertungService bewertungService,
-            [FromServices] AfraAppContext dbContext,
-            List<DTOProfundumBewertung> bewertungenDto) =>
+        [FromServices] ProfundumsBewertungService bewertungService,
+        [FromServices] AfraAppContext dbContext,
+        List<DTOProfundumBewertung> bewertungenDto) =>
         {
             var bewertungen = new List<ProfundumBewertung>();
+            Person? studentReference = null;
 
             foreach (var dto in bewertungenDto)
             {
                 var kriterium = await dbContext.ProfundumsBewertungKriterien.FindAsync(dto.KriteriumId);
-                var instanz = await dbContext.ProfundaInstanzen.FindAsync(dto.InstanzId);
-                var student = await dbContext.Personen.FindAsync(dto.InstanzId);
+                var instanz = await dbContext.ProfundaEinschreibungen
+                    .Include(i => i.BetroffenePerson)
+                    .Include(i => i.ProfundumInstanz)
+                    .FirstOrDefaultAsync(i => i.ProfundumInstanzId == dto.InstanzId);
 
-                if (kriterium == null || instanz == null || student == null)
-                    return Results.BadRequest("Kriterium, Instanz oder betroffene Person nicht gefunden");
+                if (kriterium == null || instanz == null)
+                    return Results.BadRequest("Kriterium oder Instanz nicht gefunden");
+
+                var student = instanz.BetroffenePerson;
+                if (student == null)
+                    return Results.BadRequest("Betroffene Person fehlt für Instanz");
+
+                studentReference = (Person?)student;
 
                 bewertungen.Add(new ProfundumBewertung
                 {
                     Id = Guid.NewGuid(),
                     Kriterium = kriterium,
-                    Instanz = instanz,
+                    Instanz = instanz.ProfundumInstanz,
                     BetroffenePerson = student,
                     Grad = dto.Grad
                 });
             }
 
+            if (studentReference == null)
+            {
+                return Results.BadRequest("Keine gültige betroffene Person gefunden");
+            }
+            
             try
             {
-                await bewertungService.AddBewertungenAsync(null!, bewertungen);
+                await bewertungService.AddBewertungenAsync(studentReference, bewertungen);
             }
             catch (ProfundumsBewertungException e)
             {
@@ -117,5 +151,42 @@ public static class Bewertung
             return Results.Ok("Feedback gespeichert");
         })
         .RequireAuthorization(AuthorizationPolicies.TutorOnly);
+
+
+        group.MapGet("/{id:guid}/profunda", async (
+        [FromServices] AfraAppContext dbContext,
+        Guid id) =>
+        {
+            var instanzen = await dbContext.ProfundaEinschreibungen
+                .Include(e => e.ProfundumInstanz)
+                .ThenInclude(i => i.Profundum)
+                .Where(e => e.BetroffenePersonId == id)
+                .Select(e => new
+                {
+                    instanzId = e.ProfundumInstanz.Id,
+                    profundumName = e.ProfundumInstanz.Profundum.Bezeichnung
+                })
+                .ToListAsync();
+
+            return Results.Ok(instanzen);
+        });
+        
+        group.MapGet("/{personId:guid}/{instanzId:guid}", async (
+        Guid personId,
+        Guid instanzId,
+        [FromServices] AfraAppContext dbContext) =>
+        {
+            var bewertungen = await dbContext.ProfundumBewertungen
+                .Where(b => b.BetroffenePerson.Id == personId && b.Kriterium.Id == instanzId)
+                .Select(b => new
+                {
+                    kriteriumId = b.Kriterium.Id,
+                    grad = b.Grad
+                })
+                .ToListAsync();
+
+            return Results.Ok(bewertungen);
+        });
+
     }
 }
