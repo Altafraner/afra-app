@@ -30,12 +30,12 @@ const items_teacher = [
         icon: 'pi pi-eye',
     },
     {
-        label: 'Einstellungen',
+        label: 'Profundum-Verwaltung',
         route: {
-            name: 'Settings',
+            name: 'Profundum-Verwaltung',
         },
-        icon: 'pi pi-cog',
-    },
+        icon: 'pi pi-star',
+    }
 ];
 
 const items_student = [
@@ -50,14 +50,7 @@ const items_student = [
             name: 'Katalog',
         },
         icon: 'pi pi-list',
-    },
-    {
-        label: 'Einstellungen',
-        route: {
-            name: 'Settings',
-        },
-        icon: 'pi pi-cog',
-    },
+    }
 ];
 
 const items_mittelstufe = [
@@ -68,6 +61,13 @@ const items_mittelstufe = [
         },
         icon: 'pi pi-check-square',
     },
+    {
+        label: 'Profundum-Bewertung',
+        route: {
+            name: 'ProfundumBewertung',
+        },
+        icon: 'pi pi-star',         
+    }
 ];
 
 const items_otium_manager = [
@@ -82,12 +82,29 @@ const items_otium_manager = [
 
 const items_admin = [
     {
+        label: 'Kriterien-Verwaltung',
+        route: {
+            name: 'Kriterien',
+        },
+        icon: 'pi pi-sliders-h',
+    },
+    {
         label: 'Admin',
         route: {
             name: 'Admin',
         },
         icon: 'pi pi-asterisk',
     },
+];
+
+const items_einstellungen = [
+    {
+        label: 'Einstellungen',
+        route: {
+            name: 'Settings',
+        },
+        icon: 'pi pi-cog',
+    }
 ];
 
 const toast = useToast();
@@ -135,6 +152,7 @@ async function setup(update = true) {
     if (user.isAdmin) {
         items.value = [...items.value, ...items_admin];
     }
+    items.value = [...items.value, ...items_einstellungen];
 }
 
 setup();

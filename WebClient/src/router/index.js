@@ -10,9 +10,19 @@ const routes = [
         component: Home,
     },
     {
+        path: '/kriterienverwaltung',
+        name: 'Kriterien',
+        component: () => import('@/views/KriteriumVerwaltung.vue'),
+    },
+    {
         path: '/admin',
         name: 'Admin',
         component: () => import('@/views/Admin.vue'),
+    },
+    {
+        path: '/profundum-verwaltung',
+        name: 'Profundum-Verwaltung',
+        component: () => import('@/views/ProfundumVerwaltung.vue'),
     },
     {
         path: '/settings',

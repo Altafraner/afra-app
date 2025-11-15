@@ -7,6 +7,7 @@ using Afra_App.Schuljahr.Domain.Models;
 using Afra_App.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -15,9 +16,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Afra_App.Migrations
 {
     [DbContext(typeof(AfraAppContext))]
-    partial class AfraAppContextModelSnapshot : ModelSnapshot
+    [Migration("20250918140504_ProfundumBewertungPrimaryKey")]
+    partial class ProfundumBewertungPrimaryKey
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -609,6 +612,21 @@ namespace Afra_App.Migrations
                     b.ToTable("ProfundumBewertungen");
                 });
 
+            modelBuilder.Entity("ProfundumBewertungKriterium", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Bezeichnung")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ProfundumsBewertungKriterien");
+                });
+
             modelBuilder.Entity("ProfundumInstanzProfundumSlot", b =>
                 {
                     b.Property<Guid>("ProfundumInstanzId")
@@ -622,21 +640,6 @@ namespace Afra_App.Migrations
                     b.HasIndex("SlotsId");
 
                     b.ToTable("ProfundumInstanzProfundumSlot");
-                });
-
-            modelBuilder.Entity("ProfundumsBewertungKriterium", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Bezeichnung")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ProfundumsBewertungKriterien");
                 });
 
             modelBuilder.Entity("Afra_App.Backbone.Email.Domain.Models.ScheduledEmail", b =>
@@ -894,7 +897,7 @@ namespace Afra_App.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ProfundumsBewertungKriterium", "Kriterium")
+                    b.HasOne("ProfundumBewertungKriterium", "Kriterium")
                         .WithMany()
                         .HasForeignKey("KriteriumId")
                         .OnDelete(DeleteBehavior.Cascade)

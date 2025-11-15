@@ -16,5 +16,6 @@ public static class RouteBuilderExtension
             .WithOpenApi();
         group.MapEnrollmentEndpoints();
         group.MapManagementEndpoints();
+        group.MapBewertungEndpoints();
     }
 }
