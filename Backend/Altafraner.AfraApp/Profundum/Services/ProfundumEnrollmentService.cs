@@ -432,10 +432,11 @@ public class ProfundumEnrollmentService
                 .ToArrayAsync())
             .Where(pi => pi.Slots.Any(s => slots.Any(sl => sl.Id == s.Id)))
             .ToArray();
+        var angeboteList = angebote.ToList();
         var belegwuensche = await _dbContext.ProfundaBelegWuensche
             .Include(b => b.BetroffenePerson)
             .Include(b => b.ProfundumInstanz).ThenInclude(pi => pi.Profundum).ThenInclude(p => p.Kategorie)
-            .Where(b => angebote.Contains(b.ProfundumInstanz))
+            .Where(b => angeboteList.Contains(b.ProfundumInstanz))
             .ToArrayAsync();
         var personen = belegwuensche.Select(b => b.BetroffenePerson).ToHashSet().ToArray();
 

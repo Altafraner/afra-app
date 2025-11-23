@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using IPNetwork = System.Net.IPNetwork;
 
 namespace Altafraner.Backbone.Defaults;
 
@@ -25,7 +26,7 @@ public class ReverseProxyHandlerModule : IModule
             ForwardedHeaders = ForwardedHeaders.XForwardedFor
                                | ForwardedHeaders.XForwardedProto
                                | ForwardedHeaders.XForwardedHost,
-            KnownNetworks =
+            KnownIPNetworks =
             {
                 IPNetwork.Parse("10.0.0.0/8"),
                 IPNetwork.Parse("172.16.0.0/12"),

@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1-labs
 
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src/
 COPY --link Afra-App.slnx ./
 COPY --link --parents **/*.csproj ./
@@ -14,7 +14,7 @@ RUN dotnet publish "Altafraner.AfraApp/Altafraner.AfraApp.csproj" \
     --runtime linux-x64 \
     -o /app/publish
 
-FROM mcr.microsoft.com/dotnet/runtime-deps:9.0 AS run
+FROM mcr.microsoft.com/dotnet/runtime-deps:10.0 AS run
 EXPOSE 8080
 RUN apt-get update && apt-get -y install libldap-2.5-0
 USER $APP_UID
