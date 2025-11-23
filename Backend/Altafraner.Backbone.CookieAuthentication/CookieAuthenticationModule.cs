@@ -27,27 +27,6 @@ public class CookieAuthenticationModule : IModule<CookieAuthenticationSettings>
                 options.Cookie.SameSite = settings.SameSiteMode;
                 options.Cookie.SecurePolicy = settings.SecurePolicy;
                 options.SlidingExpiration = settings.SlidingExpiration;
-                options.Events.OnRedirectToAccessDenied = context =>
-                {
-                    var authenticated = context.HttpContext.User.Identity?.IsAuthenticated ?? false;
-                    if (authenticated)
-                    {
-                        context.Response.Clear();
-                        context.Response.StatusCode = StatusCodes.Status403Forbidden;
-                        context.Response.WriteAsJsonAsync(new ProblemDetails
-                        {
-                            Title = "Access Denied",
-                            Detail =
-                                "You are not allowed to access this resource. You do not seem to have the right roles.",
-                            Status = StatusCodes.Status403Forbidden,
-                            Type = "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.3"
-                        });
-                        return Task.CompletedTask;
-                    }
-
-                    context.Response.Redirect(context.RedirectUri);
-                    return Task.CompletedTask;
-                };
             });
         services.AddScoped<IAuthenticationLifetimeService, AuthenticationLifetimeService>();
     }
