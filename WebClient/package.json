@@ -5,15 +5,19 @@
     "type": "module",
     "scripts": {
         "dev": "vite --host",
-        "build": "vite build",
+        "build": "\"run-p type-check \\\"build-only {@}\\\" --\"",
+        "build-only": "vite build",
         "preview": "vite preview",
-        "lint": "eslint . --fix"
+        "type-check": "vue-tsc --build",
+        "lint": "eslint . --fix",
+        "format": "prettier --write src/"
     },
     "dependencies": {
         "@microsoft/signalr": "^10.0.0",
         "@primevue/forms": "^4.3.4",
         "@primevue/themes": "^4.3.4",
         "@tailwindcss/vite": "^4.0.12",
+        "dompurify": "^3.3.0",
         "mande": "^2.0.9",
         "marked": "^17.0.1",
         "pinia": "^3.0.1",
@@ -28,6 +32,8 @@
     "devDependencies": {
         "@eslint/js": "^9.18.0",
         "@vitejs/plugin-vue": "^6.0.1",
+        "@vue/tsconfig": "^0.8.1",
+        "vue-tsc": "^3.1.5",
         "eslint": "^9.18.0",
         "eslint-plugin-vue": "^10.4.0",
         "prettier": "3.6.2",
