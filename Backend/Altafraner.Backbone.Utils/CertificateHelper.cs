@@ -3,8 +3,14 @@ using Microsoft.Extensions.Configuration;
 
 namespace Altafraner.Backbone.Utils;
 
+/// <summary>
+///     A helper-class for loading certificates
+/// </summary>
 public static class CertificateHelper
 {
+    /// <summary>
+    ///     Loads an X509-Certificate and corresponding private key
+    /// </summary>
     public static X509Certificate2 LoadX509CertificateAndKey(IConfiguration configuration, string name)
     {
         var certPath = configuration[$"Certificates:{name}Cert"];
@@ -15,13 +21,15 @@ public static class CertificateHelper
         return X509Certificate2.CreateFromPemFile(certPath, keyPath);
     }
 
+    /// <summary>
+    ///     Loads an X509-Certificate without it's coressponding private key
+    /// </summary>
     public static X509Certificate2 LoadX509Certificate(IConfiguration configuration, string name)
     {
         var certPath = configuration[$"Certificates:{name}Cert"];
 
         if (certPath == null)
             throw new KeyNotFoundException($"The certificate with the name {name} was not configured");
-
         return X509CertificateLoader.LoadCertificateFromFile(certPath);
     }
 }

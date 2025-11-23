@@ -7,8 +7,12 @@ using Quartz.AspNetCore;
 
 namespace Altafraner.Backbone.Scheduling;
 
+/// <summary>
+///     A Module for job scheduling
+/// </summary>
 public class SchedulingModule : IModule
 {
+    /// <inheritdoc />
     public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
     {
         services.AddQuartz(q =>

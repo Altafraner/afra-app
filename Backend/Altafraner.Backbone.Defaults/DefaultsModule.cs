@@ -5,6 +5,9 @@ using Microsoft.Extensions.Hosting;
 
 namespace Altafraner.Backbone.Defaults;
 
+/// <summary>
+///     A pseudo-module for including some commonly used modules
+/// </summary>
 [DependsOn<DevelopmentModule>]
 [DependsOn<PrometheusModule>]
 [DependsOn<SignalRModule>]
@@ -14,6 +17,7 @@ namespace Altafraner.Backbone.Defaults;
 [DependsOn<HttpContextAccessorModule>]
 public class DefaultsModule : IModule
 {
+    /// <inheritdoc />
     public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
     {
     }

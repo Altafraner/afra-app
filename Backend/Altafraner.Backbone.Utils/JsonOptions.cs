@@ -3,8 +3,14 @@ using System.Text.Json.Serialization;
 
 namespace Altafraner.Backbone.Utils;
 
-public class JsonOptions
+/// <summary>
+///     Utilities for configuring the JSON Serializer
+/// </summary>
+public static class JsonOptions
 {
+    /// <summary>
+    ///     Configures the json serializer
+    /// </summary>
     public static void Configure(JsonSerializerOptions options)
     {
         options.ReferenceHandler = ReferenceHandler.IgnoreCycles;
