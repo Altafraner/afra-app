@@ -6,8 +6,12 @@ using Microsoft.Extensions.Hosting;
 
 namespace Altafraner.Backbone.Defaults;
 
+/// <summary>
+///     Configures SignalR
+/// </summary>
 public class SignalRModule : IModule
 {
+    /// <inheritdoc />
     public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
     {
         services.AddSignalR()

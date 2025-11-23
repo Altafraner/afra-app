@@ -7,8 +7,12 @@ using OpenTelemetry.Metrics;
 
 namespace Altafraner.Backbone.Defaults;
 
+/// <summary>
+///     Adds observability
+/// </summary>
 public class PrometheusModule : IModule
 {
+    /// <inheritdoc />
     public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
     {
         var otel = services.AddOpenTelemetry();
@@ -24,6 +28,7 @@ public class PrometheusModule : IModule
         );
     }
 
+    /// <inheritdoc />
     public void Configure(WebApplication app)
     {
         app.MapPrometheusScrapingEndpoint();

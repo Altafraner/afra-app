@@ -2,7 +2,6 @@
 using Altafraner.Backbone.EmailOutbox;
 using Altafraner.Backbone.EmailSchedulingModule.Services;
 using Altafraner.Backbone.Scheduling;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -10,11 +9,16 @@ using Microsoft.Extensions.Options;
 
 namespace Altafraner.Backbone.EmailSchedulingModule;
 
+/// <summary>
+///     A module for scheduling E-Mail deliveries
+/// </summary>
+/// <typeparam name="TPerson">The data type representing a user in the current context</typeparam>
 [DependsOn<EmailOutboxModule>]
 [DependsOn<SchedulingModule>]
 public class EmailSchedulingModule<TPerson> : IModule<EmailSchedulingSettings<TPerson>>
     where TPerson : class, IEmailRecipient
 {
+    /// <inheritdoc />
     public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
     {
         services.AddScoped<IScheduledEmailContext<TPerson>>(sp =>
@@ -28,14 +32,5 @@ public class EmailSchedulingModule<TPerson> : IModule<EmailSchedulingSettings<TP
         });
 
         services.AddScoped<INotificationService, EmailNotificationService<TPerson>>();
-    }
-
-    public void Configure(WebApplication app)
-    {
-    }
-
-    public Task InitializeAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
     }
 }

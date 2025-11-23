@@ -10,9 +10,13 @@ using Microsoft.Extensions.Hosting;
 
 namespace Altafraner.Backbone.CookieAuthentication;
 
+/// <summary>
+///     A module handling cookie authentication
+/// </summary>
 [DependsOn<HttpContextAccessorModule>]
 public class CookieAuthenticationModule : IModule<CookieAuthenticationSettings>
 {
+    /// <inheritdoc />
     public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
     {
         var settings = config.Get<CookieAuthenticationSettings>() ?? new CookieAuthenticationSettings();
@@ -48,6 +52,7 @@ public class CookieAuthenticationModule : IModule<CookieAuthenticationSettings>
         services.AddScoped<IAuthenticationLifetimeService, AuthenticationLifetimeService>();
     }
 
+    /// <inheritdoc />
     public void RegisterMiddleware(WebApplication app)
     {
         app.UseAuthentication();

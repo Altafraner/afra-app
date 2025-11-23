@@ -7,12 +7,17 @@ using Microsoft.Extensions.Hosting;
 
 namespace Altafraner.Backbone.Defaults;
 
+/// <summary>
+///     Adds middleware to handle local network traffic via reverse proxy
+/// </summary>
 public class ReverseProxyHandlerModule : IModule
 {
+    /// <inheritdoc />
     public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
     {
     }
 
+    /// <inheritdoc />
     public void RegisterMiddleware(WebApplication app)
     {
         app.UseForwardedHeaders(new ForwardedHeadersOptions

@@ -6,14 +6,19 @@ using Microsoft.Extensions.Hosting;
 
 namespace Altafraner.Backbone.Defaults;
 
+/// <summary>
+///     A module adding some development convenience features such as swagger and open api
+/// </summary>
 public class DevelopmentModule : IModule
 {
+    /// <inheritdoc />
     public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
     {
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
     }
 
+    /// <inheritdoc />
     public void Configure(WebApplication app)
     {
         app.MapOpenApi();
