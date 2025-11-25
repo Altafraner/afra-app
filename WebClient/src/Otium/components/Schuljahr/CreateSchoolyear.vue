@@ -8,7 +8,7 @@ import FloatLabel from 'primevue/floatlabel';
 import DatePicker from 'primevue/datepicker';
 import { Button, Column, DataTable, Message, MultiSelect, Select, useToast } from 'primevue';
 import Form from '@primevue/forms/form';
-import { formatDate, formatMachineDate } from '@/helpers/formatters.js';
+import { formatDate, formatMachineDate } from '@/helpers/formatters.ts';
 import { mande } from 'mande';
 import { useRouter } from 'vue-router';
 import { useOtiumStore } from '@/Otium/stores/otium.js';

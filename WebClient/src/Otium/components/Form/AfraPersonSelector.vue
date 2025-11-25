@@ -1,5 +1,5 @@
 <script setup>
-import { formatTutor } from '@/helpers/formatters.js';
+import { formatTutor } from '@/helpers/formatters.ts';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
 import { ref } from 'vue';
 import { FloatLabel, Select } from 'primevue';

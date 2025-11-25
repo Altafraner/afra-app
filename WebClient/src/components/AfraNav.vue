@@ -5,7 +5,7 @@ import { Button, Image, useToast } from 'primevue';
 
 import wappenLight from '/vdaa/favicon.svg?url';
 import wappenDark from '/vdaa/favicon-dark.svg?url';
-import { useUser } from '@/stores/user.js';
+import { useUser } from '@/stores/user';
 import { useRouter } from 'vue-router';
 import { isDark } from '@/helpers/isdark.js';
 

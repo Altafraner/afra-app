@@ -1,8 +1,8 @@
 <script setup>
-import { useUser } from '@/stores/user.js';
+import { useUser } from '@/stores/user';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
 import { computed } from 'vue';
-import { formatTutor } from '@/helpers/formatters.js';
+import { formatTutor } from '@/helpers/formatters.ts';
 import { Button } from 'primevue';
 import { mande } from 'mande';
 import { useRouter } from 'vue-router';

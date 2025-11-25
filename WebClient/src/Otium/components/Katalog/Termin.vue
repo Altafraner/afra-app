@@ -1,9 +1,9 @@
 <script setup>
-import { Button, InputGroup, Message, Tag, useConfirm, useDialog, useToast } from 'primevue';
+import { Button, InputGroup, Message, Tag, useDialog, useToast } from 'primevue';
 import { ref } from 'vue';
-import { formatDate, formatTime, formatTutor } from '@/helpers/formatters.js';
+import { formatDate, formatTutor } from '@/helpers/formatters.ts';
 import { mande } from 'mande';
-import { useUser } from '@/stores/user.js';
+import { useUser } from '@/stores/user';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
 import { useRouter } from 'vue-router';
 import AfraKategorieTag from '@/Otium/components/Shared/AfraKategorieTag.vue';
@@ -11,6 +11,7 @@ import { findPath } from '@/helpers/tree.js';
 import SimpleBreadcrumb from '@/components/SimpleBreadcrumb.vue';
 import MultipleEnrollmentForm from '@/Otium/components/Katalog/Forms/MultipleEnrollmentForm.vue';
 import { useConfirmPopover } from '@/composables/confirmPopover.js';
+import Notes from '@/Otium/components/Notes/Notes.vue';
 
 const settings = useOtiumStore();
 const user = useUser();
@@ -23,7 +24,6 @@ const props = defineProps({
 });
 const emit = defineEmits(['update']);
 
-const kategorien = ref(null);
 const buttonLoading = ref(true);
 const otium = ref(null);
 const connection = ref(null);
@@ -126,11 +126,6 @@ function multiEnroll() {
     }
 }
 
-async function loadKategorien() {
-    await settings.updateKategorien();
-    kategorien.value = settings.kategorien;
-}
-
 async function edit(termin) {
     await router.push({
         name: 'Verwaltung-Termin',
@@ -155,12 +150,28 @@ async function cancel(evt, termin) {
     openConfirmDialog(evt, callback, 'Termin absagen?');
 }
 
+async function editNotes() {
+    dialog.open(Notes, {
+        props: {
+            modal: true,
+            header: 'Notizen',
+        },
+        data: {
+            notes: otium.value.einschreibung.notizen,
+            myNote: otium.value.einschreibung.notiz,
+            blockId: otium.value.block.id,
+        },
+        emits: {
+            onUpdate: () => {
+                loadTermin();
+            },
+        },
+    });
+}
+
 async function setup() {
     connection.value = mande('/api/otium/' + props.terminId);
-    const terminPromise = loadTermin();
-    const kategorienPromise = loadKategorien();
-
-    await Promise.all([terminPromise, kategorienPromise]);
+    await loadTermin();
 }
 
 await setup();
@@ -178,10 +189,10 @@ await setup();
                 {{ formatTutor(otium.tutor) }}
             </span>
             <span v-if="otium.ort"> <i class="pi pi-map-marker" /> {{ otium.ort }} </span>
-            <span v-if="otium.datum">
+            <span v-if="otium.block.datum">
                 <i class="pi pi-clock" />
-                {{ formatDate(new Date(otium.datum)) }},
-                {{ formatTime(new Date(otium.datum)) }} Uhr
+                {{ formatDate(new Date(otium.block.datum)) }},
+                {{ otium.block.uhrzeit.start }} Uhr
             </span>
         </div>
 
@@ -256,13 +267,18 @@ await setup();
         <template v-if="user.isStudent">
             <Button
                 v-if="otium.einschreibung.eingeschrieben"
-                v-tooltip="'Coming soon!'"
                 :loading="buttonLoading"
-                disabled
+                :disabled="buttonLoading"
                 icon="pi pi-clipboard"
-                label="Notiz hinzufügen"
-                severity="secondary"
+                :severity="
+                    otium.einschreibung.notiz !== null ||
+                    otium.einschreibung.notizen.length !== 0
+                        ? 'warn'
+                        : 'secondary'
+                "
+                label="Notizen"
                 variant="text"
+                @click="editNotes"
             />
             <Button
                 v-else-if="

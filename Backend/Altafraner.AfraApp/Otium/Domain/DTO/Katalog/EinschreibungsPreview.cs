@@ -15,4 +15,6 @@ public record EinschreibungsPreview(
     bool KannBearbeiten,
     string? Grund,
     bool Eingeschrieben,
+    Notiz.Notiz? Notiz,
+    IEnumerable<Notiz.Notiz> Notizen,
     TimeOnlyInterval Interval);

@@ -2,7 +2,7 @@
 import { Button, useToast } from 'primevue';
 import { ref } from 'vue';
 import { mande } from 'mande';
-import { useUser } from '@/stores/user.js';
+import { useUser } from '@/stores/user';
 import StudentOverview from '@/Otium/components/Overview/StudentOverview.vue';
 
 const loading = ref(true);

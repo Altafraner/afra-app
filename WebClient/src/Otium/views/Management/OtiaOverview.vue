@@ -1,5 +1,5 @@
 <script setup>
-import { useUser } from '@/stores/user.js';
+import { useUser } from '@/stores/user';
 import OtiumOverview from '@/Otium/components/Management/Overview.vue';
 import SchuljahrOverview from '@/Otium/components/Schuljahr/Overview.vue';
 import Tabs from 'primevue/tabs';

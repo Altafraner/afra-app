@@ -5,10 +5,10 @@ import AfraDateSelector from '@/Otium/components/Form/AfraDateSelector.vue';
 import AfraKategorySelector from '@/Otium/components/Form/AfraKategorySelector.vue';
 import AfraOtiumKatalogView from '@/Otium/components/Katalog/AfraOtiumKatalogView.vue';
 import { mande } from 'mande';
-import { useUser } from '@/stores/user.js';
+import { useUser } from '@/stores/user';
 import { useRoute, useRouter } from 'vue-router';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
-import { formatDate } from '@/helpers/formatters.js';
+import { formatDate } from '@/helpers/formatters.ts';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
 
 const props = defineProps({

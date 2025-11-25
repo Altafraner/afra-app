@@ -51,6 +51,7 @@ public class OtiumModule : IModule
         group.MapKatalogEndpoints();
         group.MapDashboardEndpoints();
         group.MapManagementEndpoints();
+        group.MapNoteEndpoints();
         group.MapHub<AttendanceHub>("/attendance")
             .RequireAuthorization(AuthorizationPolicies.TutorOnly);
     }

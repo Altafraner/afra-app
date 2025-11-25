@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
-import { useUser } from '@/stores/user.js';
+import { useUser } from '@/stores/user';
 import {
     Button,
     FloatLabel,
@@ -13,7 +13,7 @@ import {
 } from 'primevue';
 import { mande } from 'mande';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
-import { formatDate, formatPerson } from '@/helpers/formatters.js';
+import { formatDate, formatPerson } from '@/helpers/formatters.ts';
 import Grid from '@/components/Form/Grid.vue';
 import GridEditRow from '@/components/Form/GridEditRow.vue';
 import AfraPersonSelector from '@/Otium/components/Form/AfraPersonSelector.vue';

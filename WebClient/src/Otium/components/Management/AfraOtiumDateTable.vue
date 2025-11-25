@@ -1,6 +1,6 @@
 <script setup>
 import { Button, Column, DataTable, Dialog } from 'primevue';
-import { formatDate, formatPerson } from '@/helpers/formatters.js';
+import { formatDate, formatPerson } from '@/helpers/formatters.ts';
 import { RouterLink } from 'vue-router';
 import { defineAsyncComponent, ref } from 'vue';
 import { useConfirmPopover } from '@/composables/confirmPopover.js';
