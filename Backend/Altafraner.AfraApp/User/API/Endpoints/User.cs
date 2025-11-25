@@ -20,7 +20,6 @@ public static class User
                         IWebHostEnvironment environment) =>
                     await userSigninService.HandleSignInRequestAsync(request, environment))
             .WithName("sign-in")
-            .WithOpenApi()
             .AllowAnonymous();
 
         app.MapGet("/api/user",

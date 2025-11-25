@@ -22,7 +22,6 @@ public static class Management
     public static void MapManagementEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/management")
-            .WithOpenApi()
             .RequireAuthorization(AuthorizationPolicies.TutorOnly);
 
         group.MapGet("/supervision/now", GetNowSupervising);
