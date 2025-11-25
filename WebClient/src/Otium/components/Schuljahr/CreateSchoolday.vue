@@ -4,7 +4,7 @@ import FloatLabel from 'primevue/floatlabel';
 import DatePicker from 'primevue/datepicker';
 import { Button, Message, MultiSelect, Select, useToast } from 'primevue';
 import Form from '@primevue/forms/form';
-import { formatMachineDate } from '@/helpers/formatters.ts';
+import { formatMachineDate } from '@/helpers/formatters';
 import { mande } from 'mande';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
 import { useConfirmPopover } from '@/composables/confirmPopover.js';

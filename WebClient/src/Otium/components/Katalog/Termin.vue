@@ -1,7 +1,7 @@
 <script setup>
 import { Button, InputGroup, Message, Tag, useDialog, useToast } from 'primevue';
 import { ref } from 'vue';
-import { formatDate, formatTutor } from '@/helpers/formatters.ts';
+import { formatDate, formatTutor } from '@/helpers/formatters';
 import { mande } from 'mande';
 import { useUser } from '@/stores/user';
 import { useOtiumStore } from '@/Otium/stores/otium.js';

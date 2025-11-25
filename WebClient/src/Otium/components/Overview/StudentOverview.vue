@@ -1,5 +1,5 @@
 <script setup>
-import { formatDate } from '@/helpers/formatters.ts';
+import { formatDate } from '@/helpers/formatters';
 import {
     Accordion,
     AccordionContent,

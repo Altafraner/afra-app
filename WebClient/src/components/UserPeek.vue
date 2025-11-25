@@ -3,7 +3,7 @@ import { ref } from 'vue';
 import { Button, Divider, Popover, Tag, useToast } from 'primevue';
 import { mande } from 'mande';
 import { formatStudent, formatTutor } from '@/helpers/formatters';
-import type { UserInfoMinimal } from '@/models/user/userInfoMinimal.ts';
+import type { UserInfoMinimal } from '@/models/user/userInfoMinimal';
 
 defineOptions({ name: 'UserPeek' });
 

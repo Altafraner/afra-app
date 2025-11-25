@@ -8,7 +8,7 @@ import { mande } from 'mande';
 import { useUser } from '@/stores/user';
 import { useRoute, useRouter } from 'vue-router';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
-import { formatDate } from '@/helpers/formatters.ts';
+import { formatDate } from '@/helpers/formatters';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
 
 const props = defineProps({

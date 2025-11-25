@@ -13,7 +13,7 @@ import {
 } from 'primevue';
 import { mande } from 'mande';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
-import { formatDate, formatPerson } from '@/helpers/formatters.ts';
+import { formatDate, formatPerson } from '@/helpers/formatters';
 import Grid from '@/components/Form/Grid.vue';
 import GridEditRow from '@/components/Form/GridEditRow.vue';
 import AfraPersonSelector from '@/Otium/components/Form/AfraPersonSelector.vue';

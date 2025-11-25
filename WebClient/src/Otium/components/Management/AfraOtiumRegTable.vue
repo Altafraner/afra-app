@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue';
 import { Button, Column, DataTable, Dialog, useDialog } from 'primevue';
-import { formatDate, formatDayOfWeek, formatTutor } from '@/helpers/formatters.ts';
+import { formatDate, formatDayOfWeek, formatTutor } from '@/helpers/formatters';
 import CreateWiederholungForm from '@/Otium/components/Management/CreateWiederholungForm.vue';
 import CancelWiederholungForm from '@/Otium/components/Management/CancelWiederholungForm.vue';
 

@@ -1,4 +1,4 @@
-﻿import type { UserInfoMinimal } from '@/models/user/userInfoMinimal.ts';
+﻿import type { UserInfoMinimal } from '@/models/user/userInfoMinimal';
 
 export interface Note {
     id: string;

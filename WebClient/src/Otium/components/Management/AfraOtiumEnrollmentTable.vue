@@ -3,7 +3,7 @@ import { Badge, Button, Column, DataTable, useDialog } from 'primevue';
 import AfraOtiumAnwesenheit from '@/Otium/components/Shared/AfraOtiumAnwesenheit.vue';
 import UserPeek from '@/components/UserPeek.vue';
 import Notes from '@/Otium/components/Notes/Notes.vue';
-import { useUser } from '@/stores/user.ts';
+import { useUser } from '@/stores/user';
 import { computed } from 'vue';
 
 const props = defineProps({

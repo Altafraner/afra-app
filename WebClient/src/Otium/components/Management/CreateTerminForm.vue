@@ -11,7 +11,7 @@ import {
 } from 'primevue';
 import { Form } from '@primevue/forms';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
-import { formatTutor } from '@/helpers/formatters.ts';
+import { formatTutor } from '@/helpers/formatters';
 import AfraPersonSelector from '@/Otium/components/Form/AfraPersonSelector.vue';
 import AfraDateSelector from '@/Otium/components/Form/AfraDateSelector.vue';
 
