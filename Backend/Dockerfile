@@ -2,7 +2,7 @@
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src/
-COPY --link Afra-App.slnx ./
+COPY --link Afra-App.slnx Directory.Build.props Directory.Packages.props ./
 COPY --link --parents **/*.csproj ./
 RUN dotnet restore "Afra-App.slnx" \
     --runtime linux-x64
@@ -16,7 +16,7 @@ RUN dotnet publish "Altafraner.AfraApp/Altafraner.AfraApp.csproj" \
 
 FROM mcr.microsoft.com/dotnet/runtime-deps:10.0 AS run
 EXPOSE 8080
-RUN apt-get update && apt-get -y install libldap-2.5-0
+RUN apt-get update && apt-get -y install libldap2
 USER $APP_UID
 WORKDIR /app
 COPY --from=build /app/publish .
