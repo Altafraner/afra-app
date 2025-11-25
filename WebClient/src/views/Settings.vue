@@ -2,7 +2,7 @@
 import { Button, useToast } from 'primevue';
 import { ref } from 'vue';
 import { mande } from 'mande';
-import { useUser } from '@/stores/user.js';
+import { useUser } from '@/stores/user';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
 
 const loading = ref(false);

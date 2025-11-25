@@ -1,9 +1,9 @@
 <script setup>
 import { Button, Column, DataTable, Skeleton, Tag, useToast } from 'primevue';
-import { formatDate, formatStudent } from '@/helpers/formatters.js';
+import { formatDate, formatStudent } from '@/helpers/formatters.ts';
 import { ref } from 'vue';
 import { mande } from 'mande';
-import { useUser } from '@/stores/user.js';
+import { useUser } from '@/stores/user';
 import AuslastungsTag from '@/Otium/components/Shared/AuslastungsTag.vue';
 
 const toast = useToast();

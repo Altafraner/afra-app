@@ -1,6 +1,6 @@
 <script setup>
 import { Button, Column, DataTable, Skeleton } from 'primevue';
-import { formatPerson } from '@/helpers/formatters.js';
+import { formatPerson } from '@/helpers/formatters.ts';
 import AuslastungsTag from '@/Otium/components/Shared/AuslastungsTag.vue';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
 import AfraKategorieTag from '@/Otium/components/Shared/AfraKategorieTag.vue';

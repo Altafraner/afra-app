@@ -1,6 +1,7 @@
 using Altafraner.AfraApp.Otium.Domain.Contracts.Rules;
 using Altafraner.AfraApp.Otium.Domain.Contracts.Services;
 using Altafraner.AfraApp.Otium.Domain.DTO.Katalog;
+using Altafraner.AfraApp.Otium.Domain.DTO.Notiz;
 using Altafraner.AfraApp.Otium.Domain.Models.TimeInterval;
 using Altafraner.AfraApp.Schuljahr.Domain.Models;
 using Altafraner.AfraApp.User.Domain.DTO;
@@ -17,25 +18,31 @@ namespace Altafraner.AfraApp.Otium.Services;
 /// <summary>
 ///     A service for handling enrollments.
 /// </summary>
-public class EnrollmentService
+internal class EnrollmentService
 {
     private readonly BlockHelper _blockHelper;
     private readonly AfraAppContext _dbContext;
     private readonly ILogger _logger;
     private readonly IRulesFactory _rulesFactory;
     private readonly INotificationService _notificationService;
+    private readonly NotesService _notesService;
 
     /// <summary>
     ///     Constructs the EnrollmentService. Usually called by the DI container.
     /// </summary>
-    public EnrollmentService(AfraAppContext dbContext, ILogger<EnrollmentService> logger, BlockHelper blockHelper,
-        IRulesFactory rulesFactory, INotificationService notificationService)
+    public EnrollmentService(AfraAppContext dbContext,
+        ILogger<EnrollmentService> logger,
+        BlockHelper blockHelper,
+        IRulesFactory rulesFactory,
+        INotificationService notificationService,
+        NotesService notesService)
     {
         _dbContext = dbContext;
         _logger = logger;
         _blockHelper = blockHelper;
         _rulesFactory = rulesFactory;
         _notificationService = notificationService;
+        _notesService = notesService;
     }
 
     /// <summary>
@@ -236,7 +243,8 @@ public class EnrollmentService
     /// <returns></returns>
     public async Task<EinschreibungsPreview> GetEnrolmentPreview(Models_Person user, Models_OtiumTermin termin)
     {
-        var terminEinschreibungen = await _dbContext.OtiaEinschreibungen.AsNoTracking()
+        var terminEinschreibungen = await _dbContext.OtiaEinschreibungen
+            .AsNoTracking()
             .Where(e => e.Termin == termin)
             .ToListAsync();
 
@@ -258,10 +266,15 @@ public class EnrollmentService
         var changeResult = usersEnrollment != null
             ? await MayUnenroll(user, usersEnrollment)
             : await MayEnroll(user, termin);
+        var notes = await _notesService.GetNotesAsync(user.Id, termin.Block.Id);
+        var myNote = notes.FirstOrDefault(n => n.AuthorId == user.Id);
+        if (myNote != null) notes.Remove(myNote);
         return new EinschreibungsPreview(countEnrolled,
             changeResult.IsValid,
             string.Join(Environment.NewLine, changeResult.Messages),
             usersEnrollment != null,
+            myNote is not null ? new Notiz(myNote) : null,
+            notes.Select(n => new Notiz(n)),
             schema.Interval);
     }
 

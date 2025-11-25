@@ -1,5 +1,5 @@
 <script setup>
-import { chooseSeverity } from '@/helpers/formatters.js';
+import { chooseSeverity } from '@/helpers/formatters.ts';
 import { Tag } from 'primevue';
 
 const props = defineProps({

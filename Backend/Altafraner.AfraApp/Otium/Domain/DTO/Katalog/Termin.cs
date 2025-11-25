@@ -1,3 +1,5 @@
+using Altafraner.AfraApp.Otium.Domain.Models;
+using Altafraner.AfraApp.Schuljahr.Domain.Models;
 using Altafraner.AfraApp.User.Domain.DTO;
 
 namespace Altafraner.AfraApp.Otium.Domain.DTO.Katalog;
@@ -13,10 +15,11 @@ public record Termin : ITermin
     /// <param name="termin">The termins DB entry</param>
     /// <param name="einschreibung">Information on whether and how to enroll</param>
     /// <param name="kategorie">The category the Otium is in</param>
-    /// <param name="startTime">The time the termin starts at</param>
-    /// <param name="block">The block the termin is in.</param>
-    public Termin(Models.OtiumTermin termin, EinschreibungsPreview einschreibung,
-        Guid kategorie, TimeOnly startTime, string block)
+    /// <param name="schema">The schema of the block the termin is in</param>
+    public Termin(OtiumTermin termin,
+        EinschreibungsPreview einschreibung,
+        Guid kategorie,
+        BlockMetadata schema)
     {
         Id = termin.Id;
         Otium = termin.Bezeichnung;
@@ -28,14 +31,19 @@ public record Termin : ITermin
         Tutor = termin.Tutor is not null ? new PersonInfoMinimal(termin.Tutor) : null;
         MaxEinschreibungen = termin.MaxEinschreibungen;
         Einschreibung = einschreibung;
-        BlockSchemaId = termin.Block.SchemaId;
-        Datum = termin.Block.Schultag.Datum.ToDateTime(startTime);
         Wiederholungen = termin.Wiederholung?.Termine
             .Select(t => t.Block.SchultagKey)
             .Distinct()
             .Order()
             .SkipWhile(d => d <= termin.Block.SchultagKey) ?? [];
-        Block = block;
+        Block = new BlockInfo
+        {
+            Datum = termin.Block.Schultag.Datum,
+            Id = termin.Block.Id,
+            Name = schema.Bezeichnung,
+            SchemaId = schema.Id,
+            Uhrzeit = schema.Interval
+        };
     }
 
     /// <summary>
@@ -77,11 +85,10 @@ public record Termin : ITermin
     /// <inheritdoc />
     public string Ort { get; set; }
 
-    /// <inheritdoc />
-    public char BlockSchemaId { get; set; }
-
-    /// <inheritdoc />
-    public string Block { get; set; }
+    /// <summary>
+    ///     The block the termin is in.
+    /// </summary>
+    public BlockInfo Block { get; set; }
 
     /// <inheritdoc />
     public PersonInfoMinimal? Tutor { get; set; }

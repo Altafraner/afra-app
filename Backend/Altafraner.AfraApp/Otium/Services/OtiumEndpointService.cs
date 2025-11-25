@@ -21,7 +21,7 @@ namespace Altafraner.AfraApp.Otium.Services;
 /// <summary>
 ///     A Service for handling requests to the Otium endpoint.
 /// </summary>
-public class OtiumEndpointService
+internal class OtiumEndpointService
 {
     private readonly IAttendanceService _attendanceService;
     private readonly BlockHelper _blockHelper;
@@ -133,8 +133,7 @@ public class OtiumEndpointService
         return new Katalog_Termin(termin,
             await _enrollmentService.GetEnrolmentPreview(user, termin),
             termin.Otium.Kategorie.Id,
-            schema.Interval.Start,
-            schema.Bezeichnung);
+            schema);
     }
 
     private async Task<IEnumerable<string>> GetStatusForDayAsync(Models_Person user, DateOnly date)

@@ -1,5 +1,5 @@
 <script setup>
-import { formatDate } from '@/helpers/formatters.js';
+import { formatDate } from '@/helpers/formatters.ts';
 import {
     Accordion,
     AccordionContent,
@@ -11,7 +11,7 @@ import {
     DataTable,
     Message,
 } from 'primevue';
-import { useUser } from '@/stores/user.js';
+import { useUser } from '@/stores/user';
 import { computed } from 'vue';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
 import { findPath } from '@/helpers/tree.js';

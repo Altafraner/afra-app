@@ -1,5 +1,5 @@
 <script setup>
-import { useUser } from '@/stores/user.js';
+import { useUser } from '@/stores/user';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
 import { Button, Column, DataTable, Dialog, Skeleton, useToast } from 'primevue';
 import { ref } from 'vue';

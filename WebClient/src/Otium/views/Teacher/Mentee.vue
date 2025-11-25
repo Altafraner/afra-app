@@ -2,9 +2,9 @@
 import { Button, Skeleton, useToast } from 'primevue';
 import { computed, ref } from 'vue';
 import { mande } from 'mande';
-import { useUser } from '@/stores/user.js';
+import { useUser } from '@/stores/user';
 import StudentOverview from '@/Otium/components/Overview/StudentOverview.vue';
-import { formatStudent } from '@/helpers/formatters.js';
+import { formatStudent } from '@/helpers/formatters.ts';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
 
 const props = defineProps({

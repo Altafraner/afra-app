@@ -4,8 +4,8 @@ import 'primeicons/primeicons.css';
 
 import DynamicDialog from 'primevue/dynamicdialog';
 import AfraNav from '@/components/AfraNav.vue';
-import { useUser } from '@/stores/user.js';
-import { computed, ref } from 'vue';
+import { useUser } from '@/stores/user';
+import { computed } from 'vue';
 import wappenLight from '/vdaa/favicon.svg?url';
 import wappenDark from '/vdaa/favicon-dark.svg?url';
 import { ConfirmPopup, Image, Skeleton, Toast, useToast } from 'primevue';

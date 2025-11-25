@@ -16,7 +16,7 @@ namespace Altafraner.AfraApp.Otium.API.Hubs;
 /// <summary>
 ///     A hub for managing attendance updates in the Otium application.
 /// </summary>
-public class AttendanceHub : Hub<IAttendanceHubClient>
+internal class AttendanceHub : Hub<IAttendanceHubClient>
 {
     private readonly IAttendanceService _attendanceService;
     private readonly ILogger<AttendanceHub> _logger;

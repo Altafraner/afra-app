@@ -1,8 +1,9 @@
-<script setup>
+<script lang="ts" setup>
 import { ref } from 'vue';
 import { Button, Divider, Popover, Tag, useToast } from 'primevue';
 import { mande } from 'mande';
-import { formatStudent, formatTutor } from '@/helpers/formatters.js';
+import { formatStudent, formatTutor } from '@/helpers/formatters.ts';
+import type { UserInfoMinimal } from '@/models/user/userInfoMinimal.ts';
 
 defineOptions({ name: 'UserPeek' });
 
@@ -16,7 +17,7 @@ const props = defineProps({
 const toast = useToast();
 const pop = ref();
 
-const copy = async (text) => {
+const copy = async (text: string) => {
     try {
         await navigator.clipboard.writeText(text);
         toast.add({
@@ -30,17 +31,17 @@ const copy = async (text) => {
     }
 };
 
-const mentors = ref([]);
+const mentors = ref<UserInfoMinimal[]>([]);
 const isLoadingMentors = ref(false);
 const mentorsError = ref('');
 const mentorsLoaded = ref(false);
 
-const fetchMentors = async (id) => {
+const fetchMentors = async (id: string) => {
     if (!id) return;
     isLoadingMentors.value = true;
     mentorsError.value = '';
     try {
-        const res = await mande(`/api/people/${id}/mentor`).get();
+        const res: any = await mande(`/api/people/${id}/mentor`).get();
         mentors.value = Array.isArray(res) ? res : (res?.items ?? []);
         mentorsLoaded.value = true;
     } catch (e) {
@@ -51,7 +52,7 @@ const fetchMentors = async (id) => {
     }
 };
 
-const toggle = async (event) => {
+const toggle = async (event: Event) => {
     pop.value?.toggle(event);
     if (!mentorsLoaded.value && props.person?.id) {
         await fetchMentors(props.person.id);

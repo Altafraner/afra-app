@@ -34,6 +34,13 @@ internal sealed class NotesService
             && e.AuthorId == authorId);
 
         if (note == null) return false;
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            _dbContext.OtiaEinschreibungsNotizen.Remove(note);
+            await _dbContext.SaveChangesAsync();
+            return true;
+        }
+
         note.Content = content;
         await _dbContext.SaveChangesAsync();
 
@@ -66,5 +73,14 @@ internal sealed class NotesService
     {
         return await _dbContext.OtiaEinschreibungsNotizen.AnyAsync(e => e.StudentId == studentId
                                                                         && e.BlockId == blockId);
+    }
+
+    public async Task<List<OtiumAnwesenheitsNotiz>> GetNotesAsync(Guid studentId, Guid blockId)
+    {
+        return await _dbContext.OtiaEinschreibungsNotizen
+            .Include(e => e.Author)
+            .Where(e => e.StudentId == studentId)
+            .Where(e => e.BlockId == blockId)
+            .ToListAsync();
     }
 }

@@ -5,12 +5,12 @@ import {
     AccordionHeader,
     AccordionPanel,
     InputText,
+    Select,
     Textarea,
     useToast,
-    Select,
 } from 'primevue';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
-import { useUser } from '@/stores/user.js';
+import { useUser } from '@/stores/user';
 import { mande } from 'mande';
 import { computed, ref } from 'vue';
 import SimpleBreadcrumb from '@/components/SimpleBreadcrumb.vue';

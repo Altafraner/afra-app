@@ -1,9 +1,9 @@
 <script setup>
 import { Form } from '@primevue/forms';
-import { Button, FloatLabel, InputText, Password, Checkbox, useToast } from 'primevue';
+import { Button, Checkbox, FloatLabel, InputText, Password, useToast } from 'primevue';
 import { ref } from 'vue';
 import { mande } from 'mande';
-import { useUser } from '@/stores/user.js';
+import { useUser } from '@/stores/user';
 
 const loading = ref(false);
 const user = useUser();
