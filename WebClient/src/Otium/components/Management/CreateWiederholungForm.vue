@@ -11,7 +11,7 @@ import {
 } from 'primevue';
 import { Form } from '@primevue/forms';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
-import { formatDayOfWeek, formatTutor } from '@/helpers/formatters.ts';
+import { formatDayOfWeek, formatTutor } from '@/helpers/formatters';
 import AfraDateSelector from '@/Otium/components/Form/AfraDateSelector.vue';
 
 const emit = defineEmits(['submit']);

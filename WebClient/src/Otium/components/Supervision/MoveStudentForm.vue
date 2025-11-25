@@ -1,7 +1,7 @@
 <script setup>
 import { computed, inject, ref } from 'vue';
 import Form from '@primevue/forms/form';
-import { formatStudent } from '@/helpers/formatters.ts';
+import { formatStudent } from '@/helpers/formatters';
 import FloatLabel from 'primevue/floatlabel';
 import { Button, Message, Select, SplitButton } from 'primevue';
 

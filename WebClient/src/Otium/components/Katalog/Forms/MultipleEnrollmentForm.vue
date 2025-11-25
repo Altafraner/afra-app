@@ -1,7 +1,7 @@
 <script setup>
 import { inject, ref } from 'vue';
 import { Button, PickList } from 'primevue';
-import { formatDate } from '@/helpers/formatters.ts';
+import { formatDate } from '@/helpers/formatters';
 
 const dialogRef = inject('dialogRef');
 

@@ -4,7 +4,7 @@ import { computed, ref } from 'vue';
 import { mande } from 'mande';
 import { useUser } from '@/stores/user';
 import StudentOverview from '@/Otium/components/Overview/StudentOverview.vue';
-import { formatStudent } from '@/helpers/formatters.ts';
+import { formatStudent } from '@/helpers/formatters';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
 
 const props = defineProps({

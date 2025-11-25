@@ -1,6 +1,6 @@
 <script setup>
 import { Button, Column, DataTable, Skeleton, Tag, useToast } from 'primevue';
-import { formatDate, formatStudent } from '@/helpers/formatters.ts';
+import { formatDate, formatStudent } from '@/helpers/formatters';
 import { ref } from 'vue';
 import { mande } from 'mande';
 import { useUser } from '@/stores/user';
