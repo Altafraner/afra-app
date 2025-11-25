@@ -132,6 +132,7 @@ function initMove(student, terminId) {
                 <afra-otium-enrollment-table
                     :enrollments="room.einschreibungen"
                     :update-function="updateAttendanceCallback"
+                    :block-id="block.id"
                     may-edit-attendance
                     show-transfer
                     @initMove="(student) => initMove(student, room.terminId)"

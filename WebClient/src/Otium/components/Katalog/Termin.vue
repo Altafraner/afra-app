@@ -160,6 +160,8 @@ async function editNotes() {
             notes: otium.value.einschreibung.notizen,
             myNote: otium.value.einschreibung.notiz,
             blockId: otium.value.block.id,
+            studentId: user.user.id,
+            updateSelf: true,
         },
         emits: {
             onUpdate: () => {

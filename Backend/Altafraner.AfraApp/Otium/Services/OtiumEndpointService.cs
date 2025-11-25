@@ -4,6 +4,7 @@ using Altafraner.AfraApp.Otium.Domain.Contracts.Services;
 using Altafraner.AfraApp.Otium.Domain.DTO;
 using Altafraner.AfraApp.Otium.Domain.DTO.Dashboard;
 using Altafraner.AfraApp.Otium.Domain.DTO.Katalog;
+using Altafraner.AfraApp.Otium.Domain.DTO.Notiz;
 using Altafraner.AfraApp.Otium.Domain.Models;
 using Altafraner.AfraApp.Otium.Domain.Models.TimeInterval;
 using Altafraner.AfraApp.Schuljahr.Domain.Models;
@@ -31,6 +32,7 @@ internal class OtiumEndpointService
     private readonly RulesValidationService _rulesValidationService;
     private readonly UserService _userService;
     private readonly INotificationService _notificationService;
+    private readonly NotesService _notesService;
 
     /// <summary>
     ///     Constructor for the OtiumEndpointService. Usually called by the DI container.
@@ -38,7 +40,8 @@ internal class OtiumEndpointService
     public OtiumEndpointService(AfraAppContext dbContext, KategorieService kategorieService,
         EnrollmentService enrollmentService, BlockHelper blockHelper, IAttendanceService attendanceService,
         UserService userService, RulesValidationService rulesValidationService,
-        INotificationService notificationService)
+        INotificationService notificationService,
+        NotesService notesService)
     {
         _dbContext = dbContext;
         _kategorieService = kategorieService;
@@ -48,6 +51,7 @@ internal class OtiumEndpointService
         _userService = userService;
         _rulesValidationService = rulesValidationService;
         _notificationService = notificationService;
+        _notesService = notesService;
     }
 
     /// <summary>
@@ -448,7 +452,13 @@ internal class OtiumEndpointService
         if (termin is null)
             return null;
 
-        var anwesenheiten = await _attendanceService.GetAttendanceForTerminAsync(terminId);
+        var anwesenheiten = await (await _attendanceService.GetAttendanceForTerminAsync(terminId))
+            .ToAsyncEnumerable()
+            .Select<KeyValuePair<Models_Person, OtiumAnwesenheitsStatus>, LehrerEinschreibung>(async (e, _) =>
+                new LehrerEinschreibung(new PersonInfoMinimal(e.Key),
+                    e.Value,
+                    (await _notesService.GetNotesAsync(e.Key.Id, termin.Block.Id)).Select(n => new Notiz(n))))
+            .ToListAsync();
 
         var isDoneOrRunning = _blockHelper.IsBlockDoneOrRunning(termin.Block);
 
@@ -472,9 +482,7 @@ internal class OtiumEndpointService
             Tutor = termin.Tutor is not null
                 ? new PersonInfoMinimal(termin.Tutor)
                 : null,
-            Einschreibungen = anwesenheiten.Select(e =>
-                new LehrerEinschreibung(new PersonInfoMinimal(e.Key),
-                    e.Value)),
+            Einschreibungen = anwesenheiten,
             Bezeichnung = termin.OverrideBezeichnung,
             Beschreibung = termin.OverrideBeschreibung,
         };

@@ -1,7 +1,10 @@
 <script setup>
-import { Badge, Button, Column, DataTable } from 'primevue';
+import { Badge, Button, Column, DataTable, useDialog } from 'primevue';
 import AfraOtiumAnwesenheit from '@/Otium/components/Shared/AfraOtiumAnwesenheit.vue';
 import UserPeek from '@/components/UserPeek.vue';
+import Notes from '@/Otium/components/Notes/Notes.vue';
+import { useUser } from '@/stores/user.ts';
+import { computed } from 'vue';
 
 const props = defineProps({
     enrollments: Array,
@@ -10,12 +13,31 @@ const props = defineProps({
     updateFunction: Function,
     showTransfer: Boolean,
     showRemove: Boolean,
+    blockId: String,
 });
 
 const emit = defineEmits(['initMove', 'remove']);
 
+const dialog = useDialog();
+const user = useUser();
+
 function initMove(student) {
     emit('initMove', student);
+}
+
+function openNotes(data) {
+    dialog.open(Notes, {
+        props: {
+            modal: true,
+            header: 'Notizen',
+        },
+        data: {
+            notes: computed(() => data.notizen),
+            myNote: data.notizen.find((n) => n.creator.id === user.user.id) ?? null,
+            blockId: props.blockId,
+            studentId: data.student.id,
+        },
+    });
 }
 </script>
 
@@ -55,6 +77,16 @@ function initMove(student) {
                         variant="text"
                         aria-label="Verschieben"
                         @click="() => initMove(data.student)"
+                    />
+                    <Button
+                        v-if="mayEditAttendance"
+                        v-tooltip="'Notizen'"
+                        :severity="data.notizen.length !== 0 ? 'warn' : 'secondary'"
+                        aria-label="Notizen"
+                        icon="pi pi-clipboard"
+                        size="small"
+                        variant="text"
+                        @click="() => openNotes(data)"
                     />
                     <Button
                         v-if="!mayEditAttendance && showRemove"

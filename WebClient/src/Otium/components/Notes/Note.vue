@@ -1,9 +1,8 @@
 ﻿<script lang="ts" setup>
-import { Card } from 'primevue';
+import { Card, Message } from 'primevue';
 import { convertMarkdownToHtml } from '@/composables/markdown';
-import UserPeek from '@/components/UserPeek.vue';
-import { formatDateTime } from '@/helpers/formatters';
 import type { Note } from '@/Otium/models/note.ts';
+import { formatDateTime, formatPerson } from '@/helpers/formatters';
 
 defineProps<{
     note: Note;
@@ -11,18 +10,30 @@ defineProps<{
 </script>
 
 <template>
-    <Card>
+    <Card
+        :pt="{
+            body: {
+                class: ['p-4'],
+            },
+            content: {
+                class: ['mb-2'],
+            },
+        }"
+        class="dark:bg-surface-800 bg-surface-100 p-0"
+    >
         <template #content>
-            <div v-html="convertMarkdownToHtml(note.content)" />
+            <div class="m-trim" v-html="convertMarkdownToHtml(note.content)" />
         </template>
         <template #footer>
             <div class="flex justify-between flex-wrap">
-                <UserPeek :person="note.person" />
-                <span
+                <Message severity="info" size="small" variant="simple">{{
+                    formatPerson(note.creator)
+                }}</Message>
+                <Message severity="secondary" size="small" variant="simple"
                     >Erstellt am {{ formatDateTime(new Date(note.created))
                     }}<template v-if="note.created !== note.changed"
                         >, Geändert {{ formatDateTime(new Date(note.changed)) }}</template
-                    >.</span
+                    >.</Message
                 >
             </div>
         </template>

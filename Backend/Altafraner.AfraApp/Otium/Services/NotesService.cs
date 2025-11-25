@@ -6,10 +6,12 @@ namespace Altafraner.AfraApp.Otium.Services;
 internal sealed class NotesService
 {
     private readonly AfraAppContext _dbContext;
+    private readonly AttendanceRealtimeService _attendanceRealtimeService;
 
-    public NotesService(AfraAppContext dbContext)
+    public NotesService(AfraAppContext dbContext, AttendanceRealtimeService attendanceRealtimeService)
     {
         _dbContext = dbContext;
+        _attendanceRealtimeService = attendanceRealtimeService;
     }
 
     public async Task<bool> TryAddNoteAsync(string content, Guid studentId, Guid blockId, Guid authorId)
@@ -24,6 +26,7 @@ internal sealed class NotesService
             BlockId = blockId
         });
         await _dbContext.SaveChangesAsync();
+        await SendRealtimeUpdate(studentId, blockId);
         return true;
     }
 
@@ -38,12 +41,13 @@ internal sealed class NotesService
         {
             _dbContext.OtiaEinschreibungsNotizen.Remove(note);
             await _dbContext.SaveChangesAsync();
+            await SendRealtimeUpdate(studentId, blockId);
             return true;
         }
 
         note.Content = content;
         await _dbContext.SaveChangesAsync();
-
+        await SendRealtimeUpdate(studentId, blockId);
         return true;
     }
 
@@ -59,6 +63,7 @@ internal sealed class NotesService
             AuthorId = authorId
         });
         await _dbContext.SaveChangesAsync();
+        await SendRealtimeUpdate(studentId, blockId);
         return true;
     }
 
@@ -81,6 +86,23 @@ internal sealed class NotesService
             .Include(e => e.Author)
             .Where(e => e.StudentId == studentId)
             .Where(e => e.BlockId == blockId)
+            .OrderByDescending(n => n.LastModified)
             .ToListAsync();
+    }
+
+    public async Task<Dictionary<Guid, OtiumAnwesenheitsNotiz[]>> GetNotesByBlockAsync(Guid blockId)
+    {
+        return await _dbContext.OtiaEinschreibungsNotizen
+            .Include(e => e.Author)
+            .Where(e => e.BlockId == blockId)
+            .OrderByDescending(n => n.LastModified)
+            .GroupBy(e => e.StudentId)
+            .ToDictionaryAsync(e => e.Key, e => e.ToArray());
+    }
+
+    private async Task SendRealtimeUpdate(Guid studentId, Guid blockId)
+    {
+        var notes = await GetNotesAsync(studentId, blockId);
+        await _attendanceRealtimeService.SendNoteUpdate(studentId, blockId, notes);
     }
 }

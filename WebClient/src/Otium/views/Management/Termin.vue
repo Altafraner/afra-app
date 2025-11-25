@@ -421,6 +421,7 @@ await fetchData();
         :may-edit-attendance="aufsichtRunning"
         :update-function="updateAttendanceCallback"
         :show-remove="!otium.isDoneOrRunning && !otium.isSupervisionEnabled"
+        :block-id="otium.blockId"
         show-attendance
         show-transfer
         @remove="initRemove"

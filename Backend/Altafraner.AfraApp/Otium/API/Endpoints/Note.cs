@@ -1,4 +1,5 @@
 ﻿using Altafraner.AfraApp.Otium.Domain.DTO.Notiz;
+using Altafraner.AfraApp.Otium.Domain.Models;
 using Altafraner.AfraApp.Otium.Services;
 using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.AfraApp.User.Services;
@@ -39,12 +40,23 @@ internal static class Note
         if (user.Id != request.StudentId && user.Rolle != Rolle.Tutor) return Results.Forbid();
 
         var affected = await userService.GetUserByIdAsync(request.StudentId);
-        if (affected.Rolle is not Rolle.Mittelstufe and not Rolle.Oberstufe) return Results.BadRequest();
+        if (affected.Rolle is not Rolle.Mittelstufe and not Rolle.Oberstufe)
+            return Results.BadRequest("The person represented by studentId is not a student.");
 
+        List<OtiumAnwesenheitsNotiz> notes;
         var success = await service.UpdateNoteAsync(request.Content, request.StudentId, request.BlockId, user.Id);
-        if (success) return Results.Ok();
+        if (success)
+        {
+            notes = await service.GetNotesAsync(affected.Id, request.BlockId);
+            return Results.Ok(notes.Select(n => new Notiz(n)));
+        }
+
+        ;
 
         success = await service.TryAddNoteAsync(request.Content, request.StudentId, request.BlockId, user.Id);
-        return success ? Results.Created() : Results.Conflict();
+        if (!success) return Results.Conflict();
+
+        notes = await service.GetNotesAsync(affected.Id, request.BlockId);
+        return Results.Ok(notes.Select(n => new Notiz(n)));
     }
 }
