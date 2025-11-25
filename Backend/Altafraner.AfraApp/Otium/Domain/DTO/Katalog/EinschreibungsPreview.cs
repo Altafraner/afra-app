@@ -10,6 +10,8 @@ namespace Altafraner.AfraApp.Otium.Domain.DTO.Katalog;
 /// <param name="Grund">the reason the user may not enroll / unenroll</param>
 /// <param name="Eingeschrieben">whether the user is enrolled for this sub-slot</param>
 /// <param name="Interval">the timeslot for this otium</param>
+/// <param name="Notiz">the users note regarding that enrollment</param>
+/// <param name="Notizen">all notes regarding that enrollment</param>
 public record EinschreibungsPreview(
     int Anzahl,
     bool KannBearbeiten,
