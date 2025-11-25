@@ -28,8 +28,7 @@ public class ProfundumModule : IModule
     /// <inheritdoc />
     public void Configure(WebApplication app)
     {
-        var group = app.MapGroup("/api/profundum")
-            .WithOpenApi();
+        var group = app.MapGroup("/api/profundum");
         group.MapEnrollmentEndpoints();
         group.MapManagementEndpoints();
     }

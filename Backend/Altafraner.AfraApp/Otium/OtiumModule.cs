@@ -46,7 +46,6 @@ public class OtiumModule : IModule
     public void Configure(WebApplication app)
     {
         var group = app.MapGroup("/api/otium")
-            .WithOpenApi()
             .RequireAuthorization();
         group.MapKategorienEndpoints();
         group.MapKatalogEndpoints();
