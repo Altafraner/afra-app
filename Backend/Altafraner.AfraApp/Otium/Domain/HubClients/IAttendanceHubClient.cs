@@ -1,5 +1,6 @@
 using Altafraner.AfraApp.Otium.API.Hubs;
 using Altafraner.AfraApp.Otium.Domain.DTO;
+using Altafraner.AfraApp.Otium.Domain.DTO.Notiz;
 using Altafraner.AfraApp.Otium.Domain.Models;
 
 namespace Altafraner.AfraApp.Otium.Domain.HubClients;
@@ -37,6 +38,12 @@ public interface IAttendanceHubClient
     Task UpdateAttendance(AttendanceUpdate update);
 
     /// <summary>
+    ///     Tells the client to update the notes regarding a student.
+    /// </summary>
+    /// <param name="update">The update to send</param>
+    Task UpdateNote(NoteUpdate update);
+
+    /// <summary>
     /// Tells the client to update the attendance status of all students in a block.
     /// </summary>
     Task UpdateBlockAttendances(IEnumerable<TerminInformation> updates);
@@ -67,6 +74,13 @@ public interface IAttendanceHubClient
     /// <param name="BlockId">The blocks id</param>
     /// <param name="Status">The students updated status</param>
     public record AttendanceUpdate(Guid StudentId, Guid TerminId, Guid BlockId, OtiumAnwesenheitsStatus Status);
+
+    /// <summary>
+    ///     A dto for updating the notes of a student in a specific block.
+    /// </summary>
+    /// <param name="StudentId">The students id</param>
+    /// <param name="Notizen">All notes for the student during the block</param>
+    record NoteUpdate(Guid StudentId, IEnumerable<Notiz> Notizen);
 
     /// <summary>
     /// A dto for updating the status of a specific termin.

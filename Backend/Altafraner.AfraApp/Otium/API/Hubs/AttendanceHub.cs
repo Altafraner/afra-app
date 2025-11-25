@@ -16,18 +16,20 @@ namespace Altafraner.AfraApp.Otium.API.Hubs;
 /// <summary>
 ///     A hub for managing attendance updates in the Otium application.
 /// </summary>
-internal class AttendanceHub : Hub<IAttendanceHubClient>
+internal partial class AttendanceHub : Hub<IAttendanceHubClient>
 {
     private readonly IAttendanceService _attendanceService;
+    private readonly NotesService _notesService;
     private readonly ILogger<AttendanceHub> _logger;
 
     /// <summary>
     ///     Constructs a new instance of the <see cref="AttendanceHub" /> class.
     /// </summary>
-    public AttendanceHub(IAttendanceService attendanceService, ILogger<AttendanceHub> logger)
+    public AttendanceHub(IAttendanceService attendanceService, ILogger<AttendanceHub> logger, NotesService notesService)
     {
         _attendanceService = attendanceService;
         _logger = logger;
+        _notesService = notesService;
     }
 
     /// <summary>
@@ -47,7 +49,7 @@ internal class AttendanceHub : Hub<IAttendanceHubClient>
         }
 
         await Groups.AddToGroupAsync(Context.ConnectionId, TerminGroupName(terminId));
-        var updates = await GetTerminAttendances(terminId);
+        var updates = await GetTerminAttendances(terminId, block.Id);
         await Clients.Caller.UpdateTerminAttendances(updates);
     }
 
@@ -408,98 +410,5 @@ internal class AttendanceHub : Hub<IAttendanceHubClient>
         await SendNotificationToAffected("Schüler:in verschoben",
             $"{user.FirstName} {user.LastName} wurde ausgetragen.",
             block.Id, fromTerminId, Guid.Empty);
-    }
-
-    private async Task UpdateAttendance(OtiumAnwesenheitsStatus status, Guid studentId, Guid blockId, Guid terminId)
-    {
-        await _attendanceService.SetAttendanceForStudentInBlockAsync(studentId, blockId, status);
-        await Clients.Groups(TerminGroupName(terminId), BlockGroupName(blockId))
-            .UpdateAttendance(new IAttendanceHubClient.AttendanceUpdate(studentId, terminId, blockId, status));
-    }
-
-    private async Task<List<IAttendanceHubClient.TerminInformation>> GetBlockAttendances(Guid blockId)
-    {
-        var (attendancesByTermin, missingPersons, missingPersonsChecked) =
-            await _attendanceService.GetAttendanceForBlockAsync(blockId);
-
-        List<IAttendanceHubClient.TerminInformation> updates = [];
-        foreach (var (termin, anwesenheitByPerson) in attendancesByTermin)
-        {
-            var enrollments = anwesenheitByPerson.Select((entry, _) =>
-                    new LehrerEinschreibung(new PersonInfoMinimal(entry.Key), entry.Value))
-                .OrderBy(e => e.Student?.Vorname)
-                .ThenBy(e => e.Student?.Nachname)
-                .ToList();
-            updates.Add(new IAttendanceHubClient.TerminInformation(termin.Id, termin.Bezeichnung, termin.Ort,
-                enrollments, termin.SindAnwesenheitenKontrolliert));
-        }
-
-        updates = updates.OrderBy(e => e.Ort).ToList();
-
-        var missingPersonsEnrollments = missingPersons.Select((entry, _) =>
-                new LehrerEinschreibung(new PersonInfoMinimal(entry.Key), entry.Value))
-            .OrderBy(e => e.Student?.Vorname)
-            .ThenBy(e => e.Student?.Nachname)
-            .ToList();
-        updates.Insert(0, new IAttendanceHubClient.TerminInformation(Guid.Empty, "Nicht eingeschrieben", "FEHLEND",
-            missingPersonsEnrollments, missingPersonsChecked));
-
-        return updates;
-    }
-
-    private async Task<List<LehrerEinschreibung>> GetTerminAttendances(Guid terminId)
-    {
-        var enrollments = await _attendanceService.GetAttendanceForTerminAsync(terminId);
-        return enrollments.Select(entry => new LehrerEinschreibung(new PersonInfoMinimal(entry.Key), entry.Value))
-            .ToList();
-    }
-
-    private Task SendUpdateToAffected(Guid blockId, Guid terminId)
-    {
-        return SendUpdateToAffected(blockId, Guid.Empty, terminId);
-    }
-
-    private async Task SendNotificationToAffected(string subject, string message, Guid blockId, Guid fromTerminId,
-        Guid toTerminId)
-    {
-        var notification =
-            new IAttendanceHubClient.Notification(subject, message, IAttendanceHubClient.NotificationSeverity.Info);
-        await Clients.Groups(BlockGroupName(blockId)).Notify(notification);
-        if (fromTerminId != Guid.Empty)
-            await Clients.Groups(TerminGroupName(fromTerminId)).Notify(notification);
-        if (toTerminId != Guid.Empty)
-            await Clients.Groups(TerminGroupName(toTerminId)).Notify(notification);
-    }
-
-    private async Task SendUpdateToAffected(Guid blockId, Guid fromTerminId, Guid toTerminId)
-    {
-        var blockUpdates = await GetBlockAttendances(blockId);
-        await Clients.Group(BlockGroupName(blockId)).UpdateBlockAttendances(blockUpdates);
-
-        var toTerminUpdates = blockUpdates.FirstOrDefault(t => t.TerminId == toTerminId);
-        if (toTerminUpdates is not null)
-            await Clients.Group(TerminGroupName(toTerminId))
-                .UpdateTerminAttendances(toTerminUpdates.Einschreibungen);
-        else
-            _logger.LogWarning("Tried to update termine for {fromTerminId}, but did not find any", fromTerminId);
-
-        if (fromTerminId == Guid.Empty)
-            return;
-        var fromTerminUpdates = blockUpdates.FirstOrDefault(t => t.TerminId == fromTerminId);
-        if (fromTerminUpdates is not null)
-            await Clients.Group(TerminGroupName(fromTerminId))
-                .UpdateTerminAttendances(fromTerminUpdates.Einschreibungen);
-        else
-            _logger.LogWarning("Tried to update termine for {fromTerminId}, but did not find any", fromTerminId);
-    }
-
-    internal static string TerminGroupName(Guid terminId)
-    {
-        return $"termin-{terminId}";
-    }
-
-    internal static string BlockGroupName(Guid blockId)
-    {
-        return $"block-{blockId}";
     }
 }

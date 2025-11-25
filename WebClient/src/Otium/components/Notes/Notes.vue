@@ -1,10 +1,9 @@
 ﻿<script lang="ts" setup>
-import { inject, ref } from 'vue';
+import { computed, inject, ref } from 'vue';
 import NoteElement from './Note.vue';
 import { Button, FloatLabel, InputGroup, Message, Textarea, useToast } from 'primevue';
 import type { Note, NoteCreationRequest } from '@/Otium/models/note';
 import { mande } from 'mande';
-import { useUser } from '@/stores/user';
 
 const dialogRef = inject<{
     value: {
@@ -12,6 +11,8 @@ const dialogRef = inject<{
             notes: Note[];
             myNote: Note;
             blockId: string;
+            studentId: string;
+            updateSelf: boolean;
         };
     };
 }>('dialogRef');
@@ -20,11 +21,16 @@ const emit = defineEmits<{
     update: any;
 }>();
 
-const user = useUser();
 const toast = useToast();
 
 const currentNote = ref<string>(dialogRef.value.data.myNote?.content ?? '');
 const disabled = ref<boolean>(false);
+const currentNotes = ref<Note[]>(dialogRef.value.data.notes);
+const notes = computed(() =>
+    (dialogRef.value.data.updateSelf ?? false)
+        ? currentNotes.value
+        : dialogRef.value.data.notes,
+);
 
 async function save() {
     disabled.value = true;
@@ -32,15 +38,16 @@ async function save() {
     const request: NoteCreationRequest = {
         content: currentNote.value,
         blockId: dialogRef.value.data.blockId,
-        studentId: user.user.id,
+        studentId: dialogRef.value.data.studentId,
     };
     try {
-        await api.put(request);
+        const result = await api.put<Note[]>(request);
         toast.add({
             severity: 'success',
             summary: 'Notiz gespeichert',
             life: 10000,
         });
+        currentNotes.value = result;
     } catch (error) {
         toast.add({
             severity: 'error',
@@ -58,10 +65,8 @@ async function save() {
 
 <template>
     <div class="flex flex-col gap-4">
-        <NoteElement v-for="note in dialogRef.data.notes" :key="note.id" :note="note" />
-        <span v-if="dialogRef.data.notes.length === 0" class="text-center"
-            >Bisher gibt es keine Notizen von anderen.</span
-        >
+        <NoteElement v-for="note in notes" :key="note.id" :note="note" />
+        <span v-if="notes.length === 0" class="text-center">Bisher gibt es keine Notizen.</span>
     </div>
     <div class="flex flex-col gap-4 mt-6">
         <InputGroup>

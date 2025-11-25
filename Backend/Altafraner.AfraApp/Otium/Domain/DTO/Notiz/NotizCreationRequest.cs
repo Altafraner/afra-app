@@ -1,4 +1,6 @@
-﻿namespace Altafraner.AfraApp.Otium.Domain.DTO.Notiz;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Altafraner.AfraApp.Otium.Domain.DTO.Notiz;
 
 /// <summary>
 ///     A request to create a new note
@@ -8,6 +10,7 @@ public record NotizCreationRequest
     /// <summary>
     ///     The notes content
     /// </summary>
+    [MaxLength(500)]
     public required string Content { get; set; }
 
     /// <summary>

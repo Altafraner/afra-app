@@ -123,4 +123,16 @@ public class ManagementService
         _dbContext.OtiaTermine.Update(termin);
         await _dbContext.SaveChangesAsync();
     }
+
+    /// <summary>
+    ///     Gets the id's for termine in a block
+    /// </summary>
+    public async Task<Guid[]> GetTermineInBlock(Guid blockId)
+    {
+        return await _dbContext.OtiaTermine
+            .AsNoTracking()
+            .Where(t => t.Block.Id == blockId)
+            .Select(t => t.Id)
+            .ToArrayAsync();
+    }
 }

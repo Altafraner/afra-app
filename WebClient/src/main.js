@@ -113,6 +113,18 @@ const AfraAppPreset = definePreset(Aura, {
                 },
             },
         },
+        message: {
+            colorScheme: {
+                dark: {
+                    info: {
+                        color: '{blue.200}',
+                        simple: {
+                            color: '{blue.200}',
+                        },
+                    },
+                },
+            },
+        },
     },
     semantic: {
         primary: {

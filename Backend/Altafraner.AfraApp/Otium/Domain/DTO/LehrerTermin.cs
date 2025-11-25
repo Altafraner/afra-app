@@ -86,6 +86,8 @@ public record LehrerTermin : ITermin
 /// </summary>
 /// <param name="Student">The student enrolled</param>
 /// <param name="Anwesenheit">The current verification status</param>
+/// <param name="Notizen">Notes left regarding this attendance</param>
 public record LehrerEinschreibung(
     PersonInfoMinimal? Student,
-    OtiumAnwesenheitsStatus Anwesenheit);
+    OtiumAnwesenheitsStatus Anwesenheit,
+    IEnumerable<Notiz.Notiz> Notizen);

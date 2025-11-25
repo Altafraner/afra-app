@@ -268,7 +268,6 @@ internal class EnrollmentService
             : await MayEnroll(user, termin);
         var notes = await _notesService.GetNotesAsync(user.Id, termin.Block.Id);
         var myNote = notes.FirstOrDefault(n => n.AuthorId == user.Id);
-        if (myNote != null) notes.Remove(myNote);
         return new EinschreibungsPreview(countEnrolled,
             changeResult.IsValid,
             string.Join(Environment.NewLine, changeResult.Messages),

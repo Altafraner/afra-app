@@ -29,6 +29,14 @@
     .p-menubar-start img {
         @apply h-[3rem];
     }
+
+    .m-trim *:first-child {
+        @apply mt-0;
+    }
+
+    .m-trim *:last-child {
+        @apply mb-0;
+    }
 }
 
 :root {

@@ -32,6 +32,7 @@ public class OtiumModule : IModule
         services.AddScoped<EnrollmentService>();
         services.AddScoped<ManagementService>();
         services.AddScoped<IAttendanceService, AttendanceService>();
+        services.AddScoped<AttendanceRealtimeService>();
         services.AddScoped<NotesService>();
 
         services.AddHostedService<EnrollmentReminderScheduler>();

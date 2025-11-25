@@ -26,10 +26,12 @@ export function useAttendance(scope, id, toastService = { add: () => undefined }
     if (toValue(scope) === 'termin') {
         registerMessageHandler('UpdateTerminAttendances', updateTerminAttendances);
         registerMessageHandler('UpdateAttendance', updateAttendanceInTermin);
+        registerMessageHandler('UpdateNote', updateNoteInTermin);
     } else if (toValue(scope) === 'block') {
         registerMessageHandler('UpdateBlockAttendances', updateBlockAttendances);
         registerMessageHandler('UpdateAttendance', updateAttendanceInBlock);
         registerMessageHandler('UpdateTerminStatus', updateTerminStatus);
+        registerMessageHandler('UpdateNote', updateNoteInBlock);
     } else {
         throw Error(`Unrecognized scope: ${scope}`);
     }
@@ -68,6 +70,25 @@ export function useAttendance(scope, id, toastService = { add: () => undefined }
             attendances.value[index].anwesenheit = data.status;
         } else {
             console.warn('Received status for non-existent user', data);
+        }
+    }
+
+    function updateNoteInTermin(data) {
+        const index = attendances.value.findIndex((a) => a.student.id === data.studentId);
+        if (index !== -1) {
+            attendances.value[index].notizen = data.notizen;
+        }
+    }
+
+    function updateNoteInBlock(data) {
+        for (let i = 0; i < attendances.value.length; i++) {
+            console.log(attendances.value[i]);
+            const index = attendances.value[i].einschreibungen.findIndex(
+                (a) => a.student.id === data.studentId,
+            );
+            if (index !== -1) {
+                attendances.value[i].einschreibungen[index].notizen = data.notizen;
+            }
         }
     }
 

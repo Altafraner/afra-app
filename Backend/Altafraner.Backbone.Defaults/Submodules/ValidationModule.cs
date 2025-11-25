@@ -6,20 +6,13 @@ using Microsoft.Extensions.Hosting;
 namespace Altafraner.Backbone.Defaults;
 
 /// <summary>
-///     A pseudo-module for including some commonly used modules
+///     Adds validation to minimal APIs
 /// </summary>
-[DependsOn<DevelopmentModule>]
-[DependsOn<PrometheusModule>]
-[DependsOn<SignalRModule>]
-[DependsOn<CachingModule>]
-[DependsOn<HttpJsonOptionsModule>]
-[DependsOn<ReverseProxyHandlerModule>]
-[DependsOn<HttpContextAccessorModule>]
-[DependsOn<ValidationModule>]
-public class DefaultsModule : IModule
+public class ValidationModule : IModule
 {
     /// <inheritdoc />
     public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
     {
+        services.AddValidation();
     }
 }

@@ -5,7 +5,7 @@ export interface Note {
     content: string;
     created: string;
     changed: string;
-    person: UserInfoMinimal;
+    creator: UserInfoMinimal;
 }
 
 export interface NoteCreationRequest {
