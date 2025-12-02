@@ -82,7 +82,6 @@ export function useAttendance(scope, id, toastService = { add: () => undefined }
 
     function updateNoteInBlock(data) {
         for (let i = 0; i < attendances.value.length; i++) {
-            console.log(attendances.value[i]);
             const index = attendances.value[i].einschreibungen.findIndex(
                 (a) => a.student.id === data.studentId,
             );

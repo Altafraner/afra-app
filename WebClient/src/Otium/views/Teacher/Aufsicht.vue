@@ -34,7 +34,7 @@ await setup();
     <div class="flex justify-between items-center">
         <h1>Aufsicht</h1>
         <Button
-            v-if="status"
+            v-if="status && route.query.blockId === undefined"
             icon="pi pi-stop"
             label="Block Wechseln"
             severity="secondary"

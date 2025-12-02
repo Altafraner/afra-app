@@ -30,14 +30,11 @@ const useDataFromQuery = computed(
     () => props.useQueryBlock && route.query.blockId !== undefined,
 );
 
-async function setup() {
-    if (useDataFromQuery.value) {
-        inactive.value = false;
-        return useAttendance('block', route.query.blockId, toast);
-    }
+const blockId = computed(() => (useDataFromQuery.value ? route.query.blockId : props.block.id));
 
+async function setup() {
     inactive.value = false;
-    return useAttendance('block', props.block.id, toast);
+    return useAttendance('block', blockId.value, toast);
 }
 
 const attendanceService = await setup();
@@ -132,7 +129,7 @@ function initMove(student, terminId) {
                 <afra-otium-enrollment-table
                     :enrollments="room.einschreibungen"
                     :update-function="updateAttendanceCallback"
-                    :block-id="block.id"
+                    :block-id="blockId"
                     may-edit-attendance
                     show-transfer
                     @initMove="(student) => initMove(student, room.terminId)"
