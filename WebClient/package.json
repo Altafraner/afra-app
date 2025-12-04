@@ -14,7 +14,7 @@
     },
     "dependencies": {
         "@microsoft/signalr": "^10.0.0",
-        "@primevue/forms": "^4.3.4",
+        "@primevue/forms": "^4.5.1",
         "@primevue/themes": "^4.3.4",
         "@tailwindcss/vite": "^4.0.12",
         "dompurify": "^3.3.0",
