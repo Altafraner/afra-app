@@ -2,6 +2,7 @@ using Afra_App.Profundum.Configuration;
 using Afra_App.Profundum.Domain.DTO;
 using Afra_App.Profundum.Domain.Models;
 using Afra_App.User.Services;
+using Afra_App.User.Domain.Models;
 using Microsoft.Extensions.Options;
 
 namespace Afra_App.Profundum.Services;
@@ -111,12 +112,23 @@ public class ProfundumManagementService
             _logger.LogError("no such profundum def");
             return null;
         }
+        var tutorEntity = dtoInstanz.TutorId != Guid.Empty
+            ? await _dbContext.Personen.FindAsync(dtoInstanz.TutorId)
+            : null;
+            
+        if (tutorEntity is null)
+        {
+            _logger.LogError("no such tutor");
+            return null;
+        }    
 
         var inst = new ProfundumInstanz
         {
             Profundum = def,
             MaxEinschreibungen = dtoInstanz.MaxEinschreibungen,
-            Slots = [],
+            Tutor = tutorEntity,
+            Slots = new List<ProfundumSlot>(),
+        
         };
         _dbContext.ProfundaInstanzen.Add(inst);
         foreach (var s in dtoInstanz.Slots)

@@ -7,6 +7,7 @@ using Afra_App.Schuljahr.Domain.Models;
 using Afra_App.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -15,9 +16,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Afra_App.Migrations
 {
     [DbContext(typeof(AfraAppContext))]
-    partial class AfraAppContextModelSnapshot : ModelSnapshot
+    [Migration("20251202091407_AnkerFix")]
+    partial class AnkerFix
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -591,16 +594,11 @@ namespace Afra_App.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Bezeichnung")
+                    b.Property<string>("Bzeichnung")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<Guid>("KategorieId")
-                        .HasColumnType("uuid");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("KategorieId");
 
                     b.ToTable("ProfundumAnker");
                 });
@@ -943,17 +941,6 @@ namespace Afra_App.Migrations
                         .HasForeignKey("VerwalteteOtiaId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("ProfundumAnker", b =>
-                {
-                    b.HasOne("Afra_App.Profundum.Domain.Models.ProfundumKategorie", "Kategorie")
-                        .WithMany()
-                        .HasForeignKey("KategorieId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Kategorie");
                 });
 
             modelBuilder.Entity("ProfundumAnkerBewertung", b =>

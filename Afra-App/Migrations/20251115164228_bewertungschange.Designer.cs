@@ -7,6 +7,7 @@ using Afra_App.Schuljahr.Domain.Models;
 using Afra_App.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -15,9 +16,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Afra_App.Migrations
 {
     [DbContext(typeof(AfraAppContext))]
-    partial class AfraAppContextModelSnapshot : ModelSnapshot
+    [Migration("20251115164228_bewertungschange")]
+    partial class bewertungschange
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -393,14 +396,9 @@ namespace Afra_App.Migrations
                     b.Property<Guid>("ProfundumId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("TutorId")
-                        .HasColumnType("uuid");
-
                     b.HasKey("Id");
 
                     b.HasIndex("ProfundumId");
-
-                    b.HasIndex("TutorId");
 
                     b.ToTable("ProfundaInstanzen");
                 });
@@ -583,60 +581,6 @@ namespace Afra_App.Migrations
                     b.HasIndex("VerwalteteOtiaId");
 
                     b.ToTable("OtiumDefinitionPerson");
-                });
-
-            modelBuilder.Entity("ProfundumAnker", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Bezeichnung")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("KategorieId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("KategorieId");
-
-                    b.ToTable("ProfundumAnker");
-                });
-
-            modelBuilder.Entity("ProfundumAnkerBewertung", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("AnkerId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("BewertetePersonId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("Bewertung")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("KriteriumId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("ProfundumId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AnkerId");
-
-                    b.HasIndex("BewertetePersonId");
-
-                    b.HasIndex("KriteriumId");
-
-                    b.HasIndex("ProfundumId");
-
-                    b.ToTable("ProfundumAnkerBewertungen");
                 });
 
             modelBuilder.Entity("ProfundumBewertung", b =>
@@ -884,13 +828,7 @@ namespace Afra_App.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Afra_App.User.Domain.Models.Person", "Tutor")
-                        .WithMany()
-                        .HasForeignKey("TutorId");
-
                     b.Navigation("Profundum");
-
-                    b.Navigation("Tutor");
                 });
 
             modelBuilder.Entity("Afra_App.Profundum.Domain.Models.ProfundumSlot", b =>
@@ -943,52 +881,6 @@ namespace Afra_App.Migrations
                         .HasForeignKey("VerwalteteOtiaId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("ProfundumAnker", b =>
-                {
-                    b.HasOne("Afra_App.Profundum.Domain.Models.ProfundumKategorie", "Kategorie")
-                        .WithMany()
-                        .HasForeignKey("KategorieId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Kategorie");
-                });
-
-            modelBuilder.Entity("ProfundumAnkerBewertung", b =>
-                {
-                    b.HasOne("ProfundumAnker", "Anker")
-                        .WithMany()
-                        .HasForeignKey("AnkerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Afra_App.User.Domain.Models.Person", "BewertetePerson")
-                        .WithMany()
-                        .HasForeignKey("BewertetePersonId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ProfundumsBewertungKriterium", "Kriterium")
-                        .WithMany()
-                        .HasForeignKey("KriteriumId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Afra_App.Profundum.Domain.Models.ProfundumInstanz", "Profundum")
-                        .WithMany()
-                        .HasForeignKey("ProfundumId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Anker");
-
-                    b.Navigation("BewertetePerson");
-
-                    b.Navigation("Kriterium");
-
-                    b.Navigation("Profundum");
                 });
 
             modelBuilder.Entity("ProfundumBewertung", b =>

@@ -86,10 +86,10 @@ public class Person
     public ICollection<OtiumEinschreibung> OtiaEinschreibungen { get; set; } = new List<OtiumEinschreibung>();
 
     ///
-    public ICollection<ProfundumEinschreibung> ProfundaEinschreibungen { get; set; } = [];
+    public ICollection<ProfundumEinschreibung> ProfundaEinschreibungen { get; set; } = new List<ProfundumEinschreibung>();
 
     ///
-    public ICollection<ProfundumBelegWunsch> ProfundaBelegwuensche { get; set; } = [];
+    public ICollection<ProfundumBelegWunsch> ProfundaBelegwuensche { get; set; } = new List<ProfundumBelegWunsch>();
 
     /// <inheritdoc />
     public override string ToString()

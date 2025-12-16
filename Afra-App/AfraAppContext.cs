@@ -121,6 +121,16 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext
     public DbSet<ProfundumBewertung> ProfundumBewertungen { get; set; }
 
     /// <summary>
+    ///   All Anker for Profunda
+    /// </summary>
+    public DbSet<ProfundumAnker> ProfundumAnker { get; set; }
+
+    /// <summary>
+    ///  All Anker Bewertungen for Profunda
+    /// </summary>
+    public DbSet<ProfundumAnkerBewertung> ProfundumAnkerBewertungen { get; set; }
+
+    /// <summary>
     ///     All Calendar Subscriptions
     /// </summary>
     public DbSet<CalendarSubscription> CalendarSubscriptions { get; set; }
