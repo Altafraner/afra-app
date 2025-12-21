@@ -1,6 +1,7 @@
 using Altafraner.AfraApp.Calendar.Domain.Models;
 using Altafraner.AfraApp.Otium.Domain.Models;
 using Altafraner.AfraApp.Profundum.Domain.Models;
+using Altafraner.AfraApp.Profundum.Domain.Models.Bewertung;
 using Altafraner.AfraApp.Schuljahr.Domain.Models;
 using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.Backbone.EmailSchedulingModule;
@@ -120,6 +121,21 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
     ///     All Kategorien for Profunda
     /// </summary>
     public DbSet<ProfundumKategorie> ProfundaKategorien { get; set; }
+
+    /// <summary>
+    ///     All Bewertungen for Profunda
+    /// </summary>
+    public DbSet<ProfundumFeedbackEntry> ProfundumFeedbackEntries { get; set; }
+
+    /// <summary>
+    ///     All Anker for Profunda
+    /// </summary>
+    public DbSet<ProfundumFeedbackAnker> ProfundumAnker { get; set; }
+
+    /// <summary>
+    ///     All categories of profundum ankers.
+    /// </summary>
+    public DbSet<ProfundumFeedbackKategorie> ProfundumFeedbackKategories { get; set; }
 
     /// <summary>
     ///     All Calendar Subscriptions
@@ -254,6 +270,12 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
         });
 
         modelBuilder.Entity<CalendarSubscription>(s => { s.HasOne(b => b.BetroffenePerson).WithMany(); });
+
+        modelBuilder.Entity<ProfundumFeedbackKategorie>(e =>
+        {
+            e.HasMany(k => k.Kategorien)
+                .WithMany();
+        });
 
         /*
          * This is a bit annoying, but we'll have to do it because of a bug in the Npgsql provider.
