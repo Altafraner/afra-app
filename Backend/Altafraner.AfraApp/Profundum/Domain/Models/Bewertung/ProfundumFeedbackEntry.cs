@@ -18,7 +18,7 @@ public class ProfundumFeedbackEntry
     /// <summary>
     ///     The actual Kriterium
     /// </summary>
-    public required ProfundumFeedbackAnker Anker { get; set; }
+    public ProfundumFeedbackAnker Anker { get; set; } = null!;
 
     /// <summary>
     ///     The profundum instanz the Bewertung is for
@@ -28,7 +28,7 @@ public class ProfundumFeedbackEntry
     /// <summary>
     ///     The actual Profundum Instanz
     /// </summary>
-    public required ProfundumInstanz Instanz { get; set; }
+    public ProfundumInstanz Instanz { get; set; } = null!;
 
     /// <summary>
     ///     The person that received the Bewertung
@@ -38,7 +38,7 @@ public class ProfundumFeedbackEntry
     /// <summary>
     ///     The actual person that received the Bewertung
     /// </summary>
-    public required Person BetroffenePerson { get; set; }
+    public Person BetroffenePerson { get; set; } = null!;
 
     /// <summary>
     ///     The grade given for the Kriterium
