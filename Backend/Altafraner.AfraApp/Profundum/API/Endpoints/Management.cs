@@ -2,9 +2,14 @@ using System.Net.Mime;
 using System.Text;
 using Altafraner.AfraApp.Backbone.Authorization;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
+using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.Profundum.Services;
 using Match = Altafraner.AfraApp.Profundum.Services.ProfundumMatchingService;
 using Mgmt = Altafraner.AfraApp.Profundum.Services.ProfundumManagementService;
+using Altafraner.AfraApp.User.Domain.Models;
+using Altafraner.AfraApp.User.Services;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.EntityFrameworkCore;
 
 namespace Altafraner.AfraApp.Profundum.API.Endpoints;
 
@@ -59,5 +64,38 @@ public static class Management
         gp.MapPut("/enrollment/{personId:guid}", (Mgmt svc, Guid personId, List<DTOProfundumEnrollment> enrollments) => svc.UpdateEnrollmentsAsync(personId, enrollments));
 
         gp.MapGet("/matching.csv", async (Mgmt svc) => TypedResults.File(Encoding.UTF8.GetBytes(await svc.GetStudentMatchingCsv()), MediaTypeNames.Text.Csv));
+
+        app.MapGet("/management/belegung", GetAllQuartaleWithEnrollments)
+            .RequireAuthorization(AuthorizationPolicies.TutorOnly);
+    }
+
+    // TODO This is slow and should be replaced by something more in line with the new matching interface.
+    private static async Task<Ok<QuartalEnrollmentOverview[]>> GetAllQuartaleWithEnrollments(
+        AfraAppContext dbContext,
+        UserAccessor userAccessor)
+    {
+        var user = await userAccessor.GetUserAsync();
+        IQueryable<ProfundumInstanz> profundaQuery = dbContext.ProfundaInstanzen
+            .AsSplitQuery()
+            .Include(e => e.Profundum)
+            .Include(e => e.Einschreibungen.Where(enr => enr.IsFixed))
+            .ThenInclude(e => e.BetroffenePerson)
+            .Include(e => e.Slots);
+
+        if (!user.GlobalPermissions.Contains(GlobalPermission.Profundumsverantwortlich))
+            profundaQuery = profundaQuery.Where(p => p.Verantwortliche.Contains(user));
+
+        var profunda = await profundaQuery
+            .OrderBy(e => e.Profundum.Bezeichnung)
+            .AsAsyncEnumerable()
+            .SelectMany(e => e.Slots.Select(s => (slot: s, instanz: e)))
+            .GroupBy(e => e.slot, a => a.instanz)
+            .OrderByDescending(e => e.Key.Jahr)
+            .ThenByDescending(e => e.Key.Quartal)
+            .ThenBy(e => e.Key.Wochentag)
+            .Select(e => new QuartalEnrollmentOverview(e.Key, e))
+            .ToArrayAsync();
+
+        return TypedResults.Ok(profunda);
     }
 }
