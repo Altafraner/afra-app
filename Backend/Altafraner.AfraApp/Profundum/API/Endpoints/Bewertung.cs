@@ -1,5 +1,7 @@
+using Altafraner.AfraApp.Backbone.Authorization;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Services;
+using Altafraner.AfraApp.User.Services;
 using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace Altafraner.AfraApp.Profundum.API.Endpoints;
@@ -15,20 +17,26 @@ public static class Bewertung
     /// <param name="app"></param>
     public static void MapBewertungEndpoints(this IEndpointRouteBuilder app)
     {
-        var bewertung = app.MapGroup("/bewertung");
+        var bewertung = app.MapGroup("/bewertung")
+            .RequireAuthorization(AuthorizationPolicies.TutorOnly);
 
-        var anker = bewertung.MapGroup("/anker");
+        var anker = bewertung.MapGroup("/anker")
+            .RequireAuthorization(AuthorizationPolicies.Profundumserantwortlich);
+
         anker.MapGet("/", GetAllAnker);
         anker.MapPost("/", AddAnkerAsync);
         anker.MapDelete("/{id:guid}", DeleteAnkerAsync);
         anker.MapPut("/{id:guid}", UpdateAnkerAsync);
 
-        var kategorie = bewertung.MapGroup("/kategorie");
+        var kategorie = bewertung.MapGroup("/kategorie")
+            .RequireAuthorization(AuthorizationPolicies.Profundumserantwortlich);
         kategorie.MapPost("/", AddKategorieAsync);
         kategorie.MapDelete("/{id:guid}", DeleteKategorieAsync);
         kategorie.MapPut("/{id:guid}", UpdateKategorieAsync);
 
         bewertung.MapGet("/{profundumId:guid}", GetAnkerForProfundum);
+        bewertung.MapGet("/{profundumId:guid}/{studentId:guid}", GetBewertungAsync);
+        bewertung.MapPut("/{profundumId:guid}/{studentId:guid}", UpdateBewertungAsync);
     }
 
     private static async Task<Results<Ok<Anker>, NotFound<HttpValidationProblemDetails>>> AddAnkerAsync(
@@ -145,10 +153,16 @@ public static class Bewertung
         return TypedResults.Ok(dto);
     }
 
-    private static async Task<Ok<AnkerOverview>> GetAnkerForProfundum(Guid profundumId,
+    private static async Task<Results<Ok<AnkerOverview>, ForbidHttpResult>> GetAnkerForProfundum(Guid profundumId,
         FeedbackAnkerService ankerService,
-        FeedbackKategorienService kategorienService)
+        FeedbackKategorienService kategorienService,
+        FeedbackService feedbackService,
+        UserAccessor userAccessor)
     {
+        var user = await userAccessor.GetUserAsync();
+        if (!await feedbackService.MayProvideFeedbackForProfundumAsync(user, profundumId))
+            return TypedResults.Forbid();
+
         var anker = await ankerService.GetAnkerByCategories(profundumId);
         var kategorien = await kategorienService.GetAllCategories();
 
@@ -160,5 +174,46 @@ public static class Bewertung
         };
 
         return TypedResults.Ok(dto);
+    }
+
+    private static async Task<Results<Ok<Dictionary<Guid, int?>>, ForbidHttpResult>> GetBewertungAsync(Guid studentId,
+        Guid profundumId,
+        FeedbackService feedbackService,
+        UserAccessor userAccessor)
+    {
+        var user = await userAccessor.GetUserAsync();
+        if (!await feedbackService.MayProvideFeedbackForProfundumAsync(user, profundumId))
+            return TypedResults.Forbid();
+
+        var feedback = await feedbackService.GetFeedback(studentId, profundumId);
+        return TypedResults.Ok(feedback.ToDictionary(f => f.Key.Id, f => f.Value));
+    }
+
+    private static async Task<Results<NoContent, ForbidHttpResult, BadRequest<HttpValidationProblemDetails>>>
+        UpdateBewertungAsync(Guid studentId,
+        Guid profundumId,
+        Dictionary<Guid, int?> bewertungen,
+        FeedbackService feedbackService,
+        UserAccessor userAccessor)
+    {
+        var user = await userAccessor.GetUserAsync();
+        if (!await feedbackService.MayProvideFeedbackForProfundumAsync(user, profundumId))
+            return TypedResults.Forbid();
+        try
+        {
+            await feedbackService.UpdateFeedback(studentId,
+                profundumId,
+                bewertungen.Where(b => b.Value.HasValue)
+                    .ToDictionary(f => f.Key, f => f.Value!.Value));
+
+            return TypedResults.NoContent();
+        }
+        catch (ArgumentException e)
+        {
+            return TypedResults.BadRequest(new HttpValidationProblemDetails(new Dictionary<string, string[]>
+            {
+                { e.ParamName ?? "unknown", [e.Message] }
+            }));
+        }
     }
 }

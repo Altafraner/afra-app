@@ -25,6 +25,7 @@ public class ProfundumModule : IModule
         services.AddScoped<ProfundumManagementService>();
         services.AddScoped<FeedbackAnkerService>();
         services.AddScoped<FeedbackKategorienService>();
+        services.AddScoped<FeedbackService>();
     }
 
     /// <inheritdoc />
