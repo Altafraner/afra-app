@@ -3,7 +3,9 @@ using Altafraner.AfraApp.Backbone.Authorization;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.Profundum.Services;
+using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.AfraApp.User.Services;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
 namespace Altafraner.AfraApp.Profundum.API.Endpoints;
@@ -32,11 +34,17 @@ public static class Management
         group.MapPost("/matching", DoMatchingAsync);
         group.MapPost("/matching/final", DoFinalMatchingAsync);
         group.MapGet("/matching.csv", MatchingAsyncCsv);
+
+        group.MapGet("/kategorien", GetKategorien);
+        app.MapGet("/management/belegung", GetAllQuartaleWithEnrollments)
+            .RequireAuthorization(AuthorizationPolicies.TutorOnly);
     }
 
     ///
     private static async Task<IResult> AddEinwahlZeitraumAsync(ProfundumManagementService managementService,
-        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger,
+        UserAccessor userAccessor,
+        AfraAppContext dbContext,
+        ILogger<ProfundumEnrollmentService> logger,
         DtoProfundumEinwahlZeitraum zeitraum)
     {
         var res = await managementService.CreateEinwahlZeitraumAsync(zeitraum);
@@ -45,7 +53,9 @@ public static class Management
 
     ///
     private static async Task<IResult> AddSlotAsync(ProfundumManagementService managementService,
-        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger,
+        UserAccessor userAccessor,
+        AfraAppContext dbContext,
+        ILogger<ProfundumEnrollmentService> logger,
         DtoProfundumSlot slot)
     {
         var res = await managementService.CreateSlotAsync(slot);
@@ -59,7 +69,9 @@ public static class Management
 
     ///
     private static async Task<IResult> AddKategorieAsync(ProfundumManagementService managementService,
-        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger,
+        UserAccessor userAccessor,
+        AfraAppContext dbContext,
+        ILogger<ProfundumEnrollmentService> logger,
         DtoProfundumKategorie kategorie)
     {
         var res = await managementService.CreateKategorieAsync(kategorie);
@@ -73,7 +85,9 @@ public static class Management
 
     ///
     private static async Task<IResult> AddProfundumAsync(ProfundumManagementService managementService,
-        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger,
+        UserAccessor userAccessor,
+        AfraAppContext dbContext,
+        ILogger<ProfundumEnrollmentService> logger,
         DtoProfundumDefinition definition)
     {
         var res = await managementService.CreateProfundumAsync(definition);
@@ -87,7 +101,9 @@ public static class Management
 
     ///
     private static async Task<IResult> AddInstanzAsync(ProfundumManagementService managementService,
-        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger,
+        UserAccessor userAccessor,
+        AfraAppContext dbContext,
+        ILogger<ProfundumEnrollmentService> logger,
         DtoProfundumInstanz instanz)
     {
         var res = await managementService.CreateInstanzAsync(instanz);
@@ -102,7 +118,9 @@ public static class Management
 
     ///
     private static async Task<IResult> DoMatchingAsync(ProfundumEnrollmentService enrollmentService,
-        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
+        UserAccessor userAccessor,
+        AfraAppContext dbContext,
+        ILogger<ProfundumEnrollmentService> logger)
     {
         var now = DateTime.UtcNow;
         var einwahlZeitraum = (await dbContext.ProfundumEinwahlZeitraeume
@@ -121,7 +139,9 @@ public static class Management
 
     ///
     private static async Task<IResult> DoFinalMatchingAsync(ProfundumEnrollmentService enrollmentService,
-        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
+        UserAccessor userAccessor,
+        AfraAppContext dbContext,
+        ILogger<ProfundumEnrollmentService> logger)
     {
         var now = DateTime.UtcNow;
         var einwahlZeitraum = (await dbContext.ProfundumEinwahlZeitraeume
@@ -140,7 +160,9 @@ public static class Management
 
     ///
     private static async Task<IResult> MatchingAsyncCsv(ProfundumEnrollmentService enrollmentService,
-        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
+        UserAccessor userAccessor,
+        AfraAppContext dbContext,
+        ILogger<ProfundumEnrollmentService> logger)
     {
         var now = DateTime.UtcNow;
         var einwahlZeitraum = (await dbContext.ProfundumEinwahlZeitraeume
@@ -159,7 +181,9 @@ public static class Management
 
     ///
     private static async Task<IResult> GetUnenrolledAsync(ProfundumEnrollmentService enrollmentService,
-        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
+        UserAccessor userAccessor,
+        AfraAppContext dbContext,
+        ILogger<ProfundumEnrollmentService> logger)
     {
         var now = DateTime.UtcNow;
         var einwahlZeitraum = (await dbContext.ProfundumEinwahlZeitraeume
@@ -180,7 +204,9 @@ public static class Management
 
     ///
     private static async Task<IResult> GetUnenrolledEmailsAsync(ProfundumEnrollmentService enrollmentService,
-        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
+        UserAccessor userAccessor,
+        AfraAppContext dbContext,
+        ILogger<ProfundumEnrollmentService> logger)
     {
         var now = DateTime.UtcNow;
         var einwahlZeitraum = (await dbContext.ProfundumEinwahlZeitraeume
@@ -197,5 +223,41 @@ public static class Management
 
         var result = await enrollmentService.GetMissingStudentsEmailsAsync(slots);
         return Results.Ok(result);
+    }
+
+    // TODO This is slow and a security risk. Replace with multiple endpoints
+    private static async Task<Ok<QuartalEnrollmentOverview[]>> GetAllQuartaleWithEnrollments(
+        AfraAppContext dbContext,
+        UserAccessor userAccessor)
+    {
+        var user = await userAccessor.GetUserAsync();
+        IQueryable<ProfundumInstanz> profundaQuery = dbContext.ProfundaInstanzen
+            .AsSplitQuery()
+            .Include(e => e.Profundum)
+            .Include(e => e.Einschreibungen)
+            .ThenInclude(e => e.BetroffenePerson)
+            .Include(e => e.Slots);
+
+        if (!user.GlobalPermissions.Contains(GlobalPermission.Profundumsverantwortlich))
+            profundaQuery = profundaQuery.Where(p => p.Tutor == user);
+
+        var profunda = await profundaQuery
+            .OrderBy(e => e.Profundum.Bezeichnung)
+            .AsAsyncEnumerable()
+            .SelectMany(e => e.Slots.Select(s => (slot: s, instanz: e)))
+            .GroupBy(e => e.slot, a => a.instanz)
+            .OrderByDescending(e => e.Key.Jahr)
+            .ThenByDescending(e => e.Key.Quartal)
+            .ThenBy(e => e.Key.Wochentag)
+            .Select(e => new QuartalEnrollmentOverview(e.Key, e))
+            .ToArrayAsync();
+
+        return TypedResults.Ok(profunda);
+    }
+
+    // TODO Replace this
+    private static IAsyncEnumerable<DtoProfundumKategorie> GetKategorien(AfraAppContext dbContext)
+    {
+        return dbContext.ProfundaKategorien.AsAsyncEnumerable().Select(k => new DtoProfundumKategorie(k));
     }
 }
