@@ -6,14 +6,17 @@ namespace Altafraner.AfraApp.Profundum.Domain.DTO;
 public record DtoProfundumInstanz
 {
     /// <inheritdoc cref="ProfundumInstanz.Id"/>
-    public Guid? Id { get; set; }
+    public required Guid? Id { get; set; }
 
     /// <inheritdoc cref="ProfundumInstanz.Profundum"/>
-    public Guid ProfundumId { get; set; }
+    public required Guid ProfundumId { get; set; }
+
+    /// <inheritdoc cref="ProfundumInstanz.Tutor" />
+    public required Guid TutorId { get; set; }
 
     /// <inheritdoc cref="ProfundumInstanz.Slots"/>
     public required ICollection<Guid> Slots { get; set; }
 
     /// <inheritdoc cref="ProfundumInstanz.MaxEinschreibungen"/>
-    public int? MaxEinschreibungen { get; set; } = null;
+    public required int? MaxEinschreibungen { get; set; } = null;
 }
