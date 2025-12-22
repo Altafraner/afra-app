@@ -1,4 +1,6 @@
-﻿namespace Altafraner.AfraApp.Profundum.Domain.Models.Bewertung;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Altafraner.AfraApp.Profundum.Domain.Models.Bewertung;
 
 /// <summary>
 ///     A kategorie for
@@ -13,6 +15,7 @@ public class ProfundumFeedbackKategorie
     /// <summary>
     ///     The categories label
     /// </summary>
+    [MaxLength(200)]
     public required string Label { get; set; }
 
     /// <summary>

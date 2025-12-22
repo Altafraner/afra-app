@@ -26,6 +26,8 @@ public class ProfundumModule : IModule
 
         services.AddScoped<ProfundumEnrollmentService>();
         services.AddScoped<ProfundumManagementService>();
+        services.AddScoped<FeedbackAnkerService>();
+        services.AddScoped<FeedbackKategorienService>();
         services.AddScoped<ProfundumMatchingService>();
 
         services.AddRules();
@@ -37,5 +39,6 @@ public class ProfundumModule : IModule
         var group = app.MapGroup("/api/profundum");
         group.MapEnrollmentEndpoints();
         group.MapManagementEndpoints();
+        group.MapBewertungEndpoints();
     }
 }

@@ -10,16 +10,16 @@ public class ProfundumFeedbackAnker
     /// <summary>
     ///     The unique identifier for the Anker
     /// </summary>
-    public required Guid Id { get; set; }
+    public Guid Id { get; set; }
 
     /// <summary>
     ///     The name of the Anker
     /// </summary>
     [MaxLength(200)]
-    public required string Bezeichnung { get; set; }
+    public required string Label { get; set; }
 
     /// <summary>
     ///     The category of the anchor
     /// </summary>
-    public required ProfundumKategorie Kategorie { get; set; }
+    public required ProfundumFeedbackKategorie Kategorie { get; set; }
 }

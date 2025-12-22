@@ -130,7 +130,7 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
     /// <summary>
     ///     All Anker for Profunda
     /// </summary>
-    public DbSet<ProfundumFeedbackAnker> ProfundumAnker { get; set; }
+    public DbSet<ProfundumFeedbackAnker> ProfundumFeedbackAnker { get; set; }
 
     /// <summary>
     ///     All categories of profundum ankers.
