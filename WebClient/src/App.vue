@@ -10,7 +10,7 @@ import wappenLight from '/vdaa/favicon.svg?url';
 import wappenDark from '/vdaa/favicon-dark.svg?url';
 import { ConfirmPopup, Image, Skeleton, Toast, useToast } from 'primevue';
 import Login from '@/components/Login.vue';
-import { isDark } from '@/helpers/isdark.js';
+import { isDark } from '@/helpers/isdark';
 import ReloadPrompt from '@/components/ReloadPrompt.vue';
 import { useRoute } from 'vue-router';
 
