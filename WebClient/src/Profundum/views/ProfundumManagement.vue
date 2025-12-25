@@ -15,7 +15,7 @@ import {
     TabView,
     TabPanel,
 } from 'primevue';
-import { useConfirmPopover } from '@/composables/confirmPopover.js';
+import { useConfirmPopover } from '@/composables/confirmPopover';
 
 import EinwahlZeitraeume from '@/Profundum/components/EinwahlZeitraeume.vue';
 import Slots from '@/Profundum/components/Slots.vue';

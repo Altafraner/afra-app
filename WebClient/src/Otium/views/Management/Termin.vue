@@ -20,7 +20,7 @@ import AfraPersonSelector from '@/Otium/components/Form/AfraPersonSelector.vue';
 import AfraOtiumEnrollmentTable from '@/Otium/components/Management/AfraOtiumEnrollmentTable.vue';
 import { useAttendance } from '@/Otium/composables/attendanceHubClient.js';
 import MoveStudentForm from '@/Otium/components/Supervision/MoveStudentForm.vue';
-import { useConfirmPopover } from '@/composables/confirmPopover.js';
+import { useConfirmPopover } from '@/composables/confirmPopover';
 import { isNowInInterval } from '@/helpers/time.js';
 
 const props = defineProps({

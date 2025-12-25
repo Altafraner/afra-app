@@ -11,7 +11,7 @@ import {
 } from 'primevue';
 import { mande } from 'mande';
 import { computed, ref } from 'vue';
-import { useConfirmPopover } from '@/composables/confirmPopover.js';
+import { useConfirmPopover } from '@/composables/confirmPopover';
 import UserPeek from '@/components/UserPeek.vue';
 
 const slots = ref([]);

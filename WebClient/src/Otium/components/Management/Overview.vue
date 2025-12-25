@@ -9,7 +9,7 @@ import SimpleBreadcrumb from '@/components/SimpleBreadcrumb.vue';
 import { RouterLink } from 'vue-router';
 import AfraKategorieTag from '@/Otium/components/Shared/AfraKategorieTag.vue';
 import CreateOtiumForm from '@/Otium/components/Management/CreateOtiumForm.vue';
-import { useConfirmPopover } from '@/composables/confirmPopover.js';
+import { useConfirmPopover } from '@/composables/confirmPopover';
 
 const user = useUser();
 const settings = useOtiumStore();

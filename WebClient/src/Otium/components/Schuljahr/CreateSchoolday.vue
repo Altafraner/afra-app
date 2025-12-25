@@ -7,7 +7,7 @@ import Form from '@primevue/forms/form';
 import { formatMachineDate } from '@/helpers/formatters';
 import { mande } from 'mande';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
-import { useConfirmPopover } from '@/composables/confirmPopover.js';
+import { useConfirmPopover } from '@/composables/confirmPopover';
 
 const dialogRef = inject('dialogRef');
 const emit = defineEmits(['update']);

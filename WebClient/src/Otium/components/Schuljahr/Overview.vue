@@ -5,7 +5,7 @@ import { mande } from 'mande';
 import CreateSchoolday from '@/Otium/components/Schuljahr/CreateSchoolday.vue';
 import { useRouter } from 'vue-router';
 import BlockSelectorDialog from '@/Otium/components/Management/BlockSelectorDialog.vue';
-import { useConfirmPopover } from '@/composables/confirmPopover.js';
+import { useConfirmPopover } from '@/composables/confirmPopover';
 
 const settings = useOtiumStore();
 const dialog = useDialog();

@@ -10,7 +10,7 @@ import AfraKategorieTag from '@/Otium/components/Shared/AfraKategorieTag.vue';
 import { findPath } from '@/helpers/tree.js';
 import SimpleBreadcrumb from '@/components/SimpleBreadcrumb.vue';
 import MultipleEnrollmentForm from '@/Otium/components/Katalog/Forms/MultipleEnrollmentForm.vue';
-import { useConfirmPopover } from '@/composables/confirmPopover.js';
+import { useConfirmPopover } from '@/composables/confirmPopover';
 import Notes from '@/Otium/components/Notes/Notes.vue';
 
 const settings = useOtiumStore();

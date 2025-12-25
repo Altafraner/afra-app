@@ -10,7 +10,7 @@ import {
     Tag,
     FloatLabel,
 } from 'primevue';
-import { useConfirmPopover } from '@/composables/confirmPopover.js';
+import { useConfirmPopover } from '@/composables/confirmPopover';
 import Dialog from 'primevue/dialog';
 import { formatStudent } from '@/helpers/formatters.ts';
 import AfraPersonSelector from '@/Otium/components/Form/AfraPersonSelector.vue';
