@@ -9,109 +9,101 @@ import { useUser } from '@/stores/user';
 import { useRouter } from 'vue-router';
 import { isDark } from '@/helpers/isdark';
 
-const groups = [
-    (_) => ({
-        label: 'Allgemein',
-        icon: 'pi pi-home',
-        items: [
-            {
-                label: 'Übersicht',
-                route: '/',
-                icon: 'pi pi-user',
-            },
-        ],
-    }),
-    (_) => ({
-        label: 'Otium',
+const items_teacher = [
+    {
+        label: 'Übersicht',
+        route: '/',
+        icon: 'pi pi-user',
+    },
+    {
+        label: 'Katalog',
+        route: {
+            name: 'Katalog',
+        },
         icon: 'pi pi-list',
-        items: [
-            {
-                label: 'Otium Katalog',
-                route: { name: 'Katalog' },
-                icon: 'pi pi-list',
-            },
-        ],
-    }),
-    (u) =>
-        user.isTeacher
-            ? {
-                  label: 'Lehrkräfte',
-                  icon: 'pi pi-briefcase',
-                  items: [
-                      {
-                          label: 'Otium Aufsicht',
-                          route: { name: 'Aufsicht' },
-                          icon: 'pi pi-eye',
-                      },
-                  ],
-              }
-            : null,
-    (u) =>
-        user.isStudent && user.isMittelstufe
-            ? {
-                  label: 'Schüler',
-                  icon: 'pi pi-graduation-cap',
-                  items: [
-                      {
-                          label: 'Profundum Einwahl',
-                          route: { name: 'Profundum-Einwahl' },
-                          icon: 'pi pi-check-square',
-                      },
-                  ],
-              }
-            : null,
+    },
+    {
+        label: 'Aufsicht',
+        route: {
+            name: 'Aufsicht',
+        },
+        icon: 'pi pi-eye',
+    },
+];
 
-    (u) => ({
+const items_student = [
+    {
+        label: 'Übersicht',
+        route: '/',
+        icon: 'pi pi-user',
+    },
+    {
+        label: 'Katalog',
+        route: {
+            name: 'Katalog',
+        },
+        icon: 'pi pi-list',
+    },
+];
+
+const items_mittelstufe = [
+    {
+        label: 'Profundum Einwahl',
+        route: {
+            name: 'Profundum-Einwahl',
+        },
+        icon: 'pi pi-check-square',
+    },
+];
+
+const items_otium_manager = [
+    {
         label: 'Verwaltung',
+        route: {
+            name: 'Verwaltung',
+        },
         icon: 'pi pi-wrench',
-        items: [
-            ...(user.isOtiumsverantwortlich
-                ? [
-                      {
-                          label: 'Otia Verwaltung',
-                          route: { name: 'Verwaltung' },
-                          icon: 'pi pi-wrench',
-                      },
-                  ]
-                : []),
-            ...(user.isProfundumsverantwortlich
-                ? [
-                      {
-                          label: 'Profunda Verwaltung',
-                          route: { name: 'Profundum-Verwaltung' },
-                          icon: 'pi pi-wrench',
-                      },
-                      {
-                          label: 'Profunda Matching',
-                          route: { name: 'Profundum-Matching' },
-                          icon: 'pi pi-map',
-                      },
-                  ]
-                : []),
+    },
+];
 
-            ...(user.isAdmin
-                ? [
-                      {
-                          label: 'Admin',
-                          route: { name: 'Admin' },
-                          icon: 'pi pi-asterisk',
-                      },
-                  ]
-                : []),
-        ],
-    }),
+const items_profundum_manager = [
+    {
+        label: 'Kriterien-Verwaltung',
+        route: {
+            name: 'Kriterien',
+        },
+        icon: 'pi pi-sliders-h',
+    },
+    {
+        label: 'Profunda Verwaltung',
+        route: { name: 'Profundum-Verwaltung' },
+        icon: 'pi pi-wrench',
+    },
+    {
+        label: 'Profunda Matching',
+        route: { name: 'Profundum-Matching' },
+        icon: 'pi pi-map',
+    },
+];
 
-    (_) => ({
-        label: 'System',
+const items_admin = [
+    {
+        label: 'Admin',
+        route: {
+            name: 'Admin',
+        },
+        icon: 'pi pi-asterisk',
+    },
+];
+
+const items_einstellungen = [
+    {
+        label: 'Einstellungen',
+        route: {
+            name: 'Settings',
+        },
         icon: 'pi pi-cog',
-        items: [
-            {
-                label: 'Einstellungen',
-                route: { name: 'Settings' },
-                icon: 'pi pi-cog',
-            },
-        ],
-    }),
+    },
 ];
 
 const toast = useToast();
@@ -139,22 +131,30 @@ const logout = async () => {
     }
 };
 
-function collapseSingleItemGroups(menu) {
-    return menu.flatMap((group) => {
-        if (group.items && group.items.length === 1) {
-            return group.items[0];
-        }
-        return group;
-    });
-}
-
 async function setup(update = true) {
     if (update) await user.update();
     if (user.loading) return;
+    if (user.isStudent) {
+        items.value = items_student;
+        if (user.isMittelstufe) {
+            items.value = [...items.value, ...items_mittelstufe];
+        }
+    } else if (user.isTeacher) {
+        items.value = items_teacher;
+    } else {
+        items.value = [];
+    }
 
-    items.value = collapseSingleItemGroups(
-        groups.map((g) => g(user)).filter((x) => x && x.items.length > 0),
-    );
+    if (user.isOtiumsverantwortlich) {
+        items.value = [...items.value, ...items_otium_manager];
+    }
+    if (user.isProfundumsverantwortlich) {
+        items.value = [...items.value, ...items_profundum_manager];
+    }
+    if (user.isAdmin) {
+        items.value = [...items.value, ...items_admin];
+    }
+    items.value = [...items.value, ...items_einstellungen];
 }
 
 setup();

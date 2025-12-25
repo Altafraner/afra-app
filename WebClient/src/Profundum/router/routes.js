@@ -21,4 +21,9 @@ export const routes = [
         component: () => import('@/Profundum/views/ProfundumEdit.vue'),
         props: true,
     },
+    {
+        path: '/profundum/feedback/kriterien',
+        name: 'Profundum-Feedback-Kriterien',
+        component: () => import('@/Profundum/views/Kriterien.vue'),
+    },
 ];
