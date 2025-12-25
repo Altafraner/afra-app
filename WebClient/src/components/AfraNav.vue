@@ -7,7 +7,7 @@ import wappenLight from '/vdaa/favicon.svg?url';
 import wappenDark from '/vdaa/favicon-dark.svg?url';
 import { useUser } from '@/stores/user';
 import { useRouter } from 'vue-router';
-import { isDark } from '@/helpers/isdark.js';
+import { isDark } from '@/helpers/isdark';
 
 const items_teacher = [
     {
