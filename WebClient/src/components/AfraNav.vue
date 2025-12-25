@@ -74,11 +74,21 @@ const all_items: MenuItemWithCondition[] = [
                 },
             },
             {
+                label: 'Feedback',
+                route: {
+                    name: 'Profundum-Feedback-Abgeben',
+                },
+                icon: 'pi pi-sliders-h',
+                conditions: {
+                    roles: ['Tutor'],
+                },
+            },
+            {
                 label: 'Kriterien',
                 route: {
                     name: 'Profundum-Feedback-Kriterien',
                 },
-                icon: 'pi pi-sliders-h',
+                icon: 'pi pi-wrench',
                 conditions: {
                     permissions: ['Profundumsverantwortlich'],
                 },
