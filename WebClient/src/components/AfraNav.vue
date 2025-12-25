@@ -1,7 +1,7 @@
-<script setup>
-import Menubar from 'primevue/menubar';
-import { computed, ref } from 'vue';
-import { Button, Image, useToast } from 'primevue';
+<script lang="ts" setup>
+import { Button, Image, Menubar, useToast } from 'primevue';
+import type { MenuItem } from 'primevue/menuitem';
+import { computed } from 'vue';
 
 import wappenLight from '/vdaa/favicon.svg?url';
 import wappenDark from '/vdaa/favicon-dark.svg?url';
@@ -9,84 +9,92 @@ import { useUser } from '@/stores/user';
 import { useRouter } from 'vue-router';
 import { isDark } from '@/helpers/isdark';
 
-const items_teacher = [
+type GlobalPermissions = 'Otiumsverantwortlich' | 'Profundumsverantwortlich' | 'Admin';
+type Role = 'Tutor' | 'Oberstufe' | 'Mittelstufe';
+
+interface Conditions {
+    permissions?: GlobalPermissions[] | undefined;
+    roles?: Role[] | undefined;
+}
+
+interface MenuItemWithCondition extends MenuItem {
+    conditions?: Conditions | undefined;
+    items?: MenuItemWithCondition[] | undefined;
+}
+
+const all_items: MenuItemWithCondition[] = [
     {
         label: 'Übersicht',
         route: '/',
-        icon: 'pi pi-user',
+        icon: 'pi pi-home',
     },
     {
-        label: 'Katalog',
-        route: {
-            name: 'Katalog',
-        },
-        icon: 'pi pi-list',
+        label: 'Otium',
+        items: [
+            {
+                label: 'Katalog',
+                route: {
+                    name: 'Katalog',
+                },
+                icon: 'pi pi-list',
+            },
+            {
+                label: 'Aufsicht',
+                route: {
+                    name: 'Aufsicht',
+                },
+                icon: 'pi pi-eye',
+                conditions: {
+                    roles: ['Tutor'],
+                },
+            },
+            {
+                label: 'Verwaltung',
+                route: {
+                    name: 'Verwaltung',
+                },
+                icon: 'pi pi-wrench',
+                conditions: {
+                    permissions: ['Otiumsverantwortlich'],
+                },
+            },
+        ],
     },
-    {
-        label: 'Aufsicht',
-        route: {
-            name: 'Aufsicht',
-        },
-        icon: 'pi pi-eye',
-    },
-];
-
-const items_student = [
-    {
-        label: 'Übersicht',
-        route: '/',
-        icon: 'pi pi-user',
-    },
-    {
-        label: 'Katalog',
-        route: {
-            name: 'Katalog',
-        },
-        icon: 'pi pi-list',
-    },
-];
-
-const items_mittelstufe = [
     {
         label: 'Profundum',
-        route: {
-            name: 'Profundum-Einwahl',
-        },
-        icon: 'pi pi-check-square',
+        items: [
+            {
+                label: 'Profundum',
+                route: {
+                    name: 'Profundum-Einwahl',
+                },
+                icon: 'pi pi-check-square',
+                conditions: {
+                    roles: ['Mittelstufe'],
+                },
+            },
+            {
+                label: 'Kriterien',
+                route: {
+                    name: 'Profundum-Feedback-Kriterien',
+                },
+                icon: 'pi pi-sliders-h',
+                conditions: {
+                    permissions: ['Profundumsverantwortlich'],
+                },
+            },
+        ],
     },
-];
-
-const items_otium_manager = [
-    {
-        label: 'Verwaltung',
-        route: {
-            name: 'Verwaltung',
-        },
-        icon: 'pi pi-wrench',
-    },
-];
-
-const items_profundum_manager = [
-    {
-        label: 'Kriterien-Verwaltung',
-        route: {
-            name: 'Kriterien',
-        },
-        icon: 'pi pi-sliders-h',
-    },
-];
-
-const items_admin = [
     {
         label: 'Admin',
         route: {
             name: 'Admin',
         },
         icon: 'pi pi-asterisk',
+        conditions: {
+            permissions: ['Admin'],
+        },
     },
-];
-
-const items_einstellungen = [
     {
         label: 'Einstellungen',
         route: {
@@ -98,7 +106,6 @@ const items_einstellungen = [
 
 const toast = useToast();
 const router = useRouter();
-const items = ref([]);
 const user = useUser();
 
 const logout = async () => {
@@ -121,38 +128,49 @@ const logout = async () => {
     }
 };
 
-async function setup(update = true) {
-    if (update) await user.update();
-    if (user.loading) return;
-    if (user.isStudent) {
-        items.value = items_student;
-        if (user.isMittelstufe) {
-            items.value = [...items.value, ...items_mittelstufe];
+function evaluateCondition(item: MenuItemWithCondition): boolean {
+    if (item.conditions === undefined) return true;
+
+    if (item.conditions.permissions !== undefined && item.conditions.permissions.length > 0) {
+        for (const permission of item.conditions.permissions) {
+            if (!user.user.berechtigungen.includes(permission)) return false;
         }
-    } else if (user.isTeacher) {
-        items.value = items_teacher;
-    } else {
-        items.value = [];
     }
 
-    if (user.isOtiumsverantwortlich) {
-        items.value = [...items.value, ...items_otium_manager];
+    if (item.conditions.roles !== undefined && item.conditions.roles.length > 0) {
+        let success = false;
+        for (const role of item.conditions.roles) {
+            if (!(user.user.rolle === role)) continue;
+            success = true;
+            break;
+        }
+        if (!success) return false;
     }
-    if (user.isProfundumsverantwortlich) {
-        items.value = [...items.value, ...items_profundum_manager];
-    }
-    if (user.isAdmin) {
-        items.value = [...items.value, ...items_admin];
-    }
-    items.value = [...items.value, ...items_einstellungen];
+    return true;
 }
 
-setup();
+function evaluateItems(items: MenuItemWithCondition[]): MenuItem[] {
+    const selectedItems: MenuItem[] = [];
 
-user.$subscribe(() => {
-    setup(false);
-});
+    for (const item of items) {
+        if (!evaluateCondition(item)) continue;
+        let workingCopy = item;
+        if (item.items && item.items.length > 0) {
+            const children = evaluateItems(item.items);
+            workingCopy = Object.assign({}, workingCopy, { items: children });
+        }
+        if (
+            workingCopy.url ||
+            workingCopy.target ||
+            workingCopy.route ||
+            (workingCopy.items && workingCopy.items.length > 0)
+        )
+            selectedItems.push(workingCopy);
+    }
+    return selectedItems;
+}
 
+const items = computed(() => evaluateItems(all_items));
 const logo = computed(() => (isDark().value ? wappenDark : wappenLight));
 </script>
 
@@ -169,7 +187,7 @@ const logo = computed(() => (isDark().value ? wappenDark : wappenLight));
                 </a>
             </router-link>
             <a v-else :href="item.url" :target="item.target" v-bind="props.action">
-                <span :class="item.icon" />
+                <span v-if="item.icon" :class="item.icon" />
                 <span>{{ item.label }}</span>
                 <span v-if="hasSubmenu" class="pi pi-fw pi-angle-down" />
             </a>
