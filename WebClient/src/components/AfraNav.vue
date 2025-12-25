@@ -29,13 +29,6 @@ const items_teacher = [
         },
         icon: 'pi pi-eye',
     },
-    {
-        label: 'Einstellungen',
-        route: {
-            name: 'Settings',
-        },
-        icon: 'pi pi-cog',
-    },
 ];
 
 const items_student = [
@@ -50,13 +43,6 @@ const items_student = [
             name: 'Katalog',
         },
         icon: 'pi pi-list',
-    },
-    {
-        label: 'Einstellungen',
-        route: {
-            name: 'Settings',
-        },
-        icon: 'pi pi-cog',
     },
 ];
 
@@ -80,6 +66,16 @@ const items_otium_manager = [
     },
 ];
 
+const items_profundum_manager = [
+    {
+        label: 'Kriterien-Verwaltung',
+        route: {
+            name: 'Kriterien',
+        },
+        icon: 'pi pi-sliders-h',
+    },
+];
+
 const items_admin = [
     {
         label: 'Admin',
@@ -87,6 +83,16 @@ const items_admin = [
             name: 'Admin',
         },
         icon: 'pi pi-asterisk',
+    },
+];
+
+const items_einstellungen = [
+    {
+        label: 'Einstellungen',
+        route: {
+            name: 'Settings',
+        },
+        icon: 'pi pi-cog',
     },
 ];
 
@@ -132,9 +138,13 @@ async function setup(update = true) {
     if (user.isOtiumsverantwortlich) {
         items.value = [...items.value, ...items_otium_manager];
     }
+    if (user.isProfundumsverantwortlich) {
+        items.value = [...items.value, ...items_profundum_manager];
+    }
     if (user.isAdmin) {
         items.value = [...items.value, ...items_admin];
     }
+    items.value = [...items.value, ...items_einstellungen];
 }
 
 setup();
