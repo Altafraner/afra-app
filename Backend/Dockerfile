@@ -20,4 +20,4 @@ RUN apt-get update && apt-get -y install libldap2
 USER $APP_UID
 WORKDIR /app
 COPY --from=build /app/publish .
-ENTRYPOINT ["./Afra-App"]
+ENTRYPOINT ["./Altafraner.AfraApp"]
