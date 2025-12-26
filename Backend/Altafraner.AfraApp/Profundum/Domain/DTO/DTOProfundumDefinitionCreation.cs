@@ -11,6 +11,9 @@ public record DTOProfundumDefinitionCreation
     /// <inheritdoc cref="ProfundumDefinition.Bezeichnung"/>
     public required string Bezeichnung { get; set; }
 
+    /// <inheritdoc cref="ProfundumDefinition.Beschreibung"/>
+    public required string Beschreibung { get; set; }
+
     /// <inheritdoc cref="ProfundumDefinition.Kategorie"/>
     public Guid KategorieId { get; set; }
 

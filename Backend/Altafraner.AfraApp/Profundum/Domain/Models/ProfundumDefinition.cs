@@ -18,6 +18,12 @@ public class ProfundumDefinition
     [MaxLength(100)]
     public required string Bezeichnung { get; set; }
 
+    /// <summary>
+    ///     A description for the Profundum
+    /// </summary>
+    [MaxLength(500)]
+    public required string Beschreibung { get; set; }
+
     ///
     public required ProfundumKategorie Kategorie { get; set; }
 
