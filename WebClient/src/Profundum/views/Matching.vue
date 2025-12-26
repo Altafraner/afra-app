@@ -14,7 +14,6 @@ const enrollments = ref([
     },
 ]);
 
-
 async function getSlots() {
     const getter = mande('/api/profundum/management/slot');
     slots.value = await getter.get();
@@ -32,13 +31,12 @@ async function autoMatching() {
 
 getSlots();
 getEnrollments();
-
 </script>
 
 <template>
     <h1>Profunda-Matching</h1>
 
-    <Button label="Automatisches Matching aktualisieren" @click="autoMatching"/>
+    <Button label="Automatisches Matching aktualisieren" @click="autoMatching" />
 
     <h2>Fest Eingeschriebene</h2>
 
@@ -55,7 +53,11 @@ getEnrollments();
             </template>
         </Column>
         <Column field="id" header="Person" />
-        <Column v-for="s of slots" :header="`${s.jahr}-${s.quartal}-${s.wochentag}`" :field="s.Id">
+        <Column
+            v-for="s of slots"
+            :header="`${s.jahr}-${s.quartal}-${s.wochentag}`"
+            :field="s.Id"
+        >
             <template #body>
                 <Select
                     option-label="label"

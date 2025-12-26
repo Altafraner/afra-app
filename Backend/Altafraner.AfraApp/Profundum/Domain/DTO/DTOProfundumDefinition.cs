@@ -10,6 +10,7 @@ public record DTOProfundumDefinition
     {
         Id = dbProfundumDefinition.Id;
         Bezeichnung = dbProfundumDefinition.Bezeichnung;
+        Beschreibung = dbProfundumDefinition.Beschreibung;
         KategorieId = dbProfundumDefinition.Kategorie.Id;
         minKlasse = dbProfundumDefinition.MinKlasse;
         maxKlasse = dbProfundumDefinition.MaxKlasse;
@@ -20,6 +21,9 @@ public record DTOProfundumDefinition
 
     /// <inheritdoc cref="ProfundumDefinition.Bezeichnung"/>
     public string Bezeichnung { get; set; }
+
+    /// <inheritdoc cref="ProfundumDefinition.Beschreibung"/>
+    public string Beschreibung { get; set; }
 
     /// <inheritdoc cref="ProfundumDefinition.Kategorie"/>
     public Guid KategorieId { get; set; }

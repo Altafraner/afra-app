@@ -14,4 +14,10 @@ export const routes = [
         name: 'Profundum-Matching',
         component: () => import('@/Profundum/views/Matching.vue'),
     },
+    {
+        path: '/profundum/management/:profundumId',
+        name: 'Profundum-Edit',
+        component: () => import('@/Profundum/views/ProfundumEdit.vue'),
+        props: true,
+    },
 ];

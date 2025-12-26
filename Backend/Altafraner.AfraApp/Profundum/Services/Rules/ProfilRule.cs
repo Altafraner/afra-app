@@ -1,10 +1,10 @@
 using Altafraner.AfraApp.Profundum.Configuration;
+using Altafraner.AfraApp.Profundum.Domain.Contracts.Rules;
 using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.AfraApp.User.Services;
 using Google.OrTools.Sat;
 using Microsoft.Extensions.Options;
-using Altafraner.AfraApp.Profundum.Domain.Contracts.Rules;
 
 namespace Altafraner.AfraApp.Profundum.Services.Rules;
 

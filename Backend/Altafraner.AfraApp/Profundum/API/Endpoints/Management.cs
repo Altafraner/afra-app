@@ -32,6 +32,7 @@ public static class Management
         group.MapPut("/kategorie/{kategorieId:guid}", UpdateKategorieAsync);
         group.MapDelete("/kategorie/{kategorieId:guid}", DeleteKategorieAsync);
 
+        group.MapGet("/profundum/{profundumId:guid}", GetProfundumAsync);
         group.MapGet("/profundum", GetProfundaAsync);
         group.MapPost("/profundum", AddProfundumAsync);
         group.MapPut("/profundum/{profundumId:guid}", UpdateProfundumAsync);
@@ -142,6 +143,13 @@ public static class Management
     {
         await managementService.DeleteProfundumAsync(profundumId);
         return Results.Ok();
+    }
+
+    private static async Task<IResult> GetProfundumAsync(ProfundumManagementService managementService,
+           UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger, Guid profundumId)
+    {
+        Console.WriteLine($"check for id {profundumId}");
+        return Results.Ok(await managementService.GetProfundumAsync(profundumId));
     }
 
     private static async Task<IResult> GetProfundaAsync(ProfundumManagementService managementService,

@@ -31,6 +31,8 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
     /// </summary>
     public DbSet<MentorMenteeRelation> MentorMenteeRelations { get; set; }
 
+    public DbSet<ProfundaInstanzDependency> ProfundaInstanzDependencies { get; set; }
+
     /// <summary>
     ///     All the Otia in the application.
     /// </summary>
@@ -223,7 +225,15 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
             p.HasOne(i => i.Profundum)
                 .WithMany(e => e.Instanzen);
             p.HasMany(e => e.Slots).WithMany();
+            p.HasMany(p => p.Dependants)
+            .WithMany(p => p.Dependencies)
+            .UsingEntity<ProfundaInstanzDependency>(
+                r => r.HasOne<ProfundumInstanz>().WithMany().HasForeignKey(e => e.DependantId),
+                l => l.HasOne<ProfundumInstanz>().WithMany().HasForeignKey(e => e.DependencyId));
         });
+        modelBuilder.Entity<ProfundaInstanzDependency>()
+            .HasKey(r => new { r.DependencyId, r.DependantId });
+
         modelBuilder.Entity<ProfundumEinschreibung>(e =>
         {
             e.HasOne(f => f.ProfundumInstanz).WithMany(pi => pi.Einschreibungen);
