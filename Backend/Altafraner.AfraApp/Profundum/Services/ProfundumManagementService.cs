@@ -142,6 +142,7 @@ public class ProfundumManagementService
         var def = new ProfundumDefinition
         {
             Bezeichnung = dtoProfundum.Bezeichnung,
+            Beschreibung = dtoProfundum.Beschreibung,
             Kategorie = kat,
             MinKlasse = dtoProfundum.minKlasse,
             MaxKlasse = dtoProfundum.maxKlasse
@@ -161,7 +162,9 @@ public class ProfundumManagementService
         }
 
         if (dtoProfundum.Bezeichnung != profundum.Bezeichnung)
-            profundum.Bezeichnung = dtoProfundum.Bezeichnung;
+            profundum.Bezeichnung = dtoProfundum.Beschreibung;
+        if (dtoProfundum.Beschreibung != profundum.Bezeichnung)
+            profundum.Beschreibung = dtoProfundum.Beschreibung;
         if (dtoProfundum.minKlasse != profundum.MinKlasse)
             profundum.MinKlasse = dtoProfundum.minKlasse;
         if (dtoProfundum.maxKlasse != profundum.MaxKlasse)
@@ -192,6 +195,15 @@ public class ProfundumManagementService
             .Include(p => p.Kategorie)
             .Select(p => new DTOProfundumDefinition(p))
             .ToArrayAsync();
+    }
+
+    ///
+    public Task<DTOProfundumDefinition?> GetProfundumAsync(Guid profundumId)
+    {
+        return _dbContext.Profunda
+            .Include(p => p.Kategorie)
+            .Where(p => p.Id == profundumId)
+            .Select(p => new DTOProfundumDefinition(p)).FirstOrDefaultAsync();
     }
 
     ///
