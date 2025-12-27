@@ -1,7 +1,7 @@
 <script setup>
 import { mande } from 'mande';
 import { ref, onMounted } from 'vue';
-import { InputText, Button, MultiSelect, useToast, Tag } from 'primevue';
+import { InputText, Button, MultiSelect, useToast, Tag, Card } from 'primevue';
 import Grid from '@/components/Form/Grid.vue';
 import GridEditRow from '@/components/Form/GridEditRow.vue';
 
@@ -91,18 +91,20 @@ onMounted(load);
         >
             <template #body>
                 <h3>Instanz:</h3>
-                <span class="inline-flex gap-4">
+
+                <span class="flex gap-4 mb-2 mt-2">
                     <Tag severity="info"> {{ inst.maxEinschreibungen }} Plätze </Tag>
-
-                    <template v-for="slotId in inst.slots" :key="slotId">
-                        <Tag> {{ slots.find((s) => s.id === slotId)?.label }} </Tag>
-                    </template>
-
                     <Button
                         as="a"
                         :href="`/api/profundum/management/instanz/${inst.id}.pdf`"
                         label="PDF (experimentell)"
                     />
+                </span>
+
+                <span class="flex gap-2">
+                    <template v-for="slotId in inst.slots" :key="slotId">
+                        <Tag> {{ slots.find((s) => s.id === slotId)?.label }} </Tag>
+                    </template>
                 </span>
             </template>
 
