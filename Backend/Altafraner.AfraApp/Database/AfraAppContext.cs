@@ -31,6 +31,9 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
     /// </summary>
     public DbSet<MentorMenteeRelation> MentorMenteeRelations { get; set; }
 
+    /// <summary>
+    /// Dependencies between profunda
+    /// </summary>
     public DbSet<ProfundaInstanzDependency> ProfundaInstanzDependencies { get; set; }
 
     /// <summary>
@@ -219,19 +222,21 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
         {
             p.HasOne(e => e.Kategorie)
                 .WithMany(k => k.Profunda);
-            p.HasMany(p => p.Verantwortliche).WithMany(v => v.BetreuteProfunda);
+            p.HasMany(e => e.Verantwortliche).WithMany(v => v.BetreuteProfunda);
         });
+
         modelBuilder.Entity<ProfundumInstanz>(p =>
         {
             p.HasOne(i => i.Profundum)
                 .WithMany(e => e.Instanzen);
             p.HasMany(e => e.Slots).WithMany();
-            p.HasMany(p => p.Dependants)
-            .WithMany(p => p.Dependencies)
+            p.HasMany(e => e.Dependants)
+                .WithMany(e => e.Dependencies)
             .UsingEntity<ProfundaInstanzDependency>(
                 r => r.HasOne<ProfundumInstanz>().WithMany().HasForeignKey(e => e.DependantId),
                 l => l.HasOne<ProfundumInstanz>().WithMany().HasForeignKey(e => e.DependencyId));
         });
+
         modelBuilder.Entity<ProfundaInstanzDependency>()
             .HasKey(r => new { r.DependencyId, r.DependantId });
 
@@ -241,6 +246,7 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
             e.HasOne(f => f.BetroffenePerson).WithMany(pe => pe.ProfundaEinschreibungen);
             e.HasKey(b => new { b.BetroffenePersonId, b.ProfundumInstanzId, });
         });
+
         modelBuilder.Entity<ProfundumBelegWunsch>(w =>
         {
             w.HasKey(b => new { b.ProfundumInstanzId, b.BetroffenePersonId, b.Stufe });

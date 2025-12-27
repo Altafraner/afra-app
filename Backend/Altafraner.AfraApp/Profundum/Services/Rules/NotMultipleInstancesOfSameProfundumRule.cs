@@ -11,16 +11,6 @@ namespace Altafraner.AfraApp.Profundum.Services.Rules;
 ///
 public class NotMultipleInstancesOfSameProfundumRule : IProfundumIndividualRule
 {
-    private readonly UserService _userService;
-    private readonly IOptions<ProfundumConfiguration> _profundumConfiguration;
-
-    ///
-    public NotMultipleInstancesOfSameProfundumRule(UserService userService, IOptions<ProfundumConfiguration> profundumConfiguration)
-    {
-        _userService = userService;
-        _profundumConfiguration = profundumConfiguration;
-    }
-
     /// <inheritdoc/>
     public void AddConstraints(Person student,
         ProfundumEinwahlZeitraum einwahlZeitraum,
@@ -30,16 +20,16 @@ public class NotMultipleInstancesOfSameProfundumRule : IProfundumIndividualRule
         CpModel model
         )
     {
-        var slots = einwahlZeitraum.Slots.ToArray();
+        var wuenscheArray = wuensche as ProfundumBelegWunsch[] ?? wuensche.ToArray();
 
-        var profundaDefinitionenIds = wuensche
+        var profundaDefinitionenIds = wuenscheArray
             .Where(b => b.BetroffenePerson.Id == student.Id)
             .Select(b => b.ProfundumInstanz.Profundum.Id)
             .ToHashSet();
 
         foreach (var defId in profundaDefinitionenIds)
         {
-            var psBeleg = wuensche
+            var psBeleg = wuenscheArray
                 .Where(b => b.ProfundumInstanz.Profundum.Id == defId);
             var psBelegVar = psBeleg.Select(b => wuenscheVariables[b]).ToArray();
             model.AddAtMostOne(psBelegVar);
