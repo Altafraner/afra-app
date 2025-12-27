@@ -15,6 +15,7 @@ using Altafraner.Backbone.Defaults;
 using Altafraner.Backbone.EmailOutbox;
 using Altafraner.Backbone.EmailSchedulingModule;
 using Altafraner.Backbone.Scheduling;
+using Altafraner.Typst;
 
 CultureInfo.CurrentCulture = CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfoByIetfLanguageTag("de-DE");
 
@@ -42,6 +43,11 @@ builder.UseAltafranerBackbone(configure: altafranerBuilder => altafranerBuilder
 );
 
 builder.Services.AddControllers();
+
+builder.Services.AddOptions<TypstConfiguration>()
+    .Bind(builder.Configuration.GetSection("Typst"))
+    .Validate(TypstConfiguration.Validate)
+    .ValidateOnStart();
 
 var app = builder.Build();
 
