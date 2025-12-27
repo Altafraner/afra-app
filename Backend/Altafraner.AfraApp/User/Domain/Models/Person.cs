@@ -92,6 +92,9 @@ public class Person : IEmailRecipient
     ///
     public ICollection<ProfundumBelegWunsch> ProfundaBelegwuensche { get; set; } = [];
 
+    ///
+    public ICollection<ProfundumDefinition> BetreuteProfunda { get; set; } = [];
+
     /// <inheritdoc />
     public override string ToString()
     {

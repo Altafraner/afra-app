@@ -1,8 +1,8 @@
-using Altafraner.AfraApp.Profundum.Configuration;
+using System.Text.Json;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.User.Domain.DTO;
-using Altafraner.AfraApp.User.Services;
+using Altafraner.Typst;
 using Microsoft.EntityFrameworkCore;
 
 namespace Altafraner.AfraApp.Profundum.Services;
@@ -139,11 +139,17 @@ public class ProfundumManagementService
             return null;
         }
 
+        var verantwortliche = await _dbContext.Personen
+            .Where(p => dtoProfundum.VerantwortlicheIds.Contains(p.Id))
+            .ToArrayAsync();
+
+
         var def = new ProfundumDefinition
         {
             Bezeichnung = dtoProfundum.Bezeichnung,
             Beschreibung = dtoProfundum.Beschreibung,
             Kategorie = kat,
+            Verantwortliche = verantwortliche,
             MinKlasse = dtoProfundum.minKlasse,
             MaxKlasse = dtoProfundum.maxKlasse
         };
@@ -155,11 +161,19 @@ public class ProfundumManagementService
     ///
     public async Task<ProfundumDefinition?> UpdateProfundumAsync(Guid profundumId, DTOProfundumDefinitionCreation dtoProfundum)
     {
-        var profundum = await _dbContext.Profunda.FindAsync(profundumId);
+        var profundum = await _dbContext.Profunda
+            .Include(p => p.Verantwortliche)
+            .Where(p => p.Id == profundumId)
+            .FirstOrDefaultAsync();
         if (profundum is null)
         {
             return null;
         }
+
+        var verantwortliche = await _dbContext.Personen
+            .Where(p => dtoProfundum.VerantwortlicheIds.Contains(p.Id))
+            .ToListAsync();
+        profundum.Verantwortliche = verantwortliche;
 
         if (dtoProfundum.Bezeichnung != profundum.Bezeichnung)
             profundum.Bezeichnung = dtoProfundum.Beschreibung;
@@ -193,6 +207,7 @@ public class ProfundumManagementService
     {
         return _dbContext.Profunda
             .Include(p => p.Kategorie)
+            .Include(p => p.Verantwortliche)
             .Select(p => new DTOProfundumDefinition(p))
             .ToArrayAsync();
     }
@@ -202,12 +217,13 @@ public class ProfundumManagementService
     {
         return _dbContext.Profunda
             .Include(p => p.Kategorie)
+            .Include(p => p.Verantwortliche)
             .Where(p => p.Id == profundumId)
             .Select(p => new DTOProfundumDefinition(p)).FirstOrDefaultAsync();
     }
 
     ///
-    public async Task<ProfundumInstanz?> CreateInstanzAsync(DTOProfundumInstanz dtoInstanz)
+    public async Task<ProfundumInstanz?> CreateInstanzAsync(DTOProfundumInstanzCreation dtoInstanz)
     {
         var def = await _dbContext.Profunda.FindAsync(dtoInstanz.ProfundumId);
         if (def is null)
@@ -239,6 +255,56 @@ public class ProfundumManagementService
         return inst;
     }
 
+
+    public Task<DTOProfundumInstanz[]> GetInstanzenAsync()
+    {
+        return _dbContext.ProfundaInstanzen
+            .Include(i => i.Profundum)
+            .Include(i => i.Slots)
+            .Select(i => new DTOProfundumInstanz(i))
+            .ToArrayAsync();
+    }
+
+    public Task<DTOProfundumInstanz?> GetInstanzAsync(Guid instanzId)
+    {
+        return _dbContext.ProfundaInstanzen
+            .Include(i => i.Profundum)
+            .Include(i => i.Slots)
+            .Where(i => i.Id == instanzId)
+            .Select(i => new DTOProfundumInstanz(i))
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<ProfundumInstanz?> UpdateInstanzAsync(Guid instanzId, DTOProfundumInstanzCreation patch)
+    {
+        var instanz = await _dbContext.ProfundaInstanzen
+            .Include(i => i.Slots)
+            .FirstOrDefaultAsync(i => i.Id == instanzId);
+
+        if (instanz is null) return null;
+
+        instanz.MaxEinschreibungen = patch.MaxEinschreibungen;
+
+        // update slots
+        instanz.Slots.Clear();
+        foreach (var slotId in patch.Slots)
+        {
+            var slt = await _dbContext.ProfundaSlots.FindAsync(slotId);
+            if (slt != null)
+                instanz.Slots.Add(slt);
+        }
+
+        await _dbContext.SaveChangesAsync();
+        return instanz;
+    }
+
+    public Task DeleteInstanzAsync(Guid instanzId)
+    {
+        _dbContext.ProfundaInstanzen.Where(i => i.Id == instanzId).ExecuteDelete();
+        return _dbContext.SaveChangesAsync();
+    }
+
+
     ///
     public Task<Dictionary<Guid, DTOProfundumEnrollment[]>> GetAllEnrollmentsAsync()
     {
@@ -249,4 +315,87 @@ public class ProfundumManagementService
                 e => e.Select(e => new DTOProfundumEnrollment(e)).ToArray()
                 );
     }
+
+    ///
+    public async Task<byte[]?> GetInstanzPdfAsync(Guid instanzId)
+    {
+        var p = await _dbContext.ProfundaInstanzen
+            .AsSplitQuery()
+            .Include(i => i.Profundum).ThenInclude(p => p.Verantwortliche)
+            .Include(i => i.Slots)
+            .Where(i => i.Id == instanzId)
+            .FirstOrDefaultAsync();
+
+
+        if (p is null)
+        {
+            return null;
+        }
+
+        var teilnehmer = _dbContext.ProfundaEinschreibungen
+            .Where(e => e.ProfundumInstanz.Id == p.Id)
+            .Select(e => e.BetroffenePerson);
+
+        var src = $$"""
+            #let bezeichnung = sys.inputs.bezeichnung
+            #let beschreibung = sys.inputs.beschreibung
+            #let slots = json(bytes(sys.inputs.slots))
+            #let verantwortliche = json(bytes(sys.inputs.verantwortliche))
+            #let teilnehmer = json(bytes(sys.inputs.teilnehmer))
+
+            #align(right, image("logo.png", width: 50mm))
+
+            #let accent-color = rgb("#0069B4")
+            #let accent-font = "TheSerif"
+
+            #show heading.where(level: 1): set text(size: 22pt, font: accent-font, weight: 500, fill: accent-color)
+            #show heading.where(level: 2): set text(size: 18pt, font: accent-font, weight: 500, fill: accent-color)
+
+            = Profundum: #bezeichnung
+
+            #beschreibung
+
+            #let weekdays = (
+              "Montag",
+              "Dienstag",
+              "Mittwoch",
+              "Donnerstag",
+              "Freitag",
+              "Samstag",
+              "Sonntag",
+            )
+
+
+            #for v in verantwortliche [
+                #v.Nachname, #v.Vorname (#v.Email) \
+            ]
+
+            #for s in slots [
+                #s.Jahr/#{calc.rem-euclid(s.Jahr + 1, 100)} Q#s.Quartal #weekdays.at(s.Wochentag) \
+            ]
+
+            == Teilnehmer
+
+            #table(columns: 3,
+                ..for v in teilnehmer {
+                    (v.Gruppe, v.Nachname, v.Vorname,)
+                }
+            )
+            """;
+
+
+        var typst = new TypstCompilerWrapper(src, null, "/tmp/img/");
+
+        typst.SetSysInputs(new Dictionary<string, string> {
+                { "bezeichnung", p.Profundum.Bezeichnung },
+                { "beschreibung", p.Profundum.Beschreibung },
+                { "slots", JsonSerializer.Serialize(p.Slots) },
+                { "verantwortliche", JsonSerializer.Serialize(p.Profundum.Verantwortliche.Select(v=>new PersonInfoMinimal(v))) },
+                { "teilnehmer", JsonSerializer.Serialize(teilnehmer.Select(v=>new PersonInfoMinimal(v))) },
+        });
+
+        var res = typst.CompilePdf();
+        return res;
+    }
+
 }
