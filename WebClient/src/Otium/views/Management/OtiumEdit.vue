@@ -22,6 +22,7 @@ import GridEditRow from '@/components/Form/GridEditRow.vue';
 import AfraOtiumRegTable from '@/Otium/components/Management/AfraOtiumRegTable.vue';
 import AfraOtiumDateTable from '@/Otium/components/Management/AfraOtiumDateTable.vue';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
+import KlassenrangeSelector from '@/components/KlassenRangeSelector.vue';
 
 const props = defineProps({
     otiumId: String,
@@ -368,24 +369,12 @@ setup();
                     </template>
                 </template>
                 <template #edit>
-                    <Select
-                        id="minKlasseSelect"
-                        v-model="minKlasse"
+                    <KlassenrangeSelector
+                        :min="minKlasse"
+                        :max="maxKlasse"
                         :options="klassenStufenSelects"
-                        optionLabel="label"
-                        optionValue="value"
-                        placeholder="min"
-                        fluid
-                    />
-                    –
-                    <Select
-                        id="maxKlasseSelect"
-                        v-model="maxKlasse"
-                        :options="klassenStufenSelects"
-                        optionLabel="label"
-                        optionValue="value"
-                        placeholder="max"
-                        fluid
+                        @update:min="minKlasse = $event"
+                        @update:max="maxKlasse = $event"
                     />
                 </template>
             </GridEditRow>
