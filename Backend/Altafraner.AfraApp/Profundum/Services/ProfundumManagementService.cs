@@ -4,6 +4,7 @@ using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.User.Domain.DTO;
 using Altafraner.Typst;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace Altafraner.AfraApp.Profundum.Services;
 
@@ -14,15 +15,19 @@ public class ProfundumManagementService
 {
     private readonly AfraAppContext _dbContext;
     private readonly ILogger _logger;
+    private readonly IOptions<TypstConfiguration> _typstConfig;
 
     /// <summary>
     ///     Constructs the ManagementService. Usually called by the DI container.
     /// </summary>
     public ProfundumManagementService(AfraAppContext dbContext,
-        ILogger<ProfundumEnrollmentService> logger)
+        ILogger<ProfundumEnrollmentService> logger,
+        IOptions<TypstConfiguration> typstConfig
+        )
     {
         _dbContext = dbContext;
         _logger = logger;
+        _typstConfig = typstConfig;
     }
 
     ///
@@ -402,7 +407,7 @@ public class ProfundumManagementService
             """;
 
 
-        var typst = new TypstCompilerWrapper(src, null, "/tmp/img/");
+        var typst = new TypstCompilerWrapper(src, null, _typstConfig.Value.TypstResourcePath);
 
         typst.SetSysInputs(new Dictionary<string, string> {
                 { "bezeichnung", p.Profundum.Bezeichnung },
