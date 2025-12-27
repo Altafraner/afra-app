@@ -232,11 +232,14 @@ public class ProfundumManagementService
             return null;
         }
 
+        var deps = await _dbContext.ProfundaInstanzen.Where(p => dtoInstanz.DependencyIds.Contains(p.Id)).ToArrayAsync();
+
         var inst = new ProfundumInstanz
         {
             Profundum = def,
             MaxEinschreibungen = dtoInstanz.MaxEinschreibungen,
             Slots = [],
+            Dependencies = deps,
         };
         _dbContext.ProfundaInstanzen.Add(inst);
         foreach (var s in dtoInstanz.Slots)
@@ -259,8 +262,10 @@ public class ProfundumManagementService
     public Task<DTOProfundumInstanz[]> GetInstanzenAsync()
     {
         return _dbContext.ProfundaInstanzen
+            .AsSingleQuery()
             .Include(i => i.Profundum)
             .Include(i => i.Slots)
+            .Include(i => i.Dependencies)
             .Select(i => new DTOProfundumInstanz(i))
             .ToArrayAsync();
     }
@@ -268,8 +273,10 @@ public class ProfundumManagementService
     public Task<DTOProfundumInstanz?> GetInstanzAsync(Guid instanzId)
     {
         return _dbContext.ProfundaInstanzen
+            .AsSingleQuery()
             .Include(i => i.Profundum)
             .Include(i => i.Slots)
+            .Include(i => i.Dependencies)
             .Where(i => i.Id == instanzId)
             .Select(i => new DTOProfundumInstanz(i))
             .FirstOrDefaultAsync();
@@ -284,6 +291,10 @@ public class ProfundumManagementService
         if (instanz is null) return null;
 
         instanz.MaxEinschreibungen = patch.MaxEinschreibungen;
+
+        var deps = await _dbContext.ProfundaInstanzen
+            .Where(p => patch.DependencyIds.Contains(p.Id)).ToArrayAsync();
+        instanz.Dependencies = deps;
 
         // update slots
         instanz.Slots.Clear();

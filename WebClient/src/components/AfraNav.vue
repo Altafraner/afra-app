@@ -88,13 +88,13 @@ const items_profundum_manager = [
         },
         icon: 'pi pi-wrench',
     },
-    {
-        label: 'Profunda Matching',
-        route: {
-            name: 'Profundum-Matching',
-        },
-        icon: 'pi pi-wrench',
-    },
+    // {
+    //     label: 'Profunda Matching',
+    //     route: {
+    //         name: 'Profundum-Matching',
+    //     },
+    //     icon: 'pi pi-wrench',
+    // },
 ];
 
 const items_admin = [
