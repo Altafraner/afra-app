@@ -1,6 +1,7 @@
 namespace Altafraner.AfraApp.Profundum.Domain.DTO;
 
 using Altafraner.AfraApp.Profundum.Domain.Models;
+using Altafraner.AfraApp.User.Domain.DTO;
 
 ///
 public record DTOProfundumDefinition
@@ -14,6 +15,8 @@ public record DTOProfundumDefinition
         KategorieId = dbProfundumDefinition.Kategorie.Id;
         minKlasse = dbProfundumDefinition.MinKlasse;
         maxKlasse = dbProfundumDefinition.MaxKlasse;
+        VerantwortlicheIds = dbProfundumDefinition.Verantwortliche.Select(s => s.Id).ToArray();
+        VerantwortlicheInfo = dbProfundumDefinition.Verantwortliche.Select(s => new PersonInfoMinimal(s)).ToArray();
     }
 
     /// <inheritdoc cref="ProfundumDefinition.Id"/>
@@ -27,6 +30,12 @@ public record DTOProfundumDefinition
 
     /// <inheritdoc cref="ProfundumDefinition.Kategorie"/>
     public Guid KategorieId { get; set; }
+
+    /// <inheritdoc cref="ProfundumDefinition.Verantwortliche"/>
+    public ICollection<Guid> VerantwortlicheIds { get; set; } = [];
+
+    /// <inheritdoc cref="ProfundumDefinition.Verantwortliche"/>
+    public ICollection<PersonInfoMinimal> VerantwortlicheInfo { get; set; } = [];
 
     /// <inheritdoc cref="ProfundumDefinition.MinKlasse"/>
     public int? minKlasse { get; set; } = null;

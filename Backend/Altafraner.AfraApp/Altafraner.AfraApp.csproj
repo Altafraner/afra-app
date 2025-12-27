@@ -47,6 +47,7 @@
         <ProjectReference Include="..\Altafraner.Backbone.Defaults\Altafraner.Backbone.Defaults.csproj"/>
         <ProjectReference Include="..\Altafraner.Backbone.EmailSchedulingModule\Altafraner.Backbone.EmailSchedulingModule.csproj"/>
         <ProjectReference Include="..\Altafraner.Backbone\Altafraner.Backbone.csproj"/>
+        <ProjectReference Include="..\Altafraner.Typst\Altafraner.Typst.csproj"/>
     </ItemGroup>
 
 </Project>

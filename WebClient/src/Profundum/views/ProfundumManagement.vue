@@ -4,6 +4,7 @@ import { mande } from 'mande';
 import {
     Button,
     Column,
+    Message,
     DataTable,
     Dialog,
     Skeleton,
@@ -100,8 +101,14 @@ setup();
 
 <template>
     <template v-if="!loading">
-        <h2>Alle Profunda</h2>
-        <p>Klicken sie auf ein Profundum, um Details zu sehen oder es zu bearbeiten.</p>
+        <h2>Profunda Verwaltung</h2>
+
+        <Message severity="warn">
+            Diese Funktionen sind nicht ausgiebig getestet und insbesondere die Löschung von
+            bereits genutzen Profunda kann erheblichen Datenverlust beispielsweise für Matching
+            und Feedback-Funktionen auslösen. Alte Profunda sollten beispielsweise im neuen
+            Semester einfach keine neue Instanz erhalten, statt gelöscht zu werden.
+        </Message>
 
         <DataTable :value="profunda" data-key="id">
             <Column header="Bezeichnung">
@@ -128,7 +135,7 @@ setup();
                 <template #body="{ data }">
                     <Button
                         v-tooltip.left="'Löschen'"
-                        icon="pi pi-times"
+                        icon="pi pi-trash"
                         severity="danger"
                         variant="text"
                         aria-label="Löschen"

@@ -1,16 +1,31 @@
 <script setup>
-import { InputText, Textarea, useToast } from 'primevue';
+import { InputText, Textarea, Button, useToast, Select } from 'primevue';
 import Dropdown from 'primevue/dropdown';
+import { formatStudent } from '@/helpers/formatters';
 
 import { mande } from 'mande';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import Grid from '@/components/Form/Grid.vue';
 import GridEditRow from '@/components/Form/GridEditRow.vue';
+import ProfundumInstanzen from '@/Profundum/components/ProfundumInstanzen.vue';
+import AfraPersonSelector from '@/Otium/components/Form/AfraPersonSelector.vue';
 
 const props = defineProps({ profundumId: String });
 const toast = useToast();
 
 const loading = ref(true);
+
+const klassenstufen = ref([]);
+const klassenStufenSelects = computed(() => [
+    { label: '–', value: null },
+    ...klassenstufen.value.map((x) => ({ label: x.toString(), value: x })),
+]);
+
+async function getKlassen() {
+    const getter = mande('/api/klassen');
+    klassenstufen.value = await getter.get();
+}
+
 const categories = ref([]);
 const profundum = ref(null);
 
@@ -36,7 +51,7 @@ async function loadProfundum() {
 
 async function setup() {
     try {
-        await Promise.all([loadCategories(), loadProfundum()]);
+        await Promise.all([loadProfundum(), loadCategories(), getKlassen()]);
     } catch (e) {
         toast.add({
             severity: 'error',
@@ -64,6 +79,7 @@ async function savePatch(patch) {
             summary: 'Fehler',
             detail: e?.body ?? 'Konnte nicht speichern',
         });
+    } finally {
         await loadProfundum();
     }
 }
@@ -71,6 +87,8 @@ async function savePatch(patch) {
 const updateTitel = () => savePatch({ bezeichnung: profundum.value.bezeichnung });
 const updateKategorie = () => savePatch({ kategorieId: profundum.value.kategorieId });
 const updateBeschreibung = () => savePatch({ beschreibung: profundum.value.beschreibung });
+const updateVerantwortliche = () =>
+    savePatch({ verantwortlicheIds: profundum.value.verantwortlicheIds });
 const updateKlassen = () =>
     savePatch({
         minKlasse: profundum.value.minKlasse ?? null,
@@ -134,6 +152,31 @@ const updateKlassen = () =>
                 </template>
             </GridEditRow>
 
+            <GridEditRow
+                header="Verantwortliche"
+                header-class="self-start"
+                @update="updateVerantwortliche"
+            >
+                <template #body>
+                    <template v-if="profundum.verantwortlicheInfo === []">
+                        Kein:e Betreuer:in
+                    </template>
+                    <template v-else>
+                        <template v-for="tutor in profundum.verantwortlicheInfo">
+                            {{ formatStudent(tutor) }},
+                        </template>
+                    </template>
+                </template>
+                <template #edit>
+                    <AfraPersonSelector
+                        v-model="profundum.verantwortlicheIds"
+                        :multi="true"
+                        name="tutor"
+                        required
+                    />
+                </template>
+            </GridEditRow>
+
             <GridEditRow header="Jahrgänge" @update="updateKlassen">
                 <template #body>
                     <span v-if="!profundum.minKlasse && !profundum.maxKlasse">Alle</span>
@@ -145,12 +188,31 @@ const updateKlassen = () =>
                         <span v-if="profundum.maxKlasse"> bis {{ profundum.maxKlasse }}</span>
                     </span>
                 </template>
+
                 <template #edit>
-                    <InputText type="number" v-model="profundum.minKlasse" placeholder="min" />
-                    –
-                    <InputText type="number" v-model="profundum.maxKlasse" placeholder="max" />
+                    <span class="flex gap-2 items-center">
+                        <Select
+                            v-model="profundum.minKlasse"
+                            :options="klassenStufenSelects"
+                            optionLabel="label"
+                            optionValue="value"
+                            placeholder="min"
+                            fluid
+                        />
+                        –
+                        <Select
+                            v-model="profundum.maxKlasse"
+                            :options="klassenStufenSelects"
+                            optionLabel="label"
+                            optionValue="value"
+                            placeholder="max"
+                            fluid
+                        />
+                    </span>
                 </template>
             </GridEditRow>
         </Grid>
+
+        <ProfundumInstanzen :profundumId="props.profundumId" />
     </template>
 </template>
