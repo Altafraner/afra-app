@@ -32,6 +32,11 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
     public DbSet<MentorMenteeRelation> MentorMenteeRelations { get; set; }
 
     /// <summary>
+    /// Dependencies between profunda
+    /// </summary>
+    public DbSet<ProfundaInstanzDependency> ProfundaInstanzDependencies { get; set; }
+
+    /// <summary>
     ///     All the Otia in the application.
     /// </summary>
     public DbSet<OtiumDefinition> Otia { get; set; }
@@ -217,19 +222,31 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
         {
             p.HasOne(e => e.Kategorie)
                 .WithMany(k => k.Profunda);
+            p.HasMany(e => e.Verantwortliche).WithMany(v => v.BetreuteProfunda);
         });
+
         modelBuilder.Entity<ProfundumInstanz>(p =>
         {
             p.HasOne(i => i.Profundum)
                 .WithMany(e => e.Instanzen);
             p.HasMany(e => e.Slots).WithMany();
+            p.HasMany(e => e.Dependants)
+                .WithMany(e => e.Dependencies)
+            .UsingEntity<ProfundaInstanzDependency>(
+                r => r.HasOne<ProfundumInstanz>().WithMany().HasForeignKey(e => e.DependantId),
+                l => l.HasOne<ProfundumInstanz>().WithMany().HasForeignKey(e => e.DependencyId));
         });
+
+        modelBuilder.Entity<ProfundaInstanzDependency>()
+            .HasKey(r => new { r.DependencyId, r.DependantId });
+
         modelBuilder.Entity<ProfundumEinschreibung>(e =>
         {
             e.HasOne(f => f.ProfundumInstanz).WithMany(pi => pi.Einschreibungen);
             e.HasOne(f => f.BetroffenePerson).WithMany(pe => pe.ProfundaEinschreibungen);
             e.HasKey(b => new { b.BetroffenePersonId, b.ProfundumInstanzId, });
         });
+
         modelBuilder.Entity<ProfundumBelegWunsch>(w =>
         {
             w.HasKey(b => new { b.ProfundumInstanzId, b.BetroffenePersonId, b.Stufe });

@@ -14,6 +14,8 @@ export const useUser = defineStore('user', {
         isTeacher: (state) => state.user.rolle === 'Tutor',
         isOtiumsverantwortlich: (state) =>
             state.user.berechtigungen.includes('Otiumsverantwortlich'),
+        isProfundumsverantwortlich: (state) =>
+            state.user.berechtigungen.includes('Profundumsverantwortlich'),
         isAdmin: (state) => state.user.berechtigungen.includes('Admin'),
     },
     actions: {

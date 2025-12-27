@@ -1,9 +1,10 @@
-using System.Text;
 using Altafraner.AfraApp.Backbone.Authorization;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.Profundum.Services;
 using Altafraner.AfraApp.User.Services;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Altafraner.AfraApp.Profundum.API.Endpoints;
@@ -19,183 +20,243 @@ public static class Management
     public static void MapManagementEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/management")
-            .RequireAuthorization(AuthorizationPolicies.AdminOnly);
+            .RequireAuthorization(AuthorizationPolicies.ProfundumsVerantwortlich);
 
-        group.MapPut("/einwahlzeitraum", AddEinwahlZeitraumAsync);
-        group.MapPut("/slot", AddSlotAsync);
-        group.MapPut("/kategorie", AddKategorieAsync);
-        group.MapPut("/profundum", AddProfundumAsync);
-        group.MapPut("/instanz", AddInstanzAsync);
+        group.MapGet("/einwahlzeitraum", GetEinwahlZeitraeumeAsync);
+        group.MapPost("/einwahlzeitraum", AddEinwahlZeitraumAsync);
 
-        group.MapGet("/missing", GetUnenrolledAsync);
-        group.MapGet("/missing/emails", GetUnenrolledEmailsAsync);
+        group.MapGet("/slot", GetSlotsAsync);
+        group.MapPost("/slot", AddSlotAsync);
+
+        group.MapGet("/kategorie", GetKategorienAsync);
+        group.MapPost("/kategorie", AddKategorieAsync);
+        group.MapPut("/kategorie/{kategorieId:guid}", UpdateKategorieAsync);
+        group.MapDelete("/kategorie/{kategorieId:guid}", DeleteKategorieAsync);
+
+        group.MapGet("/profundum/{profundumId:guid}", GetProfundumAsync);
+        group.MapGet("/profundum", GetProfundaAsync);
+        group.MapPost("/profundum", AddProfundumAsync);
+        group.MapPut("/profundum/{profundumId:guid}", UpdateProfundumAsync);
+        group.MapDelete("/profundum/{profundumId:guid}", DeleteProfundumAsync);
+
+        group.MapPost("/instanz", AddInstanzAsync);
+        group.MapGet("/instanz", GetInstanzenAsync);
+        group.MapGet("/instanz/{instanzId:guid}", GetInstanzAsync);
+        group.MapGet("/instanz/{instanzId:guid}.pdf", GetInstanzPdfAsync);
+        group.MapPut("/instanz/{instanzId:guid}", UpdateInstanzAsync);
+        group.MapDelete("/instanz/{instanzId:guid}", DeleteInstanzAsync);
+
+
         group.MapPost("/matching", DoMatchingAsync);
-        group.MapPost("/matching/final", DoFinalMatchingAsync);
-        group.MapGet("/matching.csv", MatchingAsyncCsv);
+        group.MapGet("/enrollments", GetAllEnrollmentsAsync);
     }
 
-    ///
-    private static async Task<IResult> AddEinwahlZeitraumAsync(ProfundumManagementService managementService,
-        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger,
-        DtoProfundumEinwahlZeitraum zeitraum)
+    private static async Task<Ok<Guid>> AddEinwahlZeitraumAsync(ProfundumManagementService managementService,
+        UserAccessor userAccessor,
+        AfraAppContext dbContext,
+        ILogger<ProfundumEnrollmentService> logger,
+        DTOProfundumEinwahlZeitraum zeitraum)
     {
         var res = await managementService.CreateEinwahlZeitraumAsync(zeitraum);
-        return Results.Ok(res.Id);
+        return TypedResults.Ok(res.Id);
     }
 
-    ///
-    private static async Task<IResult> AddSlotAsync(ProfundumManagementService managementService,
-        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger,
-        DtoProfundumSlot slot)
+    private static async Task<Ok<DTOProfundumEinwahlZeitraum[]>> GetEinwahlZeitraeumeAsync(
+        ProfundumManagementService managementService,
+        UserAccessor userAccessor,
+        AfraAppContext dbContext,
+        ILogger<ProfundumEnrollmentService> logger)
+    {
+        return TypedResults.Ok(await managementService.GetEinwahlZeiträumeAsync());
+    }
+
+    private static async Task<Ok<DTOProfundumSlot[]>> GetSlotsAsync(ProfundumManagementService managementService,
+        UserAccessor userAccessor,
+        AfraAppContext dbContext,
+        ILogger<ProfundumEnrollmentService> logger)
+    {
+        return TypedResults.Ok(await managementService.GetSlotsAsync());
+    }
+
+    private static async Task<Results<Ok<Guid>, BadRequest<string>>> AddSlotAsync(
+        ProfundumManagementService managementService,
+        UserAccessor userAccessor,
+        AfraAppContext dbContext,
+        ILogger<ProfundumEnrollmentService> logger,
+        DTOProfundumSlot slot)
     {
         var res = await managementService.CreateSlotAsync(slot);
-        if (res is null)
-        {
-            return Results.BadRequest("Could not create slot");
-        }
+        if (res is null) return TypedResults.BadRequest("Could not create slot");
 
-        return Results.Ok(res.Id);
+        return TypedResults.Ok(res.Id);
     }
 
-    ///
-    private static async Task<IResult> AddKategorieAsync(ProfundumManagementService managementService,
-        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger,
-        DtoProfundumKategorie kategorie)
+    private static async Task<Ok<DTOProfundumKategorie[]>> GetKategorienAsync(
+        ProfundumManagementService managementService,
+        UserAccessor userAccessor,
+        AfraAppContext dbContext,
+        ILogger<ProfundumEnrollmentService> logger)
+    {
+        return TypedResults.Ok(await managementService.GetKategorienAsync());
+    }
+
+    private static async Task<Results<Ok<Guid>, BadRequest<string>>> AddKategorieAsync(
+        ProfundumManagementService managementService,
+        UserAccessor userAccessor,
+        AfraAppContext dbContext,
+        ILogger<ProfundumEnrollmentService> logger,
+        DTOProfundumKategorieCreation kategorie)
     {
         var res = await managementService.CreateKategorieAsync(kategorie);
-        if (res is null)
-        {
-            return Results.BadRequest("Could not create kategorie");
-        }
+        if (res is null) return TypedResults.BadRequest("Could not create kategorie");
 
-        return Results.Ok(res.Id);
+        return TypedResults.Ok(res.Id);
     }
 
-    ///
-    private static async Task<IResult> AddProfundumAsync(ProfundumManagementService managementService,
-        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger,
-        DtoProfundumDefinition definition)
+    private static async Task<Ok> UpdateKategorieAsync(ProfundumManagementService managementService,
+        UserAccessor userAccessor,
+        AfraAppContext dbContext,
+        ILogger<ProfundumEnrollmentService> logger,
+        Guid kategorieId,
+        DTOProfundumKategorieCreation kategorie)
+    {
+        await managementService.UpdateKategorieAsync(kategorieId, kategorie);
+        return TypedResults.Ok();
+    }
+
+    private static async Task<Ok> DeleteKategorieAsync(ProfundumManagementService managementService,
+        UserAccessor userAccessor,
+        AfraAppContext dbContext,
+        ILogger<ProfundumEnrollmentService> logger,
+        Guid kategorieId)
+    {
+        await managementService.DeleteKategorieAsync(kategorieId);
+        return TypedResults.Ok();
+    }
+
+    private static async Task<Results<Ok<Guid>, BadRequest<string>>> AddProfundumAsync(
+        ProfundumManagementService managementService,
+        UserAccessor userAccessor,
+        AfraAppContext dbContext,
+        ILogger<ProfundumEnrollmentService> logger,
+        DTOProfundumDefinitionCreation definition)
     {
         var res = await managementService.CreateProfundumAsync(definition);
-        if (res is null)
-        {
-            return Results.BadRequest("Could not create profundum");
-        }
+        if (res is null) return TypedResults.BadRequest("Could not create profundum");
 
-        return Results.Ok(res.Id);
+        return TypedResults.Ok(res.Id);
     }
 
-    ///
-    private static async Task<IResult> AddInstanzAsync(ProfundumManagementService managementService,
-        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger,
-        DtoProfundumInstanz instanz)
+    private static async Task<Results<Ok<Guid>, BadRequest<string>>> UpdateProfundumAsync(
+        ProfundumManagementService managementService,
+        UserAccessor userAccessor,
+        AfraAppContext dbContext,
+        ILogger<ProfundumEnrollmentService> logger,
+        Guid profundumId,
+        DTOProfundumDefinitionCreation definition)
+    {
+        var res = await managementService.UpdateProfundumAsync(profundumId, definition);
+        if (res is null) return TypedResults.BadRequest("Could not update profundum");
+        return TypedResults.Ok(res.Id);
+    }
+
+    private static async Task<Ok> DeleteProfundumAsync(ProfundumManagementService managementService,
+        UserAccessor userAccessor,
+        AfraAppContext dbContext,
+        ILogger<ProfundumEnrollmentService> logger,
+        Guid profundumId)
+    {
+        await managementService.DeleteProfundumAsync(profundumId);
+        return TypedResults.Ok();
+    }
+
+    private static async Task<Ok<DTOProfundumDefinition>> GetProfundumAsync(
+        ProfundumManagementService managementService,
+        UserAccessor userAccessor,
+        AfraAppContext dbContext,
+        ILogger<ProfundumEnrollmentService> logger,
+        Guid profundumId)
+    {
+        return TypedResults.Ok(await managementService.GetProfundumAsync(profundumId));
+    }
+
+    private static async Task<Ok<DTOProfundumDefinition[]>> GetProfundaAsync(
+        ProfundumManagementService managementService,
+        UserAccessor userAccessor,
+        AfraAppContext dbContext,
+        ILogger<ProfundumEnrollmentService> logger)
+    {
+        return TypedResults.Ok(await managementService.GetProfundaAsync());
+    }
+
+    private static async Task<Results<Ok<Guid>, BadRequest<string>>> AddInstanzAsync(
+        ProfundumManagementService managementService,
+        UserAccessor userAccessor,
+        AfraAppContext dbContext,
+        ILogger<ProfundumEnrollmentService> logger,
+        DTOProfundumInstanzCreation instanz)
     {
         var res = await managementService.CreateInstanzAsync(instanz);
-        if (res is null)
-        {
-            return Results.BadRequest("Could not create instanz");
-        }
+        if (res is null) return TypedResults.BadRequest("Could not create instanz");
 
-        return Results.Ok(res.Id);
+        return TypedResults.Ok(res.Id);
+    }
+
+    private static async Task<Ok<DTOProfundumInstanz[]>> GetInstanzenAsync(ProfundumManagementService svc)
+    {
+        return TypedResults.Ok(await svc.GetInstanzenAsync());
+    }
+
+    private static async Task<Ok<DTOProfundumInstanz>> GetInstanzAsync(ProfundumManagementService svc, Guid instanzId)
+    {
+        return TypedResults.Ok(await svc.GetInstanzAsync(instanzId));
+    }
+
+    private static async Task<FileContentHttpResult> GetInstanzPdfAsync(ProfundumManagementService svc, Guid instanzId)
+    {
+        return TypedResults.File((await svc.GetInstanzPdfAsync(instanzId))!, "application/pdf");
+    }
+
+    private static async Task<Results<NotFound, Ok<Guid>>> UpdateInstanzAsync(ProfundumManagementService svc,
+        Guid instanzId,
+        DTOProfundumInstanzCreation instanz)
+    {
+        var res = await svc.UpdateInstanzAsync(instanzId, instanz);
+        return res is null ? TypedResults.NotFound() : TypedResults.Ok(res.Id);
+    }
+
+    private static async Task<Ok> DeleteInstanzAsync(ProfundumManagementService svc, Guid instanzId)
+    {
+        await svc.DeleteInstanzAsync(instanzId);
+        return TypedResults.Ok();
     }
 
 
     ///
-    private static async Task<IResult> DoMatchingAsync(ProfundumEnrollmentService enrollmentService,
-        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
+    private static async Task<Results<Ok<MatchingStats>, NotFound<string>>> DoMatchingAsync(
+        ProfundumEnrollmentService enrollmentService,
+        UserAccessor userAccessor,
+        AfraAppContext dbContext,
+        ILogger<ProfundumEnrollmentService> logger)
     {
-        var now = DateTime.UtcNow;
         var einwahlZeitraum = (await dbContext.ProfundumEinwahlZeitraeume
                 .Include(ez => ez.Slots)
-                .Where(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop)
                 .ToArrayAsync())
             .FirstOrDefault((ProfundumEinwahlZeitraum?)null);
-        if (einwahlZeitraum is null)
-        {
-            return Results.NotFound("Kein offener Einwahlzeitraum");
-        }
+        if (einwahlZeitraum is null) return TypedResults.NotFound("Kein offener Einwahlzeitraum");
 
-        var result = await enrollmentService.PerformMatching(einwahlZeitraum);
-        return Results.Ok(result);
+        var result = await enrollmentService.PerformMatching(einwahlZeitraum, true);
+        return TypedResults.Ok(result);
     }
 
     ///
-    private static async Task<IResult> DoFinalMatchingAsync(ProfundumEnrollmentService enrollmentService,
-        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
+    private static async Task<Ok<Dictionary<Guid, DTOProfundumEnrollment[]>>> GetAllEnrollmentsAsync(
+        ProfundumManagementService managementService,
+        UserAccessor userAccessor,
+        AfraAppContext dbContext,
+        ILogger<ProfundumManagementService> logger)
     {
-        var now = DateTime.UtcNow;
-        var einwahlZeitraum = (await dbContext.ProfundumEinwahlZeitraeume
-                .Include(ez => ez.Slots)
-                .Where(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop)
-                .ToArrayAsync())
-            .FirstOrDefault((ProfundumEinwahlZeitraum?)null);
-        if (einwahlZeitraum is null)
-        {
-            return Results.NotFound("Kein offener Einwahlzeitraum");
-        }
-
-        var result = await enrollmentService.PerformMatching(einwahlZeitraum, writeBackOnSuccess: true);
-        return Results.Ok(result);
-    }
-
-    ///
-    private static async Task<IResult> MatchingAsyncCsv(ProfundumEnrollmentService enrollmentService,
-        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
-    {
-        var now = DateTime.UtcNow;
-        var einwahlZeitraum = (await dbContext.ProfundumEinwahlZeitraeume
-                .Include(ez => ez.Slots)
-                .Where(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop)
-                .ToArrayAsync())
-            .FirstOrDefault((ProfundumEinwahlZeitraum?)null);
-        if (einwahlZeitraum is null)
-        {
-            return Results.NotFound("Kein offener Einwahlzeitraum");
-        }
-
-        var csv = await enrollmentService.GetStudentMatchingCsv(einwahlZeitraum);
-        return Results.File(Encoding.UTF8.GetBytes(csv), "text/csv");
-    }
-
-    ///
-    private static async Task<IResult> GetUnenrolledAsync(ProfundumEnrollmentService enrollmentService,
-        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
-    {
-        var now = DateTime.UtcNow;
-        var einwahlZeitraum = (await dbContext.ProfundumEinwahlZeitraeume
-                .Include(ez => ez.Slots)
-                .Where(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop)
-                .ToArrayAsync())
-            .FirstOrDefault((ProfundumEinwahlZeitraum?)null);
-        if (einwahlZeitraum is null)
-        {
-            return Results.NotFound("Kein offener Einwahlzeitraum");
-        }
-
-        var slots = einwahlZeitraum.Slots.Select(s => s.Id).ToArray();
-
-        var result = await enrollmentService.GetMissingStudentsAsync(slots);
-        return Results.Ok(result);
-    }
-
-    ///
-    private static async Task<IResult> GetUnenrolledEmailsAsync(ProfundumEnrollmentService enrollmentService,
-        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
-    {
-        var now = DateTime.UtcNow;
-        var einwahlZeitraum = (await dbContext.ProfundumEinwahlZeitraeume
-                .Include(ez => ez.Slots)
-                .Where(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop)
-                .ToArrayAsync())
-            .FirstOrDefault((ProfundumEinwahlZeitraum?)null);
-        if (einwahlZeitraum is null)
-        {
-            return Results.NotFound("Kein offener Einwahlzeitraum");
-        }
-
-        var slots = einwahlZeitraum.Slots.Select(s => s.Id).ToArray();
-
-        var result = await enrollmentService.GetMissingStudentsEmailsAsync(slots);
-        return Results.Ok(result);
+        var result = await managementService.GetAllEnrollmentsAsync();
+        return TypedResults.Ok(result);
     }
 }
