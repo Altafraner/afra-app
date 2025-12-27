@@ -51,8 +51,6 @@ internal static class Note
             return Results.Ok(notes.Select(n => new Notiz(n)));
         }
 
-        ;
-
         success = await service.TryAddNoteAsync(request.Content, request.StudentId, request.BlockId, user.Id);
         if (!success) return Results.Conflict();
 

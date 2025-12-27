@@ -70,10 +70,10 @@ public record TerminPreview : ITermin
     /// </summary>
     public string Ort { get; set; }
 
-    /// <inheritdoc />
+    /// <summary>The blocks schema id</summary>
     public char BlockSchemaId { get; set; }
 
-    /// <inheritdoc />
+    /// <summary>The blocks human-readable name</summary>
     public string Block { get; set; }
 
     /// <summary>

@@ -2,8 +2,6 @@
 using Altafraner.Backbone.CookieAuthentication.Services;
 using Altafraner.Backbone.Defaults;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

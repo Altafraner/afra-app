@@ -49,10 +49,10 @@ public record LehrerTermin : ITermin
     /// </summary>
     public required Guid BlockId { get; set; }
 
-    /// <inheritdoc />
+    /// <summary>The blocks schema id</summary>
     public required char BlockSchemaId { get; set; }
 
-    /// <inheritdoc />
+    /// <summary>The blocks human-readable name</summary>
     public required string Block { get; set; }
 
     /// <inheritdoc />
