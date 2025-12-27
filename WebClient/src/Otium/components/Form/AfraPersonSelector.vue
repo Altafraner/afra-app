@@ -54,8 +54,7 @@ getPersonen();
                 v-model="model"
                 :loading="loading"
                 :options="personen"
-                filter
-                fluid
+                display="chip"
                 option-label="name"
                 option-value="id"
                 v-bind="$attrs"
@@ -67,4 +66,21 @@ getPersonen();
     </FloatLabel>
 </template>
 
-<style scoped></style>
+<style scoped>
+.multiselect-wrap :deep(.p-multiselect-label-container) {
+    height: auto;
+}
+
+.multiselect-wrap :deep(.p-multiselect-label) {
+    display: flex;
+    flex-wrap: wrap;
+    white-space: normal;
+    gap: 0.25rem;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+}
+
+.multiselect-wrap :deep(.p-multiselect-token) {
+    margin-bottom: 0.25rem;
+}
+</style>
