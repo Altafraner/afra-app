@@ -251,5 +251,19 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
         modelBuilder.Entity<OtiumWiederholung>()
             .Property(w => w.Block)
             .HasDefaultValueSql("''");
+
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            var tableName = entityType.GetTableName();
+            if (!string.IsNullOrEmpty(tableName))
+            {
+                entityType.SetTableName(tableName.ToLowerInvariant());
+            }
+            var schema = entityType.GetSchema();
+            if (!string.IsNullOrEmpty(schema))
+            {
+                entityType.SetSchema(schema.ToLowerInvariant());
+            }
+        }
     }
 }
