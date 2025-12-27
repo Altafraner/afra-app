@@ -3,6 +3,7 @@
     <File Path="../compose.yaml" />
   </Folder>
   <Project Path="Altafraner.AfraApp\Altafraner.AfraApp.csproj" Type="Classic C#" />
+  <Project Path="Altafraner.Typst\Altafraner.Typst.csproj" Type="Classic C#"/>
   <Project Path="Altafraner.Backbone.Abstractions\Altafraner.Backbone.Abstractions.csproj" Type="Classic C#" />
   <Project Path="Altafraner.Backbone.CookieAuthentication\Altafraner.Backbone.CookieAuthentication.csproj" Type="Classic C#" />
   <Project Path="Altafraner.Backbone.DataProtection\Altafraner.Backbone.DataProtection.csproj" Type="Classic C#" />
