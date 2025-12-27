@@ -1,38 +1,40 @@
 using System.Runtime.InteropServices;
-
 using System.Text.Json;
+
+namespace Altafraner.Typst;
 
 internal class CompilerSafe
 {
-    private unsafe CsBindgen.Compiler* inner;
+    private readonly unsafe CsBindgen.Compiler* _inner;
     internal unsafe CompilerSafe(CsBindgen.Compiler* x)
     {
         if (x == null)
         {
             throw new ArgumentNullException();
         }
-        inner = x;
+
+        _inner = x;
     }
 
-    internal CompileResultSafe compile()
+    internal CompileResultSafe Compile()
     {
         unsafe
         {
-            return new(CsBindgen.NativeMethods.compile(inner));
+            return new CompileResultSafe(CsBindgen.NativeMethods.compile(_inner));
 
         }
     }
 
-    internal unsafe bool setSysInputs(Dictionary<string, string> inputs)
+    internal unsafe bool SetSysInputs(Dictionary<string, string> inputs)
     {
         bool ok;
 
-        System.String? sysInputsJson = JsonSerializer.Serialize<Dictionary<string, string>>(inputs);
+        var sysInputsJson = JsonSerializer.Serialize(inputs);
 
-        nint sysInputsPtr = Marshal.StringToHGlobalAnsi(sysInputsJson);
+        var sysInputsPtr = Marshal.StringToHGlobalAnsi(sysInputsJson);
         try
         {
-            ok = CsBindgen.NativeMethods.set_sys_inputs(inner, (byte*)sysInputsPtr);
+            ok = CsBindgen.NativeMethods.set_sys_inputs(_inner, (byte*)sysInputsPtr);
         }
         finally
         {
@@ -45,7 +47,7 @@ internal class CompilerSafe
     {
         unsafe
         {
-            CsBindgen.NativeMethods.free_compiler(inner);
+            CsBindgen.NativeMethods.free_compiler(_inner);
         }
     }
 }

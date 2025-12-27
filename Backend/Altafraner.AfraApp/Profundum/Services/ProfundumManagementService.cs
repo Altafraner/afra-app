@@ -11,7 +11,7 @@ namespace Altafraner.AfraApp.Profundum.Services;
 /// <summary>
 ///     A service for managing profunda.
 /// </summary>
-public class ProfundumManagementService
+internal class ProfundumManagementService
 {
     private readonly AfraAppContext _dbContext;
     private readonly ILogger _logger;
@@ -21,7 +21,7 @@ public class ProfundumManagementService
     ///     Constructs the ManagementService. Usually called by the DI container.
     /// </summary>
     public ProfundumManagementService(AfraAppContext dbContext,
-        ILogger<ProfundumEnrollmentService> logger,
+        ILogger<ProfundumManagementService> logger,
         IOptions<TypstConfiguration> typstConfig
         )
     {
@@ -30,7 +30,6 @@ public class ProfundumManagementService
         _typstConfig = typstConfig;
     }
 
-    ///
     public async Task<ProfundumEinwahlZeitraum> CreateEinwahlZeitraumAsync(DTOProfundumEinwahlZeitraum zeitraum)
     {
         if (zeitraum.EinwahlStart is null || zeitraum.EinwahlStop is null)
@@ -48,7 +47,6 @@ public class ProfundumManagementService
         return einwahlZeitraum;
     }
 
-    ///
     public Task<DTOProfundumEinwahlZeitraum[]> GetEinwahlZeiträumeAsync()
     {
         return _dbContext.ProfundumEinwahlZeitraeume
@@ -56,7 +54,6 @@ public class ProfundumManagementService
             .ToArrayAsync();
     }
 
-    ///
     public Task<DTOProfundumSlot[]> GetSlotsAsync()
     {
         return _dbContext.ProfundaSlots
@@ -65,8 +62,6 @@ public class ProfundumManagementService
             .ToArrayAsync();
     }
 
-
-    ///
     public async Task<ProfundumSlot?> CreateSlotAsync(DTOProfundumSlot dtoSlot)
     {
         var zeitraum = await _dbContext.ProfundumEinwahlZeitraeume.FindAsync(dtoSlot.EinwahlZeitraumId);
@@ -87,7 +82,6 @@ public class ProfundumManagementService
         return slot;
     }
 
-    ///
     public async Task<ProfundumKategorie?> CreateKategorieAsync(DTOProfundumKategorieCreation dtoKategorie)
     {
         var kategorie = new ProfundumKategorie
@@ -102,7 +96,6 @@ public class ProfundumManagementService
         return kategorie;
     }
 
-    ///
     public async Task<ProfundumKategorie?> UpdateKategorieAsync(Guid kategorieId, DTOProfundumKategorieCreation dtoKategorie)
     {
         var kategorie = await _dbContext.ProfundaKategorien.FindAsync(kategorieId);
@@ -122,20 +115,16 @@ public class ProfundumManagementService
         return kategorie;
     }
 
-    ///
     public async Task DeleteKategorieAsync(Guid kategorieId)
     {
-        _dbContext.ProfundaKategorien.Where(k => k.Id == kategorieId).ExecuteDelete();
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.ProfundaKategorien.Where(k => k.Id == kategorieId).ExecuteDeleteAsync();
     }
 
-    ///
     public Task<DTOProfundumKategorie[]> GetKategorienAsync()
     {
         return _dbContext.ProfundaKategorien.Select(k => new DTOProfundumKategorie(k)).ToArrayAsync();
     }
 
-    ///
     public async Task<ProfundumDefinition?> CreateProfundumAsync(DTOProfundumDefinitionCreation dtoProfundum)
     {
         var kat = await _dbContext.ProfundaKategorien.FindAsync(dtoProfundum.KategorieId);
@@ -155,15 +144,14 @@ public class ProfundumManagementService
             Beschreibung = dtoProfundum.Beschreibung,
             Kategorie = kat,
             Verantwortliche = verantwortliche,
-            MinKlasse = dtoProfundum.minKlasse,
-            MaxKlasse = dtoProfundum.maxKlasse
+            MinKlasse = dtoProfundum.MinKlasse,
+            MaxKlasse = dtoProfundum.MaxKlasse
         };
         _dbContext.Profunda.Add(def);
         await _dbContext.SaveChangesAsync();
         return def;
     }
 
-    ///
     public async Task<ProfundumDefinition?> UpdateProfundumAsync(Guid profundumId, DTOProfundumDefinitionCreation dtoProfundum)
     {
         var profundum = await _dbContext.Profunda
@@ -184,8 +172,8 @@ public class ProfundumManagementService
             profundum.Bezeichnung = dtoProfundum.Bezeichnung;
         if (dtoProfundum.Beschreibung != profundum.Beschreibung)
             profundum.Beschreibung = dtoProfundum.Beschreibung;
-        profundum.MinKlasse = dtoProfundum.minKlasse;
-        profundum.MaxKlasse = dtoProfundum.maxKlasse;
+        profundum.MinKlasse = dtoProfundum.MinKlasse;
+        profundum.MaxKlasse = dtoProfundum.MaxKlasse;
 
         var kat = await _dbContext.ProfundaKategorien.FindAsync(dtoProfundum.KategorieId);
         if (kat is null)
@@ -198,14 +186,12 @@ public class ProfundumManagementService
         return profundum;
     }
 
-    ///
     public Task DeleteProfundumAsync(Guid profundumId)
     {
         _dbContext.Profunda.Where(p => p.Id == profundumId).ExecuteDelete();
         return _dbContext.SaveChangesAsync();
     }
 
-    ///
     public Task<DTOProfundumDefinition[]> GetProfundaAsync()
     {
         return _dbContext.Profunda
@@ -215,7 +201,6 @@ public class ProfundumManagementService
             .ToArrayAsync();
     }
 
-    ///
     public Task<DTOProfundumDefinition?> GetProfundumAsync(Guid profundumId)
     {
         return _dbContext.Profunda
@@ -225,7 +210,6 @@ public class ProfundumManagementService
             .Select(p => new DTOProfundumDefinition(p)).FirstOrDefaultAsync();
     }
 
-    ///
     public async Task<ProfundumInstanz?> CreateInstanzAsync(DTOProfundumInstanzCreation dtoInstanz)
     {
         var def = await _dbContext.Profunda.FindAsync(dtoInstanz.ProfundumId);
@@ -260,7 +244,6 @@ public class ProfundumManagementService
         await _dbContext.SaveChangesAsync();
         return inst;
     }
-
 
     public Task<DTOProfundumInstanz[]> GetInstanzenAsync()
     {
@@ -319,18 +302,15 @@ public class ProfundumManagementService
     }
 
 
-    ///
     public Task<Dictionary<Guid, DTOProfundumEnrollment[]>> GetAllEnrollmentsAsync()
     {
         return _dbContext.ProfundaEinschreibungen
             .Include(e => e.BetroffenePerson)
             .GroupBy(e => e.BetroffenePersonId)
             .ToDictionaryAsync(e => e.Key,
-                e => e.Select(e => new DTOProfundumEnrollment(e)).ToArray()
-                );
+                e => e.Select(ei => new DTOProfundumEnrollment(ei)).ToArray());
     }
 
-    ///
     public async Task<byte[]?> GetInstanzPdfAsync(Guid instanzId)
     {
         var p = await _dbContext.ProfundaInstanzen

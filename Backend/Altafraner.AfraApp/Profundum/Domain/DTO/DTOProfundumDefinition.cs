@@ -13,8 +13,8 @@ public record DTOProfundumDefinition
         Bezeichnung = dbProfundumDefinition.Bezeichnung;
         Beschreibung = dbProfundumDefinition.Beschreibung;
         KategorieId = dbProfundumDefinition.Kategorie.Id;
-        minKlasse = dbProfundumDefinition.MinKlasse;
-        maxKlasse = dbProfundumDefinition.MaxKlasse;
+        MinKlasse = dbProfundumDefinition.MinKlasse;
+        MaxKlasse = dbProfundumDefinition.MaxKlasse;
         VerantwortlicheIds = dbProfundumDefinition.Verantwortliche.Select(s => s.Id).ToArray();
         VerantwortlicheInfo = dbProfundumDefinition.Verantwortliche.Select(s => new PersonInfoMinimal(s)).ToArray();
     }
@@ -38,7 +38,7 @@ public record DTOProfundumDefinition
     public ICollection<PersonInfoMinimal> VerantwortlicheInfo { get; set; } = [];
 
     /// <inheritdoc cref="ProfundumDefinition.MinKlasse"/>
-    public int? minKlasse { get; set; } = null;
+    public int? MinKlasse { get; set; } = null;
     /// <inheritdoc cref="ProfundumDefinition.MaxKlasse"/>
-    public int? maxKlasse { get; set; } = null;
+    public int? MaxKlasse { get; set; } = null;
 }

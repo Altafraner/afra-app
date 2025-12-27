@@ -27,15 +27,11 @@ public class ProfilRule : IProfundumIndividualRule
             IEnumerable<ProfundumBelegWunsch> wuensche)
     {
         var slots = einwahlZeitraum.Slots.ToArray();
-        var profilPflichtig = isProfilPflichtig(student, slots.Select(s => s.Quartal));
-        if (profilPflichtig)
-        {
-            if (!wuensche.Any(w => w.ProfundumInstanz.Profundum.Kategorie.ProfilProfundum))
-            {
-                return RuleStatus.Invalid("Profilprofundum ist nicht in Einwahl enthalten.");
-            }
-        }
-        return RuleStatus.Valid;
+        var profilPflichtig = IsProfilPflichtig(student, slots.Select(s => s.Quartal));
+        if (!profilPflichtig) return RuleStatus.Valid;
+        return wuensche.Any(w => w.ProfundumInstanz.Profundum.Kategorie.ProfilProfundum)
+            ? RuleStatus.Valid
+            : RuleStatus.Invalid("Profilprofundum ist nicht in Einwahl enthalten.");
     }
 
     /// <inheritdoc/>
@@ -48,23 +44,17 @@ public class ProfilRule : IProfundumIndividualRule
         )
     {
         var slots = einwahlZeitraum.Slots.ToArray();
-        var profilPflichtig = isProfilPflichtig(student, slots.Select(s => s.Quartal));
-        if (profilPflichtig)
-        {
-            var profilWuensche = wuensche.Where(b => b.ProfundumInstanz.Profundum.Kategorie.ProfilProfundum);
-            var profilWuenscheVars = profilWuensche.Select(b => wuenscheVariables[b]);
-            model.AddAtLeastOne(profilWuenscheVars.Append(personNotEnrolledVar));
-        }
+        var profilPflichtig = IsProfilPflichtig(student, slots.Select(s => s.Quartal));
+        if (!profilPflichtig) return;
+        var profilWuensche = wuensche.Where(b => b.ProfundumInstanz.Profundum.Kategorie.ProfilProfundum);
+        var profilWuenscheVars = profilWuensche.Select(b => wuenscheVariables[b]);
+        model.AddAtLeastOne(profilWuenscheVars.Append(personNotEnrolledVar));
     }
 
-    private bool isProfilPflichtig(Person student, IEnumerable<ProfundumQuartal> quartale)
+    private bool IsProfilPflichtig(Person student, IEnumerable<ProfundumQuartal> quartale)
     {
         var klasse = _userService.GetKlassenstufe(student);
         var profilQuartale = _profundumConfiguration.Value.ProfilPflichtigkeit.GetValueOrDefault(klasse);
-        if (profilQuartale is null)
-        {
-            return false;
-        }
-        return profilQuartale.Intersect(quartale).Any();
+        return profilQuartale is not null && profilQuartale.Intersect(quartale).Any();
     }
 }

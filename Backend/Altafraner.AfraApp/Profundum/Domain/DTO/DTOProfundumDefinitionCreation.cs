@@ -21,7 +21,7 @@ public record DTOProfundumDefinitionCreation
     public ICollection<Guid> VerantwortlicheIds { get; set; } = [];
 
     /// <inheritdoc cref="ProfundumDefinition.MinKlasse"/>
-    public int? minKlasse { get; set; } = null;
+    public int? MinKlasse { get; set; } = null;
     /// <inheritdoc cref="ProfundumDefinition.MaxKlasse"/>
-    public int? maxKlasse { get; set; } = null;
+    public int? MaxKlasse { get; set; } = null;
 }

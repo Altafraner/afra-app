@@ -1,28 +1,19 @@
-using Altafraner.AfraApp.Profundum.Configuration;
 using Altafraner.AfraApp.Profundum.Domain.Contracts.Rules;
 using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.User.Domain.Models;
-using Altafraner.AfraApp.User.Services;
 using Google.OrTools.Sat;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 namespace Altafraner.AfraApp.Profundum.Services.Rules;
 
 ///
 public class MaxEinschreibungenRule : IProfundumAggregateRule
 {
-    private readonly UserService _userService;
-    private readonly IOptions<ProfundumConfiguration> _profundumConfiguration;
     private readonly AfraAppContext _dbContext;
 
     ///
-    public MaxEinschreibungenRule(UserService userService,
-            IOptions<ProfundumConfiguration> profundumConfiguration,
-            AfraAppContext dbContext)
+    public MaxEinschreibungenRule(AfraAppContext dbContext)
     {
-        _userService = userService;
-        _profundumConfiguration = profundumConfiguration;
         _dbContext = dbContext;
     }
 
@@ -34,6 +25,7 @@ public class MaxEinschreibungenRule : IProfundumAggregateRule
         Dictionary<ProfundumBelegWunsch, BoolVar> wuenscheVariables,
         CpModel model)
     {
+        var wuenscheArray = wuensche as ProfundumBelegWunsch[] ?? wuensche.ToArray();
         var slots = einwahlZeitraum.Slots.ToArray();
         var angebote = _dbContext.ProfundaInstanzen
             .Include(pi => pi.Slots)
@@ -42,14 +34,12 @@ public class MaxEinschreibungenRule : IProfundumAggregateRule
             .Where(pi => pi.Slots.Any(s => slots.Any(sl => sl.Id == s.Id)))
             .ToArray();
 
-        foreach (var a in angebote)
+        foreach (var angebot in angebote)
         {
-            var angebotWuensche = wuensche.Where(b => b.ProfundumInstanz.Id == a.Id).ToArray();
+            var angebotWuensche = wuenscheArray.Where(b => b.ProfundumInstanz.Id == angebot.Id).ToArray();
             var angebotWuenscheVars = angebotWuensche.Select(w => wuenscheVariables[w]);
-            if (a.MaxEinschreibungen is int max)
-            {
-                model.Add(LinearExpr.Sum(angebotWuenscheVars) <= max);
-            }
+            if (angebot.MaxEinschreibungen is not { } max) continue;
+            model.Add(LinearExpr.Sum(angebotWuenscheVars) <= max);
         }
     }
 }
