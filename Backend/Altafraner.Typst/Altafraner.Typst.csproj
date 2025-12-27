@@ -1,14 +1,23 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
-  <ItemGroup>
-  <None Include="./typst_with_bindings/target/release/libtypst_with_bindings.so">
-      <Link>libtypst_with_bindings.so</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+    <ItemGroup Condition=" '$(OS)' == 'Unix' ">
+        <None Include="./typst_with_bindings/target/*/libtypst_with_bindings.so">
+            <Link>libtypst_with_bindings.so</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+    <ItemGroup Condition=" '$(OS)' == 'Windows_NT' ">
+        <None Include="./typst_with_bindings/target/*/typst_with_bindings.dll">
+            <Link>typst_with_bindings.dll</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+    <ItemGroup>
+        <Folder Include="tmp\"/>
+    </ItemGroup>
 </Project>
