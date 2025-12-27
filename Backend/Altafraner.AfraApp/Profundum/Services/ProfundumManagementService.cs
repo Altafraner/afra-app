@@ -360,11 +360,9 @@ public class ProfundumManagementService
             #let accent-font = "TheSerif"
 
             #show heading.where(level: 1): set text(size: 22pt, font: accent-font, weight: 500, fill: accent-color)
-            #show heading.where(level: 2): set text(size: 18pt, font: accent-font, weight: 500, fill: accent-color)
+            #show heading.where(level: 2): set text(size: 17pt, font: accent-font, weight: 500, fill: accent-color)
 
             = Profundum: #bezeichnung
-
-            #beschreibung
 
             #let weekdays = (
               "Montag",
@@ -375,14 +373,18 @@ public class ProfundumManagementService
               "Samstag",
               "Sonntag",
             )
+            #for s in slots [
+                #s.Jahr/#{calc.rem-euclid(s.Jahr + 1, 100)} Q#s.Quartal #weekdays.at(s.Wochentag+1) \
+            ]
 
+            == Inhalt
+
+            #beschreibung
+
+            == Verantwortliche
 
             #for v in verantwortliche [
                 #v.Nachname, #v.Vorname (#v.Email) \
-            ]
-
-            #for s in slots [
-                #s.Jahr/#{calc.rem-euclid(s.Jahr + 1, 100)} Q#s.Quartal #weekdays.at(s.Wochentag) \
             ]
 
             == Teilnehmer
