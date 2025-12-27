@@ -373,9 +373,12 @@ public class ProfundumManagementService
               "Samstag",
               "Sonntag",
             )
-            #for s in slots [
-                #s.Jahr/#{calc.rem-euclid(s.Jahr + 1, 100)} Q#s.Quartal #weekdays.at(s.Wochentag+1) \
-            ]
+
+            #table(columns: 3,stroke:none,
+                ..for s in slots {
+                    ([#s.Jahr/#{calc.rem-euclid(s.Jahr + 1, 100)}], [Q#s.Quartal], weekdays.at(s.Wochentag+1))
+                }
+            )
 
             == Inhalt
 
@@ -383,9 +386,11 @@ public class ProfundumManagementService
 
             == Verantwortliche
 
-            #for v in verantwortliche [
-                #v.Nachname, #v.Vorname (#v.Email) \
-            ]
+            #table(columns: 3,stroke:none,
+                ..for v in verantwortliche {
+                    (v.Nachname, v.Vorname, v.Email)
+                }
+            )
 
             == Teilnehmer
 
