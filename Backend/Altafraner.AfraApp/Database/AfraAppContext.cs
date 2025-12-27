@@ -219,6 +219,7 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
         {
             p.HasOne(e => e.Kategorie)
                 .WithMany(k => k.Profunda);
+            p.HasMany(p => p.Verantwortliche).WithMany(v => v.BetreuteProfunda);
         });
         modelBuilder.Entity<ProfundumInstanz>(p =>
         {

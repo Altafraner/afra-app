@@ -1,4 +1,3 @@
-using System.Text;
 using Altafraner.AfraApp.Backbone.Authorization;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Domain.Models;
@@ -39,6 +38,11 @@ public static class Management
         group.MapDelete("/profundum/{profundumId:guid}", DeleteProfundumAsync);
 
         group.MapPost("/instanz", AddInstanzAsync);
+        group.MapGet("/instanz", GetInstanzenAsync);
+        group.MapGet("/instanz/{instanzId:guid}", GetInstanzAsync);
+        group.MapGet("/instanz/{instanzId:guid}.pdf", GetInstanzPdfAsync);
+        group.MapPut("/instanz/{instanzId:guid}", UpdateInstanzAsync);
+        group.MapDelete("/instanz/{instanzId:guid}", DeleteInstanzAsync);
 
 
         group.MapPost("/matching", DoMatchingAsync);
@@ -160,7 +164,7 @@ public static class Management
 
     private static async Task<IResult> AddInstanzAsync(ProfundumManagementService managementService,
         UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger,
-        DTOProfundumInstanz instanz)
+        DTOProfundumInstanzCreation instanz)
     {
         var res = await managementService.CreateInstanzAsync(instanz);
         if (res is null)
@@ -169,6 +173,26 @@ public static class Management
         }
 
         return Results.Ok(res.Id);
+    }
+    private static async Task<IResult> GetInstanzenAsync(ProfundumManagementService svc) =>
+        Results.Ok(await svc.GetInstanzenAsync());
+
+    private static async Task<IResult> GetInstanzAsync(ProfundumManagementService svc, Guid instanzId) =>
+        Results.Ok(await svc.GetInstanzAsync(instanzId));
+
+    private static async Task<IResult> GetInstanzPdfAsync(ProfundumManagementService svc, Guid instanzId) =>
+        Results.File(await svc.GetInstanzPdfAsync(instanzId), "application/pdf");
+
+    private static async Task<IResult> UpdateInstanzAsync(ProfundumManagementService svc, Guid instanzId, DTOProfundumInstanzCreation instanz)
+    {
+        var res = await svc.UpdateInstanzAsync(instanzId, instanz);
+        return res is null ? Results.NotFound() : Results.Ok(res.Id);
+    }
+
+    private static async Task<IResult> DeleteInstanzAsync(ProfundumManagementService svc, Guid instanzId)
+    {
+        await svc.DeleteInstanzAsync(instanzId);
+        return Results.Ok();
     }
 
 
