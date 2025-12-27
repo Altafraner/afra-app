@@ -58,6 +58,7 @@ getPersonen();
                 option-label="name"
                 option-value="id"
                 v-bind="$attrs"
+                filter
             />
             <label for="betreuerSelect">
                 <slot name="label">Betreuer:in</slot>
