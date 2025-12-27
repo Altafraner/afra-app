@@ -181,13 +181,11 @@ public class ProfundumManagementService
         profundum.Verantwortliche = verantwortliche;
 
         if (dtoProfundum.Bezeichnung != profundum.Bezeichnung)
-            profundum.Bezeichnung = dtoProfundum.Beschreibung;
-        if (dtoProfundum.Beschreibung != profundum.Bezeichnung)
+            profundum.Bezeichnung = dtoProfundum.Bezeichnung;
+        if (dtoProfundum.Beschreibung != profundum.Beschreibung)
             profundum.Beschreibung = dtoProfundum.Beschreibung;
-        if (dtoProfundum.minKlasse != profundum.MinKlasse)
-            profundum.MinKlasse = dtoProfundum.minKlasse;
-        if (dtoProfundum.maxKlasse != profundum.MaxKlasse)
-            profundum.MaxKlasse = dtoProfundum.maxKlasse;
+        profundum.MinKlasse = dtoProfundum.minKlasse;
+        profundum.MaxKlasse = dtoProfundum.maxKlasse;
 
         var kat = await _dbContext.ProfundaKategorien.FindAsync(dtoProfundum.KategorieId);
         if (kat is null)
