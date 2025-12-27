@@ -1,7 +1,7 @@
 <script setup>
 import { mande } from 'mande';
 import { ref, onMounted } from 'vue';
-import { InputText, Button, MultiSelect, useToast } from 'primevue';
+import { InputText, Button, MultiSelect, useToast, Tag } from 'primevue';
 import Grid from '@/components/Form/Grid.vue';
 import GridEditRow from '@/components/Form/GridEditRow.vue';
 
@@ -86,26 +86,30 @@ onMounted(load);
             v-for="inst in instanzen"
             :key="inst.id"
             :header="`Instanz`"
-            @update="saveInstanz(inst)"
+            @update="updateInstanz(inst)"
             @delete="deleteInstanz(inst.id)"
             can-delete
         >
             <template #body>
-                <b>{{ inst.maxEinschreibungen }} Schüler</b><br />
-                <ul class="list-disc ml-5">
-                    <li v-for="slotId in inst.slots" :key="slotId">
-                        {{ slots.find((s) => s.id === slotId)?.label ?? '(Slot entfernt)' }}
-                    </li>
-                </ul>
+                <span class="inline-flex gap-4">
+                    <Tag severity="warn"> {{ inst.maxEinschreibungen }} Plätze </Tag>
+
+                    <template v-for="slotId in inst.slots" :key="slotId">
+                        <Tag> {{ slots.find((s) => s.id === slotId)?.label }} </Tag>
+                    </template>
+                </span>
             </template>
 
             <template #edit>
                 <div class="flex flex-col gap-2">
+                    <label>Plätze: </label>
                     <InputText
                         type="number"
                         v-model="inst.maxEinschreibungen"
                         placeholder="max. Schüler"
                     />
+
+                    <label>Slots: </label>
                     <MultiSelect
                         v-model="inst.slots"
                         :options="slots"
@@ -113,7 +117,20 @@ onMounted(load);
                         optionValue="id"
                         filter
                         placeholder="Slots auswählen"
-                        class="w-80"
+                    />
+
+                    <label>Voraussetzungen: </label>
+                    <MultiSelect
+                        v-model="inst.dependencyIds"
+                        :options="instanzen.filter(i=>i.id !== inst.id).map(
+                            i => (
+                            { ...i, slotLabels: `Instanz: ${i.maxEinschreibungen} Plätze,
+                            ${i.slots.map(s=>slots.find((s2)=>s2.id===s)).map((s)=>s.label) } Slots
+                            `}))"
+                        placeholder="Benötigt zuerst"
+                        optionLabel="slotLabels"
+                        optionValue="id"
+                        display="chip"
                     />
                 </div>
             </template>

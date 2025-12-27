@@ -38,5 +38,5 @@ public static class AuthorizationPolicies
     /// <summary>
     /// Only users with the permission "Profundumsverantwortliche:r" may access this endpoint.
     /// </summary>
-    public const string Profundumserantwortlich = "Profundumsverantwortliche:r";
+    public const string ProfundumsVerantwortlich = "Profundumsverantwortliche:r";
 }

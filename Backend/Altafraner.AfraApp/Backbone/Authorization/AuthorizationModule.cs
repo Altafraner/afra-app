@@ -28,7 +28,7 @@ public class AuthorizationModule : IModule
             .AddPolicy(AuthorizationPolicies.Otiumsverantwortlich,
                 policy => policy.RequireClaim(AfraAppClaimTypes.GlobalPermission,
                     nameof(GlobalPermission.Otiumsverantwortlich)))
-            .AddPolicy(AuthorizationPolicies.Profundumserantwortlich,
+            .AddPolicy(AuthorizationPolicies.ProfundumsVerantwortlich,
                 policy => policy.RequireClaim(AfraAppClaimTypes.GlobalPermission,
                     nameof(GlobalPermission.Profundumsverantwortlich)))
             .AddPolicy(AuthorizationPolicies.AdminOnly,
