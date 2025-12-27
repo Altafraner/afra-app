@@ -9,6 +9,7 @@ import Grid from '@/components/Form/Grid.vue';
 import GridEditRow from '@/components/Form/GridEditRow.vue';
 import ProfundumInstanzen from '@/Profundum/components/ProfundumInstanzen.vue';
 import AfraPersonSelector from '@/Otium/components/Form/AfraPersonSelector.vue';
+import KlassenrangeSelector from '@/components/KlassenRangeSelector.vue';
 
 const props = defineProps({ profundumId: String });
 const toast = useToast();
@@ -185,31 +186,23 @@ const updateKlassen = () =>
                         nur {{ profundum.minKlasse }}
                     </span>
                     <span v-else>
-                        <span v-if="profundum.minKlasse">ab {{ profundum.minKlasse }}</span>
-                        <span v-if="profundum.maxKlasse"> bis {{ profundum.maxKlasse }}</span>
+                        <span v-if="profundum.minKlasse"
+                            >ab Klasse {{ profundum.minKlasse }}</span
+                        >
+                        <span v-if="profundum.maxKlasse">
+                            bis Klasse {{ profundum.maxKlasse }}</span
+                        >
                     </span>
                 </template>
 
                 <template #edit>
-                    <span class="flex gap-2 items-center">
-                        <Select
-                            v-model="profundum.minKlasse"
-                            :options="klassenStufenSelects"
-                            optionLabel="label"
-                            optionValue="value"
-                            placeholder="min"
-                            fluid
-                        />
-                        –
-                        <Select
-                            v-model="profundum.maxKlasse"
-                            :options="klassenStufenSelects"
-                            optionLabel="label"
-                            optionValue="value"
-                            placeholder="max"
-                            fluid
-                        />
-                    </span>
+                    <KlassenrangeSelector
+                        :min="profundum.minKlasse"
+                        :max="profundum.maxKlasse"
+                        :options="klassenStufenSelects"
+                        @update:min="profundum.minKlasse = $event"
+                        @update:max="profundum.maxKlasse = $event"
+                    />
                 </template>
             </GridEditRow>
         </Grid>
