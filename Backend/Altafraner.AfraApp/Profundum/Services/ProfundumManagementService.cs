@@ -347,6 +347,8 @@ internal class ProfundumManagementService
 
             #show heading.where(level: 1): set text(size: 22pt, font: accent-font, weight: 500, fill: accent-color)
             #show heading.where(level: 2): set text(size: 17pt, font: accent-font, weight: 500, fill: accent-color)
+            #show heading.where(level: 3): set text(size: 14pt, font: accent-font, weight: 500, fill: accent-color)
+            #show heading.where(level: 4): set text(size: 12pt, font: accent-font, weight: 500, fill: accent-color)
 
             = Profundum: #bezeichnung
 
@@ -369,7 +371,7 @@ internal class ProfundumManagementService
             == Inhalt
 
 
-            #cmarker.render(math:mitex,
+            #cmarker.render(math:mitex,h1-level:3,
                 beschreibung
             )
 
