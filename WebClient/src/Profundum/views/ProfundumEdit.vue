@@ -10,6 +10,7 @@ import GridEditRow from '@/components/Form/GridEditRow.vue';
 import ProfundumInstanzen from '@/Profundum/components/ProfundumInstanzen.vue';
 import AfraPersonSelector from '@/Otium/components/Form/AfraPersonSelector.vue';
 import KlassenrangeSelector from '@/components/KlassenRangeSelector.vue';
+import { convertMarkdownToHtml } from '@/composables/markdown';
 
 const props = defineProps({ profundumId: String });
 const toast = useToast();
@@ -138,9 +139,7 @@ const updateKlassen = () =>
                 @update="updateBeschreibung"
             >
                 <template #body>
-                    <p v-for="line in (profundum.beschreibung ?? '').split('\n')" :key="line">
-                        {{ line }}
-                    </p>
+            <div class="m-trim" v-html="convertMarkdownToHtml(profundum.beschreibung)" />
                 </template>
                 <template #edit>
                     <Textarea

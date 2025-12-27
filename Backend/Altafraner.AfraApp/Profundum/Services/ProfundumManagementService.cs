@@ -331,6 +331,9 @@ internal class ProfundumManagementService
             .Select(e => e.BetroffenePerson);
 
         var src = $$"""
+            #import "@preview/cmarker:0.1.8"
+            #import "@preview/mitex:0.2.6": mitex
+
             #let bezeichnung = sys.inputs.bezeichnung
             #let beschreibung = sys.inputs.beschreibung
             #let slots = json(bytes(sys.inputs.slots))
@@ -365,7 +368,10 @@ internal class ProfundumManagementService
 
             == Inhalt
 
-            #beschreibung
+
+            #cmarker.render(math:mitex,
+                beschreibung
+            )
 
             == Verantwortliche
 
