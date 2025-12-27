@@ -3,7 +3,7 @@ import { Button, Image } from 'primevue';
 import { computed } from 'vue';
 import wappenLight from '/vdaa/favicon.svg?url';
 import wappenDark from '/vdaa/favicon-dark.svg?url';
-import { isDark } from '@/helpers/isdark.js';
+import { isDark } from '@/helpers/isdark';
 
 const logo = computed(() => (isDark().value ? wappenDark : wappenLight));
 </script>

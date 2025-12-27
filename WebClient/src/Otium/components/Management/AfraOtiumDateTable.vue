@@ -3,7 +3,7 @@ import { Button, Column, DataTable, Dialog } from 'primevue';
 import { formatDate, formatPerson } from '@/helpers/formatters';
 import { RouterLink } from 'vue-router';
 import { defineAsyncComponent, ref } from 'vue';
-import { useConfirmPopover } from '@/composables/confirmPopover.js';
+import { useConfirmPopover } from '@/composables/confirmPopover';
 
 const CreateTerminForm = defineAsyncComponent(
     () => import('@/Otium/components/Management/CreateTerminForm.vue'),

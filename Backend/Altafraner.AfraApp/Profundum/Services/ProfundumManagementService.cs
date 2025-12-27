@@ -6,7 +6,7 @@ namespace Altafraner.AfraApp.Profundum.Services;
 /// <summary>
 ///     A service for managing profunda.
 /// </summary>
-public class ProfundumManagementService
+internal class ProfundumManagementService
 {
     private readonly AfraAppContext _dbContext;
     private readonly ILogger _logger;
@@ -107,12 +107,24 @@ public class ProfundumManagementService
             return null;
         }
 
+        var tutorEntity = dtoInstanz.TutorId != Guid.Empty
+            ? await _dbContext.Personen.FindAsync(dtoInstanz.TutorId)
+            : null;
+
+        if (dtoInstanz.TutorId != Guid.Empty && tutorEntity is null)
+        {
+            _logger.LogError("no such tutor");
+            return null;
+        }
+
         var inst = new ProfundumInstanz
         {
             Profundum = def,
             MaxEinschreibungen = dtoInstanz.MaxEinschreibungen,
-            Slots = [],
+            Tutor = tutorEntity,
+            Slots = []
         };
+
         _dbContext.ProfundaInstanzen.Add(inst);
         foreach (var s in dtoInstanz.Slots)
         {
