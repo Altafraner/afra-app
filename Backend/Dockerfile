@@ -15,6 +15,8 @@ COPY --link --parents **/*.csproj ./
 RUN dotnet restore "Afra-App.slnx" \
     --runtime linux-x64
 COPY ./ ./
+COPY --from=rust-build /rust-src/Altafraner.Typst/typst_with_bindings/Typst.g.cs                               /src/Altafraner.Typst/typst_with_bindings/Typst.g.cs
+COPY --from=rust-build /rust-src/Altafraner.Typst/typst_with_bindings/target/release/libtypst_with_bindings.so /src/Altafraner.Typst/typst_with_bindings/target/release/libtypst_with_bindings.so
 RUN dotnet publish "Altafraner.AfraApp/Altafraner.AfraApp.csproj" \
     -c release \
     --no-restore \
@@ -28,5 +30,4 @@ RUN apt-get update && apt-get -y install libldap2
 USER $APP_UID
 WORKDIR /app
 COPY --from=build /app/publish .
-COPY --from=rust-build /rust-src/Altafraner.Typst/typst_with_bindings/target/release/libtypst_with_bindings.so .
 ENTRYPOINT ["./Altafraner.AfraApp"]

@@ -19,6 +19,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+    - name: Build Rust bindings
+      working-directory: Backend/Altafraner.Typst/typst_with_bindings
+      run: cargo build --release
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
