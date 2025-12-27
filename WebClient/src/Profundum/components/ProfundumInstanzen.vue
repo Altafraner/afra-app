@@ -98,6 +98,7 @@ onMounted(load);
                         as="a"
                         :href="`/api/profundum/management/instanz/${inst.id}.pdf`"
                         label="PDF (experimentell)"
+                        download
                     />
                 </span>
 
