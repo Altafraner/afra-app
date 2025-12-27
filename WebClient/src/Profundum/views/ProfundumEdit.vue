@@ -173,6 +173,7 @@ const updateKlassen = () =>
                         :multi="true"
                         name="tutor"
                         required
+                        class="multiselect-wrap"
                     />
                 </template>
             </GridEditRow>

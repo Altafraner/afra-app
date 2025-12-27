@@ -65,7 +65,7 @@ onMounted(load);
             type="number"
             v-model="newInstanz.maxEinschreibungen"
             placeholder="max. Schüler"
-            class="w-32"
+            class="w-32 multiselect-wrap"
         />
 
         <MultiSelect
@@ -74,8 +74,8 @@ onMounted(load);
             optionLabel="label"
             optionValue="id"
             placeholder="Slots auswählen"
-            class="w-140"
             display="chip"
+            class="multiselect-wrap"
         />
 
         <Button label="Anlegen" icon="pi pi-plus" @click="createInstanz" />
@@ -85,22 +85,29 @@ onMounted(load);
         <GridEditRow
             v-for="inst in instanzen"
             :key="inst.id"
-            :header="`Instanz`"
             @update="updateInstanz(inst)"
             @delete="deleteInstanz(inst.id)"
             can-delete
         >
             <template #body>
+                <h3>Instanz:</h3>
                 <span class="inline-flex gap-4">
-                    <Tag severity="warn"> {{ inst.maxEinschreibungen }} Plätze </Tag>
+                    <Tag severity="info"> {{ inst.maxEinschreibungen }} Plätze </Tag>
 
                     <template v-for="slotId in inst.slots" :key="slotId">
                         <Tag> {{ slots.find((s) => s.id === slotId)?.label }} </Tag>
                     </template>
+
+                    <Button
+                        as="a"
+                        :href="`/api/profundum/management/instanz/${inst.id}.pdf`"
+                        label="PDF (experimentell)"
+                    />
                 </span>
             </template>
 
             <template #edit>
+                <h3>Instanz:</h3>
                 <div class="flex flex-col gap-2">
                     <label>Plätze: </label>
                     <InputText
@@ -117,23 +124,48 @@ onMounted(load);
                         optionValue="id"
                         filter
                         placeholder="Slots auswählen"
+                        class="multiselect-wrap"
                     />
 
                     <label>Voraussetzungen: </label>
                     <MultiSelect
                         v-model="inst.dependencyIds"
-                        :options="instanzen.filter(i=>i.id !== inst.id).map(
-                            i => (
-                            { ...i, slotLabels: `Instanz: ${i.maxEinschreibungen} Plätze,
-                            ${i.slots.map(s=>slots.find((s2)=>s2.id===s)).map((s)=>s.label) } Slots
-                            `}))"
+                        :options="
+                            instanzen
+                                .filter((i) => i.id !== inst.id)
+                                .map((i) => ({
+                                    ...i,
+                                    slotLabels: `Instanz: ${i.maxEinschreibungen} Plätze,
+                            ${i.slots.map((s) => slots.find((s2) => s2.id === s)).map((s) => s.label)} Slots
+                            `,
+                                }))
+                        "
                         placeholder="Benötigt zuerst"
                         optionLabel="slotLabels"
                         optionValue="id"
                         display="chip"
+                        class="multiselect-wrap"
                     />
                 </div>
             </template>
         </GridEditRow>
     </Grid>
 </template>
+<style scoped>
+.multiselect-wrap :deep(.p-multiselect-label-container) {
+    height: auto;
+}
+
+.multiselect-wrap :deep(.p-multiselect-label) {
+    display: flex;
+    flex-wrap: wrap;
+    white-space: normal;
+    gap: 0.25rem;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+}
+
+.multiselect-wrap :deep(.p-multiselect-token) {
+    margin-bottom: 0.25rem;
+}
+</style>
