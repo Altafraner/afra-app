@@ -13,4 +13,7 @@ public record DTOProfundumInstanzCreation
 
     /// <inheritdoc cref="ProfundumInstanz.MaxEinschreibungen"/>
     public int? MaxEinschreibungen { get; set; } = null;
+
+    /// <inheritdoc cref="ProfundumInstanz.Dependencies"/>
+    public ICollection<Guid> DependencyIds { get; set; } = [];
 }
