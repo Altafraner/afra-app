@@ -250,9 +250,20 @@ public static class Management
         return TypedResults.Ok(await svc.GetInstanzAsync(instanzId));
     }
 
-    private static async Task<FileContentHttpResult> GetInstanzPdfAsync(ProfundumManagementService svc, Guid instanzId)
+    private static async Task<Results<FileContentHttpResult, NotFound>> GetInstanzPdfAsync(
+        ProfundumManagementService svc,
+        Guid instanzId)
     {
-        return TypedResults.File((await svc.GetInstanzPdfAsync(instanzId))!, "application/pdf");
+        var instanz = await svc.GetInstanzAsync(instanzId);
+        if (instanz is null)
+            return TypedResults.NotFound();
+        var profundum = await svc.GetProfundumAsync(instanz.ProfundumId);
+        if (profundum is null)
+            return TypedResults.NotFound();
+        var firstSlot = (await svc.GetSlotsAsync()).First(s => s.Id == instanz.Slots.First());
+        return TypedResults.File((await svc.GetInstanzPdfAsync(instanzId))!,
+            "application/pdf",
+            $"{firstSlot.Jahr}_{firstSlot.Quartal}_{firstSlot.Wochentag}_{profundum.Bezeichnung}.pdf");
     }
 
     private static async Task<Results<NotFound, Ok<Guid>>> UpdateInstanzAsync(ProfundumManagementService svc,
