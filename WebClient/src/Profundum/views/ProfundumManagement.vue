@@ -13,8 +13,10 @@ import {
     Dropdown,
     useToast,
 } from 'primevue';
+import { useConfirmPopover } from '@/composables/confirmPopover.js';
 
 const toast = useToast();
+const confirm = useConfirmPopover();
 
 const loading = ref(true);
 const createDialogOpen = ref(false);
@@ -57,27 +59,33 @@ async function createProfundum() {
     }
 }
 
-async function deleteProfundum(id, bezeichnung) {
-    if (!confirm(`Möchten Sie das Profundum ${bezeichnung} wirklich löschen?`)) {
-        return;
-    }
+function deleteProfundum(event, data) {
+    confirm.openConfirmDialog(
+        event,
+        doDelete,
+        'Profundum Löschen',
+        'Das Löschen kann nicht rückgängig gemacht werden. Das Löschen von Profunda mit bereits hinterlegten Belegungen kann zu Problemen bei der nächsten Einwahl führen!',
+        'danger',
+    );
 
-    const api = mande('/api/profundum/management/profundum');
-    try {
-        await api.delete(`/${id}`);
-        toast.add({
-            severity: 'success',
-            summary: 'Gelöscht',
-            detail: 'Profundum wurde entfernt',
-        });
+    async function doDelete() {
+        const api = mande('/api/profundum/management/profundum');
+        try {
+            await api.delete(`/${data.id}`);
+            toast.add({
+                severity: 'success',
+                summary: 'Gelöscht',
+                detail: 'Profundum wurde entfernt',
+            });
 
-        await getProfunda();
-    } catch (e) {
-        toast.add({
-            severity: 'error',
-            summary: 'Fehler',
-            detail: e?.body ?? 'Konnte Profundum nicht löschen',
-        });
+            await getProfunda();
+        } catch (e) {
+            toast.add({
+                severity: 'error',
+                summary: 'Fehler',
+                detail: e?.body ?? 'Konnte Profundum nicht löschen',
+            });
+        }
     }
 }
 
@@ -103,7 +111,7 @@ setup();
     <template v-if="!loading">
         <h2>Profunda Verwaltung</h2>
 
-        <Message severity="warn">
+        <Message severity="warn" class="mb-4">
             Diese Funktionen sind nicht ausgiebig getestet und insbesondere die Löschung von
             bereits genutzen Profunda kann erheblichen Datenverlust beispielsweise für Matching
             und Feedback-Funktionen auslösen. Alte Profunda sollten beispielsweise im neuen
@@ -125,7 +133,7 @@ setup();
             <Column class="text-right afra-col-action">
                 <template #header>
                     <Button
-                        v-tooltip="'Neues Profundum'"
+                        v-tooltip.left="'Neues Profundum'"
                         icon="pi pi-plus"
                         aria-label="Neues Profundum"
                         @click="createDialogOpen = true"
@@ -139,7 +147,7 @@ setup();
                         severity="danger"
                         variant="text"
                         aria-label="Löschen"
-                        @click="deleteProfundum(data.id, data.bezeichnung)"
+                        @click="deleteProfundum($event, data)"
                     />
                 </template>
             </Column>
