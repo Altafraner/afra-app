@@ -1,11 +1,13 @@
-﻿#import "@preview/cmarker:0.1.8"
+#import "@preview/cmarker:0.1.8"
 #import "@preview/mitex:0.2.6": mitex
 
-#let bezeichnung = sys.inputs.bezeichnung
-#let beschreibung = sys.inputs.beschreibung
-#let slots = json(bytes(sys.inputs.slots))
-#let verantwortliche = json(bytes(sys.inputs.verantwortliche))
-#let teilnehmer = json(bytes(sys.inputs.teilnehmer))
+#let (
+    bezeichnung,
+    slots,
+    beschreibung,
+    verantwortliche,
+    teilnehmer
+) = json(bytes(sys.inputs.data))
 
 #let text-color = rgb("#000")
 #let gray-color = rgb("#aaa")
@@ -29,7 +31,7 @@
 #show heading.where(level: 4): set text(size: 12pt, font: accent-font, weight: 500, fill: accent-color)
 
 #set page(
-  paper: "a4", 
+  paper: "a4",
   margin: (
     left: 15mm,
     top: 10mm,
@@ -49,9 +51,9 @@
     rows: (auto),
     align(left)[
         #v(1em)
-        
+
         = #bezeichnung
-        
+
         #grid(
             columns: (1fr, 1fr),
             rows: 3em,
