@@ -38,4 +38,9 @@ public class ProfundumDefinition
     public int? MinKlasse { get; set; } = null;
     ///
     public int? MaxKlasse { get; set; } = null;
+
+    ///
+    public ICollection<ProfundumDefinition> Dependencies { get; set; } = [];
+    ///
+    public ICollection<ProfundumDefinition> Dependants { get; set; } = [];
 }

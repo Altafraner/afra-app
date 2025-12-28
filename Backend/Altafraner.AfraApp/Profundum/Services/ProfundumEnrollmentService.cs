@@ -234,31 +234,31 @@ internal class ProfundumEnrollmentService
 
         var belegWuensche = new HashSet<ProfundumBelegWunsch>();
         foreach (var (stufe, instanzen) in wuenscheDict)
-        foreach (var angebot in instanzen)
-        foreach (var angebotSlot in angebot.Slots)
-        {
-            var stufeIndex = (int)stufe - 1;
-            if (einwahl[angebotSlot][stufeIndex] is not null)
-                throw new ProfundumEinwahlWunschException("Überlappende Slots in der Einwahl.");
+            foreach (var angebot in instanzen)
+                foreach (var angebotSlot in angebot.Slots)
+                {
+                    var stufeIndex = (int)stufe - 1;
+                    if (einwahl[angebotSlot][stufeIndex] is not null)
+                        throw new ProfundumEinwahlWunschException("Überlappende Slots in der Einwahl.");
 
-            einwahl[angebotSlot][stufeIndex] = angebot;
-        }
+                    einwahl[angebotSlot][stufeIndex] = angebot;
+                }
 
         if (slots.SelectMany(s => einwahl[s]).Any(pi => pi is null))
             throw new ProfundumEinwahlWunschException("Leerer Slot in Einwahl.");
 
         foreach (var (stufe, instanzen) in wuenscheDict)
-        foreach (var angebot in instanzen)
-        {
-            var belegWunsch = new ProfundumBelegWunsch
+            foreach (var angebot in instanzen)
             {
-                BetroffenePerson = student,
-                ProfundumInstanz = angebot,
-                Stufe = stufe
-                // EinwahlZeitraum = einwahlZeitraum,
-            };
-            belegWuensche.Add(belegWunsch);
-        }
+                var belegWunsch = new ProfundumBelegWunsch
+                {
+                    BetroffenePerson = student,
+                    ProfundumInstanz = angebot,
+                    Stufe = stufe
+                    // EinwahlZeitraum = einwahlZeitraum,
+                };
+                belegWuensche.Add(belegWunsch);
+            }
 
         foreach (var r in _rulesFactory.GetIndividualRules())
         {
@@ -434,44 +434,44 @@ internal class ProfundumEnrollmentService
         // Exact eine Einschreibung pro Slot und Person
         // Gewichtung nach Einwahlstufe
         foreach (var s in slots)
-        foreach (var p in students)
-        {
-            var psBeleg = belegwuensche
-                .Where(b => b.BetroffenePerson.Id == p.Id)
-                .Where(b => b.ProfundumInstanz.Slots.Contains(s))
-                .ToArray();
-            var psBelegVar = psBeleg.Select(b => belegVariables[b]).Append(personNotEnrolledVariables[p]).ToArray();
-            var psBelegVarOnlyIndividualRules = psBeleg.Select(b => belegVariablesOnlyIndividualRules[b])
-                .Append(personNotEnrolledVariablesOnlyIndividualRules[p])
-                .ToArray();
-            model.AddExactlyOne(psBelegVar);
-            modelOnlyIndividualRules.AddExactlyOne(psBelegVarOnlyIndividualRules);
-            for (var i = 0; i < psBeleg.Length; ++i)
+            foreach (var p in students)
             {
-                objective.AddTerm(psBelegVar[i], weights[psBeleg[i].Stufe]);
-                objectiveOnlyIndividualRules.AddTerm(psBelegVarOnlyIndividualRules[i], weights[psBeleg[i].Stufe]);
+                var psBeleg = belegwuensche
+                    .Where(b => b.BetroffenePerson.Id == p.Id)
+                    .Where(b => b.ProfundumInstanz.Slots.Contains(s))
+                    .ToArray();
+                var psBelegVar = psBeleg.Select(b => belegVariables[b]).Append(personNotEnrolledVariables[p]).ToArray();
+                var psBelegVarOnlyIndividualRules = psBeleg.Select(b => belegVariablesOnlyIndividualRules[b])
+                    .Append(personNotEnrolledVariablesOnlyIndividualRules[p])
+                    .ToArray();
+                model.AddExactlyOne(psBelegVar);
+                modelOnlyIndividualRules.AddExactlyOne(psBelegVarOnlyIndividualRules);
+                for (var i = 0; i < psBeleg.Length; ++i)
+                {
+                    objective.AddTerm(psBelegVar[i], weights[psBeleg[i].Stufe]);
+                    objectiveOnlyIndividualRules.AddTerm(psBelegVarOnlyIndividualRules[i], weights[psBeleg[i].Stufe]);
+                }
             }
-        }
 
         var alteEinschreibungen = _dbContext.ProfundaEinschreibungen.Where(e => e.IsFixed);
 
         foreach (var r in _rulesFactory.GetIndividualRules())
-        foreach (var s in students)
-        {
-            var sBelegWuensche = belegwuensche.Where(w => w.BetroffenePerson.Id == s.Id).ToArray();
-            r.AddConstraints(s,
-                einwahlZeitraum,
-                sBelegWuensche,
-                belegVariables,
-                personNotEnrolledVariables[s],
-                model);
-            r.AddConstraints(s,
-                einwahlZeitraum,
-                sBelegWuensche,
-                belegVariablesOnlyIndividualRules,
-                personNotEnrolledVariables[s],
-                modelOnlyIndividualRules);
-        }
+            foreach (var s in students)
+            {
+                var sBelegWuensche = belegwuensche.Where(w => w.BetroffenePerson.Id == s.Id).ToArray();
+                r.AddConstraints(s,
+                    einwahlZeitraum,
+                    sBelegWuensche,
+                    belegVariables,
+                    personNotEnrolledVariables[s],
+                    model);
+                r.AddConstraints(s,
+                    einwahlZeitraum,
+                    sBelegWuensche,
+                    belegVariablesOnlyIndividualRules,
+                    personNotEnrolledVariables[s],
+                    modelOnlyIndividualRules);
+            }
 
         foreach (var r in _rulesFactory.GetAggregateRules())
             r.AddConstraints(einwahlZeitraum, students, belegwuensche, belegVariables, model);
@@ -496,9 +496,9 @@ internal class ProfundumEnrollmentService
 
         var matchingResultStatus = (solver.ObjectiveValue, solverOnlyIndividualRules.ObjectiveValue) switch
         {
-            (>= 0, >= 0) => MatchingResultStatus.MatchingFound,
-            (< 0, >= 0) => MatchingResultStatus.MatchingIncompleteDueToCapacity,
-            (< 0, < 0) => MatchingResultStatus.MatchingIncompleteDueToHardConstraints,
+            ( >= 0, >= 0) => MatchingResultStatus.MatchingFound,
+            ( < 0, >= 0) => MatchingResultStatus.MatchingIncompleteDueToCapacity,
+            ( < 0, < 0) => MatchingResultStatus.MatchingIncompleteDueToHardConstraints,
             _ => throw new UnreachableException()
         };
 

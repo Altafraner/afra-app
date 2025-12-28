@@ -137,6 +137,7 @@ internal class ProfundumManagementService
             .Where(p => dtoProfundum.VerantwortlicheIds.Contains(p.Id))
             .ToArrayAsync();
 
+        var deps = await _dbContext.Profunda.Where(p => dtoProfundum.DependencyIds.Contains(p.Id)).ToArrayAsync();
 
         var def = new ProfundumDefinition
         {
@@ -145,7 +146,8 @@ internal class ProfundumManagementService
             Kategorie = kat,
             Verantwortliche = verantwortliche,
             MinKlasse = dtoProfundum.MinKlasse,
-            MaxKlasse = dtoProfundum.MaxKlasse
+            MaxKlasse = dtoProfundum.MaxKlasse,
+            Dependencies = deps,
         };
         _dbContext.Profunda.Add(def);
         await _dbContext.SaveChangesAsync();
@@ -155,12 +157,23 @@ internal class ProfundumManagementService
     public async Task<ProfundumDefinition?> UpdateProfundumAsync(Guid profundumId, DTOProfundumDefinitionCreation dtoProfundum)
     {
         var profundum = await _dbContext.Profunda
+            .AsSplitQuery()
             .Include(p => p.Verantwortliche)
+            .Include(p => p.Dependencies)
             .Where(p => p.Id == profundumId)
             .FirstOrDefaultAsync();
         if (profundum is null)
         {
             return null;
+        }
+
+        var deps = await _dbContext.Profunda
+            .Where(p => dtoProfundum.DependencyIds.Contains(p.Id))
+            .ToArrayAsync();
+        profundum.Dependencies = deps;
+        foreach (var d in dtoProfundum.DependencyIds)
+        {
+            Console.WriteLine(d);
         }
 
         var verantwortliche = await _dbContext.Personen
@@ -195,8 +208,10 @@ internal class ProfundumManagementService
     public Task<DTOProfundumDefinition[]> GetProfundaAsync()
     {
         return _dbContext.Profunda
+            .AsSplitQuery()
             .Include(p => p.Kategorie)
             .Include(p => p.Verantwortliche)
+            .Include(p => p.Dependencies)
             .Select(p => new DTOProfundumDefinition(p))
             .ToArrayAsync();
     }
@@ -204,8 +219,10 @@ internal class ProfundumManagementService
     public Task<DTOProfundumDefinition?> GetProfundumAsync(Guid profundumId)
     {
         return _dbContext.Profunda
+            .AsSplitQuery()
             .Include(p => p.Kategorie)
             .Include(p => p.Verantwortliche)
+            .Include(p => p.Dependencies)
             .Where(p => p.Id == profundumId)
             .Select(p => new DTOProfundumDefinition(p)).FirstOrDefaultAsync();
     }
@@ -219,14 +236,11 @@ internal class ProfundumManagementService
             return null;
         }
 
-        var deps = await _dbContext.ProfundaInstanzen.Where(p => dtoInstanz.DependencyIds.Contains(p.Id)).ToArrayAsync();
-
         var inst = new ProfundumInstanz
         {
             Profundum = def,
             MaxEinschreibungen = dtoInstanz.MaxEinschreibungen,
             Slots = [],
-            Dependencies = deps,
         };
         _dbContext.ProfundaInstanzen.Add(inst);
         foreach (var s in dtoInstanz.Slots)
@@ -251,7 +265,6 @@ internal class ProfundumManagementService
             .AsSingleQuery()
             .Include(i => i.Profundum)
             .Include(i => i.Slots)
-            .Include(i => i.Dependencies)
             .Select(i => new DTOProfundumInstanz(i))
             .ToArrayAsync();
     }
@@ -262,7 +275,6 @@ internal class ProfundumManagementService
             .AsSingleQuery()
             .Include(i => i.Profundum)
             .Include(i => i.Slots)
-            .Include(i => i.Dependencies)
             .Where(i => i.Id == instanzId)
             .Select(i => new DTOProfundumInstanz(i))
             .FirstOrDefaultAsync();
@@ -277,10 +289,6 @@ internal class ProfundumManagementService
         if (instanz is null) return null;
 
         instanz.MaxEinschreibungen = patch.MaxEinschreibungen;
-
-        var deps = await _dbContext.ProfundaInstanzen
-            .Where(p => patch.DependencyIds.Contains(p.Id)).ToArrayAsync();
-        instanz.Dependencies = deps;
 
         // update slots
         instanz.Slots.Clear();

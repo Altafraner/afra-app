@@ -20,10 +20,4 @@ public class ProfundumInstanz
 
     ///
     public ICollection<ProfundumEinschreibung> Einschreibungen { get; set; } = [];
-
-    ///
-    public ICollection<ProfundumInstanz> Dependencies { get; set; } = [];
-
-    ///
-    public ICollection<ProfundumInstanz> Dependants { get; set; } = [];
 }
