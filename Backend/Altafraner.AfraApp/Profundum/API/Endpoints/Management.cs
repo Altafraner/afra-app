@@ -4,7 +4,6 @@ using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.Profundum.Services;
 using Altafraner.AfraApp.User.Services;
 using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Altafraner.AfraApp.Profundum.API.Endpoints;
@@ -24,9 +23,13 @@ public static class Management
 
         group.MapGet("/einwahlzeitraum", GetEinwahlZeitraeumeAsync);
         group.MapPost("/einwahlzeitraum", AddEinwahlZeitraumAsync);
+        group.MapPut("/einwahlzeitraum/{id:guid}", UpdateEinwahlZeitraumAsync);
+        group.MapDelete("/einwahlzeitraum/{id:guid}", DeleteEinwahlZeitraumAsync);
 
         group.MapGet("/slot", GetSlotsAsync);
         group.MapPost("/slot", AddSlotAsync);
+        group.MapPut("/slot/{id:guid}", UpdateSlotAsync);
+        group.MapDelete("/slot/{id:guid}", DeleteSlotAsync);
 
         group.MapGet("/kategorie", GetKategorienAsync);
         group.MapPost("/kategorie", AddKategorieAsync);
@@ -55,7 +58,7 @@ public static class Management
         UserAccessor userAccessor,
         AfraAppContext dbContext,
         ILogger<ProfundumEnrollmentService> logger,
-        DTOProfundumEinwahlZeitraum zeitraum)
+        DTOProfundumEinwahlZeitraumCreation zeitraum)
     {
         var res = await managementService.CreateEinwahlZeitraumAsync(zeitraum);
         return TypedResults.Ok(res.Id);
@@ -68,6 +71,41 @@ public static class Management
         ILogger<ProfundumEnrollmentService> logger)
     {
         return TypedResults.Ok(await managementService.GetEinwahlZeiträumeAsync());
+    }
+
+
+    private static async Task<Results<Ok, NotFound>> UpdateEinwahlZeitraumAsync(
+        ProfundumManagementService managementService,
+        Guid id,
+        DTOProfundumEinwahlZeitraumCreation dto)
+    {
+        var ok = await managementService.UpdateEinwahlZeitraumAsync(id, dto);
+        return ok ? TypedResults.Ok() : TypedResults.NotFound();
+    }
+
+    private static async Task<Ok> DeleteEinwahlZeitraumAsync(
+        ProfundumManagementService managementService,
+        Guid id)
+    {
+        await managementService.DeleteEinwahlZeitraumAsync(id);
+        return TypedResults.Ok();
+    }
+
+    private static async Task<Results<Ok, NotFound>> UpdateSlotAsync(
+        ProfundumManagementService managementService,
+        Guid id,
+        DTOProfundumSlotCreation dto)
+    {
+        var ok = await managementService.UpdateSlotAsync(id, dto);
+        return ok ? TypedResults.Ok() : TypedResults.NotFound();
+    }
+
+    private static async Task<Ok> DeleteSlotAsync(
+        ProfundumManagementService managementService,
+        Guid id)
+    {
+        await managementService.DeleteSlotAsync(id);
+        return TypedResults.Ok();
     }
 
     private static async Task<Ok<DTOProfundumSlot[]>> GetSlotsAsync(ProfundumManagementService managementService,
@@ -83,7 +121,7 @@ public static class Management
         UserAccessor userAccessor,
         AfraAppContext dbContext,
         ILogger<ProfundumEnrollmentService> logger,
-        DTOProfundumSlot slot)
+       DTOProfundumSlotCreation slot)
     {
         var res = await managementService.CreateSlotAsync(slot);
         if (res is null) return TypedResults.BadRequest("Could not create slot");
