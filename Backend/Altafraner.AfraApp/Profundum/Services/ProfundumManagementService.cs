@@ -389,7 +389,9 @@ internal class ProfundumManagementService
 
         var teilnehmer = _dbContext.ProfundaEinschreibungen
             .Where(e => e.ProfundumInstanz.Id == p.Id)
-            .Select(e => e.BetroffenePerson);
+            .Select(e => e.BetroffenePerson)
+            .OrderBy(e => e.LastName)
+            .ThenBy(e => e.FirstName);
 
         const string src = Typst.Templates.Profundum.Instanz;
         var typst = new TypstCompilerWrapper(src, null, _typstConfig.Value.TypstResourcePath);
