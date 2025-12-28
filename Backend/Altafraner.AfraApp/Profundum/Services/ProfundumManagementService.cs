@@ -137,7 +137,9 @@ internal class ProfundumManagementService
             .Where(p => dtoProfundum.VerantwortlicheIds.Contains(p.Id))
             .ToArrayAsync();
 
-        var deps = await _dbContext.Profunda.Where(p => dtoProfundum.DependencyIds.Contains(p.Id)).ToArrayAsync();
+        var deps = await _dbContext.Profunda
+            .Where(p => dtoProfundum.DependencyIds.Contains(p.Id))
+            .ToListAsync();
 
         var def = new ProfundumDefinition
         {
@@ -169,12 +171,8 @@ internal class ProfundumManagementService
 
         var deps = await _dbContext.Profunda
             .Where(p => dtoProfundum.DependencyIds.Contains(p.Id))
-            .ToArrayAsync();
+            .ToListAsync();
         profundum.Dependencies = deps;
-        foreach (var d in dtoProfundum.DependencyIds)
-        {
-            Console.WriteLine(d);
-        }
 
         var verantwortliche = await _dbContext.Personen
             .Where(p => dtoProfundum.VerantwortlicheIds.Contains(p.Id))
