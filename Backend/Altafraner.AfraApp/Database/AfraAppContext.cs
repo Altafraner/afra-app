@@ -7,6 +7,7 @@ using Altafraner.Backbone.EmailSchedulingModule;
 using Altafraner.Backbone.EmailSchedulingModule.Models;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure;
 
 namespace Altafraner.AfraApp;
@@ -259,10 +260,46 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
             {
                 entityType.SetTableName(tableName.ToLowerInvariant());
             }
+
             var schema = entityType.GetSchema();
             if (!string.IsNullOrEmpty(schema))
             {
                 entityType.SetSchema(schema.ToLowerInvariant());
+            }
+
+            var storeObjectId = StoreObjectIdentifier.Table(
+                entityType.GetTableName()!,
+                entityType.GetSchema()
+            );
+
+            foreach (var property in entityType.GetProperties())
+            {
+                var columnName = property.GetColumnName(storeObjectId);
+                if (!string.IsNullOrEmpty(columnName))
+                {
+                    property.SetColumnName(columnName.ToLowerInvariant());
+                }
+            }
+
+            foreach (var key in entityType.GetKeys())
+            {
+                var keyName = key.GetName();
+                if (!string.IsNullOrEmpty(keyName))
+                    key.SetName(keyName.ToLowerInvariant());
+            }
+
+            foreach (var fk in entityType.GetForeignKeys())
+            {
+                var fkName = fk.GetConstraintName();
+                if (!string.IsNullOrEmpty(fkName))
+                    fk.SetConstraintName(fkName.ToLowerInvariant());
+            }
+
+            foreach (var index in entityType.GetIndexes())
+            {
+                var indexName = index.GetDatabaseName();
+                if (!string.IsNullOrEmpty(indexName))
+                    index.SetDatabaseName(indexName.ToLowerInvariant());
             }
         }
     }
