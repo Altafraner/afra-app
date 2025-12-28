@@ -164,7 +164,7 @@ const updateDependencies = () => savePatch({ dependencyIds: profundum.value.depe
                         auto-resize
                         fluid
                         rows="3"
-                        maxlength="1000"
+                        maxlength="2000"
                     />
                 </template>
             </GridEditRow>
