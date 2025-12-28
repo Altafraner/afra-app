@@ -17,7 +17,7 @@ public class Typst
     }
 
     ///
-    public byte[] generatePdf(string source, Fonts? fonts, object inputdata)
+    public byte[] generatePdf(string source, object inputdata)
     {
         TypstCompilerWrapper typstCompilerWrapper;
         if (_cachedCompilers.ContainsKey(source))
@@ -26,7 +26,7 @@ public class Typst
         }
         else
         {
-            typstCompilerWrapper = new TypstCompilerWrapper(source, fonts, _typstConfiguration.Value.TypstResourcePath);
+            typstCompilerWrapper = new TypstCompilerWrapper(source, _typstConfiguration.Value.TypstFontPaths, _typstConfiguration.Value.TypstResourcePath);
             _cachedCompilers[source] = typstCompilerWrapper;
         }
 
