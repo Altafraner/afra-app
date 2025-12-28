@@ -11,6 +11,7 @@
         <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore"/>
         <PackageReference Include="Bogus"/>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -27,6 +28,7 @@
         <PackageReference Include="Swashbuckle.AspNetCore"/>
         <PackageReference Include="System.DirectoryServices.Protocols"/>
         <PackageReference Include="Google.OrTools"/>
+        <PackageReference Include="Microsoft.CodeAnalysis.Common"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -37,6 +39,7 @@
 
     <ItemGroup>
         <Folder Include="Migrations\"/>
+        <Folder Include="Typst\"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -48,6 +51,11 @@
         <ProjectReference Include="..\Altafraner.Backbone.EmailSchedulingModule\Altafraner.Backbone.EmailSchedulingModule.csproj"/>
         <ProjectReference Include="..\Altafraner.Backbone\Altafraner.Backbone.csproj"/>
         <ProjectReference Include="..\Altafraner.Typst\Altafraner.Typst.csproj"/>
+        <ProjectReference Include="..\Altafraner.Typst.Generator\Altafraner.Typst.Generator.csproj" OutputItemType="Analyzer"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <AdditionalFiles Include="Typst/**/*.typ"/>
     </ItemGroup>
 
 </Project>
