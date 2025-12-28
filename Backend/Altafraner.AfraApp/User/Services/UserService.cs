@@ -111,9 +111,11 @@ public class UserService
     /// </summary>
     public IEnumerable<int> GetKlassenstufen()
     {
-        return _ldapConfiguration.UserGroups.Select(x => x.Group)
-            .Select(s => string.Concat(s.TakeWhile(char.IsAsciiDigit)))
+        return _dbContext.Personen.Select(x => x.Gruppe)
+            .Distinct()
+            .ToArray()
             .Where(s => !string.IsNullOrWhiteSpace(s))
+            .Select(s => string.Concat(s!.TakeWhile(char.IsAsciiDigit)))
             .Select(int.Parse)
             .Order()
             .Distinct();
