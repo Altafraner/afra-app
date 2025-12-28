@@ -7,6 +7,7 @@ using Altafraner.AfraApp.Schuljahr.Domain.Models;
 using Altafraner.AfraApp.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -15,9 +16,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Altafraner.AfraApp.Migrations
 {
     [DbContext(typeof(AfraAppContext))]
-    partial class AfraAppContextModelSnapshot : ModelSnapshot
+    [Migration("20251226122813_AllLowerCase")]
+    partial class AllLowerCase
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -34,18 +37,14 @@ namespace Altafraner.AfraApp.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("BetroffenePersonId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("betroffenepersonid");
+                        .HasColumnType("uuid");
 
-                    b.HasKey("Id")
-                        .HasName("pk_calendarsubscriptions");
+                    b.HasKey("Id");
 
-                    b.HasIndex("BetroffenePersonId")
-                        .HasDatabaseName("ix_calendarsubscriptions_betroffenepersonid");
+                    b.HasIndex("BetroffenePersonId");
 
                     b.ToTable("calendarsubscriptions");
                 });
@@ -53,22 +52,17 @@ namespace Altafraner.AfraApp.Migrations
             modelBuilder.Entity("Altafraner.AfraApp.Otium.Domain.Models.OtiumAnwesenheit", b =>
                 {
                     b.Property<Guid>("BlockId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("blockid");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("StudentId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("studentid");
+                        .HasColumnType("uuid");
 
                     b.Property<OtiumAnwesenheitsStatus>("Status")
-                        .HasColumnType("anwesenheits_status")
-                        .HasColumnName("status");
+                        .HasColumnType("anwesenheits_status");
 
-                    b.HasKey("BlockId", "StudentId")
-                        .HasName("pk_otiaanwesenheiten");
+                    b.HasKey("BlockId", "StudentId");
 
-                    b.HasIndex("StudentId")
-                        .HasDatabaseName("ix_otiaanwesenheiten_studentid");
+                    b.HasIndex("StudentId");
 
                     b.ToTable("otiaanwesenheiten");
                 });
@@ -76,39 +70,30 @@ namespace Altafraner.AfraApp.Migrations
             modelBuilder.Entity("Altafraner.AfraApp.Otium.Domain.Models.OtiumAnwesenheitsNotiz", b =>
                 {
                     b.Property<Guid>("BlockId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("blockid");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("StudentId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("studentid");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("AuthorId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("authorid");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("content");
+                        .HasColumnType("character varying(500)");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("createdat");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("LastModified")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("lastmodified");
+                        .HasColumnType("timestamp with time zone");
 
-                    b.HasKey("BlockId", "StudentId", "AuthorId")
-                        .HasName("pk_otiaeinschreibungsnotizen");
+                    b.HasKey("BlockId", "StudentId", "AuthorId");
 
-                    b.HasIndex("AuthorId")
-                        .HasDatabaseName("ix_otiaeinschreibungsnotizen_authorid");
+                    b.HasIndex("AuthorId");
 
-                    b.HasIndex("StudentId")
-                        .HasDatabaseName("ix_otiaeinschreibungsnotizen_studentid");
+                    b.HasIndex("StudentId");
 
                     b.ToTable("otiaeinschreibungsnotizen");
                 });
@@ -117,46 +102,36 @@ namespace Altafraner.AfraApp.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Beschreibung")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("beschreibung");
+                        .HasColumnType("character varying(500)");
 
                     b.Property<string>("Bezeichnung")
                         .IsRequired()
                         .HasMaxLength(70)
-                        .HasColumnType("character varying(70)")
-                        .HasColumnName("bezeichnung");
+                        .HasColumnType("character varying(70)");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("createdat");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("KategorieId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("kategorieid");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("LastModified")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("lastmodified");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int?>("MaxKlasse")
-                        .HasColumnType("integer")
-                        .HasColumnName("maxklasse");
+                        .HasColumnType("integer");
 
                     b.Property<int?>("MinKlasse")
-                        .HasColumnType("integer")
-                        .HasColumnName("minklasse");
+                        .HasColumnType("integer");
 
-                    b.HasKey("Id")
-                        .HasName("pk_otia");
+                    b.HasKey("Id");
 
-                    b.HasIndex("KategorieId")
-                        .HasDatabaseName("ix_otia_kategorieid");
+                    b.HasIndex("KategorieId");
 
                     b.ToTable("otia");
                 });
@@ -165,24 +140,19 @@ namespace Altafraner.AfraApp.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("BetroffenePersonId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("betroffenepersonid");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("createdat");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("LastModified")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("lastmodified");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("TerminId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("terminid");
+                        .HasColumnType("uuid");
 
                     b.ComplexProperty(typeof(Dictionary<string, object>), "Interval", "Altafraner.AfraApp.Otium.Domain.Models.OtiumEinschreibung.Interval#TimeOnlyInterval", b1 =>
                         {
@@ -195,14 +165,11 @@ namespace Altafraner.AfraApp.Migrations
                                 .HasColumnType("time without time zone");
                         });
 
-                    b.HasKey("Id")
-                        .HasName("pk_otiaeinschreibungen");
+                    b.HasKey("Id");
 
-                    b.HasIndex("BetroffenePersonId")
-                        .HasDatabaseName("ix_otiaeinschreibungen_betroffenepersonid");
+                    b.HasIndex("BetroffenePersonId");
 
-                    b.HasIndex("TerminId")
-                        .HasDatabaseName("ix_otiaeinschreibungen_terminid");
+                    b.HasIndex("TerminId");
 
                     b.ToTable("otiaeinschreibungen");
                 });
@@ -211,42 +178,33 @@ namespace Altafraner.AfraApp.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Bezeichnung")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("bezeichnung");
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("CssColor")
                         .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("csscolor");
+                        .HasColumnType("character varying(20)");
 
                     b.Property<string>("Icon")
                         .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("icon");
+                        .HasColumnType("character varying(20)");
 
                     b.Property<bool>("IgnoreEnrollmentRule")
-                        .HasColumnType("boolean")
-                        .HasColumnName("ignoreenrollmentrule");
+                        .HasColumnType("boolean");
 
                     b.Property<Guid?>("ParentId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("parentid");
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("Required")
-                        .HasColumnType("boolean")
-                        .HasColumnName("required");
+                        .HasColumnType("boolean");
 
-                    b.HasKey("Id")
-                        .HasName("pk_otiakategorien");
+                    b.HasKey("Id");
 
-                    b.HasIndex("ParentId")
-                        .HasDatabaseName("ix_otiakategorien_parentid");
+                    b.HasIndex("ParentId");
 
                     b.ToTable("otiakategorien");
                 });
@@ -255,75 +213,57 @@ namespace Altafraner.AfraApp.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("BlockId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("blockid");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("createdat");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IstAbgesagt")
-                        .HasColumnType("boolean")
-                        .HasColumnName("istabgesagt");
+                        .HasColumnType("boolean");
 
                     b.Property<DateTime>("LastModified")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("lastmodified");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int?>("MaxEinschreibungen")
-                        .HasColumnType("integer")
-                        .HasColumnName("maxeinschreibungen");
+                        .HasColumnType("integer");
 
                     b.Property<string>("Ort")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("ort");
+                        .HasColumnType("character varying(20)");
 
                     b.Property<Guid>("OtiumId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("otiumid");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("OverrideBeschreibung")
                         .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("overridebeschreibung");
+                        .HasColumnType("character varying(500)");
 
                     b.Property<string>("OverrideBezeichnung")
                         .HasMaxLength(70)
-                        .HasColumnType("character varying(70)")
-                        .HasColumnName("overridebezeichnung");
+                        .HasColumnType("character varying(70)");
 
                     b.Property<bool>("SindAnwesenheitenKontrolliert")
-                        .HasColumnType("boolean")
-                        .HasColumnName("sindanwesenheitenkontrolliert");
+                        .HasColumnType("boolean");
 
                     b.Property<Guid?>("TutorId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("tutorid");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid?>("WiederholungId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("wiederholungid");
+                        .HasColumnType("uuid");
 
-                    b.HasKey("Id")
-                        .HasName("pk_otiatermine");
+                    b.HasKey("Id");
 
-                    b.HasIndex("BlockId")
-                        .HasDatabaseName("ix_otiatermine_blockid");
+                    b.HasIndex("BlockId");
 
-                    b.HasIndex("OtiumId")
-                        .HasDatabaseName("ix_otiatermine_otiumid");
+                    b.HasIndex("OtiumId");
 
-                    b.HasIndex("TutorId")
-                        .HasDatabaseName("ix_otiatermine_tutorid");
+                    b.HasIndex("TutorId");
 
-                    b.HasIndex("WiederholungId")
-                        .HasDatabaseName("ix_otiatermine_wiederholungid");
+                    b.HasIndex("WiederholungId");
 
                     b.ToTable("otiatermine");
                 });
@@ -332,49 +272,38 @@ namespace Altafraner.AfraApp.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
+                        .HasColumnType("uuid");
 
                     b.Property<char>("Block")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("character(1)")
-                        .HasColumnName("block")
                         .HasDefaultValueSql("''");
 
                     b.Property<int?>("MaxEinschreibungen")
-                        .HasColumnType("integer")
-                        .HasColumnName("maxeinschreibungen");
+                        .HasColumnType("integer");
 
                     b.Property<string>("Ort")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("ort");
+                        .HasColumnType("character varying(20)");
 
                     b.Property<Guid>("OtiumId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("otiumid");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid?>("TutorId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("tutorid");
+                        .HasColumnType("uuid");
 
                     b.Property<int>("Wochentag")
-                        .HasColumnType("integer")
-                        .HasColumnName("wochentag");
+                        .HasColumnType("integer");
 
                     b.Property<Wochentyp>("Wochentyp")
-                        .HasColumnType("wochentyp")
-                        .HasColumnName("wochentyp");
+                        .HasColumnType("wochentyp");
 
-                    b.HasKey("Id")
-                        .HasName("pk_otiawiederholungen");
+                    b.HasKey("Id");
 
-                    b.HasIndex("OtiumId")
-                        .HasDatabaseName("ix_otiawiederholungen_otiumid");
+                    b.HasIndex("OtiumId");
 
-                    b.HasIndex("TutorId")
-                        .HasDatabaseName("ix_otiawiederholungen_tutorid");
+                    b.HasIndex("TutorId");
 
                     b.ToTable("otiawiederholungen");
                 });
@@ -382,22 +311,17 @@ namespace Altafraner.AfraApp.Migrations
             modelBuilder.Entity("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumBelegWunsch", b =>
                 {
                     b.Property<Guid>("ProfundumInstanzId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("profunduminstanzid");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("BetroffenePersonId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("betroffenepersonid");
+                        .HasColumnType("uuid");
 
                     b.Property<int>("Stufe")
-                        .HasColumnType("integer")
-                        .HasColumnName("stufe");
+                        .HasColumnType("integer");
 
-                    b.HasKey("ProfundumInstanzId", "BetroffenePersonId", "Stufe")
-                        .HasName("pk_profundabelegwuensche");
+                    b.HasKey("ProfundumInstanzId", "BetroffenePersonId", "Stufe");
 
-                    b.HasIndex("BetroffenePersonId")
-                        .HasDatabaseName("ix_profundabelegwuensche_betroffenepersonid");
+                    b.HasIndex("BetroffenePersonId");
 
                     b.ToTable("profundabelegwuensche");
                 });
@@ -406,32 +330,25 @@ namespace Altafraner.AfraApp.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Bezeichnung")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("bezeichnung");
+                        .HasColumnType("character varying(100)");
 
                     b.Property<Guid>("KategorieId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("kategorieid");
+                        .HasColumnType("uuid");
 
                     b.Property<int?>("MaxKlasse")
-                        .HasColumnType("integer")
-                        .HasColumnName("maxklasse");
+                        .HasColumnType("integer");
 
                     b.Property<int?>("MinKlasse")
-                        .HasColumnType("integer")
-                        .HasColumnName("minklasse");
+                        .HasColumnType("integer");
 
-                    b.HasKey("Id")
-                        .HasName("pk_profunda");
+                    b.HasKey("Id");
 
-                    b.HasIndex("KategorieId")
-                        .HasDatabaseName("ix_profunda_kategorieid");
+                    b.HasIndex("KategorieId");
 
                     b.ToTable("profunda");
                 });
@@ -439,18 +356,14 @@ namespace Altafraner.AfraApp.Migrations
             modelBuilder.Entity("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumEinschreibung", b =>
                 {
                     b.Property<Guid>("BetroffenePersonId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("betroffenepersonid");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("ProfundumInstanzId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("profunduminstanzid");
+                        .HasColumnType("uuid");
 
-                    b.HasKey("BetroffenePersonId", "ProfundumInstanzId")
-                        .HasName("pk_profundaeinschreibungen");
+                    b.HasKey("BetroffenePersonId", "ProfundumInstanzId");
 
-                    b.HasIndex("ProfundumInstanzId")
-                        .HasDatabaseName("ix_profundaeinschreibungen_profunduminstanzid");
+                    b.HasIndex("ProfundumInstanzId");
 
                     b.ToTable("profundaeinschreibungen");
                 });
@@ -459,23 +372,18 @@ namespace Altafraner.AfraApp.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("EinwahlStart")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("einwahlstart");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("EinwahlStop")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("einwahlstop");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("HasBeenMatched")
-                        .HasColumnType("boolean")
-                        .HasColumnName("hasbeenmatched");
+                        .HasColumnType("boolean");
 
-                    b.HasKey("Id")
-                        .HasName("pk_profundumeinwahlzeitraeume");
+                    b.HasKey("Id");
 
                     b.ToTable("profundumeinwahlzeitraeume");
                 });
@@ -484,22 +392,17 @@ namespace Altafraner.AfraApp.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
+                        .HasColumnType("uuid");
 
                     b.Property<int?>("MaxEinschreibungen")
-                        .HasColumnType("integer")
-                        .HasColumnName("maxeinschreibungen");
+                        .HasColumnType("integer");
 
                     b.Property<Guid>("ProfundumId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("profundumid");
+                        .HasColumnType("uuid");
 
-                    b.HasKey("Id")
-                        .HasName("pk_profundainstanzen");
+                    b.HasKey("Id");
 
-                    b.HasIndex("ProfundumId")
-                        .HasDatabaseName("ix_profundainstanzen_profundumid");
+                    b.HasIndex("ProfundumId");
 
                     b.ToTable("profundainstanzen");
                 });
@@ -508,25 +411,20 @@ namespace Altafraner.AfraApp.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Bezeichnung")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("bezeichnung");
+                        .HasColumnType("character varying(50)");
 
                     b.Property<int?>("MaxProEinwahl")
-                        .HasColumnType("integer")
-                        .HasColumnName("maxproeinwahl");
+                        .HasColumnType("integer");
 
                     b.Property<bool>("ProfilProfundum")
-                        .HasColumnType("boolean")
-                        .HasColumnName("profilprofundum");
+                        .HasColumnType("boolean");
 
-                    b.HasKey("Id")
-                        .HasName("pk_profundakategorien");
+                    b.HasKey("Id");
 
                     b.ToTable("profundakategorien");
                 });
@@ -535,30 +433,23 @@ namespace Altafraner.AfraApp.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("EinwahlZeitraumId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("einwahlzeitraumid");
+                        .HasColumnType("uuid");
 
                     b.Property<int>("Jahr")
-                        .HasColumnType("integer")
-                        .HasColumnName("jahr");
+                        .HasColumnType("integer");
 
                     b.Property<int>("Quartal")
-                        .HasColumnType("integer")
-                        .HasColumnName("quartal");
+                        .HasColumnType("integer");
 
                     b.Property<int>("Wochentag")
-                        .HasColumnType("integer")
-                        .HasColumnName("wochentag");
+                        .HasColumnType("integer");
 
-                    b.HasKey("Id")
-                        .HasName("pk_profundaslots");
+                    b.HasKey("Id");
 
-                    b.HasIndex("EinwahlZeitraumId")
-                        .HasDatabaseName("ix_profundaslots_einwahlzeitraumid");
+                    b.HasIndex("EinwahlZeitraumId");
 
                     b.ToTable("profundaslots");
                 });
@@ -567,29 +458,23 @@ namespace Altafraner.AfraApp.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
+                        .HasColumnType("uuid");
 
                     b.Property<char>("SchemaId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("character(1)")
-                        .HasColumnName("schemaid")
                         .HasDefaultValueSql("''");
 
                     b.Property<DateOnly>("SchultagKey")
-                        .HasColumnType("date")
-                        .HasColumnName("schultagkey");
+                        .HasColumnType("date");
 
                     b.Property<bool>("SindAnwesenheitenFehlernderKontrolliert")
-                        .HasColumnType("boolean")
-                        .HasColumnName("sindanwesenheitenfehlernderkontrolliert");
+                        .HasColumnType("boolean");
 
-                    b.HasKey("Id")
-                        .HasName("pk_blocks");
+                    b.HasKey("Id");
 
                     b.HasIndex("SchultagKey", "SchemaId")
-                        .IsUnique()
-                        .HasDatabaseName("ix_blocks_schultagkey_schemaid");
+                        .IsUnique();
 
                     b.ToTable("blocks");
                 });
@@ -597,15 +482,12 @@ namespace Altafraner.AfraApp.Migrations
             modelBuilder.Entity("Altafraner.AfraApp.Schuljahr.Domain.Models.Schultag", b =>
                 {
                     b.Property<DateOnly>("Datum")
-                        .HasColumnType("date")
-                        .HasColumnName("datum");
+                        .HasColumnType("date");
 
                     b.Property<Wochentyp>("Wochentyp")
-                        .HasColumnType("wochentyp")
-                        .HasColumnName("wochentyp");
+                        .HasColumnType("wochentyp");
 
-                    b.HasKey("Datum")
-                        .HasName("pk_schultage");
+                    b.HasKey("Datum");
 
                     b.ToTable("schultage");
                 });
@@ -613,18 +495,14 @@ namespace Altafraner.AfraApp.Migrations
             modelBuilder.Entity("Altafraner.AfraApp.User.Domain.Models.MentorMenteeRelation", b =>
                 {
                     b.Property<Guid>("MentorId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("mentorid");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("StudentId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("studentid");
+                        .HasColumnType("uuid");
 
-                    b.HasKey("MentorId", "StudentId")
-                        .HasName("pk_mentormenteerelations");
+                    b.HasKey("MentorId", "StudentId");
 
-                    b.HasIndex("StudentId")
-                        .HasDatabaseName("ix_mentormenteerelations_studentid");
+                    b.HasIndex("StudentId");
 
                     b.ToTable("mentormenteerelations");
                 });
@@ -633,55 +511,44 @@ namespace Altafraner.AfraApp.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(150)
-                        .HasColumnType("character varying(150)")
-                        .HasColumnName("email");
+                        .HasColumnType("character varying(150)");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("firstname");
+                        .HasColumnType("character varying(50)");
 
                     b.PrimitiveCollection<GlobalPermission[]>("GlobalPermissions")
                         .IsRequired()
-                        .HasColumnType("global_permission[]")
-                        .HasColumnName("globalpermissions");
+                        .HasColumnType("global_permission[]");
 
                     b.Property<string>("Gruppe")
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("gruppe");
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("lastname");
+                        .HasColumnType("character varying(50)");
 
                     b.Property<Guid?>("LdapObjectId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("ldapobjectid");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime?>("LdapSyncFailureTime")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("ldapsyncfailuretime");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("LdapSyncTime")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("ldapsynctime");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Rolle>("Rolle")
-                        .HasColumnType("person_rolle")
-                        .HasColumnName("rolle");
+                        .HasColumnType("person_rolle");
 
-                    b.HasKey("Id")
-                        .HasName("pk_personen");
+                    b.HasKey("Id");
 
                     b.ToTable("personen");
                 });
@@ -690,34 +557,27 @@ namespace Altafraner.AfraApp.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Body")
                         .IsRequired()
                         .HasMaxLength(10000)
-                        .HasColumnType("character varying(10000)")
-                        .HasColumnName("body");
+                        .HasColumnType("character varying(10000)");
 
                     b.Property<DateTime>("Deadline")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deadline");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("RecipientId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("recipientid");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Subject")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("subject");
+                        .HasColumnType("character varying(100)");
 
-                    b.HasKey("Id")
-                        .HasName("pk_scheduledemails");
+                    b.HasKey("Id");
 
-                    b.HasIndex("RecipientId")
-                        .HasDatabaseName("ix_scheduledemails_recipientid");
+                    b.HasIndex("RecipientId");
 
                     b.ToTable("scheduledemails");
                 });
@@ -726,21 +586,17 @@ namespace Altafraner.AfraApp.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
+                        .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("FriendlyName")
-                        .HasColumnType("text")
-                        .HasColumnName("friendlyname");
+                        .HasColumnType("text");
 
                     b.Property<string>("Xml")
-                        .HasColumnType("text")
-                        .HasColumnName("xml");
+                        .HasColumnType("text");
 
-                    b.HasKey("Id")
-                        .HasName("pk_dataprotectionkeys");
+                    b.HasKey("Id");
 
                     b.ToTable("dataprotectionkeys");
                 });
@@ -748,18 +604,14 @@ namespace Altafraner.AfraApp.Migrations
             modelBuilder.Entity("OtiumDefinitionPerson", b =>
                 {
                     b.Property<Guid>("VerantwortlicheId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("verantwortlicheid");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("VerwalteteOtiaId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("verwalteteotiaid");
+                        .HasColumnType("uuid");
 
-                    b.HasKey("VerantwortlicheId", "VerwalteteOtiaId")
-                        .HasName("pk_otiumdefinitionperson");
+                    b.HasKey("VerantwortlicheId", "VerwalteteOtiaId");
 
-                    b.HasIndex("VerwalteteOtiaId")
-                        .HasDatabaseName("ix_otiumdefinitionperson_verwalteteotiaid");
+                    b.HasIndex("VerwalteteOtiaId");
 
                     b.ToTable("otiumdefinitionperson");
                 });
@@ -767,18 +619,14 @@ namespace Altafraner.AfraApp.Migrations
             modelBuilder.Entity("ProfundumInstanzProfundumSlot", b =>
                 {
                     b.Property<Guid>("ProfundumInstanzId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("profunduminstanzid");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("SlotsId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("slotsid");
+                        .HasColumnType("uuid");
 
-                    b.HasKey("ProfundumInstanzId", "SlotsId")
-                        .HasName("pk_profunduminstanzprofundumslot");
+                    b.HasKey("ProfundumInstanzId", "SlotsId");
 
-                    b.HasIndex("SlotsId")
-                        .HasDatabaseName("ix_profunduminstanzprofundumslot_slotsid");
+                    b.HasIndex("SlotsId");
 
                     b.ToTable("profunduminstanzprofundumslot");
                 });
@@ -789,8 +637,7 @@ namespace Altafraner.AfraApp.Migrations
                         .WithMany()
                         .HasForeignKey("BetroffenePersonId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_calendarsubscriptions_personen_betroffenepersonid");
+                        .IsRequired();
 
                     b.Navigation("BetroffenePerson");
                 });
@@ -801,15 +648,13 @@ namespace Altafraner.AfraApp.Migrations
                         .WithMany()
                         .HasForeignKey("BlockId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_otiaanwesenheiten_blocks_blockid");
+                        .IsRequired();
 
                     b.HasOne("Altafraner.AfraApp.User.Domain.Models.Person", "Student")
                         .WithMany()
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_otiaanwesenheiten_personen_studentid");
+                        .IsRequired();
 
                     b.Navigation("Block");
 
@@ -822,22 +667,19 @@ namespace Altafraner.AfraApp.Migrations
                         .WithMany()
                         .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_otiaeinschreibungsnotizen_personen_authorid");
+                        .IsRequired();
 
                     b.HasOne("Altafraner.AfraApp.Schuljahr.Domain.Models.Block", "Block")
                         .WithMany()
                         .HasForeignKey("BlockId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_otiaeinschreibungsnotizen_blocks_blockid");
+                        .IsRequired();
 
                     b.HasOne("Altafraner.AfraApp.User.Domain.Models.Person", "Student")
                         .WithMany()
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_otiaeinschreibungsnotizen_personen_studentid");
+                        .IsRequired();
 
                     b.Navigation("Author");
 
@@ -852,8 +694,7 @@ namespace Altafraner.AfraApp.Migrations
                         .WithMany("Otia")
                         .HasForeignKey("KategorieId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_otia_otiakategorien_kategorieid");
+                        .IsRequired();
 
                     b.Navigation("Kategorie");
                 });
@@ -864,15 +705,13 @@ namespace Altafraner.AfraApp.Migrations
                         .WithMany("OtiaEinschreibungen")
                         .HasForeignKey("BetroffenePersonId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_otiaeinschreibungen_personen_betroffenepersonid");
+                        .IsRequired();
 
                     b.HasOne("Altafraner.AfraApp.Otium.Domain.Models.OtiumTermin", "Termin")
                         .WithMany("Enrollments")
                         .HasForeignKey("TerminId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_otiaeinschreibungen_otiatermine_terminid");
+                        .IsRequired();
 
                     b.Navigation("BetroffenePerson");
 
@@ -883,8 +722,7 @@ namespace Altafraner.AfraApp.Migrations
                 {
                     b.HasOne("Altafraner.AfraApp.Otium.Domain.Models.OtiumKategorie", "Parent")
                         .WithMany("Children")
-                        .HasForeignKey("ParentId")
-                        .HasConstraintName("fk_otiakategorien_otiakategorien_parentid");
+                        .HasForeignKey("ParentId");
 
                     b.Navigation("Parent");
                 });
@@ -895,26 +733,22 @@ namespace Altafraner.AfraApp.Migrations
                         .WithMany()
                         .HasForeignKey("BlockId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_otiatermine_blocks_blockid");
+                        .IsRequired();
 
                     b.HasOne("Altafraner.AfraApp.Otium.Domain.Models.OtiumDefinition", "Otium")
                         .WithMany("Termine")
                         .HasForeignKey("OtiumId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_otiatermine_otia_otiumid");
+                        .IsRequired();
 
                     b.HasOne("Altafraner.AfraApp.User.Domain.Models.Person", "Tutor")
                         .WithMany()
-                        .HasForeignKey("TutorId")
-                        .HasConstraintName("fk_otiatermine_personen_tutorid");
+                        .HasForeignKey("TutorId");
 
                     b.HasOne("Altafraner.AfraApp.Otium.Domain.Models.OtiumWiederholung", "Wiederholung")
                         .WithMany("Termine")
                         .HasForeignKey("WiederholungId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("fk_otiatermine_otiawiederholungen_wiederholungid");
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Block");
 
@@ -931,13 +765,11 @@ namespace Altafraner.AfraApp.Migrations
                         .WithMany("Wiederholungen")
                         .HasForeignKey("OtiumId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_otiawiederholungen_otia_otiumid");
+                        .IsRequired();
 
                     b.HasOne("Altafraner.AfraApp.User.Domain.Models.Person", "Tutor")
                         .WithMany()
-                        .HasForeignKey("TutorId")
-                        .HasConstraintName("fk_otiawiederholungen_personen_tutorid");
+                        .HasForeignKey("TutorId");
 
                     b.Navigation("Otium");
 
@@ -950,15 +782,13 @@ namespace Altafraner.AfraApp.Migrations
                         .WithMany("ProfundaBelegwuensche")
                         .HasForeignKey("BetroffenePersonId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_profundabelegwuensche_personen_betroffenepersonid");
+                        .IsRequired();
 
                     b.HasOne("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumInstanz", "ProfundumInstanz")
                         .WithMany()
                         .HasForeignKey("ProfundumInstanzId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_profundabelegwuensche_profundainstanzen_profunduminstanzid");
+                        .IsRequired();
 
                     b.Navigation("BetroffenePerson");
 
@@ -971,8 +801,7 @@ namespace Altafraner.AfraApp.Migrations
                         .WithMany("Profunda")
                         .HasForeignKey("KategorieId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_profunda_profundakategorien_kategorieid");
+                        .IsRequired();
 
                     b.Navigation("Kategorie");
                 });
@@ -983,15 +812,13 @@ namespace Altafraner.AfraApp.Migrations
                         .WithMany("ProfundaEinschreibungen")
                         .HasForeignKey("BetroffenePersonId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_profundaeinschreibungen_personen_betroffenepersonid");
+                        .IsRequired();
 
                     b.HasOne("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumInstanz", "ProfundumInstanz")
                         .WithMany("Einschreibungen")
                         .HasForeignKey("ProfundumInstanzId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_profundaeinschreibungen_profundainstanzen_profunduminstanzid");
+                        .IsRequired();
 
                     b.Navigation("BetroffenePerson");
 
@@ -1004,8 +831,7 @@ namespace Altafraner.AfraApp.Migrations
                         .WithMany("Instanzen")
                         .HasForeignKey("ProfundumId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_profundainstanzen_profunda_profundumid");
+                        .IsRequired();
 
                     b.Navigation("Profundum");
                 });
@@ -1016,8 +842,7 @@ namespace Altafraner.AfraApp.Migrations
                         .WithMany("Slots")
                         .HasForeignKey("EinwahlZeitraumId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_profundaslots_profundumeinwahlzeitraeume_einwahlzeitraumid");
+                        .IsRequired();
 
                     b.Navigation("EinwahlZeitraum");
                 });
@@ -1028,8 +853,7 @@ namespace Altafraner.AfraApp.Migrations
                         .WithMany("Blocks")
                         .HasForeignKey("SchultagKey")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_blocks_schultage_schultagkey");
+                        .IsRequired();
 
                     b.Navigation("Schultag");
                 });
@@ -1040,15 +864,13 @@ namespace Altafraner.AfraApp.Migrations
                         .WithMany()
                         .HasForeignKey("MentorId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_mentormenteerelations_personen_mentorid");
+                        .IsRequired();
 
                     b.HasOne("Altafraner.AfraApp.User.Domain.Models.Person", null)
                         .WithMany()
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_mentormenteerelations_personen_studentid");
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Altafraner.Backbone.EmailSchedulingModule.Models.ScheduledEmail<Altafraner.AfraApp.User.Domain.Models.Person>", b =>
@@ -1057,8 +879,7 @@ namespace Altafraner.AfraApp.Migrations
                         .WithMany()
                         .HasForeignKey("RecipientId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_scheduledemails_personen_recipientid");
+                        .IsRequired();
 
                     b.Navigation("Recipient");
                 });
@@ -1069,15 +890,13 @@ namespace Altafraner.AfraApp.Migrations
                         .WithMany()
                         .HasForeignKey("VerantwortlicheId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_otiumdefinitionperson_personen_verantwortlicheid");
+                        .IsRequired();
 
                     b.HasOne("Altafraner.AfraApp.Otium.Domain.Models.OtiumDefinition", null)
                         .WithMany()
                         .HasForeignKey("VerwalteteOtiaId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_otiumdefinitionperson_otia_verwalteteotiaid");
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("ProfundumInstanzProfundumSlot", b =>
@@ -1086,15 +905,13 @@ namespace Altafraner.AfraApp.Migrations
                         .WithMany()
                         .HasForeignKey("ProfundumInstanzId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_profunduminstanzprofundumslot_profundainstanzen_profundumin~");
+                        .IsRequired();
 
                     b.HasOne("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumSlot", null)
                         .WithMany()
                         .HasForeignKey("SlotsId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_profunduminstanzprofundumslot_profundaslots_slotsid");
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Altafraner.AfraApp.Otium.Domain.Models.OtiumDefinition", b =>
