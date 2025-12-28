@@ -12,6 +12,7 @@ import ProfundumInstanzen from '@/Profundum/components/ProfundumInstanzen.vue';
 import AfraPersonSelector from '@/Otium/components/Form/AfraPersonSelector.vue';
 import KlassenrangeSelector from '@/components/KlassenRangeSelector.vue';
 import { convertMarkdownToHtml } from '@/composables/markdown';
+import UserPeek from '@/components/UserPeek.vue';
 
 const props = defineProps({ profundumId: String });
 const toast = useToast();
@@ -113,7 +114,8 @@ const updateDependencies = () => savePatch({ dependencyIds: profundum.value.depe
     <template v-if="loading">Lade...</template>
 
     <template v-else>
-        <h1>Profundum bearbeiten</h1>
+        <h1>{{ profundum.bezeichnung }}</h1>
+        <h2>Stammdaten</h2>
 
         <Grid>
             <GridEditRow header="Titel" @update="updateTitel">
@@ -173,13 +175,15 @@ const updateDependencies = () => savePatch({ dependencyIds: profundum.value.depe
                 @update="updateVerantwortliche"
             >
                 <template #body>
-                    <template v-if="profundum.verantwortlicheInfo === []">
+                    <template v-if="(profundum.verantwortlicheInfo?.length ?? 0) === 0">
                         Kein:e Betreuer:in
                     </template>
                     <template v-else>
-                        <template v-for="tutor in profundum.verantwortlicheInfo">
-                            {{ formatStudent(tutor) }},
-                        </template>
+                        {{
+                            profundum.verantwortlicheInfo
+                                .map((v) => formatStudent(v))
+                                .join(', ')
+                        }}
                     </template>
                 </template>
                 <template #edit>
@@ -189,6 +193,7 @@ const updateDependencies = () => savePatch({ dependencyIds: profundum.value.depe
                         name="tutor"
                         required
                         class="multiselect-wrap"
+                        fluid
                     />
                 </template>
             </GridEditRow>
