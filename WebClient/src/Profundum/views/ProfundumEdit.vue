@@ -1,5 +1,6 @@
 <script setup>
 import { InputText, Textarea, Button, useToast, Select } from 'primevue';
+import MultiSelect from 'primevue/multiselect';
 import Dropdown from 'primevue/dropdown';
 import { formatStudent } from '@/helpers/formatters';
 
@@ -30,6 +31,7 @@ async function getKlassen() {
 
 const categories = ref([]);
 const profundum = ref(null);
+const profundaList = ref([]);
 
 const apiProfunda = mande('/api/profundum/management/profundum');
 const apiKategorie = mande('/api/profundum/management/kategorie');
@@ -51,9 +53,18 @@ async function loadProfundum() {
     }
 }
 
+async function loadProfundaList() {
+    profundaList.value = await apiProfunda.get();
+}
+
 async function setup() {
     try {
-        await Promise.all([loadProfundum(), loadCategories(), getKlassen()]);
+        await Promise.all([
+            loadProfundum(),
+            loadCategories(),
+            loadProfundaList(),
+            getKlassen(),
+        ]);
     } catch (e) {
         toast.add({
             severity: 'error',
@@ -96,6 +107,7 @@ const updateKlassen = () =>
         minKlasse: profundum.value.minKlasse ?? null,
         maxKlasse: profundum.value.maxKlasse ?? null,
     });
+const updateDependencies = () => savePatch({ dependencyIds: profundum.value.dependencyIds });
 </script>
 <template>
     <template v-if="loading">Lade...</template>
@@ -139,7 +151,10 @@ const updateKlassen = () =>
                 @update="updateBeschreibung"
             >
                 <template #body>
-            <div class="m-trim" v-html="convertMarkdownToHtml(profundum.beschreibung)" />
+                    <div
+                        class="m-trim"
+                        v-html="convertMarkdownToHtml(profundum.beschreibung)"
+                    />
                 </template>
                 <template #edit>
                     <Textarea
@@ -204,8 +219,49 @@ const updateKlassen = () =>
                     />
                 </template>
             </GridEditRow>
+
+            <GridEditRow header="Voraussetzungen" @update="updateDependencies">
+                <template #body>
+                    <template v-for="id in profundum.dependencyIds" :key="id">
+                        {{ profundaList.find((p) => p.id === id)?.bezeichnung ?? '??' }},
+                    </template>
+                </template>
+                <template #edit>
+                    <MultiSelect
+                        v-model="profundum.dependencyIds"
+                        :options="profundaList"
+                        optionLabel="bezeichnung"
+                        optionValue="id"
+                        display="chip"
+                        filter
+                        filterPlaceholder="Suchen..."
+                        class="w-full multiselect-wrap"
+                        appendTo="self"
+                        placeholder="Voraussetzungen auswählen"
+                    />
+                </template>
+            </GridEditRow>
         </Grid>
 
         <ProfundumInstanzen :profundumId="props.profundumId" />
     </template>
 </template>
+
+<style scoped>
+.multiselect-wrap :deep(.p-multiselect-label-container) {
+    height: auto;
+}
+
+.multiselect-wrap :deep(.p-multiselect-label) {
+    display: flex;
+    flex-wrap: wrap;
+    white-space: normal;
+    gap: 0.25rem;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+}
+
+.multiselect-wrap :deep(.p-multiselect-token) {
+    margin-bottom: 0.25rem;
+}
+</style>

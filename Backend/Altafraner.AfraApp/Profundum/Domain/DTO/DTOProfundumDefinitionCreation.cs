@@ -24,4 +24,7 @@ public record DTOProfundumDefinitionCreation
     public int? MinKlasse { get; set; } = null;
     /// <inheritdoc cref="ProfundumDefinition.MaxKlasse"/>
     public int? MaxKlasse { get; set; } = null;
+
+    /// <inheritdoc cref="ProfundumDefinition.Dependencies"/>
+    public ICollection<Guid> DependencyIds { get; set; } = [];
 }

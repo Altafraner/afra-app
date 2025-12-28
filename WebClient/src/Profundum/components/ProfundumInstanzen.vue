@@ -129,26 +129,6 @@ onMounted(load);
                         placeholder="Slots auswählen"
                         class="multiselect-wrap"
                     />
-
-                    <label>Voraussetzungen: </label>
-                    <MultiSelect
-                        v-model="inst.dependencyIds"
-                        :options="
-                            instanzen
-                                .filter((i) => i.id !== inst.id)
-                                .map((i) => ({
-                                    ...i,
-                                    slotLabels: `Instanz: ${i.maxEinschreibungen} Plätze,
-                            ${i.slots.map((s) => slots.find((s2) => s2.id === s)).map((s) => s.label)} Slots
-                            `,
-                                }))
-                        "
-                        placeholder="Benötigt zuerst"
-                        optionLabel="slotLabels"
-                        optionValue="id"
-                        display="chip"
-                        class="multiselect-wrap"
-                    />
                 </div>
             </template>
         </GridEditRow>
