@@ -52,10 +52,14 @@
         
         = #bezeichnung
         
-        #for s in slots {
-            [*#weekdays.at(s.Wochentag) Q#s.Quartal*\
-            Schuljahr #s.Jahr/#{calc.rem-euclid(s.Jahr + 1, 100)}]
-        }
+        #grid(
+            columns: (1fr, 1fr),
+            rows: 3em,
+            ..for s in slots {
+                  ([*#weekdays.at(s.Wochentag) Q#s.Quartal*\
+                  Schuljahr #s.Jahr/#{calc.rem-euclid(s.Jahr + 1, 100)}],)
+              }
+        )
     ],
     align(right, image("logo.png", width: 50mm))
 )
