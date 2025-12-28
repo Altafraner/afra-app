@@ -16,18 +16,21 @@ internal class ProfundumManagementService
     private readonly AfraAppContext _dbContext;
     private readonly ILogger _logger;
     private readonly IOptions<TypstConfiguration> _typstConfig;
+    private readonly Typst.Typst _typst;
 
     /// <summary>
     ///     Constructs the ManagementService. Usually called by the DI container.
     /// </summary>
     public ProfundumManagementService(AfraAppContext dbContext,
         ILogger<ProfundumManagementService> logger,
-        IOptions<TypstConfiguration> typstConfig
+        IOptions<TypstConfiguration> typstConfig,
+        Typst.Typst typst
         )
     {
         _dbContext = dbContext;
         _logger = logger;
         _typstConfig = typstConfig;
+        _typst = typst;
     }
 
     public async Task<ProfundumEinwahlZeitraum> CreateEinwahlZeitraumAsync(DTOProfundumEinwahlZeitraumCreation zeitraum)
@@ -394,18 +397,16 @@ internal class ProfundumManagementService
             .ThenBy(e => e.FirstName);
 
         const string src = Typst.Templates.Profundum.Instanz;
-        var typst = new TypstCompilerWrapper(src, null, _typstConfig.Value.TypstResourcePath);
 
-        typst.SetSysInputs(new Dictionary<string, string> {
-                { "bezeichnung", p.Profundum.Bezeichnung },
-                { "beschreibung", p.Profundum.Beschreibung },
-                { "slots", JsonSerializer.Serialize(p.Slots.OrderBy(p=>p.Jahr).ThenBy(p=>p.Quartal).ThenBy(p=>p.Wochentag)) },
-                { "verantwortliche", JsonSerializer.Serialize(p.Profundum.Verantwortliche.Select(v=>new PersonInfoMinimal(v))) },
-                { "teilnehmer", JsonSerializer.Serialize(teilnehmer.Select(v=>new PersonInfoMinimal(v))) },
-        });
+        var inputs = new
+        {
+            bezeichnung = p.Profundum.Bezeichnung,
+            beschreibung = p.Profundum.Beschreibung,
+            slots = p.Slots.OrderBy(p => p.Jahr).ThenBy(p => p.Quartal).ThenBy(p => p.Wochentag),
+            verantwortliche = p.Profundum.Verantwortliche.Select(v => new PersonInfoMinimal(v)),
+            teilnehmer = teilnehmer.Select(v => new PersonInfoMinimal(v)),
+        };
 
-        var res = typst.CompilePdf();
-        return res;
+        return _typst.generatePdf(src, null, inputs);
     }
-
 }

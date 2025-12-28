@@ -11,14 +11,14 @@ public record Fonts(
 /// <summary>
 ///     Safe wrapper around the typyst compiler
 /// </summary>
-public unsafe class TypstCompilerWrapper
+internal unsafe class TypstCompilerWrapper
 {
     private readonly CompilerSafe _compiler;
 
     /// <summary>
     ///     Construct a new instance of the typst compiler
     /// </summary>
-    public TypstCompilerWrapper(string inputSource, Fonts? fonts = null, string? root = null)
+    internal TypstCompilerWrapper(string inputSource, Fonts? fonts = null, string? root = null)
     {
         fonts ??= new Fonts();
         var fontPaths = fonts.FontPaths ?? [];
