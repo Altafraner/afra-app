@@ -399,7 +399,7 @@ internal class ProfundumManagementService
         typst.SetSysInputs(new Dictionary<string, string> {
                 { "bezeichnung", p.Profundum.Bezeichnung },
                 { "beschreibung", p.Profundum.Beschreibung },
-                { "slots", JsonSerializer.Serialize(p.Slots) },
+                { "slots", JsonSerializer.Serialize(p.Slots.OrderBy(p=>p.Jahr).ThenBy(p=>p.Quartal).ThenBy(p=>p.Wochentag)) },
                 { "verantwortliche", JsonSerializer.Serialize(p.Profundum.Verantwortliche.Select(v=>new PersonInfoMinimal(v))) },
                 { "teilnehmer", JsonSerializer.Serialize(teilnehmer.Select(v=>new PersonInfoMinimal(v))) },
         });
