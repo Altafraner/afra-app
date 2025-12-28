@@ -22,7 +22,7 @@ public class ProfundumDefinition
     /// <summary>
     ///     A description for the Profundum
     /// </summary>
-    [MaxLength(500)]
+    [MaxLength(2000)]
     public required string Beschreibung { get; set; }
 
     ///
