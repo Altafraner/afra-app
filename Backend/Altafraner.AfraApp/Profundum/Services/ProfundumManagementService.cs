@@ -407,6 +407,6 @@ internal class ProfundumManagementService
             teilnehmer = teilnehmer.Select(v => new PersonInfoMinimal(v)),
         };
 
-        return _typst.generatePdf(src, null, inputs);
+        return _typst.generatePdf(src, inputs);
     }
 }

@@ -2,12 +2,6 @@ using System.Runtime.InteropServices;
 
 namespace Altafraner.Typst;
 
-///
-public record Fonts(
-    bool IncludeSystemFonts = true,
-    IEnumerable<string>? FontPaths = null
-);
-
 /// <summary>
 ///     Safe wrapper around the typyst compiler
 /// </summary>
@@ -18,11 +12,9 @@ internal unsafe class TypstCompilerWrapper
     /// <summary>
     ///     Construct a new instance of the typst compiler
     /// </summary>
-    internal TypstCompilerWrapper(string inputSource, Fonts? fonts = null, string? root = null)
+    internal TypstCompilerWrapper(string inputSource, IEnumerable<string> fontPaths, string? root = null)
     {
-        fonts ??= new Fonts();
-        var fontPaths = fonts.FontPaths ?? [];
-        var ignoreSystemFonts = !fonts.IncludeSystemFonts;
+        var ignoreSystemFonts = false;
 
         var inputSourcePtr = Marshal.StringToHGlobalAnsi(inputSource);
 
