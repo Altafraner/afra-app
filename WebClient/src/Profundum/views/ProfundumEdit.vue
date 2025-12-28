@@ -226,11 +226,20 @@ const updateDependencies = () => savePatch({ dependencyIds: profundum.value.depe
             </GridEditRow>
 
             <GridEditRow header="Voraussetzungen" @update="updateDependencies">
-                <template #body>
-                    <template v-for="id in profundum.dependencyIds" :key="id">
-                        {{ profundaList.find((p) => p.id === id)?.bezeichnung ?? '??' }},
-                    </template>
+                <template
+                    #body
+                    v-if="profundum.dependencyIds && profundum.dependencyIds.length > 0"
+                >
+                    {{
+                        profundum.dependencyIds
+                            .map(
+                                (id) =>
+                                    profundaList.find((p) => p.id === id)?.bezeichnung ?? '??',
+                            )
+                            .join(', ')
+                    }}
                 </template>
+                <template #body v-else> Keine Voraussetzungen </template>
                 <template #edit>
                     <MultiSelect
                         v-model="profundum.dependencyIds"
