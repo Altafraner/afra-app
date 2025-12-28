@@ -30,7 +30,7 @@ internal class ProfundumManagementService
         _typstConfig = typstConfig;
     }
 
-    public async Task<ProfundumEinwahlZeitraum> CreateEinwahlZeitraumAsync(DTOProfundumEinwahlZeitraum zeitraum)
+    public async Task<ProfundumEinwahlZeitraum> CreateEinwahlZeitraumAsync(DTOProfundumEinwahlZeitraumCreation zeitraum)
     {
         if (zeitraum.EinwahlStart is null || zeitraum.EinwahlStop is null)
         {
@@ -54,6 +54,29 @@ internal class ProfundumManagementService
             .ToArrayAsync();
     }
 
+    public async Task<bool> UpdateEinwahlZeitraumAsync(Guid id, DTOProfundumEinwahlZeitraumCreation dto)
+    {
+        var zeitraum = await _dbContext.ProfundumEinwahlZeitraeume.FindAsync(id);
+        if (zeitraum is null)
+            return false;
+
+        if (dto.EinwahlStart != null)
+            zeitraum.EinwahlStart = DateTime.SpecifyKind(DateTime.Parse(dto.EinwahlStart), DateTimeKind.Utc);
+
+        if (dto.EinwahlStop != null)
+            zeitraum.EinwahlStop = DateTime.SpecifyKind(DateTime.Parse(dto.EinwahlStop), DateTimeKind.Utc);
+
+        await _dbContext.SaveChangesAsync();
+        return true;
+    }
+
+    public Task DeleteEinwahlZeitraumAsync(Guid id)
+    {
+        return _dbContext.ProfundumEinwahlZeitraeume
+            .Where(e => e.Id == id)
+            .ExecuteDeleteAsync();
+    }
+
     public Task<DTOProfundumSlot[]> GetSlotsAsync()
     {
         return _dbContext.ProfundaSlots
@@ -62,7 +85,7 @@ internal class ProfundumManagementService
             .ToArrayAsync();
     }
 
-    public async Task<ProfundumSlot?> CreateSlotAsync(DTOProfundumSlot dtoSlot)
+    public async Task<ProfundumSlot?> CreateSlotAsync(DTOProfundumSlotCreation dtoSlot)
     {
         var zeitraum = await _dbContext.ProfundumEinwahlZeitraeume.FindAsync(dtoSlot.EinwahlZeitraumId);
         if (zeitraum is null)
@@ -80,6 +103,38 @@ internal class ProfundumManagementService
         _dbContext.ProfundaSlots.Add(slot);
         await _dbContext.SaveChangesAsync();
         return slot;
+    }
+
+    public async Task<bool> UpdateSlotAsync(Guid id, DTOProfundumSlotCreation dto)
+    {
+        var slot = await _dbContext.ProfundaSlots
+            .Include(s => s.EinwahlZeitraum)
+            .FirstOrDefaultAsync(s => s.Id == id);
+
+        if (slot is null)
+            return false;
+
+        slot.Jahr = dto.Jahr;
+        slot.Quartal = dto.Quartal;
+        slot.Wochentag = dto.Wochentag;
+
+        if (dto.EinwahlZeitraumId != Guid.Empty && dto.EinwahlZeitraumId != slot.EinwahlZeitraum.Id)
+        {
+            var zeitraum = await _dbContext.ProfundumEinwahlZeitraeume.FindAsync(dto.EinwahlZeitraumId);
+            if (zeitraum is null)
+                return false;
+            slot.EinwahlZeitraum = zeitraum;
+        }
+
+        await _dbContext.SaveChangesAsync();
+        return true;
+    }
+
+    public Task DeleteSlotAsync(Guid id)
+    {
+        return _dbContext.ProfundaSlots
+            .Where(s => s.Id == id)
+            .ExecuteDeleteAsync();
     }
 
     public async Task<ProfundumKategorie?> CreateKategorieAsync(DTOProfundumKategorieCreation dtoKategorie)
@@ -359,18 +414,18 @@ internal class ProfundumManagementService
             = Profundum: #bezeichnung
 
             #let weekdays = (
+              "Sonntag",
               "Montag",
               "Dienstag",
               "Mittwoch",
               "Donnerstag",
               "Freitag",
               "Samstag",
-              "Sonntag",
             )
 
             #table(columns: 3,stroke:none,
                 ..for s in slots {
-                    ([#s.Jahr/#{calc.rem-euclid(s.Jahr + 1, 100)}], [Q#s.Quartal], weekdays.at(s.Wochentag+1))
+                    ([#s.Jahr/#{calc.rem-euclid(s.Jahr + 1, 100)}], [Q#s.Quartal], weekdays.at(s.Wochentag))
                 }
             )
 
