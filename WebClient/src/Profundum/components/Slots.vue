@@ -121,17 +121,16 @@ onMounted(load);
             <GridEditRow
                 v-for="s in slots"
                 :key="s.id"
-                :header="`Slot ${s.jahr}`"
                 :canDelete="true"
                 @update="updateSlot(s)"
                 @delete="deleteSlot(s)"
             >
                 <template #body>
-                    Jahr: {{ s.jahr }}, Quartal: {{ s.quartal }}, Tag:
+                    Jahr: {{ s.jahr }}, Quartal: {{ s.quartal }}, Wochentag:
                     {{
                         weekdayOptions.find((d) => d.value === s.wochentag)?.label ??
                         s.wochentag
-                    }}, Zeitraum:
+                    }}, Einwahl:
                     {{
                         zeitraeume.find((z) => z.id === s.einwahlZeitraumId)?.einwahlStart ??
                         '–'
@@ -142,7 +141,12 @@ onMounted(load);
                     <div class="flex flex-col gap-2 w-full">
                         <div>
                             <label class="block mb-1">Jahr</label>
-                            <InputNumber v-model.number="s.jahr" :min="2020" class="w-full" />
+                            <InputNumber
+                                v-model.number="s.jahr"
+                                :min="2020"
+                                class="w-full"
+                                :useGrouping="false"
+                            />
                         </div>
 
                         <div>
