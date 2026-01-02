@@ -34,18 +34,20 @@ const model = defineModel({
                 option-value="value"
                 show-clear
             />
-            <Select
-                v-else
-                id="erstwunsch"
-                v-model="model"
-                :options="[preSelected]"
-                disabled
-                fluid
-                name="erstwunsch"
-                option-label="label"
-                option-value="value"
-                show-clear
-            />
+            <template v-else>
+                <Select
+                    id="erstwunsch"
+                    v-model="model"
+                    :options="[preSelected]"
+                    disabled
+                    fluid
+                    name="erstwunsch"
+                    option-label="label"
+                    option-value="value"
+                    show-clear
+                />
+                {{ preSelected }}
+            </template>
             <label for="erstwunsch">{{ label }}</label>
         </FloatLabel>
     </div>

@@ -1,101 +1,157 @@
 <script setup>
-import { DataTable, Column, Button, Message, Select } from 'primevue';
+import { DataTable, Checkbox, Column, Button, Message, Select } from 'primevue';
 import { mande } from 'mande';
 import { computed, ref } from 'vue';
 
-const slots = ref(['q1', 'q2', 'q3', 'q4']);
-const enrollments = ref([
-    {
-        person: 'Johann',
-        q1: 'swe',
-        q2: 'swe',
-        q3: 'swe',
-        q4: 'swe',
-    },
-]);
+const slots = ref([]);
+const enrollments = ref([]);
+const instanzen = ref([]);
 
 async function getSlots() {
-    const getter = mande('/api/profundum/management/slot');
-    slots.value = await getter.get();
+    slots.value = await mande('/api/profundum/management/slot').get();
 }
 
 async function getEnrollments() {
-    const getter = mande('/api/profundum/management/enrollments');
-    enrollments.value = await getter.get();
+    enrollments.value = await mande('/api/profundum/management/enrollments').get();
+}
+
+async function getInstanzen() {
+    instanzen.value = await mande('/api/profundum/management/instanz').get();
 }
 
 async function autoMatching() {
-    const getter = mande('/api/profundum/management/matching');
-    await getter.post();
+    await mande('/api/profundum/management/matching').post();
 }
+
+const enrollmentForSlot = (row, slotId) => {
+    return row.enrollments.find((e) => e.profundumSlotId === slotId);
+};
+
+const getOrCreateEnrollmentForSlot = (row, slotId) => {
+    if (!Array.isArray(row.enrollments)) {
+        row.enrollments = [];
+    }
+
+    let enr = row.enrollments.find((e) => e.profundumSlotId === slotId);
+
+    if (!enr) {
+        enr = {
+            profundumSlotId: slotId,
+            profundumInstanzId: null,
+            isFixed: false,
+        };
+        row.enrollments.push(enr);
+    }
+
+    return enr;
+};
+
+
+async function updateEnrollment(row) {
+    const updater = mande(`/api/profundum/management/enrollment/${row.person.id}`);
+
+    const payload = row.enrollments
+        .filter((e) => e.profundumInstanzId || e.isFixed)
+        .map((e) => ({
+            profundumInstanzId: e.profundumInstanzId,
+            profundumSlotId: e.profundumSlotId,
+            isFixed: e.isFixed,
+        }));
+
+    await updater.put(payload);
+
+    Message.success('Änderung gespeichert');
+}
+
+
+const instanzenBySlot = computed(() => {
+    const map = new Map();
+    for (const instanz of instanzen.value) {
+        for (const slotId of instanz.slots ?? []) {
+            if (!map.has(slotId)) {
+                map.set(slotId, []);
+            }
+            map.get(slotId).push(instanz);
+        }
+    }
+    return map;
+});
+
+const instanzenForSlot = (slotId) => instanzenBySlot.value.get(slotId) ?? [];
 
 getSlots();
 getEnrollments();
+getInstanzen();
 </script>
-
 <template>
     <h1>Profunda-Matching</h1>
 
     <Button label="Automatisches Matching aktualisieren" @click="autoMatching" />
 
-    <h2>Fest Eingeschriebene</h2>
-
-    <Message class="mb-2" severity="warn">
-        <div>Person X nicht eingeschrieben in Slot 2025-Q2</div>
-        <div>Person Y belegt kein Profil Profundum</div>
-        <div>Person Z erfüllt nicht die Klassenbeschränkung für SWE</div>
-    </Message>
-
-    <DataTable :value="enrollments" value-key="id">
-        <Column>
-            <template #body>
-                <Button icon="pi pi-times-circle" severity="danger" variant="text" />
+    <DataTable :value="enrollments" value-key="id" size="small" class="datatable-compact">
+        <Column header="Person">
+            <template #body="{ data }">
+                {{ data.person.vorname }} {{ data.person.nachname }}
             </template>
         </Column>
-        <Column field="id" header="Person" />
-        <Column
-            v-for="s of slots"
-            :header="`${s.jahr}-${s.quartal}-${s.wochentag}`"
-            :field="s.Id"
-        >
-            <template #body>
-                <Select
-                    option-label="label"
-                    :options="[
-                        { label: 'swe', value: 'swe' },
-                        { label: 'italienisch', value: 'italienisch' },
-                    ]"
+
+        <Column header="Speichern" style="width: 3rem">
+            <template #body="{ data }">
+                <Button
+                    icon="pi pi-save"
+                    severity="success"
+                    rounded
+                    text
+                    @click="updateEnrollment(data)"
+                    :disabled="!data.enrollments || data.enrollments.length === 0"
                 />
             </template>
         </Column>
-    </DataTable>
 
-    <h2>Automatische Zuordnungen</h2>
+        <Column
+            v-for="slot of slots"
+            :key="slot.id"
+            :header="`${slot.jahr}-${slot.quartal}-${slot.wochentag}`"
+        >
+            <template #body="{ data }">
+                <span class="flex gap-1 items-center">
+                    <Checkbox
+                        binary
+                        v-model="getOrCreateEnrollmentForSlot(data, slot.id).isFixed"
+                    />
 
-    <DataTable
-        :value="[
-            {
-                person: 'Richard',
-                q1: 'swe',
-                q2: 'swe',
-                q3: 'swe',
-                q4: 'swe',
-            },
-        ]"
-    >
-        <Column>
-            <template #body>
-                <Button icon="pi pi-thumbtack" variant="text" />
+                    <Select
+                        filter
+                        class="w-80 select-compact"
+                        :options="instanzenForSlot(slot.id)"
+                        option-label="profundumInfo.bezeichnung"
+                        option-value="id"
+                        v-model="getOrCreateEnrollmentForSlot(data, slot.id).profundumInstanzId"
+                        :disabled="!getOrCreateEnrollmentForSlot(data, slot.id).isFixed"
+                    />
+                </span>
             </template>
         </Column>
-        <Column field="person" header="Person" />
-        <Column field="q1" header="2025 Q1" />
-        <Column field="q2" header="2025 Q2" />
-        <Column field="q3" header="2025 Q3" />
-        <Column field="q4" header="2025 Q4" />
     </DataTable>
 
     <Button label="Matching finalisieren" severity="warn" />
 </template>
 
-<style scoped></style>
+<style scoped>
+.datatable-compact :deep(.p-datatable-thead > tr > th),
+.datatable-compact :deep(.p-datatable-tbody > tr > td) {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+.datatable-compact :deep(.p-select) {
+    font-size: 0.7rem;
+}
+:deep(.select-compact .p-select-label) {
+    font-size: 0.8rem;
+}
+
+:deep(.select-compact .p-select-trigger) {
+    width: 1.75rem;
+}
+</style>
