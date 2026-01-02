@@ -26,4 +26,10 @@ public class ProfundumEinschreibung
 
     ///
     protected internal Guid ProfundumInstanzId { get; set; }
+
+    ///
+    public required ProfundumSlot Slot { get; set; }
+
+    ///
+    protected internal Guid SlotId { get; set; }
 }

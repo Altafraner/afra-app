@@ -52,6 +52,7 @@ public static class Management
 
         group.MapPost("/matching", DoMatchingAsync);
         group.MapGet("/enrollments", GetAllEnrollmentsAsync);
+        group.MapPut("/enrollment/{personId:guid}", UpdateEnrollmentAsync);
     }
 
     private static async Task<Ok<Guid>> AddEinwahlZeitraumAsync(ProfundumManagementService managementService,
@@ -299,7 +300,7 @@ public static class Management
     }
 
     ///
-    private static async Task<Ok<Dictionary<Guid, DTOProfundumEnrollment[]>>> GetAllEnrollmentsAsync(
+    private static async Task<Ok<IEnumerable<DTOProfundumEnrollmentSet>>> GetAllEnrollmentsAsync(
         ProfundumManagementService managementService,
         UserAccessor userAccessor,
         AfraAppContext dbContext,
@@ -307,5 +308,14 @@ public static class Management
     {
         var result = await managementService.GetAllEnrollmentsAsync();
         return TypedResults.Ok(result);
+    }
+
+    private static async Task<Ok> UpdateEnrollmentAsync(
+        ProfundumManagementService managementService,
+        Guid personId,
+        List<DTOProfundumEnrollment> enrollments)
+    {
+        await managementService.UpdateEnrollmentsAsync(personId, enrollments);
+        return TypedResults.Ok();
     }
 }

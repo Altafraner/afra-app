@@ -19,4 +19,7 @@ public record BlockKatalog
     ///     The available set of <see cref="ProfundumInstanz"/> for the slot
     /// </summary>
     public required BlockOption[] Options { get; set; }
+
+    ///
+    public required BlockOption? Fixed { get; set; }
 }

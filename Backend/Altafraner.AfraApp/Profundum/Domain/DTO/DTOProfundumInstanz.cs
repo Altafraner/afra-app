@@ -14,6 +14,7 @@ public record DTOProfundumInstanz
         ProfundumId = dbInstanz.Profundum.Id;
         Slots = dbInstanz.Slots.Select(s => s.Id).ToArray();
         MaxEinschreibungen = dbInstanz.MaxEinschreibungen;
+        ProfundumInfo = new DTOProfundumDefinition(dbInstanz.Profundum);
     }
 
     /// <inheritdoc cref="ProfundumInstanz.Id"/>
@@ -22,9 +23,13 @@ public record DTOProfundumInstanz
     /// <inheritdoc cref="ProfundumInstanz.Profundum"/>
     public Guid ProfundumId { get; set; }
 
+    /// <inheritdoc cref="ProfundumInstanz.Profundum"/>
+    public DTOProfundumDefinition ProfundumInfo { get; set; }
+
     /// <inheritdoc cref="ProfundumInstanz.Slots"/>
     public required ICollection<Guid> Slots { get; set; }
 
     /// <inheritdoc cref="ProfundumInstanz.MaxEinschreibungen"/>
     public int? MaxEinschreibungen { get; set; } = null;
+
 }

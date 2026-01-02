@@ -1,7 +1,8 @@
 <script setup>
 import { computed, ref } from 'vue';
 import EinwahlSelectorGroup from '@/Profundum/components/EinwahlSelectorGroup.vue';
-import { Button, useToast } from 'primevue';
+import EinwahlSelector from '@/Profundum/components/EinwahlSelector.vue';
+import { Button, Select, useToast } from 'primevue';
 import { mande } from 'mande';
 import { useRouter } from 'vue-router';
 
@@ -133,10 +134,22 @@ startup();
     <div v-for="option in options" :key="option.id" class="mb-4">
         <h2>{{ option.label }}</h2>
         <EinwahlSelectorGroup
+            v-if="!option.fixed"
             v-model="results[option.id]"
             :options="option.options"
             :pre-selected="preSelected[option.id]"
         />
+        <template v-else>
+            <div class="w-full">
+                <Select
+                    fluid
+                    :disabled="true"
+                    v-model="option.fixed"
+                    :options="[option.fixed]"
+                    option-label="label"
+                />
+            </div>
+        </template>
     </div>
     <Button
         :disabled="!maySend"

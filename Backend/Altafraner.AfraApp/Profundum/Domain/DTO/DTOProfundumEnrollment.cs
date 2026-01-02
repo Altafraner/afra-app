@@ -6,12 +6,17 @@ using Altafraner.AfraApp.Profundum.Domain.Models;
 ///
 public record DTOProfundumEnrollment
 {
+    public DTOProfundumEnrollment()
+    {
+
+    }
+
     ///
     [SetsRequiredMembers]
     public DTOProfundumEnrollment(ProfundumEinschreibung dbEnrollment)
     {
         IsFixed = dbEnrollment.IsFixed;
-        BetroffenePersonId = dbEnrollment.BetroffenePersonId;
+        ProfundumSlotId = dbEnrollment.SlotId;
         ProfundumInstanzId = dbEnrollment.ProfundumInstanzId;
     }
 
@@ -19,8 +24,8 @@ public record DTOProfundumEnrollment
     public bool IsFixed { get; set; }
 
     ///
-    public required Guid BetroffenePersonId { get; set; }
+    public required Guid ProfundumSlotId { get; set; }
 
     ///
-    public required Guid ProfundumInstanzId { get; set; }
+    public required Guid? ProfundumInstanzId { get; set; }
 }

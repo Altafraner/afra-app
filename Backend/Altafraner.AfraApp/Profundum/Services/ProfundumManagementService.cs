@@ -1,7 +1,7 @@
-using System.Text.Json;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.User.Domain.DTO;
+using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.Typst;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -319,7 +319,9 @@ internal class ProfundumManagementService
     {
         return _dbContext.ProfundaInstanzen
             .AsSingleQuery()
-            .Include(i => i.Profundum)
+            .Include(i => i.Profundum).ThenInclude(p => p.Verantwortliche)
+            .Include(i => i.Profundum).ThenInclude(p => p.Dependencies)
+            .Include(i => i.Profundum).ThenInclude(p => p.Kategorie)
             .Include(i => i.Slots)
             .Select(i => new DTOProfundumInstanz(i))
             .ToArrayAsync();
@@ -329,7 +331,9 @@ internal class ProfundumManagementService
     {
         return _dbContext.ProfundaInstanzen
             .AsSingleQuery()
-            .Include(i => i.Profundum)
+            .Include(i => i.Profundum).ThenInclude(p => p.Verantwortliche)
+            .Include(i => i.Profundum).ThenInclude(p => p.Dependencies)
+            .Include(i => i.Profundum).ThenInclude(p => p.Kategorie)
             .Include(i => i.Slots)
             .Where(i => i.Id == instanzId)
             .Select(i => new DTOProfundumInstanz(i))
@@ -366,13 +370,63 @@ internal class ProfundumManagementService
     }
 
 
-    public Task<Dictionary<Guid, DTOProfundumEnrollment[]>> GetAllEnrollmentsAsync()
+    public async Task<IEnumerable<DTOProfundumEnrollmentSet>> GetAllEnrollmentsAsync()
     {
-        return _dbContext.ProfundaEinschreibungen
-            .Include(e => e.BetroffenePerson)
-            .GroupBy(e => e.BetroffenePersonId)
-            .ToDictionaryAsync(e => e.Key,
-                e => e.Select(ei => new DTOProfundumEnrollment(ei)).ToArray());
+        var slots = _dbContext.ProfundaSlots.ToArray();
+
+        return _dbContext.Personen
+            .ToArray()
+            .Where(p => p.Rolle == Rolle.Mittelstufe)
+            .Select(p => new DTOProfundumEnrollmentSet
+            {
+                Person = new PersonInfoMinimal(p),
+                Enrollments = slots.Select(s => _dbContext.ProfundaEinschreibungen
+                        .Where(e => e.BetroffenePersonId == p.Id && e.SlotId == s.Id)
+                        .Select(ei => new DTOProfundumEnrollment(ei))
+                        .ToArray()
+                        .FirstOrDefault(defaultValue: new DTOProfundumEnrollment { ProfundumSlotId = s.Id, ProfundumInstanzId = null, IsFixed = false })
+                )
+                .ToArray()
+            });
+    }
+
+
+    public async Task UpdateEnrollmentsAsync(Guid personId, List<DTOProfundumEnrollment> enrollments)
+    {
+        var existing = _dbContext.ProfundaEinschreibungen
+            .Where(e => e.BetroffenePersonId == personId);
+
+        _dbContext.ProfundaEinschreibungen.RemoveRange(existing);
+
+        var person = _dbContext.Personen.Find(personId);
+        if (person is null)
+        {
+            throw new ArgumentException();
+        }
+
+
+        foreach (var e in enrollments)
+        {
+            var instanz = _dbContext.ProfundaInstanzen.Find(e.ProfundumInstanzId);
+            if (instanz is null)
+            {
+                throw new ArgumentException();
+            }
+            var slot = _dbContext.ProfundaSlots.Find(e.ProfundumSlotId);
+            if (slot is null)
+            {
+                throw new ArgumentException();
+            }
+            _dbContext.ProfundaEinschreibungen.Add(new ProfundumEinschreibung
+            {
+                BetroffenePerson = person,
+                ProfundumInstanz = instanz,
+                Slot = slot,
+                IsFixed = e.IsFixed
+            });
+        }
+
+        await _dbContext.SaveChangesAsync();
     }
 
     public async Task<byte[]?> GetInstanzPdfAsync(Guid instanzId)
