@@ -1,10 +1,8 @@
 using Altafraner.AfraApp.Backbone.Authorization;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
-using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.Profundum.Services;
 using Altafraner.AfraApp.User.Services;
 using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.EntityFrameworkCore;
 
 namespace Altafraner.AfraApp.Profundum.API.Endpoints;
 
@@ -51,6 +49,7 @@ public static class Management
 
 
         group.MapPost("/matching", DoMatchingAsync);
+        group.MapPost("/finalize", DoFinalizeAsync);
         group.MapGet("/enrollments", GetAllEnrollmentsAsync);
         group.MapPut("/enrollment/{personId:guid}", UpdateEnrollmentAsync);
     }
@@ -283,14 +282,17 @@ public static class Management
 
 
     ///
-    private static async Task<Results<Ok<MatchingStats>, NotFound<string>>> DoMatchingAsync(
-        ProfundumEnrollmentService enrollmentService,
-        UserAccessor userAccessor,
-        AfraAppContext dbContext,
-        ILogger<ProfundumEnrollmentService> logger)
+    private static async Task<Results<Ok<MatchingStats>, NotFound<string>>> DoMatchingAsync(ProfundumEnrollmentService enrollmentService)
     {
         var result = await enrollmentService.PerformMatching();
         return TypedResults.Ok(result);
+    }
+
+    ///
+    private static async Task<Ok> DoFinalizeAsync(ProfundumEnrollmentService enrollmentService)
+    {
+        await enrollmentService.Finalize();
+        return TypedResults.Ok();
     }
 
     ///
