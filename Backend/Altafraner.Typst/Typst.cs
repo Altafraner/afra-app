@@ -26,7 +26,9 @@ public class Typst
         }
         else
         {
-            typstCompilerWrapper = new TypstCompilerWrapper(source, _typstConfiguration.Value.TypstFontPaths, _typstConfiguration.Value.TypstResourcePath);
+            typstCompilerWrapper = new TypstCompilerWrapper(source,
+                    _typstConfiguration.Value.TypstFontPaths ?? [],
+                    _typstConfiguration.Value.TypstResourcePath);
             _cachedCompilers[source] = typstCompilerWrapper;
         }
 
