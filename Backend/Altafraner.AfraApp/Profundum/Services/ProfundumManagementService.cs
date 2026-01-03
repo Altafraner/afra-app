@@ -1,3 +1,4 @@
+using Altafraner.AfraApp.Domain;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.User.Domain.DTO;
@@ -16,7 +17,7 @@ internal class ProfundumManagementService
     private readonly AfraAppContext _dbContext;
     private readonly ILogger _logger;
     private readonly IOptions<TypstConfiguration> _typstConfig;
-    private readonly Typst.Typst _typst;
+    private readonly Altafraner.Typst.Typst _typst;
 
     /// <summary>
     ///     Constructs the ManagementService. Usually called by the DI container.
@@ -24,7 +25,7 @@ internal class ProfundumManagementService
     public ProfundumManagementService(AfraAppContext dbContext,
         ILogger<ProfundumManagementService> logger,
         IOptions<TypstConfiguration> typstConfig,
-        Typst.Typst typst
+        Altafraner.Typst.Typst typst
         )
     {
         _dbContext = dbContext;
@@ -73,11 +74,10 @@ internal class ProfundumManagementService
         return true;
     }
 
-    public Task DeleteEinwahlZeitraumAsync(Guid id)
+    public async Task DeleteEinwahlZeitraumAsync(Guid id)
     {
-        return _dbContext.ProfundumEinwahlZeitraeume
-            .Where(e => e.Id == id)
-            .ExecuteDeleteAsync();
+        var numDeleted = await _dbContext.ProfundumEinwahlZeitraeume.Where(e => e.Id == id).ExecuteDeleteAsync();
+        if (numDeleted == 0) throw new NotFoundException("no such einwahlzeitraum");
     }
 
     public async Task<DTOProfundumSlot[]> GetSlotsAsync()
@@ -135,11 +135,10 @@ internal class ProfundumManagementService
         return true;
     }
 
-    public Task DeleteSlotAsync(Guid id)
+    public async Task DeleteSlotAsync(Guid id)
     {
-        return _dbContext.ProfundaSlots
-            .Where(s => s.Id == id)
-            .ExecuteDeleteAsync();
+        var numDeleted = await _dbContext.ProfundaSlots.Where(s => s.Id == id).ExecuteDeleteAsync();
+        if (numDeleted == 0) throw new NotFoundException("no such slot");
     }
 
     public async Task<ProfundumKategorie?> CreateKategorieAsync(DTOProfundumKategorieCreation dtoKategorie)
@@ -177,7 +176,8 @@ internal class ProfundumManagementService
 
     public async Task DeleteKategorieAsync(Guid kategorieId)
     {
-        await _dbContext.ProfundaKategorien.Where(k => k.Id == kategorieId).ExecuteDeleteAsync();
+        var numDeleted = await _dbContext.ProfundaKategorien.Where(k => k.Id == kategorieId).ExecuteDeleteAsync();
+        if (numDeleted == 0) throw new NotFoundException("no such kateorie");
     }
 
     public Task<DTOProfundumKategorie[]> GetKategorienAsync()
@@ -257,10 +257,10 @@ internal class ProfundumManagementService
         return profundum;
     }
 
-    public Task DeleteProfundumAsync(Guid profundumId)
+    public async Task DeleteProfundumAsync(Guid profundumId)
     {
-        _dbContext.Profunda.Where(p => p.Id == profundumId).ExecuteDelete();
-        return _dbContext.SaveChangesAsync();
+        var numDeleted = await _dbContext.Profunda.Where(p => p.Id == profundumId).ExecuteDeleteAsync();
+        if (numDeleted == 0) throw new NotFoundException("no such profundum");
     }
 
     public Task<DTOProfundumDefinition[]> GetProfundaAsync()
@@ -365,10 +365,10 @@ internal class ProfundumManagementService
         return instanz;
     }
 
-    public Task DeleteInstanzAsync(Guid instanzId)
+    public async Task DeleteInstanzAsync(Guid instanzId)
     {
-        _dbContext.ProfundaInstanzen.Where(i => i.Id == instanzId).ExecuteDelete();
-        return _dbContext.SaveChangesAsync();
+        var numDeleted = await _dbContext.ProfundaInstanzen.Where(i => i.Id == instanzId).ExecuteDeleteAsync();
+        if (numDeleted == 0) throw new NotFoundException("no such instanz");
     }
 
 
@@ -455,10 +455,11 @@ internal class ProfundumManagementService
         var teilnehmer = _dbContext.ProfundaEinschreibungen
             .Where(e => e.ProfundumInstanz.Id == p.Id)
             .Select(e => e.BetroffenePerson)
-            .OrderBy(e => e.LastName)
-            .ThenBy(e => e.FirstName);
+            .Distinct()
+            .OrderBy(p => p.LastName)
+            .ThenBy(p => p.FirstName);
 
-        const string src = Typst.Templates.Profundum.Instanz;
+        const string src = Altafraner.Typst.Templates.Profundum.Instanz;
 
         var inputs = new
         {
