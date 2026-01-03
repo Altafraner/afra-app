@@ -1,17 +1,11 @@
 namespace Altafraner.Typst;
 
-///
+/// Configuration for Document generation using Typst
 public class TypstConfiguration
 {
-    ///
+    /// The root path to build typst documents in
     public required string TypstResourcePath { get; set; }
 
-    ///
-    public IEnumerable<string> TypstFontPaths { get; set; }
-
-    ///
-    public static bool Validate(TypstConfiguration config)
-    {
-        return true;
-    }
+    /// A List of paths to scan for fonts when building typst documents
+    public IEnumerable<string>? TypstFontPaths { get; set; }
 }

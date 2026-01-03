@@ -28,9 +28,9 @@ async function autoMatching() {
         toast.add({
             severity: 'success',
             summary: 'Erfolg',
-            detail: 'Matching',
+            detail: r.result,
         });
-        console.error(r);
+        console.log(r);
     } catch (e) {
         toast.add({
             severity: 'error',
@@ -91,7 +91,7 @@ const sortedInstanzenForSlot = (slotId, row) => {
     const options = instanzenForSlot(slotId);
     const selectedId = enrollmentForSlot(row, slotId)?.profundumInstanzId;
 
-    return [...options].sort((a, b) => {
+    return options.toSorted((a, b) => {
         const wishA = wishForOption(row, a);
         const wishB = wishForOption(row, b);
 

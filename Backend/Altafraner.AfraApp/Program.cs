@@ -45,10 +45,7 @@ builder.UseAltafranerBackbone(configure: altafranerBuilder => altafranerBuilder
 builder.Services.AddControllers();
 
 builder.Services.AddScoped<Typst>();
-builder.Services.AddOptions<TypstConfiguration>()
-    .Bind(builder.Configuration.GetSection("Typst"))
-    .Validate(TypstConfiguration.Validate)
-    .ValidateOnStart();
+builder.Services.AddOptions<TypstConfiguration>().Bind(builder.Configuration.GetSection("Typst"));
 
 var app = builder.Build();
 
