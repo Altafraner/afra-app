@@ -492,29 +492,29 @@ internal class ProfundumEnrollmentService
         };
 
 
-        if (matchingResultStatus == MatchingResultStatus.MatchingFound)
+        // if (matchingResultStatus == MatchingResultStatus.MatchingFound)
+        // {
+        // Ergebnis rückschreiben
+        foreach (var bw in belegwuensche)
         {
-            // Ergebnis rückschreiben
-            foreach (var bw in belegwuensche)
+            var bwVar = belegVariables[bw];
+            if (solver.Value(bwVar) > 0)
             {
-                var bwVar = belegVariables[bw];
-                if (solver.Value(bwVar) > 0)
+                foreach (var s in bw.ProfundumInstanz.Slots)
                 {
-                    foreach (var s in bw.ProfundumInstanz.Slots)
+                    _dbContext.ProfundaEinschreibungen.Add(new ProfundumEinschreibung
                     {
-                        _dbContext.ProfundaEinschreibungen.Add(new ProfundumEinschreibung
-                        {
-                            ProfundumInstanz = bw.ProfundumInstanz,
-                            BetroffenePerson = bw.BetroffenePerson,
-                            Slot = s,
-                        });
-                    }
+                        ProfundumInstanz = bw.ProfundumInstanz,
+                        BetroffenePerson = bw.BetroffenePerson,
+                        Slot = s,
+                    });
                 }
             }
-
-            einwahlZeitraum.HasBeenMatched = true;
-            await _dbContext.SaveChangesAsync();
         }
+
+        einwahlZeitraum.HasBeenMatched = true;
+        await _dbContext.SaveChangesAsync();
+        // }
 
         return new MatchingStats
         {

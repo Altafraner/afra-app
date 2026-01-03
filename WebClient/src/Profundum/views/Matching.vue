@@ -104,6 +104,18 @@ const sortedInstanzenForSlot = (slotId, row) => {
         return score(a, wishA) - score(b, wishB);
     });
 };
+
+const editingPersonId = ref(null);
+
+const startEdit = (row) => {
+    editingPersonId.value = row.person.id;
+};
+
+const stopEdit = () => {
+    editingPersonId.value = null;
+};
+
+const isEditing = (row) => editingPersonId.value === row.person.id;
 </script>
 <template>
     <h1>Profunda-Matching</h1>
@@ -120,7 +132,6 @@ const sortedInstanzenForSlot = (slotId, row) => {
         size="small"
         class="datatable-compact"
         scrollable
-        virtualScrollerOptions
     >
         <Column header="Person">
             <template #body="{ data }">
@@ -128,16 +139,29 @@ const sortedInstanzenForSlot = (slotId, row) => {
             </template>
         </Column>
 
-        <Column header="Speichern" style="width: 3rem">
+        <Column header="Aktionen" style="width: 5rem">
             <template #body="{ data }">
-                <Button
-                    icon="pi pi-save"
-                    severity="success"
-                    rounded
-                    text
-                    @click="updateEnrollment(data)"
-                    :disabled="!data.enrollments || data.enrollments.length === 0"
-                />
+                <span class="flex">
+                    <Button
+                        v-if="!isEditing(data)"
+                        icon="pi pi-pencil"
+                        text
+                        @click="startEdit(data)"
+                    />
+
+                    <Button
+                        v-else
+                        icon="pi pi-check"
+                        severity="success"
+                        text
+                        @click="
+                            () => {
+                                updateEnrollment(data);
+                                stopEdit();
+                            }
+                        "
+                    />
+                </span>
             </template>
         </Column>
 
@@ -148,27 +172,60 @@ const sortedInstanzenForSlot = (slotId, row) => {
         >
             <template #body="{ data }">
                 <span class="flex gap-1 items-center">
-                    <Checkbox binary v-model="enrollmentForSlot(data, slot.id).isFixed" />
+                    <template v-if="isEditing(data)">
+                        <Checkbox binary v-model="enrollmentForSlot(data, slot.id).isFixed" />
 
-                    <Select
-                        filter
-                        class="w-60 select-compact"
-                        :options="sortedInstanzenForSlot(slot.id, data)"
-                        option-label="profundumInfo.bezeichnung"
-                        option-value="id"
-                        v-model="enrollmentForSlot(data, slot.id).profundumInstanzId"
-                        :disabled="!enrollmentForSlot(data, slot.id).isFixed"
-                    >
-                        <template #option="slotProps">
-                            <div class="option-row">
-                                <span>{{ slotProps.option.profundumInfo.bezeichnung }}</span>
+                        <Select
+                            filter
+                            class="w-60 select-compact"
+                            :options="sortedInstanzenForSlot(slot.id, data)"
+                            option-label="profundumInfo.bezeichnung"
+                            option-value="id"
+                            v-model="enrollmentForSlot(data, slot.id).profundumInstanzId"
+                            :disabled="!enrollmentForSlot(data, slot.id).isFixed"
+                        >
+                            <template #option="slotProps">
+                                <div class="option-row">
+                                    <span>{{
+                                        slotProps.option.profundumInfo.bezeichnung
+                                    }}</span>
 
-                                <span v-if="wishForOption(data, slotProps.option)">
-                                    ★ {{ wishForOption(data, slotProps.option).rang }}
-                                </span>
-                            </div>
-                        </template>
-                    </Select>
+                                    <span v-if="wishForOption(data, slotProps.option)">
+                                        ★ {{ wishForOption(data, slotProps.option).rang }}
+                                    </span>
+                                </div>
+                            </template>
+                        </Select>
+                    </template>
+                    <template v-else>
+                        <span class="readonly-value w-60">
+                            <template v-if="enrollmentForSlot(data, slot.id)?.isFixed">
+                                <div class="text-orange-500 flex gap-1">
+                                    <i class="pi pi-lock" />
+                                    <b>
+                                        {{
+                                            instanzen.find(
+                                                (i) =>
+                                                    i.id ===
+                                                    enrollmentForSlot(data, slot.id)
+                                                        ?.profundumInstanzId,
+                                            )?.profundumInfo.bezeichnung ?? '—'
+                                        }}
+                                    </b>
+                                </div>
+                            </template>
+                            <template v-else>
+                                {{
+                                    instanzen.find(
+                                        (i) =>
+                                            i.id ===
+                                            enrollmentForSlot(data, slot.id)
+                                                ?.profundumInstanzId,
+                                    )?.profundumInfo.bezeichnung ?? '—'
+                                }}
+                            </template>
+                        </span>
+                    </template>
                 </span>
             </template>
         </Column>
@@ -204,5 +261,13 @@ const sortedInstanzenForSlot = (slotId, row) => {
 .option-row :last-child {
     font-weight: 600;
     color: var(--primary-color);
+}
+
+.readonly-value {
+    display: inline-flex;
+}
+.readonly-value.fixed {
+    font-weight: 800;
+    color: orange;
 }
 </style>
