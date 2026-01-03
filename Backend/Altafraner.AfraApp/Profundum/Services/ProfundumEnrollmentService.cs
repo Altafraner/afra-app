@@ -524,61 +524,6 @@ internal class ProfundumEnrollmentService
             Optim = solverOnlyIndividualRules.ObjectiveValue == 0
                 ? 0
                 : solver.ObjectiveValue / solverOnlyIndividualRules.ObjectiveValue,
-            Students = students.ToDictionary(
-                p => $"{p.Gruppe}: {p.FirstName} {p.LastName}",
-                p =>
-                {
-                    double score = belegwuensche
-                        .Where(x => x.BetroffenePerson.Id == p.Id)
-                        .Select(bw =>
-                            solver.Value(belegVariables[bw]) * weights[bw.Stufe] * bw.ProfundumInstanz.Slots.Count)
-                        .Sum();
-                    double scorePossible = belegwuensche
-                        .Where(x => x.BetroffenePerson.Id == p.Id)
-                        .Select(bw =>
-                            solverOnlyIndividualRules.Value(belegVariablesOnlyIndividualRules[bw]) * weights[bw.Stufe] *
-                            bw.ProfundumInstanz.Slots.Count)
-                        .Sum();
-                    return new StudentMatchingStats
-                    {
-                        Optim = scorePossible == 0 ? 0 : score / scorePossible,
-                        Einschreibungen = slots.ToDictionary(s => s.ToString(),
-                            s => _dbContext.ProfundaEinschreibungen.Include(e => e.ProfundumInstanz)
-                                .ThenInclude(e => e.Profundum)
-                                .Where(e => e.BetroffenePerson == p)
-                                .Where(e => e.ProfundumInstanz.Slots.Contains(s))
-                                .Select(e => e.ProfundumInstanz.Profundum.Bezeichnung)
-                                .ToArray()
-                        ),
-                        Wuensche = slots.ToDictionary(s => s.ToString(),
-                            s => _dbContext.ProfundaBelegWuensche
-                                .Include(e => e.ProfundumInstanz)
-                                .ThenInclude(e => e.Profundum)
-                                .Where(e => e.BetroffenePerson == p)
-                                .Where(e => e.ProfundumInstanz.Slots.Contains(s))
-                                .ToArray()
-                                .OrderBy(e => (int)e.Stufe)
-                                .Select(e => e.ProfundumInstanz.Profundum.Bezeichnung)
-                                .ToArray()
-                        )
-                    };
-                }),
-            Profunda = angebote
-                .Where(a => _dbContext.ProfundaEinschreibungen
-                    .Include(e => e.ProfundumInstanz)
-                    .Any(e => e.ProfundumInstanz.Id == a.Id))
-                .ToDictionary(a => $"{a.Slots.First()} {a.Profundum.Bezeichnung} {a.Id}",
-                    a =>
-                        new ProfundumMatchingStats
-                        {
-                            Einschreibungen = _dbContext.ProfundaEinschreibungen
-                                .Include(e => e.ProfundumInstanz)
-                                .Count(e => e.ProfundumInstanz.Id == a.Id),
-                            MaxEinschreibungen = a.MaxEinschreibungen
-                        }),
-            // NotMatchedStudents = students.Where(p => solver.Value(personNotEnrolledVariables[p]) > 0)
-            //     .Select(p => $"{p.Gruppe}: {p.FirstName} {p.LastName}")
-            //     .ToList()
         };
     }
 
