@@ -335,7 +335,6 @@ internal class ProfundumEnrollmentService
     ///     Perform a matching for the given slots and return information about the result
     /// </summary>
     /// <param name="einwahlZeitraum">The einwahlZeitraum to apply the matching to</param>
-    /// <param name="writeBackOnSuccess">Whether to write the enrollments to db on complete matching</param>
     public async Task<MatchingStats> PerformMatching(ProfundumEinwahlZeitraum einwahlZeitraum)
     {
         var slots = einwahlZeitraum.Slots.ToArray();
