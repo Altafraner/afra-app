@@ -3,6 +3,7 @@ using Altafraner.AfraApp;
 using Altafraner.AfraApp.Backbone.Authorization;
 using Altafraner.AfraApp.Backbone.EmergencyBackup;
 using Altafraner.AfraApp.Calendar;
+using Altafraner.AfraApp.Domain;
 using Altafraner.AfraApp.Otium;
 using Altafraner.AfraApp.Profundum;
 using Altafraner.AfraApp.Schuljahr;
@@ -15,7 +16,7 @@ using Altafraner.Backbone.Defaults;
 using Altafraner.Backbone.EmailOutbox;
 using Altafraner.Backbone.EmailSchedulingModule;
 using Altafraner.Backbone.Scheduling;
-using Altafraner.Typst;
+using Microsoft.AspNetCore.Diagnostics;
 
 CultureInfo.CurrentCulture = CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfoByIetfLanguageTag("de-DE");
 
@@ -44,10 +45,34 @@ builder.UseAltafranerBackbone(configure: altafranerBuilder => altafranerBuilder
 
 builder.Services.AddControllers();
 
-builder.Services.AddScoped<Typst>();
-builder.Services.AddOptions<TypstConfiguration>().Bind(builder.Configuration.GetSection("Typst"));
-
 var app = builder.Build();
+
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        var exception = context.Features
+            .Get<IExceptionHandlerFeature>()?
+            .Error;
+
+        if (exception is ArgumentException)
+        {
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+            await context.Response.WriteAsJsonAsync(new { error = exception.Message });
+            return;
+        }
+
+        if (exception is NotFoundException)
+        {
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+            await context.Response.WriteAsJsonAsync(new { error = exception.Message });
+            return;
+        }
+
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        await context.Response.WriteAsJsonAsync(new { error = "An unspecified error occurred" });
+    });
+});
 
 app.AddAltafranerMiddleware();
 app.MapAltafranerBackbone();

@@ -19,60 +19,39 @@ public static class Management
         var group = app.MapGroup("/management")
             .RequireAuthorization(AuthorizationPolicies.ProfundumsVerantwortlich);
 
-        group.MapGet("/einwahlzeitraum", GetEinwahlZeitraeumeAsync);
-        group.MapPost("/einwahlzeitraum", AddEinwahlZeitraumAsync);
+        group.MapGet("/einwahlzeitraum", async (ProfundumManagementService svc) => TypedResults.Ok(await svc.GetEinwahlZeiträumeAsync()));
+        group.MapPost("/einwahlzeitraum", async (ProfundumManagementService svc, DTOProfundumEinwahlZeitraumCreation zeitraum) => TypedResults.Ok((await svc.CreateEinwahlZeitraumAsync(zeitraum)).Id));
         group.MapPut("/einwahlzeitraum/{id:guid}", UpdateEinwahlZeitraumAsync);
-        group.MapDelete("/einwahlzeitraum/{id:guid}", DeleteEinwahlZeitraumAsync);
+        group.MapDelete("/einwahlzeitraum/{id:guid}", (ProfundumManagementService svc, Guid id) => svc.DeleteEinwahlZeitraumAsync(id));
 
-        group.MapGet("/slot", GetSlotsAsync);
+        group.MapGet("/slot", async (ProfundumManagementService svc) => TypedResults.Ok(await svc.GetSlotsAsync()));
         group.MapPost("/slot", AddSlotAsync);
         group.MapPut("/slot/{id:guid}", UpdateSlotAsync);
-        group.MapDelete("/slot/{id:guid}", DeleteSlotAsync);
+        group.MapDelete("/slot/{id:guid}", (ProfundumManagementService svc, Guid id) => svc.DeleteSlotAsync(id));
 
-        group.MapGet("/kategorie", GetKategorienAsync);
+        group.MapGet("/kategorie", (ProfundumManagementService svc) => svc.GetKategorienAsync());
         group.MapPost("/kategorie", AddKategorieAsync);
         group.MapPut("/kategorie/{kategorieId:guid}", UpdateKategorieAsync);
-        group.MapDelete("/kategorie/{kategorieId:guid}", DeleteKategorieAsync);
+        group.MapDelete("/kategorie/{kategorieId:guid}", (ProfundumManagementService svc, Guid kategorieId) => svc.DeleteKategorieAsync(kategorieId));
 
-        group.MapGet("/profundum/{profundumId:guid}", GetProfundumAsync);
-        group.MapGet("/profundum", GetProfundaAsync);
+        group.MapGet("/profundum/{profundumId:guid}", (ProfundumManagementService svc, Guid profundumId) => svc.GetProfundumAsync(profundumId));
+        group.MapGet("/profundum", async (ProfundumManagementService svc) => TypedResults.Ok(await svc.GetProfundaAsync()));
         group.MapPost("/profundum", AddProfundumAsync);
         group.MapPut("/profundum/{profundumId:guid}", UpdateProfundumAsync);
-        group.MapDelete("/profundum/{profundumId:guid}", DeleteProfundumAsync);
-
+        group.MapDelete("/profundum/{profundumId:guid}", (ProfundumManagementService svc, Guid profundumId) => svc.DeleteProfundumAsync(profundumId));
         group.MapPost("/instanz", AddInstanzAsync);
-        group.MapGet("/instanz", GetInstanzenAsync);
-        group.MapGet("/instanz/{instanzId:guid}", GetInstanzAsync);
-        group.MapGet("/instanz/{instanzId:guid}.pdf", GetInstanzPdfAsync);
+        group.MapGet("/instanz", async (ProfundumManagementService svc) => TypedResults.Ok(await svc.GetInstanzenAsync()));
+        group.MapGet("/instanz/{instanzId:guid}", (ProfundumManagementService svc, Guid instanzId) => svc.GetInstanzAsync(instanzId));
         group.MapPut("/instanz/{instanzId:guid}", UpdateInstanzAsync);
-        group.MapDelete("/instanz/{instanzId:guid}", DeleteInstanzAsync);
+        group.MapDelete("/instanz/{instanzId:guid}", (ProfundumManagementService svc, Guid instanzId) => svc.DeleteInstanzAsync(instanzId));
 
+        group.MapGet("/instanz/{instanzId:guid}.pdf", GetInstanzPdfAsync);
 
-        group.MapPost("/matching", DoMatchingAsync);
-        group.MapPost("/finalize", DoFinalizeAsync);
-        group.MapGet("/enrollments", GetAllEnrollmentsAsync);
-        group.MapPut("/enrollment/{personId:guid}", UpdateEnrollmentAsync);
+        group.MapPost("/matching", (ProfundumMatchingService svc) => svc.PerformMatching());
+        group.MapPost("/finalize", (ProfundumMatchingService svc) => svc.Finalize());
+        group.MapGet("/enrollments", (ProfundumManagementService svc) => svc.GetAllEnrollmentsAsync());
+        group.MapPut("/enrollment/{personId:guid}", (ProfundumManagementService svc, Guid personId, List<DTOProfundumEnrollment> enrollments) => svc.UpdateEnrollmentsAsync(personId, enrollments));
     }
-
-    private static async Task<Ok<Guid>> AddEinwahlZeitraumAsync(ProfundumManagementService managementService,
-        UserAccessor userAccessor,
-        AfraAppContext dbContext,
-        ILogger<ProfundumEnrollmentService> logger,
-        DTOProfundumEinwahlZeitraumCreation zeitraum)
-    {
-        var res = await managementService.CreateEinwahlZeitraumAsync(zeitraum);
-        return TypedResults.Ok(res.Id);
-    }
-
-    private static async Task<Ok<DTOProfundumEinwahlZeitraum[]>> GetEinwahlZeitraeumeAsync(
-        ProfundumManagementService managementService,
-        UserAccessor userAccessor,
-        AfraAppContext dbContext,
-        ILogger<ProfundumEnrollmentService> logger)
-    {
-        return TypedResults.Ok(await managementService.GetEinwahlZeiträumeAsync());
-    }
-
 
     private static async Task<Results<Ok, NotFound>> UpdateEinwahlZeitraumAsync(
         ProfundumManagementService managementService,
@@ -83,14 +62,6 @@ public static class Management
         return ok ? TypedResults.Ok() : TypedResults.NotFound();
     }
 
-    private static async Task<Ok> DeleteEinwahlZeitraumAsync(
-        ProfundumManagementService managementService,
-        Guid id)
-    {
-        await managementService.DeleteEinwahlZeitraumAsync(id);
-        return TypedResults.Ok();
-    }
-
     private static async Task<Results<Ok, NotFound>> UpdateSlotAsync(
         ProfundumManagementService managementService,
         Guid id,
@@ -98,22 +69,6 @@ public static class Management
     {
         var ok = await managementService.UpdateSlotAsync(id, dto);
         return ok ? TypedResults.Ok() : TypedResults.NotFound();
-    }
-
-    private static async Task<Ok> DeleteSlotAsync(
-        ProfundumManagementService managementService,
-        Guid id)
-    {
-        await managementService.DeleteSlotAsync(id);
-        return TypedResults.Ok();
-    }
-
-    private static async Task<Ok<DTOProfundumSlot[]>> GetSlotsAsync(ProfundumManagementService managementService,
-        UserAccessor userAccessor,
-        AfraAppContext dbContext,
-        ILogger<ProfundumEnrollmentService> logger)
-    {
-        return TypedResults.Ok(await managementService.GetSlotsAsync());
     }
 
     private static async Task<Results<Ok<Guid>, BadRequest<string>>> AddSlotAsync(
@@ -129,14 +84,6 @@ public static class Management
         return TypedResults.Ok(res.Id);
     }
 
-    private static async Task<Ok<DTOProfundumKategorie[]>> GetKategorienAsync(
-        ProfundumManagementService managementService,
-        UserAccessor userAccessor,
-        AfraAppContext dbContext,
-        ILogger<ProfundumEnrollmentService> logger)
-    {
-        return TypedResults.Ok(await managementService.GetKategorienAsync());
-    }
 
     private static async Task<Results<Ok<Guid>, BadRequest<string>>> AddKategorieAsync(
         ProfundumManagementService managementService,
@@ -162,15 +109,6 @@ public static class Management
         return TypedResults.Ok();
     }
 
-    private static async Task<Ok> DeleteKategorieAsync(ProfundumManagementService managementService,
-        UserAccessor userAccessor,
-        AfraAppContext dbContext,
-        ILogger<ProfundumEnrollmentService> logger,
-        Guid kategorieId)
-    {
-        await managementService.DeleteKategorieAsync(kategorieId);
-        return TypedResults.Ok();
-    }
 
     private static async Task<Results<Ok<Guid>, BadRequest<string>>> AddProfundumAsync(
         ProfundumManagementService managementService,
@@ -198,34 +136,8 @@ public static class Management
         return TypedResults.Ok(res.Id);
     }
 
-    private static async Task<Ok> DeleteProfundumAsync(ProfundumManagementService managementService,
-        UserAccessor userAccessor,
-        AfraAppContext dbContext,
-        ILogger<ProfundumEnrollmentService> logger,
-        Guid profundumId)
-    {
-        await managementService.DeleteProfundumAsync(profundumId);
-        return TypedResults.Ok();
-    }
 
-    private static async Task<Ok<DTOProfundumDefinition>> GetProfundumAsync(
-        ProfundumManagementService managementService,
-        UserAccessor userAccessor,
-        AfraAppContext dbContext,
-        ILogger<ProfundumEnrollmentService> logger,
-        Guid profundumId)
-    {
-        return TypedResults.Ok(await managementService.GetProfundumAsync(profundumId));
-    }
 
-    private static async Task<Ok<DTOProfundumDefinition[]>> GetProfundaAsync(
-        ProfundumManagementService managementService,
-        UserAccessor userAccessor,
-        AfraAppContext dbContext,
-        ILogger<ProfundumEnrollmentService> logger)
-    {
-        return TypedResults.Ok(await managementService.GetProfundaAsync());
-    }
 
     private static async Task<Results<Ok<Guid>, BadRequest<string>>> AddInstanzAsync(
         ProfundumManagementService managementService,
@@ -240,15 +152,6 @@ public static class Management
         return TypedResults.Ok(res.Id);
     }
 
-    private static async Task<Ok<DTOProfundumInstanz[]>> GetInstanzenAsync(ProfundumManagementService svc)
-    {
-        return TypedResults.Ok(await svc.GetInstanzenAsync());
-    }
-
-    private static async Task<Ok<DTOProfundumInstanz>> GetInstanzAsync(ProfundumManagementService svc, Guid instanzId)
-    {
-        return TypedResults.Ok(await svc.GetInstanzAsync(instanzId));
-    }
 
     private static async Task<Results<FileContentHttpResult, NotFound>> GetInstanzPdfAsync(
         ProfundumManagementService svc,
@@ -272,46 +175,5 @@ public static class Management
     {
         var res = await svc.UpdateInstanzAsync(instanzId, instanz);
         return res is null ? TypedResults.NotFound() : TypedResults.Ok(res.Id);
-    }
-
-    private static async Task<Ok> DeleteInstanzAsync(ProfundumManagementService svc, Guid instanzId)
-    {
-        await svc.DeleteInstanzAsync(instanzId);
-        return TypedResults.Ok();
-    }
-
-
-    ///
-    private static async Task<Results<Ok<MatchingStats>, NotFound<string>>> DoMatchingAsync(ProfundumEnrollmentService enrollmentService)
-    {
-        var result = await enrollmentService.PerformMatching();
-        return TypedResults.Ok(result);
-    }
-
-    ///
-    private static async Task<Ok> DoFinalizeAsync(ProfundumEnrollmentService enrollmentService)
-    {
-        await enrollmentService.Finalize();
-        return TypedResults.Ok();
-    }
-
-    ///
-    private static async Task<Ok<IEnumerable<DTOProfundumEnrollmentSet>>> GetAllEnrollmentsAsync(
-        ProfundumManagementService managementService,
-        UserAccessor userAccessor,
-        AfraAppContext dbContext,
-        ILogger<ProfundumManagementService> logger)
-    {
-        var result = await managementService.GetAllEnrollmentsAsync();
-        return TypedResults.Ok(result);
-    }
-
-    private static async Task<Ok> UpdateEnrollmentAsync(
-        ProfundumManagementService managementService,
-        Guid personId,
-        List<DTOProfundumEnrollment> enrollments)
-    {
-        await managementService.UpdateEnrollmentsAsync(personId, enrollments);
-        return TypedResults.Ok();
     }
 }
