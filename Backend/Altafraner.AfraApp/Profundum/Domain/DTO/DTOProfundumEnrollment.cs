@@ -6,10 +6,8 @@ using Altafraner.AfraApp.Profundum.Domain.Models;
 ///
 public record DTOProfundumEnrollment
 {
-    public DTOProfundumEnrollment()
-    {
-
-    }
+    ///
+    public DTOProfundumEnrollment() { }
 
     ///
     [SetsRequiredMembers]

@@ -1,11 +1,13 @@
 <script setup>
-import { DataTable, Checkbox, Column, Button, Message, Select } from 'primevue';
+import { DataTable, Checkbox, Column, Button, Message, Select, useToast } from 'primevue';
 import { mande } from 'mande';
 import { computed, ref } from 'vue';
 
 const slots = ref([]);
 const enrollments = ref([]);
 const instanzen = ref([]);
+const matchingRunning = ref(false);
+const toast = useToast();
 
 async function getSlots() {
     slots.value = await mande('/api/profundum/management/slot').get();
@@ -20,32 +22,30 @@ async function getInstanzen() {
 }
 
 async function autoMatching() {
-    await mande('/api/profundum/management/matching').post();
+    matchingRunning.value = true;
+    try {
+        const r = await mande('/api/profundum/management/matching').post();
+        toast.add({
+            severity: 'success',
+            summary: 'Erfolg',
+            detail: 'Matching',
+        });
+        console.error(r);
+    } catch (e) {
+        toast.add({
+            severity: 'error',
+            summary: 'Fehler',
+            detail: 'Es ist ein Fehler beim Matching aufgetreten. ' + e,
+        });
+        console.error(e);
+    } finally {
+        enrollments.value = await mande('/api/profundum/management/enrollments').get();
+        matchingRunning.value = false;
+    }
 }
 
-const enrollmentForSlot = (row, slotId) => {
-    return row.enrollments.find((e) => e.profundumSlotId === slotId);
-};
-
-const getOrCreateEnrollmentForSlot = (row, slotId) => {
-    if (!Array.isArray(row.enrollments)) {
-        row.enrollments = [];
-    }
-
-    let enr = row.enrollments.find((e) => e.profundumSlotId === slotId);
-
-    if (!enr) {
-        enr = {
-            profundumSlotId: slotId,
-            profundumInstanzId: null,
-            isFixed: false,
-        };
-        row.enrollments.push(enr);
-    }
-
-    return enr;
-};
-
+const enrollmentForSlot = (row, slotId) =>
+    row.enrollments?.find((e) => e.profundumSlotId === slotId);
 
 async function updateEnrollment(row) {
     const updater = mande(`/api/profundum/management/enrollment/${row.person.id}`);
@@ -59,18 +59,18 @@ async function updateEnrollment(row) {
         }));
 
     await updater.put(payload);
-
-    Message.success('Änderung gespeichert');
+    toast.add({
+        severity: 'success',
+        summary: 'Gespeichert.',
+        detail: 'Änderung Gepeichert.',
+    });
 }
-
 
 const instanzenBySlot = computed(() => {
     const map = new Map();
     for (const instanz of instanzen.value) {
         for (const slotId of instanz.slots ?? []) {
-            if (!map.has(slotId)) {
-                map.set(slotId, []);
-            }
+            if (!map.has(slotId)) map.set(slotId, []);
             map.get(slotId).push(instanz);
         }
     }
@@ -82,16 +82,49 @@ const instanzenForSlot = (slotId) => instanzenBySlot.value.get(slotId) ?? [];
 getSlots();
 getEnrollments();
 getInstanzen();
+
+const wishForOption = (row, option) => {
+    return row.wuensche?.find((w) => w.id === option.profundumInfo.id) ?? null;
+};
+
+const sortedInstanzenForSlot = (slotId, row) => {
+    const options = instanzenForSlot(slotId);
+    const selectedId = enrollmentForSlot(row, slotId)?.profundumInstanzId;
+
+    return [...options].sort((a, b) => {
+        const wishA = wishForOption(row, a);
+        const wishB = wishForOption(row, b);
+
+        const score = (opt, wish) => {
+            if (opt.id === selectedId) return 0;
+            if (wish) return 10 + wish.rang;
+            return 100;
+        };
+
+        return score(a, wishA) - score(b, wishB);
+    });
+};
 </script>
 <template>
     <h1>Profunda-Matching</h1>
 
-    <Button label="Automatisches Matching aktualisieren" @click="autoMatching" />
+    <Button
+        :disabled="matchingRunning"
+        label="Automatisches Matching aktualisieren"
+        @click="autoMatching"
+    />
 
-    <DataTable :value="enrollments" value-key="id" size="small" class="datatable-compact">
+    <DataTable
+        :value="enrollments"
+        value-key="id"
+        size="small"
+        class="datatable-compact"
+        scrollable
+        virtualScrollerOptions
+    >
         <Column header="Person">
             <template #body="{ data }">
-                {{ data.person.vorname }} {{ data.person.nachname }}
+                {{ data.person.vorname }} {{ data.person.nachname }} ({{ data.person.gruppe }})
             </template>
         </Column>
 
@@ -115,20 +148,27 @@ getInstanzen();
         >
             <template #body="{ data }">
                 <span class="flex gap-1 items-center">
-                    <Checkbox
-                        binary
-                        v-model="getOrCreateEnrollmentForSlot(data, slot.id).isFixed"
-                    />
+                    <Checkbox binary v-model="enrollmentForSlot(data, slot.id).isFixed" />
 
                     <Select
                         filter
-                        class="w-80 select-compact"
-                        :options="instanzenForSlot(slot.id)"
+                        class="w-60 select-compact"
+                        :options="sortedInstanzenForSlot(slot.id, data)"
                         option-label="profundumInfo.bezeichnung"
                         option-value="id"
-                        v-model="getOrCreateEnrollmentForSlot(data, slot.id).profundumInstanzId"
-                        :disabled="!getOrCreateEnrollmentForSlot(data, slot.id).isFixed"
-                    />
+                        v-model="enrollmentForSlot(data, slot.id).profundumInstanzId"
+                        :disabled="!enrollmentForSlot(data, slot.id).isFixed"
+                    >
+                        <template #option="slotProps">
+                            <div class="option-row">
+                                <span>{{ slotProps.option.profundumInfo.bezeichnung }}</span>
+
+                                <span v-if="wishForOption(data, slotProps.option)">
+                                    ★ {{ wishForOption(data, slotProps.option).rang }}
+                                </span>
+                            </div>
+                        </template>
+                    </Select>
                 </span>
             </template>
         </Column>
@@ -153,5 +193,16 @@ getInstanzen();
 
 :deep(.select-compact .p-select-trigger) {
     width: 1.75rem;
+}
+
+.option-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.option-row :last-child {
+    font-weight: 600;
+    color: var(--primary-color);
 }
 </style>

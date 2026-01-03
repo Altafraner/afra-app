@@ -39,7 +39,7 @@ public class ProfilRule : IProfundumIndividualRule
         ProfundumEinwahlZeitraum einwahlZeitraum,
         IEnumerable<ProfundumBelegWunsch> wuensche,
         Dictionary<ProfundumBelegWunsch, BoolVar> wuenscheVariables,
-        BoolVar personNotEnrolledVar,
+        IEnumerable<BoolVar> personNotEnrolledVars,
         CpModel model
         )
     {
@@ -48,7 +48,7 @@ public class ProfilRule : IProfundumIndividualRule
         if (!profilPflichtig) return;
         var profilWuensche = wuensche.Where(b => b.ProfundumInstanz.Profundum.Kategorie.ProfilProfundum);
         var profilWuenscheVars = profilWuensche.Select(b => wuenscheVariables[b]);
-        model.AddAtLeastOne(profilWuenscheVars.Append(personNotEnrolledVar));
+        model.AddAtLeastOne(profilWuenscheVars.Union(personNotEnrolledVars));
     }
 
     private bool IsProfilPflichtig(Person student, IEnumerable<ProfundumQuartal> quartale)

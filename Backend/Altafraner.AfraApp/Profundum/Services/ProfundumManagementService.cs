@@ -80,12 +80,14 @@ internal class ProfundumManagementService
             .ExecuteDeleteAsync();
     }
 
-    public Task<DTOProfundumSlot[]> GetSlotsAsync()
+    public async Task<DTOProfundumSlot[]> GetSlotsAsync()
     {
-        return _dbContext.ProfundaSlots
+        return (await _dbContext.ProfundaSlots
             .Include(s => s.EinwahlZeitraum)
+            .ToArrayAsync())
+            .Order(new ProfundumSlotComparer())
             .Select(s => new DTOProfundumSlot(s))
-            .ToArrayAsync();
+            .ToArray();
     }
 
     public async Task<ProfundumSlot?> CreateSlotAsync(DTOProfundumSlotCreation dtoSlot)
@@ -375,18 +377,24 @@ internal class ProfundumManagementService
         var slots = _dbContext.ProfundaSlots.ToArray();
 
         return _dbContext.Personen
-            .ToArray()
             .Where(p => p.Rolle == Rolle.Mittelstufe)
+            .OrderBy(p => p.Gruppe).ThenBy(p => p.LastName).ThenBy(p => p.FirstName)
+            .ToArray()
             .Select(p => new DTOProfundumEnrollmentSet
             {
                 Person = new PersonInfoMinimal(p),
                 Enrollments = slots.Select(s => _dbContext.ProfundaEinschreibungen
                         .Where(e => e.BetroffenePersonId == p.Id && e.SlotId == s.Id)
-                        .Select(ei => new DTOProfundumEnrollment(ei))
                         .ToArray()
+                        .Select(ei => new DTOProfundumEnrollment(ei))
                         .FirstOrDefault(defaultValue: new DTOProfundumEnrollment { ProfundumSlotId = s.Id, ProfundumInstanzId = null, IsFixed = false })
                 )
+                .ToArray(),
+                Wuensche = _dbContext.ProfundaBelegWuensche
+                .Where(w => w.BetroffenePersonId == p.Id)
+                .Include(w => w.ProfundumInstanz).ThenInclude(i => i.Profundum)
                 .ToArray()
+                .Select(w => new DTOProfundumEnrollmentSet.DTOWunsch(w.ProfundumInstanz.Profundum.Id, (int)w.Stufe)),
             });
     }
 

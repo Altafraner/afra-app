@@ -20,7 +20,7 @@ public interface IProfundumIndividualRule
         ProfundumEinwahlZeitraum einwahlZeitraum,
         IEnumerable<ProfundumBelegWunsch> wuensche,
         Dictionary<ProfundumBelegWunsch, BoolVar> wuenscheVariables,
-        BoolVar personNotEnrolledVar,
+        IEnumerable<BoolVar> personNotEnrolledVars,
         CpModel model)
     { }
 }
