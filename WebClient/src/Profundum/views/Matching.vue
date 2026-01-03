@@ -44,6 +44,11 @@ async function autoMatching() {
     }
 }
 
+async function finalize() {
+    const r = await mande('/api/profundum/management/finalize').post();
+    enrollments.value = await mande('/api/profundum/management/enrollments').get();
+}
+
 const enrollmentForSlot = (row, slotId) =>
     row.enrollments?.find((e) => e.profundumSlotId === slotId);
 
@@ -120,11 +125,15 @@ const isEditing = (row) => editingPersonId.value === row.person.id;
 <template>
     <h1>Profunda-Matching</h1>
 
-    <Button
-        :disabled="matchingRunning"
-        label="Automatisches Matching aktualisieren"
-        @click="autoMatching"
-    />
+    <span class="flex gap-1 mb-4">
+        <Button
+            :disabled="matchingRunning"
+            label="Automatisches Matching aktualisieren"
+            @click="autoMatching"
+        />
+
+        <Button label="Matching finalisieren" severity="warn" @click="finalize" />
+    </span>
 
     <DataTable
         :value="enrollments"
@@ -230,8 +239,6 @@ const isEditing = (row) => editingPersonId.value === row.person.id;
             </template>
         </Column>
     </DataTable>
-
-    <Button label="Matching finalisieren" severity="warn" />
 </template>
 
 <style scoped>

@@ -331,6 +331,12 @@ internal class ProfundumEnrollmentService
             TimeSpan.Zero);
     }
 
+    ///
+    public Task Finalize()
+    {
+        return _dbContext.ProfundaEinschreibungen.ExecuteUpdateAsync(e => e.SetProperty(e => e.IsFixed, true));
+    }
+
     /// <summary>
     ///     Perform a matching for the given slots and return information about the result
     /// </summary>
