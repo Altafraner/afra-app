@@ -19,14 +19,13 @@ public class MaxEinschreibungenRule : IProfundumAggregateRule
 
     /// <inheritdoc/>
     public void AddConstraints(
-        ProfundumEinwahlZeitraum einwahlZeitraum,
+        IEnumerable<ProfundumSlot> slots,
         IEnumerable<Person> students,
         IEnumerable<ProfundumBelegWunsch> wuensche,
         Dictionary<ProfundumBelegWunsch, BoolVar> wuenscheVariables,
         CpModel model)
     {
         var wuenscheArray = wuensche as ProfundumBelegWunsch[] ?? wuensche.ToArray();
-        var slots = einwahlZeitraum.Slots.ToArray();
         var angebote = _dbContext.ProfundaInstanzen
             .Include(pi => pi.Slots)
             .Include(pi => pi.Profundum)

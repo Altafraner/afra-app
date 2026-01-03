@@ -1,10 +1,7 @@
-using Altafraner.AfraApp.Profundum.Configuration;
 using Altafraner.AfraApp.Profundum.Domain.Contracts.Rules;
 using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.User.Domain.Models;
-using Altafraner.AfraApp.User.Services;
 using Google.OrTools.Sat;
-using Microsoft.Extensions.Options;
 
 namespace Altafraner.AfraApp.Profundum.Services.Rules;
 
@@ -12,11 +9,17 @@ namespace Altafraner.AfraApp.Profundum.Services.Rules;
 public class NotMultipleInstancesOfSameProfundumRule : IProfundumIndividualRule
 {
     /// <inheritdoc/>
+    public RuleStatus CheckForSubmission(Person student,
+        IEnumerable<ProfundumSlot> slots,
+        IEnumerable<ProfundumBelegWunsch> wuensche)
+        => RuleStatus.Valid;
+
+    /// <inheritdoc/>
     public void AddConstraints(Person student,
-        ProfundumEinwahlZeitraum einwahlZeitraum,
+        IEnumerable<ProfundumSlot> slots,
         IEnumerable<ProfundumBelegWunsch> wuensche,
         Dictionary<ProfundumBelegWunsch, BoolVar> wuenscheVariables,
-        BoolVar personNotEnrolledVar,
+        IEnumerable<BoolVar> personNotEnrolledVars,
         CpModel model
         )
     {

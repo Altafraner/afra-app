@@ -11,7 +11,7 @@ public interface IProfundumAggregateRule
     ///     Add constraints to matching solver
     /// </summary>
     void AddConstraints(
-        ProfundumEinwahlZeitraum einwahlZeitraum,
+        IEnumerable<ProfundumSlot> slots,
         IEnumerable<Person> students,
         IEnumerable<ProfundumBelegWunsch> wuensche,
         Dictionary<ProfundumBelegWunsch, BoolVar> wuenscheVariables,
