@@ -273,7 +273,7 @@ internal class ProfundumEnrollmentService
 
         foreach (var r in _rulesFactory.GetIndividualRules())
         {
-            var status = r.CheckForSubmission(student, einwahlZeitraum, belegWuensche);
+            var status = r.CheckForSubmission(student, slots, belegWuensche);
             if (!status.IsValid)
                 throw new ProfundumEinwahlWunschException(status.Messages
                     .Aggregate(new StringBuilder(), (a, b) => a.AppendLine(b))
@@ -334,10 +334,9 @@ internal class ProfundumEnrollmentService
     /// <summary>
     ///     Perform a matching for the given slots and return information about the result
     /// </summary>
-    /// <param name="einwahlZeitraum">The einwahlZeitraum to apply the matching to</param>
-    public async Task<MatchingStats> PerformMatching(ProfundumEinwahlZeitraum einwahlZeitraum)
+    public async Task<MatchingStats> PerformMatching()
     {
-        var slots = einwahlZeitraum.Slots.ToArray();
+        var slots = _dbContext.ProfundaSlots.ToArray();
 
         var automatischeEinschreibungen = _dbContext.ProfundaEinschreibungen
             .Where(e => !e.IsFixed);
@@ -392,8 +391,7 @@ internal class ProfundumEnrollmentService
                 modelOnlyIndividualRules.NewBoolVar($"beleg-{wunsch.BetroffenePerson.Id}-{wunsch.ProfundumInstanz.Id}");
         }
 
-        long notMatchedPenalty = einwahlZeitraum.Slots.Count * weights[ProfundumBelegWunschStufe.ErstWunsch] *
-                                 students.Length;
+        long notMatchedPenalty = slots.Count() * weights[ProfundumBelegWunschStufe.ErstWunsch] * students.Length;
         var personNotEnrolledVariables = new Dictionary<(Models_Person, ProfundumSlot), BoolVar>();
         var personNotEnrolledVariablesOnlyIndividualRules = new Dictionary<(Models_Person, ProfundumSlot), BoolVar>();
         foreach (var student in students)
@@ -448,13 +446,13 @@ internal class ProfundumEnrollmentService
             {
                 var sBelegWuensche = belegwuensche.Where(w => w.BetroffenePerson.Id == s.Id).ToArray();
                 r.AddConstraints(s,
-                    einwahlZeitraum,
+                        slots,
                     sBelegWuensche,
                     belegVariables,
                     personNotEnrolledVariables.Where(k => k.Key.Item1.Id == s.Id).Select(s => s.Value).ToArray(),
                     model);
                 r.AddConstraints(s,
-                    einwahlZeitraum,
+                        slots,
                     sBelegWuensche,
                     belegVariablesOnlyIndividualRules,
                     personNotEnrolledVariablesOnlyIndividualRules.Where(k => k.Key.Item1.Id == s.Id).Select(s => s.Value).ToArray(),
@@ -462,7 +460,7 @@ internal class ProfundumEnrollmentService
             }
 
         foreach (var r in _rulesFactory.GetAggregateRules())
-            r.AddConstraints(einwahlZeitraum, students, belegwuensche, belegVariables, model);
+            r.AddConstraints(slots, students, belegwuensche, belegVariables, model);
 
         model.Maximize(objective);
         modelOnlyIndividualRules.Maximize(objectiveOnlyIndividualRules);
@@ -511,7 +509,6 @@ internal class ProfundumEnrollmentService
             }
         }
 
-        einwahlZeitraum.HasBeenMatched = true;
         await _dbContext.SaveChangesAsync();
         // }
 

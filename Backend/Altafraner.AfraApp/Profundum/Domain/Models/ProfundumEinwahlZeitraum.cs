@@ -21,7 +21,4 @@ public class ProfundumEinwahlZeitraum
 
     ///
     public DateTime EinwahlStop { get; set; }
-
-    ///
-    public bool HasBeenMatched { get; set; } = false;
 }

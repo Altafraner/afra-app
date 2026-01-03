@@ -289,13 +289,7 @@ public static class Management
         AfraAppContext dbContext,
         ILogger<ProfundumEnrollmentService> logger)
     {
-        var einwahlZeitraum = (await dbContext.ProfundumEinwahlZeitraeume
-                .Include(ez => ez.Slots)
-                .ToArrayAsync())
-            .FirstOrDefault((ProfundumEinwahlZeitraum?)null);
-        if (einwahlZeitraum is null) return TypedResults.NotFound("Kein offener Einwahlzeitraum");
-
-        var result = await enrollmentService.PerformMatching(einwahlZeitraum);
+        var result = await enrollmentService.PerformMatching();
         return TypedResults.Ok(result);
     }
 

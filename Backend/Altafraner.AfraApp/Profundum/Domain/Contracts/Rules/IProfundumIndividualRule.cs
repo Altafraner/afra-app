@@ -9,18 +9,16 @@ public interface IProfundumIndividualRule
 {
     ///
     RuleStatus CheckForSubmission(Person student,
-    ProfundumEinwahlZeitraum einwahlZeitraum,
-    IEnumerable<ProfundumBelegWunsch> wuensche)
-        => RuleStatus.Valid;
+    IEnumerable<ProfundumSlot> slots,
+    IEnumerable<ProfundumBelegWunsch> wuensche);
 
     /// <summary>
     ///     Add constraints to matching solver
     /// </summary>
     void AddConstraints(Person student,
-        ProfundumEinwahlZeitraum einwahlZeitraum,
+        IEnumerable<ProfundumSlot> slots,
         IEnumerable<ProfundumBelegWunsch> wuensche,
         Dictionary<ProfundumBelegWunsch, BoolVar> wuenscheVariables,
         IEnumerable<BoolVar> personNotEnrolledVars,
-        CpModel model)
-    { }
+        CpModel model);
 }

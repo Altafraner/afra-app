@@ -23,10 +23,9 @@ public class ProfilRule : IProfundumIndividualRule
 
     /// <inheritdoc/>
     public RuleStatus CheckForSubmission(Person student,
-            ProfundumEinwahlZeitraum einwahlZeitraum,
+        IEnumerable<ProfundumSlot> slots,
             IEnumerable<ProfundumBelegWunsch> wuensche)
     {
-        var slots = einwahlZeitraum.Slots.ToArray();
         var profilPflichtig = IsProfilPflichtig(student, slots.Select(s => s.Quartal));
         if (!profilPflichtig) return RuleStatus.Valid;
         return wuensche.Any(w => w.ProfundumInstanz.Profundum.Kategorie.ProfilProfundum)
@@ -36,14 +35,13 @@ public class ProfilRule : IProfundumIndividualRule
 
     /// <inheritdoc/>
     public void AddConstraints(Person student,
-        ProfundumEinwahlZeitraum einwahlZeitraum,
+        IEnumerable<ProfundumSlot> slots,
         IEnumerable<ProfundumBelegWunsch> wuensche,
         Dictionary<ProfundumBelegWunsch, BoolVar> wuenscheVariables,
         IEnumerable<BoolVar> personNotEnrolledVars,
         CpModel model
         )
     {
-        var slots = einwahlZeitraum.Slots.ToArray();
         var profilPflichtig = IsProfilPflichtig(student, slots.Select(s => s.Quartal));
         if (!profilPflichtig) return;
         var profilWuensche = wuensche.Where(b => b.ProfundumInstanz.Profundum.Kategorie.ProfilProfundum);
