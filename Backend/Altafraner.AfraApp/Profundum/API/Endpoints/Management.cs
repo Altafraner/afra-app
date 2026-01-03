@@ -295,7 +295,7 @@ public static class Management
             .FirstOrDefault((ProfundumEinwahlZeitraum?)null);
         if (einwahlZeitraum is null) return TypedResults.NotFound("Kein offener Einwahlzeitraum");
 
-        var result = await enrollmentService.PerformMatching(einwahlZeitraum, true);
+        var result = await enrollmentService.PerformMatching(einwahlZeitraum);
         return TypedResults.Ok(result);
     }
 

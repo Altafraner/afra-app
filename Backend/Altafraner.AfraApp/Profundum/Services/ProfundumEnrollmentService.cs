@@ -336,18 +336,18 @@ internal class ProfundumEnrollmentService
     /// </summary>
     /// <param name="einwahlZeitraum">The einwahlZeitraum to apply the matching to</param>
     /// <param name="writeBackOnSuccess">Whether to write the enrollments to db on complete matching</param>
-    public async Task<MatchingStats> PerformMatching(ProfundumEinwahlZeitraum einwahlZeitraum,
-        bool writeBackOnSuccess = false)
+    public async Task<MatchingStats> PerformMatching(ProfundumEinwahlZeitraum einwahlZeitraum)
     {
         var slots = einwahlZeitraum.Slots.ToArray();
 
-        var alteAutomatischeEinschreibungen = _dbContext.ProfundaEinschreibungen
-            .Where(e => !e.IsFixed)
-            .Where(e => e.ProfundumInstanz.Slots.Any(s => slots.Contains(s)));
-        _logger.LogInformation("delting {numEnrollments} old enrollments", alteAutomatischeEinschreibungen.Count());
-        _dbContext.RemoveRange(alteAutomatischeEinschreibungen);
+        var automatischeEinschreibungen = _dbContext.ProfundaEinschreibungen
+            .Where(e => !e.IsFixed);
+        _logger.LogInformation("delting {numEnrollments} old enrollments", automatischeEinschreibungen.Count());
+        _dbContext.RemoveRange(automatischeEinschreibungen);
         await _dbContext.SaveChangesAsync();
 
+        var fixEinschreibungen = _dbContext.ProfundaEinschreibungen
+            .Where(e => e.IsFixed).ToArray();
 
         var angebote = (await _dbContext.ProfundaInstanzen
                 .Include(pi => pi.Slots)
@@ -395,30 +395,43 @@ internal class ProfundumEnrollmentService
 
         long notMatchedPenalty = einwahlZeitraum.Slots.Count * weights[ProfundumBelegWunschStufe.ErstWunsch] *
                                  students.Length;
-        var personNotEnrolledVariables = new Dictionary<Models_Person, BoolVar>();
-        var personNotEnrolledVariablesOnlyIndividualRules = new Dictionary<Models_Person, BoolVar>();
+        var personNotEnrolledVariables = new Dictionary<(Models_Person, ProfundumSlot), BoolVar>();
+        var personNotEnrolledVariablesOnlyIndividualRules = new Dictionary<(Models_Person, ProfundumSlot), BoolVar>();
         foreach (var student in students)
         {
-            personNotEnrolledVariables[student] = model.NewBoolVar($"beleg-{student.Id}-not-enrolled");
-            objective.AddTerm(personNotEnrolledVariables[student], -notMatchedPenalty);
-            personNotEnrolledVariablesOnlyIndividualRules[student] =
-                modelOnlyIndividualRules.NewBoolVar($"beleg-{student.Id}-not-enrolled");
-            objectiveOnlyIndividualRules.AddTerm(personNotEnrolledVariablesOnlyIndividualRules[student],
-                -notMatchedPenalty);
+            foreach (var s in slots)
+            {
+                var nev = model.NewBoolVar($"beleg-{student.Id}-not-enrolled-in-{s.Id}");
+                personNotEnrolledVariables[(student, s)] = nev;
+                objective.AddTerm(nev, -notMatchedPenalty);
+                var nevI = modelOnlyIndividualRules.NewBoolVar($"beleg-{student.Id}-not-enrolled");
+                personNotEnrolledVariablesOnlyIndividualRules[(student, s)] = nevI;
+                objectiveOnlyIndividualRules.AddTerm(nevI, -notMatchedPenalty);
+            }
         }
 
         // Exact eine Einschreibung pro Slot und Person
         // Gewichtung nach Einwahlstufe
-        foreach (var s in slots)
-            foreach (var p in students)
+        foreach (var p in students)
+        {
+            foreach (var s in slots)
             {
+                if (fixEinschreibungen.Any(e => e.BetroffenePersonId == p.Id && e.SlotId == s.Id))
+                {
+                    model.Add(personNotEnrolledVariables[(p, s)] == 1);
+                }
+
                 var psBeleg = belegwuensche
                     .Where(b => b.BetroffenePerson.Id == p.Id)
                     .Where(b => b.ProfundumInstanz.Slots.Contains(s))
                     .ToArray();
-                var psBelegVar = psBeleg.Select(b => belegVariables[b]).Append(personNotEnrolledVariables[p]).ToArray();
-                var psBelegVarOnlyIndividualRules = psBeleg.Select(b => belegVariablesOnlyIndividualRules[b])
-                    .Append(personNotEnrolledVariablesOnlyIndividualRules[p])
+                var psBelegVar = psBeleg
+                    .Select(b => belegVariables[b])
+                    .Append(personNotEnrolledVariables[(p, s)])
+                    .ToArray();
+                var psBelegVarOnlyIndividualRules = psBeleg
+                    .Select(b => belegVariablesOnlyIndividualRules[b])
+                    .Append(personNotEnrolledVariablesOnlyIndividualRules[(p, s)])
                     .ToArray();
                 model.AddExactlyOne(psBelegVar);
                 modelOnlyIndividualRules.AddExactlyOne(psBelegVarOnlyIndividualRules);
@@ -428,8 +441,8 @@ internal class ProfundumEnrollmentService
                     objectiveOnlyIndividualRules.AddTerm(psBelegVarOnlyIndividualRules[i], weights[psBeleg[i].Stufe]);
                 }
             }
+        }
 
-        var alteEinschreibungen = _dbContext.ProfundaEinschreibungen.Where(e => e.IsFixed);
 
         foreach (var r in _rulesFactory.GetIndividualRules())
             foreach (var s in students)
@@ -439,13 +452,13 @@ internal class ProfundumEnrollmentService
                     einwahlZeitraum,
                     sBelegWuensche,
                     belegVariables,
-                    personNotEnrolledVariables[s],
+                    personNotEnrolledVariables.Where(k => k.Key.Item1.Id == s.Id).Select(s => s.Value).ToArray(),
                     model);
                 r.AddConstraints(s,
                     einwahlZeitraum,
                     sBelegWuensche,
                     belegVariablesOnlyIndividualRules,
-                    personNotEnrolledVariables[s],
+                    personNotEnrolledVariablesOnlyIndividualRules.Where(k => k.Key.Item1.Id == s.Id).Select(s => s.Value).ToArray(),
                     modelOnlyIndividualRules);
             }
 
@@ -479,7 +492,7 @@ internal class ProfundumEnrollmentService
         };
 
 
-        if (writeBackOnSuccess && matchingResultStatus == MatchingResultStatus.MatchingFound)
+        if (matchingResultStatus == MatchingResultStatus.MatchingFound)
         {
             // Ergebnis rückschreiben
             foreach (var bw in belegwuensche)
@@ -564,9 +577,9 @@ internal class ProfundumEnrollmentService
                                 .Count(e => e.ProfundumInstanz.Id == a.Id),
                             MaxEinschreibungen = a.MaxEinschreibungen
                         }),
-            NotMatchedStudents = students.Where(p => solver.Value(personNotEnrolledVariables[p]) > 0)
-                .Select(p => $"{p.Gruppe}: {p.FirstName} {p.LastName}")
-                .ToList()
+            // NotMatchedStudents = students.Where(p => solver.Value(personNotEnrolledVariables[p]) > 0)
+            //     .Select(p => $"{p.Gruppe}: {p.FirstName} {p.LastName}")
+            //     .ToList()
         };
     }
 
