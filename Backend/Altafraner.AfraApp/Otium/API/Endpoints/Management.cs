@@ -80,15 +80,8 @@ public static class Management
 
     private static IResult GetOtium(OtiumEndpointService service, Guid otiumId)
     {
-        try
-        {
-            var otium = service.GetOtium(otiumId);
-            return Results.Ok(otium);
-        }
-        catch (OtiumEndpointService.EntityNotFoundException)
-        {
-            return Results.NotFound();
-        }
+        var otium = service.GetOtium(otiumId);
+        return Results.Ok(otium);
     }
 
     private static async Task<IResult> CreateOtium(OtiumEndpointService service, ManagementOtiumCreation otium)
@@ -110,10 +103,6 @@ public static class Management
         {
             await service.DeleteOtiumAsync(otiumId);
             return Results.Ok();
-        }
-        catch (OtiumEndpointService.EntityNotFoundException)
-        {
-            return Results.NotFound();
         }
         catch (OtiumEndpointService.EntityDeletionException e)
         {
@@ -172,10 +161,6 @@ public static class Management
             await service.DeleteOtiumTerminAsync(otiumTerminId);
             return Results.Ok();
         }
-        catch (OtiumEndpointService.EntityNotFoundException)
-        {
-            return Results.NotFound();
-        }
         catch (OtiumEndpointService.EntityDeletionException e)
         {
             return Results.Conflict(e.Message);
@@ -229,10 +214,6 @@ public static class Management
             await service.DeleteOtiumWiederholungAsync(otiumWiederholungId);
             return Results.Ok();
         }
-        catch (OtiumEndpointService.EntityNotFoundException)
-        {
-            return Results.NotFound();
-        }
         catch (OtiumEndpointService.EntityDeletionException e)
         {
             return Results.Conflict(e.Message);
@@ -259,10 +240,6 @@ public static class Management
         {
             await service.DiscontinueOtiumWiederholungAsync(otiumWiederholungId, firstDayAfter.Value);
             return Results.Ok();
-        }
-        catch (OtiumEndpointService.EntityNotFoundException)
-        {
-            return Results.NotFound();
         }
         catch (OtiumEndpointService.EntityDeletionException e)
         {
@@ -325,10 +302,6 @@ public static class Management
             await service.OtiumTerminAbsagenAsync(otiumTerminId);
             return Results.Ok();
         }
-        catch (OtiumEndpointService.EntityNotFoundException)
-        {
-            return Results.NotFound();
-        }
         catch (OtiumEndpointService.EntityDeletionException e)
         {
             return Results.Conflict(e.Message);
@@ -387,15 +360,8 @@ public static class Management
         if (string.IsNullOrWhiteSpace(value.Value) || value.Value.Length <= 3 || value.Value.Length > 50)
             return Results.BadRequest();
 
-        try
-        {
-            await service.OtiumSetBezeichnungAsync(otiumId, value.Value);
-            return Results.Ok();
-        }
-        catch (OtiumEndpointService.EntityNotFoundException)
-        {
-            return Results.NotFound();
-        }
+        await service.OtiumSetBezeichnungAsync(otiumId, value.Value);
+        return Results.Ok();
     }
 
     private static async Task<IResult> OtiumSetKlassenLimits(ManagementService managementService,
@@ -421,15 +387,8 @@ public static class Management
             return Results.BadRequest(validationResults.Select(v => v.ErrorMessage));
         }
 
-        try
-        {
-            await service.OtiumSetKlassenLimitsAsync(otiumId, limits);
-            return Results.Ok();
-        }
-        catch (OtiumEndpointService.EntityNotFoundException)
-        {
-            return Results.NotFound();
-        }
+        await service.OtiumSetKlassenLimitsAsync(otiumId, limits);
+        return Results.Ok();
     }
 
     private static async Task<IResult> OtiumSetBeschreibung(ManagementService managementService,
@@ -448,42 +407,21 @@ public static class Management
 
         if (!await MayEditAsync(authHelper, managementService, otium)) return Results.Forbid();
 
-        try
-        {
-            await service.OtiumSetBeschreibungAsync(otiumId, value.Value);
-            return Results.Ok();
-        }
-        catch (OtiumEndpointService.EntityNotFoundException)
-        {
-            return Results.NotFound();
-        }
+        await service.OtiumSetBeschreibungAsync(otiumId, value.Value);
+        return Results.Ok();
     }
 
     private static async Task<IResult> OtiumAddVerantwortlich(OtiumEndpointService service, Guid otiumId, Guid persId)
     {
-        try
-        {
-            await service.OtiumAddVerantwortlichAsync(otiumId, persId);
-            return Results.Ok();
-        }
-        catch (OtiumEndpointService.EntityNotFoundException)
-        {
-            return Results.NotFound();
-        }
+        await service.OtiumAddVerantwortlichAsync(otiumId, persId);
+        return Results.Ok();
     }
 
     private static async Task<IResult> OtiumRemoveVerantwortlich(OtiumEndpointService service, Guid otiumId,
         Guid persId)
     {
-        try
-        {
-            await service.OtiumRemoveVerantwortlichAsync(otiumId, persId);
-            return Results.Ok();
-        }
-        catch (OtiumEndpointService.EntityNotFoundException)
-        {
-            return Results.NotFound();
-        }
+        await service.OtiumRemoveVerantwortlichAsync(otiumId, persId);
+        return Results.Ok();
     }
 
     private static async Task<IResult> OtiumSetKategorie(ManagementService managementService,
@@ -506,10 +444,6 @@ public static class Management
         {
             await service.OtiumSetKategorieAsync(otiumId, kategorie.Value);
             return Results.Ok();
-        }
-        catch (OtiumEndpointService.EntityNotFoundException)
-        {
-            return Results.NotFound();
         }
         catch (InvalidOperationException e)
         {
@@ -539,10 +473,6 @@ public static class Management
             await service.OtiumTerminSetMaxEinschreibungenAsync(otiumTerminId, maxEinschreibungen.Value);
             return Results.Ok();
         }
-        catch (OtiumEndpointService.EntityNotFoundException)
-        {
-            return Results.NotFound();
-        }
         catch (InvalidOperationException)
         {
             return Results.BadRequest();
@@ -570,10 +500,6 @@ public static class Management
         {
             await service.OtiumTerminSetTutorAsync(otiumTerminId, personId.Value);
             return Results.Ok();
-        }
-        catch (OtiumEndpointService.EntityNotFoundException)
-        {
-            return Results.NotFound();
         }
         catch (InvalidOperationException)
         {
@@ -603,10 +529,6 @@ public static class Management
             await service.OtiumTerminSetOrtAsync(otiumTerminId, ort.Value);
             return Results.Ok();
         }
-        catch (OtiumEndpointService.EntityNotFoundException)
-        {
-            return Results.NotFound();
-        }
         catch (InvalidOperationException)
         {
             return Results.BadRequest();
@@ -635,10 +557,6 @@ public static class Management
             await service.OtiumTerminSetOverrideBezeichnungAsync(otiumTerminId, bezeichnung.Value);
             return Results.Ok();
         }
-        catch (OtiumEndpointService.EntityNotFoundException)
-        {
-            return Results.NotFound();
-        }
         catch (InvalidOperationException)
         {
             return Results.BadRequest();
@@ -666,10 +584,6 @@ public static class Management
         {
             await service.OtiumTerminSetOverrideBeschreibungAsync(otiumTerminId, beschreibung.Value);
             return Results.Ok();
-        }
-        catch (OtiumEndpointService.EntityNotFoundException)
-        {
-            return Results.NotFound();
         }
         catch (InvalidOperationException)
         {
@@ -704,16 +618,9 @@ public static class Management
         if (blockHelper.IsBlockDoneOrRunning(termin.Block))
             return Results.BadRequest("Der Block ist bereits abgeschlossen oder läuft.");
 
-        try
-        {
-            var student = await userService.GetUserByIdAsync(personIdWrapper.Value);
-            await enrollmentService.UnenrollAsync(otiumTerminId, student, true);
-            return Results.Ok();
-        }
-        catch (OtiumEndpointService.EntityNotFoundException)
-        {
-            return Results.NotFound();
-        }
+        var student = await userService.GetUserByIdAsync(personIdWrapper.Value);
+        await enrollmentService.UnenrollAsync(otiumTerminId, student, true);
+        return Results.Ok();
     }
 
     private static async Task<IEnumerable<BlockInfo>> GetNowSupervising(AfraAppContext dbContext,

@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text;
 using Altafraner.AfraApp.Otium.Domain.Contracts.Services;
+using Altafraner.AfraApp.Domain;
 using Altafraner.AfraApp.Otium.Domain.DTO;
 using Altafraner.AfraApp.Otium.Domain.DTO.Dashboard;
 using Altafraner.AfraApp.Otium.Domain.DTO.Katalog;
@@ -289,15 +290,15 @@ internal class OtiumEndpointService
         }));
 
         return enrollments.Select(e => (e.Termin.Block.SchemaId, new Einschreibung
-            {
-                Block = _blockHelper.Get(e.Termin.Block.SchemaId)!.Bezeichnung,
-                Datum = e.Termin.Block.SchultagKey,
-                KategorieId = e.Termin.Otium.Kategorie.Id,
-                Ort = e.Termin.Ort,
-                Otium = e.Termin.Bezeichnung,
-                TerminId = e.Termin.Id,
-                Anwesenheit = blocksDoneOrRunning.Contains(e.Termin.Block.Id) ? attendances[e.Termin.Block.Id] : null
-            }))
+        {
+            Block = _blockHelper.Get(e.Termin.Block.SchemaId)!.Bezeichnung,
+            Datum = e.Termin.Block.SchultagKey,
+            KategorieId = e.Termin.Otium.Kategorie.Id,
+            Ort = e.Termin.Ort,
+            Otium = e.Termin.Bezeichnung,
+            TerminId = e.Termin.Id,
+            Anwesenheit = blocksDoneOrRunning.Contains(e.Termin.Block.Id) ? attendances[e.Termin.Block.Id] : null
+        }))
             .Concat(additionalEnrollments)
             .OrderBy(e => e.Item2.Datum)
             .ThenBy(e => e.SchemaId)
@@ -528,7 +529,7 @@ internal class OtiumEndpointService
             .FirstOrDefault(o => o.Id == otiumId);
 
         if (otium is null)
-            throw new EntityNotFoundException("Kein Otium mit dieser Id gefunden.");
+            throw new NotFoundException("Kein Otium mit dieser Id gefunden.");
 
         return new ManagementOtiumView
         {
@@ -578,7 +579,7 @@ internal class OtiumEndpointService
             .Include(o => o.Termine)
             .FirstOrDefaultAsync(o => o.Id == otiumId);
         if (otium is null)
-            throw new EntityNotFoundException("Kein Otium mit dieser Id gefunden.");
+            throw new NotFoundException("Kein Otium mit dieser Id gefunden.");
 
         var hatEinschreibungen = _dbContext.OtiaEinschreibungen.Any(e => e.Termin.Otium.Id == otiumId);
         if (hatEinschreibungen)
@@ -657,7 +658,7 @@ internal class OtiumEndpointService
             .Include(x => x.Otium)
             .FirstOrDefaultAsync(o => o.Id == otiumTerminId);
         if (otiumTermin is null)
-            throw new EntityNotFoundException("Kein Termin mit dieser Id");
+            throw new NotFoundException("Kein Termin mit dieser Id");
 
         if (otiumTermin.Wiederholung is not null)
             throw new EntityDeletionException(
@@ -744,7 +745,7 @@ internal class OtiumEndpointService
             .ThenInclude(t => t.Enrollments)
             .FirstOrDefaultAsync(o => o.Id == otiumWiederholungId);
         if (otiumWiederholung is null)
-            throw new EntityNotFoundException("Keine Wiederholung mit dieser Id");
+            throw new NotFoundException("Keine Wiederholung mit dieser Id");
 
         var hatEinschreibungen = otiumWiederholung.Termine.Any(t => t.Enrollments.Count != 0);
         if (hatEinschreibungen)
@@ -776,7 +777,7 @@ internal class OtiumEndpointService
             .Include(x => x.Termine.Where(t => t.Block.Schultag.Datum > firstDayAfter))
             .FirstOrDefaultAsync(o => o.Id == otiumWiederholungId);
         if (otiumWiederholung is null)
-            throw new EntityNotFoundException("Keine Wiederholung mit dieser Id");
+            throw new NotFoundException("Keine Wiederholung mit dieser Id");
 
         var termine = otiumWiederholung.Termine.ToList();
 
@@ -801,7 +802,7 @@ internal class OtiumEndpointService
             .Include(x => x.Termine.Where(t => t.Block.Schultag.Datum > firstDay))
             .FirstOrDefaultAsync(o => o.Id == otiumWiederholungId);
         if (otiumWiederholung is null)
-            throw new EntityNotFoundException("Keine Wiederholung mit dieser Id");
+            throw new NotFoundException("Keine Wiederholung mit dieser Id");
 
         var termine = otiumWiederholung.Termine.ToList();
 
@@ -829,7 +830,7 @@ internal class OtiumEndpointService
             .Include(x => x.Otium)
             .FirstOrDefaultAsync(o => o.Id == otiumTerminId);
         if (otiumTermin is null)
-            throw new EntityNotFoundException("Kein Termin mit dieser Id");
+            throw new NotFoundException("Kein Termin mit dieser Id");
 
         if (otiumTermin.IstAbgesagt)
             return;
@@ -980,7 +981,7 @@ internal class OtiumEndpointService
             .Include(termin => termin.Block).ThenInclude(block => block.Schultag)
             .FirstOrDefaultAsync(o => o.Id == otiumTerminId);
         if (otiumTermin is null)
-            throw new EntityNotFoundException("Kein Termin mit dieser Id");
+            throw new NotFoundException("Kein Termin mit dieser Id");
 
         if (maxEinschreibungen <= 0)
             throw new InvalidOperationException("maxEinschreibungen needs to greater than zero");
@@ -1028,7 +1029,7 @@ internal class OtiumEndpointService
             .Include(t => t.Otium)
             .FirstOrDefaultAsync(o => o.Id == otiumTerminId);
         if (otiumTermin is null)
-            throw new EntityNotFoundException("Kein Termin mit dieser Id");
+            throw new NotFoundException("Kein Termin mit dieser Id");
 
         otiumTermin.OverrideBezeichnung = bezeichnung?.Trim();
 
@@ -1046,7 +1047,7 @@ internal class OtiumEndpointService
             .Include(t => t.Otium)
             .FirstOrDefaultAsync(o => o.Id == otiumTerminId);
         if (otiumTermin is null)
-            throw new EntityNotFoundException("Kein Termin mit dieser Id");
+            throw new NotFoundException("Kein Termin mit dieser Id");
 
         otiumTermin.OverrideBeschreibung = beschreibung?.Trim();
 
@@ -1065,14 +1066,14 @@ internal class OtiumEndpointService
             .FirstOrDefaultAsync(t => t.Id == otiumTerminId);
 
         if (otiumTermin is null)
-            throw new EntityNotFoundException("Kein Termin mit dieser Id");
+            throw new NotFoundException("Kein Termin mit dieser Id");
 
         Models_Person? person = null;
         if (personId.HasValue)
         {
             person = await _dbContext.Personen.FindAsync(personId);
             if (person is null)
-                throw new EntityNotFoundException("Keine Person mit dieser Id");
+                throw new NotFoundException("Keine Person mit dieser Id");
         }
 
         otiumTermin.Tutor = person;
@@ -1090,7 +1091,7 @@ internal class OtiumEndpointService
         var otiumTermin = await _dbContext.OtiaTermine
             .FindAsync(otiumTerminId);
         if (otiumTermin is null)
-            throw new EntityNotFoundException("Kein Termin mit dieser Id");
+            throw new NotFoundException("Kein Termin mit dieser Id");
 
         otiumTermin.Ort = ort;
 
@@ -1105,19 +1106,6 @@ internal class OtiumEndpointService
         public required int? Auslasung { get; init; }
         public required OtiumTermin Termin { get; init; }
         public bool IstEingeschrieben { get; set; }
-    }
-
-    /// <summary>
-    ///     An Exception thrown when the Entity to operate on was not found
-    /// </summary>
-    public class EntityNotFoundException : InvalidOperationException
-    {
-        /// <summary>
-        ///     Constructs a new EntityNotFoundException
-        /// </summary>
-        public EntityNotFoundException(string message) : base(message)
-        {
-        }
     }
 
     /// <summary>
