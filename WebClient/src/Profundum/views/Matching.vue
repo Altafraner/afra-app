@@ -2,12 +2,14 @@
 import { DataTable, Checkbox, Column, Button, Message, Select, useToast } from 'primevue';
 import { mande } from 'mande';
 import { computed, ref } from 'vue';
+import { useConfirmPopover } from '@/composables/confirmPopover.js';
 
 const slots = ref([]);
 const enrollments = ref([]);
 const instanzen = ref([]);
 const matchingRunning = ref(false);
 const toast = useToast();
+const confirm = useConfirmPopover();
 
 async function getSlots() {
     slots.value = await mande('/api/profundum/management/slot').get();
@@ -45,8 +47,16 @@ async function autoMatching() {
 }
 
 async function finalize() {
-    const r = await mande('/api/profundum/management/finalize').post();
-    enrollments.value = await mande('/api/profundum/management/enrollments').get();
+    confirm.openConfirmDialog(
+        event,
+        async () => {
+            await mande('/api/profundum/management/finalize').post();
+            enrollments.value = await mande('/api/profundum/management/enrollments').get();
+        },
+        'Matching finalisieren',
+        'Alle Einschreibungen werden fixiert. Automatisches Matching ist hiernach nichtmehr sinnvoll.',
+        'danger',
+    );
 }
 
 const enrollmentForSlot = (row, slotId) =>
