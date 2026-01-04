@@ -24,8 +24,40 @@ async function getInstanzen() {
     instanzen.value = await mande('/api/profundum/management/instanz').get();
 }
 
+const MATCH_DURATION = 60;
+
+const remaining = ref(0);
+const fillPct = computed(() => {
+    if (!matchingRunning.value) return 0;
+    const elapsed = MATCH_DURATION - remaining.value;
+    return Math.max(0, Math.min(100, (elapsed / MATCH_DURATION) * 100));
+});
+
+let timer = null;
+
+function startCountdown() {
+    remaining.value = MATCH_DURATION;
+    clearInterval(timer);
+    timer = setInterval(() => {
+        remaining.value--;
+        if (remaining.value <= 0) {
+            clearInterval(timer);
+            timer = null;
+            remaining.value = 0;
+        }
+    }, 1000);
+}
+
+function stopCountdown() {
+    clearInterval(timer);
+    timer = null;
+    remaining.value = 0;
+}
+
 async function autoMatching() {
     matchingRunning.value = true;
+    startCountdown();
+
     try {
         const r = await mande('/api/profundum/management/matching').post();
         toast.add({
@@ -44,6 +76,7 @@ async function autoMatching() {
     } finally {
         enrollments.value = await mande('/api/profundum/management/enrollments').get();
         matchingRunning.value = false;
+        stopCountdown();
     }
 }
 
@@ -137,11 +170,19 @@ const isEditing = (row) => editingPersonId.value === row.person.id;
     <h1>Profunda-Matching</h1>
 
     <span class="flex gap-1 mb-4">
-        <Button
-            :disabled="matchingRunning"
-            label="Automatisches Matching aktualisieren"
-            @click="autoMatching"
-        />
+        <Button :disabled="matchingRunning" class="match-btn" @click="autoMatching">
+            <span class="match-btn__bg" :style="{ width: fillPct + '%' }" />
+            <span class="match-btn__content">
+                <span>
+                    {{
+                        matchingRunning
+                            ? 'Matching läuft…'
+                            : 'Automatisches Matching aktualisieren'
+                    }}
+                </span>
+                <span v-if="matchingRunning" class="match-btn__sec">< {{ remaining }}s</span>
+            </span>
+        </Button>
 
         <Button label="Matching finalisieren" severity="warn" @click="finalize" />
     </span>
@@ -287,5 +328,35 @@ const isEditing = (row) => editingPersonId.value === row.person.id;
 .readonly-value.fixed {
     font-weight: 800;
     color: orange;
+}
+
+.match-btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.match-btn__bg {
+    position: absolute;
+    inset: 0;
+    width: 0%;
+    background: color-mix(in srgb, var(--primary-color) 22%, transparent);
+    transition: width 1s linear;
+    pointer-events: none;
+}
+
+.match-btn__content {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.match-btn__sec {
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding-left: 0.75rem;
+    border-left: 1px solid color-mix(in srgb, var(--primary-color) 35%, var(--surface-border));
+    min-width: 3.2rem;
+    text-align: right;
 }
 </style>
