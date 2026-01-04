@@ -58,11 +58,11 @@ internal class ProfundumManagementService
             .ToArrayAsync();
     }
 
-    public async Task<bool> UpdateEinwahlZeitraumAsync(Guid id, DTOProfundumEinwahlZeitraumCreation dto)
+    public async Task UpdateEinwahlZeitraumAsync(Guid id, DTOProfundumEinwahlZeitraumCreation dto)
     {
         var zeitraum = await _dbContext.ProfundumEinwahlZeitraeume.FindAsync(id);
         if (zeitraum is null)
-            return false;
+            throw new NotFoundException("referenced einwahlzeitraum not found");
 
         if (dto.EinwahlStart != null)
             zeitraum.EinwahlStart = DateTime.SpecifyKind(DateTime.Parse(dto.EinwahlStart), DateTimeKind.Utc);
@@ -71,7 +71,6 @@ internal class ProfundumManagementService
             zeitraum.EinwahlStop = DateTime.SpecifyKind(DateTime.Parse(dto.EinwahlStop), DateTimeKind.Utc);
 
         await _dbContext.SaveChangesAsync();
-        return true;
     }
 
     public async Task DeleteEinwahlZeitraumAsync(Guid id)
@@ -90,12 +89,12 @@ internal class ProfundumManagementService
             .ToArray();
     }
 
-    public async Task<ProfundumSlot?> CreateSlotAsync(DTOProfundumSlotCreation dtoSlot)
+    public async Task<ProfundumSlot> CreateSlotAsync(DTOProfundumSlotCreation dtoSlot)
     {
         var zeitraum = await _dbContext.ProfundumEinwahlZeitraeume.FindAsync(dtoSlot.EinwahlZeitraumId);
         if (zeitraum is null)
         {
-            return null;
+            throw new NotFoundException("referenced zeitraum not found");
         }
 
         var slot = new ProfundumSlot
@@ -110,14 +109,16 @@ internal class ProfundumManagementService
         return slot;
     }
 
-    public async Task<bool> UpdateSlotAsync(Guid id, DTOProfundumSlotCreation dto)
+    public async Task UpdateSlotAsync(Guid id, DTOProfundumSlotCreation dto)
     {
         var slot = await _dbContext.ProfundaSlots
             .Include(s => s.EinwahlZeitraum)
             .FirstOrDefaultAsync(s => s.Id == id);
 
         if (slot is null)
-            return false;
+        {
+            throw new NotFoundException("slot to update not found");
+        }
 
         slot.Jahr = dto.Jahr;
         slot.Quartal = dto.Quartal;
@@ -127,12 +128,13 @@ internal class ProfundumManagementService
         {
             var zeitraum = await _dbContext.ProfundumEinwahlZeitraeume.FindAsync(dto.EinwahlZeitraumId);
             if (zeitraum is null)
-                return false;
+            {
+                throw new NotFoundException("referenced zeitraum not found");
+            }
             slot.EinwahlZeitraum = zeitraum;
         }
 
         await _dbContext.SaveChangesAsync();
-        return true;
     }
 
     public async Task DeleteSlotAsync(Guid id)
@@ -141,7 +143,7 @@ internal class ProfundumManagementService
         if (numDeleted == 0) throw new NotFoundException("no such slot");
     }
 
-    public async Task<ProfundumKategorie?> CreateKategorieAsync(DTOProfundumKategorieCreation dtoKategorie)
+    public async Task<ProfundumKategorie> CreateKategorieAsync(DTOProfundumKategorieCreation dtoKategorie)
     {
         var kategorie = new ProfundumKategorie
         {
@@ -185,13 +187,11 @@ internal class ProfundumManagementService
         return _dbContext.ProfundaKategorien.Select(k => new DTOProfundumKategorie(k)).ToArrayAsync();
     }
 
-    public async Task<ProfundumDefinition?> CreateProfundumAsync(DTOProfundumDefinitionCreation dtoProfundum)
+    public async Task<ProfundumDefinition> CreateProfundumAsync(DTOProfundumDefinitionCreation dtoProfundum)
     {
         var kat = await _dbContext.ProfundaKategorien.FindAsync(dtoProfundum.KategorieId);
         if (kat is null)
-        {
-            return null;
-        }
+            throw new NotFoundException("referenced kategorie not found");
 
         var verantwortliche = await _dbContext.Personen
             .Where(p => dtoProfundum.VerantwortlicheIds.Contains(p.Id))
@@ -216,7 +216,7 @@ internal class ProfundumManagementService
         return def;
     }
 
-    public async Task<ProfundumDefinition?> UpdateProfundumAsync(Guid profundumId, DTOProfundumDefinitionCreation dtoProfundum)
+    public async Task<ProfundumDefinition> UpdateProfundumAsync(Guid profundumId, DTOProfundumDefinitionCreation dtoProfundum)
     {
         var profundum = await _dbContext.Profunda
             .AsSplitQuery()
@@ -225,9 +225,7 @@ internal class ProfundumManagementService
             .Where(p => p.Id == profundumId)
             .FirstOrDefaultAsync();
         if (profundum is null)
-        {
-            return null;
-        }
+            throw new NotFoundException("profundum to update not found");
 
         var deps = await _dbContext.Profunda
             .Where(p => dtoProfundum.DependencyIds.Contains(p.Id))
@@ -248,9 +246,7 @@ internal class ProfundumManagementService
 
         var kat = await _dbContext.ProfundaKategorien.FindAsync(dtoProfundum.KategorieId);
         if (kat is null)
-        {
-            return null;
-        }
+            throw new NotFoundException("referenced kategorie not found");
         profundum.Kategorie = kat;
 
         await _dbContext.SaveChangesAsync();
@@ -285,13 +281,12 @@ internal class ProfundumManagementService
             .Select(p => new DTOProfundumDefinition(p)).FirstOrDefaultAsync();
     }
 
-    public async Task<ProfundumInstanz?> CreateInstanzAsync(DTOProfundumInstanzCreation dtoInstanz)
+    public async Task<ProfundumInstanz> CreateInstanzAsync(DTOProfundumInstanzCreation dtoInstanz)
     {
         var def = await _dbContext.Profunda.FindAsync(dtoInstanz.ProfundumId);
         if (def is null)
         {
-            _logger.LogError("no such profundum def");
-            return null;
+            throw new NotFoundException("referenced profundum not found");
         }
 
         var inst = new ProfundumInstanz
@@ -306,8 +301,7 @@ internal class ProfundumManagementService
             var slt = await _dbContext.ProfundaSlots.FindAsync(s);
             if (slt is null)
             {
-                _logger.LogError("no such slot");
-                return null;
+                throw new NotFoundException("referenced slot not found");
             }
 
             inst.Slots.Add(slt);
@@ -342,13 +336,13 @@ internal class ProfundumManagementService
             .FirstOrDefaultAsync();
     }
 
-    public async Task<ProfundumInstanz?> UpdateInstanzAsync(Guid instanzId, DTOProfundumInstanzCreation patch)
+    public async Task<ProfundumInstanz> UpdateInstanzAsync(Guid instanzId, DTOProfundumInstanzCreation patch)
     {
         var instanz = await _dbContext.ProfundaInstanzen
             .Include(i => i.Slots)
             .FirstOrDefaultAsync(i => i.Id == instanzId);
 
-        if (instanz is null) return null;
+        if (instanz is null) throw new NotFoundException("instanz to update not found");
 
         instanz.MaxEinschreibungen = patch.MaxEinschreibungen;
 
@@ -437,7 +431,7 @@ internal class ProfundumManagementService
         await _dbContext.SaveChangesAsync();
     }
 
-    public async Task<byte[]?> GetInstanzPdfAsync(Guid instanzId)
+    public async Task<byte[]> GetInstanzPdfAsync(Guid instanzId)
     {
         var p = await _dbContext.ProfundaInstanzen
             .AsSplitQuery()
@@ -449,7 +443,7 @@ internal class ProfundumManagementService
 
         if (p is null)
         {
-            return null;
+            throw new NotFoundException("instanz not found");
         }
 
         var teilnehmer = _dbContext.ProfundaEinschreibungen
