@@ -84,7 +84,7 @@ const groups = [
                       {
                           label: 'Profunda Matching',
                           route: { name: 'Profundum-Matching' },
-                          icon: 'pi pi-sitemap',
+                          icon: 'pi pi-map',
                       },
                   ]
                 : []),
