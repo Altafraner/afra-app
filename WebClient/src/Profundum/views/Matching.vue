@@ -3,6 +3,7 @@ import { DataTable, Checkbox, Column, Button, Message, Select, useToast } from '
 import { mande } from 'mande';
 import { computed, ref } from 'vue';
 import { useConfirmPopover } from '@/composables/confirmPopover.js';
+import UserPeek from '@/components/UserPeek.vue';
 
 const slots = ref([]);
 const enrollments = ref([]);
@@ -154,7 +155,7 @@ const isEditing = (row) => editingPersonId.value === row.person.id;
     >
         <Column header="Person">
             <template #body="{ data }">
-                {{ data.person.vorname }} {{ data.person.nachname }} ({{ data.person.gruppe }})
+                <UserPeek :person="data.person" :showGroup="true" />
             </template>
         </Column>
 
