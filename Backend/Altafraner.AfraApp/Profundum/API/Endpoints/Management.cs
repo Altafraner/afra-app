@@ -1,9 +1,9 @@
+using System.Net.Mime;
 using Altafraner.AfraApp.Backbone.Authorization;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Services;
 using Match = Altafraner.AfraApp.Profundum.Services.ProfundumMatchingService;
 using Mgmt = Altafraner.AfraApp.Profundum.Services.ProfundumManagementService;
-using System.Net.Mime;
 
 namespace Altafraner.AfraApp.Profundum.API.Endpoints;
 
@@ -52,7 +52,8 @@ public static class Management
         ins.MapDelete("/{id:guid}", (Mgmt svc, Guid id) => svc.DeleteInstanzAsync(id));
         ins.MapGet("/{id:guid}.pdf", async (Mgmt svc, Guid id) => TypedResults.File((await svc.GetInstanzPdfAsync(id)), MediaTypeNames.Application.Pdf, $"{id}.pdf"));
 
-        gp.MapPost("/matching", (Match svc) => svc.PerformMatching());
+        gp.MapPost("/matching", (Match svc) => svc.StartMatching());
+        gp.MapGet("/matching/{mId:guid}", (Match svc, Guid mId) => svc.QueryMatching(mId));
         gp.MapPost("/finalize", (Match svc) => svc.Finalize());
         gp.MapGet("/enrollments", (Mgmt svc) => svc.GetAllEnrollmentsAsync());
         gp.MapPut("/enrollment/{personId:guid}", (Mgmt svc, Guid personId, List<DTOProfundumEnrollment> enrollments) => svc.UpdateEnrollmentsAsync(personId, enrollments));
