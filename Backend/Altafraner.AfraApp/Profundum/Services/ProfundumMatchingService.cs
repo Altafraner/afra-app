@@ -224,8 +224,8 @@ internal class ProfundumMatchingService
         modelOnlyIndividualRules.Maximize(objectiveOnlyIndividualRules);
         var solver = new CpSolver();
         var solverOnlyIndividualRules = new CpSolver();
-        var resultStatus = solver.Solve(model);
-        var resultStatusOnlyIndividualRules = solverOnlyIndividualRules.Solve(modelOnlyIndividualRules);
+        var resultStatus = solver.Solve(model, new SolutionCallBack());
+        var resultStatusOnlyIndividualRules = solverOnlyIndividualRules.Solve(modelOnlyIndividualRules, new SolutionCallBack());
 
         if (resultStatus != CpSolverStatus.Optimal && resultStatus != CpSolverStatus.Feasible)
         {
@@ -287,4 +287,16 @@ internal class ProfundumMatchingService
     {
         return _dbContext.ProfundaEinschreibungen.ExecuteUpdateAsync(e => e.SetProperty(e => e.IsFixed, true));
     }
+}
+
+class SolutionCallBack : CpSolverSolutionCallback
+{
+    private int solution_count;
+    public override void OnSolutionCallback()
+    {
+        Console.WriteLine(String.Format("Solution #{0}: time = {1:F2} s", solution_count, WallTime()));
+        Console.WriteLine(String.Format("  objective value = {0}", ObjectiveValue()));
+        solution_count++;
+    }
+
 }
