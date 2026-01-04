@@ -3,6 +3,7 @@ using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Services;
 using Match = Altafraner.AfraApp.Profundum.Services.ProfundumMatchingService;
 using Mgmt = Altafraner.AfraApp.Profundum.Services.ProfundumManagementService;
+using System.Net.Mime;
 
 namespace Altafraner.AfraApp.Profundum.API.Endpoints;
 
@@ -49,7 +50,7 @@ public static class Management
         ins.MapGet("/{id:guid}", (Mgmt svc, Guid id) => svc.GetInstanzAsync(id));
         ins.MapPut("/{id:guid}", async (Mgmt svc, Guid id, DTOProfundumInstanzCreation instanz) => (await svc.UpdateInstanzAsync(id, instanz)).Id);
         ins.MapDelete("/{id:guid}", (Mgmt svc, Guid id) => svc.DeleteInstanzAsync(id));
-        ins.MapGet("/{id:guid}.pdf", async (Mgmt svc, Guid id) => TypedResults.File((await svc.GetInstanzPdfAsync(id)), "application/pdf", $"{id}.pdf"));
+        ins.MapGet("/{id:guid}.pdf", async (Mgmt svc, Guid id) => TypedResults.File((await svc.GetInstanzPdfAsync(id)), MediaTypeNames.Application.Pdf, $"{id}.pdf"));
 
         gp.MapPost("/matching", (Match svc) => svc.PerformMatching());
         gp.MapPost("/finalize", (Match svc) => svc.Finalize());
