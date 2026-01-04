@@ -173,7 +173,9 @@ internal class ProfundumMatchingService
         model.Maximize(objective);
         modelOnlyIndividualRules.Maximize(objectiveOnlyIndividualRules);
         var solver = new CpSolver();
+        solver.StringParameters = "max_time_in_seconds:30.0";
         var solverOnlyIndividualRules = new CpSolver();
+        solverOnlyIndividualRules.StringParameters = "max_time_in_seconds:30.0";
         var resultStatus = solver.Solve(model, new SolutionCallBack());
         var resultStatusOnlyIndividualRules = solverOnlyIndividualRules.Solve(modelOnlyIndividualRules, new SolutionCallBack());
 
