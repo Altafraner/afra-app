@@ -17,41 +17,16 @@ public static class Enrollment
     {
         var group = app.MapGroup("/sus")
             .RequireAuthorization(AuthorizationPolicies.MittelStufeStudentOnly);
-        group.MapPost("/wuensche", AddBelegWuenscheAsync);
-        group.MapGet("/wuensche", GetOptionsAsync);
+        group.MapPost("/wuensche", async (ProfundumEnrollmentService svc, UserAccessor userAccessor, Dictionary<String, Guid[]> wuensche) =>
+            await svc.RegisterBelegWunschAsync(await userAccessor.GetUserAsync(), wuensche)
+        );
+        group.MapGet("/wuensche", async (ProfundumEnrollmentService svc, UserAccessor userAccessor) => svc.GetKatalog(await userAccessor.GetUserAsync()));
         group.MapGet("/einschreibungen", GetEnrollmentsAsync);
     }
 
     ///
-    private static async Task<IResult> GetOptionsAsync(ProfundumEnrollmentService enrollmentService,
-        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
-    {
-        var user = await userAccessor.GetUserAsync();
-        var katalog = enrollmentService.GetKatalog(user);
-        return Results.Ok(katalog);
-    }
-
-    ///
-    private static async Task<IResult> AddBelegWuenscheAsync(ProfundumEnrollmentService enrollmentService,
-        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger,
-        Dictionary<String, Guid[]> wuensche)
-    {
-        var user = await userAccessor.GetUserAsync();
-        try
-        {
-            await enrollmentService.RegisterBelegWunschAsync(user, wuensche);
-        }
-        catch (ProfundumEinwahlWunschException e)
-        {
-            return Results.BadRequest(e.Message);
-        }
-
-        return Results.Ok("Einwahl gespeichert");
-    }
-
-    ///
-    private static async Task<IResult> GetEnrollmentsAsync(ProfundumEnrollmentService enrollmentService,
-        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
+    private static async Task<IResult> GetEnrollmentsAsync(ProfundumEnrollmentService svc,
+        UserAccessor userAccessor, AfraAppContext dbContext)
     {
         var user = await userAccessor.GetUserAsync();
 
@@ -61,7 +36,6 @@ public static class Enrollment
             .First(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop);
         var slots = einwahlZeitraum.Slots.Select(s => s.Id).ToArray();
 
-        var result = await enrollmentService.GetEnrollment(user, slots);
-        return Results.Ok(result);
+        return Results.Ok(await svc.GetEnrollment(user, slots));
     }
 }
