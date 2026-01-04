@@ -26,6 +26,7 @@ public class ProfundumModule : IModule
 
         services.AddScoped<ProfundumEnrollmentService>();
         services.AddScoped<ProfundumManagementService>();
+        services.AddScoped<ProfundumMatchingService>();
 
         services.AddRules();
     }
