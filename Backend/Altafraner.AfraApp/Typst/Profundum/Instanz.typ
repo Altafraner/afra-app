@@ -5,6 +5,7 @@
     bezeichnung,
     slots,
     beschreibung,
+    voraussetzungen,
     verantwortliche,
     teilnehmer
 ) = json(bytes(sys.inputs.data))
@@ -71,6 +72,13 @@
 #cmarker.render(math:mitex,h1-level:3,
     beschreibung
 )
+
+#if (voraussetzungen.len() > 0) {[
+    === Vorausgesetzte Profunda
+    #for v in voraussetzungen {
+      [- #v ]
+    }
+]}
 
 #if (verantwortliche.len() > 0) {[
     == Verantwortliche

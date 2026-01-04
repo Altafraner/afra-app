@@ -441,6 +441,7 @@ internal class ProfundumManagementService
         var p = await _dbContext.ProfundaInstanzen
             .AsSplitQuery()
             .Include(i => i.Profundum).ThenInclude(p => p.Verantwortliche)
+            .Include(i => i.Profundum).ThenInclude(p => p.Dependencies)
             .Include(i => i.Slots)
             .Where(i => i.Id == instanzId)
             .FirstOrDefaultAsync();
@@ -464,6 +465,7 @@ internal class ProfundumManagementService
         {
             bezeichnung = p.Profundum.Bezeichnung,
             beschreibung = p.Profundum.Beschreibung,
+            voraussetzungen = p.Profundum.Dependencies.Select(d => d.Bezeichnung),
             slots = p.Slots.OrderBy(p => p.Jahr).ThenBy(p => p.Quartal).ThenBy(p => p.Wochentag),
             verantwortliche = p.Profundum.Verantwortliche.Select(v => new PersonInfoMinimal(v)),
             teilnehmer = teilnehmer.Select(v => new PersonInfoMinimal(v)),
