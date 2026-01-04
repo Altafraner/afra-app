@@ -32,6 +32,11 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
     public DbSet<MentorMenteeRelation> MentorMenteeRelations { get; set; }
 
     /// <summary>
+    /// Dependencies between profunda
+    /// </summary>
+    public DbSet<ProfundaDefinitionDependency> ProfundumDefinitionDependencies { get; set; }
+
+    /// <summary>
     ///     All the Otia in the application.
     /// </summary>
     public DbSet<OtiumDefinition> Otia { get; set; }
@@ -217,19 +222,31 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
         {
             p.HasOne(e => e.Kategorie)
                 .WithMany(k => k.Profunda);
+            p.HasMany(e => e.Verantwortliche).WithMany(v => v.BetreuteProfunda);
+            p.HasMany(e => e.Dependants).WithMany(e => e.Dependencies)
+                .UsingEntity<ProfundaDefinitionDependency>(
+                    r => r.HasOne<ProfundumDefinition>().WithMany().HasForeignKey(e => e.DependantId),
+                    l => l.HasOne<ProfundumDefinition>().WithMany().HasForeignKey(e => e.DependencyId)
+                );
         });
+
+        modelBuilder.Entity<ProfundaDefinitionDependency>()
+            .HasKey(r => new { r.DependencyId, r.DependantId });
+
         modelBuilder.Entity<ProfundumInstanz>(p =>
         {
             p.HasOne(i => i.Profundum)
                 .WithMany(e => e.Instanzen);
             p.HasMany(e => e.Slots).WithMany();
         });
+
         modelBuilder.Entity<ProfundumEinschreibung>(e =>
         {
             e.HasOne(f => f.ProfundumInstanz).WithMany(pi => pi.Einschreibungen);
             e.HasOne(f => f.BetroffenePerson).WithMany(pe => pe.ProfundaEinschreibungen);
-            e.HasKey(b => new { b.BetroffenePersonId, b.ProfundumInstanzId, });
+            e.HasKey(b => new { b.BetroffenePersonId, b.ProfundumInstanzId, b.SlotId });
         });
+
         modelBuilder.Entity<ProfundumBelegWunsch>(w =>
         {
             w.HasKey(b => new { b.ProfundumInstanzId, b.BetroffenePersonId, b.Stufe });

@@ -14,6 +14,7 @@ public class ProfundumInstanz
     ///
     public required ICollection<ProfundumSlot> Slots { get; set; }
 
+    // public ICollection<Person> Verantwortliche { get; set; } = new List<Person>();
     ///
     public int? MaxEinschreibungen { get; set; } = null;
 

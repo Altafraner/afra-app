@@ -1,10 +1,9 @@
-using System.Text;
 using Altafraner.AfraApp.Backbone.Authorization;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
-using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.Profundum.Services;
-using Altafraner.AfraApp.User.Services;
-using Microsoft.EntityFrameworkCore;
+using Match = Altafraner.AfraApp.Profundum.Services.ProfundumMatchingService;
+using Mgmt = Altafraner.AfraApp.Profundum.Services.ProfundumManagementService;
+using System.Net.Mime;
 
 namespace Altafraner.AfraApp.Profundum.API.Endpoints;
 
@@ -18,184 +17,44 @@ public static class Management
     /// </summary>
     public static void MapManagementEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/management")
-            .RequireAuthorization(AuthorizationPolicies.AdminOnly);
+        var gp = app.MapGroup("/management")
+            .RequireAuthorization(AuthorizationPolicies.ProfundumsVerantwortlich);
 
-        group.MapPut("/einwahlzeitraum", AddEinwahlZeitraumAsync);
-        group.MapPut("/slot", AddSlotAsync);
-        group.MapPut("/kategorie", AddKategorieAsync);
-        group.MapPut("/profundum", AddProfundumAsync);
-        group.MapPut("/instanz", AddInstanzAsync);
+        var ez = gp.MapGroup("einwahlzeitraum");
+        ez.MapGet("/", (Mgmt svc) => svc.GetEinwahlZeiträumeAsync());
+        ez.MapPost("/", async (Mgmt svc, DTOProfundumEinwahlZeitraumCreation zeitraum) => (await svc.CreateEinwahlZeitraumAsync(zeitraum)).Id);
+        ez.MapPut("/{id:guid}", (ProfundumManagementService managementService, Guid id, DTOProfundumEinwahlZeitraumCreation dto) => managementService.UpdateEinwahlZeitraumAsync(id, dto));
+        ez.MapDelete("/{id:guid}", (Mgmt svc, Guid id) => svc.DeleteEinwahlZeitraumAsync(id));
 
-        group.MapGet("/missing", GetUnenrolledAsync);
-        group.MapGet("/missing/emails", GetUnenrolledEmailsAsync);
-        group.MapPost("/matching", DoMatchingAsync);
-        group.MapPost("/matching/final", DoFinalMatchingAsync);
-        group.MapGet("/matching.csv", MatchingAsyncCsv);
-    }
+        gp.MapGet("/slot", (Mgmt svc) => svc.GetSlotsAsync());
+        gp.MapPost("/slot", async (Mgmt svc, DTOProfundumSlotCreation slot) => (await svc.CreateSlotAsync(slot)).Id);
+        gp.MapPut("/slot/{id:guid}", (Mgmt svc, Guid id, DTOProfundumSlotCreation dto) => svc.UpdateSlotAsync(id, dto));
+        gp.MapDelete("/slot/{id:guid}", (Mgmt svc, Guid id) => svc.DeleteSlotAsync(id));
 
-    ///
-    private static async Task<IResult> AddEinwahlZeitraumAsync(ProfundumManagementService managementService,
-        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger,
-        DtoProfundumEinwahlZeitraum zeitraum)
-    {
-        var res = await managementService.CreateEinwahlZeitraumAsync(zeitraum);
-        return Results.Ok(res.Id);
-    }
+        var kat = gp.MapGroup("kategorie");
+        kat.MapGet("/", (Mgmt svc) => svc.GetKategorienAsync());
+        kat.MapPost("/", async (Mgmt svc, DTOProfundumKategorieCreation kategorie) => (await svc.CreateKategorieAsync(kategorie)).Id);
+        kat.MapPut("/{id:guid}", (Mgmt svc, Guid id, DTOProfundumKategorieCreation kategorie) => svc.UpdateKategorieAsync(id, kategorie));
+        kat.MapDelete("/{id:guid}", (Mgmt svc, Guid id) => svc.DeleteKategorieAsync(id));
 
-    ///
-    private static async Task<IResult> AddSlotAsync(ProfundumManagementService managementService,
-        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger,
-        DtoProfundumSlot slot)
-    {
-        var res = await managementService.CreateSlotAsync(slot);
-        if (res is null)
-        {
-            return Results.BadRequest("Could not create slot");
-        }
+        var pf = gp.MapGroup("profundum");
+        pf.MapGet("/{id:guid}", (Mgmt svc, Guid id) => svc.GetProfundumAsync(id));
+        pf.MapGet("/", (Mgmt svc) => svc.GetProfundaAsync());
+        pf.MapPost("/", async (Mgmt svc, DTOProfundumDefinitionCreation definition) => (await svc.CreateProfundumAsync(definition)).Id);
+        pf.MapPut("/{id:guid}", async (Mgmt svc, Guid id, DTOProfundumDefinitionCreation definition) => (await svc.UpdateProfundumAsync(id, definition)).Id);
+        pf.MapDelete("/{id:guid}", (Mgmt svc, Guid id) => svc.DeleteProfundumAsync(id));
 
-        return Results.Ok(res.Id);
-    }
+        var ins = gp.MapGroup("instanz");
+        ins.MapPost("/", async (Mgmt svc, DTOProfundumInstanzCreation instanz) => (await svc.CreateInstanzAsync(instanz)).Id);
+        ins.MapGet("/", (Mgmt svc) => svc.GetInstanzenAsync());
+        ins.MapGet("/{id:guid}", (Mgmt svc, Guid id) => svc.GetInstanzAsync(id));
+        ins.MapPut("/{id:guid}", async (Mgmt svc, Guid id, DTOProfundumInstanzCreation instanz) => (await svc.UpdateInstanzAsync(id, instanz)).Id);
+        ins.MapDelete("/{id:guid}", (Mgmt svc, Guid id) => svc.DeleteInstanzAsync(id));
+        ins.MapGet("/{id:guid}.pdf", async (Mgmt svc, Guid id) => TypedResults.File((await svc.GetInstanzPdfAsync(id)), MediaTypeNames.Application.Pdf, $"{id}.pdf"));
 
-    ///
-    private static async Task<IResult> AddKategorieAsync(ProfundumManagementService managementService,
-        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger,
-        DtoProfundumKategorie kategorie)
-    {
-        var res = await managementService.CreateKategorieAsync(kategorie);
-        if (res is null)
-        {
-            return Results.BadRequest("Could not create kategorie");
-        }
-
-        return Results.Ok(res.Id);
-    }
-
-    ///
-    private static async Task<IResult> AddProfundumAsync(ProfundumManagementService managementService,
-        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger,
-        DtoProfundumDefinition definition)
-    {
-        var res = await managementService.CreateProfundumAsync(definition);
-        if (res is null)
-        {
-            return Results.BadRequest("Could not create profundum");
-        }
-
-        return Results.Ok(res.Id);
-    }
-
-    ///
-    private static async Task<IResult> AddInstanzAsync(ProfundumManagementService managementService,
-        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger,
-        DtoProfundumInstanz instanz)
-    {
-        var res = await managementService.CreateInstanzAsync(instanz);
-        if (res is null)
-        {
-            return Results.BadRequest("Could not create instanz");
-        }
-
-        return Results.Ok(res.Id);
-    }
-
-
-    ///
-    private static async Task<IResult> DoMatchingAsync(ProfundumEnrollmentService enrollmentService,
-        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
-    {
-        var now = DateTime.UtcNow;
-        var einwahlZeitraum = (await dbContext.ProfundumEinwahlZeitraeume
-                .Include(ez => ez.Slots)
-                .Where(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop)
-                .ToArrayAsync())
-            .FirstOrDefault((ProfundumEinwahlZeitraum?)null);
-        if (einwahlZeitraum is null)
-        {
-            return Results.NotFound("Kein offener Einwahlzeitraum");
-        }
-
-        var result = await enrollmentService.PerformMatching(einwahlZeitraum);
-        return Results.Ok(result);
-    }
-
-    ///
-    private static async Task<IResult> DoFinalMatchingAsync(ProfundumEnrollmentService enrollmentService,
-        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
-    {
-        var now = DateTime.UtcNow;
-        var einwahlZeitraum = (await dbContext.ProfundumEinwahlZeitraeume
-                .Include(ez => ez.Slots)
-                .Where(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop)
-                .ToArrayAsync())
-            .FirstOrDefault((ProfundumEinwahlZeitraum?)null);
-        if (einwahlZeitraum is null)
-        {
-            return Results.NotFound("Kein offener Einwahlzeitraum");
-        }
-
-        var result = await enrollmentService.PerformMatching(einwahlZeitraum, writeBackOnSuccess: true);
-        return Results.Ok(result);
-    }
-
-    ///
-    private static async Task<IResult> MatchingAsyncCsv(ProfundumEnrollmentService enrollmentService,
-        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
-    {
-        var now = DateTime.UtcNow;
-        var einwahlZeitraum = (await dbContext.ProfundumEinwahlZeitraeume
-                .Include(ez => ez.Slots)
-                .Where(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop)
-                .ToArrayAsync())
-            .FirstOrDefault((ProfundumEinwahlZeitraum?)null);
-        if (einwahlZeitraum is null)
-        {
-            return Results.NotFound("Kein offener Einwahlzeitraum");
-        }
-
-        var csv = await enrollmentService.GetStudentMatchingCsv(einwahlZeitraum);
-        return Results.File(Encoding.UTF8.GetBytes(csv), "text/csv");
-    }
-
-    ///
-    private static async Task<IResult> GetUnenrolledAsync(ProfundumEnrollmentService enrollmentService,
-        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
-    {
-        var now = DateTime.UtcNow;
-        var einwahlZeitraum = (await dbContext.ProfundumEinwahlZeitraeume
-                .Include(ez => ez.Slots)
-                .Where(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop)
-                .ToArrayAsync())
-            .FirstOrDefault((ProfundumEinwahlZeitraum?)null);
-        if (einwahlZeitraum is null)
-        {
-            return Results.NotFound("Kein offener Einwahlzeitraum");
-        }
-
-        var slots = einwahlZeitraum.Slots.Select(s => s.Id).ToArray();
-
-        var result = await enrollmentService.GetMissingStudentsAsync(slots);
-        return Results.Ok(result);
-    }
-
-    ///
-    private static async Task<IResult> GetUnenrolledEmailsAsync(ProfundumEnrollmentService enrollmentService,
-        UserAccessor userAccessor, AfraAppContext dbContext, ILogger<ProfundumEnrollmentService> logger)
-    {
-        var now = DateTime.UtcNow;
-        var einwahlZeitraum = (await dbContext.ProfundumEinwahlZeitraeume
-                .Include(ez => ez.Slots)
-                .Where(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop)
-                .ToArrayAsync())
-            .FirstOrDefault((ProfundumEinwahlZeitraum?)null);
-        if (einwahlZeitraum is null)
-        {
-            return Results.NotFound("Kein offener Einwahlzeitraum");
-        }
-
-        var slots = einwahlZeitraum.Slots.Select(s => s.Id).ToArray();
-
-        var result = await enrollmentService.GetMissingStudentsEmailsAsync(slots);
-        return Results.Ok(result);
+        gp.MapPost("/matching", (Match svc) => svc.PerformMatching());
+        gp.MapPost("/finalize", (Match svc) => svc.Finalize());
+        gp.MapGet("/enrollments", (Mgmt svc) => svc.GetAllEnrollmentsAsync());
+        gp.MapPut("/enrollment/{personId:guid}", (Mgmt svc, Guid personId, List<DTOProfundumEnrollment> enrollments) => svc.UpdateEnrollmentsAsync(personId, enrollments));
     }
 }

@@ -1,6 +1,8 @@
 using Altafraner.AfraApp.Profundum.API.Endpoints;
 using Altafraner.AfraApp.Profundum.Configuration;
+using Altafraner.AfraApp.Profundum.Extensions;
 using Altafraner.AfraApp.Profundum.Services;
+using Altafraner.AfraApp.Typst;
 using Altafraner.AfraApp.User;
 using Altafraner.Backbone.Abstractions;
 
@@ -11,6 +13,7 @@ namespace Altafraner.AfraApp.Profundum;
 /// </summary>
 [DependsOn<UserModule>]
 [DependsOn<DatabaseModule>]
+[DependsOn<TypstModule>]
 public class ProfundumModule : IModule
 {
     /// <inheritdoc />
@@ -23,6 +26,9 @@ public class ProfundumModule : IModule
 
         services.AddScoped<ProfundumEnrollmentService>();
         services.AddScoped<ProfundumManagementService>();
+        services.AddScoped<ProfundumMatchingService>();
+
+        services.AddRules();
     }
 
     /// <inheritdoc />

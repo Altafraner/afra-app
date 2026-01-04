@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Altafraner.AfraApp.User.Domain.Models;
 
 namespace Altafraner.AfraApp.Profundum.Domain.Models;
 
@@ -18,6 +19,12 @@ public class ProfundumDefinition
     [MaxLength(100)]
     public required string Bezeichnung { get; set; }
 
+    /// <summary>
+    ///     A description for the Profundum
+    /// </summary>
+    [MaxLength(2000)]
+    public required string Beschreibung { get; set; }
+
     ///
     public required ProfundumKategorie Kategorie { get; set; }
 
@@ -25,7 +32,15 @@ public class ProfundumDefinition
     public ICollection<ProfundumInstanz> Instanzen { get; set; } = [];
 
     ///
+    public ICollection<Person> Verantwortliche { get; set; } = [];
+
+    ///
     public int? MinKlasse { get; set; } = null;
     ///
     public int? MaxKlasse { get; set; } = null;
+
+    ///
+    public ICollection<ProfundumDefinition> Dependencies { get; set; } = [];
+    ///
+    public ICollection<ProfundumDefinition> Dependants { get; set; } = [];
 }

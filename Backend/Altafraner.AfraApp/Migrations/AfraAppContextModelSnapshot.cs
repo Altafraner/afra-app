@@ -21,7 +21,7 @@ namespace Altafraner.AfraApp.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.0")
+                .HasAnnotation("ProductVersion", "10.0.1")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "anwesenheits_status", new[] { "anwesend", "entschuldigt", "fehlend" });
@@ -305,6 +305,21 @@ namespace Altafraner.AfraApp.Migrations
                     b.ToTable("OtiaWiederholungen");
                 });
 
+            modelBuilder.Entity("Altafraner.AfraApp.Profundum.Domain.Models.ProfundaDefinitionDependency", b =>
+                {
+                    b.Property<Guid>("DependencyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("DependantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("DependencyId", "DependantId");
+
+                    b.HasIndex("DependantId");
+
+                    b.ToTable("ProfundumDefinitionDependencies");
+                });
+
             modelBuilder.Entity("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumBelegWunsch", b =>
                 {
                     b.Property<Guid>("ProfundumInstanzId")
@@ -328,6 +343,11 @@ namespace Altafraner.AfraApp.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<string>("Beschreibung")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
 
                     b.Property<string>("Bezeichnung")
                         .IsRequired()
@@ -358,9 +378,17 @@ namespace Altafraner.AfraApp.Migrations
                     b.Property<Guid>("ProfundumInstanzId")
                         .HasColumnType("uuid");
 
-                    b.HasKey("BetroffenePersonId", "ProfundumInstanzId");
+                    b.Property<Guid>("SlotId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsFixed")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("BetroffenePersonId", "ProfundumInstanzId", "SlotId");
 
                     b.HasIndex("ProfundumInstanzId");
+
+                    b.HasIndex("SlotId");
 
                     b.ToTable("ProfundaEinschreibungen");
                 });
@@ -376,9 +404,6 @@ namespace Altafraner.AfraApp.Migrations
 
                     b.Property<DateTime>("EinwahlStop")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("HasBeenMatched")
-                        .HasColumnType("boolean");
 
                     b.HasKey("Id");
 
@@ -613,6 +638,21 @@ namespace Altafraner.AfraApp.Migrations
                     b.ToTable("OtiumDefinitionPerson");
                 });
 
+            modelBuilder.Entity("PersonProfundumDefinition", b =>
+                {
+                    b.Property<Guid>("BetreuteProfundaId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("VerantwortlicheId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("BetreuteProfundaId", "VerantwortlicheId");
+
+                    b.HasIndex("VerantwortlicheId");
+
+                    b.ToTable("PersonProfundumDefinition");
+                });
+
             modelBuilder.Entity("ProfundumInstanzProfundumSlot", b =>
                 {
                     b.Property<Guid>("ProfundumInstanzId")
@@ -773,6 +813,21 @@ namespace Altafraner.AfraApp.Migrations
                     b.Navigation("Tutor");
                 });
 
+            modelBuilder.Entity("Altafraner.AfraApp.Profundum.Domain.Models.ProfundaDefinitionDependency", b =>
+                {
+                    b.HasOne("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumDefinition", null)
+                        .WithMany()
+                        .HasForeignKey("DependantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumDefinition", null)
+                        .WithMany()
+                        .HasForeignKey("DependencyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumBelegWunsch", b =>
                 {
                     b.HasOne("Altafraner.AfraApp.User.Domain.Models.Person", "BetroffenePerson")
@@ -817,9 +872,17 @@ namespace Altafraner.AfraApp.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumSlot", "Slot")
+                        .WithMany()
+                        .HasForeignKey("SlotId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("BetroffenePerson");
 
                     b.Navigation("ProfundumInstanz");
+
+                    b.Navigation("Slot");
                 });
 
             modelBuilder.Entity("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumInstanz", b =>
@@ -892,6 +955,21 @@ namespace Altafraner.AfraApp.Migrations
                     b.HasOne("Altafraner.AfraApp.Otium.Domain.Models.OtiumDefinition", null)
                         .WithMany()
                         .HasForeignKey("VerwalteteOtiaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PersonProfundumDefinition", b =>
+                {
+                    b.HasOne("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumDefinition", null)
+                        .WithMany()
+                        .HasForeignKey("BetreuteProfundaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Altafraner.AfraApp.User.Domain.Models.Person", null)
+                        .WithMany()
+                        .HasForeignKey("VerantwortlicheId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
