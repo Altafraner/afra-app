@@ -12,7 +12,9 @@ import { ConfirmPopup, Image, Skeleton, Toast, useToast } from 'primevue';
 import Login from '@/components/Login.vue';
 import { isDark } from '@/helpers/isdark.js';
 import ReloadPrompt from '@/components/ReloadPrompt.vue';
+import { useRoute } from 'vue-router';
 
+const route = useRoute();
 const user = useUser();
 const toast = useToast();
 user.update().catch(() => {
@@ -34,7 +36,7 @@ const logo = computed(() => (isDark().value ? wappenDark : wappenLight));
     <template v-if="!user.loading">
         <afra-nav v-if="user.loggedIn" />
         <main class="flex justify-center min-h-[90vh] mt-4">
-            <div v-if="user.loggedIn" class="container">
+            <div v-if="user.loggedIn" :class="route.meta.fullWidth ? 'w-19/20' : 'container'">
                 <RouterView v-slot="{ Component }">
                     <template v-if="Component">
                         <Suspense>

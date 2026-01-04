@@ -13,6 +13,7 @@ export const routes = [
         path: '/profundum/matching',
         name: 'Profundum-Matching',
         component: () => import('@/Profundum/views/Matching.vue'),
+        meta: { fullWidth: true },
     },
     {
         path: '/profundum/management/:profundumId',
