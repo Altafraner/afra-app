@@ -1,16 +1,13 @@
 using System.Diagnostics;
-using Altafraner.AfraApp.Domain;
 using Altafraner.AfraApp.Profundum.Configuration;
 using Altafraner.AfraApp.Profundum.Domain.Contracts.Services;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Domain.Models;
-using Altafraner.AfraApp.Profundum.Jobs;
 using Altafraner.AfraApp.User.Services;
 using Altafraner.Backbone.EmailSchedulingModule;
 using Google.OrTools.Sat;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Quartz;
 using Models_Person = Altafraner.AfraApp.User.Domain.Models.Person;
 
 namespace Altafraner.AfraApp.Profundum.Services;
@@ -24,7 +21,6 @@ internal class ProfundumMatchingService
     private readonly IOptions<ProfundumConfiguration> _profundumConfiguration;
     private readonly IRulesFactory _rulesFactory;
     private readonly UserService _userService;
-    private readonly IScheduler _scheduler;
 
     ///
     public ProfundumMatchingService(AfraAppContext dbContext,
@@ -32,9 +28,7 @@ internal class ProfundumMatchingService
         UserService userService,
         IOptions<ProfundumConfiguration> profundumConfiguration,
         INotificationService notificationService,
-        IRulesFactory rulesFactory,
-        ISchedulerFactory schedulerFactory
-        )
+        IRulesFactory rulesFactory)
     {
         _dbContext = dbContext;
         _logger = logger;
@@ -42,52 +36,8 @@ internal class ProfundumMatchingService
         _profundumConfiguration = profundumConfiguration;
         _notificationService = notificationService;
         _rulesFactory = rulesFactory;
-        _scheduler = schedulerFactory.GetScheduler().GetAwaiter().GetResult();
     }
 
-    ///
-    public async Task<Guid> StartMatching()
-    {
-        var matchingId = Guid.CreateVersion7();
-        var jobDataMap = new JobDataMap
-        {
-            { "matchingid", matchingId },
-        };
-        var job = JobBuilder.Create<MatchingJob>()
-            .WithIdentity($"matching-{matchingId}", "profundum-matching")
-            .UsingJobData(jobDataMap)
-            .Build();
-
-        var trigger = TriggerBuilder.Create()
-            .StartNow()
-            .Build();
-
-        await _scheduler.ScheduleJob(job, trigger);
-        return matchingId;
-    }
-
-    ///
-    public MatchingStats? QueryMatching(Guid matchingId)
-    {
-        // var job = _scheduler.GetJobDetail(new JobKey($"matching-{matchingId}", "profundum-matching"));
-        // if (job.IsCompleted)
-        // {
-        var res = matchingResults.GetValueOrDefault(matchingId);
-        Console.WriteLine("num of results " + matchingResults.Count());
-        if (res is null)
-        {
-            throw new NotFoundException("job not yet finished.");
-        }
-        return res;
-        // }
-    }
-
-    public void RegisterMatching(Guid id, MatchingStats stats)
-    {
-        matchingResults[id] = stats;
-    }
-
-    private static Dictionary<Guid, MatchingStats> matchingResults = new Dictionary<Guid, MatchingStats>();
 
     /// <summary>
     ///     Perform a matching for the given slots and return information about the result

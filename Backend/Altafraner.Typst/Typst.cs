@@ -7,12 +7,13 @@ using Microsoft.Extensions.Options;
 public class Typst
 {
     private readonly IOptions<TypstConfiguration> _typstConfiguration;
-    private static readonly Dictionary<string, TypstCompilerWrapper> _cachedCompilers = new();
+    private readonly Dictionary<string, TypstCompilerWrapper> _cachedCompilers;
 
     ///
     public Typst(IOptions<TypstConfiguration> typstConfiguration)
     {
         _typstConfiguration = typstConfiguration;
+        _cachedCompilers = new();
     }
 
     ///

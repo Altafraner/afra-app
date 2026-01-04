@@ -24,33 +24,10 @@ async function getInstanzen() {
     instanzen.value = await mande('/api/profundum/management/instanz').get();
 }
 
-async function pollMatching(id) {
-    const client = mande(`/api/profundum/management/matching/${id}`);
-
-    while (true) {
-        await new Promise((r) => setTimeout(r, 1000));
-
-        try {
-            return await client.get();
-        } catch (e) {
-            if (e?.response?.status === 404) {
-                continue;
-            }
-
-            throw e;
-        }
-    }
-}
-
 async function autoMatching() {
     matchingRunning.value = true;
-
     try {
-        const id = await mande('/api/profundum/management/matching').post();
-
-        if (!id) throw new Error('Keine Matching-ID erhalten');
-
-        const r = await pollMatching(id);
+        const r = await mande('/api/profundum/management/matching').post();
         toast.add({
             severity: 'success',
             summary: 'Erfolg',
@@ -65,7 +42,7 @@ async function autoMatching() {
         });
         console.error(e);
     } finally {
-        await getEnrollments();
+        enrollments.value = await mande('/api/profundum/management/enrollments').get();
         matchingRunning.value = false;
     }
 }
