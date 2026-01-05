@@ -188,18 +188,6 @@ const isEditing = (row) => editingPersonId.value === row.person.id;
 <template>
     <h1>Profunda-Matching</h1>
 
-    <Message severity="warn">
-        <template v-for="w in warnings">
-            <p>{{ w }}</p>
-        </template>
-    </Message>
-
-    <DataTable :value="instanzen">
-        <Column field="profundumInfo.bezeichnung" header="Bezeichnung"></Column>
-        <Column field="maxEinschreibungen" header="MaxEinschreibungen"></Column>
-        <Column field="numEinschreibungen" header="Einschreibungen"></Column>
-    </DataTable>
-
     <span class="flex gap-1 mb-4">
         <Button :disabled="matchingRunning" class="match-btn" @click="autoMatching">
             <span class="match-btn__bg" :style="{ width: fillPct + '%' }" />
@@ -333,6 +321,18 @@ const isEditing = (row) => editingPersonId.value === row.person.id;
                 </span>
             </template>
         </Column>
+    </DataTable>
+
+    <Message severity="warn">
+        <template v-for="w in warnings">
+            <p>{{ w }}</p>
+        </template>
+    </Message>
+
+    <DataTable :value="instanzen">
+        <Column field="profundumInfo.bezeichnung" header="Bezeichnung"></Column>
+        <Column field="maxEinschreibungen" header="MaxEinschreibungen"></Column>
+        <Column field="numEinschreibungen" header="Einschreibungen"></Column>
     </DataTable>
 </template>
 
