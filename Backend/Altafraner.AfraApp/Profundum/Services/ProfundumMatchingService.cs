@@ -3,12 +3,12 @@ using Altafraner.AfraApp.Profundum.Configuration;
 using Altafraner.AfraApp.Profundum.Domain.Contracts.Services;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Domain.Models;
+using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.AfraApp.User.Services;
 using Altafraner.Backbone.EmailSchedulingModule;
 using Google.OrTools.Sat;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Models_Person = Altafraner.AfraApp.User.Domain.Models.Person;
 
 namespace Altafraner.AfraApp.Profundum.Services;
 
@@ -100,8 +100,8 @@ internal class ProfundumMatchingService
         }
 
         long notMatchedPenalty = slots.Count() * weights[ProfundumBelegWunschStufe.ErstWunsch] * students.Length;
-        var personNotEnrolledVariables = new Dictionary<(Models_Person, ProfundumSlot), BoolVar>();
-        var personNotEnrolledVariablesOnlyIndividualRules = new Dictionary<(Models_Person, ProfundumSlot), BoolVar>();
+        var personNotEnrolledVariables = new Dictionary<(Person, ProfundumSlot), BoolVar>();
+        var personNotEnrolledVariablesOnlyIndividualRules = new Dictionary<(Person, ProfundumSlot), BoolVar>();
         foreach (var student in students)
         {
             foreach (var s in slots)
