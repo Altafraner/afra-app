@@ -40,7 +40,7 @@ public class KlassenLimitsRule : IProfundumIndividualRule
     {
         var klasse = _userService.GetKlassenstufe(student);
 
-        foreach (var (k, v) in belegVars)
+        foreach (var (k, v) in belegVars.Where(p => p.Key.Item1.Id == student.Id))
         {
             var (p, s, i) = k;
             var minKlasse = i.Profundum.MinKlasse;
