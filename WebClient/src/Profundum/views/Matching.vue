@@ -228,6 +228,9 @@ const isEditing = (row) => editingPersonId.value === row.person.id;
         <Column header="Person">
             <template #body="{ data }">
                 <UserPeek :person="data.person" :showGroup="true" />
+                <template v-if="data.wuensche.length === 0">
+                  (Keine Wünsche)
+                </template>
             </template>
         </Column>
 
