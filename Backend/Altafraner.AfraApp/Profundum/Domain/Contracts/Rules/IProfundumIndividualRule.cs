@@ -19,6 +19,7 @@ public interface IProfundumIndividualRule
         IEnumerable<ProfundumSlot> slots,
         IEnumerable<ProfundumBelegWunsch> wuensche,
         Dictionary<(Person, ProfundumSlot, ProfundumInstanz), BoolVar> belegVars,
-        IEnumerable<BoolVar> personNotEnrolledVars,
-        CpModel model);
+        Dictionary<ProfundumSlot, BoolVar> personNotEnrolledVars,
+        CpModel model,
+        LinearExprBuilder objective);
 }

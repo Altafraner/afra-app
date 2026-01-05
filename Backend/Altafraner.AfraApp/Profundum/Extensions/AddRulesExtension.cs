@@ -15,7 +15,7 @@ public static class AddRulesExtension
         services.AddScoped<IProfundumAggregateRule, MaxEinschreibungenRule>();
         services.AddScoped<IProfundumIndividualRule, ProfilRule>();
         services.AddScoped<IProfundumIndividualRule, NotMultipleInstancesOfSameProfundumRule>();
-
+        services.AddScoped<IProfundumIndividualRule, KlassenLimitsRule>();
         services.AddScoped<IRulesFactory, ServiceProviderRulesFactory>();
     }
 }

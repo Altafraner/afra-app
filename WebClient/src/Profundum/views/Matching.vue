@@ -8,6 +8,7 @@ import UserPeek from '@/components/UserPeek.vue';
 const slots = ref([]);
 const enrollments = ref([]);
 const instanzen = ref([]);
+const warnings = ref([]);
 const matchingRunning = ref(false);
 const toast = useToast();
 const confirm = useConfirmPopover();
@@ -22,6 +23,10 @@ async function getEnrollments() {
 
 async function getInstanzen() {
     instanzen.value = await mande('/api/profundum/management/instanz').get();
+}
+
+async function getWarnings() {
+    warnings.value = await mande('/api/profundum/management/warnings').get();
 }
 
 const MATCH_DURATION = 60;
@@ -74,7 +79,9 @@ async function autoMatching() {
         });
         console.error(e);
     } finally {
-        enrollments.value = await mande('/api/profundum/management/enrollments').get();
+        getEnrollments();
+        getWarnings();
+        getInstanzen();
         matchingRunning.value = false;
         stopCountdown();
     }
@@ -128,9 +135,21 @@ const instanzenBySlot = computed(() => {
 
 const instanzenForSlot = (slotId) => instanzenBySlot.value.get(slotId) ?? [];
 
+const wishForSelectedEnrollment = (row, slotId) => {
+    const enrollment = enrollmentForSlot(row, slotId);
+    if (!enrollment?.profundumInstanzId) return null;
+
+    const instanz = instanzen.value.find((i) => i.id === enrollment.profundumInstanzId);
+
+    if (!instanz) return null;
+
+    return wishForOption(row, instanz);
+};
+
 getSlots();
 getEnrollments();
 getInstanzen();
+getWarnings();
 
 const wishForOption = (row, option) => {
     return row.wuensche?.find((w) => w.id === option.profundumInfo.id) ?? null;
@@ -168,6 +187,18 @@ const isEditing = (row) => editingPersonId.value === row.person.id;
 </script>
 <template>
     <h1>Profunda-Matching</h1>
+
+    <Message severity="warn">
+        <template v-for="w in warnings">
+            <p>{{ w }}</p>
+        </template>
+    </Message>
+
+    <DataTable :value="instanzen">
+        <Column field="profundumInfo.bezeichnung" header="Bezeichnung"></Column>
+        <Column field="maxEinschreibungen" header="MaxEinschreibungen"></Column>
+        <Column field="numEinschreibungen" header="Einschreibungen"></Column>
+    </DataTable>
 
     <span class="flex gap-1 mb-4">
         <Button :disabled="matchingRunning" class="match-btn" @click="autoMatching">
@@ -259,9 +290,17 @@ const isEditing = (row) => editingPersonId.value === row.person.id;
                         </Select>
                     </template>
                     <template v-else>
-                        <span class="readonly-value w-60">
+                        <span class="readonly-value w-60 flex items-center gap-2">
+                            <span
+                                v-if="wishForSelectedEnrollment(data, slot.id)"
+                                class="wish-indicator"
+                            >
+                                <i class="pi pi-crown" />
+                                {{ wishForSelectedEnrollment(data, slot.id).rang }}
+                            </span>
+
                             <template v-if="enrollmentForSlot(data, slot.id)?.isFixed">
-                                <div class="text-orange-500 flex gap-1">
+                                <div class="text-orange-500 flex gap-1 items-center">
                                     <i class="pi pi-lock" />
                                     <b>
                                         {{
@@ -275,6 +314,7 @@ const isEditing = (row) => editingPersonId.value === row.person.id;
                                     </b>
                                 </div>
                             </template>
+
                             <template v-else>
                                 {{
                                     instanzen.find(
@@ -358,5 +398,14 @@ const isEditing = (row) => editingPersonId.value === row.person.id;
     border-left: 1px solid color-mix(in srgb, var(--primary-color) 35%, var(--surface-border));
     min-width: 3.2rem;
     text-align: right;
+}
+
+.wish-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-weight: 700;
+    color: green;
+    white-space: nowrap;
 }
 </style>

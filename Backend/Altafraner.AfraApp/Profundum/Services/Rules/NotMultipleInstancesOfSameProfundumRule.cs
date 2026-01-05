@@ -19,9 +19,9 @@ public class NotMultipleInstancesOfSameProfundumRule : IProfundumIndividualRule
         IEnumerable<ProfundumSlot> slots,
         IEnumerable<ProfundumBelegWunsch> wuensche,
         Dictionary<(Person, ProfundumSlot, ProfundumInstanz), BoolVar> belegVars,
-        IEnumerable<BoolVar> personNotEnrolledVars,
-        CpModel model
-        )
+        Dictionary<ProfundumSlot, BoolVar> personNotEnrolledVars,
+        CpModel model,
+        LinearExprBuilder objective)
     {
         var personen = belegVars.Keys.ToArray().Select(x => x.Item1).Distinct().ToArray();
         var profundaInstanzen = belegVars.Keys.ToArray().Select(x => x.Item3).Distinct().ToArray();

@@ -38,15 +38,53 @@ public class ProfilRule : IProfundumIndividualRule
         IEnumerable<ProfundumSlot> slots,
         IEnumerable<ProfundumBelegWunsch> wuensche,
         Dictionary<(Person, ProfundumSlot, ProfundumInstanz), BoolVar> belegVars,
-        IEnumerable<BoolVar> personNotEnrolledVars,
-        CpModel model
-        )
+        Dictionary<ProfundumSlot, BoolVar> personNotEnrolledVars,
+        CpModel model,
+        LinearExprBuilder objective)
     {
-        var profilPflichtig = IsProfilPflichtig(student, slots.Select(s => s.Quartal));
-        if (!profilPflichtig) return;
-        var profilWuensche = wuensche.Where(b => b.ProfundumInstanz.Profundum.Kategorie.ProfilProfundum);
-        var profilWuenscheVars = profilWuensche.SelectMany(b => b.ProfundumInstanz.Slots.Select(s => belegVars[(b.BetroffenePerson, s, b.ProfundumInstanz)]));
-        model.AddAtLeastOne(profilWuenscheVars.Union(personNotEnrolledVars));
+        var pflichtQuartale = slots
+            .Where(s => IsProfilPflichtig(student, s.Quartal))
+        .GroupBy(s => (s.Jahr, s.Quartal));
+
+
+        foreach (var quartalGroup in slots
+            .Where(s => IsProfilPflichtig(student, s.Quartal))
+            .GroupBy(s => s.Quartal))
+        {
+            var profilVars = belegVars
+                .Where(x => x.Key.Item1 == student)
+                .Where(x => quartalGroup.Contains(x.Key.Item2))
+                .Where(x => x.Key.Item3.Profundum.Kategorie.ProfilProfundum)
+                .Select(x => x.Value)
+                .ToList();
+
+            var notEnrolledVars = quartalGroup
+                .Select(s => personNotEnrolledVars[s]);
+
+            model.AddAtLeastOne(profilVars.Concat(notEnrolledVars));
+        }
+
+        foreach (var (k, v) in belegVars)
+        {
+            if (!IsProfilZulaessig(k.Item1, k.Item2.Quartal)
+             && !IsProfilPflichtig(k.Item1, k.Item2.Quartal)
+             && k.Item3.Profundum.Kategorie.ProfilProfundum)
+            {
+                model.Add(v == 0);
+            }
+        }
+    }
+
+    public bool IsProfilZulaessig(Person student, ProfundumQuartal quartal)
+    {
+        var klasse = student.Gruppe;
+        if (klasse is null) return false;
+
+        var profilQuartale = _profundumConfiguration.Value.ProfilZulassung.GetValueOrDefault(klasse);
+        if (profilQuartale is null) return false;
+
+        var ret = profilQuartale.Contains(quartal);
+        return ret;
     }
 
     private bool IsProfilPflichtig(Person student, IEnumerable<ProfundumQuartal> quartale)
@@ -54,5 +92,12 @@ public class ProfilRule : IProfundumIndividualRule
         var klasse = _userService.GetKlassenstufe(student);
         var profilQuartale = _profundumConfiguration.Value.ProfilPflichtigkeit.GetValueOrDefault(klasse);
         return profilQuartale is not null && profilQuartale.Intersect(quartale).Any();
+    }
+
+    private bool IsProfilPflichtig(Person student, ProfundumQuartal quartal)
+    {
+        var klasse = _userService.GetKlassenstufe(student);
+        var profilQuartale = _profundumConfiguration.Value.ProfilPflichtigkeit.GetValueOrDefault(klasse);
+        return profilQuartale is not null && profilQuartale.Contains(quartal);
     }
 }

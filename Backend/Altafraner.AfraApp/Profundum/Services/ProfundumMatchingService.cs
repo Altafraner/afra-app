@@ -141,7 +141,7 @@ internal class ProfundumMatchingService
                 foreach (var v in psVars.Skip(1))
                     model.Add(psVars.First() == v);
                 foreach (var v in psVarsOIR.Skip(1))
-                    model.Add(psVarsOIR.First() == v);
+                    modelOIR.Add(psVarsOIR.First() == v);
             }
         }
 
@@ -155,6 +155,7 @@ internal class ProfundumMatchingService
                 {
                     var e = fixE.First();
                     model.Add(belegVars[(p, s, e.ProfundumInstanz)] == 1);
+                    modelOIR.Add(belegVarsOIR[(p, s, e.ProfundumInstanz)] == 1);
                 }
 
                 var psBeleg = belegwuensche
@@ -187,14 +188,18 @@ internal class ProfundumMatchingService
                         slots,
                     sBelegWuensche,
                     belegVars,
-                    personNotEnrolledVariables.Where(k => k.Key.Item1.Id == s.Id).Select(s => s.Value).ToArray(),
-                    model);
+                    personNotEnrolledVariables.Where(k => k.Key.Item1 == s).ToDictionary(x => x.Key.Item2, x => x.Value),
+                    model,
+                    objective
+                    );
                 r.AddConstraints(s,
                         slots,
                     sBelegWuensche,
                     belegVarsOIR,
-                    personNotEnrolledVariablesOIR.Where(k => k.Key.Item1.Id == s.Id).Select(s => s.Value).ToArray(),
-                    modelOIR);
+                    personNotEnrolledVariablesOIR.Where(k => k.Key.Item1 == s).ToDictionary(x => x.Key.Item2, x => x.Value),
+                    modelOIR,
+                    objectiveOIR
+                    );
             }
 
         foreach (var r in _rulesFactory.GetAggregateRules())
@@ -202,20 +207,23 @@ internal class ProfundumMatchingService
 
         model.Maximize(objective);
         modelOIR.Maximize(objectiveOIR);
-        var solver = new CpSolver();
-        solver.StringParameters = "max_time_in_seconds:30.0";
+
+
         var solverOIR = new CpSolver();
         solverOIR.StringParameters = "max_time_in_seconds:30.0";
-        var resultStatus = solver.Solve(model, new SolutionCallBack());
         var resultStatusOIR = solverOIR.Solve(modelOIR, new SolutionCallBack());
+
+        if (resultStatusOIR != CpSolverStatus.Optimal &&
+            resultStatusOIR != CpSolverStatus.Feasible)
+            throw new ArgumentException(
+                "No solution found in Matching likely due to errors in non-capacity constraints.");
+
+        var solver = new CpSolver();
+        solver.StringParameters = "max_time_in_seconds:30.0";
+        var resultStatus = solver.Solve(model, new SolutionCallBack());
 
         if (resultStatus != CpSolverStatus.Optimal && resultStatus != CpSolverStatus.Feasible)
         {
-            if (resultStatusOIR != CpSolverStatus.Optimal &&
-                resultStatusOIR != CpSolverStatus.Feasible)
-                throw new ArgumentException(
-                    "No solution found in Matching likely due to errors in non-capacity constraints.");
-
             throw new ArgumentException("No solution found in Matching due to capacity constraints");
         }
 
@@ -271,7 +279,61 @@ internal class ProfundumMatchingService
     {
         return _dbContext.ProfundaEinschreibungen.ExecuteUpdateAsync(e => e.SetProperty(e => e.IsFixed, true));
     }
+
+    ///
+    public async Task<IEnumerable<string>> GetMatchingWarnings()
+    {
+        var warnings = new List<string>();
+        var enrollments = _dbContext.ProfundaEinschreibungen
+            .Include(e => e.ProfundumInstanz).ThenInclude(i => i.Profundum).ThenInclude(p => p.Kategorie)
+            .Include(e => e.Slot)
+            .Include(e => e.BetroffenePerson).ToArray();
+
+
+        var students = _dbContext.Personen.Where(x => x.Rolle == Rolle.Mittelstufe).ToArray();
+        var slots = _dbContext.ProfundaSlots.ToArray();
+
+
+        foreach (var e in enrollments)
+        {
+            var klasse = _userService.GetKlassenstufe(e.BetroffenePerson);
+            var minKlasse = e.ProfundumInstanz.Profundum.MinKlasse;
+            var maxKlasse = e.ProfundumInstanz.Profundum.MaxKlasse;
+            if (minKlasse is not null && klasse < minKlasse)
+            {
+                warnings.Add($"{e.BetroffenePerson.Email} minKlasse");
+            }
+            if (maxKlasse is not null && klasse > maxKlasse)
+            {
+                warnings.Add($"{e.BetroffenePerson.Email} maxKlasse");
+            }
+        }
+
+        foreach (var student in students)
+        {
+            foreach (var (j, q) in slots.Select(s => (s.Jahr, s.Quartal)).Distinct().Where((x => IsProfilPflichtig(student, x.Quartal))))
+            {
+                if (!enrollments.Any(e => e.BetroffenePerson == student
+                            && e.Slot.Jahr == j && e.Slot.Quartal == q
+                            && e.ProfundumInstanz.Profundum.Kategorie.ProfilProfundum))
+                {
+                    warnings.Add($"{student.Email} profil");
+                }
+            }
+        }
+
+
+        return warnings;
+    }
+
+    private bool IsProfilPflichtig(Person student, ProfundumQuartal quartal)
+    {
+        var klasse = _userService.GetKlassenstufe(student);
+        var profilQuartale = _profundumConfiguration.Value.ProfilPflichtigkeit.GetValueOrDefault(klasse);
+        return profilQuartale is not null && profilQuartale.Contains(quartal);
+    }
 }
+
 
 class SolutionCallBack : CpSolverSolutionCallback
 {
