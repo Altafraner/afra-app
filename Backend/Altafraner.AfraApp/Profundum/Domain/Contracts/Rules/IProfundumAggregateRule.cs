@@ -14,6 +14,6 @@ public interface IProfundumAggregateRule
         IEnumerable<ProfundumSlot> slots,
         IEnumerable<Person> students,
         IEnumerable<ProfundumBelegWunsch> wuensche,
-        Dictionary<ProfundumBelegWunsch, BoolVar> wuenscheVariables,
+        Dictionary<(Person, ProfundumSlot, ProfundumInstanz), BoolVar> belegVars,
         CpModel model);
 }

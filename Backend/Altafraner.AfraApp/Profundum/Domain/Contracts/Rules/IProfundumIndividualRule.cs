@@ -18,7 +18,7 @@ public interface IProfundumIndividualRule
     void AddConstraints(Person student,
         IEnumerable<ProfundumSlot> slots,
         IEnumerable<ProfundumBelegWunsch> wuensche,
-        Dictionary<ProfundumBelegWunsch, BoolVar> wuenscheVariables,
+        Dictionary<(Person, ProfundumSlot, ProfundumInstanz), BoolVar> belegVars,
         IEnumerable<BoolVar> personNotEnrolledVars,
         CpModel model);
 }

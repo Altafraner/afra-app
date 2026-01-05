@@ -37,7 +37,7 @@ public class ProfilRule : IProfundumIndividualRule
     public void AddConstraints(Person student,
         IEnumerable<ProfundumSlot> slots,
         IEnumerable<ProfundumBelegWunsch> wuensche,
-        Dictionary<ProfundumBelegWunsch, BoolVar> wuenscheVariables,
+        Dictionary<(Person, ProfundumSlot, ProfundumInstanz), BoolVar> belegVars,
         IEnumerable<BoolVar> personNotEnrolledVars,
         CpModel model
         )
@@ -45,7 +45,7 @@ public class ProfilRule : IProfundumIndividualRule
         var profilPflichtig = IsProfilPflichtig(student, slots.Select(s => s.Quartal));
         if (!profilPflichtig) return;
         var profilWuensche = wuensche.Where(b => b.ProfundumInstanz.Profundum.Kategorie.ProfilProfundum);
-        var profilWuenscheVars = profilWuensche.Select(b => wuenscheVariables[b]);
+        var profilWuenscheVars = profilWuensche.SelectMany(b => b.ProfundumInstanz.Slots.Select(s => belegVars[(b.BetroffenePerson, s, b.ProfundumInstanz)]));
         model.AddAtLeastOne(profilWuenscheVars.Union(personNotEnrolledVars));
     }
 

@@ -18,24 +18,59 @@ public class NotMultipleInstancesOfSameProfundumRule : IProfundumIndividualRule
     public void AddConstraints(Person student,
         IEnumerable<ProfundumSlot> slots,
         IEnumerable<ProfundumBelegWunsch> wuensche,
-        Dictionary<ProfundumBelegWunsch, BoolVar> wuenscheVariables,
+        Dictionary<(Person, ProfundumSlot, ProfundumInstanz), BoolVar> belegVars,
         IEnumerable<BoolVar> personNotEnrolledVars,
         CpModel model
         )
     {
-        var wuenscheArray = wuensche as ProfundumBelegWunsch[] ?? wuensche.ToArray();
+        var personen = belegVars.Keys.ToArray().Select(x => x.Item1).Distinct().ToArray();
+        var profundaInstanzen = belegVars.Keys.ToArray().Select(x => x.Item3).Distinct().ToArray();
+        var profundaDefinitionen = profundaInstanzen.Select(p => p.Profundum).Distinct().ToArray();
 
-        var profundaDefinitionenIds = wuenscheArray
-            .Where(b => b.BetroffenePerson.Id == student.Id)
-            .Select(b => b.ProfundumInstanz.Profundum.Id)
-            .ToHashSet();
-
-        foreach (var defId in profundaDefinitionenIds)
+        var instanceActive = new Dictionary<(Person, ProfundumInstanz), BoolVar>();
+        foreach (var person in personen)
         {
-            var psBeleg = wuenscheArray
-                .Where(b => b.ProfundumInstanz.Profundum.Id == defId);
-            var psBelegVar = psBeleg.Select(b => wuenscheVariables[b]).ToArray();
-            model.AddAtMostOne(psBelegVar);
+            foreach (var instanz in profundaInstanzen)
+            {
+                var varsForInstance = belegVars
+                    .Where(kv =>
+                        kv.Key.Item1 == person &&
+                        kv.Key.Item3 == instanz)
+                    .Select(kv => kv.Value)
+                    .ToArray();
+
+                if (varsForInstance.Length == 0)
+                    continue;
+
+                var active = model.NewBoolVar(
+                    $"active_{person.Id}_{instanz.Id}");
+
+                instanceActive[(person, instanz)] = active;
+
+                foreach (var v in varsForInstance)
+                    model.AddImplication(v, active);
+
+                model.Add(LinearExpr.Sum(varsForInstance) >= active);
+            }
+        }
+
+        foreach (var person in personen)
+        {
+            var instanzenByDefinition = instanceActive.Keys
+                .Where(k => k.Item1 == person)
+                .GroupBy(k => k.Item2.Profundum);
+
+            foreach (var defGroup in instanzenByDefinition)
+            {
+                var actives = defGroup
+                    .Select(k => instanceActive[k])
+                    .ToArray();
+
+                if (actives.Length > 1)
+                {
+                    model.Add(LinearExpr.Sum(actives) <= 1);
+                }
+            }
         }
     }
 }
