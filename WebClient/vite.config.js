@@ -34,6 +34,9 @@ const pwaOptions = {
             },
         ],
     },
+    workbox: {
+        navigateFallbackDenylist: [/^\/api/],
+    },
 };
 
 // https://vite.dev/config/
