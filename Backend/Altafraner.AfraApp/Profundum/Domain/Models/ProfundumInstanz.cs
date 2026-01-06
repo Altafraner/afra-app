@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Altafraner.AfraApp.Profundum.Domain.Models;
 
 /// <summary>
@@ -14,10 +16,13 @@ public class ProfundumInstanz
     ///
     public required ICollection<ProfundumSlot> Slots { get; set; }
 
-    // public ICollection<Person> Verantwortliche { get; set; } = new List<Person>();
     ///
     public int? MaxEinschreibungen { get; set; } = null;
 
     ///
     public ICollection<ProfundumEinschreibung> Einschreibungen { get; set; } = [];
+
+    ///
+    [MaxLength(20)]
+    public required string Ort { get; set; }
 }

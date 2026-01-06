@@ -28,6 +28,7 @@ const newInstanz = ref({
     profundumId: props.profundumId,
     maxEinschreibungen: 15,
     slots: [],
+    ort: '',
 });
 
 const dialogVisible = ref(null);
@@ -52,6 +53,7 @@ async function createInstanz() {
             profundumId: props.profundumId,
             maxEinschreibungen: 15,
             slots: [],
+            ort: '',
         };
         await load();
     } catch (e) {
@@ -90,7 +92,7 @@ onMounted(load);
         <h2>Angebote</h2>
         <Button icon="pi pi-plus" label="Neues Angebot" @click="createDialogVisible = true" />
     </div>
-    <Dialog :visible="createDialogVisible" header="Neues Angebot erstellen">
+    <Dialog v-model:visible="createDialogVisible" header="Neues Angebot erstellen" modal>
         <div class="flex gap-2 flex-col mt-2">
             <FloatLabel variant="on">
                 <InputNumber
@@ -123,6 +125,11 @@ onMounted(load);
                 fluid
             />
 
+            <FloatLabel variant="on">
+                <InputText id="newOrt" v-model="newInstanz.ort" maxlength="20" fluid />
+                <label for="newOrt">Ort</label>
+            </FloatLabel>
+
             <Button label="Anlegen" icon="pi pi-plus" @click="createInstanz" fluid />
         </div>
     </Dialog>
@@ -134,7 +141,7 @@ onMounted(load);
                     {{ slots.find((s) => s.id === slotId)?.label }}
                 </Tag>
             </span>
-            <span> {{ angebot.maxEinschreibungen }} Plätze </span>
+            <span> {{ angebot.maxEinschreibungen }} Plätze, Raum: {{ angebot.ort }} </span>
             <span class="inline-flex gap-2 items-baseline">
                 <Button
                     as="a"
@@ -188,6 +195,17 @@ onMounted(load);
                             placeholder="Slots auswählen"
                             class="multiselect-wrap"
                         />
+
+                        <FloatLabel variant="on">
+                            <InputText
+                                :id="`ort-${angebot.id}`"
+                                v-model="angebot.ort"
+                                maxlength="20"
+                                fluid
+                            />
+                            <label :for="`ort-${angebot.id}`">Ort</label>
+                        </FloatLabel>
+
                         <Button label="Speichern" @click="updateInstanz(angebot)" />
                     </div>
                 </Dialog>

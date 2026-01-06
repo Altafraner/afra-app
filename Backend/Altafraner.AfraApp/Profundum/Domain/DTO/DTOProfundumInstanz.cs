@@ -16,6 +16,7 @@ public record DTOProfundumInstanz
         MaxEinschreibungen = dbInstanz.MaxEinschreibungen;
         NumEinschreibungen = dbInstanz.Einschreibungen?.Select(e => e.BetroffenePersonId).Distinct().Count() ?? 0;
         ProfundumInfo = new DTOProfundumDefinition(dbInstanz.Profundum);
+        Ort = dbInstanz.Ort;
     }
 
     /// <inheritdoc cref="ProfundumInstanz.Id"/>
@@ -35,4 +36,7 @@ public record DTOProfundumInstanz
 
     ///
     public int? NumEinschreibungen { get; set; } = null;
+
+    /// <inheritdoc cref="ProfundumInstanz.Ort"/>
+    public string Ort { get; set; }
 }

@@ -294,6 +294,7 @@ internal class ProfundumManagementService
             Profundum = def,
             MaxEinschreibungen = dtoInstanz.MaxEinschreibungen,
             Slots = [],
+            Ort = dtoInstanz.Ort,
         };
         _dbContext.ProfundaInstanzen.Add(inst);
         foreach (var s in dtoInstanz.Slots)
@@ -346,6 +347,7 @@ internal class ProfundumManagementService
         if (instanz is null) throw new NotFoundException("instanz to update not found");
 
         instanz.MaxEinschreibungen = patch.MaxEinschreibungen;
+        instanz.Ort = patch.Ort;
 
         // update slots
         instanz.Slots.Clear();
@@ -436,6 +438,7 @@ internal class ProfundumManagementService
             bezeichnung = p.Profundum.Bezeichnung,
             beschreibung = p.Profundum.Beschreibung,
             voraussetzungen = p.Profundum.Dependencies.Select(d => d.Bezeichnung),
+            ort = p.Ort,
             slots = p.Slots.OrderBy(p => p.Jahr).ThenBy(p => p.Quartal).ThenBy(p => p.Wochentag),
             verantwortliche = p.Profundum.Verantwortliche.Select(v => new PersonInfoMinimal(v)),
             teilnehmer = teilnehmer.Select(v => new PersonInfoMinimal(v)),

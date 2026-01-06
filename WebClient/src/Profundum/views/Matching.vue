@@ -1,5 +1,14 @@
 <script setup>
-import { DataTable, Checkbox, Column, Button, Message, Popover, Select, useToast } from 'primevue';
+import {
+    DataTable,
+    Checkbox,
+    Column,
+    Button,
+    Message,
+    Popover,
+    Select,
+    useToast,
+} from 'primevue';
 import { mande } from 'mande';
 import { computed, ref } from 'vue';
 import { useConfirmPopover } from '@/composables/confirmPopover.js';
@@ -176,7 +185,6 @@ const stopEdit = () => {
     editingPersonId.value = null;
 };
 
-
 const warningPops = ref([]);
 
 const isEditing = (row) => editingPersonId.value === row.person.id;
@@ -212,34 +220,32 @@ const isEditing = (row) => editingPersonId.value === row.person.id;
         <Column header="Person">
             <template #body="{ data }">
                 <UserPeek :person="data.person" :showGroup="true" />
-                <template v-if="data.wuensche.length === 0">
-                  (Keine Wünsche)
-                </template>
+                <template v-if="data.wuensche.length === 0"> (Keine Wünsche) </template>
             </template>
         </Column>
 
-<Column header="Warnungen" style="width: 5rem">
-    <template #body="{ data, index }">
-        <Button
-            v-if="data.warnings.length !== 0"
-            icon="pi pi-exclamation-triangle"
-            severity="warn"
-            text
-            @click="(e) => warningPops[index].toggle(e)"
-        />
+        <Column header="Warnungen" style="width: 5rem">
+            <template #body="{ data, index }">
+                <Button
+                    v-if="data.warnings.length !== 0"
+                    icon="pi pi-exclamation-triangle"
+                    severity="warn"
+                    text
+                    @click="(e) => warningPops[index].toggle(e)"
+                />
 
-        <Popover
-            :ref="el => warningPops[index] = el"
-            dismissable
-            showCloseIcon
-            style="min-width: 15rem"
-        >
-            <p v-for="w in data.warnings" :key="w">
-                {{ w }}
-            </p>
-        </Popover>
-    </template>
-</Column>
+                <Popover
+                    :ref="(el) => (warningPops[index] = el)"
+                    dismissable
+                    showCloseIcon
+                    style="min-width: 15rem"
+                >
+                    <p v-for="w in data.warnings" :key="w">
+                        {{ w }}
+                    </p>
+                </Popover>
+            </template>
+        </Column>
 
         <Column header="Aktionen" style="width: 5rem">
             <template #body="{ data }">

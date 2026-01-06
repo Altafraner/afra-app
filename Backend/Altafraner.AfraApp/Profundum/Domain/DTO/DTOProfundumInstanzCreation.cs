@@ -13,4 +13,7 @@ public record DTOProfundumInstanzCreation
 
     /// <inheritdoc cref="ProfundumInstanz.MaxEinschreibungen"/>
     public int? MaxEinschreibungen { get; set; } = null;
+
+    /// <inheritdoc cref="ProfundumInstanz.Ort"/>
+    public required string Ort { get; set; }
 }

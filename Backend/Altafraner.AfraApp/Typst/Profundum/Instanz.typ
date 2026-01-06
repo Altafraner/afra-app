@@ -5,6 +5,7 @@
     bezeichnung,
     slots,
     beschreibung,
+    ort,
     voraussetzungen,
     verantwortliche,
     teilnehmer
@@ -66,6 +67,8 @@
     ],
     align(right, image("logo.png", width: 50mm))
 )
+
+Raum #ort
 
 == Beschreibung
 
