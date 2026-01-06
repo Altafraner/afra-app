@@ -59,19 +59,20 @@ public class KlassenLimitsRule : IProfundumIndividualRule
     /// <inheritdoc/>
     public IEnumerable<string> GetWarnings(Person student, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
     {
+        var klasse = _userService.GetKlassenstufe(student);
         var warnings = new List<string>();
         foreach (var e in enrollments)
         {
-            var klasse = _userService.GetKlassenstufe(e.BetroffenePerson);
-            var minKlasse = e.ProfundumInstanz.Profundum.MinKlasse;
-            var maxKlasse = e.ProfundumInstanz.Profundum.MaxKlasse;
+            var p = e.ProfundumInstanz.Profundum;
+            var minKlasse = p.MinKlasse;
+            var maxKlasse = p.MaxKlasse;
             if (minKlasse is not null && klasse < minKlasse)
             {
-                warnings.Add($"minKlasse in {e.Slot.Jahr}, {e.Slot.Quartal}, {e.Slot.Wochentag}: {e.ProfundumInstanz.Profundum.Bezeichnung}");
+                warnings.Add($"über Klassenbegrenzung für {p.Bezeichnung}");
             }
             if (maxKlasse is not null && klasse > maxKlasse)
             {
-                warnings.Add($"maxKlasse in {e.Slot.Jahr}, {e.Slot.Quartal}, {e.Slot.Wochentag}: {e.ProfundumInstanz.Profundum.Bezeichnung}");
+                warnings.Add($"unter Klassenbegrenzung für {p.Bezeichnung}");
             }
         }
         return warnings;

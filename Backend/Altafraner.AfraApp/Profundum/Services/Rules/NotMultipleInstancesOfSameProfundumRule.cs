@@ -66,16 +66,7 @@ public class NotMultipleInstancesOfSameProfundumRule : IProfundumIndividualRule
 
     /// <inheritdoc/>
     public IEnumerable<string> GetWarnings(Person student, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
-    {
-        var warnings = new List<string>();
-        var enrollmentsByProfundum = enrollments.GroupBy(e => e.ProfundumInstanz.Profundum);
-        foreach (var x in enrollmentsByProfundum)
-        {
-            if (x.Select(x => x.ProfundumInstanz).Distinct().Count() > 1)
-            {
-                warnings.Add($"Mehrere Instanzen desselben Profundums: {x.Key.Bezeichnung}");
-            }
-        }
-        return warnings;
-    }
+        => enrollments.GroupBy(e => e.ProfundumInstanz.Profundum)
+            .Where(x => x.Select(x => x.ProfundumInstanz).Distinct().Count() > 1)
+            .Select(x => $"Mehrere Instanzen desselben Profundums: {x.Key.Bezeichnung}");
 }

@@ -104,16 +104,11 @@ public class ProfilRule : IProfundumIndividualRule
     /// <inheritdoc/>
     public IEnumerable<string> GetWarnings(Person student, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
     {
-        var warnings = new List<string>();
-        foreach (var (j, q) in slots.Select(s => (s.Jahr, s.Quartal)).Distinct().Where((x => IsProfilPflichtig(student, x.Quartal))))
-        {
-            if (!enrollments.Any(e => e.BetroffenePerson == student
-                        && e.Slot.Jahr == j && e.Slot.Quartal == q
-                        && e.ProfundumInstanz.Profundum.Kategorie.ProfilProfundum))
-            {
-                warnings.Add($"kein profil in {j}, {q}");
-            }
-        }
-        return warnings;
+        return slots.Select(s => (s.Jahr, s.Quartal)).Distinct()
+            .Where((x => IsProfilPflichtig(student, x.Quartal)))
+            .Where(x => !enrollments.Any(e => e.BetroffenePerson == student
+                     && e.Slot.Jahr == x.Jahr && e.Slot.Quartal == x.Quartal
+                     && e.ProfundumInstanz.Profundum.Kategorie.ProfilProfundum))
+            .Select(x => $"kein profil in {x.Jahr}, {x.Quartal}");
     }
 }
