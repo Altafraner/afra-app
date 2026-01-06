@@ -1,11 +1,17 @@
 version: 2
 updates:
   - package-ecosystem: "nuget"
-    directory: "/Afra-App"
+    directory: "/Backend"
     schedule:
       interval: "daily"
+    groups:
+      minor:
+        update-types: ['minor', 'patch']
 
   - package-ecosystem: "npm"
     directory: "/WebClient"
     schedule:
       interval: "daily"
+    groups:
+      minor:
+        update-types: ['minor', 'patch']
