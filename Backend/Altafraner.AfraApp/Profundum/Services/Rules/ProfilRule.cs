@@ -74,7 +74,7 @@ public class ProfilRule : IProfundumIndividualRule
         }
     }
 
-    ///
+    /// <inheritdoc/>
     public bool IsProfilZulaessig(Person student, ProfundumQuartal quartal)
     {
         var klasse = student.Gruppe;
@@ -99,5 +99,21 @@ public class ProfilRule : IProfundumIndividualRule
         var klasse = _userService.GetKlassenstufe(student);
         var profilQuartale = _profundumConfiguration.Value.ProfilPflichtigkeit.GetValueOrDefault(klasse);
         return profilQuartale is not null && profilQuartale.Contains(quartal);
+    }
+
+    /// <inheritdoc/>
+    public IEnumerable<string> GetWarnings(Person student, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
+    {
+        var warnings = new List<string>();
+        foreach (var (j, q) in slots.Select(s => (s.Jahr, s.Quartal)).Distinct().Where((x => IsProfilPflichtig(student, x.Quartal))))
+        {
+            if (!enrollments.Any(e => e.BetroffenePerson == student
+                        && e.Slot.Jahr == j && e.Slot.Quartal == q
+                        && e.ProfundumInstanz.Profundum.Kategorie.ProfilProfundum))
+            {
+                warnings.Add($"kein profil in {j}, {q}");
+            }
+        }
+        return warnings;
     }
 }

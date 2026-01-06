@@ -302,30 +302,10 @@ internal class ProfundumMatchingService
             .Include(e => e.ProfundumInstanz).ThenInclude(i => i.Profundum).ThenInclude(p => p.Kategorie)
             .Include(e => e.Slot)
             .Include(e => e.BetroffenePerson).ToArray();
-        foreach (var e in enrollments)
-        {
-            var klasse = _userService.GetKlassenstufe(e.BetroffenePerson);
-            var minKlasse = e.ProfundumInstanz.Profundum.MinKlasse;
-            var maxKlasse = e.ProfundumInstanz.Profundum.MaxKlasse;
-            if (minKlasse is not null && klasse < minKlasse)
-            {
-                warnings.Add($"minKlasse in {e.Slot.Jahr}, {e.Slot.Quartal}, {e.Slot.Wochentag}: {e.ProfundumInstanz.Profundum.Bezeichnung}");
-            }
-            if (maxKlasse is not null && klasse > maxKlasse)
-            {
-                warnings.Add($"maxKlasse in {e.Slot.Jahr}, {e.Slot.Quartal}, {e.Slot.Wochentag}: {e.ProfundumInstanz.Profundum.Bezeichnung}");
-            }
-        }
-
         var slots = _dbContext.ProfundaSlots.ToArray();
-        foreach (var (j, q) in slots.Select(s => (s.Jahr, s.Quartal)).Distinct().Where((x => IsProfilPflichtig(student, x.Quartal))))
+        foreach (var r in _rulesFactory.GetIndividualRules())
         {
-            if (!enrollments.Any(e => e.BetroffenePerson == student
-                        && e.Slot.Jahr == j && e.Slot.Quartal == q
-                        && e.ProfundumInstanz.Profundum.Kategorie.ProfilProfundum))
-            {
-                warnings.Add($"kein profil in {j}, {q}");
-            }
+            warnings.AddRange(r.GetWarnings(student, slots, enrollments));
         }
 
         return warnings;

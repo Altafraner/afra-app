@@ -22,4 +22,8 @@ public interface IProfundumIndividualRule
         Dictionary<ProfundumSlot, BoolVar> personNotEnrolledVars,
         CpModel model,
         LinearExprBuilder objective);
+
+    ///
+    IEnumerable<string> GetWarnings(Person student, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
+        => Enumerable.Empty<string>();
 }
