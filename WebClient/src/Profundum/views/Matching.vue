@@ -123,6 +123,8 @@ async function updateEnrollment(row) {
         summary: 'Gespeichert.',
         detail: 'Änderung Gepeichert.',
     });
+
+    getEnrollments();
 }
 
 const instanzenBySlot = computed(() => {
