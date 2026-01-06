@@ -291,19 +291,15 @@ internal class ProfundumMatchingService
     }
 
     ///
-    public async Task<IEnumerable<string>> GetMatchingWarnings()
+    public IEnumerable<string> GetStudentWarnings(Person student)
     {
         var warnings = new List<string>();
+
         var enrollments = _dbContext.ProfundaEinschreibungen
+            .Where(e => e.BetroffenePerson == student)
             .Include(e => e.ProfundumInstanz).ThenInclude(i => i.Profundum).ThenInclude(p => p.Kategorie)
             .Include(e => e.Slot)
             .Include(e => e.BetroffenePerson).ToArray();
-
-
-        var students = _dbContext.Personen.Where(x => x.Rolle == Rolle.Mittelstufe).ToArray();
-        var slots = _dbContext.ProfundaSlots.ToArray();
-
-
         foreach (var e in enrollments)
         {
             var klasse = _userService.GetKlassenstufe(e.BetroffenePerson);
@@ -311,27 +307,24 @@ internal class ProfundumMatchingService
             var maxKlasse = e.ProfundumInstanz.Profundum.MaxKlasse;
             if (minKlasse is not null && klasse < minKlasse)
             {
-                warnings.Add($"{e.BetroffenePerson.Email} minKlasse");
+                warnings.Add($"minKlasse in {e.Slot.Jahr}, {e.Slot.Quartal}, {e.Slot.Wochentag}: {e.ProfundumInstanz.Profundum.Bezeichnung}");
             }
             if (maxKlasse is not null && klasse > maxKlasse)
             {
-                warnings.Add($"{e.BetroffenePerson.Email} maxKlasse");
+                warnings.Add($"maxKlasse in {e.Slot.Jahr}, {e.Slot.Quartal}, {e.Slot.Wochentag}: {e.ProfundumInstanz.Profundum.Bezeichnung}");
             }
         }
 
-        foreach (var student in students)
+        var slots = _dbContext.ProfundaSlots.ToArray();
+        foreach (var (j, q) in slots.Select(s => (s.Jahr, s.Quartal)).Distinct().Where((x => IsProfilPflichtig(student, x.Quartal))))
         {
-            foreach (var (j, q) in slots.Select(s => (s.Jahr, s.Quartal)).Distinct().Where((x => IsProfilPflichtig(student, x.Quartal))))
+            if (!enrollments.Any(e => e.BetroffenePerson == student
+                        && e.Slot.Jahr == j && e.Slot.Quartal == q
+                        && e.ProfundumInstanz.Profundum.Kategorie.ProfilProfundum))
             {
-                if (!enrollments.Any(e => e.BetroffenePerson == student
-                            && e.Slot.Jahr == j && e.Slot.Quartal == q
-                            && e.ProfundumInstanz.Profundum.Kategorie.ProfilProfundum))
-                {
-                    warnings.Add($"{student.Email} profil");
-                }
+                warnings.Add($"kein profil in {j}, {q}");
             }
         }
-
 
         return warnings;
     }
@@ -341,6 +334,40 @@ internal class ProfundumMatchingService
         var klasse = _userService.GetKlassenstufe(student);
         var profilQuartale = _profundumConfiguration.Value.ProfilPflichtigkeit.GetValueOrDefault(klasse);
         return profilQuartale is not null && profilQuartale.Contains(quartal);
+    }
+
+    public async Task<IEnumerable<DTOProfundumEnrollmentSet>> GetAllEnrollmentsAsync()
+    {
+        var slots = _dbContext.ProfundaSlots.ToArray();
+
+        var bw = await _dbContext.ProfundaBelegWuensche
+            .Include(w => w.ProfundumInstanz).ThenInclude(i => i.Profundum)
+            .ToArrayAsync();
+
+        var pe = await _dbContext.ProfundaEinschreibungen.ToArrayAsync();
+
+
+
+        return _dbContext.Personen
+            .Where(p => p.Rolle == Rolle.Mittelstufe)
+            .OrderBy(p => p.Gruppe).ThenBy(p => p.LastName).ThenBy(p => p.FirstName)
+            .ToArray()
+            .Select(p => new DTOProfundumEnrollmentSet
+            {
+                Person = new User.Domain.DTO.PersonInfoMinimal(p),
+                Enrollments = slots.Select(s => pe
+                        .Where(e => e.BetroffenePersonId == p.Id && e.SlotId == s.Id)
+                        .ToArray()
+                        .Select(ei => new DTOProfundumEnrollment(ei))
+                        .FirstOrDefault(defaultValue: new DTOProfundumEnrollment { ProfundumSlotId = s.Id, ProfundumInstanzId = null, IsFixed = false })
+                )
+                .ToArray(),
+                Wuensche = bw
+                .Where(w => w.BetroffenePersonId == p.Id)
+                .ToArray()
+                .Select(w => new DTOProfundumEnrollmentSet.DTOWunsch(w.ProfundumInstanz.Profundum.Id, (int)w.Stufe)),
+                Warnings = GetStudentWarnings(p)
+            });
     }
 }
 

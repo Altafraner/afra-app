@@ -1,5 +1,5 @@
 <script setup>
-import { DataTable, Checkbox, Column, Button, Message, Select, useToast } from 'primevue';
+import { DataTable, Checkbox, Column, Button, Message, Popover, Select, useToast } from 'primevue';
 import { mande } from 'mande';
 import { computed, ref } from 'vue';
 import { useConfirmPopover } from '@/composables/confirmPopover.js';
@@ -8,7 +8,6 @@ import UserPeek from '@/components/UserPeek.vue';
 const slots = ref([]);
 const enrollments = ref([]);
 const instanzen = ref([]);
-const warnings = ref([]);
 const matchingRunning = ref(false);
 const toast = useToast();
 const confirm = useConfirmPopover();
@@ -23,10 +22,6 @@ async function getEnrollments() {
 
 async function getInstanzen() {
     instanzen.value = await mande('/api/profundum/management/instanz').get();
-}
-
-async function getWarnings() {
-    warnings.value = await mande('/api/profundum/management/warnings').get();
 }
 
 const MATCH_DURATION = 60;
@@ -80,7 +75,6 @@ async function autoMatching() {
         console.error(e);
     } finally {
         getEnrollments();
-        getWarnings();
         getInstanzen();
         matchingRunning.value = false;
         stopCountdown();
@@ -149,7 +143,6 @@ const wishForSelectedEnrollment = (row, slotId) => {
 getSlots();
 getEnrollments();
 getInstanzen();
-getWarnings();
 
 const wishForOption = (row, option) => {
     return row.wuensche?.find((w) => w.id === option.profundumInfo.id) ?? null;
@@ -182,6 +175,9 @@ const startEdit = (row) => {
 const stopEdit = () => {
     editingPersonId.value = null;
 };
+
+
+const warningPops = ref([]);
 
 const isEditing = (row) => editingPersonId.value === row.person.id;
 </script>
@@ -221,6 +217,29 @@ const isEditing = (row) => editingPersonId.value === row.person.id;
                 </template>
             </template>
         </Column>
+
+<Column header="Warnungen" style="width: 5rem">
+    <template #body="{ data, index }">
+        <Button
+            v-if="data.warnings.length !== 0"
+            icon="pi pi-exclamation-triangle"
+            severity="warn"
+            text
+            @click="(e) => warningPops[index].toggle(e)"
+        />
+
+        <Popover
+            :ref="el => warningPops[index] = el"
+            dismissable
+            showCloseIcon
+            style="min-width: 15rem"
+        >
+            <p v-for="w in data.warnings" :key="w">
+                {{ w }}
+            </p>
+        </Popover>
+    </template>
+</Column>
 
         <Column header="Aktionen" style="width: 5rem">
             <template #body="{ data }">
@@ -322,12 +341,6 @@ const isEditing = (row) => editingPersonId.value === row.person.id;
             </template>
         </Column>
     </DataTable>
-
-    <Message severity="warn">
-        <template v-for="w in warnings">
-            <p>{{ w }}</p>
-        </template>
-    </Message>
 
     <DataTable :value="instanzen">
         <Column field="profundumInfo.bezeichnung" header="Bezeichnung"></Column>

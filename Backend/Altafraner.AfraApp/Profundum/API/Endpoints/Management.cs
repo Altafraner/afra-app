@@ -54,8 +54,7 @@ public static class Management
 
         gp.MapPost("/matching", (Match svc) => svc.PerformMatching());
         gp.MapPost("/finalize", (Match svc) => svc.Finalize());
-        gp.MapGet("/enrollments", (Mgmt svc) => svc.GetAllEnrollmentsAsync());
+        gp.MapGet("/enrollments", (Match svc) => svc.GetAllEnrollmentsAsync());
         gp.MapPut("/enrollment/{personId:guid}", (Mgmt svc, Guid personId, List<DTOProfundumEnrollment> enrollments) => svc.UpdateEnrollmentsAsync(personId, enrollments));
-        gp.MapGet("/warnings", (Match svc) => svc.GetMatchingWarnings());
     }
 }

@@ -367,37 +367,6 @@ internal class ProfundumManagementService
     }
 
 
-    public async Task<IEnumerable<DTOProfundumEnrollmentSet>> GetAllEnrollmentsAsync()
-    {
-        var slots = _dbContext.ProfundaSlots.ToArray();
-
-        var bw = await _dbContext.ProfundaBelegWuensche
-            .Include(w => w.ProfundumInstanz).ThenInclude(i => i.Profundum)
-            .ToArrayAsync();
-
-        var pe = await _dbContext.ProfundaEinschreibungen.ToArrayAsync();
-
-        return _dbContext.Personen
-            .Where(p => p.Rolle == Rolle.Mittelstufe)
-            .OrderBy(p => p.Gruppe).ThenBy(p => p.LastName).ThenBy(p => p.FirstName)
-            .ToArray()
-            .Select(p => new DTOProfundumEnrollmentSet
-            {
-                Person = new PersonInfoMinimal(p),
-                Enrollments = slots.Select(s => pe
-                        .Where(e => e.BetroffenePersonId == p.Id && e.SlotId == s.Id)
-                        .ToArray()
-                        .Select(ei => new DTOProfundumEnrollment(ei))
-                        .FirstOrDefault(defaultValue: new DTOProfundumEnrollment { ProfundumSlotId = s.Id, ProfundumInstanzId = null, IsFixed = false })
-                )
-                .ToArray(),
-                Wuensche = bw
-                .Where(w => w.BetroffenePersonId == p.Id)
-                .ToArray()
-                .Select(w => new DTOProfundumEnrollmentSet.DTOWunsch(w.ProfundumInstanz.Profundum.Id, (int)w.Stufe)),
-            });
-    }
-
 
     public async Task UpdateEnrollmentsAsync(Guid personId, List<DTOProfundumEnrollment> enrollments)
     {

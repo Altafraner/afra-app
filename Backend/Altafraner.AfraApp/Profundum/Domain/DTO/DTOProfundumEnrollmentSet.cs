@@ -14,4 +14,7 @@ public record DTOProfundumEnrollmentSet
     public record DTOWunsch(Guid id, int rang);
     ///
     public required IEnumerable<DTOWunsch> Wuensche { get; set; }
+
+    ///
+    public required IEnumerable<string> Warnings { get; set; }
 }
