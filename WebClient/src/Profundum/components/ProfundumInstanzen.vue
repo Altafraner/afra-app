@@ -26,7 +26,7 @@ const loading = ref(true);
 
 const newInstanz = ref({
     profundumId: props.profundumId,
-    maxEinschreibungen: 12,
+    maxEinschreibungen: 15,
     slots: [],
 });
 
@@ -50,7 +50,7 @@ async function createInstanz() {
         toast.add({ severity: 'success', summary: 'Instanz erstellt' });
         newInstanz.value = {
             profundumId: props.profundumId,
-            maxEinschreibungen: 12,
+            maxEinschreibungen: 15,
             slots: [],
         };
         await load();
