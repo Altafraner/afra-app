@@ -33,7 +33,7 @@ public class KlassenLimitsRule : IProfundumIndividualRule
     public void AddConstraints(Person student,
         IEnumerable<ProfundumSlot> slots,
         IEnumerable<ProfundumBelegWunsch> wuensche,
-        Dictionary<(Person, ProfundumSlot, ProfundumInstanz), BoolVar> belegVars,
+        Dictionary<(ProfundumSlot, ProfundumInstanz), BoolVar> belegVars,
         Dictionary<ProfundumSlot, BoolVar> personNotEnrolledVars,
         CpModel model,
         LinearExprBuilder objective)
@@ -42,7 +42,7 @@ public class KlassenLimitsRule : IProfundumIndividualRule
 
         foreach (var (k, v) in belegVars.Where(p => p.Key.Item1.Id == student.Id))
         {
-            var (p, s, i) = k;
+            var (s, i) = k;
             var minKlasse = i.Profundum.MinKlasse;
             var maxKlasse = i.Profundum.MaxKlasse;
             if (minKlasse is not null && klasse < minKlasse)

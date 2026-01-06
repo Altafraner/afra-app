@@ -18,58 +18,48 @@ public class NotMultipleInstancesOfSameProfundumRule : IProfundumIndividualRule
     public void AddConstraints(Person student,
         IEnumerable<ProfundumSlot> slots,
         IEnumerable<ProfundumBelegWunsch> wuensche,
-        Dictionary<(Person, ProfundumSlot, ProfundumInstanz), BoolVar> belegVars,
+        Dictionary<(ProfundumSlot, ProfundumInstanz), BoolVar> belegVars,
         Dictionary<ProfundumSlot, BoolVar> personNotEnrolledVars,
         CpModel model,
         LinearExprBuilder objective)
     {
-        var personen = belegVars.Keys.ToArray().Select(x => x.Item1).Distinct().ToArray();
-        var profundaInstanzen = belegVars.Keys.ToArray().Select(x => x.Item3).Distinct().ToArray();
+        var profundaInstanzen = belegVars.Keys.ToArray().Select(x => x.Item2).Distinct().ToArray();
         var profundaDefinitionen = profundaInstanzen.Select(p => p.Profundum).Distinct().ToArray();
 
-        var instanceActive = new Dictionary<(Person, ProfundumInstanz), BoolVar>();
-        foreach (var person in personen)
+        var instanceActive = new Dictionary<ProfundumInstanz, BoolVar>();
+        foreach (var instanz in profundaInstanzen)
         {
-            foreach (var instanz in profundaInstanzen)
-            {
-                var varsForInstance = belegVars
-                    .Where(kv =>
-                        kv.Key.Item1 == person &&
-                        kv.Key.Item3 == instanz)
-                    .Select(kv => kv.Value)
-                    .ToArray();
+            var varsForInstance = belegVars
+                .Where(kv => kv.Key.Item2 == instanz)
+                .Select(kv => kv.Value)
+                .ToArray();
 
-                if (varsForInstance.Length == 0)
-                    continue;
+            if (varsForInstance.Length == 0)
+                continue;
 
-                var active = model.NewBoolVar(
-                    $"active_{person.Id}_{instanz.Id}");
+            var active = model.NewBoolVar(
+                $"active_{student.Id}_{instanz.Id}");
 
-                instanceActive[(person, instanz)] = active;
+            instanceActive[instanz] = active;
 
-                foreach (var v in varsForInstance)
-                    model.AddImplication(v, active);
+            foreach (var v in varsForInstance)
+                model.AddImplication(v, active);
 
-                model.Add(LinearExpr.Sum(varsForInstance) >= active);
-            }
+            model.Add(LinearExpr.Sum(varsForInstance) >= active);
         }
 
-        foreach (var person in personen)
+        var instanzenByDefinition = instanceActive.Keys
+            .GroupBy(k => k.Profundum);
+
+        foreach (var defGroup in instanzenByDefinition)
         {
-            var instanzenByDefinition = instanceActive.Keys
-                .Where(k => k.Item1 == person)
-                .GroupBy(k => k.Item2.Profundum);
+            var actives = defGroup
+                .Select(k => instanceActive[k])
+                .ToArray();
 
-            foreach (var defGroup in instanzenByDefinition)
+            if (actives.Length > 1)
             {
-                var actives = defGroup
-                    .Select(k => instanceActive[k])
-                    .ToArray();
-
-                if (actives.Length > 1)
-                {
-                    model.Add(LinearExpr.Sum(actives) <= 1);
-                }
+                model.Add(LinearExpr.Sum(actives) <= 1);
             }
         }
     }

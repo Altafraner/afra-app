@@ -136,12 +136,22 @@ internal class ProfundumMatchingService
         {
             foreach (var i in angebote)
             {
-                var psVars = i.Slots.Select(s => belegVars[(p, s, i)]);
-                var psVarsOIR = i.Slots.Select(s => belegVarsOIR[(p, s, i)]);
-                foreach (var v in psVars.Skip(1))
-                    model.Add(psVars.First() == v);
-                foreach (var v in psVarsOIR.Skip(1))
-                    modelOIR.Add(psVarsOIR.First() == v);
+                var psVars = i.Slots.Select(s => belegVars[(p, s, i)]).ToArray();
+                var psVarsOIR = i.Slots.Select(s => belegVarsOIR[(p, s, i)]).ToArray();
+                foreach (var (v, w) in psVars.Zip(psVars.Skip(1)))
+                {
+                    var ineq = model.NewBoolVar($"{new Guid()}");
+                    model.Add(v != w).OnlyEnforceIf(ineq);
+                    model.Add(v == w).OnlyEnforceIf(ineq.Not());
+                    objective.AddTerm(ineq, -500);
+                }
+                foreach (var (v, w) in psVarsOIR.Zip(psVarsOIR.Skip(1)))
+                {
+                    var ineq = modelOIR.NewBoolVar($"{new Guid()}");
+                    modelOIR.Add(v != w).OnlyEnforceIf(ineq);
+                    modelOIR.Add(v == w).OnlyEnforceIf(ineq.Not());
+                    objectiveOIR.AddTerm(ineq, -500);
+                }
             }
         }
 
@@ -187,7 +197,7 @@ internal class ProfundumMatchingService
                 r.AddConstraints(s,
                         slots,
                     sBelegWuensche,
-                    belegVars,
+                    belegVars.Where(k => k.Key.Item1 == s).ToDictionary(x => (x.Key.Item2, x.Key.Item3), x => x.Value),
                     personNotEnrolledVariables.Where(k => k.Key.Item1 == s).ToDictionary(x => x.Key.Item2, x => x.Value),
                     model,
                     objective
@@ -195,7 +205,7 @@ internal class ProfundumMatchingService
                 r.AddConstraints(s,
                         slots,
                     sBelegWuensche,
-                    belegVarsOIR,
+                    belegVarsOIR.Where(k => k.Key.Item1 == s).ToDictionary(x => (x.Key.Item2, x.Key.Item3), x => x.Value),
                     personNotEnrolledVariablesOIR.Where(k => k.Key.Item1 == s).ToDictionary(x => x.Key.Item2, x => x.Value),
                     modelOIR,
                     objectiveOIR

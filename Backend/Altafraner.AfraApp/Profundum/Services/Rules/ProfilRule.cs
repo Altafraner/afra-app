@@ -37,7 +37,7 @@ public class ProfilRule : IProfundumIndividualRule
     public void AddConstraints(Person student,
         IEnumerable<ProfundumSlot> slots,
         IEnumerable<ProfundumBelegWunsch> wuensche,
-        Dictionary<(Person, ProfundumSlot, ProfundumInstanz), BoolVar> belegVars,
+        Dictionary<(ProfundumSlot, ProfundumInstanz), BoolVar> belegVars,
         Dictionary<ProfundumSlot, BoolVar> personNotEnrolledVars,
         CpModel model,
         LinearExprBuilder objective)
@@ -52,9 +52,8 @@ public class ProfilRule : IProfundumIndividualRule
             .GroupBy(s => s.Quartal))
         {
             var profilVars = belegVars
-                .Where(x => x.Key.Item1 == student)
-                .Where(x => quartalGroup.Contains(x.Key.Item2))
-                .Where(x => x.Key.Item3.Profundum.Kategorie.ProfilProfundum)
+                .Where(x => quartalGroup.Contains(x.Key.Item1))
+                .Where(x => x.Key.Item2.Profundum.Kategorie.ProfilProfundum)
                 .Select(x => x.Value)
                 .ToList();
 
@@ -66,15 +65,16 @@ public class ProfilRule : IProfundumIndividualRule
 
         foreach (var (k, v) in belegVars)
         {
-            if (!IsProfilZulaessig(k.Item1, k.Item2.Quartal)
-             && !IsProfilPflichtig(k.Item1, k.Item2.Quartal)
-             && k.Item3.Profundum.Kategorie.ProfilProfundum)
+            if (!IsProfilZulaessig(student, k.Item1.Quartal)
+             && !IsProfilPflichtig(student, k.Item1.Quartal)
+             && k.Item2.Profundum.Kategorie.ProfilProfundum)
             {
                 model.Add(v == 0);
             }
         }
     }
 
+    ///
     public bool IsProfilZulaessig(Person student, ProfundumQuartal quartal)
     {
         var klasse = student.Gruppe;
