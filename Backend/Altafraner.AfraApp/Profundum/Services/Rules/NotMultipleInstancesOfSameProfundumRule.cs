@@ -73,7 +73,7 @@ public class NotMultipleInstancesOfSameProfundumRule : IProfundumIndividualRule
         {
             if (x.Select(x => x.ProfundumInstanz).Distinct().Count() > 1)
             {
-                warnings.Add("Mehrere Instanzen desselben Profundums");
+                warnings.Add($"Mehrere Instanzen desselben Profundums: {x.Key.Bezeichnung}");
             }
         }
         return warnings;
