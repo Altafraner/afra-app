@@ -40,18 +40,18 @@ public class KlassenLimitsRule : IProfundumIndividualRule
     {
         var klasse = _userService.GetKlassenstufe(student);
 
-        foreach (var (k, v) in belegVars.Where(p => p.Key.Item1.Id == student.Id))
+        foreach (var (k, v) in belegVars)
         {
             var (s, i) = k;
             var minKlasse = i.Profundum.MinKlasse;
             var maxKlasse = i.Profundum.MaxKlasse;
             if (minKlasse is not null && klasse < minKlasse)
             {
-                objective.AddTerm(v, -1000);
+                objective.AddTerm(v, -10000);
             }
             if (maxKlasse is not null && klasse > maxKlasse)
             {
-                objective.AddTerm(v, -1000);
+                objective.AddTerm(v, -10000);
             }
         }
     }

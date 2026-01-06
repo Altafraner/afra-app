@@ -93,7 +93,7 @@ internal class ProfundumMatchingService
         var belegVarsOIR = new Dictionary<(Person, ProfundumSlot, ProfundumInstanz), BoolVar>();
 
 
-        long notMatchedPenalty = slots.Count() * weights[ProfundumBelegWunschStufe.ErstWunsch] * students.Length;
+        long notMatchedPenalty = 1000;
         var personNotEnrolledVariables = new Dictionary<(Person, ProfundumSlot), BoolVar>();
         var personNotEnrolledVariablesOIR = new Dictionary<(Person, ProfundumSlot), BoolVar>();
         foreach (var student in students)
@@ -143,14 +143,14 @@ internal class ProfundumMatchingService
                     var ineq = model.NewBoolVar($"{new Guid()}");
                     model.Add(v != w).OnlyEnforceIf(ineq);
                     model.Add(v == w).OnlyEnforceIf(ineq.Not());
-                    objective.AddTerm(ineq, -500);
+                    objective.AddTerm(ineq, -1000);
                 }
                 foreach (var (v, w) in psVarsOIR.Zip(psVarsOIR.Skip(1)))
                 {
                     var ineq = modelOIR.NewBoolVar($"{new Guid()}");
                     modelOIR.Add(v != w).OnlyEnforceIf(ineq);
                     modelOIR.Add(v == w).OnlyEnforceIf(ineq.Not());
-                    objectiveOIR.AddTerm(ineq, -500);
+                    objectiveOIR.AddTerm(ineq, -1000);
                 }
             }
         }
@@ -247,20 +247,21 @@ internal class ProfundumMatchingService
         };
 
 
+        var newEinschreibungen = new List<ProfundumEinschreibung>();
         foreach (var p in students)
         {
             foreach (var i in angebote)
             {
                 foreach (var s in i.Slots)
                 {
-                    if (_dbContext.ProfundaEinschreibungen.Any(e => e.BetroffenePersonId == p.Id && e.SlotId == s.Id))
+                    if (fixEinschreibungen.Any(e => e.BetroffenePersonId == p.Id && e.SlotId == s.Id))
                     {
                         continue;
                     }
 
                     if (solver.Value(belegVars[(p, s, i)]) > 0)
                     {
-                        _dbContext.ProfundaEinschreibungen.Add(new ProfundumEinschreibung
+                        newEinschreibungen.Add(new ProfundumEinschreibung
                         {
                             ProfundumInstanz = i,
                             BetroffenePerson = p,
@@ -270,6 +271,7 @@ internal class ProfundumMatchingService
                 }
             }
         }
+        await _dbContext.ProfundaEinschreibungen.AddRangeAsync(newEinschreibungen);
         await _dbContext.SaveChangesAsync();
 
         return new MatchingStats
