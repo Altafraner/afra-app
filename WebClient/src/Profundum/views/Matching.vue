@@ -265,7 +265,7 @@ const slotLabel = (slotId) => {
             :href="`/api/profundum/management/matching.csv`"
             icon="pi pi-table"
             download
-            label="CSV-Export fixierter Einschreibungen"
+            label="CSV-Export"
         />
     </span>
 
