@@ -60,7 +60,10 @@ public class ProfilRule : IProfundumIndividualRule
             var notEnrolledVars = quartalGroup
                 .Select(s => personNotEnrolledVars[s]);
 
-            model.AddAtLeastOne(profilVars.Concat(notEnrolledVars));
+            var allVars = profilVars.Concat(notEnrolledVars).ToList();
+            var hasProfil = model.NewBoolVar($"hasProfil-{student.Id}-{quartalGroup.Key}");
+            model.AddMaxEquality(hasProfil, allVars);
+            objective.AddTerm(hasProfil.Not(), -5000);
         }
 
         foreach (var (k, v) in belegVars)
