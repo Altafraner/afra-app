@@ -259,6 +259,14 @@ const slotLabel = (slotId) => {
         </Button>
 
         <Button label="Matching finalisieren" severity="warn" @click="finalize" />
+
+        <Button
+            as="a"
+            :href="`/api/profundum/management/matching.csv`"
+            icon="pi pi-table"
+            download
+            label="CSV-Export fixierter Einschreibungen"
+        />
     </span>
 
     <DataTable

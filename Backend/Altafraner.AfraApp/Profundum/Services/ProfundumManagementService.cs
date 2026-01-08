@@ -1,3 +1,4 @@
+using System.Text;
 using Altafraner.AfraApp.Domain;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Domain.Models;
@@ -450,5 +451,39 @@ internal class ProfundumManagementService
         };
 
         return _typst.generatePdf(src, inputs);
+    }
+
+    ///
+    public async Task<string> GetStudentMatchingCsv()
+    {
+        var personen = await _dbContext.Personen
+            .AsSplitQuery()
+            .Include(s => s.ProfundaEinschreibungen)
+            .ThenInclude(e => e.ProfundumInstanz)
+            .ThenInclude(e => e!.Profundum)
+            .Include(person => person.ProfundaEinschreibungen).ThenInclude(profundumEinschreibung => profundumEinschreibung.ProfundumInstanz)
+            .Include(person => person.ProfundaEinschreibungen).ThenInclude(profundumEinschreibung => profundumEinschreibung.ProfundumInstanz)
+            .Where(p => p.Rolle == Rolle.Mittelstufe)
+            .ToArrayAsync();
+
+        var slots = await _dbContext.ProfundaSlots.ToArrayAsync();
+
+        const char sep = '\t';
+
+        var sb = new StringBuilder();
+        sb.AppendLine($"Klasse{sep} Name{sep} Vorname{slots.Select(s => s.ToString()).Aggregate("", (r, c) => $"{r}{sep} {c}")}");
+
+        foreach (var student in personen)
+        {
+            sb.AppendLine($"{student.Gruppe}{sep} {student.LastName}{sep} {student.FirstName}{slots.Select(s =>
+                student.ProfundaEinschreibungen
+                    .Where(e => e.IsFixed)
+                    .Where(e => e.Slot == s)
+                    .Select(e => e.ProfundumInstanz == null ? "" : e.ProfundumInstanz.Profundum.Bezeichnung)
+                    .FirstOrDefault(defaultValue: "")
+            ).Aggregate("", (r, c) => $"{r}{sep} {c}")}");
+        }
+
+        return sb.ToString();
     }
 }
