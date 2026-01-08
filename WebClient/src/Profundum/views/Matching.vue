@@ -255,13 +255,13 @@ const slotLabel = (slotId) => {
         <Column header="Person">
             <template #body="{ data }">
                 <UserPeek :person="data.person" :showGroup="true" />
-                <template v-if="data.wuensche.length === 0"> (Keine Wünsche) </template>
             </template>
         </Column>
 
-        <Column header="Wuensche" style="width: 5rem">
+        <Column header="Wünsche" style="width: 5rem">
             <template #body="{ data, index }">
                 <Button
+                    v-if="data.wuensche.length !== 0"
                     icon="pi pi-crown"
                     severity="info"
                     text
