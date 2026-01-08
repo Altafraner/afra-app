@@ -59,7 +59,13 @@ public class NotMultipleInstancesOfSameProfundumRule : IProfundumIndividualRule
 
             if (actives.Length > 1)
             {
-                model.Add(LinearExpr.Sum(actives) <= 1);
+                var count = model.NewIntVar(0, actives.Length, $"count_{student.Id}_{defGroup.Key.Id}");
+                model.Add(count == LinearExpr.Sum(actives));
+                var excess = model.NewIntVar(
+                    0, actives.Length, $"excess_{student.Id}_{defGroup.Key.Id}");
+                model.Add(excess >= count - 1);
+                model.Add(excess >= 0);
+                objective.AddTerm(excess, -5000);
             }
         }
     }
