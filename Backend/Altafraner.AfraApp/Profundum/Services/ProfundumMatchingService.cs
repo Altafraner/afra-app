@@ -68,7 +68,7 @@ internal class ProfundumMatchingService
             .Include(b => b.ProfundumInstanz).ThenInclude(pi => pi.Profundum).ThenInclude(p => p.Kategorie)
             .Where(b => angeboteList.Contains(b.ProfundumInstanz))
             .ToArrayAsync();
-        var students = belegwuensche.Select(b => b.BetroffenePerson).ToHashSet().ToArray();
+        var students = _dbContext.Personen.Where(p => p.Rolle == Rolle.Mittelstufe).ToArray();
 
         if (!_profundumConfiguration.Value.DeterministicMatching)
         {
