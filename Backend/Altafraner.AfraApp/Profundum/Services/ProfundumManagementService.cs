@@ -466,7 +466,10 @@ internal class ProfundumManagementService
             .Where(p => p.Rolle == Rolle.Mittelstufe)
             .ToArrayAsync();
 
-        var slots = await _dbContext.ProfundaSlots.ToArrayAsync();
+        var slots = (await _dbContext.ProfundaSlots
+            .ToArrayAsync())
+            .Order(new ProfundumSlotComparer())
+            .ToArray();
 
         const char sep = '\t';
 
