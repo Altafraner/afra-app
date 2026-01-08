@@ -122,15 +122,31 @@ async function updateEnrollment(row) {
             isFixed: e.isFixed,
         }));
 
-    await updater.put(payload);
-    toast.add({
-        severity: 'success',
-        summary: 'Gespeichert.',
-        detail: 'Änderung Gepeichert.',
-        life: 1000,
-    });
+    try {
+        await updater.put(payload);
+        toast.add({
+            severity: 'success',
+            summary: 'Gespeichert',
+            detail: 'Änderung gespeichert.',
+            life: 1500,
+        });
+        await getEnrollments();
+        return true;
+    } catch (err) {
+        console.error(err);
 
-    getEnrollments();
+        let message = 'Speichern fehlgeschlagen.';
+        if (err?.response?.data) {
+            message += ' ' + err.response.data;
+        }
+        toast.add({
+            severity: 'error',
+            summary: 'Fehler',
+            detail: message,
+            life: 4000,
+        });
+        return false;
+    }
 }
 
 const instanzenBySlot = computed(() => {
