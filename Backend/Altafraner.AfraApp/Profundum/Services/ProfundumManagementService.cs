@@ -386,10 +386,15 @@ internal class ProfundumManagementService
 
         foreach (var e in enrollments)
         {
-            var instanz = _dbContext.ProfundaInstanzen.Find(e.ProfundumInstanzId);
-            if (instanz is null)
+            ProfundumInstanz? instanz;
+            if (e.ProfundumInstanzId is not null)
             {
-                throw new ArgumentException();
+                instanz = _dbContext.ProfundaInstanzen.Find(e.ProfundumInstanzId);
+                if (instanz is null) throw new ArgumentException();
+            }
+            else
+            {
+                instanz = null;
             }
             var slot = _dbContext.ProfundaSlots.Find(e.ProfundumSlotId);
             if (slot is null)
@@ -425,7 +430,7 @@ internal class ProfundumManagementService
         }
 
         var teilnehmer = _dbContext.ProfundaEinschreibungen
-            .Where(e => e.ProfundumInstanz.Id == p.Id)
+            .Where(e => e.ProfundumInstanz != null && e.ProfundumInstanz.Id == p.Id)
             .Select(e => e.BetroffenePerson)
             .Distinct()
             .OrderBy(p => p.LastName)

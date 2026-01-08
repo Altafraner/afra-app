@@ -22,10 +22,10 @@ public class ProfundumEinschreibung
     protected internal Guid BetroffenePersonId { get; set; }
 
     ///
-    public required ProfundumInstanz ProfundumInstanz { get; set; }
+    public required ProfundumInstanz? ProfundumInstanz { get; set; }
 
     ///
-    protected internal Guid ProfundumInstanzId { get; set; }
+    protected internal Guid? ProfundumInstanzId { get; set; }
 
     ///
     public required ProfundumSlot Slot { get; set; }

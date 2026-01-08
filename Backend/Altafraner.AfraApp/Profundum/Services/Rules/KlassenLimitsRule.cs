@@ -63,7 +63,7 @@ public class KlassenLimitsRule : IProfundumIndividualRule
         var warnings = new List<string>();
         foreach (var e in enrollments)
         {
-            var p = e.ProfundumInstanz.Profundum;
+            var p = e.ProfundumInstanz!.Profundum;
             var minKlasse = p.MinKlasse;
             var maxKlasse = p.MaxKlasse;
             if (minKlasse is not null && klasse < minKlasse)

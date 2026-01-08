@@ -164,8 +164,16 @@ internal class ProfundumMatchingService
                 if (fixE.Any())
                 {
                     var e = fixE.First();
-                    model.Add(belegVars[(p, s, e.ProfundumInstanz)] == 1);
-                    modelOIR.Add(belegVarsOIR[(p, s, e.ProfundumInstanz)] == 1);
+                    if (e.ProfundumInstanz is null)
+                    {
+                        model.Add(personNotEnrolledVariables[(p, s)] == 1);
+                        modelOIR.Add(personNotEnrolledVariablesOIR[(p, s)] == 1);
+                    }
+                    else
+                    {
+                        model.Add(belegVars[(p, s, e.ProfundumInstanz!)] == 1);
+                        modelOIR.Add(belegVarsOIR[(p, s, e.ProfundumInstanz!)] == 1);
+                    }
                 }
 
                 var psBeleg = belegwuensche
@@ -298,8 +306,9 @@ internal class ProfundumMatchingService
         var warnings = new List<string>();
 
         var enrollments = _dbContext.ProfundaEinschreibungen
+            .Where(e => e.ProfundumInstanz != null)
             .Where(e => e.BetroffenePerson == student)
-            .Include(e => e.ProfundumInstanz).ThenInclude(i => i.Profundum).ThenInclude(p => p.Kategorie)
+            .Include(e => e.ProfundumInstanz).ThenInclude(i => i!.Profundum).ThenInclude(p => p.Kategorie)
             .Include(e => e.Slot)
             .Include(e => e.BetroffenePerson).ToArray();
         var slots = _dbContext.ProfundaSlots.ToArray();

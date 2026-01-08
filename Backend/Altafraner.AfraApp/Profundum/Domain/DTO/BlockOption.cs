@@ -17,7 +17,7 @@ public record BlockOption
     /// <summary>
     ///     The id of the <see cref="ProfundumInstanz"/>
     /// </summary>
-    public required Guid Value { get; set; }
+    public required Guid? Value { get; set; }
 
     /// <summary>
     ///     Additional Slots that are covered

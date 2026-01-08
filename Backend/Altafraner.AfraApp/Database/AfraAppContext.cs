@@ -242,9 +242,9 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
 
         modelBuilder.Entity<ProfundumEinschreibung>(e =>
         {
-            e.HasOne(f => f.ProfundumInstanz).WithMany(pi => pi.Einschreibungen);
+            e.HasOne(f => f.ProfundumInstanz).WithMany(pi => pi.Einschreibungen).HasForeignKey(f => f.ProfundumInstanzId).IsRequired(false);
             e.HasOne(f => f.BetroffenePerson).WithMany(pe => pe.ProfundaEinschreibungen);
-            e.HasKey(b => new { b.BetroffenePersonId, b.ProfundumInstanzId, b.SlotId });
+            e.HasKey(b => new { b.BetroffenePersonId, b.SlotId });
         });
 
         modelBuilder.Entity<ProfundumBelegWunsch>(w =>

@@ -354,6 +354,7 @@ const slotLabel = (slotId) => {
                         <Checkbox binary v-model="enrollmentForSlot(data, slot.id).isFixed" />
 
                         <Select
+                            showClear
                             filter
                             class="w-60 select-compact"
                             :options="sortedInstanzenForSlot(slot.id, data)"

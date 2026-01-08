@@ -134,12 +134,12 @@ internal class ProfundumEnrollmentService
             .Select(t => new BlockKatalog
             {
                 Fixed = _dbContext.ProfundaEinschreibungen
-                .Include(p => p.ProfundumInstanz).ThenInclude(i => i.Slots)
-                .Include(p => p.ProfundumInstanz).ThenInclude(i => i.Profundum)
+                .Include(p => p.ProfundumInstanz).ThenInclude(i => i!.Slots)
+                .Include(p => p.ProfundumInstanz).ThenInclude(i => i!.Profundum)
                     .Where(e => e.BetroffenePerson.Id == student.Id)
-                    .Where(e => e.ProfundumInstanz.Slots.Any(x => x.Id == t.slot.Id))
+                    .Where(e => e.Slot.Id == t.slot.Id)
                     .Select(e => e.ProfundumInstanz)
-                    .Select(p => new BlockOption
+                    .Select(p => p == null ? new BlockOption { Label = "-", Value = null } : new BlockOption
                     {
                         Label = p.Slots.Count <= 1
                             ? p.Profundum.Bezeichnung
@@ -339,12 +339,13 @@ internal class ProfundumEnrollmentService
             s => s.ToString(),
             s =>
                 _dbContext.ProfundaEinschreibungen
-                    .Include(pe => pe.ProfundumInstanz)
+                    .Where(p => p.ProfundumInstanz == null)
+                    .Include(pe => pe.ProfundumInstanz!)
                     .ThenInclude(pi => pi.Profundum)
                     .ThenInclude(p => p.Kategorie)
                     .Where(pe => pe.BetroffenePerson.Id == student.Id)
-                    .Where(p => p.ProfundumInstanz.Slots.Contains(s))
-                    .Select(pe => new DTOProfundumDefinition(pe.ProfundumInstanz.Profundum))
+                    .Where(p => p.ProfundumInstanz!.Slots.Contains(s))
+                    .Select(pe => new DTOProfundumDefinition(pe.ProfundumInstanz!.Profundum))
                     .First());
     }
 }

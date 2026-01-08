@@ -108,7 +108,7 @@ public class ProfilRule : IProfundumIndividualRule
             .Where((x => IsProfilPflichtig(student, x.Quartal)))
             .Where(x => !enrollments.Any(e => e.BetroffenePerson == student
                      && e.Slot.Jahr == x.Jahr && e.Slot.Quartal == x.Quartal
-                     && e.ProfundumInstanz.Profundum.Kategorie.ProfilProfundum))
+                     && e.ProfundumInstanz!.Profundum.Kategorie.ProfilProfundum))
             .Select(x => $"kein profil in {x.Jahr}, {x.Quartal}");
     }
 }
