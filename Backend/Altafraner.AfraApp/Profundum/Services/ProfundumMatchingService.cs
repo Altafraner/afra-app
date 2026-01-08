@@ -324,6 +324,7 @@ internal class ProfundumMatchingService
 
         var bw = await _dbContext.ProfundaBelegWuensche
             .Include(w => w.ProfundumInstanz).ThenInclude(i => i.Profundum)
+            .Include(w => w.ProfundumInstanz).ThenInclude(i => i.Slots)
             .ToArrayAsync();
 
         var pe = await _dbContext.ProfundaEinschreibungen.ToArrayAsync();
@@ -347,7 +348,9 @@ internal class ProfundumMatchingService
                 Wuensche = bw
                 .Where(w => w.BetroffenePersonId == p.Id)
                 .ToArray()
-                .Select(w => new DTOProfundumEnrollmentSet.DTOWunsch(w.ProfundumInstanz.Profundum.Id, (int)w.Stufe)),
+                .Select(w => new DTOProfundumEnrollmentSet.DTOWunsch(w.ProfundumInstanz.Profundum.Id,
+                            w.ProfundumInstanz.Slots.Select(s => s.Id),
+                            (int)w.Stufe)),
                 Warnings = GetStudentWarnings(p)
             });
     }

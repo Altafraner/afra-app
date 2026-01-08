@@ -17,6 +17,7 @@ import UserPeek from '@/components/UserPeek.vue';
 const slots = ref([]);
 const enrollments = ref([]);
 const instanzen = ref([]);
+const profunda = ref([]);
 const matchingRunning = ref(false);
 const toast = useToast();
 const confirm = useConfirmPopover();
@@ -31,6 +32,10 @@ async function getEnrollments() {
 
 async function getInstanzen() {
     instanzen.value = await mande('/api/profundum/management/instanz').get();
+}
+
+async function getProfunda() {
+    profunda.value = await mande('/api/profundum/management/profundum').get();
 }
 
 const MATCH_DURATION = 60;
@@ -155,6 +160,7 @@ const wishForSelectedEnrollment = (row, slotId) => {
 getSlots();
 getEnrollments();
 getInstanzen();
+getProfunda();
 
 const wishForOption = (row, option) => {
     return row.wuensche?.find((w) => w.id === option.profundumInfo.id) ?? null;
@@ -189,8 +195,34 @@ const stopEdit = () => {
 };
 
 const warningPops = ref([]);
+const wuenschePops = ref([]);
 
 const isEditing = (row) => editingPersonId.value === row.person.id;
+
+const wuenscheBySlot = (row) => {
+    const map = new Map();
+
+    for (const w of row.wuensche ?? []) {
+        for (const slotId of w.slotId ?? []) {
+            if (!map.has(slotId)) map.set(slotId, []);
+            map.get(slotId).push(w);
+        }
+    }
+
+    for (const [slotId, list] of map) {
+        map.set(
+            slotId,
+            list.toSorted((a, b) => a.rang - b.rang),
+        );
+    }
+
+    return map;
+};
+
+const slotLabel = (slotId) => {
+    const s = slots.value.find((x) => x.id === slotId);
+    return s ? `${s.jahr}-${s.quartal}-${s.wochentag}` : 'Unbekannter Slot';
+};
 </script>
 <template>
     <h1>Profunda-Matching</h1>
@@ -224,6 +256,39 @@ const isEditing = (row) => editingPersonId.value === row.person.id;
             <template #body="{ data }">
                 <UserPeek :person="data.person" :showGroup="true" />
                 <template v-if="data.wuensche.length === 0"> (Keine Wünsche) </template>
+            </template>
+        </Column>
+
+        <Column header="Wuensche" style="width: 5rem">
+            <template #body="{ data, index }">
+                <Button
+                    icon="pi pi-crown"
+                    severity="info"
+                    text
+                    @click="(e) => wuenschePops[index].toggle(e)"
+                />
+
+                <Popover
+                    :ref="(el) => (wuenschePops[index] = el)"
+                    dismissable
+                    showCloseIcon
+                    style="min-width: 15rem"
+                >
+                    <div
+                        v-for="[slotId, wishes] of wuenscheBySlot(data)"
+                        :key="slotId"
+                        class="mb-2"
+                    >
+                        <b class="block mb-1">{{ slotLabel(slotId) }}</b>
+
+                        <ul class="ml-3">
+                            <li v-for="w in wishes" :key="`${slotId}-${w.id}`">
+                                {{ w.rang }}.
+                                {{ profunda.find((p) => p.id == w.id)?.bezeichnung ?? '—' }}
+                            </li>
+                        </ul>
+                    </div>
+                </Popover>
             </template>
         </Column>
 

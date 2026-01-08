@@ -11,7 +11,7 @@ public record DTOProfundumEnrollmentSet
     public required IEnumerable<DTOProfundumEnrollment?> Enrollments { get; set; }
 
     ///
-    public record DTOWunsch(Guid id, int rang);
+    public record DTOWunsch(Guid id, IEnumerable<Guid> slotId, int rang);
     ///
     public required IEnumerable<DTOWunsch> Wuensche { get; set; }
 
