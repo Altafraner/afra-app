@@ -122,6 +122,7 @@ async function updateEnrollment(row) {
         severity: 'success',
         summary: 'Gespeichert.',
         detail: 'Änderung Gepeichert.',
+        life: 1000,
     });
 
     getEnrollments();
@@ -242,9 +243,11 @@ const isEditing = (row) => editingPersonId.value === row.person.id;
                     showCloseIcon
                     style="min-width: 15rem"
                 >
-                    <p v-for="w in data.warnings" :key="w">
-                        {{ w }}
-                    </p>
+                    <ul>
+                        <li v-for="w in data.warnings" :key="w">
+                            {{ w }}
+                        </li>
+                    </ul>
                 </Popover>
             </template>
         </Column>
