@@ -11,7 +11,6 @@ public record DTOProfundumKategorie
         Id = dbProfundumKategorie.Id;
         Bezeichnung = dbProfundumKategorie.Bezeichnung;
         ProfilProfundum = dbProfundumKategorie.ProfilProfundum;
-        MaxProEinwahl = dbProfundumKategorie.MaxProEinwahl;
     }
 
     /// <inheritdoc cref="ProfundumKategorie.Id"/>
@@ -22,7 +21,4 @@ public record DTOProfundumKategorie
 
     /// <inheritdoc cref="ProfundumKategorie.ProfilProfundum"/>
     public bool ProfilProfundum { get; set; }
-
-    /// <inheritdoc cref="ProfundumKategorie.MaxProEinwahl"/>
-    public int? MaxProEinwahl { get; set; }
 }

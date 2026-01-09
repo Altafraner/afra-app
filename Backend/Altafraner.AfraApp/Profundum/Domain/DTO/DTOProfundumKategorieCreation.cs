@@ -10,7 +10,4 @@ public record DTOProfundumKategorieCreation
 
     /// <inheritdoc cref="ProfundumKategorie.ProfilProfundum"/>
     public bool ProfilProfundum { get; set; }
-
-    /// <inheritdoc cref="ProfundumKategorie.MaxProEinwahl"/>
-    public int? MaxProEinwahl { get; set; }
 }

@@ -150,7 +150,6 @@ internal class ProfundumManagementService
         {
             Bezeichnung = dtoKategorie.Bezeichnung,
             ProfilProfundum = dtoKategorie.ProfilProfundum,
-            MaxProEinwahl = dtoKategorie.MaxProEinwahl,
         };
 
         _dbContext.ProfundaKategorien.Add(kategorie);
@@ -166,8 +165,6 @@ internal class ProfundumManagementService
             throw new ArgumentException();
         }
 
-        if (dtoKategorie.MaxProEinwahl != kategorie.MaxProEinwahl)
-            kategorie.MaxProEinwahl = dtoKategorie.MaxProEinwahl;
         if (dtoKategorie.Bezeichnung != kategorie.Bezeichnung)
             kategorie.Bezeichnung = dtoKategorie.Bezeichnung;
         if (dtoKategorie.ProfilProfundum != kategorie.ProfilProfundum)

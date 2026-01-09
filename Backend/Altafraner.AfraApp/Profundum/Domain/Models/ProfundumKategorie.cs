@@ -29,9 +29,4 @@ public class ProfundumKategorie
     /// A boolean indicating that Profunda of this Kategorie correspond to Profilprofunda
     /// </summary>
     public required bool ProfilProfundum { get; set; }
-
-    /// <summary>
-    /// How many Profunda of this Kategorie can be enrolled in in one Enrollment cycle
-    /// </summary>
-    public int? MaxProEinwahl { get; set; }
 }
