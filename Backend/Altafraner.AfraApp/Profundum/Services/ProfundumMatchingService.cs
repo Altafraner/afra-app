@@ -301,17 +301,12 @@ internal class ProfundumMatchingService
     }
 
     ///
-    public IEnumerable<string> GetStudentWarnings(Person student)
+    internal IEnumerable<string> GetStudentWarnings(Person student,
+        ProfundumSlot[] slots,
+        ProfundumEinschreibung[] enrollments)
     {
         var warnings = new List<string>();
 
-        var enrollments = _dbContext.ProfundaEinschreibungen
-            .Where(e => e.ProfundumInstanz != null)
-            .Where(e => e.BetroffenePerson == student)
-            .Include(e => e.ProfundumInstanz).ThenInclude(i => i!.Profundum).ThenInclude(p => p.Kategorie)
-            .Include(e => e.Slot)
-            .Include(e => e.BetroffenePerson).ToArray();
-        var slots = _dbContext.ProfundaSlots.ToArray();
         foreach (var r in _rulesFactory.GetIndividualRules())
         {
             warnings.AddRange(r.GetWarnings(student, slots, enrollments));
@@ -327,41 +322,60 @@ internal class ProfundumMatchingService
         return profilQuartale is not null && profilQuartale.Contains(quartal);
     }
 
-    public async Task<IEnumerable<DTOProfundumEnrollmentSet>> GetAllEnrollmentsAsync()
+    public async IAsyncEnumerable<DTOProfundumEnrollmentSet> GetAllEnrollmentsAsync()
     {
-        var slots = _dbContext.ProfundaSlots.ToArray();
+        var slots = await _dbContext.ProfundaSlots.ToArrayAsync();
 
-        var bw = await _dbContext.ProfundaBelegWuensche
-            .Include(w => w.ProfundumInstanz).ThenInclude(i => i.Profundum)
-            .Include(w => w.ProfundumInstanz).ThenInclude(i => i.Slots)
-            .ToArrayAsync();
-
-        var pe = await _dbContext.ProfundaEinschreibungen.ToArrayAsync();
-
-
-
-        return _dbContext.Personen
+        var personenWithData = _dbContext.Personen
+            .AsSplitQuery()
             .Where(p => p.Rolle == Rolle.Mittelstufe)
-            .OrderBy(p => p.Gruppe).ThenBy(p => p.LastName).ThenBy(p => p.FirstName)
-            .ToArray()
-            .Select(p => new DTOProfundumEnrollmentSet
+            .OrderBy(p => p.Gruppe)
+            .ThenBy(p => p.LastName)
+            .ThenBy(p => p.FirstName)
+            .Include(p => p.ProfundaBelegwuensche)
+            .ThenInclude(p => p.ProfundumInstanz)
+            .ThenInclude(p => p.Profundum)
+            .Include(p => p.ProfundaBelegwuensche)
+            .ThenInclude(p => p.ProfundumInstanz)
+            .ThenInclude(p => p.Slots)
+            .Include(p => p.ProfundaEinschreibungen)
+            .ThenInclude(p => p.ProfundumInstanz)
+            .ThenInclude(p => p!.Profundum)
+            .ThenInclude(p => p.Kategorie)
+            .Include(p => p.ProfundaEinschreibungen)
+            .ThenInclude(p => p.ProfundumInstanz)
+            .ThenInclude(p => p!.Slots)
+            .AsAsyncEnumerable();
+
+
+        await foreach (var person in personenWithData)
+        {
+            var personsEnrollments = slots.Select(slot => (slotId: slot.Id,
+                    enrollment: person.ProfundaEinschreibungen.FirstOrDefault(e => e.SlotId == slot.Id)))
+                .Select(e =>
+                    e.enrollment is not null
+                        ? new DTOProfundumEnrollment(e.enrollment)
+                        : new DTOProfundumEnrollment
+                            { ProfundumSlotId = e.slotId, ProfundumInstanzId = null, IsFixed = false });
+
+            var personsWishes = person.ProfundaBelegwuensche
+                .Select(e => new DTOWunsch(e.ProfundumInstanz.Profundum.Id,
+                    e.ProfundumInstanz.Slots.Select(s => s.Id),
+                    (int)e.Stufe));
+            var warnings = GetStudentWarnings(person,
+                slots,
+                person.ProfundaEinschreibungen
+                    .Where(e => e.ProfundumInstanz is not null)
+                    .ToArray());
+
+            yield return new DTOProfundumEnrollmentSet
             {
-                Person = new User.Domain.DTO.PersonInfoMinimal(p),
-                Enrollments = slots.Select(s => pe
-                        .Where(e => e.BetroffenePersonId == p.Id && e.SlotId == s.Id)
-                        .ToArray()
-                        .Select(ei => new DTOProfundumEnrollment(ei))
-                        .FirstOrDefault(defaultValue: new DTOProfundumEnrollment { ProfundumSlotId = s.Id, ProfundumInstanzId = null, IsFixed = false })
-                )
-                .ToArray(),
-                Wuensche = bw
-                .Where(w => w.BetroffenePersonId == p.Id)
-                .ToArray()
-                .Select(w => new DTOProfundumEnrollmentSet.DTOWunsch(w.ProfundumInstanz.Profundum.Id,
-                            w.ProfundumInstanz.Slots.Select(s => s.Id),
-                            (int)w.Stufe)),
-                Warnings = GetStudentWarnings(p)
-            });
+                Person = new User.Domain.DTO.PersonInfoMinimal(person),
+                Enrollments = personsEnrollments,
+                Wuensche = personsWishes,
+                Warnings = warnings
+            };
+        }
     }
 }
 

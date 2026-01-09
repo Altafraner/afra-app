@@ -1,13 +1,15 @@
-namespace Altafraner.AfraApp.Profundum.Domain.DTO;
-
 using System.Diagnostics.CodeAnalysis;
 using Altafraner.AfraApp.Profundum.Domain.Models;
 
+namespace Altafraner.AfraApp.Profundum.Domain.DTO;
+
 ///
-public record DTOProfundumEnrollment
+public record struct DTOProfundumEnrollment
 {
     ///
-    public DTOProfundumEnrollment() { }
+    public DTOProfundumEnrollment()
+    {
+    }
 
     ///
     [SetsRequiredMembers]

@@ -23,7 +23,17 @@ public interface IProfundumIndividualRule
         CpModel model,
         LinearExprBuilder objective);
 
-    ///
-    IEnumerable<string> GetWarnings(Person student, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
-        => Enumerable.Empty<string>();
+    /// <summary>
+    /// Gets warnings for a student
+    /// </summary>
+    /// <param name="student">The student to get warnings for</param>
+    /// <param name="slots">The slots the student can enroll for</param>
+    /// <param name="enrollments">The students enrollments</param>
+    /// <returns></returns>
+    IEnumerable<string> GetWarnings(Person student,
+        IEnumerable<ProfundumSlot> slots,
+        IEnumerable<ProfundumEinschreibung> enrollments)
+    {
+        return [];
+    }
 }
