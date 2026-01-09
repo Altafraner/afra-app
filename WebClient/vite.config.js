@@ -27,10 +27,13 @@ const pwaOptions = {
                 src: 'screenshots/screenshot_wide.png',
                 type: 'image/png',
                 form_factor: 'wide',
+                sizes: '2160x1620',
             },
             {
                 src: 'screenshots/screenshot_narrow.png',
                 type: 'image/png',
+                form_factor: 'narrow',
+                sizes: '1242x2688',
             },
         ],
     },
