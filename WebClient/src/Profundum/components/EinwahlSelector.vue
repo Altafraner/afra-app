@@ -46,7 +46,6 @@ const model = defineModel({
                     option-value="value"
                     show-clear
                 />
-                {{ preSelected }}
             </template>
             <label for="erstwunsch">{{ label }}</label>
         </FloatLabel>

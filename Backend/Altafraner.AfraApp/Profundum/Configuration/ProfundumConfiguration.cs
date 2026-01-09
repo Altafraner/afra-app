@@ -12,9 +12,6 @@ public class ProfundumConfiguration
     public required bool DeterministicMatching { get; set; }
 
     ///
-    public required Dictionary<int, ProfundumQuartal[]> ProfundumBlockiert { get; set; }
-
-    ///
     public required Dictionary<int, ProfundumQuartal[]> ProfilPflichtigkeit { get; set; }
 
     ///

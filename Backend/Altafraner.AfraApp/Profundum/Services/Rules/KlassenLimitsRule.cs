@@ -24,7 +24,8 @@ public class KlassenLimitsRule : IProfundumIndividualRule
     /// <inheritdoc/>
     public RuleStatus CheckForSubmission(Person student,
         IEnumerable<ProfundumSlot> slots,
-            IEnumerable<ProfundumBelegWunsch> wuensche)
+        IEnumerable<ProfundumEinschreibung> enrollments,
+        IEnumerable<ProfundumBelegWunsch> wuensche)
     {
         return RuleStatus.Valid;
     }

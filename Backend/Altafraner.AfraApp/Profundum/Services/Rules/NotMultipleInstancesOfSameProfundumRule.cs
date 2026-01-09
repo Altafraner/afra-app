@@ -11,6 +11,7 @@ public class NotMultipleInstancesOfSameProfundumRule : IProfundumIndividualRule
     /// <inheritdoc/>
     public RuleStatus CheckForSubmission(Person student,
         IEnumerable<ProfundumSlot> slots,
+        IEnumerable<ProfundumEinschreibung> enrollments,
         IEnumerable<ProfundumBelegWunsch> wuensche)
         => RuleStatus.Valid;
 

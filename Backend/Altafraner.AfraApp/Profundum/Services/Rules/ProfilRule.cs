@@ -24,7 +24,8 @@ public class ProfilRule : IProfundumIndividualRule
     /// <inheritdoc/>
     public RuleStatus CheckForSubmission(Person student,
         IEnumerable<ProfundumSlot> slots,
-            IEnumerable<ProfundumBelegWunsch> wuensche)
+        IEnumerable<ProfundumEinschreibung> enrollments,
+        IEnumerable<ProfundumBelegWunsch> wuensche)
     {
         var profilPflichtig = IsProfilPflichtig(student, slots.Select(s => s.Quartal));
         if (!profilPflichtig) return RuleStatus.Valid;

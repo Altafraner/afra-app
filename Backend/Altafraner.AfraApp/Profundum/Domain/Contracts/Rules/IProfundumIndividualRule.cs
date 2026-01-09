@@ -10,6 +10,7 @@ public interface IProfundumIndividualRule
     ///
     RuleStatus CheckForSubmission(Person student,
     IEnumerable<ProfundumSlot> slots,
+    IEnumerable<ProfundumEinschreibung> enrollments,
     IEnumerable<ProfundumBelegWunsch> wuensche);
 
     /// <summary>

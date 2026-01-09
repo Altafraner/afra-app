@@ -17,7 +17,7 @@ async function get() {
     const profunda = await api.get();
     options.value = profunda;
 
-    for (const option of options.value) {
+    for (const option of options.value.filter((x) => x.fixed === null)) {
         results.value[option.id] = [null, null, null];
     }
 }
@@ -33,8 +33,7 @@ async function send() {
         toast.add({
             severity: 'error',
             summary: 'Fehler',
-            detail:
-                'Deine Belegwünsche sind fehlerhaft. \n' + (e.body ? e.body.split('(')[0] : ''),
+            detail: 'Deine Belegwünsche sind fehlerhaft. \n' + e.body.error,
         });
         return;
     }
@@ -52,7 +51,7 @@ async function send() {
 const preSelected = computed(() => {
     // return an array of the ids of all selected options
     const computedResult = {};
-    for (const option of options.value) {
+    for (const option of options.value.filter((x) => x.fixed === null)) {
         for (let i = 0; i < results.value[option.id].length; i++) {
             const value = results.value[option.id][i];
             const valueObj = option.options.find((opt) => opt.value === value);
@@ -69,8 +68,11 @@ const preSelected = computed(() => {
 });
 
 const maySend = computed(() => {
-    for (const option of options.value) {
-        if (!results.value[option.id].every((value) => value !== null)) {
+    for (const option of options.value.filter((x) => x.fixed === null)) {
+        if (
+            option.fixed === null &&
+            !results.value[option.id].every((value) => value !== null)
+        ) {
             return false;
         }
     }
