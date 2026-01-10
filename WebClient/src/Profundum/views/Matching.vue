@@ -275,6 +275,7 @@ const slotLabel = (slotId) => {
         size="small"
         class="datatable-compact"
         scrollable
+        :loading="matchingRunning"
     >
         <Column header="Person">
             <template #body="{ data }">
