@@ -10,14 +10,6 @@ namespace Altafraner.AfraApp.Profundum.Services.Rules;
 ///
 public class AllSlotsRule : IProfundumIndividualRule
 {
-    private readonly AfraAppContext _dbContext;
-
-    ///
-    public AllSlotsRule(AfraAppContext dbContext)
-    {
-        _dbContext = dbContext;
-    }
-
     /// <inheritdoc/>
     public RuleStatus CheckForSubmission(Person student,
         IEnumerable<ProfundumSlot> slots,

@@ -83,8 +83,8 @@ internal class ProfundumEnrollmentService
         var profundaInstanzen = _dbContext.ProfundaInstanzen
             .AsSplitQuery()
             .Include(p => p.Slots)
-            .Include(p => p.Profundum)
-            .ThenInclude(p => p.Kategorie)
+            .Include(p => p.Profundum).ThenInclude(p => p.Kategorie)
+            .Include(p => p.Profundum).ThenInclude(p => p.Dependencies)
             .Where(p => (p.Profundum.MinKlasse == null || klasse >= p.Profundum.MinKlasse)
                         && (p.Profundum.MaxKlasse == null || klasse <= p.Profundum.MaxKlasse))
             .Where(p => !p.Profundum.Kategorie.ProfilProfundum || profilPflichtig || profilZulässig)
