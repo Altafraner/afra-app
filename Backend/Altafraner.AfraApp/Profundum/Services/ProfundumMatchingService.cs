@@ -89,7 +89,6 @@ internal class ProfundumMatchingService
         var belegVars = new Dictionary<(Person, ProfundumSlot, ProfundumInstanz), BoolVar>();
 
 
-        long notMatchedPenalty = 1000;
         var personNotEnrolledVariables = new Dictionary<(Person, ProfundumSlot), BoolVar>();
         foreach (var student in students)
         {
@@ -97,7 +96,7 @@ internal class ProfundumMatchingService
             {
                 var nev = model.NewBoolVar($"beleg-{student.Id}-not-enrolled-in-{s.Id}");
                 personNotEnrolledVariables[(student, s)] = nev;
-                objective.AddTerm(nev, -notMatchedPenalty);
+                objective.AddTerm(nev, 1); // Not matched is slightly better than stupid solutions.
             }
         }
 
@@ -137,14 +136,12 @@ internal class ProfundumMatchingService
                     }
                 }
 
-                var psBeleg = belegwuensche
+                var wunschVars = belegwuensche
                     .Where(b => b.BetroffenePerson.Id == p.Id)
                     .Where(b => b.ProfundumInstanz.Slots.Contains(s))
-                    .ToArray();
-                var psBelegVar = psBeleg
                     .SelectMany(b => b.ProfundumInstanz.Slots.Select(s => (b.Stufe, belegVars[(b.BetroffenePerson, s, b.ProfundumInstanz)])))
                     .ToArray();
-                foreach (var (stufe, v) in psBelegVar)
+                foreach (var (stufe, v) in wunschVars)
                 {
                     objective.AddTerm(v, weights[stufe]);
                 }
