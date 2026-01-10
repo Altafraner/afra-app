@@ -264,6 +264,7 @@ internal class ProfundumManagementService
             .Include(p => p.Kategorie)
             .Include(p => p.Verantwortliche)
             .Include(p => p.Dependencies)
+            .OrderBy(p => p.Bezeichnung.ToLower())
             .Select(p => new DTOProfundumDefinition(p))
             .ToArrayAsync();
     }
