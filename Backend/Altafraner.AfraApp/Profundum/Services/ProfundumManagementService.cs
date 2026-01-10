@@ -440,7 +440,7 @@ internal class ProfundumManagementService
         var inputs = new
         {
             bezeichnung = p.Profundum.Bezeichnung,
-            beschreibung = p.Profundum.Beschreibung,
+            beschreibung = "",
             voraussetzungen = p.Profundum.Dependencies.Select(d => d.Bezeichnung),
             ort = p.Ort,
             slots = p.Slots.OrderBy(p => p.Jahr).ThenBy(p => p.Quartal).ThenBy(p => p.Wochentag),

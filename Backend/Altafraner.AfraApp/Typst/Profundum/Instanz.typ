@@ -70,11 +70,12 @@
 
 Raum #ort
 
-== Beschreibung
-
-#cmarker.render(math:mitex,h1-level:3,
-    beschreibung
-)
+#if (beschreibung.len() > 0) {[
+    == Beschreibung
+    #cmarker.render(math:mitex,h1-level:3,
+        beschreibung
+    )
+]}
 
 #if (voraussetzungen.len() > 0) {[
     === Vorausgesetzte Profunda
