@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Altafraner.AfraApp.Profundum.Configuration;
 using Altafraner.AfraApp.Profundum.Domain.Contracts.Services;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
@@ -176,7 +175,7 @@ internal class ProfundumMatchingService
 
         var solver = new CpSolver();
         solver.StringParameters = "max_time_in_seconds:30.0";
-        var resultStatus = solver.Solve(model, new SolutionCallBack());
+        var resultStatus = solver.Solve(model, new SolutionCallBack(_logger));
 
         if (resultStatus != CpSolverStatus.Optimal && resultStatus != CpSolverStatus.Feasible)
         {
@@ -300,17 +299,15 @@ internal class ProfundumMatchingService
             };
         }
     }
-}
 
-
-class SolutionCallBack : CpSolverSolutionCallback
-{
-    private int solution_count;
-    public override void OnSolutionCallback()
+    class SolutionCallBack(in ILogger logger) : CpSolverSolutionCallback()
     {
-        Console.WriteLine(String.Format("Solution #{0}: time = {1:F2} s", solution_count, WallTime()));
-        Console.WriteLine(String.Format("  objective value = {0}", ObjectiveValue()));
-        solution_count++;
+        private readonly ILogger _logger = logger;
+        private int solution_count;
+        public override void OnSolutionCallback()
+        {
+            _logger.LogInformation("Solution #{}: time = {:F2} s, objective value = {}", solution_count, WallTime(), ObjectiveValue());
+            solution_count++;
+        }
     }
-
 }
