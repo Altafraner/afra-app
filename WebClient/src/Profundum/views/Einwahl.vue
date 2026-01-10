@@ -96,12 +96,25 @@ startup();
         <strong> kein Kriterium </strong> zur Belegung.
     </p>
 
+    <h2>Vorauswahl</h2>
+
+    <p>Im Folgenden sind eure bereits gewählten Profunda ausgegraut aufgeführt. Bitte prüft:</p>
+    <ol class="list-decimal pl-6">
+        <li>Ob eure vergangenen Belegungen korrekt sind.</li>
+        <li>
+            Ob ihr für die Zukunft gewählte Profunda (insbesondere Fremdsprachen) weiter belegen
+            wollt.
+        </li>
+    </ol>
+    <p>
+        Ist eine Belegung falsch, oder ihr möchtet eine Sprache abwählen, gebt ihr bitte
+        <strong> noch keine Wünsche </strong> ab und wendet euch an
+        <a href="mailto:@afra.lernsax.de">@afra.lernsax.de</a>
+    </p>
+
     <h2>Kriterien</h2>
 
-    <p>
-        Im folgenden Formular könnt ihr Wünsche für das Profundum im folgenden Halbjahr abgeben.
-        Bitte beachtet das Profundarium für ausführliche Informationen zu jedem Angebot.
-    </p>
+    <p>Bitte beachtet das Profundarium für ausführliche Informationen zu jedem Angebot.</p>
 
     <p>
         Um eure Wünsche abgeben zu können, wählt ihr für jeden Slot eure drei Favoriten in
@@ -128,7 +141,8 @@ startup();
             href="https://github.com/Altafraner/afra-app"
             target="_blank"
             >veröffentlichter Berechnungsvorschrift</a
-        >. Jeder soll immer einen seiner drei Wünsche erhalten.
+        >. Jeder soll immer einen seiner drei Wünsche erhalten, werden keine weiteren Absprachen
+        getroffen.
     </p>
 
     <hr class="my-3" />
