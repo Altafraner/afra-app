@@ -1,4 +1,5 @@
 using Altafraner.AfraApp.Profundum.Domain.Contracts.Rules;
+using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.User.Domain.Models;
 using Google.OrTools.Sat;
@@ -72,8 +73,8 @@ public class NotMultipleInstancesOfSameProfundumRule : IProfundumIndividualRule
     }
 
     /// <inheritdoc/>
-    public IEnumerable<string> GetWarnings(Person student, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
+    public IEnumerable<MatchingWarning> GetWarnings(Person student, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
         => enrollments.GroupBy(e => e.ProfundumInstanz!.Profundum)
             .Where(x => x.Select(x => x.ProfundumInstanz).Distinct().Count() > 1)
-            .Select(x => $"Mehrere Instanzen desselben Profundums: {x.Key.Bezeichnung}");
+            .Select(x => new MatchingWarning($"Mehrere Instanzen desselben Profundums: {x.Key.Bezeichnung}"));
 }

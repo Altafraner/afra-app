@@ -1,3 +1,4 @@
+using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.User.Domain.Models;
 using Google.OrTools.Sat;
@@ -31,10 +32,7 @@ public interface IProfundumIndividualRule
     /// <param name="slots">The slots the student can enroll for</param>
     /// <param name="enrollments">The students enrollments</param>
     /// <returns></returns>
-    IEnumerable<string> GetWarnings(Person student,
+    IEnumerable<MatchingWarning> GetWarnings(Person student,
         IEnumerable<ProfundumSlot> slots,
-        IEnumerable<ProfundumEinschreibung> enrollments)
-    {
-        return [];
-    }
+        IEnumerable<ProfundumEinschreibung> enrollments);
 }

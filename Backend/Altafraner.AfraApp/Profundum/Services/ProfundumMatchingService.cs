@@ -220,18 +220,11 @@ internal class ProfundumMatchingService
     }
 
     ///
-    internal IEnumerable<string> GetStudentWarnings(Person student,
+    internal IEnumerable<MatchingWarning> GetStudentWarnings(Person student,
         ProfundumSlot[] slots,
         ProfundumEinschreibung[] enrollments)
     {
-        var warnings = new List<string>();
-
-        foreach (var r in _rulesFactory.GetIndividualRules())
-        {
-            warnings.AddRange(r.GetWarnings(student, slots, enrollments));
-        }
-
-        return warnings;
+        return _rulesFactory.GetIndividualRules().SelectMany(r => r.GetWarnings(student, slots, enrollments));
     }
 
     private bool IsProfilPflichtig(Person student, ProfundumQuartal quartal)
@@ -261,6 +254,10 @@ internal class ProfundumMatchingService
             .ThenInclude(p => p.ProfundumInstanz)
             .ThenInclude(p => p!.Profundum)
             .ThenInclude(p => p.Kategorie)
+            .Include(p => p.ProfundaEinschreibungen)
+            .ThenInclude(p => p.ProfundumInstanz)
+            .ThenInclude(p => p!.Profundum)
+            .ThenInclude(p => p.Dependencies)
             .Include(p => p.ProfundaEinschreibungen)
             .ThenInclude(p => p.ProfundumInstanz)
             .ThenInclude(p => p!.Slots)

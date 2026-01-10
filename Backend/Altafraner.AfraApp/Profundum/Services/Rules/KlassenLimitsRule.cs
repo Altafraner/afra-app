@@ -1,5 +1,6 @@
 using Altafraner.AfraApp.Profundum.Configuration;
 using Altafraner.AfraApp.Profundum.Domain.Contracts.Rules;
+using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.AfraApp.User.Services;
@@ -58,10 +59,10 @@ public class KlassenLimitsRule : IProfundumIndividualRule
     }
 
     /// <inheritdoc/>
-    public IEnumerable<string> GetWarnings(Person student, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
+    public IEnumerable<MatchingWarning> GetWarnings(Person student, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
     {
         var klasse = _userService.GetKlassenstufe(student);
-        var warnings = new List<string>();
+        var warnings = new List<MatchingWarning>();
         foreach (var e in enrollments)
         {
             var p = e.ProfundumInstanz!.Profundum;
@@ -69,11 +70,11 @@ public class KlassenLimitsRule : IProfundumIndividualRule
             var maxKlasse = p.MaxKlasse;
             if (minKlasse is not null && klasse < minKlasse)
             {
-                warnings.Add($"über Klassenbegrenzung für {p.Bezeichnung}");
+                warnings.Add(new MatchingWarning($"über Klassenbegrenzung für {p.Bezeichnung}"));
             }
             if (maxKlasse is not null && klasse > maxKlasse)
             {
-                warnings.Add($"unter Klassenbegrenzung für {p.Bezeichnung}");
+                warnings.Add(new MatchingWarning($"unter Klassenbegrenzung für {p.Bezeichnung}"));
             }
         }
         return warnings;

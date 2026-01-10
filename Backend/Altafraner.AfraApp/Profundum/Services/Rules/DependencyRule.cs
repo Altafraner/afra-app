@@ -1,4 +1,5 @@
 using Altafraner.AfraApp.Profundum.Domain.Contracts.Rules;
+using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.User.Domain.Models;
 using Google.OrTools.Sat;
@@ -47,8 +48,17 @@ public class DependencyRule : IProfundumIndividualRule
     }
 
     /// <inheritdoc/>
-    public IEnumerable<string> GetWarnings(Person student, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
+    public IEnumerable<MatchingWarning> GetWarnings(Person student, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
     {
-        return [];
+        foreach (var e in enrollments.Where(e => e.ProfundumInstanz is not null))
+        {
+            foreach (var d in e.ProfundumInstanz!.Profundum.Dependencies)
+            {
+                if (!enrollments.Any(x => x.ProfundumInstanz?.Profundum == d))
+                {
+                    yield return new MatchingWarning($"Vorbedingung {d.Bezeichnung} für {e.ProfundumInstanz.Profundum.Bezeichnung} nicht erfüllt.");
+                }
+            }
+        }
     }
 }

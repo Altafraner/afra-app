@@ -1,4 +1,5 @@
 using Altafraner.AfraApp.Profundum.Domain.Contracts.Rules;
+using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.User.Domain.Models;
 using Google.OrTools.Sat;
@@ -48,9 +49,9 @@ public class AllSlotsRule : IProfundumIndividualRule
     }
 
     /// <inheritdoc/>
-    public IEnumerable<string> GetWarnings(Person student, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
+    public IEnumerable<MatchingWarning> GetWarnings(Person student, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
     {
-        List<string> warnings = [];
+        List<MatchingWarning> warnings = [];
         var angebote = enrollments
             .Where(p => p.ProfundumInstanz is not null)
             .Select(x => x.ProfundumInstanz!).Distinct();
@@ -59,11 +60,11 @@ public class AllSlotsRule : IProfundumIndividualRule
             var belegtSlots = enrollments.Where(e => e.ProfundumInstanz == i).Select(e => e.Slot).ToArray();
             foreach (var b in belegtSlots.Except(i.Slots))
             {
-                warnings.Add($"Einschreibung in {i.Profundum.Bezeichnung}. Obwohl es in {b} nicht stattfindet. Vermutlich wurde das Profundum nach der Wahl geändert.");
+                warnings.Add(new MatchingWarning($"Einschreibung in {i.Profundum.Bezeichnung}. Obwohl es in {b} nicht stattfindet. Vermutlich wurde das Profundum nach der Wahl geändert."));
             }
             foreach (var b in i.Slots.Except(belegtSlots))
             {
-                warnings.Add($"Der Einschreibung in {i.Profundum.Bezeichnung} fehlt der Slot {b}.");
+                warnings.Add(new MatchingWarning($"Der Einschreibung in {i.Profundum.Bezeichnung} fehlt der Slot {b}."));
             }
         }
         return warnings;

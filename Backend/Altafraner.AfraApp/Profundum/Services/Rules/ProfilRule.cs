@@ -1,5 +1,6 @@
 using Altafraner.AfraApp.Profundum.Configuration;
 using Altafraner.AfraApp.Profundum.Domain.Contracts.Rules;
+using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.AfraApp.User.Services;
@@ -115,23 +116,23 @@ public class ProfilRule : IProfundumIndividualRule
     }
 
     /// <inheritdoc/>
-    public IEnumerable<string> GetWarnings(Person student, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
+    public IEnumerable<MatchingWarning> GetWarnings(Person student, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
     {
-        var keinProfundum = slots.Select(s => (s.Jahr, s.Quartal)).Distinct()
-            .Where((x => IsProfilPflichtig(student, x.Quartal)))
-            .Where(x => !enrollments.Any(e => e.BetroffenePerson == student
-                     && e.Slot.Jahr == x.Jahr && e.Slot.Quartal == x.Quartal
+        List<MatchingWarning> warnings = [];
+        var profilPflichtig = slots.Any(s => IsProfilPflichtig(student, s.Quartal));
+        if (profilPflichtig && !enrollments.Any(e => e.BetroffenePerson == student
                      && e.ProfundumInstanz!.Profundum.Kategorie.ProfilProfundum))
-            .Select(x => $"Profil (Pflicht für {student.Gruppe}) fehlt in {x.Jahr}, {x.Quartal}");
+        {
+            warnings.Add(new MatchingWarning("Profilpflicht nicht erfüllt."));
+        }
 
-
-        var profundumUnzulässig = slots.Select(s => (s.Jahr, s.Quartal)).Distinct()
+        warnings.AddRange(slots.Select(s => (s.Jahr, s.Quartal)).Distinct()
             .Where((x => !IsProfilPflichtig(student, x.Quartal) && !IsProfilZulaessig(student, x.Quartal)))
             .Where(x => enrollments.Any(e => e.BetroffenePerson == student
                      && e.Slot.Jahr == x.Jahr && e.Slot.Quartal == x.Quartal
                      && e.ProfundumInstanz!.Profundum.Kategorie.ProfilProfundum))
-            .Select(x => $"Profil nicht erlaubt für {student.Gruppe} in {x.Jahr}, {x.Quartal}");
+            .Select(x => new MatchingWarning($"Profil nicht erlaubt für {student.Gruppe} in {x.Quartal}")));
 
-        return keinProfundum.Union(profundumUnzulässig);
+        return warnings;
     }
 }

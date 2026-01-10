@@ -333,9 +333,9 @@ const slotLabel = (slotId) => {
                     showCloseIcon
                     style="min-width: 15rem"
                 >
-                    <ul>
+                    <ul class="list-disc pl-4">
                         <li v-for="w in data.warnings" :key="w">
-                            {{ w }}
+                            {{ w.text }}
                         </li>
                     </ul>
                 </Popover>

@@ -15,7 +15,7 @@ public record struct DTOProfundumEnrollmentSet
     public required IEnumerable<DTOWunsch> Wuensche { get; set; }
 
     ///
-    public required IEnumerable<string> Warnings { get; set; }
+    public required IEnumerable<MatchingWarning> Warnings { get; set; }
 
 }
 
