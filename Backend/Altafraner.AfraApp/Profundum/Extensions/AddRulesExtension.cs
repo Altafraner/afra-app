@@ -12,6 +12,7 @@ public static class AddRulesExtension
     /// </summary>
     public static void AddRules(this IServiceCollection services)
     {
+        services.AddScoped<IProfundumIndividualRule, AllSlotsRule>();
         services.AddScoped<IProfundumAggregateRule, MaxEinschreibungenRule>();
         services.AddScoped<IProfundumIndividualRule, ProfilRule>();
         services.AddScoped<IProfundumIndividualRule, NotMultipleInstancesOfSameProfundumRule>();

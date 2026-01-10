@@ -78,9 +78,7 @@ internal class ProfundumMatchingService
         }
 
         var model = new CpModel();
-        var modelOIR = new CpModel();
         var objective = LinearExpr.NewBuilder();
-        var objectiveOIR = LinearExpr.NewBuilder();
 
         var weights = new Dictionary<ProfundumBelegWunschStufe, int>
         {
@@ -90,12 +88,10 @@ internal class ProfundumMatchingService
         }.AsReadOnly();
 
         var belegVars = new Dictionary<(Person, ProfundumSlot, ProfundumInstanz), BoolVar>();
-        var belegVarsOIR = new Dictionary<(Person, ProfundumSlot, ProfundumInstanz), BoolVar>();
 
 
         long notMatchedPenalty = 1000;
         var personNotEnrolledVariables = new Dictionary<(Person, ProfundumSlot), BoolVar>();
-        var personNotEnrolledVariablesOIR = new Dictionary<(Person, ProfundumSlot), BoolVar>();
         foreach (var student in students)
         {
             foreach (var s in slots)
@@ -103,9 +99,6 @@ internal class ProfundumMatchingService
                 var nev = model.NewBoolVar($"beleg-{student.Id}-not-enrolled-in-{s.Id}");
                 personNotEnrolledVariables[(student, s)] = nev;
                 objective.AddTerm(nev, -notMatchedPenalty);
-                var nevI = modelOIR.NewBoolVar($"beleg-{student.Id}-not-enrolled");
-                personNotEnrolledVariablesOIR[(student, s)] = nevI;
-                objectiveOIR.AddTerm(nevI, -notMatchedPenalty);
             }
         }
 
@@ -114,44 +107,15 @@ internal class ProfundumMatchingService
             foreach (var s in slots)
             {
                 var psVars = new List<BoolVar>() { personNotEnrolledVariables[(p, s)] };
-                var psVarsOIR = new List<BoolVar>() { personNotEnrolledVariablesOIR[(p, s)] };
 
                 foreach (var i in angebote.Where(a => a.Slots.Contains(s)))
                 {
                     belegVars[(p, s, i)] =
                         model.NewBoolVar($"beleg-{p.Id}-{s.Id}-{i.Id}");
                     psVars.Add(belegVars[(p, s, i)]);
-
-                    belegVarsOIR[(p, s, i)] =
-                        modelOIR.NewBoolVar($"beleg-{p.Id}-{s.Id}-{i.Id}");
-                    psVarsOIR.Add(belegVarsOIR[(p, s, i)]);
                 }
 
                 model.AddExactlyOne(psVars);
-                modelOIR.AddExactlyOne(psVarsOIR);
-            }
-        }
-
-        foreach (var p in students)
-        {
-            foreach (var i in angebote)
-            {
-                var psVars = i.Slots.Select(s => belegVars[(p, s, i)]).ToArray();
-                var psVarsOIR = i.Slots.Select(s => belegVarsOIR[(p, s, i)]).ToArray();
-                foreach (var (v, w) in psVars.Zip(psVars.Skip(1)))
-                {
-                    var ineq = model.NewBoolVar($"{new Guid()}");
-                    model.Add(v != w).OnlyEnforceIf(ineq);
-                    model.Add(v == w).OnlyEnforceIf(ineq.Not());
-                    objective.AddTerm(ineq, -1000);
-                }
-                foreach (var (v, w) in psVarsOIR.Zip(psVarsOIR.Skip(1)))
-                {
-                    var ineq = modelOIR.NewBoolVar($"{new Guid()}");
-                    modelOIR.Add(v != w).OnlyEnforceIf(ineq);
-                    modelOIR.Add(v == w).OnlyEnforceIf(ineq.Not());
-                    objectiveOIR.AddTerm(ineq, -1000);
-                }
             }
         }
 
@@ -167,12 +131,10 @@ internal class ProfundumMatchingService
                     if (e.ProfundumInstanz is null)
                     {
                         model.Add(personNotEnrolledVariables[(p, s)] == 1);
-                        modelOIR.Add(personNotEnrolledVariablesOIR[(p, s)] == 1);
                     }
                     else
                     {
                         model.Add(belegVars[(p, s, e.ProfundumInstanz!)] == 1);
-                        modelOIR.Add(belegVarsOIR[(p, s, e.ProfundumInstanz!)] == 1);
                     }
                 }
 
@@ -183,16 +145,9 @@ internal class ProfundumMatchingService
                 var psBelegVar = psBeleg
                     .SelectMany(b => b.ProfundumInstanz.Slots.Select(s => (b.Stufe, belegVars[(b.BetroffenePerson, s, b.ProfundumInstanz)])))
                     .ToArray();
-                var psBelegVarOIR = psBeleg
-                    .SelectMany(b => b.ProfundumInstanz.Slots.Select(s => (b.Stufe, belegVarsOIR[(b.BetroffenePerson, s, b.ProfundumInstanz)])))
-                    .ToArray();
                 foreach (var (stufe, v) in psBelegVar)
                 {
                     objective.AddTerm(v, weights[stufe]);
-                }
-                foreach (var (stufe, v) in psBelegVarOIR)
-                {
-                    objectiveOIR.AddTerm(v, weights[stufe]);
                 }
             }
         }
@@ -210,31 +165,14 @@ internal class ProfundumMatchingService
                     model,
                     objective
                     );
-                r.AddConstraints(s,
-                        slots,
-                    sBelegWuensche,
-                    belegVarsOIR.Where(k => k.Key.Item1 == s).ToDictionary(x => (x.Key.Item2, x.Key.Item3), x => x.Value),
-                    personNotEnrolledVariablesOIR.Where(k => k.Key.Item1 == s).ToDictionary(x => x.Key.Item2, x => x.Value),
-                    modelOIR,
-                    objectiveOIR
-                    );
             }
 
         foreach (var r in _rulesFactory.GetAggregateRules())
             r.AddConstraints(slots, students, belegwuensche, belegVars, model);
 
         model.Maximize(objective);
-        modelOIR.Maximize(objectiveOIR);
 
-
-        var solverOIR = new CpSolver();
-        solverOIR.StringParameters = "max_time_in_seconds:30.0";
-        var resultStatusOIR = solverOIR.Solve(modelOIR, new SolutionCallBack());
-
-        if (resultStatusOIR != CpSolverStatus.Optimal &&
-            resultStatusOIR != CpSolverStatus.Feasible)
-            throw new ArgumentException(
-                "No solution found in Matching likely due to errors in non-capacity constraints.");
+        _logger.LogInformation($"Model stats: {model.ModelStats()}");
 
         var solver = new CpSolver();
         solver.StringParameters = "max_time_in_seconds:30.0";
@@ -242,18 +180,8 @@ internal class ProfundumMatchingService
 
         if (resultStatus != CpSolverStatus.Optimal && resultStatus != CpSolverStatus.Feasible)
         {
-            throw new ArgumentException("No solution found in Matching due to capacity constraints");
+            throw new ArgumentException("No solution found in Matching.");
         }
-
-
-        var matchingResultStatus = (solver.ObjectiveValue, solverOIR.ObjectiveValue) switch
-        {
-            ( >= 0, >= 0) => MatchingResultStatus.MatchingFound,
-            ( < 0, >= 0) => MatchingResultStatus.MatchingIncompleteDueToCapacity,
-            ( < 0, < 0) => MatchingResultStatus.MatchingIncompleteDueToHardConstraints,
-            _ => throw new UnreachableException()
-        };
-
 
         var newEinschreibungen = new List<ProfundumEinschreibung>();
         foreach (var p in students)
@@ -285,12 +213,7 @@ internal class ProfundumMatchingService
         return new MatchingStats
         {
             CalculationTime = solver.WallTime(),
-            Result = matchingResultStatus,
-            ObjectiveValue = solver.ObjectiveValue,
-            ObjectiveValueNoLimits = solverOIR.ObjectiveValue,
-            Optim = solverOIR.ObjectiveValue == 0
-                ? 0
-                : solver.ObjectiveValue / solverOIR.ObjectiveValue,
+            Result = MatchingResultStatus.MatchingComplete,
         };
     }
 
@@ -356,7 +279,7 @@ internal class ProfundumMatchingService
                     e.enrollment is not null
                         ? new DTOProfundumEnrollment(e.enrollment)
                         : new DTOProfundumEnrollment
-                            { ProfundumSlotId = e.slotId, ProfundumInstanzId = null, IsFixed = false });
+                        { ProfundumSlotId = e.slotId, ProfundumInstanzId = null, IsFixed = false });
 
             var personsWishes = person.ProfundaBelegwuensche
                 .Select(e => new DTOWunsch(e.ProfundumInstanz.Profundum.Id,
