@@ -77,7 +77,6 @@ internal class ProfundumEnrollmentService
         IEnumerable<ProfundumSlot> slots, bool profil)
     {
         var klasse = _userService.GetKlassenstufe(student);
-        var profundumSlots = slots as ProfundumSlot[] ?? slots.ToArray();
         var profundaInstanzen = _dbContext.ProfundaInstanzen
             .AsSplitQuery()
             .Include(p => p.Slots)
@@ -176,26 +175,29 @@ internal class ProfundumEnrollmentService
     public async Task RegisterBelegWunschAsync(Models_Person student, Dictionary<string, Guid[]> wuensche)
     {
         var now = DateTime.UtcNow;
-        var einschreibeZeitraum = _dbContext.ProfundumEinwahlZeitraeume.Where(z => z.EinwahlStart <= now && z.EinwahlStop > now).FirstOrDefault();
+        var einschreibeZeitraum =
+            await _dbContext.ProfundumEinwahlZeitraeume.FirstOrDefaultAsync(z =>
+                z.EinwahlStart <= now && z.EinwahlStop > now);
         if (einschreibeZeitraum is null)
-        {
             throw new ProfundumEinwahlWunschException("Einwahl geschlossen");
-        }
 
-        var fixedEnrollments = _dbContext.ProfundaEinschreibungen
+        var fixedEnrollments = await _dbContext.ProfundaEinschreibungen
             .Where(e => e.IsFixed)
             .Where(e => e.BetroffenePerson == student)
             .Include(e => e.ProfundumInstanz).ThenInclude(p => p!.Profundum)
-            .Include(e => e.Slot).ToArray();
+            .Include(e => e.Slot)
+            .ToArrayAsync();
+        var fixedSlots = fixedEnrollments.Select(s => s.Slot).Distinct().ToArray();
         var slots = _dbContext.ProfundaSlots.ToArray();
-        var openSlots = _dbContext.ProfundaSlots.Where(s => !fixedEnrollments.Select(s => s.Slot).Distinct().ToArray().Contains(s)).ToArray();
-        Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(openSlots));
+        var openSlots = await _dbContext.ProfundaSlots
+            .Where(s => !fixedSlots.Contains(s))
+            .ToArrayAsync();
+        _logger.LogInformation("{serialized}", System.Text.Json.JsonSerializer.Serialize(openSlots));
 
         var toRemove = _dbContext.ProfundaBelegWuensche
             .Where(p => p.BetroffenePerson == student)
             .Where(p => p.ProfundumInstanz.Slots.All(s => openSlots.Contains(s)));
         _dbContext.ProfundaBelegWuensche.RemoveRange(toRemove);
-
 
         var profilPflichtig = IsProfilPflichtig(student, slots.Select(s => s.Quartal));
         var profilZulässig = IsProfilZulässig(student, slots.Select(s => s.Quartal));
@@ -209,30 +211,36 @@ internal class ProfundumEnrollmentService
             [ProfundumBelegWunschStufe.DrittWunsch] = []
         };
 
-        foreach (var (str, l) in wuensche)
+        foreach (var (slotString, wuenscheGuids) in wuensche)
         {
-            var s = openSlots.FirstOrDefault(sm => sm.ToString() == str);
+            var s = openSlots.FirstOrDefault(sm => sm.ToString() == slotString);
             if (s is null) throw new ProfundumEinwahlWunschException("Kein solcher Slot");
 
-            if (l.Length != 3) throw new ProfundumEinwahlWunschException("Zu viele Wünsche für einen Slot");
+            if (wuenscheGuids.Length != 3) throw new ProfundumEinwahlWunschException("Zu viele Wünsche für einen Slot");
 
-            for (var i = 0; i < l.Length; ++i)
+            for (var i = 0; i < wuenscheGuids.Length; ++i)
             {
                 if (!Enum.IsDefined(typeof(ProfundumBelegWunschStufe), i + 1))
                     throw new ProfundumEinwahlWunschException("Belegwunschstufe nicht definiert.");
 
                 var stufe = (ProfundumBelegWunschStufe)(i + 1);
 
-                if (angeboteUsed.FirstOrDefault(a => a.Id == l[i]) is not null) continue;
+                if (angeboteUsed.Any(a => a.Id == wuenscheGuids[i])) continue;
 
-                var angebot = angebote.FirstOrDefault(a => a.Id == l[i]);
-                if (angebot is null) throw new ProfundumEinwahlWunschException($"Profundum nicht gefunden {l[i]}.");
+                var angebot = angebote.FirstOrDefault(a => a.Id == wuenscheGuids[i]);
+                if (angebot is null)
+                    throw new ProfundumEinwahlWunschException($"Profundum nicht gefunden {wuenscheGuids[i]}.");
 
                 wuenscheDict[stufe].Add(angebot);
                 angebote.Remove(angebot);
                 angeboteUsed.Add(angebot);
             }
         }
+
+        var distinctProfunda = angeboteUsed.Select(a => a.Profundum).DistinctBy(p => p.Id).ToArray();
+        if (distinctProfunda.Length < openSlots.Length)
+            throw new ProfundumEinwahlWunschException(
+                $"In den Wünschen müssen mindestens {openSlots.Length} verschiedene Profunda enthalten sein");
 
         var einwahl = new Dictionary<ProfundumSlot, ProfundumInstanz?[]>();
         foreach (var s in openSlots) einwahl[s] = new ProfundumInstanz?[3];
