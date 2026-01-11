@@ -177,10 +177,10 @@ internal class ProfundumEnrollmentService
         var openSlots = _dbContext.ProfundaSlots.Where(s => !fixedEnrollments.Select(s => s.Slot).Distinct().ToArray().Contains(s)).ToArray();
         Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(openSlots));
 
-        await _dbContext.ProfundaBelegWuensche
+        var toRemove = _dbContext.ProfundaBelegWuensche
             .Where(p => p.BetroffenePerson == student)
-            .Where(p => p.ProfundumInstanz.Slots.All(s => openSlots.Contains(s)))
-            .ExecuteDeleteAsync();
+            .Where(p => p.ProfundumInstanz.Slots.All(s => openSlots.Contains(s)));
+        _dbContext.ProfundaBelegWuensche.RemoveRange(toRemove);
 
 
         var profilPflichtig = IsProfilPflichtig(student, slots.Select(s => s.Quartal));
