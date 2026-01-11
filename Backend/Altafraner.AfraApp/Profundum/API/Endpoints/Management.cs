@@ -65,7 +65,7 @@ public static class Management
 
         gp.MapGet("/matching.csv", async (Mgmt svc) => TypedResults.File(Encoding.UTF8.GetBytes(await svc.GetStudentMatchingCsv()), MediaTypeNames.Text.Csv));
 
-        app.MapGet("/management/belegung", GetAllQuartaleWithEnrollments)
+        gp.MapGet("/feedback/belegung", GetAllQuartaleWithEnrollments)
             .RequireAuthorization(AuthorizationPolicies.TutorOnly);
     }
 

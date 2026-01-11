@@ -11,7 +11,7 @@ export const useManagement = () => {
         QuartalEnrollmentOverview[] | null
     > {
         try {
-            return await api.get('/management/belegung');
+            return await api.get('/feedback/belegung');
         } catch (e) {
             const mandeError: MandeError = e;
             toast.add({
