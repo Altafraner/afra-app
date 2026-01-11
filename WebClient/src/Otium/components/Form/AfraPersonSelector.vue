@@ -12,6 +12,11 @@ const loading = ref(true);
 
 const props = defineProps({
     multi: Boolean,
+    id: {
+        type: String,
+        default: 'betreuerSelect',
+        required: false,
+    },
 });
 
 async function getPersonen() {
@@ -34,7 +39,7 @@ getPersonen();
     <FloatLabel class="w-full" variant="on">
         <template v-if="!props.multi">
             <Select
-                id="betreuerSelect"
+                :id="id"
                 v-model="model"
                 :loading="loading"
                 :options="personen"
@@ -44,13 +49,10 @@ getPersonen();
                 option-value="id"
                 v-bind="$attrs"
             />
-            <label for="betreuerSelect">
-                <slot name="label">Betreuer:in</slot>
-            </label>
         </template>
         <template v-else>
             <MultiSelect
-                id="betreuerSelect"
+                :id="id"
                 v-model="model"
                 :loading="loading"
                 :options="personen"
@@ -60,10 +62,10 @@ getPersonen();
                 v-bind="$attrs"
                 filter
             />
-            <label for="betreuerSelect">
-                <slot name="label">Betreuer:in</slot>
-            </label>
         </template>
+        <label :for="id">
+            <slot name="label">Betreuer:in</slot>
+        </label>
     </FloatLabel>
 </template>
 

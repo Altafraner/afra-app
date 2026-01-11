@@ -222,7 +222,6 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
         {
             p.HasOne(e => e.Kategorie)
                 .WithMany(k => k.Profunda);
-            p.HasMany(e => e.Verantwortliche).WithMany(v => v.BetreuteProfunda);
             p.HasMany(e => e.Dependants).WithMany(e => e.Dependencies)
                 .UsingEntity<ProfundaDefinitionDependency>(
                     r => r.HasOne<ProfundumDefinition>().WithMany().HasForeignKey(e => e.DependantId),
@@ -238,6 +237,7 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
             p.HasOne(i => i.Profundum)
                 .WithMany(e => e.Instanzen);
             p.HasMany(e => e.Slots).WithMany();
+            p.HasMany(e => e.Verantwortliche).WithMany(e => e.BetreuteProfunda);
         });
 
         modelBuilder.Entity<ProfundumEinschreibung>(e =>

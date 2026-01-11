@@ -191,10 +191,6 @@ internal class ProfundumManagementService
         if (kat is null)
             throw new NotFoundException("referenced kategorie not found");
 
-        var verantwortliche = await _dbContext.Personen
-            .Where(p => dtoProfundum.VerantwortlicheIds.Contains(p.Id))
-            .ToArrayAsync();
-
         var deps = await _dbContext.Profunda
             .Where(p => dtoProfundum.DependencyIds.Contains(p.Id))
             .ToListAsync();
@@ -204,7 +200,6 @@ internal class ProfundumManagementService
             Bezeichnung = dtoProfundum.Bezeichnung,
             Beschreibung = dtoProfundum.Beschreibung,
             Kategorie = kat,
-            Verantwortliche = verantwortliche,
             MinKlasse = dtoProfundum.MinKlasse,
             MaxKlasse = dtoProfundum.MaxKlasse,
             Dependencies = deps,
@@ -218,7 +213,6 @@ internal class ProfundumManagementService
     {
         var profundum = await _dbContext.Profunda
             .AsSplitQuery()
-            .Include(p => p.Verantwortliche)
             .Include(p => p.Dependencies)
             .Where(p => p.Id == profundumId)
             .FirstOrDefaultAsync();
@@ -229,11 +223,6 @@ internal class ProfundumManagementService
             .Where(p => dtoProfundum.DependencyIds.Contains(p.Id))
             .ToListAsync();
         profundum.Dependencies = deps;
-
-        var verantwortliche = await _dbContext.Personen
-            .Where(p => dtoProfundum.VerantwortlicheIds.Contains(p.Id))
-            .ToListAsync();
-        profundum.Verantwortliche = verantwortliche;
 
         if (dtoProfundum.Bezeichnung != profundum.Bezeichnung)
             profundum.Bezeichnung = dtoProfundum.Bezeichnung;
@@ -262,7 +251,6 @@ internal class ProfundumManagementService
         return _dbContext.Profunda
             .AsSplitQuery()
             .Include(p => p.Kategorie)
-            .Include(p => p.Verantwortliche)
             .Include(p => p.Dependencies)
             .OrderBy(p => p.Bezeichnung.ToLower())
             .Select(p => new DTOProfundumDefinition(p))
@@ -274,39 +262,40 @@ internal class ProfundumManagementService
         return _dbContext.Profunda
             .AsSplitQuery()
             .Include(p => p.Kategorie)
-            .Include(p => p.Verantwortliche)
             .Include(p => p.Dependencies)
             .Where(p => p.Id == profundumId)
             .Select(p => new DTOProfundumDefinition(p)).FirstOrDefaultAsync();
     }
 
-    public async Task<ProfundumInstanz> CreateInstanzAsync(DTOProfundumInstanzCreation dtoInstanz)
+    public async Task<ProfundumInstanz> CreateInstanzAsync(DTOProfundumInstanzCreation request)
     {
-        var def = await _dbContext.Profunda.FindAsync(dtoInstanz.ProfundumId);
+        var def = await _dbContext.Profunda.FindAsync(request.ProfundumId);
         if (def is null)
-        {
             throw new NotFoundException("referenced profundum not found");
+
+        var verantwortliche =
+            await _dbContext.Personen.Where(p => request.VerantwortlicheIds.Contains(p.Id)).ToListAsync();
+        if (verantwortliche.Count != request.VerantwortlicheIds.Count)
+            throw new NotFoundException("At least one of the tutors does not exist");
+
+        if (request.Slots.Count == 0)
+            throw new ArgumentOutOfRangeException(nameof(request.Slots), "At least one slot is required");
+
+        var slots = await _dbContext.ProfundaSlots.Where(slot => request.Slots.Contains(slot.Id)).ToListAsync();
+        if (slots.Count != request.Slots.Count)
+        {
+            throw new NotFoundException("At least one of the slots does not exist");
         }
 
         var inst = new ProfundumInstanz
         {
             Profundum = def,
-            MaxEinschreibungen = dtoInstanz.MaxEinschreibungen,
-            Slots = [],
-            Ort = dtoInstanz.Ort,
+            MaxEinschreibungen = request.MaxEinschreibungen,
+            Slots = slots,
+            Ort = request.Ort,
+            Verantwortliche = verantwortliche
         };
-        _dbContext.ProfundaInstanzen.Add(inst);
-        foreach (var s in dtoInstanz.Slots)
-        {
-            var slt = await _dbContext.ProfundaSlots.FindAsync(s);
-            if (slt is null)
-            {
-                throw new NotFoundException("referenced slot not found");
-            }
-
-            inst.Slots.Add(slt);
-        }
-
+        await _dbContext.ProfundaInstanzen.AddAsync(inst);
         await _dbContext.SaveChangesAsync();
         return inst;
     }
@@ -315,7 +304,7 @@ internal class ProfundumManagementService
     {
         return _dbContext.ProfundaInstanzen
             .AsSingleQuery()
-            .Include(i => i.Profundum).ThenInclude(p => p.Verantwortliche)
+            .Include(p => p.Verantwortliche)
             .Include(i => i.Profundum).ThenInclude(p => p.Dependencies)
             .Include(i => i.Profundum).ThenInclude(p => p.Kategorie)
             .Include(i => i.Slots)
@@ -328,7 +317,7 @@ internal class ProfundumManagementService
     {
         return _dbContext.ProfundaInstanzen
             .AsSingleQuery()
-            .Include(i => i.Profundum).ThenInclude(p => p.Verantwortliche)
+            .Include(p => p.Verantwortliche)
             .Include(i => i.Profundum).ThenInclude(p => p.Dependencies)
             .Include(i => i.Profundum).ThenInclude(p => p.Kategorie)
             .Include(i => i.Slots)
@@ -340,22 +329,35 @@ internal class ProfundumManagementService
     public async Task<ProfundumInstanz> UpdateInstanzAsync(Guid instanzId, DTOProfundumInstanzCreation patch)
     {
         var instanz = await _dbContext.ProfundaInstanzen
+            .AsSplitQuery()
             .Include(i => i.Slots)
+            .Include(i => i.Verantwortliche)
             .FirstOrDefaultAsync(i => i.Id == instanzId);
 
         if (instanz is null) throw new NotFoundException("instanz to update not found");
 
+        var verantwortliche =
+            await _dbContext.Personen.Where(p => patch.VerantwortlicheIds.Contains(p.Id)).ToArrayAsync();
+        if (verantwortliche.Length != patch.VerantwortlicheIds.Count)
+            throw new NotFoundException("At least one of the tutors does not exist");
+
+        if (patch.Slots.Count == 0)
+            throw new ArgumentOutOfRangeException(nameof(patch.Slots), "At least one slot is required");
+
+        var slots = await _dbContext.ProfundaSlots.Where(slot => patch.Slots.Contains(slot.Id)).ToArrayAsync();
+        if (slots.Length != patch.Slots.Count) throw new NotFoundException("At least one of the slots does not exist");
+        var slotIds = slots.Select(s => s.Id).ToArray();
+        instanz.Slots.RemoveAll(s => !slotIds.Contains(s.Id));
+        var instanzSlotIds = instanz.Slots.Select(s => s.Id).ToArray();
+        instanz.Slots.AddRange(slots.Where(s => !instanzSlotIds.Contains(s.Id)));
+
+        var verantwortlicheIds = verantwortliche.Select(e => e.Id).ToArray();
+        instanz.Verantwortliche.RemoveAll(v => !verantwortlicheIds.Contains(v.Id));
+        var instanzVerantwortlicheIds = instanz.Verantwortliche.Select(v => v.Id).ToArray();
+        instanz.Verantwortliche.AddRange(verantwortliche.Where(v => !instanzVerantwortlicheIds.Contains(v.Id)));
+
         instanz.MaxEinschreibungen = patch.MaxEinschreibungen;
         instanz.Ort = patch.Ort;
-
-        // update slots
-        instanz.Slots.Clear();
-        foreach (var slotId in patch.Slots)
-        {
-            var slt = await _dbContext.ProfundaSlots.FindAsync(slotId);
-            if (slt != null)
-                instanz.Slots.Add(slt);
-        }
 
         await _dbContext.SaveChangesAsync();
         return instanz;
@@ -366,8 +368,6 @@ internal class ProfundumManagementService
         var numDeleted = await _dbContext.ProfundaInstanzen.Where(i => i.Id == instanzId).ExecuteDeleteAsync();
         if (numDeleted == 0) throw new NotFoundException("no such instanz");
     }
-
-
 
     public async Task UpdateEnrollmentsAsync(Guid personId, List<DTOProfundumEnrollment> enrollments)
     {
@@ -416,7 +416,7 @@ internal class ProfundumManagementService
     {
         var p = await _dbContext.ProfundaInstanzen
             .AsSplitQuery()
-            .Include(i => i.Profundum).ThenInclude(p => p.Verantwortliche)
+            .Include(p => p.Verantwortliche)
             .Include(i => i.Profundum).ThenInclude(p => p.Dependencies)
             .Include(i => i.Slots)
             .Where(i => i.Id == instanzId)
@@ -443,8 +443,8 @@ internal class ProfundumManagementService
             beschreibung = "",
             voraussetzungen = p.Profundum.Dependencies.Select(d => d.Bezeichnung),
             ort = p.Ort,
-            slots = p.Slots.OrderBy(p => p.Jahr).ThenBy(p => p.Quartal).ThenBy(p => p.Wochentag),
-            verantwortliche = p.Profundum.Verantwortliche.Select(v => new PersonInfoMinimal(v)),
+            slots = p.Slots.OrderBy(e => e.Jahr).ThenBy(e => e.Quartal).ThenBy(e => e.Wochentag),
+            verantwortliche = p.Verantwortliche.Select(v => new PersonInfoMinimal(v)),
             teilnehmer = teilnehmer.Select(v => new PersonInfoMinimal(v)),
         };
 

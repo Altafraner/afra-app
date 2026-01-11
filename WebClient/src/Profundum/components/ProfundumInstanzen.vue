@@ -12,6 +12,8 @@ import {
 } from 'primevue';
 import { useConfirmPopover } from '@/composables/confirmPopover.js';
 import Dialog from 'primevue/dialog';
+import { formatStudent } from '@/helpers/formatters.ts';
+import AfraPersonSelector from '@/Otium/components/Form/AfraPersonSelector.vue';
 
 const props = defineProps({ profundumId: String });
 const toast = useToast();
@@ -28,6 +30,7 @@ const newInstanz = ref({
     profundumId: props.profundumId,
     maxEinschreibungen: 15,
     slots: [],
+    verantwortliche: [],
     ort: '',
 });
 
@@ -66,7 +69,8 @@ async function createInstanz() {
 async function updateInstanz(inst) {
     dialogVisible.value = true;
     await apiInstanz.put(`/${inst.id}`, inst);
-    toast.add({ severity: 'success', summary: 'Gespeichert' });
+    toast.add({ severity: 'success', summary: 'Gespeichert', life: 10000 });
+    await load();
 }
 
 function deleteInstanz(event, id) {
@@ -105,43 +109,72 @@ onMounted(load);
                     id="newSpace"
                 >
                     <template #incrementbuttonicon>
-                        <span class="pi pi-plus" />
+                        <i class="pi pi-plus" />
                     </template>
                     <template #decrementbuttonicon>
-                        <span class="pi pi-minus" />
+                        <i class="pi pi-minus" />
                     </template>
                 </InputNumber>
                 <label for="newSpace">Plätze</label>
             </FloatLabel>
 
-            <MultiSelect
-                v-model="newInstanz.slots"
-                :options="slots"
-                optionLabel="label"
-                optionValue="id"
-                placeholder="Slots auswählen"
-                display="chip"
-                class="multiselect-wrap"
-                fluid
-            />
+            <FloatLabel variant="on">
+                <MultiSelect
+                    id="newSlots"
+                    v-model="newInstanz.slots"
+                    :options="slots"
+                    optionLabel="label"
+                    optionValue="id"
+                    placeholder="Slots auswählen"
+                    display="chip"
+                    class="multiselect-wrap"
+                    fluid
+                />
+                <label for="newSlots">Slots</label>
+            </FloatLabel>
 
             <FloatLabel variant="on">
                 <InputText id="newOrt" v-model="newInstanz.ort" maxlength="20" fluid />
                 <label for="newOrt">Ort</label>
             </FloatLabel>
 
+            <AfraPersonSelector
+                v-model="newInstanz.verantwortlicheIds"
+                multi
+                name="tutor"
+                class="multiselect-wrap"
+                fluid
+                id="newVerantwortliche"
+            >
+                <template #label>Verantwortliche</template>
+            </AfraPersonSelector>
+
             <Button label="Anlegen" icon="pi pi-plus" @click="createInstanz" fluid />
         </div>
     </Dialog>
 
-    <div class="grid grid-cols-[auto_1fr_auto] gap-4 items-baseline mt-4">
+    <div class="grid grid-cols-[auto_auto_auto_1fr_auto] gap-4 items-baseline mt-4 text-sm">
         <template v-for="angebot in instanzen">
-            <span class="inline-flex gap-2">
-                <Tag severity="secondary" v-for="slotId in angebot.slots" :key="slotId">
+            <span class="grid grid-cols-2 gap-1">
+                <Tag
+                    severity="secondary"
+                    v-for="slotId in angebot.slots"
+                    :key="slotId"
+                    class="text-sm px-1.5"
+                >
                     {{ slots.find((s) => s.id === slotId)?.label }}
                 </Tag>
             </span>
-            <span> {{ angebot.maxEinschreibungen }} Plätze, Raum: {{ angebot.ort }} </span>
+            <span> {{ angebot.maxEinschreibungen }} Plätze </span>
+            <span> Raum: {{ angebot.ort ? angebot.ort : '–' }} </span>
+            <span>
+                <template v-if="(angebot.verantwortlicheInfo?.length ?? 0) === 0">
+                    Keine Verantwortlichen
+                </template>
+                <template v-else>
+                    {{ angebot.verantwortlicheInfo.map((v) => formatStudent(v)).join(', ') }}
+                </template>
+            </span>
             <span class="inline-flex gap-2 items-baseline">
                 <Button
                     as="a"
@@ -177,24 +210,30 @@ onMounted(load);
                     header="Angebot bearbeiten"
                     modal
                 >
-                    <div class="flex flex-col gap-2">
-                        <label>Plätze: </label>
-                        <InputText
-                            type="number"
-                            v-model="angebot.maxEinschreibungen"
-                            placeholder="max. Schüler"
-                        />
+                    <div class="flex flex-col gap-2 mt-2">
+                        <FloatLabel variant="on">
+                            <InputText
+                                :id="`max-${angebot.id}`"
+                                type="number"
+                                v-model="angebot.maxEinschreibungen"
+                                placeholder="max. Schüler"
+                            />
+                            <label :id="`max-${angebot.id}`">Plätze</label>
+                        </FloatLabel>
 
-                        <label>Slots: </label>
-                        <MultiSelect
-                            v-model="angebot.slots"
-                            :options="slots"
-                            optionLabel="label"
-                            optionValue="id"
-                            filter
-                            placeholder="Slots auswählen"
-                            class="multiselect-wrap"
-                        />
+                        <FloatLabel variant="on">
+                            <MultiSelect
+                                :id="`slots-${angebot.id}`"
+                                v-model="angebot.slots"
+                                :options="slots"
+                                optionLabel="label"
+                                optionValue="id"
+                                filter
+                                placeholder="Slots auswählen"
+                                class="multiselect-wrap"
+                            />
+                            <label :id="`slots-${angebot.id}`">Slots</label>
+                        </FloatLabel>
 
                         <FloatLabel variant="on">
                             <InputText
@@ -205,6 +244,17 @@ onMounted(load);
                             />
                             <label :for="`ort-${angebot.id}`">Ort</label>
                         </FloatLabel>
+
+                        <AfraPersonSelector
+                            v-model="angebot.verantwortlicheIds"
+                            multi
+                            name="tutor"
+                            class="multiselect-wrap"
+                            fluid
+                            :id="`verantwortliche-${angebot.id}`"
+                        >
+                            <template #label>Verantwortliche</template>
+                        </AfraPersonSelector>
 
                         <Button label="Speichern" @click="updateInstanz(angebot)" />
                     </div>

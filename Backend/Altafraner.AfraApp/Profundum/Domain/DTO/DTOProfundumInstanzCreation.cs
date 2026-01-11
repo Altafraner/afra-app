@@ -16,4 +16,7 @@ public record DTOProfundumInstanzCreation
 
     /// <inheritdoc cref="ProfundumInstanz.Ort"/>
     public required string Ort { get; set; }
+
+    /// <inheritdoc cref="ProfundumInstanz.Verantwortliche"/>
+    public ICollection<Guid> VerantwortlicheIds { get; set; } = [];
 }

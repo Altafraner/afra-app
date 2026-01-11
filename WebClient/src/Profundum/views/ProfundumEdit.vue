@@ -50,7 +50,6 @@ async function loadProfundum() {
             summary: 'Nicht gefunden',
             detail: 'Profundum existiert nicht',
         });
-        return;
     }
 }
 
@@ -101,8 +100,6 @@ async function savePatch(patch) {
 const updateTitel = () => savePatch({ bezeichnung: profundum.value.bezeichnung });
 const updateKategorie = () => savePatch({ kategorieId: profundum.value.kategorieId });
 const updateBeschreibung = () => savePatch({ beschreibung: profundum.value.beschreibung });
-const updateVerantwortliche = () =>
-    savePatch({ verantwortlicheIds: profundum.value.verantwortlicheIds });
 const updateKlassen = () =>
     savePatch({
         minKlasse: profundum.value.minKlasse ?? null,
@@ -165,35 +162,6 @@ const updateDependencies = () => savePatch({ dependencyIds: profundum.value.depe
                         fluid
                         rows="3"
                         maxlength="2000"
-                    />
-                </template>
-            </GridEditRow>
-
-            <GridEditRow
-                header="Verantwortliche"
-                header-class="self-start"
-                @update="updateVerantwortliche"
-            >
-                <template #body>
-                    <template v-if="(profundum.verantwortlicheInfo?.length ?? 0) === 0">
-                        Kein:e Betreuer:in
-                    </template>
-                    <template v-else>
-                        {{
-                            profundum.verantwortlicheInfo
-                                .map((v) => formatStudent(v))
-                                .join(', ')
-                        }}
-                    </template>
-                </template>
-                <template #edit>
-                    <AfraPersonSelector
-                        v-model="profundum.verantwortlicheIds"
-                        :multi="true"
-                        name="tutor"
-                        required
-                        class="multiselect-wrap"
-                        fluid
                     />
                 </template>
             </GridEditRow>
