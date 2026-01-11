@@ -456,6 +456,21 @@ const slotLabel = (slotId) => {
                 </Button>
             </template>
         </Column>
+        <Column header="pdf">
+            <template #body="{ data }">
+                <Button
+                    as="a"
+                    :href="`/api/profundum/management/instanz/${data.id}.pdf`"
+                    icon="pi pi-file-pdf"
+                    variant="text"
+                    size="small"
+                    download
+                    severity="info"
+                    v-tooltip.left="'PDF (experimentell)'"
+                    aria-label="PDF (experimentell)'"
+                />
+            </template>
+        </Column>
         <Column header="slots">
             <template #body="{ data }">
                 <span v-for="s in data.slots">
