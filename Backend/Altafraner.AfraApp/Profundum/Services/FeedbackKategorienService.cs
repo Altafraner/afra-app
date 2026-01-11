@@ -14,7 +14,7 @@ internal class FeedbackKategorienService
 
     public async Task<ProfundumFeedbackKategorie> AddKategorie(string label, IEnumerable<Guid> kategorieIds)
     {
-        var categories = await _dbContext.ProfundaKategorien
+        var categories = await _dbContext.ProfundaFachbereiche
             .Where(k => kategorieIds.Contains(k.Id))
             .ToListAsync();
 
@@ -25,7 +25,7 @@ internal class FeedbackKategorienService
         var entry = await _dbContext.ProfundumFeedbackKategories.AddAsync(new ProfundumFeedbackKategorie
         {
             Label = label,
-            Kategorien = categories
+            Fachbereiche = categories
         });
 
         await _dbContext.SaveChangesAsync();
@@ -44,12 +44,12 @@ internal class FeedbackKategorienService
     public async Task UpdateKategorie(Guid id, string label, IEnumerable<Guid> kategorieIds)
     {
         var entry = await _dbContext.ProfundumFeedbackKategories
-            .Include(e => e.Kategorien)
+            .Include(e => e.Fachbereiche)
             .FirstOrDefaultAsync(e => e.Id == id);
 
         if (entry is null) throw new ArgumentException("Kategorie not found", nameof(id));
 
-        var categories = await _dbContext.ProfundaKategorien
+        var categories = await _dbContext.ProfundaFachbereiche
             .Where(k => kategorieIds.Contains(k.Id))
             .ToListAsync();
 
@@ -58,7 +58,7 @@ internal class FeedbackKategorienService
                 nameof(kategorieIds));
 
         entry.Label = label;
-        entry.Kategorien = categories;
+        entry.Fachbereiche = categories;
 
         _dbContext.ProfundumFeedbackKategories.Update(entry);
         await _dbContext.SaveChangesAsync();
@@ -67,8 +67,8 @@ internal class FeedbackKategorienService
     public async Task<IEnumerable<ProfundumFeedbackKategorie>> GetAllCategories()
     {
         return await _dbContext.ProfundumFeedbackKategories
-            .Include(e => e.Kategorien)
-            .OrderBy(e => e.Kategorien.Count)
+            .Include(e => e.Fachbereiche)
+            .OrderBy(e => e.Fachbereiche.Count)
             .ThenBy(e => e.Label)
             .ToListAsync();
     }

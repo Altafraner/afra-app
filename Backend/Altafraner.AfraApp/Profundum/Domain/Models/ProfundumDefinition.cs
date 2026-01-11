@@ -28,6 +28,11 @@ public class ProfundumDefinition
     ///
     public required ProfundumKategorie Kategorie { get; set; }
 
+    /// <summary>
+    ///     The departements this profundum is part of.
+    /// </summary>
+    public List<ProfundumFachbereich> Fachbereiche { get; set; }
+
     ///
     public ICollection<ProfundumInstanz> Instanzen { get; set; } = [];
 

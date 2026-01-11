@@ -1,5 +1,5 @@
 ﻿import type { UserInfoMinimal } from '@/models/user/userInfoMinimal';
-import type { ProfundumKategorie } from './verwaltung';
+import type { ProfundumFachbereich } from './verwaltung';
 
 export interface Anker {
     id: string;
@@ -20,7 +20,7 @@ export interface AnkerOverview {
 export interface FeedbackKategorie {
     id: string;
     label: string;
-    profundumKategorien: ProfundumKategorie[];
+    fachbereiche: ProfundumFachbereich[];
 }
 
 export interface FeedbackKategorieChangeRequest {

@@ -322,10 +322,14 @@ internal class ProfundumEnrollmentService
             s => s.ToString(),
             s =>
                 _dbContext.ProfundaEinschreibungen
+                    .AsSplitQuery()
                     .Where(p => p.ProfundumInstanz == null)
                     .Include(pe => pe.ProfundumInstanz!)
                     .ThenInclude(pi => pi.Profundum)
                     .ThenInclude(p => p.Kategorie)
+                    .Include(pe => pe.ProfundumInstanz!)
+                    .ThenInclude(pi => pi.Profundum)
+                    .ThenInclude(p => p.Fachbereiche)
                     .Where(pe => pe.BetroffenePerson.Id == student.Id)
                     .Where(p => p.ProfundumInstanz!.Slots.Contains(s))
                     .Select(pe => new DTOProfundumDefinition(pe.ProfundumInstanz!.Profundum))

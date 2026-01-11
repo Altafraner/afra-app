@@ -1,6 +1,4 @@
-﻿export interface ProfundumKategorie {
+﻿export interface ProfundumFachbereich {
     id: string;
-    bezeichnung: string;
-    profilProfundum: boolean;
-    maxProEinwahl: number | null;
+    label: string;
 }

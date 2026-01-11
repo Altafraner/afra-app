@@ -1,21 +1,17 @@
 <script setup>
-import { InputText, Textarea, Button, useToast, Select } from 'primevue';
-import MultiSelect from 'primevue/multiselect';
-import Dropdown from 'primevue/dropdown';
-import { formatStudent } from '@/helpers/formatters';
-
+import { InputText, Textarea, useToast, Select, MultiSelect } from 'primevue';
 import { mande } from 'mande';
 import { ref, onMounted, computed } from 'vue';
 import Grid from '@/components/Form/Grid.vue';
 import GridEditRow from '@/components/Form/GridEditRow.vue';
 import ProfundumInstanzen from '@/Profundum/components/ProfundumInstanzen.vue';
-import AfraPersonSelector from '@/Otium/components/Form/AfraPersonSelector.vue';
 import KlassenrangeSelector from '@/components/KlassenRangeSelector.vue';
 import { convertMarkdownToHtml } from '@/composables/markdown';
-import UserPeek from '@/components/UserPeek.vue';
+import { useManagement } from '@/Profundum/composables/verwaltung.ts';
 
 const props = defineProps({ profundumId: String });
 const toast = useToast();
+const verwaltung = useManagement();
 
 const loading = ref(true);
 
@@ -24,6 +20,11 @@ const klassenStufenSelects = computed(() => [
     { label: '–', value: null },
     ...klassenstufen.value.map((x) => ({ label: x.toString(), value: x })),
 ]);
+
+const fachbereiche = ref([]);
+async function loadFachbereiche() {
+    fachbereiche.value = await verwaltung.getFachbereiche();
+}
 
 async function getKlassen() {
     const getter = mande('/api/klassen');
@@ -64,6 +65,7 @@ async function setup() {
             loadCategories(),
             loadProfundaList(),
             getKlassen(),
+            loadFachbereiche(),
         ]);
     } catch (e) {
         toast.add({
@@ -106,6 +108,10 @@ const updateKlassen = () =>
         maxKlasse: profundum.value.maxKlasse ?? null,
     });
 const updateDependencies = () => savePatch({ dependencyIds: profundum.value.dependencyIds });
+const updateFachbereiche = () =>
+    savePatch({
+        fachbereichIds: profundum.value.fachbereichIds,
+    });
 </script>
 <template>
     <template v-if="loading">Lade...</template>
@@ -132,7 +138,7 @@ const updateDependencies = () => savePatch({ dependencyIds: profundum.value.depe
                     }}
                 </template>
                 <template #edit>
-                    <Dropdown
+                    <Select
                         v-model="profundum.kategorieId"
                         :options="categories"
                         optionLabel="bezeichnung"
@@ -220,6 +226,28 @@ const updateDependencies = () => savePatch({ dependencyIds: profundum.value.depe
                         class="w-full multiselect-wrap"
                         appendTo="self"
                         placeholder="Voraussetzungen auswählen"
+                    />
+                </template>
+            </GridEditRow>
+            <GridEditRow header="Fachbereiche" @update="updateFachbereiche">
+                <template
+                    #body
+                    v-if="profundum.fachbereichIds && profundum.fachbereichIds.length > 0"
+                >
+                    {{ profundum.fachbereiche.map((fb) => fb.label).join(', ') }}
+                </template>
+                <template #body v-else> Keinen Fachbereichen zugeordnet </template>
+                <template #edit>
+                    <MultiSelect
+                        v-model="profundum.fachbereichIds"
+                        :options="fachbereiche"
+                        optionLabel="label"
+                        optionValue="id"
+                        display="chip"
+                        filter
+                        filterPlaceholder="Suchen..."
+                        class="w-full multiselect-wrap"
+                        appendTo="self"
                     />
                 </template>
             </GridEditRow>

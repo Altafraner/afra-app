@@ -21,5 +21,5 @@ public class ProfundumFeedbackKategorie
     /// <summary>
     ///     The profundum categories this feedback category applies for
     /// </summary>
-    public List<ProfundumKategorie> Kategorien { get; set; } = [];
+    public List<ProfundumFachbereich> Fachbereiche { get; set; } = [];
 }

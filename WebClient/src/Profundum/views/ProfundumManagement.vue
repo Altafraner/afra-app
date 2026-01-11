@@ -7,23 +7,27 @@ import {
     Message,
     DataTable,
     Dialog,
-    Skeleton,
     InputText,
     Textarea,
-    Dropdown,
     useToast,
-    TabView,
+    Tabs,
+    TabList,
+    Tab,
+    TabPanels,
     TabPanel,
+    Select,
 } from 'primevue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
 
 import EinwahlZeitraeume from '@/Profundum/components/EinwahlZeitraeume.vue';
 import Slots from '@/Profundum/components/Slots.vue';
+import { useManagement } from '@/Profundum/composables/verwaltung.ts';
 
 const toast = useToast();
 const confirm = useConfirmPopover();
+const verwaltung = useManagement();
 
-const loading = ref(true);
+const currentTab = ref('0');
 const createDialogOpen = ref(false);
 
 const createModel = ref({
@@ -32,10 +36,12 @@ const createModel = ref({
     kategorieId: null,
     minKlasse: null,
     maxKlasse: null,
+    fachbereichIds: [],
 });
 
 const profunda = ref([]);
 const categories = ref([]);
+const fachbereiche = ref([]);
 
 async function createProfundum() {
     const api = mande('/api/profundum/management/profundum');
@@ -106,20 +112,28 @@ async function getKategorien() {
     categories.value = await getter.get();
 }
 
-async function setup() {
-    await Promise.all([getProfunda(), getKategorien()]);
-    loading.value = false;
+async function getFachbereiche() {
+    fachbereiche.value = await verwaltung.getFachbereiche();
 }
 
-setup();
+async function setup() {
+    await Promise.all([getProfunda(), getKategorien(), getFachbereiche()]);
+}
+
+await setup();
 </script>
 
 <template>
-    <template v-if="!loading">
-        <h2>Profunda Verwaltung</h2>
+    <h2>Profunda Verwaltung</h2>
 
-        <TabView class="mt-5">
-            <TabPanel header="Profunda">
+    <Tabs class="mt-5" v-model:value="currentTab">
+        <TabList>
+            <Tab value="0">Profunda</Tab>
+            <Tab value="1">Einwahlzeiträume</Tab>
+            <Tab value="2">Slots</Tab>
+        </TabList>
+        <TabPanels>
+            <TabPanel value="0">
                 <Message severity="warn" class="mb-4">
                     Diese Funktionen sind nicht ausgiebig getestet und insbesondere die Löschung
                     von bereits genutzen Profunda kann erheblichen Datenverlust beispielsweise
@@ -171,30 +185,15 @@ setup();
                 </DataTable>
             </TabPanel>
 
-            <TabPanel header="Einwahlzeiträume">
+            <TabPanel value="1">
                 <EinwahlZeitraeume />
             </TabPanel>
 
-            <TabPanel header="Slots">
+            <TabPanel value="2">
                 <Slots />
             </TabPanel>
-        </TabView>
-    </template>
-
-    <template v-else>
-        <Skeleton class="mb-6" height="3rem" />
-        <Skeleton class="mb-4" />
-        <DataTable :value="new Array(10)">
-            <Column v-for="_ in new Array(3)">
-                <template #body>
-                    <Skeleton />
-                </template>
-                <template #header>
-                    <Skeleton height="1.5em" />
-                </template>
-            </Column>
-        </DataTable>
-    </template>
+        </TabPanels>
+    </Tabs>
 
     <Dialog
         v-model:visible="createDialogOpen"
@@ -215,12 +214,24 @@ setup();
 
             <div class="field">
                 <label>Kategorie*</label>
-                <Dropdown
+                <Select
                     v-model="createModel.kategorieId"
                     :options="categories"
                     optionLabel="bezeichnung"
                     optionValue="id"
                     placeholder="Kategorie auswählen"
+                    class="w-full"
+                />
+            </div>
+
+            <div class="field">
+                <label>Fachbereiche</label>
+                <Select
+                    v-model="createModel.fachbereichIds"
+                    :options="fachbereiche"
+                    optionLabel="label"
+                    optionValue="id"
+                    placeholder="Fachbereiche wählen"
                     class="w-full"
                 />
             </div>

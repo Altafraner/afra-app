@@ -14,7 +14,7 @@ public record FeedbackCategory
     {
         Id = kategorie.Id;
         Label = kategorie.Label;
-        ProfundumKategorien = kategorie.Kategorien.Select(k => new DTOProfundumKategorie(k));
+        Fachbereiche = kategorie.Fachbereiche.Select(k => new DtoProfundumFachbereich(k));
     }
 
     /// <summary>
@@ -28,7 +28,7 @@ public record FeedbackCategory
     public string Label { get; set; }
 
     /// <summary>
-    ///     The profundum kategorien this feedback kategorie is for
+    ///     The profundum fachbereiche this feedback category is for
     /// </summary>
-    public IEnumerable<DTOProfundumKategorie> ProfundumKategorien { get; set; }
+    public IEnumerable<DtoProfundumFachbereich> Fachbereiche { get; set; }
 }

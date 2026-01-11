@@ -4,9 +4,7 @@ using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.User.Domain.DTO;
 using Altafraner.AfraApp.User.Domain.Models;
-using Altafraner.Typst;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 namespace Altafraner.AfraApp.Profundum.Services;
 
@@ -16,22 +14,16 @@ namespace Altafraner.AfraApp.Profundum.Services;
 internal class ProfundumManagementService
 {
     private readonly AfraAppContext _dbContext;
-    private readonly ILogger _logger;
-    private readonly IOptions<TypstConfiguration> _typstConfig;
     private readonly Altafraner.Typst.Typst _typst;
 
     /// <summary>
     ///     Constructs the ManagementService. Usually called by the DI container.
     /// </summary>
     public ProfundumManagementService(AfraAppContext dbContext,
-        ILogger<ProfundumManagementService> logger,
-        IOptions<TypstConfiguration> typstConfig,
         Altafraner.Typst.Typst typst
         )
     {
         _dbContext = dbContext;
-        _logger = logger;
-        _typstConfig = typstConfig;
         _typst = typst;
     }
 
@@ -195,6 +187,11 @@ internal class ProfundumManagementService
             .Where(p => dtoProfundum.DependencyIds.Contains(p.Id))
             .ToListAsync();
 
+        var fachbereiche = await _dbContext.ProfundaFachbereiche.Where(e => dtoProfundum.FachbereichIds.Contains(e.Id))
+            .ToListAsync();
+        if (fachbereiche.Count != dtoProfundum.FachbereichIds.Count)
+            throw new KeyNotFoundException("At least one fachbereich does not exist");
+
         var def = new ProfundumDefinition
         {
             Bezeichnung = dtoProfundum.Bezeichnung,
@@ -203,6 +200,7 @@ internal class ProfundumManagementService
             MinKlasse = dtoProfundum.MinKlasse,
             MaxKlasse = dtoProfundum.MaxKlasse,
             Dependencies = deps,
+            Fachbereiche = fachbereiche
         };
         _dbContext.Profunda.Add(def);
         await _dbContext.SaveChangesAsync();
@@ -214,6 +212,7 @@ internal class ProfundumManagementService
         var profundum = await _dbContext.Profunda
             .AsSplitQuery()
             .Include(p => p.Dependencies)
+            .Include(p => p.Fachbereiche)
             .Where(p => p.Id == profundumId)
             .FirstOrDefaultAsync();
         if (profundum is null)
@@ -222,6 +221,13 @@ internal class ProfundumManagementService
         var deps = await _dbContext.Profunda
             .Where(p => dtoProfundum.DependencyIds.Contains(p.Id))
             .ToListAsync();
+
+        var fachbereiche = await _dbContext.ProfundaFachbereiche.Where(e => dtoProfundum.FachbereichIds.Contains(e.Id))
+            .ToListAsync();
+        if (fachbereiche.Count != dtoProfundum.FachbereichIds.Count)
+            throw new KeyNotFoundException("At least one fachbereich does not exist");
+
+        profundum.Fachbereiche = fachbereiche;
         profundum.Dependencies = deps;
 
         if (dtoProfundum.Bezeichnung != profundum.Bezeichnung)
@@ -252,6 +258,7 @@ internal class ProfundumManagementService
             .AsSplitQuery()
             .Include(p => p.Kategorie)
             .Include(p => p.Dependencies)
+            .Include(e => e.Fachbereiche)
             .OrderBy(p => p.Bezeichnung.ToLower())
             .Select(p => new DTOProfundumDefinition(p))
             .ToArrayAsync();
@@ -263,6 +270,7 @@ internal class ProfundumManagementService
             .AsSplitQuery()
             .Include(p => p.Kategorie)
             .Include(p => p.Dependencies)
+            .Include(e => e.Fachbereiche)
             .Where(p => p.Id == profundumId)
             .Select(p => new DTOProfundumDefinition(p)).FirstOrDefaultAsync();
     }
@@ -307,6 +315,8 @@ internal class ProfundumManagementService
             .Include(p => p.Verantwortliche)
             .Include(i => i.Profundum).ThenInclude(p => p.Dependencies)
             .Include(i => i.Profundum).ThenInclude(p => p.Kategorie)
+            .Include(i => i.Profundum)
+            .ThenInclude(p => p.Fachbereiche)
             .Include(i => i.Slots)
             .Include(i => i.Einschreibungen).ThenInclude(e => e.BetroffenePerson)
             .OrderBy(i => i.Profundum.Bezeichnung.ToLower())
@@ -321,6 +331,8 @@ internal class ProfundumManagementService
             .Include(p => p.Verantwortliche)
             .Include(i => i.Profundum).ThenInclude(p => p.Dependencies)
             .Include(i => i.Profundum).ThenInclude(p => p.Kategorie)
+            .Include(i => i.Profundum)
+            .ThenInclude(p => p.Fachbereiche)
             .Include(i => i.Slots)
             .Where(i => i.Id == instanzId)
             .Select(i => new DTOProfundumInstanz(i))
@@ -377,7 +389,7 @@ internal class ProfundumManagementService
 
         _dbContext.ProfundaEinschreibungen.RemoveRange(existing);
 
-        var person = _dbContext.Personen.Find(personId);
+        var person = await _dbContext.Personen.FindAsync(personId);
         if (person is null)
         {
             throw new ArgumentException();
@@ -389,14 +401,15 @@ internal class ProfundumManagementService
             ProfundumInstanz? instanz;
             if (e.ProfundumInstanzId is not null)
             {
-                instanz = _dbContext.ProfundaInstanzen.Find(e.ProfundumInstanzId);
+                instanz = await _dbContext.ProfundaInstanzen.FindAsync(e.ProfundumInstanzId);
                 if (instanz is null) throw new ArgumentException();
             }
             else
             {
                 instanz = null;
             }
-            var slot = _dbContext.ProfundaSlots.Find(e.ProfundumSlotId);
+
+            var slot = await _dbContext.ProfundaSlots.FindAsync(e.ProfundumSlotId);
             if (slot is null)
             {
                 throw new ArgumentException();
@@ -433,8 +446,8 @@ internal class ProfundumManagementService
             .Where(e => e.ProfundumInstanz != null && e.ProfundumInstanz.Id == p.Id)
             .Select(e => e.BetroffenePerson)
             .Distinct()
-            .OrderBy(p => p.LastName)
-            .ThenBy(p => p.FirstName);
+            .OrderBy(e => e.LastName)
+            .ThenBy(e => e.FirstName);
 
         const string src = Altafraner.Typst.Templates.Profundum.Instanz;
 

@@ -123,6 +123,11 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
     public DbSet<ProfundumKategorie> ProfundaKategorien { get; set; }
 
     /// <summary>
+    ///     All Fachbereiche for Profunda
+    /// </summary>
+    public DbSet<ProfundumFachbereich> ProfundaFachbereiche { get; set; }
+
+    /// <summary>
     ///     All Bewertungen for Profunda
     /// </summary>
     public DbSet<ProfundumFeedbackEntry> ProfundumFeedbackEntries { get; set; }
@@ -243,6 +248,7 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
                     r => r.HasOne<ProfundumDefinition>().WithMany().HasForeignKey(e => e.DependantId),
                     l => l.HasOne<ProfundumDefinition>().WithMany().HasForeignKey(e => e.DependencyId)
                 );
+            p.HasMany(e => e.Fachbereiche).WithMany(e => e.Profunda);
         });
 
         modelBuilder.Entity<ProfundaDefinitionDependency>()
@@ -273,7 +279,7 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
 
         modelBuilder.Entity<ProfundumFeedbackKategorie>(e =>
         {
-            e.HasMany(k => k.Kategorien)
+            e.HasMany(k => k.Fachbereiche)
                 .WithMany();
         });
 

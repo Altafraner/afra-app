@@ -1,7 +1,7 @@
 ﻿import { useToast } from 'primevue';
 import { mande, type MandeError } from 'mande';
 import type { QuartalEnrollmentOverview } from '@/Profundum/models/feedback';
-import type { ProfundumKategorie } from '@/Profundum/models/verwaltung';
+import type { ProfundumFachbereich } from '@/Profundum/models/verwaltung';
 
 export const useManagement = () => {
     const toast = useToast();
@@ -22,9 +22,9 @@ export const useManagement = () => {
         }
     }
 
-    async function getKategorien(): Promise<ProfundumKategorie[]> {
+    async function getFachbereiche(): Promise<ProfundumFachbereich[]> {
         try {
-            return await api.get('/kategorie');
+            return await api.get('/fachbereich');
         } catch (e) {
             const mandeError: MandeError = e;
             toast.add({
@@ -35,5 +35,5 @@ export const useManagement = () => {
         }
     }
 
-    return { getAllQuartaleWithEnrollments, getKategorien };
+    return { getAllQuartaleWithEnrollments, getFachbereiche };
 };

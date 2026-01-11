@@ -17,6 +17,9 @@ public record DTOProfundumDefinitionCreation
     /// <inheritdoc cref="ProfundumDefinition.Kategorie"/>
     public Guid KategorieId { get; set; }
 
+    /// <inheritdoc cref="ProfundumDefinition.Fachbereiche"/>
+    public required List<Guid> FachbereichIds { get; set; }
+
     /// <inheritdoc cref="ProfundumDefinition.MinKlasse"/>
     public int? MinKlasse { get; set; } = null;
     /// <inheritdoc cref="ProfundumDefinition.MaxKlasse"/>

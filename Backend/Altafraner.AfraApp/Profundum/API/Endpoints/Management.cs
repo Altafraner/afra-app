@@ -1,6 +1,7 @@
 using System.Net.Mime;
 using System.Text;
 using Altafraner.AfraApp.Backbone.Authorization;
+using Altafraner.AfraApp.Otium.API.Endpoints;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.Profundum.Services;
@@ -57,6 +58,29 @@ public static class Management
         ins.MapPut("/{id:guid}", async (Mgmt svc, Guid id, DTOProfundumInstanzCreation instanz) => (await svc.UpdateInstanzAsync(id, instanz)).Id);
         ins.MapDelete("/{id:guid}", (Mgmt svc, Guid id) => svc.DeleteInstanzAsync(id));
         ins.MapGet("/{id:guid}.pdf", async (Mgmt svc, Guid id) => TypedResults.File((await svc.GetInstanzPdfAsync(id)), MediaTypeNames.Application.Pdf, $"{id}.pdf"));
+
+        var fachbereich = gp.MapGroup("fachbereich");
+        fachbereich.MapGet("/",
+            async (ProfundumFachbereicheService fbs) =>
+                TypedResults.Ok((await fbs.GetFachbereicheAsync()).Select(fb => new DtoProfundumFachbereich(fb))));
+        fachbereich.MapPost("/",
+            async (ProfundumFachbereicheService fbs, ValueWrapper<string> request) =>
+            {
+                await fbs.CreateFachbereichAsync(request.Value);
+                return TypedResults.NoContent();
+            });
+        fachbereich.MapPut("/",
+            async (ProfundumFachbereicheService fbs, DtoProfundumFachbereich request) =>
+            {
+                await fbs.UpdateFachbereichAsync(request.Id, request.Label);
+                return TypedResults.NoContent();
+            });
+        fachbereich.MapDelete("/{id:guid}",
+            async (ProfundumFachbereicheService fbs, Guid id) =>
+            {
+                await fbs.DeleteFachbereichAsync(id);
+                return TypedResults.NoContent();
+            });
 
         gp.MapPost("/matching", (Match svc) => svc.PerformMatching());
         gp.MapPost("/finalize", (Match svc) => svc.Finalize());

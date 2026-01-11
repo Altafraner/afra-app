@@ -26,10 +26,11 @@ public class ProfundumModule : IModule
 
         services.AddScoped<ProfundumEnrollmentService>();
         services.AddScoped<ProfundumManagementService>();
+        services.AddScoped<ProfundumMatchingService>();
+        services.AddScoped<ProfundumFachbereicheService>();
         services.AddScoped<FeedbackAnkerService>();
         services.AddScoped<FeedbackKategorienService>();
         services.AddScoped<FeedbackService>();
-        services.AddScoped<ProfundumMatchingService>();
 
         services.AddRules();
     }

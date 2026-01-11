@@ -21,8 +21,6 @@ async function setup() {
 
 await setup();
 
-const anker = computed(() => Object.values(ankerByKategorie.value).flat());
-
 function startCreateAnker(kategorieId) {
     dialog.open(SimpleTextDialog, {
         props: {
@@ -86,7 +84,7 @@ function startAddKategorie() {
             variant: 'create',
         },
         onClose: async ({ data }) => {
-            await feedback.createKategorie(data.label, data.categories);
+            await feedback.createKategorie(data.label, data.fachbereiche);
             await setup();
         },
     });
@@ -101,10 +99,10 @@ function startEditKategorie(kategorie) {
         data: {
             variant: 'update',
             label: kategorie.label,
-            categories: kategorie.profundumKategorien.map((k) => k.id),
+            fachbereiche: kategorie.fachbereiche.map((k) => k.id),
         },
         onClose: async ({ data }) => {
-            await feedback.updateKategorie(kategorie.id, data.label, data.categories);
+            await feedback.updateKategorie(kategorie.id, data.label, data.fachbereiche);
             await setup();
         },
     });

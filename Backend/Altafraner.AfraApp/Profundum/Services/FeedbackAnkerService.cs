@@ -60,7 +60,7 @@ internal class FeedbackAnkerService
         var result = await _dbContext.ProfundumFeedbackAnker
             .Include(e => e.Kategorie)
             .OrderBy(a => a.Label)
-            .ThenBy(e => e.Kategorie.Kategorien.Count)
+            .ThenBy(e => e.Kategorie.Fachbereiche.Count)
             .ThenBy(e => e.Kategorie.Label)
             .GroupBy(a => a.Kategorie)
             .ToDictionaryAsync(e => e.Key, e => e.ToList());
@@ -68,25 +68,35 @@ internal class FeedbackAnkerService
         return result;
     }
 
-    public async Task<Dictionary<ProfundumFeedbackKategorie, List<ProfundumFeedbackAnker>>> GetAnkerByCategories(
-        Guid profundumId)
+    public async Task<List<ProfundumFeedbackAnker>> GetAnker(Guid instanzId)
     {
-        var kategorieId = await _dbContext.ProfundaInstanzen.AsNoTracking()
-            .Where(e => e.Id == profundumId)
-            .Select(e => e.Profundum.Kategorie.Id)
-            .FirstOrDefaultAsync();
+        var profundumFachbereicheIds = await _dbContext.ProfundaInstanzen
+            .Where(e => e.Id == instanzId)
+            .SelectMany(e => e.Profundum.Fachbereiche)
+            .Select(e => e.Id)
+            .ToArrayAsync();
 
-        if (kategorieId == Guid.Empty) throw new ArgumentException("Profundum not found", nameof(profundumId));
+        if (profundumFachbereicheIds.Length == 0)
+            throw new ArgumentException("Profundum not found", nameof(instanzId));
 
         var result = await _dbContext.ProfundumFeedbackAnker
             .Include(e => e.Kategorie)
-            .Where(e => e.Kategorie.Kategorien.Any(k => k.Id == kategorieId))
+            .Where(e => e.Kategorie.Fachbereiche.Any(k => profundumFachbereicheIds.Contains(k.Id)))
             .OrderBy(a => a.Label)
-            .ThenBy(e => e.Kategorie.Kategorien.Count)
+            .ThenBy(e => e.Kategorie.Fachbereiche.Count)
             .ThenBy(e => e.Kategorie.Label)
-            .GroupBy(a => a.Kategorie)
-            .ToDictionaryAsync(e => e.Key, e => e.ToList());
+            .ToListAsync();
 
+        return result;
+    }
+
+    public async Task<Dictionary<ProfundumFeedbackKategorie, List<ProfundumFeedbackAnker>>> GetAnkerByCategories(
+        Guid instanzId)
+    {
+        var anker = await GetAnker(instanzId);
+        var result = anker
+            .GroupBy(a => a.Kategorie)
+            .ToDictionary(e => e.Key, e => e.ToList());
         return result;
     }
 }

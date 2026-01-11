@@ -6,29 +6,19 @@ namespace Altafraner.AfraApp.Profundum.Services;
 
 internal sealed class FeedbackService
 {
+    private readonly FeedbackAnkerService _ankerService;
     private readonly AfraAppContext _dbContext;
 
-    public FeedbackService(AfraAppContext dbContext)
+    public FeedbackService(AfraAppContext dbContext, FeedbackAnkerService ankerService)
     {
         _dbContext = dbContext;
+        _ankerService = ankerService;
     }
 
     public async Task UpdateFeedback(Guid studentId, Guid instanzId, Dictionary<Guid, int> content)
     {
-        // validate
-        var profundumKategorieId = await _dbContext.ProfundaInstanzen
-            .Where(e => e.Id == instanzId)
-            .Select(e => e.Profundum.Kategorie.Id)
-            .FirstOrDefaultAsync();
-        if (profundumKategorieId == Guid.Empty)
-            throw new ArgumentException("There is no profundums instance with the specified id.");
-
-        var keys = content.Keys;
-        var ankerCount = await _dbContext.ProfundumFeedbackAnker
-            .Include(e => e.Kategorie)
-            .ThenInclude(e => e.Kategorien)
-            .Where(a => keys.Contains(a.Id) && a.Kategorie.Kategorien.Any(e => e.Id == profundumKategorieId))
-            .CountAsync();
+        var anker = await _ankerService.GetAnker(instanzId);
+        var ankerCount = anker.Count(a => content.ContainsKey(a.Id));
 
         if (ankerCount != content.Count)
             throw new ArgumentException(
@@ -53,15 +43,7 @@ internal sealed class FeedbackService
 
     public async Task<Dictionary<ProfundumFeedbackAnker, int?>> GetFeedback(Guid studentId, Guid instanzId)
     {
-        var profundumKategorieId = await _dbContext.ProfundaInstanzen
-            .Where(e => e.Id == instanzId)
-            .Select(e => e.Profundum.Kategorie.Id)
-            .FirstOrDefaultAsync();
-
-        var anker = await _dbContext.ProfundumFeedbackAnker
-            .Where(a => a.Kategorie.Kategorien.Any(e => e.Id == profundumKategorieId))
-            .ToArrayAsync();
-
+        var anker = await _ankerService.GetAnker(instanzId);
         var bewertungen = await _dbContext.ProfundumFeedbackEntries
             .Where(e => e.InstanzId == instanzId && e.BetroffenePersonId == studentId)
             .ToArrayAsync();
