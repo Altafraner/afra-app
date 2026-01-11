@@ -7,5 +7,5 @@ public class TypstConfiguration
     public required string TypstResourcePath { get; set; }
 
     /// A List of paths to scan for fonts when building typst documents
-    public IEnumerable<string>? TypstFontPaths { get; set; }
+    public string[] TypstFontPaths { get; set; } = [];
 }
