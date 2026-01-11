@@ -445,7 +445,34 @@ const slotLabel = (slotId) => {
     </DataTable>
 
     <DataTable :value="instanzen">
-        <Column field="profundumInfo.bezeichnung" header="Bezeichnung"></Column>
+        <Column field="profundumInfo.bezeichnung" header="Bezeichnung">
+            <template #body="{ data }">
+                <Button
+                    as="RouterLink"
+                    :to="{ name: 'Profundum-Edit', params: { profundumId: data.profundumId } }"
+                    text
+                >
+                    {{ data.profundumInfo.bezeichnung }}
+                </Button>
+            </template>
+        </Column>
+        <Column header="slots">
+            <template #body="{ data }">
+                <span v-for="s in data.slots">
+                    {{ slotLabel(slots.find((x) => x.id === s).id) }},
+                </span>
+            </template>
+        </Column>
+        <Column header="Warnung">
+            <template #body="{ data }">
+                <Button
+                    v-if="data.maxEinschreibungen < data.numEinschreibungen"
+                    icon="pi pi-exclamation-triangle"
+                    severity="warn"
+                    disabled
+                />
+            </template>
+        </Column>
         <Column field="maxEinschreibungen" header="MaxEinschreibungen"></Column>
         <Column field="numEinschreibungen" header="Einschreibungen"></Column>
     </DataTable>
