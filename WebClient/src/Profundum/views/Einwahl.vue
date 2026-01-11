@@ -121,37 +121,56 @@ startup();
     <h1>Profundums-Einwahl</h1>
 
     <p>
-        Bitte lest euch die Folgenden Hinweise aufmerksam durch. Beachtet vor allem die
-        Informationen, die ihr zum Profundum erhalten habt.
-        <strong> Der Zeitpunkt der Abgabe </strong> innerhalb des Einwahlfensters ist
-        <strong> kein Kriterium </strong> zur Belegung.
+        Bitte lest euch die folgenden Hinweise aufmerksam durch.
+        <strong
+            >Der Zeitpunkt der Abgabe eurer Wünsche innerhalb des Einwahlzeitraums hat keinen
+            Einfluss auf die Vergabe.</strong
+        >
+    </p>
+
+    <p>
+        Die Einwahl beginnt am Montag (12.01.26) um 08:00 Uhr und endet am Dienstag (13.01.26)
+        um 22:00 Uhr. Danach können keine Wünsche mehr abgegeben werden. Habt ihr bis dahin noch
+        keine Wünsche abgegeben, werden euch Plätze in Angeboten mit freier Kapazität
+        zugewiesen.
     </p>
 
     <h2>Vorauswahl</h2>
 
-    <p>Im Folgenden sind eure bereits gewählten Profunda ausgegraut aufgeführt. Bitte prüft:</p>
+    <p>
+        Im Folgenden sind eure bereits gewählten <em>profunda</em> grau hinterlegt aufgeführt.
+        Bitte prüft folgende Punkte:
+    </p>
+
     <ol class="list-decimal pl-6">
-        <li>Ob eure vergangenen Belegungen korrekt sind.</li>
+        <li>Sind eure vergangenen Belegungen korrekt?</li>
         <li>
-            Ob ihr für die Zukunft gewählte Profunda (insbesondere Fremdsprachen) weiter belegen
-            wollt.
+            Wollt ihr eine Fremdsprache (Italienisch, Spanisch, Schwedisch) weiter fortführen?
+            Bitte beachtet, dass die Belegung der 4. Fremdsprache (Italienisch und Spanisch) im
+            <em>profundum</em> für eine Belegung dieser Sprache in der Sekundartstufe II
+            notwendig sein kann.
         </li>
     </ol>
     <p>
-        Ist eine Belegung falsch, oder ihr möchtet eine Sprache abwählen, gebt ihr bitte
-        <strong> noch keine Wünsche </strong> ab und wendet euch an
-        <a href="mailto:@afra.lernsax.de">@afra.lernsax.de</a>
+        Ist eine Belegung falsch, oder ihr möchtet eine Sprache abwählen, so gebt ihr bitte
+        <strong>noch keine Wünsche</strong> ab und wendet euch an (<a
+            href="mailto:@afra.lernsax.de"
+            >@afra.lernsax.de</a
+        >).
     </p>
 
     <h2>Kriterien</h2>
 
-    <p>Bitte beachtet das Profundarium für ausführliche Informationen zu jedem Angebot.</p>
+    <p>
+        Bitte beachtet das <em>profundarium</em> für ausführliche Informationen zu jedem
+        Angebot.
+    </p>
 
     <p>
         Um eure Wünsche abgeben zu können, wählt ihr für jeden Slot eure drei Favoriten in
-        absteigender Reihenfolge. Profunda, die sich über mehrere Quartale erstrecken, werden
-        automatisch dort eingetragen. Sie sind nur in ihrem ersten Quartal in der Liste zu
-        finden.
+        absteigender Reihenfolge. Bei <em>profunda</em>, die sich über mehrere Quartale
+        erstrecken, werden damit automatisch beide Quartale eingetragen. Sie sind nur in ihrem
+        ersten Quartal in der Liste zu finden.
     </p>
 
     <p>
