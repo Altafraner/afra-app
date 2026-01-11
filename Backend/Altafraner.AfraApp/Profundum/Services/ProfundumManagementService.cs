@@ -309,6 +309,7 @@ internal class ProfundumManagementService
             .Include(i => i.Profundum).ThenInclude(p => p.Kategorie)
             .Include(i => i.Slots)
             .Include(i => i.Einschreibungen).ThenInclude(e => e.BetroffenePerson)
+            .OrderBy(i => i.Profundum.Bezeichnung.ToLower())
             .Select(i => new DTOProfundumInstanz(i))
             .ToArrayAsync();
     }
