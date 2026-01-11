@@ -468,7 +468,7 @@ internal class ProfundumManagementService
     ///
     public async Task<string> GetStudentMatchingCsv()
     {
-        var personen = await _dbContext.Personen
+        var personen = _dbContext.Personen
             .AsSplitQuery()
             .Include(s => s.ProfundaEinschreibungen)
             .ThenInclude(e => e.ProfundumInstanz)
@@ -476,7 +476,10 @@ internal class ProfundumManagementService
             .Include(person => person.ProfundaEinschreibungen).ThenInclude(profundumEinschreibung => profundumEinschreibung.ProfundumInstanz)
             .Include(person => person.ProfundaEinschreibungen).ThenInclude(profundumEinschreibung => profundumEinschreibung.ProfundumInstanz)
             .Where(p => p.Rolle == Rolle.Mittelstufe)
-            .ToArrayAsync();
+            .ToAsyncEnumerable()
+            .OrderBy(x => int.Parse((x.Gruppe ?? "0").TakeWhile(c => char.IsDigit(c)).ToArray()))
+            .ThenBy(x => (x.Gruppe ?? "").SkipWhile(c => !char.IsDigit(c)).Aggregate(new StringBuilder(), (a, b) => a.Append(b)).ToString())
+            ;
 
         var slots = (await _dbContext.ProfundaSlots
             .ToArrayAsync())
@@ -488,7 +491,7 @@ internal class ProfundumManagementService
         var sb = new StringBuilder();
         sb.AppendLine($"Klasse{sep} Name{sep} Vorname{slots.Select(s => s.ToString()).Aggregate("", (r, c) => $"{r}{sep} {c}")}");
 
-        foreach (var student in personen)
+        await foreach (var student in personen)
         {
             sb.AppendLine($"{student.Gruppe}{sep} {student.LastName}{sep} {student.FirstName}{slots.Select(s =>
                 student.ProfundaEinschreibungen

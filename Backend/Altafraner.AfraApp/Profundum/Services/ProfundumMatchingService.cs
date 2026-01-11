@@ -1,3 +1,4 @@
+using System.Text;
 using Altafraner.AfraApp.Profundum.Configuration;
 using Altafraner.AfraApp.Profundum.Domain.Contracts.Services;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
@@ -79,12 +80,6 @@ internal class ProfundumMatchingService
         var model = new CpModel();
         var objective = LinearExpr.NewBuilder();
 
-        var weights = new Dictionary<ProfundumBelegWunschStufe, int>
-        {
-            { ProfundumBelegWunschStufe.ErstWunsch, 100 },
-            { ProfundumBelegWunschStufe.ZweitWunsch, 50 },
-            { ProfundumBelegWunschStufe.DrittWunsch, 25 }
-        }.AsReadOnly();
 
         var belegVars = new Dictionary<(Person, ProfundumSlot, ProfundumInstanz), BoolVar>();
 
@@ -116,6 +111,14 @@ internal class ProfundumMatchingService
                 model.AddExactlyOne(psVars);
             }
         }
+
+
+        var weights = new Dictionary<ProfundumBelegWunschStufe, int>
+        {
+            { ProfundumBelegWunschStufe.ErstWunsch, 100 },
+            { ProfundumBelegWunschStufe.ZweitWunsch, 50 },
+            { ProfundumBelegWunschStufe.DrittWunsch, 25 }
+        }.AsReadOnly();
 
         // Gewichtung nach Einwahlstufe
         foreach (var p in students)
@@ -261,7 +264,10 @@ internal class ProfundumMatchingService
             .Include(p => p.ProfundaEinschreibungen)
             .ThenInclude(p => p.ProfundumInstanz)
             .ThenInclude(p => p!.Slots)
-            .AsAsyncEnumerable();
+            .AsAsyncEnumerable()
+            .OrderBy(x => int.Parse((x.Gruppe ?? "0").TakeWhile(c => char.IsDigit(c)).ToArray()))
+            .ThenBy(x => (x.Gruppe ?? "").SkipWhile(c => !char.IsDigit(c)).Aggregate(new StringBuilder(), (a, b) => a.Append(b)).ToString())
+            ;
 
 
         await foreach (var person in personenWithData)
