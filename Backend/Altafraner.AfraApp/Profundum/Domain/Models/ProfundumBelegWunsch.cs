@@ -33,6 +33,6 @@ public class ProfundumBelegWunsch
     /// </summary>
     public required ProfundumBelegWunschStufe Stufe { get; set; }
 
-    // ///
-    // public required ProfundumEinwahlZeitraum EinwahlZeitraum { get; set; }
+    ///
+    public required ProfundumEinwahlZeitraum EinwahlZeitraum { get; set; }
 }

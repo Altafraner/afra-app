@@ -93,6 +93,13 @@ internal class ProfundumEnrollmentService
 
     public BlockKatalog[] GetKatalog(Models_Person student)
     {
+        var now = DateTime.UtcNow;
+        var einschreibeZeitraum = _dbContext.ProfundumEinwahlZeitraeume.Where(z => z.EinwahlStart <= now && z.EinwahlStop > now);
+        if (!einschreibeZeitraum.Any())
+        {
+            return [];
+        }
+
         var slots = _dbContext.ProfundaSlots.ToArray().Order(new ProfundumSlotComparer());
         var fixedEnrollments = _dbContext.ProfundaEinschreibungen
             .Where(e => e.IsFixed)
@@ -168,6 +175,13 @@ internal class ProfundumEnrollmentService
     /// <param name="wuensche">A dictionary containing the ordered ids of ProdundumInstanzen given the slot</param>
     public async Task RegisterBelegWunschAsync(Models_Person student, Dictionary<string, Guid[]> wuensche)
     {
+        var now = DateTime.UtcNow;
+        var einschreibeZeitraum = _dbContext.ProfundumEinwahlZeitraeume.Where(z => z.EinwahlStart <= now && z.EinwahlStop > now).FirstOrDefault();
+        if (einschreibeZeitraum is null)
+        {
+            throw new ProfundumEinwahlWunschException("Einwahl geschlossen");
+        }
+
         var fixedEnrollments = _dbContext.ProfundaEinschreibungen
             .Where(e => e.IsFixed)
             .Where(e => e.BetroffenePerson == student)
@@ -246,7 +260,8 @@ internal class ProfundumEnrollmentService
                 {
                     BetroffenePerson = student,
                     ProfundumInstanz = angebot,
-                    Stufe = stufe
+                    Stufe = stufe,
+                    EinwahlZeitraum = einschreibeZeitraum,
                 };
                 belegWuensche.Add(belegWunsch);
             }
