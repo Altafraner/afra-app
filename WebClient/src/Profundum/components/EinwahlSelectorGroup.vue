@@ -87,7 +87,8 @@ function conflictAt(i) {
                 v-else
                 v-model="model[i]"
                 :options="optionsCleaned[i]"
-                :forced="forcedAt(i)"
+                :preSelected="forcedAt(i)"
+                :disabled="forcedAt(i)"
                 :conflict="conflictAt(i)"
                 :label="label"
             />

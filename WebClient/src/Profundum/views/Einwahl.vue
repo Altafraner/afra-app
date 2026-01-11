@@ -184,7 +184,7 @@ startup();
             v-if="!option.fixed"
             v-model="results[option.id]"
             :options="option.options"
-            :pre-selected="preSelected.clean[option.id]"
+            :preSelected="preSelected.clean[option.id]"
             :conflicts="preSelected.conflicts[option.id]"
         />
         <template v-else>
