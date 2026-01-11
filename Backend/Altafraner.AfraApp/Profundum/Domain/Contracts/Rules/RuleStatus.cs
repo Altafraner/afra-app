@@ -34,4 +34,10 @@ public record struct RuleStatus
     {
         return new RuleStatus { IsValid = false, Messages = [message] };
     }
+
+    [Pure]
+    internal static RuleStatus Invalid(IEnumerable<string> messages)
+    {
+        return new RuleStatus { IsValid = false, Messages = messages };
+    }
 }

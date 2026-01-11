@@ -29,11 +29,24 @@ public class ProfilRule : IProfundumIndividualRule
         IEnumerable<ProfundumBelegWunsch> wuensche)
     {
         var profilPflichtig = slots.Any(s => IsProfilPflichtig(student, s.Quartal));
-        if (!profilPflichtig) return RuleStatus.Valid;
-        return enrollments.Any(w => w.ProfundumInstanz?.Profundum?.Kategorie?.ProfilProfundum ?? false) ||
-            wuensche.Any(w => w.ProfundumInstanz.Profundum.Kategorie.ProfilProfundum)
-            ? RuleStatus.Valid
-            : RuleStatus.Invalid("Profilprofundum ist nicht in Einwahl enthalten.");
+        if (!profilPflichtig)
+        {
+            return RuleStatus.Valid;
+        }
+        if (enrollments.Any(w => w.ProfundumInstanz?.Profundum?.Kategorie?.ProfilProfundum ?? false))
+        {
+            if (wuensche.Any(w => w.ProfundumInstanz.Profundum.Kategorie.ProfilProfundum))
+            {
+                return RuleStatus.Invalid("Profil bereits belegt.");
+            }
+            return RuleStatus.Valid;
+        }
+        if (wuensche.Any(w => w.ProfundumInstanz.Profundum.Kategorie.ProfilProfundum))
+        {
+            return RuleStatus.Valid;
+        }
+
+        return RuleStatus.Invalid("Profilprofundum ist nicht in Einwahl enthalten.");
     }
 
     /// <inheritdoc/>
@@ -95,8 +108,7 @@ public class ProfilRule : IProfundumIndividualRule
         }
     }
 
-    /// <inheritdoc/>
-    public bool IsProfilZulaessig(Person student, ProfundumQuartal quartal)
+    private bool IsProfilZulaessig(Person student, ProfundumQuartal quartal)
     {
         var klasse = student.Gruppe;
         if (klasse is null) return false;

@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue';
 import EinwahlSelectorGroup from '@/Profundum/components/EinwahlSelectorGroup.vue';
 import EinwahlSelector from '@/Profundum/components/EinwahlSelector.vue';
-import { Button, Select, useToast } from 'primevue';
+import { Button, Select, useToast, Toast } from 'primevue';
 import { mande } from 'mande';
 import { useRouter } from 'vue-router';
 
@@ -29,11 +29,19 @@ async function send() {
     try {
         await api.post(results.value);
     } catch (e) {
-        console.log(e.response);
+        const errors = Array.isArray(e.body?.error)
+            ? e.body.error
+            : String(e.body?.error ?? 'Unbekannter Fehler')
+                  .split('\n')
+                  .filter(Boolean);
+
         toast.add({
+            group: 'bc',
             severity: 'error',
             summary: 'Fehler',
-            detail: 'Deine Belegwünsche sind fehlerhaft. \n' + e.body.error,
+            detail: 'Deine Belegwünsche sind fehlerhaft.',
+            data: { errors },
+            life: 8000,
         });
         return;
     }
@@ -44,27 +52,50 @@ async function send() {
         detail: 'Deine Wünsche wurden erfolgreich gespeichert.',
         life: 3000,
     });
-
-    await router.push({ name: 'Home' });
 }
 
-const preSelected = computed(() => {
-    // return an array of the ids of all selected options
-    const computedResult = {};
+const preSelectedRaw = computed(() => {
+    const claims = {};
+
     for (const option of options.value.filter((x) => x.fixed === null)) {
         for (let i = 0; i < results.value[option.id].length; i++) {
             const value = results.value[option.id][i];
             const valueObj = option.options.find((opt) => opt.value === value);
-            if (valueObj && valueObj.alsoIncludes && valueObj.alsoIncludes.length > 0) {
-                for (const alsoIncludedElement of valueObj.alsoIncludes) {
-                    if (!computedResult[alsoIncludedElement])
-                        computedResult[alsoIncludedElement] = [];
-                    computedResult[alsoIncludedElement][i] = valueObj;
+
+            if (valueObj?.alsoIncludes?.length) {
+                for (const forcedId of valueObj.alsoIncludes) {
+                    if (!claims[forcedId]) claims[forcedId] = [[], [], []];
+                    claims[forcedId][i] ??= [];
+                    claims[forcedId][i].push(valueObj);
                 }
             }
         }
     }
-    return computedResult;
+
+    return claims;
+});
+
+const preSelected = computed(() => {
+    const clean = {};
+    const conflicts = {};
+
+    for (const [optId, slots] of Object.entries(preSelectedRaw.value)) {
+        for (const i in slots) {
+            if (!slots[i]?.length) continue;
+
+            const unique = [...new Map(slots[i].map((v) => [v.value, v])).values()];
+
+            if (unique.length === 1) {
+                clean[optId] ??= [];
+                clean[optId][i] = unique[0];
+            } else {
+                conflicts[optId] ??= [];
+                conflicts[optId][i] = unique;
+            }
+        }
+    }
+
+    return { clean, conflicts };
 });
 
 const maySend = computed(() => {
@@ -153,7 +184,8 @@ startup();
             v-if="!option.fixed"
             v-model="results[option.id]"
             :options="option.options"
-            :pre-selected="preSelected[option.id]"
+            :pre-selected="preSelected.clean[option.id]"
+            :conflicts="preSelected.conflicts[option.id]"
         />
         <template v-else>
             <div class="w-full">
@@ -174,6 +206,26 @@ startup();
         label="Überprüfen und abgeben"
         @click="send"
     />
+
+    <Toast group="bc">
+        <template #message="slotProps">
+            <div class="flex flex-col gap-2">
+                <div class="font-bold">{{ slotProps.message.summary }}</div>
+                <ul
+                    v-if="Array.isArray(slotProps.message.data?.errors)"
+                    class="list-disc pl-5 m-0"
+                >
+                    <li v-for="(err, i) in slotProps.message.data.errors" :key="i">
+                        {{ err }}
+                    </li>
+                </ul>
+
+                <div v-else class="whitespace-pre-line">
+                    {{ slotProps.message.detail }}
+                </div>
+            </div>
+        </template>
+    </Toast>
 </template>
 
 <style scoped></style>

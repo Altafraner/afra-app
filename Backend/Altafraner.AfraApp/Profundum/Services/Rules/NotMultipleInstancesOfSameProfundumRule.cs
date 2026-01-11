@@ -14,7 +14,15 @@ public class NotMultipleInstancesOfSameProfundumRule : IProfundumIndividualRule
         IEnumerable<ProfundumSlot> slots,
         IEnumerable<ProfundumEinschreibung> enrollments,
         IEnumerable<ProfundumBelegWunsch> wuensche)
-        => RuleStatus.Valid;
+    {
+        var emsgs = wuensche.Where(w => enrollments.Any(e => e.ProfundumInstanz?.Profundum == w.ProfundumInstanz.Profundum))
+            .Select(w => $"{w.ProfundumInstanz.Profundum.Bezeichnung} bereits belegt.");
+        if (emsgs.Any())
+        {
+            return RuleStatus.Invalid(emsgs);
+        }
+        return RuleStatus.Valid;
+    }
 
     /// <inheritdoc/>
     public void AddConstraints(Person student,

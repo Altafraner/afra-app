@@ -11,6 +11,10 @@ const props = defineProps({
         type: Array,
         required: false,
     },
+    conflicts: {
+        type: Array,
+        required: false,
+    },
 });
 
 const model = defineModel({
@@ -53,31 +57,41 @@ watch(
     },
     { immediate: true },
 );
+
+function forcedAt(i) {
+    return props.preSelected?.[i] ?? null;
+}
+function conflictAt(i) {
+    return props.conflicts?.[i] ?? null;
+}
 </script>
 
 <template>
-    <div class="flex flex-col gap-3">
-        <EinwahlSelector
-            v-model="model[0]"
-            :disabled="disabled[0]"
-            :options="optionsCleaned[0]"
-            :pre-selected="preSelected && preSelected[0] ? preSelected[0] : {}"
-            label="Erstwunsch"
-        />
-        <EinwahlSelector
-            v-model="model[1]"
-            :disabled="disabled[1]"
-            :options="optionsCleaned[1]"
-            :pre-selected="preSelected && preSelected[1] ? preSelected[1] : {}"
-            label="Zweitwunsch"
-        />
-        <EinwahlSelector
-            v-model="model[2]"
-            :disabled="disabled[2]"
-            :options="optionsCleaned[2]"
-            :pre-selected="preSelected && preSelected[2] ? preSelected[2] : {}"
-            label="Drittwunsch"
-        />
+    <div class="flex flex-col gap-4">
+        <div
+            v-for="(label, i) in ['Erstwunsch', 'Zweitwunsch', 'Drittwunsch']"
+            :key="i"
+            class="flex flex-col gap-1"
+        >
+            <p v-if="conflictAt(i)" class="text-sm text-red-600">
+                ⚠ Konflikt: Mehrere zusammenhängende Profunda streuen in diesen Slot:
+                <strong>
+                    {{
+                        conflictAt(i)
+                            .map((x) => x.label)
+                            .join(', ')
+                    }}
+                </strong>
+            </p>
+            <EinwahlSelector
+                v-else
+                v-model="model[i]"
+                :options="optionsCleaned[i]"
+                :forced="forcedAt(i)"
+                :conflict="conflictAt(i)"
+                :label="label"
+            />
+        </div>
     </div>
 </template>
 
