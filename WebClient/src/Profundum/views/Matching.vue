@@ -254,7 +254,7 @@ const slotLabel = (slotId) => {
                             : 'Automatisches Matching aktualisieren'
                     }}
                 </span>
-                <span v-if="matchingRunning" class="match-btn__sec">< {{ remaining }}s</span>
+                <span v-if="matchingRunning" class="match-btn__sec"> < {{ remaining }}s</span>
             </span>
         </Button>
 
@@ -471,11 +471,12 @@ const slotLabel = (slotId) => {
                 />
             </template>
         </Column>
-        <Column header="slots">
+        <Column style="width: 10pt"
+            v-for="slot of slots"
+            :header="`${slot.jahr}-${slot.quartal}-${slot.wochentag}`"
+        >
             <template #body="{ data }">
-                <span v-for="s in data.slots">
-                    {{ slotLabel(slots.find((x) => x.id === s).id) }},
-                </span>
+                <div class="cell-fill" :class="{ active: data.slots.includes(slot.id) }"></div>
             </template>
         </Column>
         <Column header="Warnung">
@@ -503,6 +504,7 @@ const slotLabel = (slotId) => {
 .datatable-compact :deep(.p-select) {
     font-size: 0.7rem;
 }
+
 :deep(.select-compact .p-select-label) {
     font-size: 0.8rem;
 }
@@ -567,5 +569,19 @@ const slotLabel = (slotId) => {
     font-weight: 700;
     color: green;
     white-space: nowrap;
+}
+
+:deep(td) {
+    position: relative;
+    padding: 0;
+}
+
+.cell-fill {
+    position: absolute;
+    inset: 0;
+}
+
+.cell-fill.active {
+    background-color: rgb(80 80 80);
 }
 </style>
