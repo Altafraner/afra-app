@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using System.Text;
 using Altafraner.AfraApp.Domain;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
@@ -463,6 +464,35 @@ internal class ProfundumManagementService
         };
 
         return _typst.generatePdf(src, inputs);
+    }
+    public async Task<(byte[], string)> GetSlotPdfsZipAsync(Guid slotId)
+    {
+        var slot = _dbContext.ProfundaSlots.Find(slotId);
+        if (slot is null)
+        {
+            throw new NotFoundException("no such slot");
+        }
+
+        var instanzen = _dbContext.ProfundaInstanzen
+            .Include(i => i.Slots)
+            .Include(i => i.Profundum)
+            .ToArray()
+            .Where(i => i.Slots.Contains(slot));
+
+        using var ms = new MemoryStream();
+
+        using (var archive = new ZipArchive(ms, ZipArchiveMode.Create, leaveOpen: true))
+        {
+            foreach (var i in instanzen)
+            {
+                var fname = $"{i.Profundum.Bezeichnung}.pdf";
+                var entry = archive.CreateEntry(fname);
+                using var entryStream = entry.Open();
+                var pdf = await GetInstanzPdfAsync(i.Id);
+                entryStream.Write(pdf, 0, pdf.Length);
+            }
+        }
+        return (ms.ToArray(), slot.ToString());
     }
 
     ///

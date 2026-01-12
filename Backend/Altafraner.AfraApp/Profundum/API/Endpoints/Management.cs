@@ -5,12 +5,12 @@ using Altafraner.AfraApp.Otium.API.Endpoints;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.Profundum.Services;
-using Match = Altafraner.AfraApp.Profundum.Services.ProfundumMatchingService;
-using Mgmt = Altafraner.AfraApp.Profundum.Services.ProfundumManagementService;
 using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.AfraApp.User.Services;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
+using Match = Altafraner.AfraApp.Profundum.Services.ProfundumMatchingService;
+using Mgmt = Altafraner.AfraApp.Profundum.Services.ProfundumManagementService;
 
 namespace Altafraner.AfraApp.Profundum.API.Endpoints;
 
@@ -58,6 +58,7 @@ public static class Management
         ins.MapPut("/{id:guid}", async (Mgmt svc, Guid id, DTOProfundumInstanzCreation instanz) => (await svc.UpdateInstanzAsync(id, instanz)).Id);
         ins.MapDelete("/{id:guid}", (Mgmt svc, Guid id) => svc.DeleteInstanzAsync(id));
         ins.MapGet("/{id:guid}.pdf", async (Mgmt svc, Guid id) => TypedResults.File((await svc.GetInstanzPdfAsync(id)), MediaTypeNames.Application.Pdf, $"{id}.pdf"));
+        ins.MapGet("/{id:guid}.zip", async (Mgmt svc, Guid id) => { var (f, fn) = await svc.GetSlotPdfsZipAsync(id); return TypedResults.File(f, MediaTypeNames.Application.Zip, fn); });
 
         var fachbereich = gp.MapGroup("fachbereich");
         fachbereich.MapGet("/",
