@@ -115,8 +115,7 @@ public class CalendarService
             .Where(e => e.ProfundumInstanz != null)
             .Include(e => e.ProfundumInstanz).ThenInclude(i => i!.Slots).ThenInclude(s => s.Termine);
         var profundumEnrolledEvents = profundumEnrollments
-            .SelectMany(e => e.ProfundumInstanz!.Slots
-            .SelectMany(s => s.Termine
+            .SelectMany(e => e.Slot.Termine
             .Select(t => new CalendarEvent
             {
                 Summary = e.ProfundumInstanz!.Profundum.Bezeichnung,
@@ -124,7 +123,7 @@ public class CalendarService
                 Location = e.ProfundumInstanz!.Ort,
                 Start = new CalDateTime(new DateTime(t.Day, t.StartTime), true),
                 End = new CalDateTime(new DateTime(t.Day, t.EndTime), true),
-            })));
+            }));
 
         var profundumTaught = _dbContext.ProfundaInstanzen
             .Where(i => i.Verantwortliche.Contains(sub.BetroffenePerson))
