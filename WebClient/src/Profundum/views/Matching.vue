@@ -138,22 +138,29 @@ async function updateEnrollment(row) {
             detail: 'Änderung gespeichert.',
             life: 1500,
         });
-        await getEnrollments();
         return true;
     } catch (err) {
         console.error(err);
-
-        let message = 'Speichern fehlgeschlagen.';
-        if (err?.response?.data) {
-            message += ' ' + err.response.data;
+        if (err?.response?.status === 429) {
+            toast.add({
+                severity: 'error',
+                summary: 'Matching läuft.',
+                detail: 'Das Matching wird gerade von einer anderen Sitzung ausgeführt. Bitte warten und erneut eintragen..',
+            });
+        } else {
+            let message = 'Speichern fehlgeschlagen.';
+            if (err?.response?.data) {
+                message += ' ' + err.response.data;
+            }
+            toast.add({
+                severity: 'error',
+                summary: 'Fehler',
+                detail: message,
+            });
         }
-        toast.add({
-            severity: 'error',
-            summary: 'Fehler',
-            detail: message,
-            life: 4000,
-        });
         return false;
+    } finally {
+        await getEnrollments();
     }
 }
 
@@ -266,7 +273,7 @@ const slotLabel = (slotId) => {
                             : 'Automatisches Matching aktualisieren'
                     }}
                 </span>
-                <span v-if="matchingRunning" class="match-btn__sec">< {{ remaining }}s</span>
+                <span v-if="matchingRunning" class="match-btn__sec"> < {{ remaining }}s</span>
             </span>
         </Button>
 
@@ -373,9 +380,10 @@ const slotLabel = (slotId) => {
                         severity="success"
                         text
                         @click="
-                            () => {
-                                updateEnrollment(data);
-                                stopEdit();
+                            async () => {
+                                if (await updateEnrollment(data)) {
+                                    stopEdit();
+                                }
                             }
                         "
                     />
@@ -532,6 +540,7 @@ const slotLabel = (slotId) => {
 .datatable-compact :deep(.p-select) {
     font-size: 0.7rem;
 }
+
 :deep(.select-compact .p-select-label) {
     font-size: 0.8rem;
 }
@@ -553,6 +562,7 @@ const slotLabel = (slotId) => {
 .readonly-value {
     display: inline-flex;
 }
+
 .readonly-value.fixed {
     font-weight: 800;
     color: orange;

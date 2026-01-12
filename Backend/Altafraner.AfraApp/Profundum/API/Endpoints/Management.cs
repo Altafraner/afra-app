@@ -91,7 +91,7 @@ public static class Management
         gp.MapPost("/matching", PerformMatchingSynchronized);
         gp.MapPost("/finalize", (Match svc) => svc.Finalize());
         gp.MapGet("/enrollments", (Match svc) => svc.GetAllEnrollmentsAsync());
-        gp.MapPut("/enrollment/{personId:guid}", (Mgmt svc, Guid personId, List<DTOProfundumEnrollment> enrollments) => svc.UpdateEnrollmentsAsync(personId, enrollments));
+        gp.MapPut("/enrollment/{personId:guid}", PutEnrollmentsAsync);
 
         gp.MapGet("/matching.csv", async (Mgmt svc) => TypedResults.File(Encoding.UTF8.GetBytes(await svc.GetStudentMatchingCsv()), MediaTypeNames.Text.Csv));
 
@@ -107,6 +107,21 @@ public static class Management
         try
         {
             return TypedResults.Ok(await svc.PerformMatching());
+        }
+        finally
+        {
+            _matchingSemaphore.Release();
+        }
+    }
+
+    private static async Task<Results<Ok, StatusCodeHttpResult>> PutEnrollmentsAsync(Mgmt svc, Guid personId, List<DTOProfundumEnrollment> enrollments)
+    {
+        if (!await _matchingSemaphore.WaitAsync(0))
+            return TypedResults.StatusCode(429);
+        try
+        {
+            await svc.UpdateEnrollmentsAsync(personId, enrollments);
+            return TypedResults.Ok();
         }
         finally
         {
