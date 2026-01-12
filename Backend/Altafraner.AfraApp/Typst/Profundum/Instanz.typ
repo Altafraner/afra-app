@@ -87,11 +87,9 @@ Raum #ort
 #if (verantwortliche.len() > 0) {[
     == Verantwortliche
 
-    #table(columns: 3,stroke:none,
-        ..for v in verantwortliche {
-            (v.Nachname, v.Vorname, v.Email)
-        }
-    )
+    #for v in verantwortliche {
+        [- #v.Nachname, #v.Vorname]
+    }
 ]}
 
 == Teilnehmer:innen
