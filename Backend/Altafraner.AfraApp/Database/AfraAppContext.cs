@@ -113,6 +113,11 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
     public DbSet<ProfundumSlot> ProfundaSlots { get; set; }
 
     /// <summary>
+    ///     All termine for profunda lessons
+    /// </summary>
+    public DbSet<ProfundumTermin> ProfundaTermine { get; set; }
+
+    /// <summary>
     ///     All Einwahlzeiträume for Profundum
     /// </summary>
     public DbSet<ProfundumEinwahlZeitraum> ProfundumEinwahlZeitraeume { get; set; }
@@ -278,6 +283,12 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
         {
             w.HasKey(b => new { b.ProfundumInstanzId, b.BetroffenePersonId, b.Stufe });
             w.HasOne(b => b.BetroffenePerson).WithMany(p => p.ProfundaBelegwuensche);
+        });
+
+        modelBuilder.Entity<ProfundumTermin>(w =>
+        {
+            w.HasKey(t => t.Day);
+            w.HasOne(t => t.Slot).WithMany(s => s.Termine);
         });
 
         modelBuilder.Entity<ProfundumProfilBefreiung>(w =>

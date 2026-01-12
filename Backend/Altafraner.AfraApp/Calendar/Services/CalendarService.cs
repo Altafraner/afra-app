@@ -110,10 +110,43 @@ public class CalendarService
             Created = new CalDateTime(e.CreatedAt, true)
         });
 
+        var profundumEnrollments = _dbContext.ProfundaEinschreibungen
+            .Where(e => e.BetroffenePerson == sub.BetroffenePerson)
+            .Where(e => e.ProfundumInstanz != null)
+            .Include(e => e.ProfundumInstanz).ThenInclude(i => i!.Slots).ThenInclude(s => s.Termine);
+        var profundumEnrolledEvents = profundumEnrollments
+            .SelectMany(e => e.ProfundumInstanz!.Slots
+            .SelectMany(s => s.Termine
+            .Select(t => new CalendarEvent
+            {
+                Summary = e.ProfundumInstanz!.Profundum.Bezeichnung,
+                Description = e.ProfundumInstanz!.Profundum.Beschreibung,
+                Location = e.ProfundumInstanz!.Ort,
+                Start = new CalDateTime(new DateTime(t.Day, t.StartTime), true),
+                End = new CalDateTime(new DateTime(t.Day, t.EndTime), true),
+            })));
+
+        var profundumTaught = _dbContext.ProfundaInstanzen
+            .Where(i => i.Verantwortliche.Contains(sub.BetroffenePerson))
+            .Include(i => i!.Slots).ThenInclude(s => s.Termine);
+        var profundumTaughtEvents = profundumTaught
+            .SelectMany(i => i.Slots
+            .SelectMany(s => s.Termine
+            .Select(t => new CalendarEvent
+            {
+                Summary = i.Profundum.Bezeichnung,
+                Description = i.Profundum.Beschreibung,
+                Location = i.Ort,
+                Start = new CalDateTime(new DateTime(t.Day, t.StartTime), true),
+                End = new CalDateTime(new DateTime(t.Day, t.EndTime), true),
+            })));
+
         var calendar = new Ical.Net.Calendar();
 
         calendar.Events.AddRange(enrolledEvents);
         calendar.Events.AddRange(taughtEvents);
+        calendar.Events.AddRange(profundumEnrolledEvents);
+        calendar.Events.AddRange(profundumTaughtEvents);
         calendar.AddTimeZone(new VTimeZone("Europe/Berlin"));
 
         var serializer = new CalendarSerializer();
