@@ -195,8 +195,8 @@ internal class ProfundumEnrollmentService
         _logger.LogInformation("{serialized}", System.Text.Json.JsonSerializer.Serialize(openSlots));
 
         var toRemove = _dbContext.ProfundaBelegWuensche
-            .Where(p => p.BetroffenePerson == student)
-            .Where(p => p.ProfundumInstanz.Slots.All(s => openSlots.Contains(s)));
+            .Where(w => w.BetroffenePerson == student)
+            .Where(w => w.EinwahlZeitraum == einschreibeZeitraum);
         _dbContext.ProfundaBelegWuensche.RemoveRange(toRemove);
 
         var profilPflichtig = IsProfilPflichtig(student, slots.Select(s => s.Quartal));
@@ -281,10 +281,9 @@ internal class ProfundumEnrollmentService
             throw new ProfundumEinwahlWunschException(errmsgs.Aggregate(new StringBuilder(), (a, b) => a.AppendLine(b)).ToString());
         }
 
-        await SendWuenscheEMail(student, openSlots, belegWuensche);
-
         _dbContext.ProfundaBelegWuensche.AddRange(belegWuensche);
         await _dbContext.SaveChangesAsync();
+        await SendWuenscheEMail(student, openSlots, belegWuensche);
     }
 
     private async Task SendWuenscheEMail(Models_Person student,
