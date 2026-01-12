@@ -58,7 +58,12 @@ public static class Management
         ins.MapPut("/{id:guid}", async (Mgmt svc, Guid id, DTOProfundumInstanzCreation instanz) => (await svc.UpdateInstanzAsync(id, instanz)).Id);
         ins.MapDelete("/{id:guid}", (Mgmt svc, Guid id) => svc.DeleteInstanzAsync(id));
         ins.MapGet("/{id:guid}.pdf", async (Mgmt svc, Guid id) => TypedResults.File((await svc.GetInstanzPdfAsync(id)), MediaTypeNames.Application.Pdf, $"{id}.pdf"));
-        ins.MapGet("/{id:guid}.zip", async (Mgmt svc, Guid id) => { var (f, fn) = await svc.GetSlotPdfsZipAsync(id); return TypedResults.File(f, MediaTypeNames.Application.Zip, fn); });
+        ins.MapGet("/{id:guid}.zip",
+            async (Mgmt svc, Guid id) =>
+            {
+                var (f, fn) = await svc.GetSlotPdfsZipAsync(id);
+                return TypedResults.File(f, MediaTypeNames.Application.Zip, $"{fn}.zip");
+            });
 
         var fachbereich = gp.MapGroup("fachbereich");
         fachbereich.MapGet("/",
