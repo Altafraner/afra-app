@@ -111,6 +111,7 @@ public class CalendarService
         });
 
         var profundumEnrollments = _dbContext.ProfundaEinschreibungen
+            .Where(e => e.IsFixed)
             .Where(e => e.BetroffenePerson == sub.BetroffenePerson)
             .Where(e => e.ProfundumInstanz != null)
             .Include(e => e.ProfundumInstanz).ThenInclude(i => i!.Slots).ThenInclude(s => s.Termine);
