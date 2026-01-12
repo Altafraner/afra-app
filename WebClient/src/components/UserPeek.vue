@@ -10,7 +10,6 @@ defineOptions({ name: 'UserPeek' });
 const props = defineProps({
     showGroup: { type: Boolean, default: false },
     person: { type: Object, required: true },
-    label: { type: String, default: '' },
     displayFunction: { type: Function, default: formatStudent },
 });
 
@@ -61,77 +60,71 @@ const toggle = async (event: Event) => {
 </script>
 
 <template>
-    <span>
-        <Button
-            :label="displayFunction(person)"
-            class="py-1 font-semibold"
-            variant="text"
-            @click="toggle($event)"
-        />
-
-        <Tag
-            v-if="!person?.gruppe && person?.rolle && showGroup"
-            :value="person.rolle"
-            rounded
-            severity="info"
-        />
-        <Tag
-            v-if="person?.gruppe && showGroup"
-            :value="person.gruppe"
-            rounded
-            severity="info"
-        />
-
-        <Popover
-            ref="pop"
-            :aria-label="displayFunction(person)"
-            dismissable
-            showCloseIcon
-            style="min-width: 15rem"
-        >
-            <div class="p-3">
-                <div class="flex items-center gap-3 mb-3">
-                    <div class="font-bold">{{ displayFunction(person) }}</div>
-                    <Tag
-                        v-if="!person?.gruppe && person?.rolle"
-                        :value="person.rolle"
-                        rounded
-                        severity="info"
-                    />
-                    <Tag v-if="person?.gruppe" :value="person.gruppe" rounded severity="info" />
-                </div>
-
-                <Divider />
-
-                <Button
-                    v-if="person?.email"
-                    :label="person.email"
-                    class="-ml-2"
-                    icon="pi pi-envelope"
-                    size="small"
-                    variant="text"
-                    @click.prevent="copy(person.email)"
+    <Button class="py-1 font-semibold" v-bind="$attrs" variant="text" @click="toggle($event)">
+        <template #default>
+            <span class="inline-flex justify-between items-center gap-2 w-full">
+                <span class="w-full inline-block text-center">
+                    {{ displayFunction(person) }}
+                </span>
+                <Tag
+                    v-if="person && showGroup"
+                    :value="person.gruppe ?? person.rolle"
+                    rounded
+                    severity="info"
                 />
+            </span>
+        </template>
+    </Button>
 
-                <template v-if="mentorsLoaded && mentors.length">
-                    <Divider />
-                    <div class="mt-2 flex flex-col gap-2">
-                        <div class="text-700 text-sm mb-2 font-medium">Mentor:innen</div>
-                        <div v-for="mentor in mentors" :key="mentor.id">
-                            <div>{{ formatTutor(mentor) }}</div>
-                            <Button
-                                v-if="mentor.email"
-                                :label="mentor.email"
-                                class="-ml-2"
-                                icon="pi pi-envelope"
-                                size="small"
-                                variant="text"
-                                @click.prevent="copy(mentor.email)"
-                            />
-                        </div>
-                    </div>
-                </template>
+    <Popover
+        ref="pop"
+        :aria-label="displayFunction(person)"
+        dismissable
+        showCloseIcon
+        style="min-width: 15rem"
+    >
+        <div class="p-3">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="font-bold">{{ displayFunction(person) }}</div>
+                <Tag
+                    v-if="!person?.gruppe && person?.rolle"
+                    :value="person.rolle"
+                    rounded
+                    severity="info"
+                />
+                <Tag v-if="person?.gruppe" :value="person.gruppe" rounded severity="info" />
             </div>
-        </Popover>
-    </span>
+
+            <Divider />
+
+            <Button
+                v-if="person?.email"
+                :label="person.email"
+                class="-ml-2"
+                icon="pi pi-envelope"
+                size="small"
+                variant="text"
+                @click.prevent="copy(person.email)"
+            />
+
+            <template v-if="mentorsLoaded && mentors.length">
+                <Divider />
+                <div class="mt-2 flex flex-col gap-2">
+                    <div class="text-700 text-sm mb-2 font-medium">Mentor:innen</div>
+                    <div v-for="mentor in mentors" :key="mentor.id">
+                        <div>{{ formatTutor(mentor) }}</div>
+                        <Button
+                            v-if="mentor.email"
+                            :label="mentor.email"
+                            class="-ml-2"
+                            icon="pi pi-envelope"
+                            size="small"
+                            variant="text"
+                            @click.prevent="copy(mentor.email)"
+                        />
+                    </div>
+                </div>
+            </template>
+        </div>
+    </Popover>
 </template>

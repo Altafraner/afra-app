@@ -283,7 +283,7 @@ const slotLabel = (slotId) => {
     >
         <Column header="Person">
             <template #body="{ data }">
-                <UserPeek :person="data.person" :showGroup="true" />
+                <UserPeek :person="data.person" class="w-full" showGroup />
             </template>
         </Column>
 
