@@ -126,17 +126,17 @@ onMounted(load);
                 @delete="deleteSlot(s)"
             >
                 <template #body>
-                <Button
-                    as="a"
-                    :href="`/api/profundum/management/instanz/${s.id}.zip`"
-                    icon="pi pi-file-pdf"
-                    variant="text"
-                    size="small"
-                    download
-                    severity="info"
-                    v-tooltip.left="'PDFs aller Profunda (experimentell)'"
-                    aria-label="PDFs aller Profunda (experimentell)'"
-                />
+                    <Button
+                        as="a"
+                        :href="`/api/profundum/management/instanz/${s.id}.zip`"
+                        icon="pi pi-file-pdf"
+                        variant="text"
+                        size="small"
+                        download
+                        severity="info"
+                        v-tooltip.left="'PDFs aller Profunda (experimentell)'"
+                        aria-label="PDFs aller Profunda (experimentell)'"
+                    />
                     Jahr: {{ s.jahr }}, Quartal: {{ s.quartal }}, Wochentag:
                     {{
                         weekdayOptions.find((d) => d.value === s.wochentag)?.label ??
