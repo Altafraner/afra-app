@@ -123,6 +123,11 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
     public DbSet<ProfundumKategorie> ProfundaKategorien { get; set; }
 
     /// <summary>
+    ///     All Profundum Profil Befreiungen
+    /// </summary>
+    public DbSet<ProfundumProfilBefreiung> ProfundumProfilBefreiungen { get; set; }
+
+    /// <summary>
     ///     All Fachbereiche for Profunda
     /// </summary>
     public DbSet<ProfundumFachbereich> ProfundaFachbereiche { get; set; }
@@ -273,6 +278,12 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
         {
             w.HasKey(b => new { b.ProfundumInstanzId, b.BetroffenePersonId, b.Stufe });
             w.HasOne(b => b.BetroffenePerson).WithMany(p => p.ProfundaBelegwuensche);
+        });
+
+        modelBuilder.Entity<ProfundumProfilBefreiung>(w =>
+        {
+            w.HasKey(b => new { b.BetroffenePersonId, b.Jahr, b.Quartal });
+            w.HasOne(b => b.BetroffenePerson).WithMany();
         });
 
         modelBuilder.Entity<CalendarSubscription>(s => { s.HasOne(b => b.BetroffenePerson).WithMany(); });

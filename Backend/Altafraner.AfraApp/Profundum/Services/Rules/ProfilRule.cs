@@ -5,6 +5,7 @@ using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.AfraApp.User.Services;
 using Google.OrTools.Sat;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 
 namespace Altafraner.AfraApp.Profundum.Services.Rules;
@@ -12,14 +13,18 @@ namespace Altafraner.AfraApp.Profundum.Services.Rules;
 ///
 public class ProfilRule : IProfundumIndividualRule
 {
+    private readonly AfraAppContext _dbContext;
     private readonly UserService _userService;
     private readonly IOptions<ProfundumConfiguration> _profundumConfiguration;
+    private readonly IMemoryCache _cache;
 
     ///
-    public ProfilRule(UserService userService, IOptions<ProfundumConfiguration> profundumConfiguration)
+    public ProfilRule(AfraAppContext dbContext, UserService userService, IOptions<ProfundumConfiguration> profundumConfiguration, IMemoryCache cache)
     {
+        _dbContext = dbContext;
         _userService = userService;
         _profundumConfiguration = profundumConfiguration;
+        _cache = cache;
     }
 
     /// <inheritdoc/>
@@ -33,6 +38,12 @@ public class ProfilRule : IProfundumIndividualRule
         {
             return RuleStatus.Valid;
         }
+
+        if (IsProfilRegelBefreit(student))
+        {
+            return RuleStatus.Valid;
+        }
+
         if (enrollments.Any(w => w.ProfundumInstanz?.Profundum?.Kategorie?.ProfilProfundum ?? false))
         {
             if (wuensche.Any(w => w.ProfundumInstanz.Profundum.Kategorie.ProfilProfundum))
@@ -58,6 +69,11 @@ public class ProfilRule : IProfundumIndividualRule
         CpModel model,
         LinearExprBuilder objective)
     {
+        if (IsProfilRegelBefreit(student))
+        {
+            return;
+        }
+
         var pflichtQuartale = slots
             .Where(s => IsProfilPflichtig(student, s.Quartal))
         .GroupBy(s => (s.Jahr, s.Quartal));
@@ -120,8 +136,13 @@ public class ProfilRule : IProfundumIndividualRule
         return ret;
     }
 
+    private bool IsProfilRegelBefreit(Person student)
+        => _cache.GetOrCreate($"profundum:befreiung:{student.Id}",
+                _ => _dbContext.ProfundumProfilBefreiungen.Any(pb => pb.BetroffenePerson == student));
+
     private bool IsProfilPflichtig(Person student, ProfundumQuartal quartal)
     {
+
         var klasse = _userService.GetKlassenstufe(student);
         var profilQuartale = _profundumConfiguration.Value.ProfilPflichtigkeit.GetValueOrDefault(klasse);
         return profilQuartale is not null && profilQuartale.Contains(quartal);
@@ -130,6 +151,11 @@ public class ProfilRule : IProfundumIndividualRule
     /// <inheritdoc/>
     public IEnumerable<MatchingWarning> GetWarnings(Person student, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
     {
+        if (IsProfilRegelBefreit(student))
+        {
+            return [new MatchingWarning("Person ist von der Profilregel ausgenommen worden. Anforderungen prüfen!")];
+        }
+
         List<MatchingWarning> warnings = [];
         var profilPflichtig = slots.Any(s => IsProfilPflichtig(student, s.Quartal));
         if (profilPflichtig && !enrollments.Any(e => e.BetroffenePerson == student
