@@ -404,6 +404,20 @@ const slotLabel = (slotId) => {
                                     <span>{{
                                         slotProps.option.profundumInfo.bezeichnung
                                     }}</span>
+
+                                    <span
+                                        >({{
+                                            instanzen
+                                                .map((i) => {
+                                                    return {
+                                                        id: i.id,
+                                                        value: `${i.numEinschreibungen} / ${i.maxEinschreibungen}`,
+                                                    };
+                                                })
+                                                .find((i) => i.id === slotProps.option.id)
+                                                ?.value
+                                        }})</span
+                                    >
                                 </span>
                             </template>
                         </Select>
