@@ -232,7 +232,11 @@ const wuenscheBySlot = (row) => {
         );
     }
 
-    return map;
+    const slotOrder = slots.value.map((s) => s.id);
+
+    return [...map.entries()].toSorted(
+        ([a], [b]) => slotOrder.indexOf(a) - slotOrder.indexOf(b),
+    );
 };
 
 const slotLabel = (slotId) => {
@@ -471,7 +475,8 @@ const slotLabel = (slotId) => {
                 />
             </template>
         </Column>
-        <Column style="width: 10pt"
+        <Column
+            style="width: 10pt"
             v-for="slot of slots"
             :header="`${slot.jahr}-${slot.quartal}-${slot.wochentag}`"
         >
