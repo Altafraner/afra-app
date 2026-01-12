@@ -495,8 +495,8 @@ const slotLabel = (slotId) => {
                 />
             </template>
         </Column>
-        <Column field="maxEinschreibungen" header="MaxEinschreibungen"></Column>
         <Column field="numEinschreibungen" header="Einschreibungen"></Column>
+        <Column field="maxEinschreibungen" header="MaxEinschreibungen"></Column>
     </DataTable>
 </template>
 
