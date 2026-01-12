@@ -1,12 +1,12 @@
 using System.ComponentModel.DataAnnotations;
-using Altafraner.AfraApp.User.Domain.Models;
+using Altafraner.Backbone.Utils;
 
 namespace Altafraner.AfraApp.Profundum.Domain.Models;
 
 /// <summary>
 ///     A db record representing a Profundum.
 /// </summary>
-public class ProfundumDefinition
+public class ProfundumDefinition : IHasTimestamps
 {
     /// <summary>
     ///     A unique identifier for the Profundum
@@ -31,7 +31,7 @@ public class ProfundumDefinition
     /// <summary>
     ///     The departements this profundum is part of.
     /// </summary>
-    public List<ProfundumFachbereich> Fachbereiche { get; set; }
+    public List<ProfundumFachbereich> Fachbereiche { get; set; } = [];
 
     ///
     public ICollection<ProfundumInstanz> Instanzen { get; set; } = [];
@@ -45,4 +45,10 @@ public class ProfundumDefinition
     public ICollection<ProfundumDefinition> Dependencies { get; set; } = [];
     ///
     public ICollection<ProfundumDefinition> Dependants { get; set; } = [];
+
+    /// <inheritdoc/>
+    public DateTime CreatedAt { get; set; }
+
+    /// <inheritdoc/>
+    public DateTime LastModified { get; set; }
 }

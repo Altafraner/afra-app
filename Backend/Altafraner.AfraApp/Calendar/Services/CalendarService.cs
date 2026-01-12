@@ -124,6 +124,8 @@ public class CalendarService
                 Location = e.ProfundumInstanz!.Ort,
                 Start = new CalDateTime(new DateTime(t.Day, t.StartTime), true),
                 End = new CalDateTime(new DateTime(t.Day, t.EndTime), true),
+                LastModified = new CalDateTime(new[] { e.LastModified, e.ProfundumInstanz.LastModified, e.ProfundumInstanz.Profundum.LastModified }.Max(), true),
+                Created = new CalDateTime(e.CreatedAt, true)
             }));
 
         var profundumTaught = _dbContext.ProfundaInstanzen
@@ -139,6 +141,8 @@ public class CalendarService
                 Location = i.Ort,
                 Start = new CalDateTime(new DateTime(t.Day, t.StartTime), true),
                 End = new CalDateTime(new DateTime(t.Day, t.EndTime), true),
+                LastModified = new CalDateTime(new[] { i.LastModified, i.Profundum.LastModified }.Max(), true),
+                Created = new CalDateTime(i.CreatedAt, true)
             })));
 
         var calendar = new Ical.Net.Calendar();

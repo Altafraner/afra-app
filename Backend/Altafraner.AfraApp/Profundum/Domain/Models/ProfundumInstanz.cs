@@ -1,12 +1,13 @@
 using System.ComponentModel.DataAnnotations;
 using Altafraner.AfraApp.User.Domain.Models;
+using Altafraner.Backbone.Utils;
 
 namespace Altafraner.AfraApp.Profundum.Domain.Models;
 
 /// <summary>
 ///     A db record representing a Profundum instance.
 /// </summary>
-public class ProfundumInstanz
+public class ProfundumInstanz : IHasTimestamps
 {
     ///
     public Guid Id { get; set; }
@@ -31,4 +32,10 @@ public class ProfundumInstanz
     ///
     [MaxLength(20)]
     public required string Ort { get; set; }
+
+    /// <inheritdoc/>
+    public DateTime CreatedAt { get; set; }
+
+    /// <inheritdoc/>
+    public DateTime LastModified { get; set; }
 }

@@ -1,11 +1,12 @@
 using Altafraner.AfraApp.User.Domain.Models;
+using Altafraner.Backbone.Utils;
 
 namespace Altafraner.AfraApp.Profundum.Domain.Models;
 
 /// <summary>
 ///     A record representing an enrollment for a <see cref="ProfundumDefinition" />.
 /// </summary>
-public class ProfundumEinschreibung
+public class ProfundumEinschreibung : IHasTimestamps
 {
     /// <summary>
     ///     False iff the Enrollment is preliminary and can be safely overwritten by matching functions
@@ -32,4 +33,10 @@ public class ProfundumEinschreibung
 
     ///
     protected internal Guid SlotId { get; set; }
+
+    /// <inheritdoc/>
+    public DateTime CreatedAt { get; set; }
+
+    /// <inheritdoc/>
+    public DateTime LastModified { get; set; }
 }
