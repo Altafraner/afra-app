@@ -160,7 +160,7 @@ async function updateEnrollment(row) {
         }
         return false;
     } finally {
-        await getEnrollments();
+        getEnrollments();
     }
 }
 
