@@ -68,7 +68,16 @@
     align(right, image("logo.png", width: 50mm))
 )
 
-Raum #ort
+#let quickfacts = (
+  if ort.len() > 0 { [Raum #ort] } else { none },
+  if verantwortliche.len() > 0 {
+    verantwortliche
+        .map(v => [#v.Vorname #v.Nachname])
+        .join(", ")
+  } else { none },
+).filter(x => x != none)
+
+#quickfacts.join(linebreak())
 
 #if (beschreibung.len() > 0) {[
     == Beschreibung
@@ -84,13 +93,7 @@ Raum #ort
     }
 ]}
 
-#if (verantwortliche.len() > 0) {[
-    == Verantwortliche
-
-    #for v in verantwortliche {
-        [- #v.Nachname, #v.Vorname]
-    }
-]}
+#v(1em)
 
 == Teilnehmer:innen
 
