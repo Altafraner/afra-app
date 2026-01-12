@@ -281,7 +281,7 @@ internal class ProfundumMatchingService
                         { ProfundumSlotId = e.slotId, ProfundumInstanzId = null, IsFixed = false });
 
             var personsWishes = person.ProfundaBelegwuensche
-                .Select(e => new DTOWunsch(e.ProfundumInstanz.Profundum.Id,
+                .Select(e => new DTOWunsch(e.ProfundumInstanz.Id,
                     e.ProfundumInstanz.Slots.Select(s => s.Id),
                     (int)e.Stufe));
             var warnings = GetStudentWarnings(person,

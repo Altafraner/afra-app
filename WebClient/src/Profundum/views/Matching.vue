@@ -179,7 +179,7 @@ getInstanzen();
 getProfunda();
 
 const wishForOption = (row, option) => {
-    return row.wuensche?.find((w) => w.id === option.profundumInfo.id) ?? null;
+    return row.wuensche?.find((w) => w.id === option.id) ?? null;
 };
 
 const sortedInstanzenForSlot = (slotId, row) => {
@@ -313,7 +313,7 @@ const slotLabel = (slotId) => {
                         <ul class="ml-3">
                             <li v-for="w in wishes" :key="`${slotId}-${w.id}`">
                                 {{ w.rang }}.
-                                {{ profunda.find((p) => p.id == w.id)?.bezeichnung ?? '—' }}
+                                {{ instanzen.find((p) => p.id == w.id)?.profundumInfo.bezeichnung ?? '—' }}
                             </li>
                         </ul>
                     </div>
@@ -393,15 +393,15 @@ const slotLabel = (slotId) => {
                             :disabled="!enrollmentForSlot(data, slot.id).isFixed"
                         >
                             <template #option="slotProps">
-                                <div class="option-row">
-                                    <span>{{
-                                        slotProps.option.profundumInfo.bezeichnung
-                                    }}</span>
-
+                                <span class="option-row gap-2">
                                     <span v-if="wishForOption(data, slotProps.option)">
                                         ★ {{ wishForOption(data, slotProps.option).rang }}
                                     </span>
-                                </div>
+
+                                    <span>{{
+                                        slotProps.option.profundumInfo.bezeichnung
+                                    }}</span>
+                                </span>
                             </template>
                         </Select>
                     </template>
@@ -525,8 +525,7 @@ const slotLabel = (slotId) => {
 }
 
 .option-row :last-child {
-    font-weight: 600;
-    color: var(--primary-color);
+  font-style: italic
 }
 
 .readonly-value {
