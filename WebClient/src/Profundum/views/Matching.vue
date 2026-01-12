@@ -258,7 +258,7 @@ const slotLabel = (slotId) => {
                             : 'Automatisches Matching aktualisieren'
                     }}
                 </span>
-                <span v-if="matchingRunning" class="match-btn__sec"> < {{ remaining }}s</span>
+                <span v-if="matchingRunning" class="match-btn__sec">< {{ remaining }}s</span>
             </span>
         </Button>
 
@@ -313,7 +313,10 @@ const slotLabel = (slotId) => {
                         <ul class="ml-3">
                             <li v-for="w in wishes" :key="`${slotId}-${w.id}`">
                                 {{ w.rang }}.
-                                {{ instanzen.find((p) => p.id == w.id)?.profundumInfo.bezeichnung ?? '—' }}
+                                {{
+                                    instanzen.find((p) => p.id == w.id)?.profundumInfo
+                                        .bezeichnung ?? '—'
+                                }}
                             </li>
                         </ul>
                     </div>
@@ -475,13 +478,11 @@ const slotLabel = (slotId) => {
                 />
             </template>
         </Column>
-        <Column
-            style="width: 10pt"
-            v-for="slot of slots"
-            :header="`${slot.jahr}-${slot.quartal}-${slot.wochentag}`"
-        >
+        <Column header="slots">
             <template #body="{ data }">
-                <div class="cell-fill" :class="{ active: data.slots.includes(slot.id) }"></div>
+                <span v-for="s in data.slots">
+                    {{ slotLabel(slots.find((x) => x.id === s).id) }},
+                </span>
             </template>
         </Column>
         <Column header="Warnung">
@@ -509,7 +510,6 @@ const slotLabel = (slotId) => {
 .datatable-compact :deep(.p-select) {
     font-size: 0.7rem;
 }
-
 :deep(.select-compact .p-select-label) {
     font-size: 0.8rem;
 }
@@ -525,7 +525,7 @@ const slotLabel = (slotId) => {
 }
 
 .option-row :last-child {
-  font-style: italic
+    font-style: italic;
 }
 
 .readonly-value {
@@ -573,19 +573,5 @@ const slotLabel = (slotId) => {
     font-weight: 700;
     color: green;
     white-space: nowrap;
-}
-
-:deep(td) {
-    position: relative;
-    padding: 0;
-}
-
-.cell-fill {
-    position: absolute;
-    inset: 0;
-}
-
-.cell-fill.active {
-    background-color: rgb(80 80 80);
 }
 </style>
