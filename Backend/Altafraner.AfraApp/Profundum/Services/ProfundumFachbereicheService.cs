@@ -1,4 +1,4 @@
-﻿using Altafraner.AfraApp.Profundum.Domain.Models;
+using Altafraner.AfraApp.Profundum.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Altafraner.AfraApp.Profundum.Services;

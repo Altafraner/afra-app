@@ -1,4 +1,4 @@
-﻿using Altafraner.AfraApp.Profundum.Domain.Models;
+using Altafraner.AfraApp.Profundum.Domain.Models;
 
 namespace Altafraner.AfraApp.Profundum.Domain.DTO;
 

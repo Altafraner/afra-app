@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using Altafraner.AfraApp.Profundum.Domain.Models;
 
 namespace Altafraner.AfraApp.Profundum.Domain.DTO;

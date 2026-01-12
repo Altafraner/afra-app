@@ -1,4 +1,4 @@
-﻿using Altafraner.AfraApp.Profundum.Domain.Models.Bewertung;
+using Altafraner.AfraApp.Profundum.Domain.Models.Bewertung;
 using Altafraner.AfraApp.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 
