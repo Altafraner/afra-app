@@ -88,7 +88,7 @@ public static class Management
                 return TypedResults.NoContent();
             });
 
-        gp.MapPost("/matching", (Match svc) => svc.PerformMatching());
+        gp.MapPost("/matching", PerformMatchingSynchronized);
         gp.MapPost("/finalize", (Match svc) => svc.Finalize());
         gp.MapGet("/enrollments", (Match svc) => svc.GetAllEnrollmentsAsync());
         gp.MapPut("/enrollment/{personId:guid}", (Mgmt svc, Guid personId, List<DTOProfundumEnrollment> enrollments) => svc.UpdateEnrollmentsAsync(personId, enrollments));
@@ -97,6 +97,21 @@ public static class Management
 
         gp.MapGet("/feedback/belegung", GetAllQuartaleWithEnrollments)
             .RequireAuthorization(AuthorizationPolicies.TutorOnly);
+    }
+
+    private static readonly SemaphoreSlim _matchingSemaphore = new SemaphoreSlim(1, 1);
+    private static async Task<Results<Ok<MatchingStats>, StatusCodeHttpResult>> PerformMatchingSynchronized(Match svc)
+    {
+        if (!await _matchingSemaphore.WaitAsync(0))
+            return TypedResults.StatusCode(429);
+        try
+        {
+            return TypedResults.Ok(await svc.PerformMatching());
+        }
+        finally
+        {
+            _matchingSemaphore.Release();
+        }
     }
 
     // TODO This is slow and should be replaced by something more in line with the new matching interface.

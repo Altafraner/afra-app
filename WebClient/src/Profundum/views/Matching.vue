@@ -81,11 +81,19 @@ async function autoMatching() {
         });
         console.log(r);
     } catch (e) {
-        toast.add({
-            severity: 'error',
-            summary: 'Fehler',
-            detail: 'Es ist ein Fehler beim Matching aufgetreten. ' + e,
-        });
+        if (e?.response?.status === 429) {
+            toast.add({
+                severity: 'warn',
+                summary: 'Matching läuft bereits',
+                detail: 'Das Matching wird gerade von einer anderen Sitzung ausgeführt. Bitte warten.',
+            });
+        } else {
+            toast.add({
+                severity: 'error',
+                summary: 'Fehler',
+                detail: 'Es ist ein Fehler beim Matching aufgetreten. ' + e,
+            });
+        }
         console.error(e);
     } finally {
         getEnrollments();
