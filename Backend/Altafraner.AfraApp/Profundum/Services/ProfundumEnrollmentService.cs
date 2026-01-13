@@ -252,8 +252,9 @@ internal class ProfundumEnrollmentService
                 foreach (var angebotSlot in angebot.Slots)
                 {
                     var stufeIndex = (int)stufe - 1;
-                    if (einwahl[angebotSlot][stufeIndex] is not null)
-                        throw new ProfundumEinwahlWunschException($"Überlappende Slots in der Einwahl. {angebot.Profundum.Bezeichnung}, {einwahl[angebotSlot][stufeIndex].Profundum.Bezeichnung}");
+                    var konflikt = einwahl[angebotSlot][stufeIndex];
+                    if (konflikt is not null)
+                        throw new ProfundumEinwahlWunschException($"Überlappende Slots in der Einwahl. {angebot.Profundum.Bezeichnung}, {konflikt.Profundum.Bezeichnung}");
 
                     einwahl[angebotSlot][stufeIndex] = angebot;
                 }

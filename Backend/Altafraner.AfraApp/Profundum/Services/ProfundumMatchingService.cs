@@ -59,7 +59,7 @@ internal class ProfundumMatchingService
                 .Include(pi => pi.Slots)
                 .Include(pi => pi.Profundum)
                 .ToArrayAsync())
-            .Where(pi => pi.Slots.Any(s => slots.Any(sl => sl.Id == s.Id)))
+            .Where(pi => pi.Slots.Any(s => slots.Contains(s)))
             .ToArray();
         var angeboteList = angebote.ToList();
         var belegwuensche = await _dbContext.ProfundaBelegWuensche
@@ -125,7 +125,7 @@ internal class ProfundumMatchingService
         {
             foreach (var s in slots)
             {
-                var fixE = fixEinschreibungen.Where(e => e.BetroffenePersonId == p.Id && e.SlotId == s.Id);
+                var fixE = fixEinschreibungen.Where(e => e.BetroffenePerson == p && e.Slot == s);
                 if (fixE.Any())
                 {
                     var e = fixE.First();
@@ -140,7 +140,7 @@ internal class ProfundumMatchingService
                 }
 
                 var wunschVars = belegwuensche
-                    .Where(b => b.BetroffenePerson.Id == p.Id)
+                    .Where(b => b.BetroffenePerson == p)
                     .Where(b => b.ProfundumInstanz.Slots.Contains(s))
                     .SelectMany(b => b.ProfundumInstanz.Slots.Select(s => (b.Stufe, belegVars[(b.BetroffenePerson, s, b.ProfundumInstanz)])))
                     .ToArray();
@@ -153,14 +153,14 @@ internal class ProfundumMatchingService
 
 
         foreach (var r in _rulesFactory.GetIndividualRules())
-            foreach (var s in students)
+            foreach (var student in students)
             {
-                var sBelegWuensche = belegwuensche.Where(w => w.BetroffenePerson.Id == s.Id).ToArray();
-                r.AddConstraints(s,
+                var sBelegWuensche = belegwuensche.Where(w => w.BetroffenePerson == student).ToArray();
+                r.AddConstraints(student,
                         slots,
                     sBelegWuensche,
-                    belegVars.Where(k => k.Key.p == s).ToDictionary(x => (x.Key.s, x.Key.i), x => x.Value),
-                    personNotEnrolledVariables.Where(k => k.Key.p == s).ToDictionary(x => x.Key.s, x => x.Value),
+                    belegVars.Where(k => k.Key.p == student).ToDictionary(x => (x.Key.s, x.Key.i), x => x.Value),
+                    personNotEnrolledVariables.Where(k => k.Key.p == student).ToDictionary(x => x.Key.s, x => x.Value),
                     model,
                     objective
                     );
@@ -189,7 +189,7 @@ internal class ProfundumMatchingService
             {
                 foreach (var s in i.Slots)
                 {
-                    if (fixEinschreibungen.Any(e => e.BetroffenePersonId == p.Id && e.SlotId == s.Id))
+                    if (fixEinschreibungen.Any(e => e.BetroffenePerson == p && e.Slot == s))
                     {
                         continue;
                     }
@@ -273,7 +273,7 @@ internal class ProfundumMatchingService
         await foreach (var person in personenWithData)
         {
             var personsEnrollments = slots.Select(slot => (slotId: slot.Id,
-                    enrollment: person.ProfundaEinschreibungen.FirstOrDefault(e => e.SlotId == slot.Id)))
+                    enrollment: person.ProfundaEinschreibungen.FirstOrDefault(e => e.Slot == slot)))
                 .Select(e =>
                     e.enrollment is not null
                         ? new DTOProfundumEnrollment(e.enrollment)
