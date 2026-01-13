@@ -7,12 +7,34 @@ import {
     Message,
     Popover,
     Select,
+    MultiSelect,
+    InputText,
     useToast,
 } from 'primevue';
 import { mande } from 'mande';
 import { computed, ref } from 'vue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
 import UserPeek from '@/components/UserPeek.vue';
+import { FilterService, FilterMatchMode } from '@primevue/core/api';
+
+const instanzenFilters = ref({
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+
+    'profundumInfo.bezeichnung': {
+        value: null,
+        matchMode: FilterMatchMode.CONTAINS,
+    },
+    slots: {
+        value: null,
+        matchMode: 'slotsAny',
+    },
+});
+
+FilterService.register('slotsAny', (rowSlots, selectedSlots) => {
+    if (!selectedSlots || selectedSlots.length === 0) return true;
+    if (!Array.isArray(rowSlots)) return false;
+    return selectedSlots.some((s) => rowSlots.includes(s));
+});
 
 const slots = ref([]);
 const enrollments = ref([]);
@@ -262,272 +284,318 @@ const slotLabel = (slotId) => {
 <template>
     <h1>Profunda-Matching</h1>
 
-    <span class="flex gap-1 mb-4">
-        <Button :disabled="matchingRunning" class="match-btn" @click="autoMatching">
-            <span class="match-btn__bg" :style="{ width: fillPct + '%' }" />
-            <span class="match-btn__content">
-                <span>
-                    {{
-                        matchingRunning
-                            ? 'Matching läuft…'
-                            : 'Automatisches Matching aktualisieren'
-                    }}
-                </span>
-                <span v-if="matchingRunning" class="match-btn__sec"> < {{ remaining }}s</span>
-            </span>
-        </Button>
-
-        <Button label="Matching finalisieren" severity="warn" @click="finalize" />
-
-        <Button
-            as="a"
-            :href="`/api/profundum/management/matching.csv`"
-            icon="pi pi-table"
-            download
-            label="CSV-Export"
-        />
-    </span>
-
-    <DataTable
-        :value="enrollments"
-        value-key="id"
-        size="small"
-        class="datatable-compact"
-        scrollable
-        :loading="matchingRunning"
-    >
-        <Column header="Person">
-            <template #body="{ data }">
-                <UserPeek :person="data.person" class="w-full" showGroup />
-            </template>
-        </Column>
-
-        <Column header="Wünsche" style="width: 5rem">
-            <template #body="{ data, index }">
-                <Button
-                    v-if="data.wuensche.length !== 0"
-                    icon="pi pi-crown"
-                    severity="info"
-                    text
-                    @click="(e) => wuenschePops[index].toggle(e)"
-                />
-
-                <Popover
-                    :ref="(el) => (wuenschePops[index] = el)"
-                    dismissable
-                    showCloseIcon
-                    style="min-width: 15rem"
-                >
-                    <div
-                        v-for="[slotId, wishes] of wuenscheBySlot(data)"
-                        :key="slotId"
-                        class="mb-2"
+    <span class="flex flex-col gap-6">
+        <span class="flex gap-1">
+            <Button :disabled="matchingRunning" class="match-btn" @click="autoMatching">
+                <span class="match-btn__bg" :style="{ width: fillPct + '%' }" />
+                <span class="match-btn__content">
+                    <span>
+                        {{
+                            matchingRunning
+                                ? 'Matching läuft…'
+                                : 'Automatisches Matching aktualisieren'
+                        }}
+                    </span>
+                    <span v-if="matchingRunning" class="match-btn__sec">
+                        < {{ remaining }}s</span
                     >
-                        <b class="block mb-1">{{ slotLabel(slotId) }}</b>
+                </span>
+            </Button>
 
-                        <ul class="ml-3">
-                            <li v-for="w in wishes" :key="`${slotId}-${w.id}`">
-                                {{ w.rang }}.
-                                {{
-                                    instanzen.find((p) => p.id == w.id)?.profundumInfo
-                                        .bezeichnung ?? '—'
-                                }}
+            <Button label="Matching finalisieren" severity="warn" @click="finalize" />
+
+            <Button
+                as="a"
+                :href="`/api/profundum/management/matching.csv`"
+                icon="pi pi-table"
+                download
+                label="CSV-Export"
+            />
+        </span>
+        <DataTable
+            :value="enrollments"
+            value-key="id"
+            size="small"
+            class="datatable-compact"
+            scrollable
+            :loading="matchingRunning"
+        >
+            <Column header="Person">
+                <template #body="{ data }">
+                    <UserPeek :person="data.person" class="w-full" showGroup />
+                </template>
+            </Column>
+
+            <Column header="Wünsche" style="width: 5rem">
+                <template #body="{ data, index }">
+                    <Button
+                        v-if="data.wuensche.length !== 0"
+                        icon="pi pi-crown"
+                        severity="info"
+                        text
+                        @click="(e) => wuenschePops[index].toggle(e)"
+                    />
+
+                    <Popover
+                        :ref="(el) => (wuenschePops[index] = el)"
+                        dismissable
+                        showCloseIcon
+                        style="min-width: 15rem"
+                    >
+                        <div
+                            v-for="[slotId, wishes] of wuenscheBySlot(data)"
+                            :key="slotId"
+                            class="mb-2"
+                        >
+                            <b class="block mb-1">{{ slotLabel(slotId) }}</b>
+
+                            <ul class="ml-3">
+                                <li v-for="w in wishes" :key="`${slotId}-${w.id}`">
+                                    {{ w.rang }}.
+                                    {{
+                                        instanzen.find((p) => p.id == w.id)?.profundumInfo
+                                            .bezeichnung ?? '—'
+                                    }}
+                                </li>
+                            </ul>
+                        </div>
+                    </Popover>
+                </template>
+            </Column>
+
+            <Column header="Warnungen" style="width: 5rem">
+                <template #body="{ data, index }">
+                    <Button
+                        v-if="data.warnings.length !== 0"
+                        icon="pi pi-exclamation-triangle"
+                        severity="warn"
+                        text
+                        @click="(e) => warningPops[index].toggle(e)"
+                    />
+
+                    <Popover
+                        :ref="(el) => (warningPops[index] = el)"
+                        dismissable
+                        showCloseIcon
+                        style="min-width: 15rem"
+                    >
+                        <ul class="list-disc pl-4">
+                            <li v-for="w in data.warnings" :key="w">
+                                {{ w.text }}
                             </li>
                         </ul>
-                    </div>
-                </Popover>
-            </template>
-        </Column>
+                    </Popover>
+                </template>
+            </Column>
 
-        <Column header="Warnungen" style="width: 5rem">
-            <template #body="{ data, index }">
-                <Button
-                    v-if="data.warnings.length !== 0"
-                    icon="pi pi-exclamation-triangle"
-                    severity="warn"
-                    text
-                    @click="(e) => warningPops[index].toggle(e)"
-                />
+            <Column header="Aktionen" style="width: 5rem">
+                <template #body="{ data }">
+                    <span class="flex">
+                        <Button
+                            v-if="!isEditing(data)"
+                            icon="pi pi-pencil"
+                            text
+                            @click="startEdit(data)"
+                        />
 
-                <Popover
-                    :ref="(el) => (warningPops[index] = el)"
-                    dismissable
-                    showCloseIcon
-                    style="min-width: 15rem"
-                >
-                    <ul class="list-disc pl-4">
-                        <li v-for="w in data.warnings" :key="w">
-                            {{ w.text }}
-                        </li>
-                    </ul>
-                </Popover>
-            </template>
-        </Column>
-
-        <Column header="Aktionen" style="width: 5rem">
-            <template #body="{ data }">
-                <span class="flex">
-                    <Button
-                        v-if="!isEditing(data)"
-                        icon="pi pi-pencil"
-                        text
-                        @click="startEdit(data)"
-                    />
-
-                    <Button
-                        v-else
-                        icon="pi pi-check"
-                        severity="success"
-                        text
-                        @click="
-                            async () => {
-                                if (await updateEnrollment(data)) {
-                                    stopEdit();
+                        <Button
+                            v-else
+                            icon="pi pi-check"
+                            severity="success"
+                            text
+                            @click="
+                                async () => {
+                                    if (await updateEnrollment(data)) {
+                                        stopEdit();
+                                    }
                                 }
-                            }
-                        "
-                    />
-                </span>
-            </template>
-        </Column>
+                            "
+                        />
+                    </span>
+                </template>
+            </Column>
 
-        <Column
-            v-for="slot of slots"
-            :key="slot.id"
-            :header="`${slot.jahr}-${slot.quartal}-${slot.wochentag}`"
-        >
-            <template #body="{ data }">
-                <span class="flex gap-1 items-center">
-                    <template v-if="isEditing(data)">
-                        <Checkbox binary v-model="enrollmentForSlot(data, slot.id).isFixed" />
+            <Column
+                v-for="slot of slots"
+                :key="slot.id"
+                :header="`${slot.jahr}-${slot.quartal}-${slot.wochentag}`"
+            >
+                <template #body="{ data }">
+                    <span class="flex gap-1 items-center">
+                        <template v-if="isEditing(data)">
+                            <Checkbox
+                                binary
+                                v-model="enrollmentForSlot(data, slot.id).isFixed"
+                            />
 
-                        <Select
-                            showClear
-                            filter
-                            class="w-60 select-compact"
-                            :options="sortedInstanzenForSlot(slot.id, data)"
-                            option-label="profundumInfo.bezeichnung"
-                            option-value="id"
-                            v-model="enrollmentForSlot(data, slot.id).profundumInstanzId"
-                            :disabled="!enrollmentForSlot(data, slot.id).isFixed"
-                        >
-                            <template #option="slotProps">
-                                <span class="option-row gap-2">
-                                    <span v-if="wishForOption(data, slotProps.option)">
-                                        ★ {{ wishForOption(data, slotProps.option).rang }}
-                                    </span>
-
-                                    <span>{{
-                                        slotProps.option.profundumInfo.bezeichnung
-                                    }}</span>
-
-                                    <span
-                                        >({{
-                                            instanzen
-                                                .map((i) => {
-                                                    return {
-                                                        id: i.id,
-                                                        value: `${i.numEinschreibungen} / ${i.maxEinschreibungen}`,
-                                                    };
-                                                })
-                                                .find((i) => i.id === slotProps.option.id)
-                                                ?.value
-                                        }})</span
-                                    >
-                                </span>
-                            </template>
-                        </Select>
-                    </template>
-                    <template v-else>
-                        <span class="readonly-value w-60 flex items-center gap-2">
-                            <span
-                                v-if="wishForSelectedEnrollment(data, slot.id)"
-                                class="wish-indicator"
+                            <Select
+                                showClear
+                                filter
+                                class="w-60 select-compact"
+                                :options="sortedInstanzenForSlot(slot.id, data)"
+                                option-label="profundumInfo.bezeichnung"
+                                option-value="id"
+                                v-model="enrollmentForSlot(data, slot.id).profundumInstanzId"
+                                :disabled="!enrollmentForSlot(data, slot.id).isFixed"
                             >
-                                <i class="pi pi-crown" />
-                                {{ wishForSelectedEnrollment(data, slot.id).rang }}
+                                <template #option="slotProps">
+                                    <span class="option-row gap-2">
+                                        <span v-if="wishForOption(data, slotProps.option)">
+                                            ★ {{ wishForOption(data, slotProps.option).rang }}
+                                        </span>
+
+                                        <span>{{
+                                            slotProps.option.profundumInfo.bezeichnung
+                                        }}</span>
+
+                                        <span
+                                            >({{
+                                                instanzen
+                                                    .map((i) => {
+                                                        return {
+                                                            id: i.id,
+                                                            value: `${i.numEinschreibungen} / ${i.maxEinschreibungen}`,
+                                                        };
+                                                    })
+                                                    .find((i) => i.id === slotProps.option.id)
+                                                    ?.value
+                                            }})</span
+                                        >
+                                    </span>
+                                </template>
+                            </Select>
+                        </template>
+                        <template v-else>
+                            <span class="readonly-value w-60 flex items-center gap-2">
+                                <span
+                                    v-if="wishForSelectedEnrollment(data, slot.id)"
+                                    class="wish-indicator"
+                                >
+                                    <i class="pi pi-crown" />
+                                    {{ wishForSelectedEnrollment(data, slot.id).rang }}
+                                </span>
+
+                                <template v-if="enrollmentForSlot(data, slot.id)?.isFixed">
+                                    <div class="text-orange-500 flex gap-1 items-center">
+                                        <i class="pi pi-lock" />
+                                        <b>
+                                            {{
+                                                instanzen.find(
+                                                    (i) =>
+                                                        i.id ===
+                                                        enrollmentForSlot(data, slot.id)
+                                                            ?.profundumInstanzId,
+                                                )?.profundumInfo.bezeichnung ?? '—'
+                                            }}
+                                        </b>
+                                    </div>
+                                </template>
+
+                                <template v-else>
+                                    {{
+                                        instanzen.find(
+                                            (i) =>
+                                                i.id ===
+                                                enrollmentForSlot(data, slot.id)
+                                                    ?.profundumInstanzId,
+                                        )?.profundumInfo.bezeichnung ?? '—'
+                                    }}
+                                </template>
                             </span>
+                        </template>
+                    </span>
+                </template>
+            </Column>
+        </DataTable>
 
-                            <template v-if="enrollmentForSlot(data, slot.id)?.isFixed">
-                                <div class="text-orange-500 flex gap-1 items-center">
-                                    <i class="pi pi-lock" />
-                                    <b>
-                                        {{
-                                            instanzen.find(
-                                                (i) =>
-                                                    i.id ===
-                                                    enrollmentForSlot(data, slot.id)
-                                                        ?.profundumInstanzId,
-                                            )?.profundumInfo.bezeichnung ?? '—'
-                                        }}
-                                    </b>
-                                </div>
-                            </template>
+        <DataTable
+            :value="instanzen"
+            v-model:filters="instanzenFilters"
+            filterDisplay="row"
+            :globalFilterFields="[
+                'profundumInfo.bezeichnung',
+                'numEinschreibungen',
+                'maxEinschreibungen',
+            ]"
+        >
+            <Column field="profundumInfo.bezeichnung" header="Bezeichnung" filter>
+                <template #filter="{ filterModel, filterCallback }">
+                    <InputText
+                        v-model="filterModel.value"
+                        placeholder="Suchen…"
+                        class="p-column-filter w-full"
+                        @input="filterCallback()"
+                    />
+                </template>
 
-                            <template v-else>
-                                {{
-                                    instanzen.find(
-                                        (i) =>
-                                            i.id ===
-                                            enrollmentForSlot(data, slot.id)
-                                                ?.profundumInstanzId,
-                                    )?.profundumInfo.bezeichnung ?? '—'
-                                }}
-                            </template>
-                        </span>
-                    </template>
-                </span>
-            </template>
-        </Column>
-    </DataTable>
+                <template #body="{ data }">
+                    <Button
+                        as="RouterLink"
+                        :to="{
+                            name: 'Profundum-Edit',
+                            params: { profundumId: data.profundumId },
+                        }"
+                        text
+                    >
+                        {{ data.profundumInfo.bezeichnung }}
+                    </Button>
+                </template>
+            </Column>
+            <Column header="pdf">
+                <template #body="{ data }">
+                    <Button
+                        as="a"
+                        :href="`/api/profundum/management/instanz/${data.id}.pdf`"
+                        icon="pi pi-file-pdf"
+                        variant="text"
+                        size="small"
+                        download
+                        severity="info"
+                        v-tooltip.left="'PDF (experimentell)'"
+                        aria-label="PDF (experimentell)'"
+                    />
+                </template>
+            </Column>
+            <Column header="slots" field="slots" filter>
+                <template #filter="{ filterModel, filterCallback }">
+                    <MultiSelect
+                        v-model="filterModel.value"
+                        :options="slots"
+                        optionLabel="jahr"
+                        optionValue="id"
+                        placeholder="Slots wählen…"
+                        display="chip"
+                        class="p-column-filter w-full"
+                        @change="filterCallback()"
+                    >
+                        <template #option="{ option }">
+                            {{ option.jahr }}-{{ option.quartal }}-{{ option.wochentag }}
+                        </template>
 
-    <DataTable :value="instanzen">
-        <Column field="profundumInfo.bezeichnung" header="Bezeichnung">
-            <template #body="{ data }">
-                <Button
-                    as="RouterLink"
-                    :to="{ name: 'Profundum-Edit', params: { profundumId: data.profundumId } }"
-                    text
-                >
-                    {{ data.profundumInfo.bezeichnung }}
-                </Button>
-            </template>
-        </Column>
-        <Column header="pdf">
-            <template #body="{ data }">
-                <Button
-                    as="a"
-                    :href="`/api/profundum/management/instanz/${data.id}.pdf`"
-                    icon="pi pi-file-pdf"
-                    variant="text"
-                    size="small"
-                    download
-                    severity="info"
-                    v-tooltip.left="'PDF (experimentell)'"
-                    aria-label="PDF (experimentell)'"
-                />
-            </template>
-        </Column>
-        <Column header="slots">
-            <template #body="{ data }">
-                <span v-for="s in data.slots">
-                    {{ slotLabel(slots.find((x) => x.id === s).id) }},
-                </span>
-            </template>
-        </Column>
-        <Column header="Warnung">
-            <template #body="{ data }">
-                <Button
-                    v-if="data.maxEinschreibungen < data.numEinschreibungen"
-                    icon="pi pi-exclamation-triangle"
-                    severity="warn"
-                    disabled
-                />
-            </template>
-        </Column>
-        <Column field="numEinschreibungen" header="Einschreibungen"></Column>
-        <Column field="maxEinschreibungen" header="MaxEinschreibungen"></Column>
-    </DataTable>
+                        <template #chip="{ value }">
+                            {{ slotLabel(value) }}
+                        </template>
+                    </MultiSelect>
+                </template>
+
+                <template #body="{ data }">
+                    <span v-for="s in data.slots" :key="s"> {{ slotLabel(s) }}, </span>
+                </template>
+            </Column>
+            <Column header="Warnung">
+                <template #body="{ data }">
+                    <Button
+                        v-if="data.maxEinschreibungen < data.numEinschreibungen"
+                        icon="pi pi-exclamation-triangle"
+                        severity="warn"
+                        disabled
+                    />
+                </template>
+            </Column>
+            <Column field="numEinschreibungen" header="Einschreibungen"></Column>
+            <Column field="maxEinschreibungen" header="MaxEinschreibungen"></Column>
+        </DataTable>
+    </span>
 </template>
 
 <style scoped>
