@@ -467,7 +467,7 @@ internal class ProfundumManagementService
     }
     public async Task<(byte[], string)> GetSlotPdfsZipAsync(Guid slotId)
     {
-        var slot = _dbContext.ProfundaSlots.Find(slotId);
+        var slot = await _dbContext.ProfundaSlots.FindAsync(slotId);
         if (slot is null)
         {
             throw new NotFoundException("no such slot");
@@ -481,15 +481,18 @@ internal class ProfundumManagementService
 
         using var ms = new MemoryStream();
 
-        using (var archive = new ZipArchive(ms, ZipArchiveMode.Create, leaveOpen: true))
+        await using (var archive = new ZipArchive(ms, ZipArchiveMode.Create, leaveOpen: true))
         {
             foreach (var i in instanzen)
             {
-                var fname = $"{i.Profundum.Bezeichnung}.pdf";
+                var sanitizedName =
+                    new string(i.Profundum.Bezeichnung.Select(c => char.IsLetterOrDigit(c) || c == ' ' ? c : '_')
+                        .ToArray()).Trim(' ', '_');
+                var fname = $"{sanitizedName}.pdf";
                 var entry = archive.CreateEntry(fname);
-                using var entryStream = entry.Open();
+                await using var entryStream = await entry.OpenAsync();
                 var pdf = await GetInstanzPdfAsync(i.Id);
-                entryStream.Write(pdf, 0, pdf.Length);
+                await entryStream.WriteAsync(pdf, 0, pdf.Length);
             }
         }
         return (ms.ToArray(), slot.ToString());
