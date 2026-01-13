@@ -115,9 +115,15 @@ internal class ProfundumMatchingService
 
         var weights = new Dictionary<ProfundumBelegWunschStufe, int>
         {
-            { ProfundumBelegWunschStufe.ErstWunsch, 100 },
-            { ProfundumBelegWunschStufe.ZweitWunsch, 50 },
-            { ProfundumBelegWunschStufe.DrittWunsch, 25 }
+            { ProfundumBelegWunschStufe.ErstWunsch, 128 },
+            { ProfundumBelegWunschStufe.ZweitWunsch, 64 },
+            { ProfundumBelegWunschStufe.DrittWunsch, 32 }
+        }.AsReadOnly();
+        var weightsVerschoben = new Dictionary<ProfundumBelegWunschStufe, int>
+        {
+            { ProfundumBelegWunschStufe.ErstWunsch, 16 },
+            { ProfundumBelegWunschStufe.ZweitWunsch, 8 },
+            { ProfundumBelegWunschStufe.DrittWunsch, 4 }
         }.AsReadOnly();
 
         // Gewichtung nach Einwahlstufe
@@ -139,14 +145,26 @@ internal class ProfundumMatchingService
                     }
                 }
 
-                var wunschVars = belegwuensche
-                    .Where(b => b.BetroffenePerson == p)
+                var wuensche = belegwuensche.Where(b => b.BetroffenePerson == p).ToArray();
+                var wunschVars = wuensche
                     .Where(b => b.ProfundumInstanz.Slots.Contains(s))
                     .SelectMany(b => b.ProfundumInstanz.Slots.Select(s => (b.Stufe, belegVars[(b.BetroffenePerson, s, b.ProfundumInstanz)])))
                     .ToArray();
                 foreach (var (stufe, v) in wunschVars)
                 {
                     objective.AddTerm(v, weights[stufe]);
+                }
+                var wunschVerschobenVars = belegVars
+                    .Where(b => b.Key.p == p)
+                    .Select(b => (wuensche
+                        .Where(w => w.ProfundumInstanz.Profundum == b.Key.i.Profundum
+                                 && w.ProfundumInstanz != b.Key.i)
+                        .Select(w => w.Stufe), b.Value))
+                    .Where(x => x.Item1.Any())
+                    .Select(x => (x.Item1.Max(), x.Item2));
+                foreach (var (stufe, v) in wunschVerschobenVars)
+                {
+                    objective.AddTerm(v, weightsVerschoben[stufe]);
                 }
             }
         }
