@@ -517,7 +517,7 @@ const slotLabel = (slotId) => {
                                     v-else-if="wishInfoForSlot(data, slot.id).moved"
                                     class="wish-indicator text-yellow-500"
                                 >
-                                    <i class="pi pi-crown" />
+                                    <i class="pi pi-arrow-right-arrow-left" />
                                     {{ wishInfoForSlot(data, slot.id).moved.rang }}
                                 </span>
 
