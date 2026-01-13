@@ -107,7 +107,7 @@ public static class Management
             });
 
         gp.MapPost("/matching", PerformMatchingSynchronized);
-        gp.MapPost("/finalize", (Match svc) => svc.Finalize());
+        gp.MapPost("/finalize", (Match svc) => svc.FinalizeMatching());
         gp.MapGet("/enrollments", (Match svc) => svc.GetAllEnrollmentsAsync());
         gp.MapPut("/enrollment/{personId:guid}", PutEnrollmentsAsync);
 
