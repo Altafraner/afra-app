@@ -28,19 +28,19 @@ public class NotMultipleInstancesOfSameProfundumRule : IProfundumIndividualRule
     public void AddConstraints(Person student,
         IEnumerable<ProfundumSlot> slots,
         IEnumerable<ProfundumBelegWunsch> wuensche,
-        Dictionary<(ProfundumSlot, ProfundumInstanz), BoolVar> belegVars,
+        Dictionary<(ProfundumSlot s, ProfundumInstanz i), BoolVar> belegVars,
         Dictionary<ProfundumSlot, BoolVar> personNotEnrolledVars,
         CpModel model,
         LinearExprBuilder objective)
     {
-        var profundaInstanzen = belegVars.Keys.ToArray().Select(x => x.Item2).Distinct().ToArray();
+        var profundaInstanzen = belegVars.Keys.ToArray().Select(x => x.i).Distinct().ToArray();
         var profundaDefinitionen = profundaInstanzen.Select(p => p.Profundum).Distinct().ToArray();
 
         var instanceActive = new Dictionary<ProfundumInstanz, BoolVar>();
         foreach (var instanz in profundaInstanzen)
         {
             var varsForInstance = belegVars
-                .Where(kv => kv.Key.Item2 == instanz)
+                .Where(kv => kv.Key.i == instanz)
                 .Select(kv => kv.Value)
                 .ToArray();
 

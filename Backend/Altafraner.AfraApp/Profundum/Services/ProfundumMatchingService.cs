@@ -81,10 +81,10 @@ internal class ProfundumMatchingService
         var objective = LinearExpr.NewBuilder();
 
 
-        var belegVars = new Dictionary<(Person, ProfundumSlot, ProfundumInstanz), BoolVar>();
+        var belegVars = new Dictionary<(Person p, ProfundumSlot s, ProfundumInstanz i), BoolVar>();
 
 
-        var personNotEnrolledVariables = new Dictionary<(Person, ProfundumSlot), BoolVar>();
+        var personNotEnrolledVariables = new Dictionary<(Person p, ProfundumSlot s), BoolVar>();
         foreach (var student in students)
         {
             foreach (var s in slots)
@@ -159,8 +159,8 @@ internal class ProfundumMatchingService
                 r.AddConstraints(s,
                         slots,
                     sBelegWuensche,
-                    belegVars.Where(k => k.Key.Item1 == s).ToDictionary(x => (x.Key.Item2, x.Key.Item3), x => x.Value),
-                    personNotEnrolledVariables.Where(k => k.Key.Item1 == s).ToDictionary(x => x.Key.Item2, x => x.Value),
+                    belegVars.Where(k => k.Key.p == s).ToDictionary(x => (x.Key.s, x.Key.i), x => x.Value),
+                    personNotEnrolledVariables.Where(k => k.Key.p == s).ToDictionary(x => x.Key.s, x => x.Value),
                     model,
                     objective
                     );

@@ -21,12 +21,12 @@ public class AllSlotsRule : IProfundumIndividualRule
     public void AddConstraints(Person student,
         IEnumerable<ProfundumSlot> slots,
         IEnumerable<ProfundumBelegWunsch> wuensche,
-        Dictionary<(ProfundumSlot, ProfundumInstanz), BoolVar> belegVars,
+        Dictionary<(ProfundumSlot s, ProfundumInstanz i), BoolVar> belegVars,
         Dictionary<ProfundumSlot, BoolVar> personNotEnrolledVars,
         CpModel model,
         LinearExprBuilder objective)
     {
-        var angebote = belegVars.Keys.Select(x => x.Item2).Distinct();
+        var angebote = belegVars.Keys.Select(x => x.i).Distinct();
         foreach (var i in angebote)
         {
             var psVars = i.Slots.Select(s => belegVars[(s, i)]).ToArray();

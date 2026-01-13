@@ -64,7 +64,7 @@ public class ProfilRule : IProfundumIndividualRule
     public void AddConstraints(Person student,
         IEnumerable<ProfundumSlot> slots,
         IEnumerable<ProfundumBelegWunsch> wuensche,
-        Dictionary<(ProfundumSlot, ProfundumInstanz), BoolVar> belegVars,
+        Dictionary<(ProfundumSlot s, ProfundumInstanz i), BoolVar> belegVars,
         Dictionary<ProfundumSlot, BoolVar> personNotEnrolledVars,
         CpModel model,
         LinearExprBuilder objective)
@@ -83,8 +83,8 @@ public class ProfilRule : IProfundumIndividualRule
             .GroupBy(s => s.Quartal))
         {
             var profilVars = belegVars
-                .Where(x => quartalGroup.Contains(x.Key.Item1))
-                .Where(x => x.Key.Item2.Profundum.Kategorie.ProfilProfundum)
+                .Where(x => quartalGroup.Contains(x.Key.s))
+                .Where(x => x.Key.i.Profundum.Kategorie.ProfilProfundum)
                 .Select(x => x.Value)
                 .ToList();
             var hasProfil = model.NewBoolVar($"hasProfil-{student.Id}-{quartalGroup.Key}");
@@ -95,7 +95,7 @@ public class ProfilRule : IProfundumIndividualRule
         {
             var profilPflichtig = slots.Any(s => IsProfilPflichtig(student, s.Quartal));
             var profilVars = belegVars
-                .Where(x => x.Key.Item2.Profundum.Kategorie.ProfilProfundum)
+                .Where(x => x.Key.i.Profundum.Kategorie.ProfilProfundum)
                 .Select(x => x.Value)
                 .ToList();
             var hasProfil = model.NewBoolVar($"hasProfil-{student.Id}");
@@ -106,9 +106,9 @@ public class ProfilRule : IProfundumIndividualRule
         foreach (var (k, v) in belegVars)
         {
             // Profil im falschen Quartal
-            if (!IsProfilZulaessig(student, k.Item1.Quartal)
-             && !IsProfilPflichtig(student, k.Item1.Quartal)
-             && k.Item2.Profundum.Kategorie.ProfilProfundum)
+            if (!IsProfilZulaessig(student, k.s.Quartal)
+             && !IsProfilPflichtig(student, k.s.Quartal)
+             && k.i.Profundum.Kategorie.ProfilProfundum)
             {
                 objective.AddTerm(v, -1000);
             }
@@ -117,7 +117,7 @@ public class ProfilRule : IProfundumIndividualRule
             var profilZulässig = slots.Any(s =>
                     IsProfilPflichtig(student, s.Quartal)
                     || IsProfilZulaessig(student, s.Quartal));
-            if (!profilZulässig && k.Item2.Profundum.Kategorie.ProfilProfundum)
+            if (!profilZulässig && k.i.Profundum.Kategorie.ProfilProfundum)
             {
                 objective.AddTerm(v, -10000);
             }
