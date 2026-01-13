@@ -10,6 +10,7 @@ import { createPinia } from 'pinia';
 import Tooltip from 'primevue/tooltip';
 import ConfirmationService from 'primevue/confirmationservice';
 import DialogService from 'primevue/dialogservice';
+import { registerSW } from 'virtual:pwa-register';
 
 const AfraAppPreset = definePreset(Aura, {
     components: {
@@ -187,3 +188,13 @@ app.use(DialogService);
 app.directive('tooltip', Tooltip);
 
 app.mount('#app');
+
+const intervalMS = 30 * 60 * 1000;
+registerSW({
+    onRegistered(r) {
+        r &&
+            setInterval(() => {
+                r.update();
+            }, intervalMS);
+    },
+});
