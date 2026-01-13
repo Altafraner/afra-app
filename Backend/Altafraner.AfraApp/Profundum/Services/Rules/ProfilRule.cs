@@ -78,19 +78,19 @@ public class ProfilRule : IProfundumIndividualRule
             .Where(s => IsProfilPflichtig(student, s.Quartal))
         .GroupBy(s => (s.Jahr, s.Quartal));
 
-        foreach (var quartalGroup in slots
-            .Where(s => IsProfilPflichtig(student, s.Quartal))
-            .GroupBy(s => s.Quartal))
-        {
-            var profilVars = belegVars
-                .Where(x => quartalGroup.Contains(x.Key.s))
-                .Where(x => x.Key.i.Profundum.Kategorie.ProfilProfundum)
-                .Select(x => x.Value)
-                .ToList();
-            var hasProfil = model.NewBoolVar($"hasProfil-{student.Id}-{quartalGroup.Key}");
-            model.AddMaxEquality(hasProfil, profilVars);
-            objective.AddTerm(hasProfil.Not(), -4000);
-        }
+        // foreach (var quartalGroup in slots
+        //     .Where(s => IsProfilPflichtig(student, s.Quartal))
+        //     .GroupBy(s => s.Quartal))
+        // {
+        //     var profilVars = belegVars
+        //         .Where(x => quartalGroup.Contains(x.Key.s))
+        //         .Where(x => x.Key.i.Profundum.Kategorie.ProfilProfundum)
+        //         .Select(x => x.Value)
+        //         .ToList();
+        //     var hasProfil = model.NewBoolVar($"hasProfil-{student.Id}-{quartalGroup.Key}");
+        //     model.AddMaxEquality(hasProfil, profilVars);
+        //     objective.AddTerm(hasProfil.Not(), -4000);
+        // }
 
         {
             var profilPflichtig = slots.Any(s => IsProfilPflichtig(student, s.Quartal));
@@ -110,7 +110,7 @@ public class ProfilRule : IProfundumIndividualRule
              && !IsProfilPflichtig(student, k.s.Quartal)
              && k.i.Profundum.Kategorie.ProfilProfundum)
             {
-                objective.AddTerm(v, -1000);
+                objective.AddTerm(v, -4000);
             }
 
             // Profil im ganzen Jahr unzulässig
