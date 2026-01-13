@@ -49,8 +49,9 @@
 #set text(size: 12pt, fill: text-color, font: primary-font)
 
 #grid(
-    columns: (1fr, 1fr),
+    columns: (1fr, auto),
     rows: (auto),
+    column-gutter: 2em,
     align(left)[
         #v(1em)
 

@@ -1,4 +1,5 @@
 using System.Net.Mime;
+using System.Runtime.InteropServices.JavaScript;
 using System.Text;
 using Altafraner.AfraApp.Backbone.Authorization;
 using Altafraner.AfraApp.Otium.API.Endpoints;
@@ -57,7 +58,24 @@ public static class Management
         ins.MapGet("/{id:guid}", (Mgmt svc, Guid id) => svc.GetInstanzAsync(id));
         ins.MapPut("/{id:guid}", async (Mgmt svc, Guid id, DTOProfundumInstanzCreation instanz) => (await svc.UpdateInstanzAsync(id, instanz)).Id);
         ins.MapDelete("/{id:guid}", (Mgmt svc, Guid id) => svc.DeleteInstanzAsync(id));
-        ins.MapGet("/{id:guid}.pdf", async (Mgmt svc, Guid id) => TypedResults.File((await svc.GetInstanzPdfAsync(id)), MediaTypeNames.Application.Pdf, $"{id}.pdf"));
+        ins.MapGet("/{id:guid}.pdf",
+            new Func<Mgmt, Guid, Task<Results<NotFound, FileContentHttpResult>>>(async (svc, id) =>
+            {
+                var instanz = await svc.GetInstanzAsync(id);
+                if (instanz is null)
+                {
+                    return TypedResults.NotFound();
+                }
+
+                var slotId = instanz.Slots.First();
+                var slot = (await svc.GetSlotsAsync()).First(s => s.Id == slotId);
+                var nameSanitized = new string(instanz.ProfundumInfo.Bezeichnung
+                    .Select(c => char.IsLetterOrDigit(c) || c == ' ' ? c : '_')
+                    .ToArray());
+                return TypedResults.File((await svc.GetInstanzPdfAsync(id)),
+                    MediaTypeNames.Application.Pdf,
+                    $"{slot.Jahr}_{slot.Quartal}_{slot.Wochentag}_{nameSanitized}.pdf");
+            }));
         ins.MapGet("/{id:guid}.zip",
             async (Mgmt svc, Guid id) =>
             {
