@@ -125,12 +125,6 @@ internal class ProfundumMatchingService
             { ProfundumBelegWunschStufe.ZweitWunsch, 8 },
             { ProfundumBelegWunschStufe.DrittWunsch, 4 }
         }.AsReadOnly();
-        var weightsVerschobenAndereEinwahl = new Dictionary<ProfundumBelegWunschStufe, int>
-        {
-            { ProfundumBelegWunschStufe.ErstWunsch, 3 },
-            { ProfundumBelegWunschStufe.ZweitWunsch, 2 },
-            { ProfundumBelegWunschStufe.DrittWunsch, 1 }
-        }.AsReadOnly();
 
         // Gewichtung nach Einwahlstufe
         foreach (var p in students)
@@ -164,18 +158,19 @@ internal class ProfundumMatchingService
                     .Where(b => b.Key.p == p)
                     .Select(b => (wuensche
                         .Where(w => w.ProfundumInstanz.Profundum == b.Key.i.Profundum
-                                 && w.ProfundumInstanz != b.Key.i)
-                        .Select(w => w.Stufe),
-                        b.Value,
-                        wuensche.Select(w => b.Key.i.Slots.Min(new ProfundumSlotComparer())?.EinwahlZeitraum
+                                 && w.ProfundumInstanz != b.Key.i
+                                 && wuensche.Select(w => b.Key.i.Slots.Min(new ProfundumSlotComparer())?.EinwahlZeitraum
                                == w.ProfundumInstanz.Slots.Min(new ProfundumSlotComparer())?.EinwahlZeitraum)
                                 .Aggregate(false, (a, b) => a || b))
+                        .Select(w => w.Stufe),
+                        b.Value
+                        )
                     )
                     .Where(x => x.Item1.Any())
-                    .Select(x => (x.Item1.Max(), x.Item2, x.Item3));
-                foreach (var (stufe, v, sameEinschreibeZeitraum) in wunschVerschobenVars)
+                    .Select(x => (x.Item1.Max(), x.Item2));
+                foreach (var (stufe, v) in wunschVerschobenVars)
                 {
-                    objective.AddTerm(v, sameEinschreibeZeitraum ? weightsVerschoben[stufe] : weightsVerschobenAndereEinwahl[stufe]);
+                    objective.AddTerm(v, weightsVerschoben[stufe]);
                 }
             }
         }
