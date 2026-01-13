@@ -210,6 +210,17 @@ const wishForSelectedEnrollment = (row, slotId) => {
     return wishForOption(row, instanz);
 };
 
+const wishMovedForSelectedEnrollment = (row, slotId) => {
+    const enrollment = enrollmentForSlot(row, slotId);
+    if (!enrollment?.profundumInstanzId) return null;
+
+    const instanz = instanzen.value.find((i) => i.id === enrollment.profundumInstanzId);
+
+    if (!instanz) return null;
+
+    return wishMovedForOption(row, instanz);
+};
+
 getSlots();
 getEnrollments();
 getInstanzen();
@@ -217,6 +228,33 @@ getProfunda();
 
 const wishForOption = (row, option) => {
     return row.wuensche?.find((w) => w.id === option.id) ?? null;
+};
+
+const wishMovedForOption = (row, option) => {
+    if (!option?.profundumId) return null;
+
+    const matches =
+        row.wuensche
+            ?.map((w) => {
+                const wishedInstanz = instanzen.value.find((i) => i.id === w.id);
+                if (!wishedInstanz) return null;
+
+                const isSameProfundum = wishedInstanz.profundumId === option.profundumId;
+                const isDifferentInstanz = wishedInstanz.id !== option.id;
+
+                return isSameProfundum && isDifferentInstanz ? w : null;
+            })
+            .filter(Boolean) ?? [];
+
+    if (matches.length === 0) return null;
+
+    return matches.reduce((best, w) => (w.rang < best.rang ? w : best), matches[0]);
+};
+
+const wishInfoForSlot = (row, slotId) => {
+    const normal = wishForSelectedEnrollment(row, slotId);
+    const moved = wishMovedForSelectedEnrollment(row, slotId);
+    return { normal, moved };
 };
 
 const sortedInstanzenForSlot = (slotId, row) => {
@@ -468,15 +506,23 @@ const slotLabel = (slotId) => {
                         <template v-else>
                             <span class="readonly-value w-60 flex items-center gap-2">
                                 <span
-                                    v-if="wishForSelectedEnrollment(data, slot.id)"
-                                    class="wish-indicator"
+                                    v-if="wishInfoForSlot(data, slot.id).normal"
+                                    class="wish-indicator text-green-500"
                                 >
                                     <i class="pi pi-crown" />
-                                    {{ wishForSelectedEnrollment(data, slot.id).rang }}
+                                    {{ wishInfoForSlot(data, slot.id).normal.rang }}
+                                </span>
+
+                                <span
+                                    v-else-if="wishInfoForSlot(data, slot.id).moved"
+                                    class="wish-indicator text-yellow-500"
+                                >
+                                    <i class="pi pi-crown" />
+                                    {{ wishInfoForSlot(data, slot.id).moved.rang }}
                                 </span>
 
                                 <template v-if="enrollmentForSlot(data, slot.id)?.isFixed">
-                                    <div class="text-orange-500 flex gap-1 items-center">
+                                    <div class="text-orange-600 flex gap-1 items-center">
                                         <i class="pi pi-lock" />
                                         <b>
                                             {{
@@ -671,7 +717,6 @@ const slotLabel = (slotId) => {
     align-items: center;
     gap: 0.25rem;
     font-weight: 700;
-    color: green;
     white-space: nowrap;
 }
 </style>

@@ -56,7 +56,7 @@ internal class ProfundumMatchingService
             .Where(e => e.IsFixed).ToArray();
 
         var angebote = (await _dbContext.ProfundaInstanzen
-                .Include(pi => pi.Slots)
+                .Include(pi => pi.Slots).ThenInclude(s => s.EinwahlZeitraum)
                 .Include(pi => pi.Profundum)
                 .ToArrayAsync())
             .Where(pi => pi.Slots.Any(s => slots.Contains(s)))
@@ -64,7 +64,7 @@ internal class ProfundumMatchingService
         var angeboteList = angebote.ToList();
         var belegwuensche = await _dbContext.ProfundaBelegWuensche
             .Include(b => b.BetroffenePerson)
-            .Include(b => b.ProfundumInstanz).ThenInclude(b => b.Slots)
+            .Include(b => b.ProfundumInstanz).ThenInclude(b => b.Slots).ThenInclude(s => s.EinwahlZeitraum)
             .Include(b => b.ProfundumInstanz).ThenInclude(pi => pi.Profundum).ThenInclude(p => p.Kategorie)
             .Where(b => angeboteList.Contains(b.ProfundumInstanz))
             .ToArrayAsync();
@@ -125,6 +125,12 @@ internal class ProfundumMatchingService
             { ProfundumBelegWunschStufe.ZweitWunsch, 8 },
             { ProfundumBelegWunschStufe.DrittWunsch, 4 }
         }.AsReadOnly();
+        var weightsVerschobenAndereEinwahl = new Dictionary<ProfundumBelegWunschStufe, int>
+        {
+            { ProfundumBelegWunschStufe.ErstWunsch, 3 },
+            { ProfundumBelegWunschStufe.ZweitWunsch, 2 },
+            { ProfundumBelegWunschStufe.DrittWunsch, 1 }
+        }.AsReadOnly();
 
         // Gewichtung nach Einwahlstufe
         foreach (var p in students)
@@ -159,12 +165,17 @@ internal class ProfundumMatchingService
                     .Select(b => (wuensche
                         .Where(w => w.ProfundumInstanz.Profundum == b.Key.i.Profundum
                                  && w.ProfundumInstanz != b.Key.i)
-                        .Select(w => w.Stufe), b.Value))
+                        .Select(w => w.Stufe),
+                        b.Value,
+                        wuensche.Select(w => b.Key.i.Slots.Min(new ProfundumSlotComparer())?.EinwahlZeitraum
+                               == w.ProfundumInstanz.Slots.Min(new ProfundumSlotComparer())?.EinwahlZeitraum)
+                                .Aggregate(false, (a, b) => a || b))
+                    )
                     .Where(x => x.Item1.Any())
-                    .Select(x => (x.Item1.Max(), x.Item2));
-                foreach (var (stufe, v) in wunschVerschobenVars)
+                    .Select(x => (x.Item1.Max(), x.Item2, x.Item3));
+                foreach (var (stufe, v, sameEinschreibeZeitraum) in wunschVerschobenVars)
                 {
-                    objective.AddTerm(v, weightsVerschoben[stufe]);
+                    objective.AddTerm(v, sameEinschreibeZeitraum ? weightsVerschoben[stufe] : weightsVerschobenAndereEinwahl[stufe]);
                 }
             }
         }
