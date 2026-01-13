@@ -203,7 +203,7 @@ internal class ProfundumMatchingService
         _logger.LogInformation($"Model stats: {model.ModelStats()}");
 
         var solver = new CpSolver();
-        solver.StringParameters = "max_time_in_seconds:60.0";
+        solver.StringParameters = "max_time_in_seconds:240.0";
         var resultStatus = solver.Solve(model, new SolutionCallBack(_logger));
 
         if (resultStatus != CpSolverStatus.Optimal && resultStatus != CpSolverStatus.Feasible)

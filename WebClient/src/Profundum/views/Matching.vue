@@ -60,7 +60,7 @@ async function getProfunda() {
     profunda.value = await mande('/api/profundum/management/profundum').get();
 }
 
-const MATCH_DURATION = 60;
+const MATCH_DURATION = 240;
 
 const remaining = ref(0);
 const fillPct = computed(() => {
