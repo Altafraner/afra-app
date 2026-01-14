@@ -358,7 +358,7 @@ const slotLabel = (slotId) => {
             scrollable
             :loading="matchingRunning"
         >
-            <Column frozen class="z-0">
+            <Column frozen class="z-0 border-r">
                 <template #header>
                     <span class="inline-flex justify-between w-full font-semibold">
                         <span>Person</span>
