@@ -21,5 +21,5 @@ public class ProfundumFachbereich
     /// <summary>
     ///     A list of all profunda that are part of this departement.
     /// </summary>
-    public List<ProfundumDefinition> Profunda { get; set; } = [];
+    public List<ProfundumDefinition> Profunda { get; set; } = null!;
 }

@@ -23,5 +23,5 @@ public class Schultag
     ///     The blocks of the school day
     /// </summary>
     [JsonIgnore]
-    public ICollection<Block> Blocks { get; set; } = [];
+    public List<Block> Blocks { get; set; } = null!;
 }

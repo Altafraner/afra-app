@@ -31,10 +31,10 @@ public class ProfundumDefinition : IHasTimestamps
     /// <summary>
     ///     The departements this profundum is part of.
     /// </summary>
-    public List<ProfundumFachbereich> Fachbereiche { get; set; } = [];
+    public List<ProfundumFachbereich> Fachbereiche { get; set; } = null!;
 
     ///
-    public ICollection<ProfundumInstanz> Instanzen { get; set; } = [];
+    public List<ProfundumInstanz> Instanzen { get; set; } = null!;
 
     ///
     public int? MinKlasse { get; set; } = null;
@@ -42,9 +42,9 @@ public class ProfundumDefinition : IHasTimestamps
     public int? MaxKlasse { get; set; } = null;
 
     ///
-    public ICollection<ProfundumDefinition> Dependencies { get; set; } = [];
+    public List<ProfundumDefinition> Dependencies { get; set; } = null!;
     ///
-    public ICollection<ProfundumDefinition> Dependants { get; set; } = [];
+    public List<ProfundumDefinition> Dependants { get; set; } = null!;
 
     /// <inheritdoc/>
     public DateTime CreatedAt { get; set; }

@@ -23,7 +23,7 @@ public record ProfundumSlot
     public required ProfundumEinwahlZeitraum EinwahlZeitraum { get; set; }
 
     ///
-    public ICollection<ProfundumTermin> Termine { get; set; } = [];
+    public List<ProfundumTermin> Termine { get; set; } = null!;
 
     ///
     public override string ToString()

@@ -38,12 +38,12 @@ public class Person : IEmailRecipient
     /// <summary>
     ///     The mentors of the person. Only used if the person is a student.
     /// </summary>
-    public ICollection<Person> Mentors { get; set; } = new List<Person>();
+    public List<Person> Mentors { get; set; } = null!;
 
     /// <summary>
     ///     A collection of the mentees of the person. Only used if the person is a teacher.
     /// </summary>
-    public ICollection<Person> Mentees { get; set; } = new List<Person>();
+    public List<Person> Mentees { get; set; } = null!;
 
     /// <summary>
     ///     The role of the person.
@@ -59,7 +59,7 @@ public class Person : IEmailRecipient
     /// <summary>
     ///     A list of all global permissions the person has.
     /// </summary>
-    public ICollection<GlobalPermission> GlobalPermissions { get; set; } = new List<GlobalPermission>();
+    public List<GlobalPermission> GlobalPermissions { get; set; } = [];
 
     /// <summary>
     ///     The ObjectGuid of the person in the LDAP directory.
@@ -79,21 +79,21 @@ public class Person : IEmailRecipient
     /// <summary>
     ///     A list of all Otia the person is responsible for.
     /// </summary>
-    public ICollection<OtiumDefinition> VerwalteteOtia { get; set; } = new List<OtiumDefinition>();
+    public List<OtiumDefinition> VerwalteteOtia { get; set; } = null!;
 
     /// <summary>
     ///     A list of all Otia the person is enrolled in.
     /// </summary>
-    public ICollection<OtiumEinschreibung> OtiaEinschreibungen { get; set; } = new List<OtiumEinschreibung>();
+    public List<OtiumEinschreibung> OtiaEinschreibungen { get; set; } = null!;
 
     ///
-    public ICollection<ProfundumEinschreibung> ProfundaEinschreibungen { get; set; } = [];
+    public List<ProfundumEinschreibung> ProfundaEinschreibungen { get; set; } = null!;
 
     ///
-    public ICollection<ProfundumBelegWunsch> ProfundaBelegwuensche { get; set; } = [];
+    public List<ProfundumBelegWunsch> ProfundaBelegwuensche { get; set; } = null!;
 
     ///
-    public ICollection<ProfundumInstanz> BetreuteProfunda { get; set; } = [];
+    public List<ProfundumInstanz> BetreuteProfunda { get; set; } = null!;
 
     /// <inheritdoc />
     public override string ToString()

@@ -361,9 +361,8 @@ internal class ProfundumManagementService
         var slots = await _dbContext.ProfundaSlots.Where(slot => patch.Slots.Contains(slot.Id)).ToArrayAsync();
         if (slots.Length != patch.Slots.Count) throw new NotFoundException("At least one of the slots does not exist");
         var slotIds = slots.Select(s => s.Id).ToArray();
-        instanz.Slots.RemoveAll(s => !slotIds.Contains(s.Id));
-        var instanzSlotIds = instanz.Slots.Select(s => s.Id).ToArray();
-        instanz.Slots.AddRange(slots.Where(s => !instanzSlotIds.Contains(s.Id)));
+
+        instanz.Slots = slots.ToList();
 
         var verantwortlicheIds = verantwortliche.Select(e => e.Id).ToArray();
         instanz.Verantwortliche.RemoveAll(v => !verantwortlicheIds.Contains(v.Id));

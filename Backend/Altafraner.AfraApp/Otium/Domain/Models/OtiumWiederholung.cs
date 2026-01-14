@@ -30,7 +30,7 @@ public class OtiumWiederholung : OtiumInstanz
     /// <summary>
     ///     A list of all instances of the recurrence rule. Useful for bulk operations.
     /// </summary>
-    public ICollection<OtiumTermin> Termine { get; init; } = new List<OtiumTermin>();
+    public List<OtiumTermin> Termine { get; init; } = null!;
 
     /// <summary>
     ///     The date of the first Termin

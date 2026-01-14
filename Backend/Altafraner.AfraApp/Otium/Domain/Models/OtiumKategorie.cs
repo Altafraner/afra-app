@@ -51,12 +51,12 @@ public class OtiumKategorie
     /// <summary>
     ///     A helper collection for navigating the tree
     /// </summary>
-    public ICollection<OtiumKategorie> Children { get; init; } = new List<OtiumKategorie>();
+    public List<OtiumKategorie> Children { get; init; } = null!;
 
     /// <summary>
     ///     A helper collection for navigating to all Otia with this Kategorie.
     /// </summary>
     /// <remarks>Does not list Otia with this Kategorie transitively.</remarks>
     [JsonIgnore]
-    public ICollection<OtiumDefinition> Otia { get; init; } = new List<OtiumDefinition>();
+    public List<OtiumDefinition> Otia { get; init; } = null!;
 }

@@ -16,18 +16,18 @@ public class ProfundumInstanz : IHasTimestamps
     public required ProfundumDefinition Profundum { get; set; }
 
     ///
-    public required List<ProfundumSlot> Slots { get; set; }
+    public List<ProfundumSlot> Slots { get; set; } = null!;
 
     ///
     public int? MaxEinschreibungen { get; set; } = null;
 
     ///
-    public ICollection<ProfundumEinschreibung> Einschreibungen { get; set; } = [];
+    public List<ProfundumEinschreibung> Einschreibungen { get; set; } = null!;
 
     /// <summary>
     /// The persons responsible for the profundum
     /// </summary>
-    public List<Person> Verantwortliche { get; set; } = [];
+    public List<Person> Verantwortliche { get; set; } = null!;
 
     ///
     [MaxLength(20)]

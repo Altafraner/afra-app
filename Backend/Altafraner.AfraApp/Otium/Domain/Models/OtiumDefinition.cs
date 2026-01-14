@@ -34,17 +34,17 @@ public class OtiumDefinition : IHasTimestamps
     /// <summary>
     ///     A list of all people responsible for the Otium.
     /// </summary>
-    public ICollection<Person> Verantwortliche { get; set; } = new List<Person>();
+    public ICollection<Person> Verantwortliche { get; set; } = null!;
 
     /// <summary>
     ///     All recurrence rules for the Otium
     /// </summary>
-    public ICollection<OtiumWiederholung> Wiederholungen { get; set; } = new List<OtiumWiederholung>();
+    public ICollection<OtiumWiederholung> Wiederholungen { get; set; } = null!;
 
     /// <summary>
     ///     All instances of the Otium
     /// </summary>
-    public ICollection<OtiumTermin> Termine { get; set; } = new List<OtiumTermin>();
+    public ICollection<OtiumTermin> Termine { get; set; } = null!;
 
     /// <inheritdoc/>
     public DateTime CreatedAt { get; set; }
