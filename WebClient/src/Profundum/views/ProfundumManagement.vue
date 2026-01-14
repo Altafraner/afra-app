@@ -16,6 +16,7 @@ import {
     TabPanels,
     TabPanel,
     Select,
+    MultiSelect,
 } from 'primevue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
 
@@ -226,13 +227,16 @@ await setup();
 
             <div class="field">
                 <label>Fachbereiche</label>
-                <Select
+                <MultiSelect
                     v-model="createModel.fachbereichIds"
                     :options="fachbereiche"
                     optionLabel="label"
                     optionValue="id"
                     placeholder="Fachbereiche wählen"
-                    class="w-full"
+                    display="chip"
+                    filter
+                    filterPlaceholder="Suchen..."
+                    class="w-full multiselect-wrap"
                 />
             </div>
 
