@@ -14,9 +14,15 @@ public class DatabaseModule : IModule
     /// <inheritdoc />
     public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
     {
-        services.AddDbContext<AfraAppContext>(options =>
+        services.AddHttpContextAccessor();
+        services.AddScoped<AuditInterceptor>();
+        services.AddScoped<TimestampInterceptor>();
+        services.AddDbContext<AfraAppContext>((sp, options) =>
         {
-            options.AddInterceptors(new TimestampInterceptor());
+            options.AddInterceptors(
+                sp.GetRequiredService<TimestampInterceptor>(),
+                sp.GetRequiredService<AuditInterceptor>()
+            );
             options.UseNpgsql(config.GetConnectionString("DefaultConnection"),
                 AfraAppContext.ConfigureNpgsql);
             options.ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning));

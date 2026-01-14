@@ -27,7 +27,6 @@ public class TimestampInterceptor : SaveChangesInterceptor
         return base.SavingChangesAsync(eventData, result, cancellationToken);
     }
 
-
     private static void SetTimestamps(DbContext? context)
     {
         if (context == null) return;

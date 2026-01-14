@@ -6,7 +6,7 @@ namespace Altafraner.AfraApp.Profundum.Domain.Models;
 /// <summary>
 ///     A db record representing a Profundum.
 /// </summary>
-public class ProfundumDefinition : IHasTimestamps
+public class ProfundumDefinition : IHasTimestamps, IHasUserTracking
 {
     /// <summary>
     ///     A unique identifier for the Profundum
@@ -51,4 +51,10 @@ public class ProfundumDefinition : IHasTimestamps
 
     /// <inheritdoc/>
     public DateTime LastModified { get; set; }
+
+    /// <inheritdoc/>
+    public Guid? CreatedById { get; set; }
+
+    /// <inheritdoc/>
+    public Guid? LastModifiedById { get; set; }
 }

@@ -6,7 +6,7 @@ namespace Altafraner.AfraApp.Profundum.Domain.Models;
 /// <summary>
 ///     A record representing an enrollment for a <see cref="ProfundumDefinition" />.
 /// </summary>
-public class ProfundumEinschreibung : IHasTimestamps
+public class ProfundumEinschreibung : IHasTimestamps, IHasUserTracking
 {
     /// <summary>
     ///     False iff the Enrollment is preliminary and can be safely overwritten by matching functions
@@ -39,4 +39,10 @@ public class ProfundumEinschreibung : IHasTimestamps
 
     /// <inheritdoc/>
     public DateTime LastModified { get; set; }
+
+    /// <inheritdoc/>
+    public Guid? CreatedById { get; set; }
+
+    /// <inheritdoc/>
+    public Guid? LastModifiedById { get; set; }
 }
