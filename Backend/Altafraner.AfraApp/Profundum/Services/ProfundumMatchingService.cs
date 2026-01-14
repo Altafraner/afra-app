@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text;
 using Altafraner.AfraApp.Profundum.Configuration;
 using Altafraner.AfraApp.Profundum.Domain.Contracts.Services;
@@ -36,6 +37,7 @@ internal class ProfundumMatchingService
     /// </summary>
     public async Task<MatchingStats> PerformMatching()
     {
+        var stopwatch = Stopwatch.StartNew();
         var weights = new Dictionary<ProfundumBelegWunschStufe, int>
         {
             { ProfundumBelegWunschStufe.ErstWunsch, 128 },
@@ -49,17 +51,13 @@ internal class ProfundumMatchingService
             { ProfundumBelegWunschStufe.DrittWunsch, 4 }
         }.AsReadOnly();
 
+        await _dbContext.ProfundaEinschreibungen
+            .Where(e => !e.IsFixed)
+            .ExecuteDeleteAsync();
+
         var slots = _dbContext.ProfundaSlots.ToArray();
-
-        var automatischeEinschreibungen = _dbContext.ProfundaEinschreibungen
-            .Where(e => !e.IsFixed);
-        _logger.LogInformation("deleting {numEnrollments} old enrollments", automatischeEinschreibungen.Count());
-        _dbContext.RemoveRange(automatischeEinschreibungen);
-        await _dbContext.SaveChangesAsync();
-
         var fixEinschreibungen = _dbContext.ProfundaEinschreibungen
             .Where(e => e.IsFixed).ToArray();
-
         var angebote = (await _dbContext.ProfundaInstanzen
                 .Include(pi => pi.Slots).ThenInclude(s => s.EinwahlZeitraum)
                 .Include(pi => pi.Profundum)
@@ -86,6 +84,9 @@ internal class ProfundumMatchingService
 
         var belegVars = new Dictionary<(Person p, ProfundumSlot s, ProfundumInstanz i), BoolVar>();
         var personNotEnrolledVariables = new Dictionary<(Person p, ProfundumSlot s), BoolVar>();
+
+        var timeDbAndPrep = stopwatch.ElapsedMilliseconds;
+        stopwatch.Restart();
 
         // Create vars for each possible enrollment
         foreach (var currentSlot in slots)
@@ -182,14 +183,20 @@ internal class ProfundumMatchingService
         foreach (var r in _rulesFactory.GetAggregateRules())
             r.AddConstraints(slots, students, belegwuensche, belegVars, model);
 
+        var timeConstraintsAdded = stopwatch.ElapsedMilliseconds;
+        stopwatch.Restart();
         model.Maximize(objective);
 
         _logger.LogInformation("Model stats: {stats}", model.ModelStats());
 
         var solver = new CpSolver();
         solver.StringParameters = "max_time_in_seconds:240.0";
+        var timeSolverPrep = stopwatch.ElapsedMilliseconds;
+        stopwatch.Restart();
         var resultStatus = solver.Solve(model, new SolutionCallBack(_logger));
 
+        var timeSolver = stopwatch.ElapsedMilliseconds;
+        stopwatch.Restart();
         if (resultStatus != CpSolverStatus.Optimal && resultStatus != CpSolverStatus.Feasible)
         {
             throw new ArgumentException("No solution found in Matching.");
@@ -217,6 +224,22 @@ internal class ProfundumMatchingService
         }
         await _dbContext.ProfundaEinschreibungen.AddRangeAsync(newEinschreibungen);
         await _dbContext.SaveChangesAsync();
+        var timeAfter = stopwatch.ElapsedMilliseconds;
+        stopwatch.Stop();
+
+        _logger.LogInformation("""
+                           Solver timing:
+                             DB and prep: {dbAndPrep} ms
+                             Constraints: {constraints} ms
+                             Solver prep: {solverPrep} ms
+                             Solver     : {solver} ms
+                             Memorandum : {after} ms
+                           """,
+            timeDbAndPrep,
+            timeConstraintsAdded,
+            timeSolverPrep,
+            timeSolver,
+            timeAfter);
 
         return new MatchingStats
         {
