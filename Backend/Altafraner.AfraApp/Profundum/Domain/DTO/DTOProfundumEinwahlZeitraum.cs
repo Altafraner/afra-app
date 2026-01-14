@@ -9,8 +9,8 @@ public record DTOProfundumEinwahlZeitraum
     public DTOProfundumEinwahlZeitraum(ProfundumEinwahlZeitraum dbEinwahlZeitraum)
     {
         Id = dbEinwahlZeitraum.Id;
-        EinwahlStart = dbEinwahlZeitraum.EinwahlStart.ToString();
-        EinwahlStop = dbEinwahlZeitraum.EinwahlStop.ToString();
+        EinwahlStart = new DateTimeOffset(dbEinwahlZeitraum.EinwahlStart).ToLocalTime().ToString();
+        EinwahlStop = new DateTimeOffset(dbEinwahlZeitraum.EinwahlStop).ToLocalTime().ToString();
     }
 
     /// <inheritdoc cref="ProfundumEinwahlZeitraum.Id"/>

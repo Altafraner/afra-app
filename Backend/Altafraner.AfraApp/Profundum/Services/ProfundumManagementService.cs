@@ -37,8 +37,8 @@ internal class ProfundumManagementService
 
         var einwahlZeitraum = new ProfundumEinwahlZeitraum
         {
-            EinwahlStart = DateTime.SpecifyKind(DateTime.Parse(zeitraum.EinwahlStart), DateTimeKind.Utc),
-            EinwahlStop = DateTime.SpecifyKind(DateTime.Parse(zeitraum.EinwahlStop), DateTimeKind.Utc),
+            EinwahlStart = DateTimeOffset.Parse(zeitraum.EinwahlStart).UtcDateTime,
+            EinwahlStop = DateTimeOffset.Parse(zeitraum.EinwahlStop).UtcDateTime,
         };
         _dbContext.ProfundumEinwahlZeitraeume.Add(einwahlZeitraum);
         await _dbContext.SaveChangesAsync();
@@ -59,10 +59,10 @@ internal class ProfundumManagementService
             throw new NotFoundException("referenced einwahlzeitraum not found");
 
         if (dto.EinwahlStart != null)
-            zeitraum.EinwahlStart = DateTime.SpecifyKind(DateTime.Parse(dto.EinwahlStart), DateTimeKind.Utc);
+            zeitraum.EinwahlStart = DateTimeOffset.Parse(dto.EinwahlStart).UtcDateTime;
 
         if (dto.EinwahlStop != null)
-            zeitraum.EinwahlStop = DateTime.SpecifyKind(DateTime.Parse(dto.EinwahlStop), DateTimeKind.Utc);
+            zeitraum.EinwahlStop = DateTimeOffset.Parse(dto.EinwahlStop).UtcDateTime;
 
         await _dbContext.SaveChangesAsync();
     }
