@@ -4,8 +4,6 @@ using Altafraner.AfraApp.Profundum.Domain.Contracts.Services;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.User.Domain.Models;
-using Altafraner.AfraApp.User.Services;
-using Altafraner.Backbone.EmailSchedulingModule;
 using Google.OrTools.Sat;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -38,6 +36,19 @@ internal class ProfundumMatchingService
     /// </summary>
     public async Task<MatchingStats> PerformMatching()
     {
+        var weights = new Dictionary<ProfundumBelegWunschStufe, int>
+        {
+            { ProfundumBelegWunschStufe.ErstWunsch, 128 },
+            { ProfundumBelegWunschStufe.ZweitWunsch, 64 },
+            { ProfundumBelegWunschStufe.DrittWunsch, 32 }
+        }.AsReadOnly();
+        var weightsVerschoben = new Dictionary<ProfundumBelegWunschStufe, int>
+        {
+            { ProfundumBelegWunschStufe.ErstWunsch, 16 },
+            { ProfundumBelegWunschStufe.ZweitWunsch, 8 },
+            { ProfundumBelegWunschStufe.DrittWunsch, 4 }
+        }.AsReadOnly();
+
         var slots = _dbContext.ProfundaSlots.ToArray();
 
         var automatischeEinschreibungen = _dbContext.ProfundaEinschreibungen
@@ -73,99 +84,76 @@ internal class ProfundumMatchingService
         var model = new CpModel();
         var objective = LinearExpr.NewBuilder();
 
-
         var belegVars = new Dictionary<(Person p, ProfundumSlot s, ProfundumInstanz i), BoolVar>();
-
-
         var personNotEnrolledVariables = new Dictionary<(Person p, ProfundumSlot s), BoolVar>();
-        foreach (var student in students)
-        {
-            foreach (var s in slots)
-            {
-                var nev = model.NewBoolVar($"beleg-{student.Id}-not-enrolled-in-{s.Id}");
-                personNotEnrolledVariables[(student, s)] = nev;
-                objective.AddTerm(nev, 1); // Not matched is slightly better than stupid solutions.
-            }
-        }
 
-        foreach (var p in students)
-        foreach (var s in slots)
-        {
-            var psVars = new List<BoolVar> { personNotEnrolledVariables[(p, s)] };
-
-            foreach (var i in angebote.Where(a => a.Slots.Contains(s)))
-            {
-                belegVars[(p, s, i)] =
-                    model.NewBoolVar($"beleg-{p.Id}-{s.Id}-{i.Id}");
-                psVars.Add(belegVars[(p, s, i)]);
-            }
-
-            model.AddExactlyOne(psVars);
-        }
-
-
-        var weights = new Dictionary<ProfundumBelegWunschStufe, int>
-        {
-            { ProfundumBelegWunschStufe.ErstWunsch, 128 },
-            { ProfundumBelegWunschStufe.ZweitWunsch, 64 },
-            { ProfundumBelegWunschStufe.DrittWunsch, 32 }
-        }.AsReadOnly();
-        var weightsVerschoben = new Dictionary<ProfundumBelegWunschStufe, int>
-        {
-            { ProfundumBelegWunschStufe.ErstWunsch, 16 },
-            { ProfundumBelegWunschStufe.ZweitWunsch, 8 },
-            { ProfundumBelegWunschStufe.DrittWunsch, 4 }
-        }.AsReadOnly();
-
-        // Gewichtung nach Einwahlstufe
-        foreach (var currentPerson in students)
+        // Create vars for each possible enrollment
         foreach (var currentSlot in slots)
         {
-            var fixE = fixEinschreibungen.Where(e => e.BetroffenePerson == currentPerson && e.Slot == currentSlot)
-                .ToArray();
-            if (fixE.Length != 0)
+            var angeboteInSlot = angebote.Where(a => a.Slots.Contains(currentSlot)).ToArray();
+            foreach (var currentStudent in students)
             {
-                var e = fixE.First();
-                if (e.ProfundumInstanz is null)
-                {
-                    model.Add(personNotEnrolledVariables[(currentPerson, currentSlot)] == 1);
-                }
-                else
-                {
-                    model.Add(belegVars[(currentPerson, currentSlot, e.ProfundumInstanz!)] == 1);
-                }
-            }
+                List<BoolVar> personsVariablesInSlot = [];
+                var fixE = fixEinschreibungen
+                    .FirstOrDefault(e => e.BetroffenePerson == currentStudent
+                                         && e.Slot == currentSlot);
 
-            var wuensche = belegwuensche.Where(b => b.BetroffenePerson == currentPerson).ToArray();
-            var wunschVars = wuensche
-                .Where(b => b.ProfundumInstanz.Slots.Contains(currentSlot))
-                .SelectMany(b =>
-                    b.ProfundumInstanz.Slots.Select(sl =>
-                        (b.Stufe, belegVars[(b.BetroffenePerson, sl, b.ProfundumInstanz)])))
-                .ToArray();
-            foreach (var (stufe, v) in wunschVars)
-            {
-                objective.AddTerm(v, weights[stufe]);
-            }
+                // Not enrolled var
+                var nev = model.NewBoolVar($"beleg-{currentStudent.Id}-not-enrolled-in-{currentSlot.Id}");
+                personNotEnrolledVariables[(currentStudent, currentSlot)] = nev;
+                objective.AddTerm(nev, 1); // Not matched is slightly better than stupid solutions.
+                personsVariablesInSlot.Add(nev);
+                if (fixE is not null && fixE.ProfundumInstanz is null)
+                {
+                    model.Add(nev == 1);
+                }
 
-            // Wünsche from different slots
-            var wunschVerschobenVars = belegVars
-                .Where(b => b.Key.p == currentPerson)
-                .Select(b => (
-                        stufe: wuensche
-                        .Where(w => w.ProfundumInstanz.Profundum == b.Key.i.Profundum
-                                 && w.ProfundumInstanz != b.Key.i
-                                 && w.EinwahlZeitraum.Slots.Contains(b.Key.s)
-                        )
-                        .Select(w => w.Stufe),
-                        var: b.Value
+                var wuensche = belegwuensche.Where(b => b.BetroffenePerson == currentStudent).ToArray();
+                var wuenscheInSlot = wuensche.Where(w => w.ProfundumInstanz.Slots.Contains(currentSlot)).ToArray();
+
+                // angebote vars
+                foreach (var currentInstanzInSlot in angeboteInSlot)
+                {
+                    var currentVar =
+                        model.NewBoolVar($"beleg-{currentStudent.Id}-{currentSlot.Id}-{currentInstanzInSlot.Id}");
+                    belegVars[(currentStudent, currentSlot, currentInstanzInSlot)] = currentVar;
+                    personsVariablesInSlot.Add(currentVar);
+
+                    // fix einschreibungen
+                    if (fixE?.ProfundumInstanz == currentInstanzInSlot)
+                    {
+                        model.Add(currentVar == 1);
+                    }
+
+                    // gewichtung
+                    var wunsch = wuenscheInSlot.FirstOrDefault(w => w.ProfundumInstanz == currentInstanzInSlot);
+                    if (wunsch is not null)
+                    {
+                        objective.AddTerm(currentVar, weights[wunsch.Stufe]);
+                    }
+                }
+
+                model.AddExactlyOne(personsVariablesInSlot);
+
+                // Wünsche from different slots
+                var wunschVerschobenVars = belegVars
+                    .Where(b => b.Key.p == currentStudent)
+                    .Select(b => (
+                            stufe: wuensche
+                                .Where(w => w.ProfundumInstanz.Profundum == b.Key.i.Profundum
+                                            && w.ProfundumInstanz != b.Key.i
+                                            && w.EinwahlZeitraum.Slots.Contains(b.Key.s)
+                                )
+                                .Select(w => w.Stufe),
+                            var: b.Value
                         )
                     )
-                .Where(x => x.stufe.Any())
-                .Select(x => (x.stufe.Max(), x.var));
-            foreach (var (stufe, v) in wunschVerschobenVars)
-            {
-                objective.AddTerm(v, weightsVerschoben[stufe]);
+                    .Where(x => x.stufe.Any())
+                    .Select(x => (x.stufe.Max(), x.var));
+                foreach (var (stufe, v) in wunschVerschobenVars)
+                {
+                    objective.AddTerm(v, weightsVerschoben[stufe]);
+                }
             }
         }
 
@@ -240,7 +228,7 @@ internal class ProfundumMatchingService
     ///
     public Task FinalizeMatching()
     {
-        return _dbContext.ProfundaEinschreibungen.ExecuteUpdateAsync(e => e.SetProperty(e => e.IsFixed, true));
+        return _dbContext.ProfundaEinschreibungen.ExecuteUpdateAsync(e => e.SetProperty(ei => ei.IsFixed, true));
     }
 
     private IEnumerable<MatchingWarning> GetStudentWarnings(Person student,
