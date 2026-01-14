@@ -1,4 +1,4 @@
-using Altafraner.AfraApp.Backbone.Authorization;
+using Altafraner.AfraApp.User.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
@@ -39,10 +39,18 @@ public class AuditInterceptor : SaveChangesInterceptor
     private Guid? GetUserId()
     {
         var ctx = _http.HttpContext;
-        if (ctx == null || !ctx.User.Identity?.IsAuthenticated == true)
+        if (ctx is null)
             return null;
-        var claim = ctx.User.Claims.FirstOrDefault(c => c.Type == AfraAppClaimTypes.Id);
-        return claim == null ? null : Guid.Parse(claim.Value);
+        Guid? userId;
+        try
+        {
+            userId = UserAccessor.GetUserIdOrThrow(ctx);
+        }
+        catch
+        {
+            userId = null;
+        }
+        return userId;
     }
 
     private void ApplyAudit(DbContext? context)

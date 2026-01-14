@@ -86,7 +86,8 @@ public class UserAccessor
         return null;
     }
 
-    private Guid GetUserIdOrThrow(HttpContext httpContext)
+    /// <summary> Get the logged in users Id from the httpContext </summary>
+    public static Guid GetUserIdOrThrow(HttpContext httpContext)
     {
         if (!httpContext.User.Identity?.IsAuthenticated ?? true)
             throw new InvalidOperationException("The user is not logged in!");
