@@ -12,7 +12,7 @@ import {
     useToast,
 } from 'primevue';
 import { mande } from 'mande';
-import { computed, ref } from 'vue';
+import { computed, nextTick, ref } from 'vue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
 import UserPeek from '@/components/UserPeek.vue';
 import { FilterService, FilterMatchMode } from '@primevue/core/api';
@@ -43,6 +43,10 @@ const profunda = ref([]);
 const matchingRunning = ref(false);
 const toast = useToast();
 const confirm = useConfirmPopover();
+
+const selectedItem = ref();
+const warningsRef = ref();
+const wuenschePopoverRef = ref();
 
 async function getSlots() {
     slots.value = await mande('/api/profundum/management/slot').get();
@@ -285,9 +289,6 @@ const stopEdit = () => {
     editingPersonId.value = null;
 };
 
-const warningPops = ref([]);
-const wuenschePops = ref([]);
-
 const isEditing = (row) => editingPersonId.value === row.person.id;
 
 const wuenscheBySlot = (row) => {
@@ -318,6 +319,18 @@ const slotLabel = (slotId) => {
     const s = slots.value.find((x) => x.id === slotId);
     return s ? `${s.jahr}-${s.quartal}-${s.wochentag}` : 'Unbekannter Slot';
 };
+
+function showWarnings(evt, data) {
+    warningsRef.value.hide();
+    selectedItem.value = data;
+    nextTick(() => warningsRef.value.show(evt));
+}
+
+function showWishes(evt, data) {
+    wuenschePopoverRef.value.hide();
+    selectedItem.value = data;
+    nextTick(() => wuenschePopoverRef.value.show(evt));
+}
 </script>
 <template>
     <h1>Profunda-Matching</h1>
@@ -374,7 +387,7 @@ const slotLabel = (slotId) => {
                             severity="info"
                             text
                             size="small"
-                            @click="(e) => wuenschePops[index].toggle(e)"
+                            @click="showWishes($event, data)"
                         />
                         <span v-else></span>
                         <Button
@@ -383,7 +396,7 @@ const slotLabel = (slotId) => {
                             severity="warn"
                             text
                             size="small"
-                            @click="(e) => warningPops[index].toggle(e)"
+                            @click="showWarnings($event, data)"
                         />
                         <span v-else></span>
                         <Button
@@ -408,43 +421,6 @@ const slotLabel = (slotId) => {
                             "
                         />
                     </span>
-
-                    <Popover
-                        :ref="(el) => (wuenschePops[index] = el)"
-                        dismissable
-                        showCloseIcon
-                        style="min-width: 15rem"
-                    >
-                        <div
-                            v-for="[slotId, wishes] of wuenscheBySlot(data)"
-                            :key="slotId"
-                            class="mb-2"
-                        >
-                            <b class="block mb-1">{{ slotLabel(slotId) }}</b>
-
-                            <ul class="ml-3">
-                                <li v-for="w in wishes" :key="`${slotId}-${w.id}`">
-                                    {{ w.rang }}.
-                                    {{
-                                        instanzen.find((p) => p.id == w.id)?.profundumInfo
-                                            .bezeichnung ?? '—'
-                                    }}
-                                </li>
-                            </ul>
-                        </div>
-                    </Popover>
-                    <Popover
-                        :ref="(el) => (warningPops[index] = el)"
-                        dismissable
-                        showCloseIcon
-                        style="min-width: 15rem"
-                    >
-                        <ul class="list-disc pl-4">
-                            <li v-for="w in data.warnings" :key="w">
-                                {{ w.text }}
-                            </li>
-                        </ul>
-                    </Popover>
                 </template>
             </Column>
 
@@ -548,6 +524,34 @@ const slotLabel = (slotId) => {
                 </template>
             </Column>
         </DataTable>
+
+        <Popover ref="wuenschePopoverRef" dismissable showCloseIcon style="min-width: 15rem">
+            <div
+                v-if="selectedItem"
+                v-for="[slotId, wishes] of wuenscheBySlot(selectedItem)"
+                :key="slotId"
+                class="mb-2"
+            >
+                <b class="block mb-1">{{ slotLabel(slotId) }}</b>
+
+                <ul class="ml-3">
+                    <li v-for="w in wishes" :key="`${slotId}-${w.id}`">
+                        {{ w.rang }}.
+                        {{
+                            instanzen.find((p) => p.id == w.id)?.profundumInfo.bezeichnung ??
+                            '—'
+                        }}
+                    </li>
+                </ul>
+            </div>
+        </Popover>
+        <Popover ref="warningsRef" dismissable showCloseIcon style="min-width: 15rem">
+            <ul class="list-disc pl-4" v-if="selectedItem">
+                <li v-for="w in selectedItem.warnings" :key="w">
+                    {{ w.text }}
+                </li>
+            </ul>
+        </Popover>
 
         <DataTable
             :value="instanzen"
