@@ -358,21 +358,56 @@ const slotLabel = (slotId) => {
             scrollable
             :loading="matchingRunning"
         >
-            <Column header="Person">
-                <template #body="{ data }">
-                    <UserPeek :person="data.person" class="w-full" showGroup />
+            <Column frozen class="z-0">
+                <template #header>
+                    <span class="inline-flex justify-between w-full font-semibold">
+                        <span>Person</span>
+                        <span>Aktion</span>
+                    </span>
                 </template>
-            </Column>
-
-            <Column header="Wünsche" style="width: 5rem">
                 <template #body="{ data, index }">
-                    <Button
-                        v-if="data.wuensche.length !== 0"
-                        icon="pi pi-crown"
-                        severity="info"
-                        text
-                        @click="(e) => wuenschePops[index].toggle(e)"
-                    />
+                    <span class="grid grid-cols-[16em_1fr_1fr_1fr] gap-1">
+                        <UserPeek :person="data.person" class="w-full" showGroup />
+                        <Button
+                            v-if="data.wuensche.length !== 0"
+                            icon="pi pi-crown"
+                            severity="info"
+                            text
+                            size="small"
+                            @click="(e) => wuenschePops[index].toggle(e)"
+                        />
+                        <span v-else></span>
+                        <Button
+                            v-if="data.warnings.length !== 0"
+                            icon="pi pi-exclamation-triangle"
+                            severity="warn"
+                            text
+                            size="small"
+                            @click="(e) => warningPops[index].toggle(e)"
+                        />
+                        <span v-else></span>
+                        <Button
+                            v-if="!isEditing(data)"
+                            icon="pi pi-pencil"
+                            text
+                            size="small"
+                            @click="startEdit(data)"
+                        />
+                        <Button
+                            v-else
+                            icon="pi pi-check"
+                            severity="success"
+                            text
+                            size="small"
+                            @click="
+                                async () => {
+                                    if (await updateEnrollment(data)) {
+                                        stopEdit();
+                                    }
+                                }
+                            "
+                        />
+                    </span>
 
                     <Popover
                         :ref="(el) => (wuenschePops[index] = el)"
@@ -398,19 +433,6 @@ const slotLabel = (slotId) => {
                             </ul>
                         </div>
                     </Popover>
-                </template>
-            </Column>
-
-            <Column header="Warnungen" style="width: 5rem">
-                <template #body="{ data, index }">
-                    <Button
-                        v-if="data.warnings.length !== 0"
-                        icon="pi pi-exclamation-triangle"
-                        severity="warn"
-                        text
-                        @click="(e) => warningPops[index].toggle(e)"
-                    />
-
                     <Popover
                         :ref="(el) => (warningPops[index] = el)"
                         dismissable
@@ -423,33 +445,6 @@ const slotLabel = (slotId) => {
                             </li>
                         </ul>
                     </Popover>
-                </template>
-            </Column>
-
-            <Column header="Aktionen" style="width: 5rem">
-                <template #body="{ data }">
-                    <span class="flex">
-                        <Button
-                            v-if="!isEditing(data)"
-                            icon="pi pi-pencil"
-                            text
-                            @click="startEdit(data)"
-                        />
-
-                        <Button
-                            v-else
-                            icon="pi pi-check"
-                            severity="success"
-                            text
-                            @click="
-                                async () => {
-                                    if (await updateEnrollment(data)) {
-                                        stopEdit();
-                                    }
-                                }
-                            "
-                        />
-                    </span>
                 </template>
             </Column>
 
@@ -690,7 +685,7 @@ const slotLabel = (slotId) => {
 .match-btn__bg {
     position: absolute;
     inset: 0;
-    width: 0%;
+    width: 0;
     background: color-mix(in srgb, var(--primary-color) 22%, transparent);
     transition: width 1s linear;
     pointer-events: none;
