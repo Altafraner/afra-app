@@ -19,6 +19,7 @@ export function findPath(nodes, id) {
     if (node) return [node];
 
     for (const node of nodes) {
+        if (!node.children) return [];
         const children = findPath(node.children, id);
         if (children.length > 0) return [node, ...children];
     }

@@ -37,7 +37,7 @@ const findKategorie = (kategorie) => {
             return element;
         }
     }
-    return null;
+    return path[0];
 };
 
 const formatedEnrollments = computed(() => {
