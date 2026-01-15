@@ -251,7 +251,9 @@ internal class ProfundumMatchingService
     ///
     public Task FinalizeMatching()
     {
-        return _dbContext.ProfundaEinschreibungen.ExecuteUpdateAsync(e => e.SetProperty(ei => ei.IsFixed, true));
+        return _dbContext.ProfundaEinschreibungen
+            .Where(e => e.ProfundumInstanz != null)
+            .ExecuteUpdateAsync(e => e.SetProperty(ei => ei.IsFixed, true));
     }
 
     private IEnumerable<MatchingWarning> GetStudentWarnings(Person student,
