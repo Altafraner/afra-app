@@ -138,7 +138,8 @@ internal class ProfundumMatchingService
                 objective.AddTerm(nev, 1); // Not matched is slightly better than stupid solutions.
 
                 var wuensche = belegwuensche.Where(b => b.BetroffenePerson == currentStudent).ToArray();
-                var wuenscheInSlot = wuensche.Where(w => w.ProfundumInstanz.Slots.Contains(currentSlot)).ToArray();
+                var wuenscheInSlot = wuensche.Where(w => w.ProfundumInstanz.Slots.Contains(currentSlot)
+                        && w.EinwahlZeitraum.Slots.Contains(currentSlot)).ToArray();
 
                 // angebote vars
                 foreach (var currentInstanzInSlot in angeboteInSlot)
