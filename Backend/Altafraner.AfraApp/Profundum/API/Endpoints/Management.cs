@@ -1,5 +1,4 @@
 using System.Net.Mime;
-using System.Runtime.InteropServices.JavaScript;
 using System.Text;
 using Altafraner.AfraApp.Backbone.Authorization;
 using Altafraner.AfraApp.Otium.API.Endpoints;
@@ -31,7 +30,9 @@ public static class Management
         var ez = gp.MapGroup("einwahlzeitraum");
         ez.MapGet("/", (Mgmt svc) => svc.GetEinwahlZeiträumeAsync());
         ez.MapPost("/", async (Mgmt svc, DTOProfundumEinwahlZeitraumCreation zeitraum) => (await svc.CreateEinwahlZeitraumAsync(zeitraum)).Id);
-        ez.MapPut("/{id:guid}", (ProfundumManagementService managementService, Guid id, DTOProfundumEinwahlZeitraumCreation dto) => managementService.UpdateEinwahlZeitraumAsync(id, dto));
+        ez.MapPut("/{id:guid}",
+            (Mgmt managementService, Guid id, DTOProfundumEinwahlZeitraumCreation dto) =>
+                managementService.UpdateEinwahlZeitraumAsync(id, dto));
         ez.MapDelete("/{id:guid}", (Mgmt svc, Guid id) => svc.DeleteEinwahlZeitraumAsync(id));
 
         gp.MapGet("/slot", (Mgmt svc) => svc.GetSlotsAsync());
@@ -153,7 +154,7 @@ public static class Management
         UserAccessor userAccessor)
     {
         var user = await userAccessor.GetUserAsync();
-        IQueryable<ProfundumInstanz> profundaQuery = dbContext.ProfundaInstanzen
+        IQueryable<ProfundumInstanz> quartalQuery = dbContext.ProfundaInstanzen
             .AsSplitQuery()
             .Include(e => e.Profundum)
             .Include(e => e.Einschreibungen.Where(enr => enr.IsFixed))
@@ -161,9 +162,9 @@ public static class Management
             .Include(e => e.Slots);
 
         if (!user.GlobalPermissions.Contains(GlobalPermission.Profundumsverantwortlich))
-            profundaQuery = profundaQuery.Where(p => p.Verantwortliche.Contains(user));
+            quartalQuery = quartalQuery.Where(p => p.Verantwortliche.Contains(user));
 
-        var profunda = await profundaQuery
+        var quartale = await quartalQuery
             .OrderBy(e => e.Profundum.Bezeichnung)
             .AsAsyncEnumerable()
             .SelectMany(e => e.Slots.Select(s => (slot: s, instanz: e)))
@@ -174,6 +175,6 @@ public static class Management
             .Select(e => new QuartalEnrollmentOverview(e.Key, e))
             .ToArrayAsync();
 
-        return TypedResults.Ok(profunda);
+        return TypedResults.Ok(quartale);
     }
 }

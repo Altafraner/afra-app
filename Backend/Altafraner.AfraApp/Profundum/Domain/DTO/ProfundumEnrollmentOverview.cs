@@ -15,7 +15,8 @@ public record ProfundumEnrollmentOverview
     {
         Id = instanz.Id;
         Label = instanz.Profundum.Bezeichnung;
-        Students = instanz.Einschreibungen.Select(e => new PersonInfoMinimal(e.BetroffenePerson));
+        Students = instanz.Einschreibungen.DistinctBy(e => e.BetroffenePersonId)
+            .Select(e => new PersonInfoMinimal(e.BetroffenePerson));
     }
 
     /// <summary>
