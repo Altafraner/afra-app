@@ -128,35 +128,39 @@ const isOs = computed(() => {
                             </template>
                         </template>
                     </Column>
-                    <Column header="Angebot">
+                    <Column header="Angebot" header-class="pl-4">
                         <template #body="{ data }">
                             <span v-if="data.otium">
-                                <AfraKategorieTag
-                                    v-if="data.kategorieId"
-                                    :value="findKategorie(data.kategorieId)"
-                                    hide-name
-                                    minimal
-                                />
                                 <Button
-                                    :label="data.otium"
                                     :to="{
                                         name: 'Katalog-Datum-Termin',
                                         params: { datum: data.datum, terminId: data.terminId },
                                     }"
                                     as="RouterLink"
                                     variant="text"
-                                />
+                                    class="px-2"
+                                >
+                                    <span class="flex gap-2 items-baseline">
+                                        <AfraKategorieTag
+                                            v-if="data.kategorieId"
+                                            :value="findKategorie(data.kategorieId)"
+                                            hide-name
+                                            minimal
+                                        />
+                                        <span class="font-semibold">{{ data.otium }}</span>
+                                    </span>
+                                </Button>
                             </span>
                             <Button
                                 v-else-if="props.showKatalog"
                                 :to="{ name: 'Katalog-Datum', params: { datum: data.datum } }"
                                 as="RouterLink"
-                                class="w-full justify-start"
+                                class="w-full justify-start px-2"
                                 icon="pi pi-list"
                                 label="Katalog"
                                 size="small"
                             />
-                            <span v-else>Keine Einschreibung</span>
+                            <span v-else class="px-2">Keine Einschreibung</span>
                         </template>
                     </Column>
                     <Column header="Ort">
