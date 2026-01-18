@@ -15,7 +15,7 @@ public record DTOProfundumInstanz
         ProfundumId = dbInstanz.Profundum.Id;
         Slots = dbInstanz.Slots.Select(s => s.Id).ToArray();
         MaxEinschreibungen = dbInstanz.MaxEinschreibungen;
-        NumEinschreibungen = dbInstanz.Einschreibungen?.Select(e => e.BetroffenePersonId).Distinct().Count() ?? 0;
+        NumEinschreibungen = dbInstanz.Einschreibungen.Select(e => e.BetroffenePersonId).Distinct().Count();
         ProfundumInfo = new DTOProfundumDefinition(dbInstanz.Profundum);
         VerantwortlicheIds = dbInstanz.Verantwortliche.Select(e => e.Id);
         VerantwortlicheInfo = dbInstanz.Verantwortliche.Select(e => new PersonInfoMinimal(e));
@@ -23,7 +23,7 @@ public record DTOProfundumInstanz
     }
 
     /// <inheritdoc cref="ProfundumInstanz.Id"/>
-    public Guid? Id { get; set; }
+    public Guid Id { get; set; }
 
     /// <inheritdoc cref="ProfundumInstanz.Profundum"/>
     public Guid ProfundumId { get; set; }
@@ -47,7 +47,7 @@ public record DTOProfundumInstanz
     /// <summary>
     /// The number of people enrolled to this instance
     /// </summary>
-    public int? NumEinschreibungen { get; set; }
+    public int NumEinschreibungen { get; set; }
 
     /// <inheritdoc cref="ProfundumInstanz.Ort"/>
     public string Ort { get; set; }

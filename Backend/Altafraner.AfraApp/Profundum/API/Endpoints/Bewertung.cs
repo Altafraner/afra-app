@@ -37,6 +37,8 @@ public static class Bewertung
         bewertung.MapGet("/{profundumId:guid}", GetAnkerForProfundum);
         bewertung.MapGet("/{profundumId:guid}/{studentId:guid}", GetBewertungAsync);
         bewertung.MapPut("/{profundumId:guid}/{studentId:guid}", UpdateBewertungAsync);
+
+        bewertung.MapGet("/control/status", GetStatusAsync);
     }
 
     private static async Task<Results<Ok<Anker>, NotFound<HttpValidationProblemDetails>>> AddAnkerAsync(
@@ -215,5 +217,34 @@ public static class Bewertung
                 { e.ParamName ?? "unknown", [e.Message] }
             }));
         }
+    }
+
+    private static async Task<Ok<Dictionary<Guid, IEnumerable<FeedbackOverview>>>>
+        GetStatusAsync(
+            FeedbackService feedbackService,
+            ProfundumManagementService managementService)
+    {
+        var slots = await managementService.GetSlotsAsync();
+        var allInstances = await managementService.GetInstanzenAsync();
+
+        var bewertungsStatus = await feedbackService.GetFeedbackStatus().ToArrayAsync();
+
+        var dict = new Dictionary<Guid, IEnumerable<FeedbackOverview>>();
+
+        foreach (var slot in slots)
+        {
+            var instancesInSlot = allInstances.Where(i => i.Slots.Contains(slot.Id));
+            var data = instancesInSlot
+                .Where(i => i.MaxEinschreibungen != 0)
+                .Select(i => new FeedbackOverview
+                {
+                    Instanz = i,
+                    Slot = slot,
+                    Status = bewertungsStatus.Single(e => e.instanz.Id == i.Id).status
+                });
+            dict.Add(slot.Id, data);
+        }
+
+        return TypedResults.Ok(dict);
     }
 }

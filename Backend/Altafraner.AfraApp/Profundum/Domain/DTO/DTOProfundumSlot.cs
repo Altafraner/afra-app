@@ -18,7 +18,7 @@ public record DTOProfundumSlot
     }
 
     /// <inheritdoc cref="ProfundumDefinition.Id"/>
-    public Guid? Id { get; set; }
+    public Guid Id { get; set; }
 
     /// <inheritdoc cref="ProfundumSlot.Jahr"/>
     public required int Jahr { get; set; }

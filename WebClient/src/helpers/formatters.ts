@@ -13,8 +13,8 @@ const padString = (text: any, n: number) => String(text).padStart(n, '0');
 export const formatTutor = (tutor: UserInfoMinimal) =>
     tutor ? tutor.nachname + ', ' + tutor.vorname : '';
 
-export const formatStudent = (student: UserInfoMinimal) =>
-    student.vorname + ' ' + student.nachname;
+export const formatStudent = (student: UserInfoMinimal, noBreak: boolean = false) =>
+    student.vorname + (noBreak ? '\u00A0' : ' ') + student.nachname;
 
 export const formatPerson = (person: UserInfoMinimal) =>
     person.rolle === 'Oberstufe' || person.rolle === 'Mittelstufe'

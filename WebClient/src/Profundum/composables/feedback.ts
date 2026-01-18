@@ -4,6 +4,7 @@ import type {
     AnkerChangeRequest,
     AnkerOverview,
     FeedbackKategorieChangeRequest,
+    ProfundumFeedbackStatus,
 } from '@/Profundum/models/feedback';
 
 export const useFeedback = () => {
@@ -175,6 +176,19 @@ export const useFeedback = () => {
         }
     }
 
+    async function getControl(): Promise<Record<string, ProfundumFeedbackStatus[]>> {
+        try {
+            return await api.get<Record<string, ProfundumFeedbackStatus[]>>('/control/status');
+        } catch (e) {
+            const mandeError: MandeError = e as MandeError;
+            toast.add({
+                severity: 'error',
+                summary: 'Es ist ein Fehler aufgetreten',
+                detail: `Die Übersicht konnte nicht abgerufen werden. Code ${mandeError.response.status}, ${mandeError.message}`,
+            });
+        }
+    }
+
     return {
         getAllAnker,
         getAnkerForProfundum,
@@ -186,5 +200,6 @@ export const useFeedback = () => {
         updateKategorie,
         deleteKategorie,
         bewertungAbgeben,
+        getControl,
     };
 };

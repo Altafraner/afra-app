@@ -1,5 +1,7 @@
 ﻿import type { UserInfoMinimal } from '@/models/user/userInfoMinimal';
-import type { ProfundumFachbereich } from './verwaltung';
+import type { ProfundumFachbereich, ProfundumInstanz, ProfundumSlot } from './verwaltung';
+
+type FeedbackStatus = 'Missing' | 'Partial' | 'Done';
 
 export interface Anker {
     id: string;
@@ -37,4 +39,10 @@ export interface ProfundumEnrollmentOverview {
 export interface QuartalEnrollmentOverview {
     label: string;
     profunda: ProfundumEnrollmentOverview[];
+}
+
+export interface ProfundumFeedbackStatus {
+    instanz: ProfundumInstanz;
+    slot: ProfundumSlot;
+    status: FeedbackStatus;
 }

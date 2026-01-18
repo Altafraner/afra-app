@@ -1,3 +1,5 @@
+using Altafraner.AfraApp.Profundum.Domain.DTO;
+using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.Profundum.Domain.Models.Bewertung;
 using Altafraner.AfraApp.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
@@ -57,5 +59,29 @@ internal sealed class FeedbackService
 
         return await _dbContext.ProfundaInstanzen.Include(e => e.Verantwortliche)
             .AnyAsync(e => e.Id == profundumId && e.Verantwortliche.Contains(user));
+    }
+
+    public async IAsyncEnumerable<(ProfundumInstanz instanz, FeedbackStatus status)> GetFeedbackStatus()
+    {
+        var instances = await _dbContext.ProfundaInstanzen
+            .Include(e => e.Einschreibungen)
+            .ThenInclude(e => e.BetroffenePerson)
+            .Where(p => p.MaxEinschreibungen != null && p.MaxEinschreibungen != 0)
+            .ToListAsync();
+
+        var feedback = await _dbContext.ProfundumFeedbackEntries.Select(e => new { e.BetroffenePersonId, e.InstanzId })
+            .Distinct()
+            .ToArrayAsync();
+
+        foreach (var instance in instances)
+        {
+            var numFeedback = feedback.Count(f => f.InstanzId == instance.Id);
+            var numStudents = instance.Einschreibungen
+                .DistinctBy(e => (e.BetroffenePersonId, e.ProfundumInstanzId))
+                .Count();
+            yield return (instance,
+                numFeedback == numStudents ? FeedbackStatus.Done :
+                numFeedback != 0 ? FeedbackStatus.Partial : FeedbackStatus.Missing);
+        }
     }
 }
