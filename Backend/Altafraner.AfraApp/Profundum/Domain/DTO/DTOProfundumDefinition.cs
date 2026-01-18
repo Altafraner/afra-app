@@ -1,8 +1,10 @@
+using Altafraner.AfraApp.Profundum.Domain.Models;
+
 namespace Altafraner.AfraApp.Profundum.Domain.DTO;
 
-using Models;
-
-///
+/// <summary>
+///     A dto representing a profundum
+/// </summary>
 public record DTOProfundumDefinition
 {
     ///

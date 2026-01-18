@@ -2,7 +2,9 @@ using Altafraner.AfraApp.Profundum.Domain.Models;
 
 namespace Altafraner.AfraApp.Profundum.Domain.DTO;
 
-///
+/// <summary>
+///     A dto representing a grouping of slots so that their enrollment process is done together
+/// </summary>
 public record DTOProfundumEinwahlZeitraum
 {
     ///

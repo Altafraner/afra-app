@@ -2,7 +2,9 @@ using Altafraner.AfraApp.Profundum.Domain.Models;
 
 namespace Altafraner.AfraApp.Profundum.Domain.DTO;
 
-///
+/// <summary>
+///     A request to change or create a profundum instance
+/// </summary>
 public record DTOProfundumInstanzCreation
 {
     /// <inheritdoc cref="ProfundumInstanz.Profundum"/>

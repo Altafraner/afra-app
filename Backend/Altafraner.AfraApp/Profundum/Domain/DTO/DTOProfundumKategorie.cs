@@ -3,7 +3,13 @@ using Altafraner.AfraApp.Profundum.Domain.Models;
 
 namespace Altafraner.AfraApp.Profundum.Domain.DTO;
 
-///
+/// <summary>
+///     A profundums category
+/// </summary>
+/// <remarks>
+///     This is usualy used to encode which special rules apply to the profundum. For information about its contents
+///     <see cref="ProfundumFachbereich" />.
+/// </remarks>
 public record DTOProfundumKategorie
 {
     ///

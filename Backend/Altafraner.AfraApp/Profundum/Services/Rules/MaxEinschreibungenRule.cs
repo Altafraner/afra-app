@@ -6,7 +6,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Altafraner.AfraApp.Profundum.Services.Rules;
 
-///
+/// <summary>
+///     only a limited number of students may enroll to the profundum at a time
+/// </summary>
 public class MaxEinschreibungenRule : IProfundumAggregateRule
 {
     private readonly AfraAppContext _dbContext;

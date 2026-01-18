@@ -20,13 +20,13 @@ public class ProfundumKategorie
     public required string Bezeichnung { get; set; }
 
     /// <summary>
-    /// A helper collection for navigating to all Profunda with this Kategorie.
+    ///  A helper collection for navigating to all Profunda with this Kategorie.
     /// </summary>
     [JsonIgnore]
     public List<ProfundumDefinition> Profunda { get; init; } = null!;
 
     /// <summary>
-    /// A boolean indicating that Profunda of this Kategorie correspond to Profilprofunda
+    ///  A boolean indicating that Profunda of this Kategorie correspond to Profilprofunda
     /// </summary>
     public required bool ProfilProfundum { get; set; }
 }

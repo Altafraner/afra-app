@@ -4,7 +4,9 @@ using Google.OrTools.Sat;
 
 namespace Altafraner.AfraApp.Profundum.Domain.Contracts.Rules;
 
-///
+/// <summary>
+///     A profundum rule that is not constrained just by the enrollments of a single student
+/// </summary>
 public interface IProfundumAggregateRule
 {
     /// <summary>

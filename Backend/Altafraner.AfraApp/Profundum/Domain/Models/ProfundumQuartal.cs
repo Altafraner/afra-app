@@ -1,6 +1,8 @@
 namespace Altafraner.AfraApp.Profundum.Domain.Models;
 
-///
+/// <summary>
+///     A timeframe within the school year
+/// </summary>
 public enum ProfundumQuartal
 {
     /// <summary> Herbstsemester Quartal 1 </summary>

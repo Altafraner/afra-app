@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json;
 using Altafraner.AfraApp.Profundum.Configuration;
 using Altafraner.AfraApp.Profundum.Domain.Contracts.Services;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
@@ -11,10 +12,8 @@ using Models_Person = Altafraner.AfraApp.User.Domain.Models.Person;
 
 namespace Altafraner.AfraApp.Profundum.Services;
 
-///
 internal class ProfundumEinwahlWunschException : ArgumentException
 {
-    ///
     public ProfundumEinwahlWunschException(string message)
         : base(message)
     {
@@ -33,9 +32,6 @@ internal class ProfundumEnrollmentService
     private readonly IRulesFactory _rulesFactory;
     private readonly UserService _userService;
 
-    /// <summary>
-    ///     Constructs the EnrollmentService. Usually called by the DI container.
-    /// </summary>
     public ProfundumEnrollmentService(AfraAppContext dbContext,
         ILogger<ProfundumEnrollmentService> logger,
         UserService userService,
@@ -192,7 +188,7 @@ internal class ProfundumEnrollmentService
         var openSlots = await _dbContext.ProfundaSlots
             .Where(s => !fixedSlots.Contains(s))
             .ToArrayAsync();
-        _logger.LogInformation("{serialized}", System.Text.Json.JsonSerializer.Serialize(openSlots));
+        _logger.LogInformation("{serialized}", JsonSerializer.Serialize(openSlots));
 
         var toRemove = _dbContext.ProfundaBelegWuensche
             .Where(w => w.BetroffenePerson == student)

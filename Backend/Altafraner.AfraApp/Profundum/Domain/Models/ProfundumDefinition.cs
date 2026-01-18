@@ -25,7 +25,13 @@ public class ProfundumDefinition : IHasTimestamps, IHasUserTracking
     [MaxLength(2000)]
     public required string Beschreibung { get; set; }
 
-    ///
+    /// <summary>
+    ///     the profundums category
+    /// </summary>
+    /// <remarks>
+    ///     the category is mostly used to choose which set of rules appies to the profundum. For information about it's
+    ///     subject area, see <see cref="Fachbereiche" />.
+    /// </remarks>
     public required ProfundumKategorie Kategorie { get; set; }
 
     /// <summary>
@@ -33,17 +39,29 @@ public class ProfundumDefinition : IHasTimestamps, IHasUserTracking
     /// </summary>
     public List<ProfundumFachbereich> Fachbereiche { get; set; } = null!;
 
-    ///
+    /// <summary>
+    ///     all instances for this profundum
+    /// </summary>
     public List<ProfundumInstanz> Instanzen { get; set; } = null!;
 
-    ///
-    public int? MinKlasse { get; set; } = null;
-    ///
-    public int? MaxKlasse { get; set; } = null;
+    /// <summary>
+    ///     the minimum grade level needed to enroll to this profundum
+    /// </summary>
+    public int? MinKlasse { get; set; }
 
-    ///
+    /// <summary>
+    ///     the maximum grade level allowed to enroll to this profundum
+    /// </summary>
+    public int? MaxKlasse { get; set; }
+
+    /// <summary>
+    ///     profunda that a student has to enroll in before enrolling to this profundum.
+    /// </summary>
     public List<ProfundumDefinition> Dependencies { get; set; } = null!;
-    ///
+
+    /// <summary>
+    ///     profunda that list this profundum as dependency.
+    /// </summary>
     public List<ProfundumDefinition> Dependants { get; set; } = null!;
 
     /// <inheritdoc/>

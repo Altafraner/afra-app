@@ -3,7 +3,9 @@ using Altafraner.AfraApp.Profundum.Domain.Models;
 
 namespace Altafraner.AfraApp.Profundum.Domain.DTO;
 
-///
+/// <summary>
+///     A dto representing a profundum slot
+/// </summary>
 public record DTOProfundumSlot
 {
     ///

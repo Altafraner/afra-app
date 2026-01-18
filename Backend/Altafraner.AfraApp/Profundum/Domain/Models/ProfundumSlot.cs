@@ -10,19 +10,29 @@ public record ProfundumSlot
     /// </summary>
     public Guid Id { get; set; }
 
-    ///
+    /// <summary>
+    ///     the first year of the school year this slot is part of
+    /// </summary>
     public required int Jahr { get; set; }
 
-    ///
+    /// <summary>
+    ///     The time within the school year this slot is part of
+    /// </summary>
     public required ProfundumQuartal Quartal { get; set; }
 
-    ///
+    /// <summary>
+    ///     the day of the week this slot happens at
+    /// </summary>
     public required DayOfWeek Wochentag { get; set; }
 
-    ///
+    /// <summary>
+    ///     the enrollment timeframe in which students may express their enrollment wishes in
+    /// </summary>
     public required ProfundumEinwahlZeitraum EinwahlZeitraum { get; set; }
 
-    ///
+    /// <summary>
+    ///     all dates this slot happens at
+    /// </summary>
     public List<ProfundumTermin> Termine { get; set; } = null!;
 
     ///
@@ -32,10 +42,8 @@ public record ProfundumSlot
     }
 }
 
-///
-public class ProfundumSlotComparer : IComparer<ProfundumSlot>, IEqualityComparer<ProfundumSlot>
+internal class ProfundumSlotComparer : IComparer<ProfundumSlot>, IEqualityComparer<ProfundumSlot>
 {
-    ///
     public int Compare(ProfundumSlot? slot1, ProfundumSlot? slot2)
         => (slot1, slot2) switch
         {
@@ -47,13 +55,11 @@ public class ProfundumSlotComparer : IComparer<ProfundumSlot>, IEqualityComparer
                 .CompareTo((s2.Jahr * 10 + (int)s2.Quartal) * 10 + (int)s2.Wochentag),
         };
 
-    ///
     public bool Equals(ProfundumSlot? x, ProfundumSlot? y)
     {
         return Compare(x, y) == 0;
     }
 
-    ///
     public int GetHashCode(ProfundumSlot obj)
     {
         return HashCode.Combine(obj.Jahr, obj.Quartal, obj.Wochentag);

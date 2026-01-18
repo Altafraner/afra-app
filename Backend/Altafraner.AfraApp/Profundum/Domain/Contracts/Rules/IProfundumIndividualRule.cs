@@ -5,10 +5,14 @@ using Google.OrTools.Sat;
 
 namespace Altafraner.AfraApp.Profundum.Domain.Contracts.Rules;
 
-///
+/// <summary>
+///     A profundum rule that is constrained only by the enrollments of a single student
+/// </summary>
 public interface IProfundumIndividualRule
 {
-    ///
+    /// <summary>
+    ///     Checks the students wishes before they can be submitted.
+    /// </summary>
     RuleStatus CheckForSubmission(Person student,
     IEnumerable<ProfundumSlot> slots,
     IEnumerable<ProfundumEinschreibung> enrollments,
@@ -26,7 +30,7 @@ public interface IProfundumIndividualRule
         LinearExprBuilder objective);
 
     /// <summary>
-    /// Gets warnings for a student
+    ///  Gets warnings for a student
     /// </summary>
     /// <param name="student">The student to get warnings for</param>
     /// <param name="slots">The slots the student can enroll for</param>

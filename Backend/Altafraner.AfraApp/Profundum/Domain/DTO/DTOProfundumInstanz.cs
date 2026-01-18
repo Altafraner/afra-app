@@ -4,7 +4,9 @@ using Altafraner.AfraApp.User.Domain.DTO;
 
 namespace Altafraner.AfraApp.Profundum.Domain.DTO;
 
-///
+/// <summary>
+///     a dto representing a profundum instance
+/// </summary>
 public record DTOProfundumInstanz
 {
     ///

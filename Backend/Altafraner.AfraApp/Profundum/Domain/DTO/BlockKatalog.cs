@@ -20,6 +20,8 @@ public record BlockKatalog
     /// </summary>
     public required BlockOption[] Options { get; set; }
 
-    ///
+    /// <summary>
+    ///     If set, the student is already enrolled to this specific option.
+    /// </summary>
     public required BlockOption? Fixed { get; set; }
 }

@@ -20,9 +20,7 @@ public class ProfundumModule : IModule
     public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
     {
         services.AddOptions<ProfundumConfiguration>()
-            .Bind(config.GetSection("Profundum"))
-            .Validate(ProfundumConfiguration.Validate)
-            .ValidateOnStart();
+            .Bind(config.GetSection("Profundum"));
 
         services.AddScoped<ProfundumEnrollmentService>();
         services.AddScoped<ProfundumManagementService>();

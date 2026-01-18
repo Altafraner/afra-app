@@ -10,7 +10,9 @@ using Microsoft.Extensions.Options;
 
 namespace Altafraner.AfraApp.Profundum.Services.Rules;
 
-///
+/// <summary>
+///     Some students must enroll to profilprofunda, some must not.
+/// </summary>
 public class ProfilRule : IProfundumIndividualRule
 {
     private readonly AfraAppContext _dbContext;
@@ -74,11 +76,13 @@ public class ProfilRule : IProfundumIndividualRule
             return;
         }
 
-        var pflichtQuartale = slots
-            .Where(s => IsProfilPflichtig(student, s.Quartal))
-        .GroupBy(s => (s.Jahr, s.Quartal));
+        var slotsArray = slots as ProfundumSlot[] ?? slots.ToArray();
 
-        // foreach (var quartalGroup in slots
+        // var pflichtQuartale = slotsArray
+        //     .Where(s => IsProfilPflichtig(student, s.Quartal))
+        // .GroupBy(s => (s.Jahr, s.Quartal));
+
+        // foreach (var quartalGroup in slotsArray
         //     .Where(s => IsProfilPflichtig(student, s.Quartal))
         //     .GroupBy(s => s.Quartal))
         // {
@@ -93,7 +97,6 @@ public class ProfilRule : IProfundumIndividualRule
         // }
 
         {
-            var profilPflichtig = slots.Any(s => IsProfilPflichtig(student, s.Quartal));
             var profilVars = belegVars
                 .Where(x => x.Key.i.Profundum.Kategorie.ProfilProfundum)
                 .Select(x => x.Value)
@@ -114,7 +117,7 @@ public class ProfilRule : IProfundumIndividualRule
             }
 
             // Profil im ganzen Jahr unzulässig
-            var profilZulässig = slots.Any(s =>
+            var profilZulässig = slotsArray.Any(s =>
                     IsProfilPflichtig(student, s.Quartal)
                     || IsProfilZulaessig(student, s.Quartal));
             if (!profilZulässig && k.i.Profundum.Kategorie.ProfilProfundum)
@@ -157,18 +160,21 @@ public class ProfilRule : IProfundumIndividualRule
         }
 
         List<MatchingWarning> warnings = [];
-        var profilPflichtig = slots.Any(s => IsProfilPflichtig(student, s.Quartal));
-        if (profilPflichtig && !enrollments.Any(e => e.BetroffenePerson == student
-                     && e.ProfundumInstanz!.Profundum.Kategorie.ProfilProfundum))
+        var slotsArray = slots as ProfundumSlot[] ?? slots.ToArray();
+        var profilPflichtig = slotsArray.Any(s => IsProfilPflichtig(student, s.Quartal));
+        var enrollmentsArray = enrollments as ProfundumEinschreibung[] ?? enrollments.ToArray();
+        if (profilPflichtig && !enrollmentsArray.Any(e => e.BetroffenePerson == student
+                                                          && e.ProfundumInstanz!.Profundum.Kategorie.ProfilProfundum))
         {
             warnings.Add(new MatchingWarning("Profilpflicht nicht erfüllt."));
         }
 
-        warnings.AddRange(slots.Select(s => (s.Jahr, s.Quartal)).Distinct()
+        warnings.AddRange(slotsArray.Select(s => (s.Jahr, s.Quartal))
+            .Distinct()
             .Where((x => !IsProfilPflichtig(student, x.Quartal) && !IsProfilZulaessig(student, x.Quartal)))
-            .Where(x => enrollments.Any(e => e.BetroffenePerson == student
-                     && e.Slot.Jahr == x.Jahr && e.Slot.Quartal == x.Quartal
-                     && e.ProfundumInstanz!.Profundum.Kategorie.ProfilProfundum))
+            .Where(x => enrollmentsArray.Any(e => e.BetroffenePerson == student
+                                                  && e.Slot.Jahr == x.Jahr && e.Slot.Quartal == x.Quartal
+                                                  && e.ProfundumInstanz!.Profundum.Kategorie.ProfilProfundum))
             .Select(x => new MatchingWarning($"Profil nicht erlaubt für {student.Gruppe} in {x.Quartal}")));
 
         return warnings;

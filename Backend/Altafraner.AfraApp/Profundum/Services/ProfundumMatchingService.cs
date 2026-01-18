@@ -4,14 +4,15 @@ using Altafraner.AfraApp.Profundum.Configuration;
 using Altafraner.AfraApp.Profundum.Domain.Contracts.Services;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Domain.Models;
+using Altafraner.AfraApp.User.Domain.DTO;
 using Altafraner.AfraApp.User.Domain.Models;
 using Google.OrTools.Sat;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Person = Altafraner.AfraApp.User.Domain.Models.Person;
 
 namespace Altafraner.AfraApp.Profundum.Services;
 
-///
 internal class ProfundumMatchingService
 {
     private readonly AfraAppContext _dbContext;
@@ -19,7 +20,6 @@ internal class ProfundumMatchingService
     private readonly IOptions<ProfundumConfiguration> _profundumConfiguration;
     private readonly IRulesFactory _rulesFactory;
 
-    ///
     public ProfundumMatchingService(AfraAppContext dbContext,
         ILogger<ProfundumEnrollmentService> logger,
         IOptions<ProfundumConfiguration> profundumConfiguration,
@@ -338,7 +338,7 @@ internal class ProfundumMatchingService
 
             yield return new DTOProfundumEnrollmentSet
             {
-                Person = new User.Domain.DTO.PersonInfoMinimal(person),
+                Person = new PersonInfoMinimal(person),
                 Enrollments = personsEnrollments,
                 Wuensche = personsWishes,
                 Warnings = warnings

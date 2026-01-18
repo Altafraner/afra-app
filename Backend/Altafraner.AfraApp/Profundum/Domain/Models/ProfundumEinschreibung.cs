@@ -19,19 +19,30 @@ public class ProfundumEinschreibung : IHasTimestamps, IHasUserTracking
     /// </summary>
     public required Person BetroffenePerson { get; set; }
 
-    ///
+    /// <summary>
+    ///     the id of the person affected by this enrollment
+    /// </summary>
     protected internal Guid BetroffenePersonId { get; set; }
 
-    ///
+    /// <summary>
+    ///     the profundum instance the student is enrolled in
+    /// </summary>
     public required ProfundumInstanz? ProfundumInstanz { get; set; }
 
-    ///
+    /// <summary>
+    ///     the id of <see cref="ProfundumInstanz" />.
+    /// </summary>
     protected internal Guid? ProfundumInstanzId { get; set; }
 
-    ///
+    /// <summary>
+    ///     The slot this enrollment is for
+    /// </summary>
+    /// <remarks>be careful as a student might be only partially enrolled to a multi slot profundum instance</remarks>
     public required ProfundumSlot Slot { get; set; }
 
-    ///
+    /// <summary>
+    ///     the id of <see cref="Slot" />.
+    /// </summary>
     protected internal Guid SlotId { get; set; }
 
     /// <inheritdoc/>

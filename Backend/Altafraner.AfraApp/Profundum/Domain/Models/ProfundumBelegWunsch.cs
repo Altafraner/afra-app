@@ -33,6 +33,12 @@ public class ProfundumBelegWunsch
     /// </summary>
     public required ProfundumBelegWunschStufe Stufe { get; set; }
 
-    ///
+    /// <summary>
+    ///     The enrollment timeframe this wish was submitted in
+    /// </summary>
+    /// <remarks>
+    ///     When a profundum instance spans multiple enrollment timeframes you could submit a wish for a slot of a future
+    ///     enrollment timeframe. This property is used to track that.
+    /// </remarks>
     public required ProfundumEinwahlZeitraum EinwahlZeitraum { get; set; }
 }

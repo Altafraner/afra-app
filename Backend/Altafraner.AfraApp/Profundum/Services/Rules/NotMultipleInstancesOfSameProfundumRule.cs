@@ -16,12 +16,9 @@ public class NotMultipleInstancesOfSameProfundumRule : IProfundumIndividualRule
         IEnumerable<ProfundumBelegWunsch> wuensche)
     {
         var emsgs = wuensche.Where(w => enrollments.Any(e => e.ProfundumInstanz?.Profundum == w.ProfundumInstanz.Profundum))
-            .Select(w => $"{w.ProfundumInstanz.Profundum.Bezeichnung} bereits belegt.");
-        if (emsgs.Any())
-        {
-            return RuleStatus.Invalid(emsgs);
-        }
-        return RuleStatus.Valid;
+            .Select(w => $"{w.ProfundumInstanz.Profundum.Bezeichnung} bereits belegt.")
+            .ToArray();
+        return emsgs.Length != 0 ? RuleStatus.Invalid(emsgs) : RuleStatus.Valid;
     }
 
     /// <inheritdoc/>
@@ -34,7 +31,6 @@ public class NotMultipleInstancesOfSameProfundumRule : IProfundumIndividualRule
         LinearExprBuilder objective)
     {
         var profundaInstanzen = belegVars.Keys.ToArray().Select(x => x.i).Distinct().ToArray();
-        var profundaDefinitionen = profundaInstanzen.Select(p => p.Profundum).Distinct().ToArray();
 
         var instanceActive = new Dictionary<ProfundumInstanz, BoolVar>();
         foreach (var instanz in profundaInstanzen)
@@ -67,16 +63,17 @@ public class NotMultipleInstancesOfSameProfundumRule : IProfundumIndividualRule
                 .Select(k => instanceActive[k])
                 .ToArray();
 
-            if (actives.Length > 1)
-            {
-                var count = model.NewIntVar(0, actives.Length, $"count_{student.Id}_{defGroup.Key.Id}");
-                model.Add(count == LinearExpr.Sum(actives));
-                var excess = model.NewIntVar(
-                    0, actives.Length, $"excess_{student.Id}_{defGroup.Key.Id}");
-                model.Add(excess >= count - 1);
-                model.Add(excess >= 0);
-                objective.AddTerm(excess, -5000);
-            }
+            if (actives.Length <= 1) continue;
+
+            var count = model.NewIntVar(0, actives.Length, $"count_{student.Id}_{defGroup.Key.Id}");
+            model.Add(count == LinearExpr.Sum(actives));
+            var excess = model.NewIntVar(
+                0,
+                actives.Length,
+                $"excess_{student.Id}_{defGroup.Key.Id}");
+            model.Add(excess >= count - 1);
+            model.Add(excess >= 0);
+            objective.AddTerm(excess, -5000);
         }
     }
 

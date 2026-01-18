@@ -1,25 +1,23 @@
-using Altafraner.AfraApp.Profundum.Configuration;
 using Altafraner.AfraApp.Profundum.Domain.Contracts.Rules;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.AfraApp.User.Services;
 using Google.OrTools.Sat;
-using Microsoft.Extensions.Options;
 
 namespace Altafraner.AfraApp.Profundum.Services.Rules;
 
-///
+/// <summary>
+///     A student may only enroll to profundums he meets the grade level criteria for
+/// </summary>
 public class KlassenLimitsRule : IProfundumIndividualRule
 {
     private readonly UserService _userService;
-    private readonly IOptions<ProfundumConfiguration> _profundumConfiguration;
 
     ///
-    public KlassenLimitsRule(UserService userService, IOptions<ProfundumConfiguration> profundumConfiguration)
+    public KlassenLimitsRule(UserService userService)
     {
         _userService = userService;
-        _profundumConfiguration = profundumConfiguration;
     }
 
     /// <inheritdoc/>

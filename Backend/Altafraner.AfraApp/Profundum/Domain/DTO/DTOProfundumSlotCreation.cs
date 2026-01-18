@@ -2,7 +2,9 @@ using Altafraner.AfraApp.Profundum.Domain.Models;
 
 namespace Altafraner.AfraApp.Profundum.Domain.DTO;
 
-///
+/// <summary>
+///     A request to change or create a profundum slot
+/// </summary>
 public record DTOProfundumSlotCreation
 {
     /// <inheritdoc cref="ProfundumSlot.Jahr"/>

@@ -3,11 +3,12 @@ using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.User.Domain.Models;
 using Google.OrTools.Sat;
-using Microsoft.EntityFrameworkCore;
 
 namespace Altafraner.AfraApp.Profundum.Services.Rules;
 
-///
+/// <summary>
+///     A student must be enrolled for all slots
+/// </summary>
 public class AllSlotsRule : IProfundumIndividualRule
 {
     /// <inheritdoc/>
@@ -32,7 +33,7 @@ public class AllSlotsRule : IProfundumIndividualRule
             var psVars = i.Slots.Select(s => belegVars[(s, i)]).ToArray();
             foreach (var (v, w) in psVars.Zip(psVars.Skip(1)))
             {
-                var ineq = model.NewBoolVar($"{new Guid()}");
+                var ineq = model.NewBoolVar($"{Guid.NewGuid()}");
                 model.Add(v != w).OnlyEnforceIf(ineq);
                 model.Add(v == w).OnlyEnforceIf(ineq.Not());
                 objective.AddTerm(ineq, -5000);
@@ -44,12 +45,13 @@ public class AllSlotsRule : IProfundumIndividualRule
     public IEnumerable<MatchingWarning> GetWarnings(Person student, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
     {
         List<MatchingWarning> warnings = [];
-        var angebote = enrollments
+        var enrollmentsArray = enrollments as ProfundumEinschreibung[] ?? enrollments.ToArray();
+        var angebote = enrollmentsArray
             .Where(p => p.ProfundumInstanz is not null)
             .Select(x => x.ProfundumInstanz!).Distinct();
         foreach (var i in angebote)
         {
-            var belegtSlots = enrollments.Where(e => e.ProfundumInstanz == i).Select(e => e.Slot).ToArray();
+            var belegtSlots = enrollmentsArray.Where(e => e.ProfundumInstanz == i).Select(e => e.Slot).ToArray();
             foreach (var b in belegtSlots.Except(i.Slots))
             {
                 warnings.Add(new MatchingWarning($"Einschreibung in {i.Profundum.Bezeichnung}. Obwohl es in {b} nicht stattfindet. Vermutlich wurde das Profundum nach der Wahl geändert."));
