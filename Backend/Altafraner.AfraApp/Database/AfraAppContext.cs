@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Altafraner.AfraApp.Calendar.Domain.Models;
 using Altafraner.AfraApp.Otium.Domain.Models;
 using Altafraner.AfraApp.Profundum.Domain.Models;
@@ -8,6 +9,7 @@ using Altafraner.Backbone.EmailSchedulingModule;
 using Altafraner.Backbone.EmailSchedulingModule.Models;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure;
 
 namespace Altafraner.AfraApp;
@@ -318,5 +320,72 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
         modelBuilder.Entity<OtiumWiederholung>()
             .Property(w => w.Block)
             .HasDefaultValueSql("''");
+
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            var tableName = entityType.GetTableName();
+            if (!string.IsNullOrEmpty(tableName))
+            {
+                entityType.SetTableName(tableName.UpperCamelToLowerSnakeCase());
+            }
+
+            var schema = entityType.GetSchema();
+            if (!string.IsNullOrEmpty(schema))
+            {
+                entityType.SetSchema(schema.UpperCamelToLowerSnakeCase());
+            }
+
+            var storeObjectId = StoreObjectIdentifier.Table(
+                entityType.GetTableName()!,
+                entityType.GetSchema()
+            );
+
+            foreach (var property in entityType.GetProperties())
+            {
+                var columnName = property.GetColumnName(storeObjectId);
+                if (!string.IsNullOrEmpty(columnName))
+                {
+                    property.SetColumnName(columnName.UpperCamelToLowerSnakeCase());
+                }
+            }
+
+            foreach (var key in entityType.GetKeys())
+            {
+                var keyName = key.GetName();
+                if (!string.IsNullOrEmpty(keyName))
+                    key.SetName(keyName.UpperCamelToLowerSnakeCase());
+            }
+
+            foreach (var fk in entityType.GetForeignKeys())
+            {
+                var fkName = fk.GetConstraintName();
+                if (!string.IsNullOrEmpty(fkName))
+                    fk.SetConstraintName(fkName.UpperCamelToLowerSnakeCase());
+            }
+
+            foreach (var index in entityType.GetIndexes())
+            {
+                var indexName = index.GetDatabaseName();
+                if (!string.IsNullOrEmpty(indexName))
+                    index.SetDatabaseName(indexName.UpperCamelToLowerSnakeCase());
+            }
+
+        }
+    }
+}
+
+///
+static class StringExtensions
+{
+    ///
+    public static string UpperCamelToLowerSnakeCase(this string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+            return input;
+
+        var result = Regex.Replace(input, @"([A-Z]+)([A-Z][a-z])", "$1_$2");
+        result = Regex.Replace(result, @"([a-z0-9])([A-Z])", "$1_$2");
+
+        return result.ToLowerInvariant();
     }
 }
