@@ -52,7 +52,7 @@ const submit = (evt: FormSubmitEvent) => {
     >
         <FloatLabel variant="on">
             <label for="input">{{ data.label ?? 'Eingabe' }}</label>
-            <InputText id="input" autofocus fluid name="input"/>
+            <InputText id="input" autofocus fluid name="input" />
         </FloatLabel>
         <Message v-if="$form.input?.invalid" severity="error" size="small" variant="simple">
             {{ $form.input.error }}

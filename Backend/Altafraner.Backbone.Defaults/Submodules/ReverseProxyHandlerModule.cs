@@ -1,4 +1,4 @@
-﻿using Altafraner.Backbone.Abstractions;
+using Altafraner.Backbone.Abstractions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Configuration;

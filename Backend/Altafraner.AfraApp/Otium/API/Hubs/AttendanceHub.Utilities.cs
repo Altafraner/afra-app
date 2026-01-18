@@ -1,4 +1,4 @@
-﻿using Altafraner.AfraApp.Otium.Domain.DTO;
+using Altafraner.AfraApp.Otium.Domain.DTO;
 using Altafraner.AfraApp.Otium.Domain.DTO.Notiz;
 using Altafraner.AfraApp.Otium.Domain.HubClients;
 using Altafraner.AfraApp.Otium.Domain.Models;

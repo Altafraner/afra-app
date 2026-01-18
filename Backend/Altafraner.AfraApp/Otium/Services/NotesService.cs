@@ -1,4 +1,4 @@
-﻿using Altafraner.AfraApp.Otium.Domain.Models;
+using Altafraner.AfraApp.Otium.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Altafraner.AfraApp.Otium.Services;

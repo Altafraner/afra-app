@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using Altafraner.AfraApp.Otium.Domain.Models;
 using Altafraner.AfraApp.User.Domain.DTO;
 

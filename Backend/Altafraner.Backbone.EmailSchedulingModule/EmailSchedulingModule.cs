@@ -1,4 +1,4 @@
-﻿using Altafraner.Backbone.Abstractions;
+using Altafraner.Backbone.Abstractions;
 using Altafraner.Backbone.EmailOutbox;
 using Altafraner.Backbone.EmailSchedulingModule.Services;
 using Altafraner.Backbone.Scheduling;

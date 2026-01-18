@@ -1,4 +1,4 @@
-﻿using Altafraner.Backbone;
+using Altafraner.Backbone;
 using Microsoft.EntityFrameworkCore.Design;
 
 // ReSharper disable UnusedType.Global
