@@ -46,11 +46,11 @@ public class DependencyRule : IProfundumIndividualRule
     {
         var enrollmentsArray = enrollments as ProfundumEinschreibung[] ?? enrollments.ToArray();
         foreach (var e in enrollmentsArray.Where(e => e.ProfundumInstanz is not null))
-        foreach (var d in e.ProfundumInstanz!.Profundum.Dependencies)
-        {
-            if (enrollmentsArray.Any(x => x.ProfundumInstanz?.Profundum == d)) continue;
-            yield return new MatchingWarning(
-                $"Vorbedingung {d.Bezeichnung} für {e.ProfundumInstanz.Profundum.Bezeichnung} nicht erfüllt.");
-        }
+            foreach (var d in e.ProfundumInstanz!.Profundum.Dependencies)
+            {
+                if (enrollmentsArray.Any(x => x.ProfundumInstanz?.Profundum == d)) continue;
+                yield return new MatchingWarning(
+                    $"Vorbedingung {d.Bezeichnung} für {e.ProfundumInstanz.Profundum.Bezeichnung} nicht erfüllt.");
+            }
     }
 }

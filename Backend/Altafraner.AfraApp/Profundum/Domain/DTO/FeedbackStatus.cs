@@ -1,4 +1,4 @@
-﻿namespace Altafraner.AfraApp.Profundum.Domain.DTO;
+namespace Altafraner.AfraApp.Profundum.Domain.DTO;
 
 /// <summary>
 ///     Indicates how far along the feedback for a specific profundum instance is.

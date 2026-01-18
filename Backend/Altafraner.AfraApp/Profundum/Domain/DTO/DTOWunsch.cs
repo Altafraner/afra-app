@@ -1,4 +1,4 @@
-﻿namespace Altafraner.AfraApp.Profundum.Domain.DTO;
+namespace Altafraner.AfraApp.Profundum.Domain.DTO;
 
 /// <summary>
 ///     A dto that represents a students enrollment wish

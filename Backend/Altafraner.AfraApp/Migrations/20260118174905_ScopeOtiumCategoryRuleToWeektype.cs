@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Altafraner.AfraApp.Schuljahr.Domain.Models;
 using Microsoft.EntityFrameworkCore.Migrations;
 

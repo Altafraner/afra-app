@@ -1,4 +1,4 @@
-﻿namespace Altafraner.AfraApp.Profundum.Domain.DTO;
+namespace Altafraner.AfraApp.Profundum.Domain.DTO;
 
 /// <summary>
 ///     Information on the status of the feedback process for a profundum instance
