@@ -1,21 +1,22 @@
 <script setup>
 import {
-    DataTable,
+    Button,
     Checkbox,
     Column,
-    Button,
-    Message,
+    DataTable,
+    InputText,
+    MultiSelect,
     Popover,
     Select,
-    MultiSelect,
-    InputText,
+    Tag,
     useToast,
 } from 'primevue';
 import { mande } from 'mande';
 import { computed, nextTick, ref } from 'vue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
 import UserPeek from '@/components/UserPeek.vue';
-import { FilterService, FilterMatchMode } from '@primevue/core/api';
+import { FilterMatchMode, FilterService } from '@primevue/core/api';
+import { formatSlot } from '@/helpers/formatters.ts';
 
 const instanzenFilters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -317,7 +318,7 @@ const wuenscheBySlot = (row) => {
 
 const slotLabel = (slotId) => {
     const s = slots.value.find((x) => x.id === slotId);
-    return s ? `${s.jahr}-${s.quartal}-${s.wochentag}` : 'Unbekannter Slot';
+    return s ? formatSlot(s) : 'Unbekannter Slot';
 };
 
 function showWarnings(evt, data) {
@@ -424,11 +425,7 @@ function showWishes(evt, data) {
                 </template>
             </Column>
 
-            <Column
-                v-for="slot of slots"
-                :key="slot.id"
-                :header="`${slot.jahr}-${slot.quartal}-${slot.wochentag}`"
-            >
+            <Column v-for="slot of slots" :key="slot.id" :header="formatSlot(slot)">
                 <template #body="{ data }">
                     <span class="flex gap-1 items-center">
                         <template v-if="isEditing(data)">
@@ -614,7 +611,7 @@ function showWishes(evt, data) {
                         @change="filterCallback()"
                     >
                         <template #option="{ option }">
-                            {{ option.jahr }}-{{ option.quartal }}-{{ option.wochentag }}
+                            {{ formatSlot(option) }}
                         </template>
 
                         <template #chip="{ value }">
@@ -624,16 +621,23 @@ function showWishes(evt, data) {
                 </template>
 
                 <template #body="{ data }">
-                    <span v-for="s in data.slots" :key="s"> {{ slotLabel(s) }}, </span>
+                    <span class="flex flex-wrap gap-1">
+                        <Tag
+                            v-for="slotId in data.slots"
+                            :key="slotId"
+                            class="text-sm px-1.5"
+                            severity="secondary"
+                        >
+                            {{ slotLabel(slotId) }}
+                        </Tag>
+                    </span>
                 </template>
             </Column>
             <Column header="Warnung">
                 <template #body="{ data }">
-                    <Button
+                    <i
                         v-if="data.maxEinschreibungen < data.numEinschreibungen"
-                        icon="pi pi-exclamation-triangle"
-                        severity="warn"
-                        disabled
+                        class="pi pi-exclamation-triangle text-xl p-2 inline-block bg-yellow-200 text-yellow-800 dark:text-yellow-400 dark:bg-yellow-950 rounded-lg"
                     />
                 </template>
             </Column>

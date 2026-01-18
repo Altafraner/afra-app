@@ -14,7 +14,9 @@ public record DTOProfundumSlot
         Jahr = dbSlot.Jahr;
         Quartal = dbSlot.Quartal;
         Wochentag = dbSlot.Wochentag;
-        EinwahlZeitraumId = dbSlot.EinwahlZeitraum.Id;
+        // Sometimes we might not need to load EinwahlZeitraum
+        // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
+        EinwahlZeitraumId = dbSlot.EinwahlZeitraum?.Id ?? Guid.Empty;
     }
 
     /// <inheritdoc cref="ProfundumDefinition.Id"/>

@@ -3,9 +3,9 @@ import { useFeedback } from '@/Profundum/composables/feedback';
 import { useManagement } from '@/Profundum/composables/verwaltung';
 import { computed, ref, watch } from 'vue';
 import { Button, Card, FloatLabel, Select, useToast } from 'primevue';
-import { formatStudent } from '@/helpers/formatters';
-import { type UserInfoMinimal } from '@/models/user/userInfoMinimal';
-import { type AnkerOverview } from '../models/feedback';
+import { formatSlot, formatStudent } from '@/helpers/formatters';
+import type { UserInfoMinimal } from '@/models/user/userInfoMinimal';
+import type { AnkerOverview } from '../models/feedback';
 
 const verwaltung = useManagement();
 const feedback = useFeedback();
@@ -20,9 +20,10 @@ const anker = ref<AnkerOverview | undefined>();
 const currentBewertung = ref<Record<string, number | null>>();
 
 const quartale = await verwaltung.getAllQuartaleWithEnrollments();
+console.log(quartale);
 const profunda = computed(() => {
     if (!quartale || !quartal.value) return [];
-    return quartale.find((q) => q.label == quartal.value)?.profunda ?? [];
+    return quartale.find((q) => q.slot.id == quartal.value)?.profunda ?? [];
 });
 const students = computed<UserInfoMinimal[]>(() => {
     if (!quartale || !quartal.value || !profundum.value) return [];
@@ -76,9 +77,17 @@ async function save() {
                 v-model="quartal"
                 :options="quartale ?? undefined"
                 fluid
-                option-label="label"
-                option-value="label"
-            />
+                option-value="slot.id"
+            >
+                <template #option="{ option }">
+                    {{ formatSlot(option.slot) }}
+                </template>
+                <template #value="{ value }"
+                    ><template v-if="value">{{
+                        formatSlot(quartale.find((slot) => slot.slot.id == value).slot)
+                    }}</template></template
+                >
+            </Select>
             <label for="quartal">Quartal</label>
         </FloatLabel>
         <FloatLabel variant="on">

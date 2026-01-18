@@ -12,14 +12,14 @@ public record QuartalEnrollmentOverview
     /// </summary>
     public QuartalEnrollmentOverview(ProfundumSlot quartal, IEnumerable<ProfundumInstanz> profunda)
     {
-        Label = quartal.ToString();
+        Slot = new DTOProfundumSlot(quartal);
         Profunda = profunda.Select(p => new ProfundumEnrollmentOverview(p));
     }
 
     /// <summary>
-    ///     the quartals label
+    ///     the slots infos
     /// </summary>
-    public string Label { get; set; }
+    public DTOProfundumSlot Slot { get; set; }
 
     /// <summary>
     ///     all profunda in the quartal

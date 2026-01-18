@@ -7,7 +7,7 @@ import Accordion from 'primevue/accordion';
 import AccordionPanel from 'primevue/accordionpanel';
 import AccordionHeader from 'primevue/accordionheader';
 import AccordionContent from 'primevue/accordioncontent';
-import { chooseSeverity, formatStudent } from '@/helpers/formatters';
+import { chooseSeverity, formatSlot, formatStudent } from '@/helpers/formatters';
 
 const feedbackService = useFeedback();
 
@@ -35,8 +35,7 @@ const slots = computed(() =>
             <AccordionHeader>
                 <div class="flex justify-between w-full mr-4">
                     <span>
-                        {{ slot.info.jahr }} / {{ slot.info.jahr + 1 }} {{ slot.info.quartal }}
-                        {{ slot.info.wochentag }}
+                        {{ formatSlot(slot.info) }}
                     </span>
                     <span
                         ><Tag :severity="chooseSeverity(100 - (100 * slot.done) / slot.count)"

@@ -1,18 +1,18 @@
 <script setup>
 import { mande } from 'mande';
-import { ref, onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 import {
-    InputText,
-    InputNumber,
     Button,
-    MultiSelect,
-    useToast,
-    Tag,
     FloatLabel,
+    InputNumber,
+    InputText,
+    MultiSelect,
+    Tag,
+    useToast,
 } from 'primevue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
 import Dialog from 'primevue/dialog';
-import { formatStudent } from '@/helpers/formatters.ts';
+import { formatSlot, formatStudent } from '@/helpers/formatters.ts';
 import AfraPersonSelector from '@/Otium/components/Form/AfraPersonSelector.vue';
 
 const props = defineProps({ profundumId: String });
@@ -40,7 +40,7 @@ const createDialogVisible = ref(false);
 async function load() {
     slots.value = (await apiSlots.get()).map((slot) => ({
         ...slot,
-        label: `${slot.wochentag} ${slot.quartal} ${slot.jahr}`,
+        label: formatSlot(slot),
     }));
     instanzen.value = (await apiInstanz.get()).filter(
         (x) => x.profundumId === props.profundumId,

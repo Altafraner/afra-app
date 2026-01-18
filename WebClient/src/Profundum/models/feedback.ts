@@ -37,7 +37,7 @@ export interface ProfundumEnrollmentOverview {
 }
 
 export interface QuartalEnrollmentOverview {
-    label: string;
+    slot: ProfundumSlot;
     profunda: ProfundumEnrollmentOverview[];
 }
 

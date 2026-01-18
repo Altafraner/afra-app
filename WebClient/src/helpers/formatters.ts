@@ -1,4 +1,5 @@
 import type { UserInfoMinimal } from '@/models/user/userInfoMinimal';
+import type { ProfundumSlot } from '@/Profundum/models/verwaltung';
 
 const wochentage = [
     'Sonntag',
@@ -55,3 +56,20 @@ export const chooseSeverity = (now: number) => {
 };
 
 export const formatDayOfWeek = (number: number) => wochentage[number % 7];
+
+export const formatDayOfWeekFromEnum = (
+    day: 'Sunday' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday',
+) => {
+    if (day === 'Sunday') return formatDayOfWeek(0);
+    if (day === 'Monday') return formatDayOfWeek(1);
+    if (day === 'Tuesday') return formatDayOfWeek(2);
+    if (day === 'Wednesday') return formatDayOfWeek(3);
+    if (day === 'Thursday') return formatDayOfWeek(4);
+    if (day === 'Friday') return formatDayOfWeek(5);
+    if (day === 'Saturday') return formatDayOfWeek(6);
+    throw Error(`Unknown day: ${day}`);
+};
+
+export const formatSlot = (slot: ProfundumSlot) => {
+    return `${slot.jahr} / ${slot.jahr + 1} ${slot.quartal} ${formatDayOfWeekFromEnum(slot.wochentag)}`;
+};
