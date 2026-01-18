@@ -40,7 +40,7 @@ public class TestController(AfraAppContext dbContext, UserSigninService userSign
             Bezeichnung = "Akademisches",
             Icon = "pi pi-graduation-cap",
             CssColor = "var(--p-blue-500)",
-            Required = true
+            RequiredIn = [Wochentyp.N]
         };
         var otiumsKategorien = new List<OtiumKategorie>
         {

@@ -1,4 +1,5 @@
 using Altafraner.AfraApp.Otium.Domain.Models;
+using Altafraner.AfraApp.Schuljahr.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -32,20 +33,20 @@ public class KategorieService
     /// <summary>
     ///     Return all required categories.
     /// </summary>
-    public async Task<List<Guid>> GetRequiredKategorienIdsAsync()
+    public async Task<List<Guid>> GetRequiredKategorienIdsAsync(Wochentyp typ)
     {
-        return await _cache.GetOrCreateAsync("otium-kategorie-required",
-            async _ => await FetchRequiredKategorienAsync()) ?? throw new Exception(
+        return await _cache.GetOrCreateAsync($"otium-kategorie-required-{typ}",
+            async _ => await FetchRequiredKategorienAsync(typ)) ?? throw new Exception(
             "Somehow we could neither fetch nor retrieve from cache the required categories. This should never happen.");
     }
 
-    private async Task<List<Guid>> FetchRequiredKategorienAsync()
+    private async Task<List<Guid>> FetchRequiredKategorienAsync(Wochentyp typ)
     {
         return await _dbContext.OtiaKategorien
             .AsNoTracking()
             .Include(k => k.Children)
             .Include(kategorie => kategorie.Parent)
-            .Where(k => k.Required)
+            .Where(k => k.RequiredIn.Contains(typ))
             .Select(k => k.Id)
             .ToListAsync();
     }
@@ -82,19 +83,20 @@ public class KategorieService
     ///     Traverses the category tree upwards and returns the first required category.
     /// </summary>
     /// <param name="kategorie">The category to get the required parent from</param>
+    /// <param name="typ">the type of week this is for</param>
     /// <returns>the first required parent if exists; Otherwise, null.</returns>
-    public async Task<Guid?> GetRequiredParentIdAsync(OtiumKategorie kategorie)
+    public async Task<Guid?> GetRequiredParentIdAsync(OtiumKategorie kategorie, Wochentyp typ)
     {
-        return await _cache.GetOrCreateAsync($"otium-kategorie-required-parent-{kategorie.Id}",
-            async _ => await FetchRequiredParentAsync(kategorie));
+        return await _cache.GetOrCreateAsync($"otium-kategorie-required-parent-{typ}-{kategorie.Id}",
+            async _ => await FetchRequiredParentAsync(kategorie, typ));
     }
 
-    private async Task<Guid?> FetchRequiredParentAsync(OtiumKategorie kategorie)
+    private async Task<Guid?> FetchRequiredParentAsync(OtiumKategorie kategorie, Wochentyp typ)
     {
         var current = await _dbContext.OtiaKategorien.FindAsync(kategorie.Id);
         while (current is not null)
         {
-            if (current.Required)
+            if (current.RequiredIn.Contains(typ))
                 return current.Id;
 
             current = await GetParentAsync(current);

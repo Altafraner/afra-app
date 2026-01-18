@@ -17,7 +17,7 @@ public class RequiredKategorienRule : IWeekRule
     private readonly BlockHelper _blockHelper;
     private readonly AfraAppContext _dbContext;
     private readonly KategorieService _kategorieService;
-    private List<Guid>? _requiredCategories;
+    private readonly Dictionary<Wochentyp, List<Guid>> _requiredCategories = [];
 
     ///
     public RequiredKategorienRule(BlockHelper blockHelper, AfraAppContext dbContext, KategorieService kategorieService)
@@ -32,11 +32,11 @@ public class RequiredKategorienRule : IWeekRule
         IEnumerable<OtiumEinschreibung> einschreibungen)
     {
         var schultageArray = schultage as Schultag[] ?? schultage.ToArray();
-        if (schultageArray.Any(d => d.Wochentyp == Wochentyp.H)) return RuleStatus.Valid;
+        var wochentyp = GetWochentypForSchultage(schultageArray);
 
         var fulfilledCategories =
-            await GetFulfilledCategoriesFromEnrollments(einschreibungen, schultageArray);
-        var missingCategories = await GetUnfulfilledRequiredCategories(fulfilledCategories);
+            await GetFulfilledCategoriesFromEnrollments(einschreibungen, schultageArray, wochentyp);
+        var missingCategories = await GetUnfulfilledRequiredCategories(fulfilledCategories, wochentyp);
         var messages = new List<string>();
         foreach (var missingCategory in missingCategories)
             messages.Add(
@@ -56,17 +56,19 @@ public class RequiredKategorienRule : IWeekRule
     {
         if (termin.Otium.Kategorie.IgnoreEnrollmentRule) return RuleStatus.Valid;
 
-        if (termin.Block.Schultag.Wochentyp == Wochentyp.H) return RuleStatus.Valid;
-
         var tage = schultage as Schultag[] ?? schultage.ToArray();
         var einschreibungsArray = einschreibungen as OtiumEinschreibung[] ?? einschreibungen.ToArray();
+        var wochentyp = GetWochentypForSchultage(tage);
         var fulfilledCategories =
-            await GetFulfilledCategoriesFromEnrollments(einschreibungsArray, tage);
-        _requiredCategories ??= await _kategorieService.GetRequiredKategorienIdsAsync();
-        var missingCategories = await GetUnfulfilledRequiredCategories(fulfilledCategories);
+            await GetFulfilledCategoriesFromEnrollments(einschreibungsArray, tage, wochentyp);
+
+        if (!_requiredCategories.ContainsKey(wochentyp))
+            _requiredCategories.Add(wochentyp, await _kategorieService.GetRequiredKategorienIdsAsync(wochentyp));
+
+        var missingCategories = await GetUnfulfilledRequiredCategories(fulfilledCategories, wochentyp);
 
         var currentCategoriesRequiredParentId =
-            await _kategorieService.GetRequiredParentIdAsync(termin.Otium.Kategorie);
+            await _kategorieService.GetRequiredParentIdAsync(termin.Otium.Kategorie, wochentyp);
 
         // The easy part: Check if the rule is fulfilled after this enrollment
         if (missingCategories.Count == 0 ||
@@ -85,7 +87,8 @@ public class RequiredKategorienRule : IWeekRule
             .Where(b => einschreibungsArray.All(e => e.Termin.Block != b))
             .ToList();
 
-        var angeboteByBlocks = await GetPossibleRequiredCategoriesForBlocks(blocksInFutureWithoutEnrollments);
+        var angeboteByBlocks =
+            await GetPossibleRequiredCategoriesForBlocks(blocksInFutureWithoutEnrollments, wochentyp);
         foreach (var (_, angebote) in angeboteByBlocks) angebote.ExceptWith(fulfilledCategories);
 
         var angeboteForCurrentBlock = angeboteByBlocks.GetValueOrDefault(termin.Block.Id, []);
@@ -122,12 +125,13 @@ public class RequiredKategorienRule : IWeekRule
                 "Es ist nicht mehr möglich, alle Pflichtkategorien zu erfüllen. Mit einer anderen Einschreibung in diesem Block kannst du aber noch mehr Pflichtkategorien wahrnehmen.");
     }
 
-    private async Task<HashSet<Guid>> GetUnfulfilledRequiredCategories(IEnumerable<Guid> categories)
+    private async Task<HashSet<Guid>> GetUnfulfilledRequiredCategories(IEnumerable<Guid> categories, Wochentyp typ)
     {
-        _requiredCategories ??= await _kategorieService.GetRequiredKategorienIdsAsync();
+        if (!_requiredCategories.ContainsKey(typ))
+            _requiredCategories.Add(typ, await _kategorieService.GetRequiredKategorienIdsAsync(typ));
 
         // Clone the required categories to avoid modifying the original list
-        var categoriesUnfulfilled = _requiredCategories.ToHashSet();
+        var categoriesUnfulfilled = _requiredCategories[typ].ToHashSet();
         foreach (var category in categories)
         {
             categoriesUnfulfilled.Remove(category);
@@ -140,15 +144,19 @@ public class RequiredKategorienRule : IWeekRule
     }
 
     private async Task<HashSet<Guid>> GetFulfilledCategoriesFromEnrollments(
-        IEnumerable<OtiumEinschreibung> einschreibungen, IEnumerable<Schultag> schultage)
+        IEnumerable<OtiumEinschreibung> einschreibungen,
+        IEnumerable<Schultag> schultage,
+        Wochentyp typ)
     {
-        _requiredCategories ??= await _kategorieService.GetRequiredKategorienIdsAsync();
+        if (!_requiredCategories.ContainsKey(typ))
+            _requiredCategories.Add(typ, await _kategorieService.GetRequiredKategorienIdsAsync(typ));
+        var requiredCategories = _requiredCategories[typ];
 
         var timelines = new Dictionary<Guid, Timeline<DateTime>>();
         foreach (var einschreibung in einschreibungen)
         {
             var requiredCategory =
-                await _kategorieService.GetRequiredParentIdAsync(einschreibung.Termin.Otium.Kategorie);
+                await _kategorieService.GetRequiredParentIdAsync(einschreibung.Termin.Otium.Kategorie, typ);
 
             if (requiredCategory is null) continue;
             timelines.TryAdd(requiredCategory.Value, new Timeline<DateTime>());
@@ -164,15 +172,18 @@ public class RequiredKategorienRule : IWeekRule
 
         foreach (var (kategorieId, timeline) in timelines)
             if (blockIntervals.Any(b => timeline.Contains(b)))
-                fulfilledCategories.Add(_requiredCategories.First(c => c == kategorieId));
+                fulfilledCategories.Add(requiredCategories.First(c => c == kategorieId));
 
         return fulfilledCategories;
     }
 
     private async Task<Dictionary<Guid, HashSet<Guid>>> GetPossibleRequiredCategoriesForBlocks(
-        List<Block> blocks)
+        List<Block> blocks,
+        Wochentyp typ)
     {
-        _requiredCategories ??= await _kategorieService.GetRequiredKategorienIdsAsync();
+        if (!_requiredCategories.ContainsKey(typ))
+            _requiredCategories.Add(typ, await _kategorieService.GetRequiredKategorienIdsAsync(typ));
+        var requiredCategories = _requiredCategories[typ];
 
         var result = await _dbContext.OtiaTermine
             .Where(t => blocks.Contains(t.Block))
@@ -185,7 +196,7 @@ public class RequiredKategorienRule : IWeekRule
         return blocks.ToDictionary(b => b.Id,
             b => result.GetValueOrDefault(b.Id, [])
                 .Select(c => c.Id)
-                .Where(_requiredCategories.Contains)
+                .Where(requiredCategories.Contains)
                 .ToHashSet()
         );
     }
@@ -214,5 +225,10 @@ public class RequiredKategorienRule : IWeekRule
         }
 
         return false;
+    }
+
+    private Wochentyp GetWochentypForSchultage(Schultag[] tage)
+    {
+        return tage.Any(s => s.Wochentyp == Wochentyp.H) ? Wochentyp.H : Wochentyp.N;
     }
 }

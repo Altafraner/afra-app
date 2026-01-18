@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using System.Text;
-using Altafraner.AfraApp.Otium.Domain.Contracts.Services;
 using Altafraner.AfraApp.Domain;
+using Altafraner.AfraApp.Otium.Domain.Contracts.Services;
 using Altafraner.AfraApp.Otium.Domain.DTO;
 using Altafraner.AfraApp.Otium.Domain.DTO.Dashboard;
 using Altafraner.AfraApp.Otium.Domain.DTO.Katalog;
@@ -961,7 +961,7 @@ internal class OtiumEndpointService
         var kategorie = await _dbContext.OtiaKategorien.FindAsync(kategorieId);
         if (kategorie is null) throw new ArgumentException("Keine Kategorie mit dieser Id existiert.");
 
-        if (otium.Kategorie.Required && !kategorie.Required) throw new InvalidOperationException();
+        if (otium.Kategorie.RequiredIn.Count != kategorie.RequiredIn.Count) throw new InvalidOperationException();
 
         otium.Kategorie = kategorie;
         await _dbContext.SaveChangesAsync();

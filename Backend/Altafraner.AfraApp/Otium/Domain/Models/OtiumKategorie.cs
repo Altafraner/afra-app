@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using Altafraner.AfraApp.Schuljahr.Domain.Models;
 
 namespace Altafraner.AfraApp.Otium.Domain.Models;
 
@@ -34,9 +35,9 @@ public class OtiumKategorie
     public string? CssColor { get; set; }
 
     /// <summary>
-    ///     If set, requires the user to enroll in at least one Otium with this Kategorie per week.
+    ///     If set, requires the user to enroll in at least one Otium with this Kategorie in weeks of the specified type.
     /// </summary>
-    public bool Required { get; set; } = false;
+    public List<Wochentyp> RequiredIn { get; set; } = null!;
 
     /// <summary>
     ///     If set, ignores the kategorie enrollment rule for enrollment into otia with this categoriy.

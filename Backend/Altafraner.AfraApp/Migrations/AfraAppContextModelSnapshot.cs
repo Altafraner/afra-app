@@ -196,8 +196,9 @@ namespace Altafraner.AfraApp.Migrations
                     b.Property<Guid?>("ParentId")
                         .HasColumnType("uuid");
 
-                    b.Property<bool>("Required")
-                        .HasColumnType("boolean");
+                    b.PrimitiveCollection<List<Wochentyp>>("RequiredIn")
+                        .IsRequired()
+                        .HasColumnType("wochentyp[]");
 
                     b.HasKey("Id");
 
