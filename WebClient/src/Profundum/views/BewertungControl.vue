@@ -30,7 +30,7 @@ const slots = computed(() =>
 </script>
 
 <template>
-    <Accordion>
+    <Accordion lazy>
         <AccordionPanel v-for="slot in slots" :key="slot.id" :value="slot.id">
             <AccordionHeader>
                 <div class="flex justify-between w-full mr-4">
