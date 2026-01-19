@@ -38,7 +38,8 @@ public static class Bewertung
         bewertung.MapGet("/{profundumId:guid}/{studentId:guid}", GetBewertungAsync);
         bewertung.MapPut("/{profundumId:guid}/{studentId:guid}", UpdateBewertungAsync);
 
-        bewertung.MapGet("/control/status", GetStatusAsync);
+        bewertung.MapGet("/control/status", GetStatusAsync)
+            .RequireAuthorization(AuthorizationPolicies.ProfundumsVerantwortlich);
     }
 
     private static async Task<Results<Ok<Anker>, NotFound<HttpValidationProblemDetails>>> AddAnkerAsync(
