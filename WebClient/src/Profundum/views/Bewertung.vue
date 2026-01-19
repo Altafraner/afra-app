@@ -2,7 +2,7 @@
 import { useFeedback } from '@/Profundum/composables/feedback';
 import { useManagement } from '@/Profundum/composables/verwaltung';
 import { computed, ref, watch } from 'vue';
-import { Button, Card, FloatLabel, Select, useToast } from 'primevue';
+import { Button, Card, FloatLabel, Message, Select, useToast } from 'primevue';
 import { formatSlot, formatStudent } from '@/helpers/formatters';
 import type { UserInfoMinimal } from '@/models/user/userInfoMinimal';
 import type { AnkerOverview } from '../models/feedback';
@@ -48,6 +48,20 @@ function cleanup() {
 watch(student, cleanup);
 watch(profundum, cleanup);
 watch(quartal, cleanup);
+
+const warn = computed<boolean>(() => {
+    const usedAnker: string[] = [];
+    for (const ankerId in currentBewertung.value) {
+        if (currentBewertung.value[ankerId] != null) usedAnker.push(ankerId);
+    }
+    const categories = new Set();
+    for (const catId in anker.value.ankerByKategorie) {
+        if (anker.value.ankerByKategorie[catId].some((a) => usedAnker.includes(a.id))) {
+            categories.add(catId);
+        }
+    }
+    return categories.size < 3;
+});
 
 async function save() {
     if (!currentBewertung.value || !anker.value || !selectedStudent.value || !profundum.value)
@@ -160,7 +174,17 @@ async function save() {
                 </template>
             </Card>
         </div>
-        <Button class="mt-8" fluid label="Feedback speichern" variant="success" @click="save" />
+        <Message v-if="warn" class="mt-8" severity="warn"
+            >Bitte nutzen Sie Anker aus mindestens <strong>drei Kategorien.</strong></Message
+        >
+        <Button
+            :disabled="warn"
+            class="mt-8"
+            fluid
+            label="Feedback speichern"
+            variant="success"
+            @click="save"
+        />
     </template>
 </template>
 

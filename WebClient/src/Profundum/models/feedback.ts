@@ -15,7 +15,7 @@ export interface AnkerChangeRequest {
 }
 
 export interface AnkerOverview {
-    ankerByKategorie: Record<string, Anker>;
+    ankerByKategorie: Record<string, Anker[]>;
     kategorien: FeedbackKategorie[];
 }
 
