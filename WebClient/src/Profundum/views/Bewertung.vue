@@ -6,6 +6,7 @@ import { Button, Card, FloatLabel, Message, Select, useToast } from 'primevue';
 import { formatSlot, formatStudent } from '@/helpers/formatters';
 import type { UserInfoMinimal } from '@/models/user/userInfoMinimal';
 import type { AnkerOverview } from '../models/feedback';
+import { convertMarkdownToHtml } from '@/composables/markdown';
 
 const verwaltung = useManagement();
 const feedback = useFeedback();
@@ -148,7 +149,7 @@ async function save() {
                         class="grid grid-cols-[1fr_repeat(5,4rem)] align-baseline gap-y-2 gap-x-1"
                     >
                         <template v-for="currentAnker in anker.ankerByKategorie[kategorie.id]">
-                            <span>{{ currentAnker.label }}</span>
+                            <span v-html="convertMarkdownToHtml(currentAnker.label, true)" />
                             <Button
                                 v-for="i in [1, 2, 3, 4]"
                                 :variant="

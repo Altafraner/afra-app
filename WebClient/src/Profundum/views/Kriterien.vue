@@ -1,10 +1,11 @@
 <script setup>
 import { useFeedback } from '@/Profundum/composables/feedback';
 import { Button, Card, useDialog } from 'primevue';
-import { computed, ref } from 'vue';
+import { ref } from 'vue';
 import SimpleTextDialog from '@/components/Form/SimpleTextDialog.vue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
 import KriteriumCreationForm from '@/Profundum/components/Forms/KriteriumCreationForm.vue';
+import { convertMarkdownToHtml } from '@/composables/markdown.ts';
 
 const feedback = useFeedback();
 const dialog = useDialog();
@@ -143,7 +144,7 @@ function startDeleteKategorie(evt, kategorieId) {
             <template #content>
                 <div class="grid grid-cols-[1fr_auto] items-baseline">
                     <template v-for="anker in ankerByKategorie[kategorie.id]">
-                        <span>{{ anker.label }}</span>
+                        <span v-html="convertMarkdownToHtml(anker.label, true)" />
                         <span class="flex gap-2 items-baseline justify-end">
                             <Button
                                 v-tooltip="'Bearbeiten'"
