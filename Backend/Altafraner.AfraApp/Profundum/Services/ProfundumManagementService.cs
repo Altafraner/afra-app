@@ -446,7 +446,13 @@ internal class ProfundumManagementService
             .Where(e => e.ProfundumInstanz != null && e.ProfundumInstanz.Id == p.Id)
             .Select(e => e.BetroffenePerson)
             .Distinct()
-            .OrderBy(e => e.LastName)
+            .AsEnumerable()
+            .OrderBy(x => int.Parse((x.Gruppe ?? "0").TakeWhile(char.IsDigit).ToArray()))
+            .ThenBy(x =>
+                (x.Gruppe ?? "").SkipWhile(c => !char.IsDigit(c))
+                .Aggregate(new StringBuilder(), (a, b) => a.Append(b))
+                .ToString())
+            .ThenBy(e => e.LastName)
             .ThenBy(e => e.FirstName);
 
         const string src = Altafraner.Typst.Templates.Profundum.Instanz;
