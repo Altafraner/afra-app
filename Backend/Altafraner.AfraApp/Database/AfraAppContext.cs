@@ -165,6 +165,7 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
     internal static Action<NpgsqlDbContextOptionsBuilder> ConfigureNpgsql =>
         builder => builder
             .MapEnum<Rolle>("person_rolle")
+            .MapEnum<MentorType>("mentor_type")
             .MapEnum<GlobalPermission>("global_permission")
             .MapEnum<Wochentyp>("wochentyp")
             .MapEnum<OtiumAnwesenheitsStatus>("anwesenheits_status");

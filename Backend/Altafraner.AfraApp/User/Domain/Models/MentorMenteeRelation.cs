@@ -14,4 +14,9 @@ public class MentorMenteeRelation
     /// The mentee's (students) unique identifier.
     /// </summary>
     public Guid StudentId { get; set; }
+
+    /// <summary>
+    ///     The type of mentorship
+    /// </summary>
+    public MentorType Type { get; set; }
 }
