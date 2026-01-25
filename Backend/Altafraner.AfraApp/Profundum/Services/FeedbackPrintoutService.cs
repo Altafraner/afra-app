@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Domain.Models.Bewertung;
 using Altafraner.AfraApp.User.Domain.DTO;
+using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.AfraApp.User.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -26,6 +27,11 @@ internal partial class FeedbackPrintoutService
     public async Task<byte[]> GenerateFileForPerson(Guid personId)
     {
         var user = await _userService.GetUserByIdAsync(personId);
+        var userGm = await _dbContext.Personen.Where(p =>
+                _dbContext.MentorMenteeRelations.Where(e => e.StudentId == user.Id && e.Type == MentorType.GM)
+                    .Select(e => e.MentorId)
+                    .Contains(p.Id))
+            .FirstOrDefaultAsync();
 
         var feedback = await _dbContext.ProfundumFeedbackEntries
             .AsSplitQuery()
@@ -42,7 +48,7 @@ internal partial class FeedbackPrintoutService
             .ToArrayAsync();
 
         var profunda = feedback.Select(e => e.Instanz)
-            .Distinct()
+            .DistinctBy(e => e.Profundum)
             .Select(e => new ProfundumFeedbackPdfData.Profundum(e.Profundum.Bezeichnung,
                 e.Verantwortliche.Select(v => new PersonInfoMinimal(v))));
 
@@ -83,6 +89,12 @@ internal partial class FeedbackPrintoutService
         {
             Meta = new ProfundumFeedbackPdfData.MetaData("25.01.2026", 25),
             Person = new PersonInfoMinimal(user),
+            GM = userGm is not null ? new PersonInfoMinimal(userGm) : null,
+            Schulleiter = new PersonInfoMinimal
+            {
+                Vorname = "Annabell",
+                Nachname = "Hecht"
+            },
             Profunda = profunda,
             FeedbackAllgemein = allgemeinSorted,
             FeedbackFachlich = fachlichSorted

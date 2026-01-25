@@ -18,14 +18,16 @@ public class LdapService
     private readonly AfraAppContext _dbContext;
     private readonly IEmailOutbox _emailOutbox;
     private readonly ILogger<LdapService> _logger;
-    private Dictionary<string, Person> _studentsByDn = [];
 
-    private Dictionary<string, Person> _tutorsByDn = [];
+    private readonly Dictionary<string, Person> _studentsByDn = [];
+    private readonly Dictionary<string, Person> _tutorsByDn = [];
 
     /// <summary>
     ///     Creates a new instance of the LdapService.
     /// </summary>
-    public LdapService(IOptions<LdapConfiguration> configuration, ILogger<LdapService> logger, AfraAppContext dbContext,
+    public LdapService(IOptions<LdapConfiguration> configuration,
+        ILogger<LdapService> logger,
+        AfraAppContext dbContext,
         IEmailOutbox emailOutbox)
     {
         _configuration = configuration.Value;
@@ -79,7 +81,8 @@ public class LdapService
             {
                 foreach (var user in unsyncedUsersWithoutNotification) user.LdapSyncFailureTime = syncTime;
                 foreach (var email in _configuration.NotificationEmails)
-                    await _emailOutbox.SendReportAsync(email, "LDAP Nutzer konnten nicht synchronisiert werden",
+                    await _emailOutbox.SendReportAsync(email,
+                        "LDAP Nutzer konnten nicht synchronisiert werden",
                         $"""
                          Es konnten nicht alle Benutzer synchronisiert werden. Möglicherweise wurden die Benutzer im Verzeichnisdienst gelöscht. Sollte dies der Fall sein, löschen Sie die Benutzer bitte manuell aus der Afra-App.
                          Neue nicht synchronisierte Benutzer:
@@ -157,51 +160,56 @@ public class LdapService
         }
 
         // LdapConnection is disposable. We pass it as a parameter so we can't accidentally call it after the connection was disposed of
-        async Task UpdateMentors(LdapSearchDescription searchDescription, LdapConnection capturedConnection)
+        async Task UpdateMentors(MentorSearchDescription[] searchDescriptions, LdapConnection capturedConnection)
         {
-            var groups = SubtreeSearch(capturedConnection, searchDescription, "member");
             var dbEntries = await _dbContext.MentorMenteeRelations
                 .ToListAsync();
 
             var dbEntriesByStruct =
-                dbEntries.ToDictionary(e => new MentorMenteeRelationStruct(e.MentorId, e.StudentId), e => e);
+                dbEntries.ToDictionary(e => new MentorMenteeRelationStruct(e.MentorId, e.StudentId, e.Type), e => e);
 
             var dbEntriesSet = dbEntriesByStruct.Keys.ToHashSet();
 
-            var allMentorGroups = groups
-                .OfType<SearchResultEntry>()
-                .ToDictionary(e => e.DistinguishedName, e => e.GetMulitAttribute("member"));
-
-            foreach (var group in allMentorGroups)
+            foreach (var searchDescription in searchDescriptions)
             {
-                var entriesList = group.Value.ToList();
-                var tutorDn = entriesList.FirstOrDefault(e => _tutorsByDn.ContainsKey(e));
-                var tutorSuccess = _tutorsByDn.TryGetValue(tutorDn ?? "", out var tutor);
-                if (!tutorSuccess || tutorDn is null)
-                {
-                    _logger.LogWarning("No tutor found in group {dn}, skipping", group.Key);
-                    continue;
-                }
+                var groups = SubtreeSearch(capturedConnection, searchDescription, "member");
+                var allMentorGroups = groups
+                    .OfType<SearchResultEntry>()
+                    .ToDictionary(e => e.DistinguishedName, e => e.GetMulitAttribute("member"));
 
-                entriesList.Remove(tutorDn);
-
-                foreach (var studentDn in entriesList)
+                foreach (var group in allMentorGroups)
                 {
-                    var studentSuccess = _studentsByDn.TryGetValue(studentDn, out var student);
-                    if (!studentSuccess)
+                    var entriesList = group.Value.ToList();
+                    var tutorDn = entriesList.FirstOrDefault(e => _tutorsByDn.ContainsKey(e));
+                    var tutorSuccess = _tutorsByDn.TryGetValue(tutorDn ?? "", out var tutor);
+                    if (!tutorSuccess || tutorDn is null)
                     {
-                        _logger.LogWarning("Student {dn} not found", studentDn);
+                        _logger.LogWarning("No tutor found in group {dn}, skipping", group.Key);
                         continue;
                     }
 
-                    var relation = new MentorMenteeRelationStruct(tutor!.Id, student!.Id);
-                    var exists = dbEntriesSet.Remove(relation);
-                    if (!exists)
-                        _dbContext.MentorMenteeRelations.Add(new MentorMenteeRelation()
+                    entriesList.Remove(tutorDn);
+
+                    foreach (var studentDn in entriesList)
+                    {
+                        var studentSuccess = _studentsByDn.TryGetValue(studentDn, out var student);
+                        if (!studentSuccess)
                         {
-                            MentorId = tutor.Id,
-                            StudentId = student.Id
-                        });
+                            _logger.LogWarning("Student {dn} not found", studentDn);
+                            continue;
+                        }
+
+                        var relation =
+                            new MentorMenteeRelationStruct(tutor!.Id, student!.Id, searchDescription.MentorType);
+                        var exists = dbEntriesSet.Remove(relation);
+                        if (!exists)
+                            _dbContext.MentorMenteeRelations.Add(new MentorMenteeRelation
+                            {
+                                MentorId = tutor.Id,
+                                StudentId = student.Id,
+                                Type = searchDescription.MentorType
+                            });
+                    }
                 }
             }
 
@@ -268,12 +276,14 @@ public class LdapService
         user = await _dbContext.Personen.FirstOrDefaultAsync(p => p.LdapObjectId == objGuid);
         if (user is null)
             _logger.LogError("User not found after sync. \n dn: {dn}\n guid: {guid}",
-                entry.DistinguishedName, objGuid);
+                entry.DistinguishedName,
+                objGuid);
 
         return user;
     }
 
-    private static SearchResultEntryCollection SubtreeSearch(LdapConnection connection, LdapSearchDescription group,
+    private static SearchResultEntryCollection SubtreeSearch(LdapConnection connection,
+        LdapSearchDescription group,
         params string[] attributes)
     {
         if (attributes.Length == 0) attributes = ["objectGuid", "givenName", "sn", "mail"];
@@ -284,7 +294,9 @@ public class LdapService
         return response.Entries;
     }
 
-    private bool TryGetOrCreatePersonFromEntry(SearchResultEntry entry, Rolle rolle, string? gruppe,
+    private bool TryGetOrCreatePersonFromEntry(SearchResultEntry entry,
+        Rolle rolle,
+        string? gruppe,
         IEnumerable<Person> users,
         out Person? user)
     {
@@ -345,5 +357,5 @@ public class LdapService
         dict[entry.DistinguishedName] = person;
     }
 
-    private record struct MentorMenteeRelationStruct(Guid MentorId, Guid MenteeId);
+    private record struct MentorMenteeRelationStruct(Guid MentorId, Guid MenteeId, MentorType Type);
 }

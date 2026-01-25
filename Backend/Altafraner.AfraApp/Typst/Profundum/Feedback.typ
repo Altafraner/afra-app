@@ -1,4 +1,5 @@
 ﻿#import "@preview/cetz:0.4.2"
+#import "@preview/titleize:0.1.1": titlecase
 
 #let input = json(bytes(sys.inputs.data))
 
@@ -7,6 +8,8 @@
 #let profunda = input.Profunda
 #let daten_allgemein = input.FeedbackAllgemein
 #let daten_fachlich = input.FeedbackFachlich
+#let gm = input.GM
+#let schulleiter = input.Schulleiter
 
 #set text(lang: "de")
 
@@ -71,6 +74,10 @@
       }
     })
   })
+}
+
+#let name-of(person) = {
+  titlecase([#person.Vorname #person.Nachname])
 }
 
 #let dot-plot(notes) = {
@@ -153,7 +160,7 @@
   [],
 
   [
-    #text(size-large, font: accent-font, weight: 700)[#schueler.Vorname #schueler.Nachname]\
+    #text(size-large, font: accent-font, weight: 700, name-of(schueler))\
     Klasse #schueler.Gruppe \
     Schuljahr #meta.Schuljahr / #(meta.Schuljahr + 1) \
     #v(1em)
@@ -166,12 +173,12 @@
         [
           #line(length: 100%)
           #v(-8pt)
-          #text(size: size-small)[Gymnasialer Mentor]
+          #text(size: size-small)[Gymnasiale(r) Mentor(in)\ #if gm != none [#name-of(gm)]]
         ],
         [
           #line(length: 100%)
           #v(-8pt)
-          #text(size: size-small)[Internatsmetor]
+          #text(size: size-small)[Schulleiter(in)\ #if schulleiter != none [#name-of(schulleiter)]]
         ],
       )
     ]
@@ -227,7 +234,7 @@
 #let profundumToText(p) = {
   p.Label
   if p.Verantwortliche.len() > 0 {
-    [ (#p.Verantwortliche.map(v => [#v.Vorname #v.Nachname]).join(", "))]
+    [ (#p.Verantwortliche.map(name-of).join(", "))]
   }
 }
 #v(1fr)
@@ -238,6 +245,7 @@
   width: 100%,
   [
     #text(weight: 700, size: size-small, font: accent-font)[Grundlage dieses Feedbacks sind folgende Profunda:]
+    
     #text(size: size-small, profunda.map(p => profundumToText(p)).join(", "))
   ],
 )

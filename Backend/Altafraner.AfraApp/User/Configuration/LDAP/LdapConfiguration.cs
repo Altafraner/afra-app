@@ -56,7 +56,7 @@ public class LdapConfiguration
     /// <summary>
     ///     Descriptions of all mentor groups that should be synced from LDAP to the application.
     /// </summary>
-    public required LdapSearchDescription MentorGroups { get; set; }
+    public required MentorSearchDescription[] MentorGroups { get; set; }
 
     /// <summary>
     ///     A collection of e-mail addresses that should be notified when special events occur, such as a user being removed.
