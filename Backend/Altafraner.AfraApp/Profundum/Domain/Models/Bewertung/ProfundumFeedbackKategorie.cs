@@ -22,4 +22,9 @@ public class ProfundumFeedbackKategorie
     ///     The profundum categories this feedback category applies for
     /// </summary>
     public List<ProfundumFachbereich> Fachbereiche { get; set; } = null!;
+
+    /// <summary>
+    ///     Whether this category is subject specific
+    /// </summary>
+    public required bool IsFachlich { get; set; }
 }

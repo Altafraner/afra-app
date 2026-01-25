@@ -43,9 +43,9 @@ public static class Bewertung
             .RequireAuthorization(AuthorizationPolicies.ProfundumsVerantwortlich);
 
         bewertung.MapGet("/{userId:guid}.pdf",
-            async (FeedbackPrintoutService ProfundumManagementService, Guid userId) =>
+            async (FeedbackPrintoutService profundumManagementService, Guid userId) =>
             {
-                var fileContents = await ProfundumManagementService.GenerateFileForPerson(userId);
+                var fileContents = await profundumManagementService.GenerateFileForPerson(userId);
                 return TypedResults.File(fileContents, MediaTypeNames.Application.Pdf);
             });
     }
@@ -101,12 +101,12 @@ public static class Bewertung
     }
 
     private static async Task<Results<Ok<FeedbackCategory>, NotFound<string>>> AddKategorieAsync(
-        FeedbackKategorieChangeRequest request,
+        FeedbackCategoryChangeRequest request,
         FeedbackKategorienService kategorienService)
     {
         try
         {
-            var entry = await kategorienService.AddKategorie(request.Label, request.Kategorien);
+            var entry = await kategorienService.AddKategorie(request.Label, request.Kategorien, request.IsFachlich);
             return TypedResults.Ok(new FeedbackCategory(entry));
         }
         catch (ArgumentException)
@@ -117,12 +117,12 @@ public static class Bewertung
 
     private static async Task<Results<NoContent, BadRequest<HttpValidationProblemDetails>>> UpdateKategorieAsync(
         Guid id,
-        FeedbackKategorieChangeRequest request,
+        FeedbackCategoryChangeRequest request,
         FeedbackKategorienService kategorienService)
     {
         try
         {
-            await kategorienService.UpdateKategorie(id, request.Label, request.Kategorien);
+            await kategorienService.UpdateKategorie(id, request.Label, request.Kategorien, request.IsFachlich);
             return TypedResults.NoContent();
         }
         catch (ArgumentException e)

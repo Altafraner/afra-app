@@ -23,11 +23,13 @@ export interface FeedbackKategorie {
     id: string;
     label: string;
     fachbereiche: ProfundumFachbereich[];
+    isFachlich: boolean;
 }
 
 export interface FeedbackKategorieChangeRequest {
     label: string;
     kategorien: string[];
+    isFachlich: boolean;
 }
 
 export interface ProfundumEnrollmentOverview {

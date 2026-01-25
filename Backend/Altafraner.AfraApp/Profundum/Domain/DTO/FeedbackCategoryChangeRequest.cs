@@ -5,7 +5,7 @@ namespace Altafraner.AfraApp.Profundum.Domain.DTO;
 /// <summary>
 ///     A request to create or change a feedback kategorie
 /// </summary>
-public record FeedbackKategorieChangeRequest
+public record FeedbackCategoryChangeRequest
 {
     /// <summary>
     ///     The categories label
@@ -18,4 +18,9 @@ public record FeedbackKategorieChangeRequest
     /// </summary>
     [MinLength(1)]
     public required IEnumerable<Guid> Kategorien { get; set; }
+
+    /// <summary>
+    ///     Whether this category is subject specific
+    /// </summary>
+    public bool IsFachlich { get; set; }
 }

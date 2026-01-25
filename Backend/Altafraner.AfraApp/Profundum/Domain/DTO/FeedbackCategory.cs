@@ -15,6 +15,7 @@ public record FeedbackCategory
         Id = kategorie.Id;
         Label = kategorie.Label;
         Fachbereiche = kategorie.Fachbereiche.Select(k => new DtoProfundumFachbereich(k));
+        IsFachlich = kategorie.IsFachlich;
     }
 
     /// <summary>
@@ -31,4 +32,9 @@ public record FeedbackCategory
     ///     The profundum fachbereiche this feedback category is for
     /// </summary>
     public IEnumerable<DtoProfundumFachbereich> Fachbereiche { get; set; }
+
+    /// <summary>
+    ///     Whether this category is subject specific
+    /// </summary>
+    public bool IsFachlich { get; set; }
 }

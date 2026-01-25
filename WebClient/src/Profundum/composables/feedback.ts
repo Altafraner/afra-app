@@ -108,11 +108,16 @@ export const useFeedback = () => {
         }
     }
 
-    async function createKategorie(label: string, kategorien: string[]): Promise<void> {
+    async function createKategorie(
+        label: string,
+        kategorien: string[],
+        isFachlich: boolean,
+    ): Promise<void> {
         try {
             const data: FeedbackKategorieChangeRequest = {
                 label,
                 kategorien,
+                isFachlich,
             };
             await api.post(`/kategorie`, data);
         } catch (e) {
@@ -129,11 +134,13 @@ export const useFeedback = () => {
         id: string,
         label: string,
         kategorien: string[],
+        isFachlich: boolean,
     ): Promise<void> {
         try {
             const data: FeedbackKategorieChangeRequest = {
                 label,
                 kategorien,
+                isFachlich,
             };
             await api.put(`/kategorie/${id}`, data);
         } catch (e) {

@@ -12,7 +12,9 @@ internal class FeedbackKategorienService
         _dbContext = dbContext;
     }
 
-    public async Task<ProfundumFeedbackKategorie> AddKategorie(string label, IEnumerable<Guid> kategorieIds)
+    public async Task<ProfundumFeedbackKategorie> AddKategorie(string label,
+        IEnumerable<Guid> kategorieIds,
+        bool isFachlich)
     {
         var categories = await _dbContext.ProfundaFachbereiche
             .Where(k => kategorieIds.Contains(k.Id))
@@ -25,7 +27,8 @@ internal class FeedbackKategorienService
         var entry = await _dbContext.ProfundumFeedbackKategories.AddAsync(new ProfundumFeedbackKategorie
         {
             Label = label,
-            Fachbereiche = categories
+            Fachbereiche = categories,
+            IsFachlich = isFachlich
         });
 
         await _dbContext.SaveChangesAsync();
@@ -41,7 +44,7 @@ internal class FeedbackKategorienService
         await _dbContext.SaveChangesAsync();
     }
 
-    public async Task UpdateKategorie(Guid id, string label, IEnumerable<Guid> kategorieIds)
+    public async Task UpdateKategorie(Guid id, string label, IEnumerable<Guid> kategorieIds, bool isFachlich)
     {
         var entry = await _dbContext.ProfundumFeedbackKategories
             .Include(e => e.Fachbereiche)
@@ -59,6 +62,7 @@ internal class FeedbackKategorienService
 
         entry.Label = label;
         entry.Fachbereiche = categories;
+        entry.IsFachlich = isFachlich;
 
         _dbContext.ProfundumFeedbackKategories.Update(entry);
         await _dbContext.SaveChangesAsync();
