@@ -8,6 +8,7 @@ on:
   push:
     branches: [ "*" ]
     paths:
+      - '.github/workflows/backend.yml'
       - 'Backend/**'
   pull_request:
     branches: [ "*" ]
@@ -24,6 +25,18 @@ jobs:
       with:
         toolchain: stable
         override: true
+
+    - name: Cache Rust
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          Backend/Altafraner.Typst/typst_with_bindings/target
+        key: rust-${{ runner.os }}-${{ hashFiles('Backend/**/Cargo.lock') }}
+        restore-keys: |
+          rust-${{ runner.os }}-
+
     - name: Build Rust bindings
       working-directory: Backend/Altafraner.Typst/typst_with_bindings
       run: cargo build --release

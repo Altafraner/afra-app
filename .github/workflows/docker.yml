@@ -4,6 +4,7 @@ permissions:
   contents: read
   pull-requests: read
   packages: write
+  actions: write
 
 on:
   push:
@@ -13,7 +14,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_BASE: ${{ github.repository }}
+  IMAGE_BASE: altafraner/afra-app
 
 jobs:
   build-and-push:
@@ -40,6 +41,8 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_BASE }}/backend:${{ github.sha }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_BASE }}/backend:latest
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,scope=backend,mode=max
 
       - name: Build & push frontend
         uses: docker/build-push-action@v6
@@ -49,3 +52,5 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_BASE }}/webclient:${{ github.sha }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_BASE }}/webclient:latest
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,scope=frontend,mode=max

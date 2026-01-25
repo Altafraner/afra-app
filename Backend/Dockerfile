@@ -1,12 +1,15 @@
 # syntax=docker/dockerfile:1-labs
 
-FROM rust AS rust-build
+FROM rust:trixie AS rust-build
 WORKDIR /rust-src
 COPY Altafraner.Typst/typst_with_bindings/Cargo.toml Altafraner.Typst/typst_with_bindings/Cargo.toml
 COPY Altafraner.Typst/typst_with_bindings/Cargo.lock  Altafraner.Typst/typst_with_bindings/Cargo.lock
 COPY Altafraner.Typst/typst_with_bindings/ Altafraner.Typst/typst_with_bindings/
 WORKDIR /rust-src/Altafraner.Typst/typst_with_bindings/
-RUN cargo build --release
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/usr/local/cargo/git \
+    --mount=type=cache,target=/rust-src/target \
+    cargo build --release
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src/
