@@ -1,10 +1,11 @@
 using System.Runtime.InteropServices;
+using CsBindgen;
 
 internal class CompileResultSafe
 {
-    private readonly CsBindgen.CompileResult _inner;
+    private readonly CompileResult _inner;
 
-    internal CompileResultSafe(CsBindgen.CompileResult x)
+    internal CompileResultSafe(CompileResult x)
     {
         _inner = x;
     }
@@ -15,7 +16,7 @@ internal class CompileResultSafe
         {
             unsafe
             {
-                return _inner.error == null ? null : Marshal.PtrToStringAnsi((nint)_inner.error);
+                return _inner.error == null ? null : Marshal.PtrToStringUTF8((nint)_inner.error);
             }
         }
     }
@@ -47,6 +48,6 @@ internal class CompileResultSafe
 
     ~CompileResultSafe()
     {
-        CsBindgen.NativeMethods.free_compile_result(_inner);
+        NativeMethods.free_compile_result(_inner);
     }
 }
