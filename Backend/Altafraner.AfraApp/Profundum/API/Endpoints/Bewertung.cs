@@ -1,3 +1,4 @@
+using System.Net.Mime;
 using Altafraner.AfraApp.Backbone.Authorization;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Services;
@@ -40,6 +41,13 @@ public static class Bewertung
 
         bewertung.MapGet("/control/status", GetStatusAsync)
             .RequireAuthorization(AuthorizationPolicies.ProfundumsVerantwortlich);
+
+        bewertung.MapGet("/{userId:guid}.pdf",
+            async (FeedbackPrintoutService ProfundumManagementService, Guid userId) =>
+            {
+                var fileContents = await ProfundumManagementService.GenerateFileForPerson(userId);
+                return TypedResults.File(fileContents, MediaTypeNames.Application.Pdf);
+            });
     }
 
     private static async Task<Results<Ok<Anker>, NotFound<HttpValidationProblemDetails>>> AddAnkerAsync(
