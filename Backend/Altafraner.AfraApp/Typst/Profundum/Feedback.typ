@@ -3,14 +3,6 @@
 
 #let input = json(bytes(sys.inputs.data))
 
-#let schueler = input.Person
-#let meta = input.Meta
-#let profunda = input.Profunda
-#let daten_allgemein = input.FeedbackAllgemein
-#let daten_fachlich = input.FeedbackFachlich
-#let gm = input.GM
-#let schulleiter = input.Schulleiter
-
 #set text(lang: "de")
 
 #let accent-color = rgb("#0069B4")
@@ -129,70 +121,13 @@
   )
 }
 
-#set page(
-  paper: "a4",
-  margin: (
-    top: 31.1mm,
-    left: 10mm,
-    right: 10mm,
-    bottom: 15mm,
-  ),
-  footer: context align(
-    right,
-    text(size: size-small)[
-      Seite #counter(page).display("1 von 1", both: true)
-    ],
-  ),
-  header: {
-    place(right + top, dy: 10mm, image("SMK_009_P_4C_FLUSH.svg", width: 76.8mm))
-    place(left + top, dy: 10mm, image("signal-2026-01-25-134339.svg", height: 11.1mm))
-  },
-)
 
-#set text(size: size-normal, fill: text-color, font: primary-font)
-#grid(
-  columns: (1fr, 1fr),
-  row-gutter: 2em,
-  align(left)[
-    #text(29pt, font: primary-font, weight: 500, fill: accent-color)[PROFUNDUM]\
-    #text(size-large, weight: "light")[Feedback-Bogen]
-  ],
-  [],
-
-  [
-    #text(size-large, font: accent-font, weight: 700, name-of(schueler))\
-    Klasse #schueler.Gruppe \
-    Schuljahr #meta.Schuljahr / #(meta.Schuljahr + 1) \
-    #v(1em)
-    #text(size: size-small, style: "italic", fill: gray-color)[Ausgabedatum: #meta.Datum]
-    #v(3em)
-    #align(center)[
-      #grid(
-        columns: (1fr, 1fr),
-        gutter: 3em,
-        [
-          #line(length: 100%)
-          #v(-8pt)
-          #text(size: size-small)[Gymnasiale(r) Mentor(in)\ #if gm != none [#name-of(gm)]]
-        ],
-        [
-          #line(length: 100%)
-          #v(-8pt)
-          #text(size: size-small)[Schulleiter(in)\ #if schulleiter != none [#name-of(schulleiter)]]
-        ],
-      )
-    ]
-  ],
-  [
-    #align(right + horizon)[
-      #radar-chart(daten_allgemein)
-    ]
-    #v(1em)
-  ],
-)
-
-#v(0.5cm)
-#bigheading("Allgemeine Kompetenzen", "Allgemeine Bewertungen aus allen Profunda")
+#let profundumToText(p) = {
+  p.Label
+  if p.Verantwortliche.len() > 0 {
+    [ (#p.Verantwortliche.map(name-of).join(", "))]
+  }
+}
 
 #let category-block(title, items) = {
   block(
@@ -217,35 +152,121 @@
   v(1em)
 }
 
-#for (cat, items) in daten_allgemein {
-  category-block(cat, items)
+#let nice(index, content) = {
+  counter(page).update(1)
+  let end-label = label("end-" + str(index))
+  set page(
+    paper: "a4",
+    margin: (
+      top: 31.1mm,
+      left: 10mm,
+      right: 10mm,
+      bottom: 15mm,
+    ),
+    footer: context align(
+      right,
+      text(size: size-small)[
+        Seite #counter(page).display("1", both: false) von #counter(page).at(query(end-label).first().location()).first()
+      ],
+    ),
+    header: {
+      place(right + top, dy: 10mm, image("SMK_009_P_4C_FLUSH.svg", width: 76.8mm))
+      place(left + top, dy: 10mm, image("signal-2026-01-25-134339.svg", height: 11.1mm))
+    },
+  )
+  content
+  [#metadata(none) #end-label]
 }
 
-#if daten_fachlich != none and daten_fachlich.len() > 0 {
-  v(1em)
-  bigheading("Fachspezifische Kompetenzen", "Spezifische Bewertungen der Fachbereiche")
-  v(0.5em)
-  
-  for (cat, items) in daten_fachlich {
+#let render(element) = [
+  #let schueler = element.Person
+  #let meta = element.Meta
+  #let profunda = element.Profunda
+  #let daten_allgemein = element.FeedbackAllgemein
+  #let daten_fachlich = element.FeedbackFachlich
+  #let gm = element.GM
+  #let schulleiter = element.Schulleiter
+
+  #set text(size: size-normal, fill: text-color, font: primary-font)
+  #grid(
+    columns: (1fr, 1fr),
+    row-gutter: 2em,
+    align(left)[
+      #text(29pt, font: primary-font, weight: 500, fill: accent-color)[PROFUNDUM]\
+      #text(size-large, weight: "light")[Feedback-Bogen]
+    ],
+    [],
+
+    [
+      #text(size-large, font: accent-font, weight: 700, name-of(schueler))\
+      Klasse #schueler.Gruppe \
+      Schuljahr #meta.Schuljahr / #(meta.Schuljahr + 1) \
+      #v(1em)
+      #text(size: size-small, style: "italic", fill: gray-color)[Ausgabedatum: #meta.Datum]
+      #v(3em)
+      #align(center)[
+        #grid(
+          columns: (1fr, 1fr),
+          gutter: 3em,
+          [
+            #line(length: 100%)
+            #v(-8pt)
+            #text(size: size-small)[Gymnasiale(r) Mentor(in)\ #if gm != none [#name-of(gm)]]
+          ],
+          [
+            #line(length: 100%)
+            #v(-8pt)
+            #text(size: size-small)[Schulleiter(in)\ #if schulleiter != none [#name-of(schulleiter)]]
+          ],
+        )
+      ]
+    ],
+    [
+      #align(right + horizon)[
+        #radar-chart(daten_allgemein)
+      ]
+      #v(1em)
+    ],
+  )
+
+  #v(0.5cm)
+  #bigheading("Allgemeine Kompetenzen", "Allgemeine Bewertungen aus allen Profunda")
+
+  #for (cat, items) in daten_allgemein {
     category-block(cat, items)
   }
-}
 
-#let profundumToText(p) = {
-  p.Label
-  if p.Verantwortliche.len() > 0 {
-    [ (#p.Verantwortliche.map(name-of).join(", "))]
+  #if daten_fachlich != none and daten_fachlich.len() > 0 {
+    v(1em)
+    bigheading("Fachspezifische Kompetenzen", "Spezifische Bewertungen der Fachbereiche")
+    v(0.5em)
+
+    for (cat, items) in daten_fachlich {
+      category-block(cat, items)
+    }
+  }
+
+  #v(1fr)
+  #block(
+    fill: luma(245),
+    inset: 1em,
+    radius: 4pt,
+    width: 100%,
+    [
+      #text(weight: 700, size: size-small, font: accent-font)[Grundlage dieses Feedbacks sind folgende Profunda:]
+
+      #text(size: size-small, profunda.map(p => profundumToText(p)).join(", "))
+    ],
+  )
+]
+
+#let i = 0
+#for element in input {
+  (i = i + 1)
+
+  nice(i, render(element))
+
+  if (i != input.len()) {
+    pagebreak(to: "odd")
   }
 }
-#v(1fr)
-#block(
-  fill: luma(245),
-  inset: 1em,
-  radius: 4pt,
-  width: 100%,
-  [
-    #text(weight: 700, size: size-small, font: accent-font)[Grundlage dieses Feedbacks sind folgende Profunda:]
-    
-    #text(size: size-small, profunda.map(p => profundumToText(p)).join(", "))
-  ],
-)
