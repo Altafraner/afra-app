@@ -28,6 +28,7 @@ public class ProfundumModule : IModule
         services.AddScoped<ProfundumFachbereicheService>();
         services.AddScoped<FeedbackAnkerService>();
         services.AddScoped<FeedbackKategorienService>();
+        services.AddScoped<FeedbackPrintoutService>();
         services.AddScoped<FeedbackService>();
 
         services.AddRules();
