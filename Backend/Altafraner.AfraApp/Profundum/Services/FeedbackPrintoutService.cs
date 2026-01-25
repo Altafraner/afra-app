@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using System.Text.RegularExpressions;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
+using Altafraner.AfraApp.Profundum.Domain.Models.Bewertung;
 using Altafraner.AfraApp.User.Domain.DTO;
 using Altafraner.AfraApp.User.Services;
 using Microsoft.EntityFrameworkCore;
@@ -45,21 +46,46 @@ internal partial class FeedbackPrintoutService
             .Select(e => new ProfundumFeedbackPdfData.Profundum(e.Profundum.Bezeichnung,
                 e.Verantwortliche.Select(v => new PersonInfoMinimal(v))));
 
-        var feedbackByAnker = feedback.GroupBy(e => e.Anker)
-            .ToDictionary(g => g.Key, g => g.Select(e => e.Grad).ToArray());
+        var feedbackByKategorie = feedback.GroupBy(e => e.Anker, e => e.Grad)
+            .GroupBy(e => e.Key.Kategorie)
+            .ToArray();
 
-        var feedbackByAnkerAndCategory = feedbackByAnker.GroupBy(e => e.Key.Kategorie)
+        List<IGrouping<ProfundumFeedbackKategorie, IGrouping<ProfundumFeedbackAnker, int>>> allgemein =
+            new(feedbackByKategorie.Length / 2);
+        List<IGrouping<ProfundumFeedbackKategorie, IGrouping<ProfundumFeedbackAnker, int>>> fachlich =
+            new(feedbackByKategorie.Length / 2);
+
+        foreach (var kategorie in feedbackByKategorie)
+        {
+            if (kategorie.Key.IsFachlich)
+            {
+                fachlich.Add(kategorie);
+                continue;
+            }
+
+            allgemein.Add(kategorie);
+        }
+
+        var allgemeinSorted = allgemein
             .OrderByDescending(g => g.Key.Fachbereiche.Count)
             .ThenBy(g => g.Key.Label)
             .ToImmutableSortedDictionary(k => k.Key.Label,
-                k => k.ToDictionary(e => ExtractFirstMarkdownBoldIfExists(e.Key.Label), e => e.Value));
+                k => k.ToDictionary(e => ExtractFirstMarkdownBoldIfExists(e.Key.Label), e => e.ToArray()));
+
+        var fachlichSorted = fachlich
+            .OrderByDescending(g => g.Key.Fachbereiche.Count)
+            .ThenBy(g => g.Key.Label)
+            .ToImmutableSortedDictionary(k => k.Key.Label,
+                k => k.ToDictionary(e => ExtractFirstMarkdownBoldIfExists(e.Key.Label), e => e.ToArray()));
+
 
         var data = new ProfundumFeedbackPdfData
         {
             Meta = new ProfundumFeedbackPdfData.MetaData("25.01.2026", 25),
             Person = new PersonInfoMinimal(user),
             Profunda = profunda,
-            Feedback = feedbackByAnkerAndCategory
+            FeedbackAllgemein = allgemeinSorted,
+            FeedbackFachlich = fachlichSorted
         };
 
         var file = _typstService.GeneratePdf(Altafraner.Typst.Templates.Profundum.Feedback, data);

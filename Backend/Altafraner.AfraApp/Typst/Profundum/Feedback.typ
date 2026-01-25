@@ -5,7 +5,8 @@
 #let schueler = input.Person
 #let meta = input.Meta
 #let profunda = input.Profunda
-#let daten_allgemein = input.Feedback
+#let daten_allgemein = input.FeedbackAllgemein
+#let daten_fachlich = input.FeedbackFachlich
 
 #set text(lang: "de")
 
@@ -184,7 +185,7 @@
 )
 
 #v(0.5cm)
-#bigheading("Kompetenzen", "Bewertungen aus den Profunda")
+#bigheading("Allgemeine Kompetenzen", "Allgemeine Bewertungen aus allen Profunda")
 
 #let category-block(title, items) = {
   block(
@@ -211,6 +212,16 @@
 
 #for (cat, items) in daten_allgemein {
   category-block(cat, items)
+}
+
+#if daten_fachlich != none and daten_fachlich.len() > 0 {
+  v(1em)
+  bigheading("Fachspezifische Kompetenzen", "Spezifische Bewertungen der Fachbereiche")
+  v(0.5em)
+  
+  for (cat, items) in daten_fachlich {
+    category-block(cat, items)
+  }
 }
 
 #let profundumToText(p) = {
