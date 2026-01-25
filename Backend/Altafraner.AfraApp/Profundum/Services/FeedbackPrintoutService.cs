@@ -11,9 +11,9 @@ namespace Altafraner.AfraApp.Profundum.Services;
 
 internal partial class FeedbackPrintoutService
 {
+    private readonly AfraAppContext _dbContext;
     private readonly Altafraner.Typst.Typst _typstService;
     private readonly UserService _userService;
-    private readonly AfraAppContext _dbContext;
 
     public FeedbackPrintoutService(Altafraner.Typst.Typst typstService,
         UserService userService,
@@ -84,21 +84,23 @@ internal partial class FeedbackPrintoutService
             .ToImmutableSortedDictionary(k => k.Key.Label,
                 k => k.ToDictionary(e => ExtractFirstMarkdownBoldIfExists(e.Key.Label), e => e.ToArray()));
 
-
-        var data = new ProfundumFeedbackPdfData
-        {
-            Meta = new ProfundumFeedbackPdfData.MetaData("25.01.2026", 25),
-            Person = new PersonInfoMinimal(user),
-            GM = userGm is not null ? new PersonInfoMinimal(userGm) : null,
-            Schulleiter = new PersonInfoMinimal
+        ProfundumFeedbackPdfData[] data =
+        [
+            new()
             {
-                Vorname = "Annabell",
-                Nachname = "Hecht"
-            },
-            Profunda = profunda,
-            FeedbackAllgemein = allgemeinSorted,
-            FeedbackFachlich = fachlichSorted
-        };
+                Meta = new ProfundumFeedbackPdfData.MetaData("25.01.2026", 25),
+                Person = new PersonInfoMinimal(user),
+                GM = userGm is not null ? new PersonInfoMinimal(userGm) : null,
+                Schulleiter = new PersonInfoMinimal
+                {
+                    Vorname = "Annabell",
+                    Nachname = "Hecht"
+                },
+                Profunda = profunda,
+                FeedbackAllgemein = allgemeinSorted,
+                FeedbackFachlich = fachlichSorted
+            }
+        ];
 
         var file = _typstService.GeneratePdf(Altafraner.Typst.Templates.Profundum.Feedback, data);
         return file;
