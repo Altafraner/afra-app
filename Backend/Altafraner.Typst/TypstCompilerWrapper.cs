@@ -1,4 +1,6 @@
 using System.Runtime.InteropServices;
+using System.Text;
+using CsBindgen;
 
 namespace Altafraner.Typst;
 
@@ -16,7 +18,7 @@ internal unsafe class TypstCompilerWrapper
     {
         var ignoreSystemFonts = false;
 
-        var inputSourcePtr = Marshal.StringToHGlobalAnsi(inputSource);
+        var inputSourcePtr = StringToHGlobalUtf8(inputSource);
 
         var rootPtr = IntPtr.Zero;
         if (!string.IsNullOrWhiteSpace(root))
@@ -36,7 +38,7 @@ internal unsafe class TypstCompilerWrapper
             fixed (IntPtr* fontPathsRawPtr = fontPathPtrs)
             {
                 var fontPathsPtr = fontPathsList.Count == 0 ? null : fontPathsRawPtr;
-                _compiler = new CompilerSafe(CsBindgen.NativeMethods.create_compiler(
+                _compiler = new CompilerSafe(NativeMethods.create_compiler(
                     (byte*)rootPtr,
                     (byte*)inputSourcePtr,
                     (byte**)fontPathsPtr,
@@ -73,5 +75,16 @@ internal unsafe class TypstCompilerWrapper
         {
             throw new Exception("Failed to set system inputs");
         }
+    }
+
+    private static IntPtr StringToHGlobalUtf8(string input)
+    {
+        var bytes = Encoding.UTF8.GetBytes(input);
+
+        var ptr = Marshal.AllocHGlobal(bytes.Length + 1);
+        Marshal.Copy(bytes, 0, ptr, bytes.Length);
+        Marshal.WriteByte(ptr, bytes.Length, 0);
+
+        return ptr;
     }
 }
