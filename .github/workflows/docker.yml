@@ -3,31 +3,49 @@ name: Build Docker Images
 permissions:
   contents: read
   pull-requests: read
+  packages: write
 
 on:
   push:
     branches: [ "main" ]
-    paths:
-      - 'Backend/**'
-      - 'WebClient/**'
-      - 'compose.yaml'
-      - '.dockerignore'
   pull_request:
     branches: [ "main" ]
-    paths:
-      - 'Backend/**'
-      - 'WebClient/**'
-      - 'compose.yaml'
-      - '.dockerignore'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_BASE: ${{ github.repository }}
 
 jobs:
-  build:
+  build-and-push:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: build backend image
-      run: docker build Backend
-    - name: build frontend image
-      run: docker build WebClient
-    - name: build compose
-      run: docker compose build
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        if: github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./Backend
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_BASE }}/backend:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_BASE }}/backend:latest
+
+      - name: Build & push frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./WebClient
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_BASE }}/webclient:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_BASE }}/webclient:latest
