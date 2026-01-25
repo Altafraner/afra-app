@@ -49,10 +49,14 @@ export const chooseColor = (now: number, max: number) => {
     return 'var(--p-button-danger-background)';
 };
 
-export const chooseSeverity = (now: number) => {
-    if (now <= 70) return 'success';
+export const chooseSeverity = (
+    now: number,
+    warnThreshold: number = 70,
+    invert: boolean = false,
+) => {
+    if (now <= warnThreshold) return !invert ? 'success' : 'danger';
     if (now < 100) return 'warn';
-    return 'danger';
+    return !invert ? 'danger' : 'success';
 };
 
 export const formatDayOfWeek = (number: number) => wochentage[number % 7];

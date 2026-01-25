@@ -38,7 +38,8 @@ const slots = computed(() =>
                         {{ formatSlot(slot.info) }}
                     </span>
                     <span
-                        ><Tag :severity="chooseSeverity(100 - (100 * slot.done) / slot.count)"
+                        ><Tag
+                            :severity="chooseSeverity((100 * slot.done) / slot.count, 25, true)"
                             >{{ slot.done }} / {{ slot.count }}</Tag
                         ></span
                     >
