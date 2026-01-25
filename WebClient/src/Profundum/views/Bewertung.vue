@@ -135,7 +135,11 @@ async function save() {
             <Card v-for="kategorie in anker.kategorien">
                 <template #title>
                     <div class="grid grid-cols-[1fr_repeat(5,4rem)] align-baseline gap-x-1">
-                        <span>{{ kategorie.label }}</span>
+                        <span
+                            ><template v-if="kategorie.isFachlich"
+                                >Fachliche Kompetenz – </template
+                            >{{ kategorie.label }}</span
+                        >
                         <span class="text-xs text-center font-thin">nicht ausgeprägt</span>
                         <span class="text-xs text-center font-thin">wenig ausgeprägt</span>
                         <span class="text-xs text-center font-thin">deutlich ausgeprägt</span>

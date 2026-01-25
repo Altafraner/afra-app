@@ -101,9 +101,15 @@ function startEditKategorie(kategorie) {
             variant: 'update',
             label: kategorie.label,
             fachbereiche: kategorie.fachbereiche.map((k) => k.id),
+            isFachlich: kategorie.isFachlich,
         },
         onClose: async ({ data }) => {
-            await feedback.updateKategorie(kategorie.id, data.label, data.fachbereiche);
+            await feedback.updateKategorie(
+                kategorie.id,
+                data.label,
+                data.fachbereiche,
+                data.isFachlich,
+            );
             await setup();
         },
     });
@@ -139,7 +145,10 @@ function startDeleteKategorie(evt, kategorieId) {
     <div class="flex gap-4 flex-col">
         <Card v-for="kategorie in kategorien">
             <template #title>
-                <h3 class="mt-0 mb-0">{{ kategorie.label }}</h3>
+                <h3 class="mt-0 mb-0">
+                    <template v-if="kategorie.isFachlich">Fachliche Kompetenz – </template
+                    >{{ kategorie.label }}
+                </h3>
             </template>
             <template #content>
                 <div class="grid grid-cols-[1fr_auto] items-baseline">

@@ -2,7 +2,16 @@
 import { inject, ref, type Ref } from 'vue';
 import type { DynamicDialogInstance } from 'primevue/dynamicdialogoptions';
 import { Form, type FormResolverOptions, type FormSubmitEvent } from '@primevue/forms';
-import { Button, FloatLabel, InputText, Message, MultiSelect } from 'primevue';
+import {
+    Button,
+    FloatLabel,
+    InputGroup,
+    InputGroupAddon,
+    InputText,
+    Message,
+    MultiSelect,
+    ToggleSwitch,
+} from 'primevue';
 import type { KriteriumCreationModel } from '@/Profundum/components/Forms/kriteriumCreationModel';
 import { useManagement } from '@/Profundum/composables/verwaltung';
 import type { ProfundumFachbereich } from '@/Profundum/models/verwaltung';
@@ -13,6 +22,7 @@ const data: KriteriumCreationModel = dialogRef.value.data;
 const initialValue = {
     label: data.label ?? '',
     fachbereiche: data.fachbereiche ?? [],
+    isFachlich: data.isFachlich ?? false,
 };
 
 const verwaltung = useManagement();
@@ -28,6 +38,7 @@ const resolver = (e: FormResolverOptions): Record<string, any> => {
     const errors: Record<string, string[]> = {
         label: [],
         fachbereiche: [],
+        isFachlich: [],
     };
 
     if (e.values['label'].length < 2) {
@@ -50,6 +61,7 @@ const submit = (evt: FormSubmitEvent) => {
     dialogRef.value.close({
         label: evt.values['label'],
         fachbereiche: evt.values['fachbereiche'],
+        isFachlich: evt.values['isFachlich'],
     });
 };
 </script>
@@ -59,17 +71,40 @@ const submit = (evt: FormSubmitEvent) => {
         v-slot="$form"
         :initial-values="initialValue"
         :resolver="resolver"
-        class="flex flex-col gap-2"
+        class="flex flex-col gap-2 pt-2"
         @submit="submit"
     >
         <FloatLabel variant="on">
             <label for="label">Bezeichnung</label>
-            <InputText id="label" fluid name="label" />
+            <input-group>
+                <input-group-addon v-if="$form.isFachlich?.value ?? false"
+                    >Fachliche Kompetenz –
+                </input-group-addon>
+                <InputText id="label" fluid name="label" />
+            </input-group>
         </FloatLabel>
         <Message v-if="$form.label?.invalid" severity="error" size="small" variant="simple">
             {{ $form.label.error }}
         </Message>
-        <FloatLabel variant="on">
+        <div class="flex justify-between flex-row-reverse mt-1">
+            <ToggleSwitch
+                id="isFachlich"
+                v-tooltip.left="
+                    'Fachliche Kategorien werden auf dem Feedback-Bogen in einer gesonderten Kategorie dargestellt.'
+                "
+                name="isFachlich"
+            />
+            <label for="isFachlich">Fachliche Kategorie</label>
+        </div>
+        <Message
+            v-if="$form.isFachlich?.invalid"
+            severity="error"
+            size="small"
+            variant="simple"
+        >
+            {{ $form.isFachlich.error }}
+        </Message>
+        <FloatLabel class="mt-3" variant="on">
             <MultiSelect
                 id="fachbereiche"
                 :loading="kategorienLoading"
