@@ -22,7 +22,7 @@ const routes = [
     ...otium,
     ...profundum,
     {
-        path: '/:pathMatch(.*)*',
+        path: '/:pathMatch(?!api/)(.*)*',
         name: 'NotFound',
         component: () => import('@/views/NotFound.vue'),
     },
