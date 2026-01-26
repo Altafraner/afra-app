@@ -47,7 +47,26 @@ public static class Bewertung
             {
                 var fileContents = await profundumManagementService.GenerateFileForPerson(userId);
                 return TypedResults.File(fileContents, MediaTypeNames.Application.Pdf);
-            });
+            })
+            .RequireAuthorization(AuthorizationPolicies.ProfundumsVerantwortlich);
+
+        bewertung.MapGet("/batch.zip",
+                async (FeedbackPrintoutService profundumManagementService,
+                    bool byClass = false,
+                    bool byGm = false,
+                    bool single = false) =>
+                {
+                    FeedbackPrintoutService.BatchingModes mode = 0;
+                    if (byClass) mode |= FeedbackPrintoutService.BatchingModes.ByClass;
+                    if (byGm) mode |= FeedbackPrintoutService.BatchingModes.ByGm;
+                    if (single) mode |= FeedbackPrintoutService.BatchingModes.Single;
+                    if (single && (byClass || byGm))
+                        return (Results<FileContentHttpResult, BadRequest<string>>)TypedResults.BadRequest(
+                            "If single is set, no other batching method may be selected.");
+                    var fileContents = await profundumManagementService.GenerateFileBatched(mode);
+                    return TypedResults.File(fileContents, MediaTypeNames.Application.Zip);
+                })
+            .RequireAuthorization(AuthorizationPolicies.ProfundumsVerantwortlich);
     }
 
     private static async Task<Results<Ok<Anker>, NotFound<HttpValidationProblemDetails>>> AddAnkerAsync(

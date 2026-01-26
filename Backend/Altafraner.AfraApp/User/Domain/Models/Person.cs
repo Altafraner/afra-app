@@ -36,6 +36,11 @@ public class Person : IEmailRecipient
     public required string Email { get; set; }
 
     /// <summary>
+    ///     The mentor-mentee-relations for this person
+    /// </summary>
+    public List<MentorMenteeRelation> MentorMenteeRelations { get; set; } = null!;
+
+    /// <summary>
     ///     The mentors of the person. Only used if the person is a student.
     /// </summary>
     public List<Person> Mentors { get; set; } = null!;

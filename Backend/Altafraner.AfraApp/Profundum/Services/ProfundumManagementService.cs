@@ -5,6 +5,7 @@ using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.User.Domain.DTO;
 using Altafraner.AfraApp.User.Domain.Models;
+using Altafraner.Backbone.Utils;
 using Microsoft.EntityFrameworkCore;
 
 namespace Altafraner.AfraApp.Profundum.Services;
@@ -489,9 +490,7 @@ internal class ProfundumManagementService
         {
             foreach (var i in instanzen)
             {
-                var sanitizedName =
-                    new string(i.Profundum.Bezeichnung.Select(c => char.IsLetterOrDigit(c) || c == ' ' ? c : '_')
-                        .ToArray()).Trim(' ', '_');
+                var sanitizedName = FilenameSanitizer.Sanitize(i.Profundum.Bezeichnung);
                 var fname = $"{sanitizedName}.pdf";
                 var entry = archive.CreateEntry(fname);
                 await using var entryStream = await entry.OpenAsync();
