@@ -48,7 +48,7 @@ internal class EnrollmentService
     /// <summary>
     ///     Enrolls a user in a termin for the subblock starting at a given time.
     /// </summary>
-    /// <param name="terminId">The is of the termin entity to enroll to</param>
+    /// <param name="terminId">The id of the termin entity to enroll to</param>
     /// <param name="student">The student wanting to enroll</param>
     /// <returns>null, iff the user may not enroll into the termin; Otherwise the Termin entity.</returns>
     public async Task<Models_OtiumTermin?> EnrollAsync(Guid terminId, Models_Person student)

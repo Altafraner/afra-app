@@ -467,7 +467,7 @@ internal class ProfundumManagementService
             teilnehmer = teilnehmer.Select(v => new PersonInfoMinimal(v)),
         };
 
-        return _typst.generatePdf(src, inputs);
+        return _typst.GeneratePdf(src, inputs);
     }
     public async Task<(byte[], string)> GetSlotPdfsZipAsync(Guid slotId)
     {

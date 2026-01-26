@@ -33,11 +33,11 @@ internal sealed class BatchEmailsJob<TPerson> : RetryJob where TPerson : class, 
         var dataMap = jobContext.JobDetail.JobDataMap;
         var userId = dataMap.GetGuidValueFromString("user_id");
 
-        var emailsForUser = _dbContext.ScheduledEmails
+        var emailsForUser = await _dbContext.ScheduledEmails
             .Include(x => x.Recipient)
             .Where(x => x.RecipientId == userId)
             .OrderBy(x => x.Deadline) // Short notices are probably more important
-            .ToList();
+            .ToListAsync();
 
         // Flush jobs might be pending that were set by already sent notifications.
         // Do not send empty batches caused by this condition
@@ -58,7 +58,7 @@ internal sealed class BatchEmailsJob<TPerson> : RetryJob where TPerson : class, 
 
                          """);
 
-        for (var i = 0; i < emailsForUser.Count; i++)
+        foreach (var (e, i) in emailsForUser.Select((e, i) => (e, i)))
         {
             // Notification format:
             //  1. Title
@@ -68,9 +68,8 @@ internal sealed class BatchEmailsJob<TPerson> : RetryJob where TPerson : class, 
             //     Notification text
             //  ...
             const string spacing = "    ";
-            var email = emailsForUser[i];
-            var notificationHeading = $"{i + 1,2}. {email.Subject}";
-            var notificationText = spacing + email.Body.ReplaceLineEndings(Environment.NewLine + spacing);
+            var notificationHeading = $"{i + 1,2}. {e.Subject}";
+            var notificationText = spacing + e.Body.ReplaceLineEndings(Environment.NewLine + spacing);
             batchText.AppendLine(notificationHeading + Environment.NewLine + notificationText);
         }
 

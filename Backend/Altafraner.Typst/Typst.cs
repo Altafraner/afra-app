@@ -17,7 +17,7 @@ public class Typst
     }
 
     ///
-    public byte[] generatePdf(string source, object inputdata)
+    public byte[] GeneratePdf(string source, object inputData)
     {
         var typstCompilerWrapper = _cachedCompilers.GetValueOrDefault(source);
         if (typstCompilerWrapper is null)
@@ -28,7 +28,7 @@ public class Typst
             _cachedCompilers[source] = typstCompilerWrapper;
         }
 
-        typstCompilerWrapper.SetSysInputs(new Dictionary<string, string> { { "data", JsonSerializer.Serialize(inputdata) } });
+        typstCompilerWrapper.SetSysInputs(new Dictionary<string, string> { { "data", JsonSerializer.Serialize(inputData) } });
         var res = typstCompilerWrapper.CompilePdf();
         typstCompilerWrapper.SetSysInputs(new Dictionary<string, string>());
         return res;
