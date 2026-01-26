@@ -6,6 +6,7 @@ import type {
     FeedbackKategorieChangeRequest,
     ProfundumFeedbackStatus,
 } from '@/Profundum/models/feedback';
+import { formatMachineDate } from '@/helpers/formatters';
 
 export const useFeedback = () => {
     const toast = useToast();
@@ -196,6 +197,60 @@ export const useFeedback = () => {
         }
     }
 
+    function downloadForStudent(
+        studentId: string,
+        schuljahr: number,
+        halbjahr: boolean,
+        ausgabedatum: Date,
+    ): string | undefined {
+        try {
+            const url = `/api/profundum/bewertung/${studentId}.pdf?schuljahr=${schuljahr}&halbjahr=${halbjahr}&ausgabedatum=${formatMachineDate(ausgabedatum)}`;
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = '';
+            a.rel = 'noopener';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            return url;
+        } catch (e) {
+            toast.add({
+                severity: 'error',
+                summary: 'Es ist ein Fehler aufgetreten',
+                detail: `Das herunterladen ist fehlgeschlagen`,
+            });
+            console.error(e);
+        }
+    }
+
+    function downloadForAll(
+        schuljahr: number,
+        halbjahr: boolean,
+        single: boolean,
+        byGm: boolean,
+        byClass: boolean,
+        ausgabedatum: Date,
+    ): string | undefined {
+        try {
+            const url = `/api/profundum/bewertung/batch.zip?schuljahr=${schuljahr}&halbjahr=${halbjahr}&single=${single}&byGm=${byGm}&byClass=${byClass}&ausgabedatum=${formatMachineDate(ausgabedatum)}`;
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = '';
+            a.rel = 'noopener';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            return url;
+        } catch (e) {
+            toast.add({
+                severity: 'error',
+                summary: 'Es ist ein Fehler aufgetreten',
+                detail: `Das herunterladen ist fehlgeschlagen`,
+            });
+            console.error(e);
+        }
+    }
+
     return {
         getAllAnker,
         getAnkerForProfundum,
@@ -208,5 +263,7 @@ export const useFeedback = () => {
         deleteKategorie,
         bewertungAbgeben,
         getControl,
+        downloadForStudent,
+        downloadForAll,
     };
 };

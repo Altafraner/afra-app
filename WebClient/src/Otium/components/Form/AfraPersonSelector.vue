@@ -2,7 +2,7 @@
 import { formatTutor } from '@/helpers/formatters';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
 import { ref } from 'vue';
-import { FloatLabel, Select, MultiSelect } from 'primevue';
+import { FloatLabel, MultiSelect, Select } from 'primevue';
 
 const model = defineModel();
 
@@ -48,6 +48,7 @@ getPersonen();
                 option-label="name"
                 option-value="id"
                 v-bind="$attrs"
+                aria-labelledby="student-label"
             />
         </template>
         <template v-else>
@@ -61,9 +62,10 @@ getPersonen();
                 option-value="id"
                 v-bind="$attrs"
                 filter
+                aria-labelledby="student-label"
             />
         </template>
-        <label :for="id">
+        <label id="student-label">
             <slot name="label">Betreuer:in</slot>
         </label>
     </FloatLabel>
