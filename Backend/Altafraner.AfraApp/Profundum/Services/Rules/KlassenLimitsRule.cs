@@ -42,7 +42,7 @@ public class KlassenLimitsRule : IProfundumIndividualRule
 
         foreach (var (k, v) in belegVars)
         {
-            var (s, i) = k;
+            var (_, i) = k;
             var minKlasse = i.Profundum.MinKlasse;
             var maxKlasse = i.Profundum.MaxKlasse;
             if (minKlasse is not null && klasse < minKlasse)

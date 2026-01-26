@@ -38,7 +38,7 @@ public record ProfundumSlot
     ///
     public override string ToString()
     {
-        return $"{Jahr}-{Quartal.ToString()}-{Wochentag.ToString()}";
+        return $"{Jahr}-{Quartal}-{Wochentag}";
     }
 }
 

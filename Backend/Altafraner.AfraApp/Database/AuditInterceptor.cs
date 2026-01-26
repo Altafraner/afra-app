@@ -59,8 +59,6 @@ public class AuditInterceptor : SaveChangesInterceptor
 
         Guid? userId = GetUserId();
 
-        var now = DateTime.UtcNow;
-
         foreach (var entry in context.ChangeTracker.Entries())
         {
             if (entry.Entity is IHasUserTracking audit)

@@ -1,3 +1,4 @@
+using System.Text;
 using Altafraner.Backbone.EmailOutbox;
 using Altafraner.Backbone.Scheduling;
 using Microsoft.EntityFrameworkCore;
@@ -50,12 +51,12 @@ internal sealed class BatchEmailsJob<TPerson> : RetryJob where TPerson : class, 
         var userEmail = user.Email;
 
         var batchSubject = emailsForUser.Count == 1 ? emailsForUser.First().Subject : "Neue Benachrichtigungen";
-        var batchText = $"""
+        var batchText = new StringBuilder($"""
                          Hallo {user.FirstName} {user.LastName},
 
                          Es gibt neue Benachrichtigungen in der Afra-App. Diese sind im folgenden aufgelistet.
 
-                         """;
+                         """);
 
         for (var i = 0; i < emailsForUser.Count; i++)
         {
@@ -70,11 +71,11 @@ internal sealed class BatchEmailsJob<TPerson> : RetryJob where TPerson : class, 
             var email = emailsForUser[i];
             var notificationHeading = $"{i + 1,2}. {email.Subject}";
             var notificationText = spacing + email.Body.ReplaceLineEndings(Environment.NewLine + spacing);
-            batchText += notificationHeading + Environment.NewLine + notificationText + Environment.NewLine;
+            batchText.AppendLine(notificationHeading + Environment.NewLine + notificationText);
         }
 
         _logger.LogInformation("Flushing E-Mail Notifications for {email}", userEmail);
-        await _emailOutbox.SendReportAsync(userEmail, batchSubject, batchText);
+        await _emailOutbox.SendReportAsync(userEmail, batchSubject, batchText.ToString());
 
         if (_dbContext is not DbContext contextActions)
             throw new InvalidOperationException("The given email store is no dbContext");
