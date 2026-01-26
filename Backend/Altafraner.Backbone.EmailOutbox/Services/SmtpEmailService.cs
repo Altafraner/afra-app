@@ -27,7 +27,8 @@ internal class SmtpEmailService : IEmailService
     /// </summary>
     public async Task SendEmailAsync(string toAddress, string subject, string body)
     {
-        var email = new MimeMessage();
+        using var email = new MimeMessage();
+
         email.Sender = MailboxAddress.Parse(_emailConfiguration.SenderEmail);
         email.Sender.Name = _emailConfiguration.SenderName;
         email.From.Add(email.Sender);

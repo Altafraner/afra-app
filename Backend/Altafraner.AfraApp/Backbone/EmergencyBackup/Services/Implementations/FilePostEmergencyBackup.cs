@@ -34,7 +34,7 @@ public class FilePostEmergencyBackup : IEmergencyBackupService
         // Sanitize the file name by replacing non-alphanumeric characters with hyphens
         var fileName = string.Concat(name.Select(c => char.IsAsciiLetterOrDigit(c) ? c : '-')) + ".html";
 
-        var formData = new MultipartFormDataContent();
+        using var formData = new MultipartFormDataContent();
         formData.Add(byteContent, "file", fileName);
 
         try

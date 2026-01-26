@@ -207,7 +207,8 @@ internal class ProfundumMatchingService
 
         _logger.LogInformation("Model stats: {stats}", model.ModelStats());
 
-        var solver = new CpSolver();
+        using var solver = new CpSolver();
+
         solver.StringParameters = "max_time_in_seconds:240.0";
         var timeSolverPrep = stopwatch.ElapsedMilliseconds;
         stopwatch.Restart();
