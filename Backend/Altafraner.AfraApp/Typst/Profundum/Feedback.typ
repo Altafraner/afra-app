@@ -119,6 +119,7 @@
       align(right, [hervorragend ausgeprägt]),
     ),
   )
+  v(5pt)
 }
 
 
@@ -133,23 +134,23 @@
   block(
     breakable: false,
     {
-      block(below: 0.5em, text(size-large, weight: 600, font: accent-font, fill: accent-color, title))
+      block(below: 4pt, text(size-large, weight: 600, font: accent-font, fill: accent-color, title))
       table(
         columns: (50%, 50%),
         stroke: none,
         inset: (y: 2pt, x: 0pt),
         column-gutter: 20pt,
-        align: (left + horizon, left + horizon),
+        align: left + horizon,
         ..for (anker, notes) in items {
           (
-            par(text(size: size-normal, anker)),
+            box(inset: (y: 2pt), text(size: size-normal, anker)),
             box(height: 1.2em, width: 90%, dot-plot(notes)),
           )
         }
       )
     },
   )
-  v(1em)
+  v(4pt)
 }
 
 #let nice(index, content) = {
@@ -159,8 +160,8 @@
     paper: "a4",
     margin: (
       top: 3 * 11.2mm,
-      left: 10mm,
-      right: 10mm,
+      left: 11.2mm,
+      right: 11.2mm,
       bottom: 15mm,
     ),
     footer: context align(
@@ -188,76 +189,74 @@
   #let schulleiter = element.Schulleiter
 
   #set text(size: size-normal, fill: text-color, font: primary-font)
-  #grid(
-    columns: (1fr, 1fr),
-    row-gutter: 2em,
-    align(left)[
+  #columns(2)[
+    #align(left)[
       #text(29pt, font: primary-font, weight: 500, fill: accent-color)[PROFUNDUM]\
       #text(size-large, weight: "light")[Feedback-Bogen]
-    ],
-    [],
+    ]
+    #v(1em)
+    #text(size-large, font: accent-font, weight: 700, name-of(schueler))\
+    Klasse #schueler.Gruppe
 
-    [
-      #text(size-large, font: accent-font, weight: 700, name-of(schueler))\
-      Klasse #schueler.Gruppe \
-      Schuljahr #meta.Schuljahr / #(meta.Schuljahr + 1) \
-      #v(1em)
-      #text(size: size-small, style: "italic", fill: gray-color)[Ausgabedatum: #meta.Datum]
-      #v(3em)
-      #align(center)[
+    Schuljahr #meta.Schuljahr / #(meta.Schuljahr + 1) \
+    #text(weight: "thin")[
+      #if meta.Halbjahr [Erstes Halbjahr\ ]
+      Datum: #meta.Datum
+    ]
+
+    #colbreak()
+    #align(center + horizon)[
+      #radar-chart(daten_allgemein)
+    ]
+  ]
+
+  #v(0.5cm)
+  #bigheading("Allgemeine Kompetenzen", "Allgemeine Bewertungen aus allen Profunda")
+  #for (cat, items) in daten_allgemein {
+    category-block(cat, items)
+  }
+
+  #block(breakable: false, inset: 0%, outset: 0%, spacing: 0%)[
+    #if daten_fachlich != none and daten_fachlich.len() > 0 {
+      v(1.7em)
+      bigheading("Fachspezifische Kompetenzen", "Spezifische Bewertungen der Fachbereiche")
+
+      for (cat, items) in daten_fachlich {
+        category-block(cat, items)
+      }
+    }
+    #block(
+      breakable: false,
+      fill: accent-color.lighten(95%),
+      inset: 1em,
+      radius: 4pt,
+      width: 100%,
+      [
+        #text(weight: 700, size: size-small, font: accent-font)[Grundlage dieses Feedbacks sind folgende Profunda:]\
+        #text(size: size-small, profunda.map(p => profundumToText(p)).join(", "))
+      ],
+    )
+
+    #align(center)[
+      #block(breakable: false, width: 80%)[
+        #v(5em)
         #grid(
           columns: (1fr, 1fr),
           gutter: 3em,
           [
             #line(length: 100%)
             #v(-8pt)
-            #text(size: size-small)[Gymnasiale(r) Mentor(in)\ #if gm != none [#name-of(gm)]]
+            #text(size: size-small)[ #if gm != none [#name-of(gm)]\ Gymnasiale(r) Mentor(in)]
           ],
           [
             #line(length: 100%)
             #v(-8pt)
-            #text(size: size-small)[Schulleiter(in)\ #if schulleiter != none [#name-of(schulleiter)]]
+            #text(size: size-small)[#if schulleiter != none [#name-of(schulleiter)]\ Schulleiter(in)]
           ],
         )
       ]
-    ],
-    [
-      #align(right + horizon)[
-        #radar-chart(daten_allgemein)
-      ]
-      #v(1em)
-    ],
-  )
-
-  #v(0.5cm)
-  #bigheading("Allgemeine Kompetenzen", "Allgemeine Bewertungen aus allen Profunda")
-
-  #for (cat, items) in daten_allgemein {
-    category-block(cat, items)
-  }
-
-  #if daten_fachlich != none and daten_fachlich.len() > 0 {
-    v(1em)
-    bigheading("Fachspezifische Kompetenzen", "Spezifische Bewertungen der Fachbereiche")
-    v(0.5em)
-
-    for (cat, items) in daten_fachlich {
-      category-block(cat, items)
-    }
-  }
-
-  #v(1fr)
-  #block(
-    fill: luma(245),
-    inset: 1em,
-    radius: 4pt,
-    width: 100%,
-    [
-      #text(weight: 700, size: size-small, font: accent-font)[Grundlage dieses Feedbacks sind folgende Profunda:]
-
-      #text(size: size-small, profunda.map(p => profundumToText(p)).join(", "))
-    ],
-  )
+    ]
+  ]
 ]
 
 #let i = 0
