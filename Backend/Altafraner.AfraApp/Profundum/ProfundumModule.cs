@@ -14,9 +14,9 @@ namespace Altafraner.AfraApp.Profundum;
 [DependsOn<UserModule>]
 [DependsOn<DatabaseModule>]
 [DependsOn<TypstModule>]
-public class ProfundumModule : IModule
+[DependsOn<GeneralConfigurationModule>]
+internal class ProfundumModule : IModule
 {
-    /// <inheritdoc />
     public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
     {
         services.AddOptions<ProfundumConfiguration>()
@@ -34,7 +34,6 @@ public class ProfundumModule : IModule
         services.AddRules();
     }
 
-    /// <inheritdoc />
     public void Configure(WebApplication app)
     {
         var group = app.MapGroup("/api/profundum");

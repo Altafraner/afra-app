@@ -43,15 +43,25 @@ public static class Bewertung
             .RequireAuthorization(AuthorizationPolicies.ProfundumsVerantwortlich);
 
         bewertung.MapGet("/{userId:guid}.pdf",
-            async (FeedbackPrintoutService profundumManagementService, Guid userId) =>
+                async (FeedbackPrintoutService profundumManagementService,
+                    Guid userId,
+                    UserService userService,
+                    int schuljahr,
+                    bool halbjahr,
+                    DateOnly ausgabedatum) =>
             {
-                var fileContents = await profundumManagementService.GenerateFileForPerson(userId);
+                var user = await userService.GetUserByIdAsync(userId);
+                var fileContents =
+                    await profundumManagementService.GenerateFileForPerson(user, schuljahr, halbjahr, ausgabedatum);
                 return TypedResults.File(fileContents, MediaTypeNames.Application.Pdf);
             })
             .RequireAuthorization(AuthorizationPolicies.ProfundumsVerantwortlich);
 
         bewertung.MapGet("/batch.zip",
                 async (FeedbackPrintoutService profundumManagementService,
+                    int schuljahr,
+                    bool halbjahr,
+                    DateOnly ausgabedatum,
                     bool byClass = false,
                     bool byGm = false,
                     bool single = false) =>
@@ -63,7 +73,8 @@ public static class Bewertung
                     if (single && (byClass || byGm))
                         return (Results<FileContentHttpResult, BadRequest<string>>)TypedResults.BadRequest(
                             "If single is set, no other batching method may be selected.");
-                    var fileContents = await profundumManagementService.GenerateFileBatched(mode);
+                    var fileContents =
+                        await profundumManagementService.GenerateFileBatched(mode, schuljahr, halbjahr, ausgabedatum);
                     return TypedResults.File(fileContents, MediaTypeNames.Application.Zip);
                 })
             .RequireAuthorization(AuthorizationPolicies.ProfundumsVerantwortlich);
