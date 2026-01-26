@@ -2,13 +2,16 @@ using System.Collections.Immutable;
 using System.IO.Compression;
 using System.Text;
 using System.Text.RegularExpressions;
+using Altafraner.AfraApp.Domain.Configuration;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
+using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.Profundum.Domain.Models.Bewertung;
 using Altafraner.AfraApp.User.Domain.DTO;
 using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.AfraApp.User.Services;
 using Altafraner.Backbone.Utils;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Quartz.Util;
 using Person = Altafraner.AfraApp.User.Domain.Models.Person;
 
@@ -19,24 +22,28 @@ internal partial class FeedbackPrintoutService
     private readonly AfraAppContext _dbContext;
     private readonly Altafraner.Typst.Typst _typstService;
     private readonly UserService _userService;
+    private readonly IOptions<GeneralConfiguration> _generalConfig;
 
     public FeedbackPrintoutService(Altafraner.Typst.Typst typstService,
         UserService userService,
-        AfraAppContext dbContext)
+        AfraAppContext dbContext,
+        IOptions<GeneralConfiguration> generalConfig)
     {
         _typstService = typstService;
         _userService = userService;
         _dbContext = dbContext;
+        _generalConfig = generalConfig;
     }
 
-    public async Task<byte[]> GenerateFileForPerson(Guid personId)
+    public async Task<byte[]> GenerateFileForPerson(Person user, int schuljahr, bool halbjahr, DateOnly ausgabedatum)
     {
-        var user = await _userService.GetUserByIdAsync(personId);
         var userGm = await _dbContext.Personen.Where(p =>
                 _dbContext.MentorMenteeRelations.Where(e => e.StudentId == user.Id && e.Type == MentorType.GM)
                     .Select(e => e.MentorId)
                     .Contains(p.Id))
             .FirstOrDefaultAsync();
+
+        var quartale = GetQuartaleForHalbjahr(halbjahr);
 
         var feedback = await _dbContext.ProfundumFeedbackEntries
             .AsSplitQuery()
@@ -50,17 +57,21 @@ internal partial class FeedbackPrintoutService
             .Include(e => e.Instanz)
             .ThenInclude(e => e.Verantwortliche)
             .Where(e => e.BetroffenePerson == user)
+            .Where(e => e.Instanz.Slots.Any(s => s.Jahr == schuljahr && quartale.Contains(s.Quartal)))
             .ToArrayAsync();
 
-        ProfundumFeedbackPdfData[] data = [FeedbackToInputData(feedback, user, userGm)];
+        var meta = new ProfundumFeedbackPdfData.MetaData(ausgabedatum.ToShortDateString(), schuljahr, halbjahr);
+        ProfundumFeedbackPdfData[] data =
+            [FeedbackToInputData(feedback, user, userGm, meta)];
 
         var file = _typstService.GeneratePdf(Altafraner.Typst.Templates.Profundum.Feedback, data);
         return file;
     }
 
-    private static ProfundumFeedbackPdfData FeedbackToInputData(ProfundumFeedbackEntry[] feedback,
+    private ProfundumFeedbackPdfData FeedbackToInputData(ProfundumFeedbackEntry[] feedback,
         Person user,
-        Person? userGm)
+        Person? userGm,
+        ProfundumFeedbackPdfData.MetaData meta)
     {
         var profunda = feedback.Select(e => e.Instanz)
             .DistinctBy(e => e.Profundum)
@@ -102,14 +113,10 @@ internal partial class FeedbackPrintoutService
         var data =
             new ProfundumFeedbackPdfData
             {
-                Meta = new ProfundumFeedbackPdfData.MetaData("25.01.2026", 25),
+                Meta = meta,
                 Person = new PersonInfoMinimal(user),
                 GM = userGm is not null ? new PersonInfoMinimal(userGm) : null,
-                Schulleiter = new PersonInfoMinimal
-                {
-                    Vorname = "Annabell",
-                    Nachname = "Hecht"
-                },
+                Schulleiter = _generalConfig.Value.Schulleiter,
                 Profunda = profunda,
                 FeedbackAllgemein = allgemeinSorted,
                 FeedbackFachlich = fachlichSorted
@@ -117,7 +124,10 @@ internal partial class FeedbackPrintoutService
         return data;
     }
 
-    public async Task<byte[]> GenerateFileBatched(BatchingModes mode)
+    public async Task<byte[]> GenerateFileBatched(BatchingModes mode,
+        int schuljahr,
+        bool halbjahr,
+        DateOnly ausgabedatum)
     {
         if (mode.HasFlag(BatchingModes.Single) && mode != BatchingModes.Single)
             throw new ArgumentException("Cannot batch and single at onec", nameof(mode));
@@ -139,6 +149,8 @@ internal partial class FeedbackPrintoutService
         var allMentors = (await _userService.GetUsersWithRoleAsync(Rolle.Tutor)).ToDictionary(e => e.Id, e => e)
             .AsReadOnly();
 
+        var quartale = GetQuartaleForHalbjahr(halbjahr);
+
         var allFeedback = await _dbContext.ProfundumFeedbackEntries.AsSplitQuery()
             .Include(e => e.Anker)
             .ThenInclude(a => a.Kategorie)
@@ -149,8 +161,11 @@ internal partial class FeedbackPrintoutService
             .ThenInclude(e => e.Slots)
             .Include(e => e.Instanz)
             .ThenInclude(e => e.Verantwortliche)
+            .Where(e => e.Instanz.Slots.Any(s => s.Jahr == schuljahr && quartale.Contains(s.Quartal)))
             .GroupBy(e => e.BetroffenePersonId)
             .ToDictionaryAsync(e => e.Key, e => e.ToArray());
+
+        var meta = new ProfundumFeedbackPdfData.MetaData(ausgabedatum.ToShortDateString(), schuljahr, halbjahr);
 
         using var zipStream = new MemoryStream();
         await using (var zip = new ZipArchive(zipStream, ZipArchiveMode.Create, true))
@@ -174,7 +189,7 @@ internal partial class FeedbackPrintoutService
                     if (person.MentorMenteeRelations.Count > 1)
                         warnings.Add(WarningForUser(person, "Mehrere GMs registriert, nehme ersten"));
 
-                    data.Add(FeedbackToInputData(feedback!, person, gm));
+                    data.Add(FeedbackToInputData(feedback!, person, gm, meta));
                     if (mode.HasFlag(BatchingModes.Single))
                     {
                         var file = _typstService.GeneratePdf(Altafraner.Typst.Templates.Profundum.Feedback, data);
@@ -214,7 +229,11 @@ internal partial class FeedbackPrintoutService
         string NiceFilename(string klasse, Guid? mentor)
         {
             return
-                $"{klasse}-{(mentor is null ? "unbekannt" : mentor == Guid.AllBitsSet ? "beliebig" : NicePersonName(allMentors.GetValueOrDefault(mentor.Value)))}.pdf";
+                $"{klasse}-{(mentor is null
+                    ? "unbekannt"
+                    : mentor == Guid.AllBitsSet
+                        ? "beliebig"
+                        : NicePersonName(allMentors.GetValueOrDefault(mentor.Value)))}.pdf";
         }
 
         string NicePersonName(Person? user)
@@ -226,6 +245,13 @@ internal partial class FeedbackPrintoutService
         {
             return $"{user.LastName}, {user.FirstName} ({user.Gruppe}): {warning}";
         }
+    }
+
+    private static List<ProfundumQuartal> GetQuartaleForHalbjahr(bool halbjahr)
+    {
+        return halbjahr
+            ? [ProfundumQuartal.Q1, ProfundumQuartal.Q2]
+            : [ProfundumQuartal.Q1, ProfundumQuartal.Q2, ProfundumQuartal.Q3, ProfundumQuartal.Q4];
     }
 
     [Flags]
