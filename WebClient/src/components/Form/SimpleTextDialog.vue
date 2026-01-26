@@ -1,4 +1,4 @@
-﻿<script lang="ts" setup>
+<script lang="ts" setup>
 import { inject, type Ref } from 'vue';
 import type { DynamicDialogInstance } from 'primevue/dynamicdialogoptions';
 import type { SimpleTextDialogModel } from '@/components/Form/simpleTextDialogModel';

@@ -1,4 +1,4 @@
-﻿<script lang="ts" setup>
+<script lang="ts" setup>
 import { Card, Message } from 'primevue';
 import { convertMarkdownToHtml } from '@/composables/markdown';
 import type { Note } from '@/Otium/models/note';

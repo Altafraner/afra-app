@@ -1,4 +1,4 @@
-﻿namespace Altafraner.Backbone.Utils;
+namespace Altafraner.Backbone.Utils;
 
 /// <summary>
 ///     A quick utility class to sanitize filenames

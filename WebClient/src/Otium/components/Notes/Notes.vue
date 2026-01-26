@@ -1,4 +1,4 @@
-﻿<script lang="ts" setup>
+<script lang="ts" setup>
 import { computed, inject, ref } from 'vue';
 import NoteElement from './Note.vue';
 import { Button, FloatLabel, InputGroup, Message, Textarea, useToast } from 'primevue';

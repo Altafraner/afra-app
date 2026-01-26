@@ -1,4 +1,4 @@
-﻿import type { UserInfoMinimal } from '@/models/user/userInfoMinimal';
+import type { UserInfoMinimal } from '@/models/user/userInfoMinimal';
 import type { ProfundumFachbereich, ProfundumInstanz, ProfundumSlot } from './verwaltung';
 
 type FeedbackStatus = 'Missing' | 'Partial' | 'Done';

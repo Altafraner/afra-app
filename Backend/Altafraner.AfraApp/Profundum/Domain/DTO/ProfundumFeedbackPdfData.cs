@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+using System.Collections.Immutable;
 using Altafraner.AfraApp.User.Domain.DTO;
 
 namespace Altafraner.AfraApp.Profundum.Domain.DTO;

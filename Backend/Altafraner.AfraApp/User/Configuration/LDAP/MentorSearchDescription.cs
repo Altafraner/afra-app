@@ -1,4 +1,4 @@
-﻿using Altafraner.AfraApp.User.Domain.Models;
+using Altafraner.AfraApp.User.Domain.Models;
 
 namespace Altafraner.AfraApp.User.Configuration.LDAP;
 

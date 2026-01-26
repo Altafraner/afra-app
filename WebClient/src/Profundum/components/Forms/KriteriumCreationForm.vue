@@ -1,4 +1,4 @@
-﻿<script lang="ts" setup>
+<script lang="ts" setup>
 import { inject, ref, type Ref } from 'vue';
 import type { DynamicDialogInstance } from 'primevue/dynamicdialogoptions';
 import { Form, type FormResolverOptions, type FormSubmitEvent } from '@primevue/forms';

@@ -1,4 +1,4 @@
-﻿#import "@preview/cetz:0.4.2"
+#import "@preview/cetz:0.4.2"
 #import "@preview/titleize:0.1.1": titlecase
 
 #let input = json(bytes(sys.inputs.data))

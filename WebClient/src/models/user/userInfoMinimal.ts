@@ -1,4 +1,4 @@
-﻿export interface UserInfoMinimal {
+export interface UserInfoMinimal {
     id: string;
     vorname: string;
     nachname: string;

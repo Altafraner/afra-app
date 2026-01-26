@@ -1,4 +1,4 @@
-﻿using Altafraner.AfraApp.User.Domain.DTO;
+using Altafraner.AfraApp.User.Domain.DTO;
 
 namespace Altafraner.AfraApp.Domain.Configuration;
 
