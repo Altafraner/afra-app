@@ -36,4 +36,9 @@ export const routes = [
         name: 'Profundum-Feedback-Control',
         component: () => import('@/Profundum/views/BewertungControl.vue'),
     },
+    {
+        path: '/profundum/feedback/download',
+        name: 'Profundum-Feedback-Download',
+        component: () => import('@/Profundum/views/BewertungDownload.vue'),
+    },
 ];

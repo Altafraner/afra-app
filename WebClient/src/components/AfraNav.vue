@@ -109,13 +109,22 @@ const all_items: MenuItemWithCondition[] = [
                     permissions: ['Profundumsverantwortlich'],
                 },
             },
-
             {
                 label: 'Feedback Überwachung',
                 route: {
                     name: 'Profundum-Feedback-Control',
                 },
                 icon: 'pi pi-eye',
+                conditions: {
+                    permissions: ['Profundumsverantwortlich'],
+                },
+            },
+            {
+                label: 'Feedback Drucken',
+                route: {
+                    name: 'Profundum-Feedback-Download',
+                },
+                icon: 'pi pi-print',
                 conditions: {
                     permissions: ['Profundumsverantwortlich'],
                 },
