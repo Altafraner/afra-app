@@ -1,4 +1,4 @@
-﻿import { useToast } from 'primevue';
+import { useToast } from 'primevue';
 import { mande, type MandeError } from 'mande';
 import type { QuartalEnrollmentOverview } from '@/Profundum/models/feedback';
 import type { ProfundumFachbereich, ProfundumSlot } from '@/Profundum/models/verwaltung';

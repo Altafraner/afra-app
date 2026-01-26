@@ -1,4 +1,4 @@
-﻿using Altafraner.AfraApp.Domain.Configuration;
+using Altafraner.AfraApp.Domain.Configuration;
 using Altafraner.Backbone.Abstractions;
 
 namespace Altafraner.AfraApp;

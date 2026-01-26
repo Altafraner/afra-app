@@ -1,4 +1,4 @@
-﻿export interface SimpleTextDialogModel {
+export interface SimpleTextDialogModel {
     default: string | undefined;
     maxLength: number | undefined;
     minLength: number | undefined;

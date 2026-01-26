@@ -1,4 +1,4 @@
-﻿<script lang="ts" setup>
+<script lang="ts" setup>
 import Form from '@primevue/forms/form';
 import { Button, DatePicker, Message, Select, SelectButton } from 'primevue';
 import AfraPersonSelector from '@/Otium/components/Form/AfraPersonSelector.vue';

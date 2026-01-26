@@ -1,4 +1,4 @@
-﻿import type { UserInfoMinimal } from '@/models/user/userInfoMinimal';
+import type { UserInfoMinimal } from '@/models/user/userInfoMinimal';
 
 type ProfundumQuartal = 'Q1' | 'Q2' | 'Q3' | 'Q4';
 type Wochentag =

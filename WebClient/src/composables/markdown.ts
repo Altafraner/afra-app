@@ -1,4 +1,4 @@
-﻿import { marked } from 'marked';
+import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 
 export function convertMarkdownToHtml(markdown: string, inline: boolean = false): string {
