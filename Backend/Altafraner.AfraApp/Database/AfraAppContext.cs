@@ -183,7 +183,7 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
             .WithMany(p => p.Mentees)
             .UsingEntity<MentorMenteeRelation>(
                 r => r.HasOne<Person>().WithMany().HasForeignKey(e => e.MentorId),
-                l => l.HasOne<Person>().WithMany().HasForeignKey(e => e.StudentId));
+                l => l.HasOne<Person>().WithMany(e => e.MentorMenteeRelations).HasForeignKey(e => e.StudentId));
 
         modelBuilder.Entity<Person>()
             .PrimitiveCollection(p => p.GlobalPermissions);

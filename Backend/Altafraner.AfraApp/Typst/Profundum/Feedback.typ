@@ -158,7 +158,7 @@
   set page(
     paper: "a4",
     margin: (
-      top: 31.1mm,
+      top: 3 * 11.2mm,
       left: 10mm,
       right: 10mm,
       bottom: 15mm,
@@ -170,8 +170,8 @@
       ],
     ),
     header: {
-      place(right + top, dy: 10mm, image("SMK_009_P_4C_FLUSH.svg", width: 76.8mm))
-      place(left + top, dy: 10mm, image("signal-2026-01-25-134339.svg", height: 11.1mm))
+      place(right + top, dy: 11.2mm, image("SMK_009_P_4C_FLUSH.svg", width: 76.8mm))
+      place(left + top, dy: 11.2mm, image("SANKT AFRA_SCHLEIFENQUADRAT_BREIT_BLAU_KORREKTUR.svg", height: 11.5mm))
     },
   )
   content
