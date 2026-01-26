@@ -170,7 +170,7 @@ internal class ProfundumManagementService
     public async Task DeleteKategorieAsync(Guid kategorieId)
     {
         var numDeleted = await _dbContext.ProfundaKategorien.Where(k => k.Id == kategorieId).ExecuteDeleteAsync();
-        if (numDeleted == 0) throw new NotFoundException("no such kateorie");
+        if (numDeleted == 0) throw new NotFoundException("no such kategorie");
     }
 
     public Task<DTOProfundumKategorie[]> GetKategorienAsync()
