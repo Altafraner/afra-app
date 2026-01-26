@@ -421,7 +421,7 @@ internal class EnrollmentService
             .ToListAsync();
 
         var mandatoryBlocks = allBlocks
-            .Where(b => _blockHelper.Get(b.SchemaId)?.Verpflichtend == true)
+            .Where(b => _blockHelper.Get(b.SchemaId)?.Verpflichtend ?? false)
             .ToList();
 
         if (mandatoryBlocks.Count == 0) return [];
