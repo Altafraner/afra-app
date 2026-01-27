@@ -4,6 +4,22 @@ import { Button } from 'primevue';
 import AfraOtiumSupervisionView from '@/Otium/components/Supervision/AfraOtiumSupervisionView.vue';
 import { useRoute } from 'vue-router';
 import { mande } from 'mande';
+import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
+
+const navItems = [
+    {
+        label: 'Otium',
+        route: {
+            name: 'Katalog',
+        },
+    },
+    {
+        label: 'Aufsicht',
+        route: {
+            name: 'Aufsicht',
+        },
+    },
+];
 
 const route = useRoute();
 const status = ref(route.query.blockId !== undefined);
@@ -31,6 +47,7 @@ await setup();
 </script>
 
 <template>
+    <nav-breadcrumb :items="navItems" />
     <div class="flex justify-between items-center">
         <h1>Aufsicht</h1>
         <Button

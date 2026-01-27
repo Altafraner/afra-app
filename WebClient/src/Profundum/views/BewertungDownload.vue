@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import Form from '@primevue/forms/form';
 import { Button, DatePicker, Message, Select, SelectButton } from 'primevue';
 import AfraPersonSelector from '@/Otium/components/Form/AfraPersonSelector.vue';
@@ -6,11 +6,30 @@ import { ref, shallowRef } from 'vue';
 import type { FormResolverOptions, FormSubmitEvent } from '@primevue/forms';
 import { useManagement } from '@/Profundum/composables/verwaltung';
 import { useFeedback } from '@/Profundum/composables/feedback';
+import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
 
 interface Option<T> {
     label: string;
     value: T;
 }
+
+const navItems = [
+    {
+        label: 'Profundum',
+    },
+    {
+        label: 'Feedback',
+        route: {
+            name: 'Profundum-Feedback-Abgeben',
+        },
+    },
+    {
+        label: 'Drucken',
+        route: {
+            name: 'Profundum-Feedback-Download',
+        },
+    },
+];
 
 const verwaltung = useManagement();
 const feedback = useFeedback();
@@ -142,6 +161,7 @@ setup();
 </script>
 
 <template>
+    <nav-breadcrumb :items="navItems" />
     <h1>Feedback-Bogen herunterladen</h1>
     <Form v-slot="$form" :resolver="resolver" @submit="submit">
         <div class="flex flex-col w-full gap-4">

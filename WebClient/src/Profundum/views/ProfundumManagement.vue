@@ -4,25 +4,38 @@ import { mande } from 'mande';
 import {
     Button,
     Column,
-    Message,
     DataTable,
     Dialog,
     InputText,
+    Message,
+    MultiSelect,
+    Select,
+    Tab,
+    TabList,
+    TabPanel,
+    TabPanels,
+    Tabs,
     Textarea,
     useToast,
-    Tabs,
-    TabList,
-    Tab,
-    TabPanels,
-    TabPanel,
-    Select,
-    MultiSelect,
 } from 'primevue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
 
 import EinwahlZeitraeume from '@/Profundum/components/EinwahlZeitraeume.vue';
 import Slots from '@/Profundum/components/Slots.vue';
 import { useManagement } from '@/Profundum/composables/verwaltung.ts';
+import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
+
+const navItems = [
+    {
+        label: 'Profundum',
+    },
+    {
+        label: 'Verwaltung',
+        route: {
+            name: 'Profundum-Verwaltung',
+        },
+    },
+];
 
 const toast = useToast();
 const confirm = useConfirmPopover();
@@ -125,7 +138,8 @@ await setup();
 </script>
 
 <template>
-    <h2>Profunda Verwaltung</h2>
+    <nav-breadcrumb :items="navItems" />
+    <h1>Profunda Verwaltung</h1>
 
     <Tabs class="mt-5" v-model:value="currentTab">
         <TabList>

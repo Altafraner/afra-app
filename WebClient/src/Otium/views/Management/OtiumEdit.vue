@@ -5,7 +5,6 @@ import {
     AccordionHeader,
     AccordionPanel,
     InputText,
-    Select,
     Textarea,
     useToast,
 } from 'primevue';
@@ -47,6 +46,12 @@ const klassenStufenSelects = computed(() => [
 ]);
 
 const navItems = computed(() => [
+    {
+        label: 'Otium',
+        route: {
+            name: 'Katalog',
+        },
+    },
     {
         label: 'Verwaltung',
         route: {
@@ -319,11 +324,11 @@ setup();
 </script>
 
 <template>
+    <NavBreadcrumb :items="navItems" />
     <template v-if="user.user.rolle !== 'Tutor'">
         <h1>Sie sind nicht Autorisiert, diese Seite zu nutzen.</h1>
     </template>
     <template v-else-if="!loading">
-        <NavBreadcrumb :items="navItems" />
         <h1>{{ otium.bezeichnung }}</h1>
         <h2>Stammdaten</h2>
         <Grid>

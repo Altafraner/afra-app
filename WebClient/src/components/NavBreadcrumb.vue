@@ -1,16 +1,17 @@
-<script setup>
+<script lang="ts" setup>
 import { Breadcrumb } from 'primevue';
 import { RouterLink } from 'vue-router';
+import type { NavBreadcrumbElement } from '@/models/navBreadcrumb';
 
-const home = {
+const home: NavBreadcrumbElement = {
     icon: 'pi pi-home',
     ariaLabel: 'Startseite',
     route: '/',
 };
 
-const props = defineProps({
-    items: Array,
-});
+const props = defineProps<{
+    items: NavBreadcrumbElement[];
+}>();
 </script>
 
 <template>

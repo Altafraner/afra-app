@@ -17,6 +17,22 @@ import { useConfirmPopover } from '@/composables/confirmPopover';
 import UserPeek from '@/components/UserPeek.vue';
 import { FilterMatchMode, FilterService } from '@primevue/core/api';
 import { formatSlot } from '@/helpers/formatters.ts';
+import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
+
+const navItems = [
+    {
+        label: 'Profundum',
+    },
+    {
+        label: 'Verwaltung',
+        route: {
+            name: 'Profundum-Verwaltung',
+        },
+    },
+    {
+        label: 'Matching',
+    },
+];
 
 const instanzenFilters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -334,6 +350,7 @@ function showWishes(evt, data) {
 }
 </script>
 <template>
+    <nav-breadcrumb :items="navItems" />
     <h1>Profunda-Matching</h1>
 
     <span class="flex flex-col gap-6">

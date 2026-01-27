@@ -55,6 +55,12 @@ const stopAufsicht = ref(() => undefined);
 
 const navItems = computed(() => [
     {
+        label: 'Otium',
+        route: {
+            name: 'Katalog',
+        },
+    },
+    {
         label: 'Verwaltung',
         route: {
             name: 'Verwaltung',

@@ -1,13 +1,14 @@
 <script setup>
-import { InputText, Textarea, useToast, Select, MultiSelect } from 'primevue';
+import { InputText, MultiSelect, Select, Textarea, useToast } from 'primevue';
 import { mande } from 'mande';
-import { ref, onMounted, computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import Grid from '@/components/Form/Grid.vue';
 import GridEditRow from '@/components/Form/GridEditRow.vue';
 import ProfundumInstanzen from '@/Profundum/components/ProfundumInstanzen.vue';
 import KlassenrangeSelector from '@/components/KlassenRangeSelector.vue';
 import { convertMarkdownToHtml } from '@/composables/markdown';
 import { useManagement } from '@/Profundum/composables/verwaltung.ts';
+import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
 
 const props = defineProps({ profundumId: String });
 const toast = useToast();
@@ -37,6 +38,21 @@ const profundaList = ref([]);
 
 const apiProfunda = mande('/api/profundum/management/profundum');
 const apiKategorie = mande('/api/profundum/management/kategorie');
+
+const navItems = computed(() => [
+    {
+        label: 'Profundum',
+    },
+    {
+        label: 'Verwaltung',
+        route: {
+            name: 'Profundum-Verwaltung',
+        },
+    },
+    {
+        label: profundum.value?.bezeichnung ?? 'Definition',
+    },
+]);
 
 async function loadCategories() {
     categories.value = await apiKategorie.get();
@@ -115,8 +131,8 @@ const updateFachbereiche = () =>
 </script>
 <template>
     <template v-if="loading">Lade...</template>
-
     <template v-else>
+        <NavBreadcrumb :items="navItems" />
         <h1>{{ profundum.bezeichnung }}</h1>
         <h2>Stammdaten</h2>
 

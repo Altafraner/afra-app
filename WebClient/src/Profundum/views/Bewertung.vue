@@ -7,6 +7,19 @@ import { formatSlot, formatStudent } from '@/helpers/formatters';
 import type { UserInfoMinimal } from '@/models/user/userInfoMinimal';
 import type { AnkerOverview } from '../models/feedback';
 import { convertMarkdownToHtml } from '@/composables/markdown';
+import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
+
+const navItems = [
+    {
+        label: 'Profundum',
+    },
+    {
+        label: 'Feedback',
+        route: {
+            name: 'Profundum-Feedback-Abgeben',
+        },
+    },
+];
 
 const verwaltung = useManagement();
 const feedback = useFeedback();
@@ -84,6 +97,7 @@ async function save() {
 </script>
 
 <template>
+    <nav-breadcrumb :items="navItems" />
     <h1>Profundums-Feedback</h1>
     <div class="flex flex-col gap-4">
         <FloatLabel variant="on">

@@ -41,16 +41,24 @@ const categoryChanged = () => {};
 const selectedOtia = ref(otia.value);
 
 const navItems = computed(() => {
-    const start = {
-        label: 'Katalog',
-        route: {
-            name: 'Katalog',
+    const start = [
+        {
+            label: 'Otium',
+            route: {
+                name: 'Katalog',
+            },
         },
-    };
+        {
+            label: 'Katalog',
+            route: {
+                name: 'Katalog',
+            },
+        },
+    ];
     return date.value == null
-        ? [start]
+        ? start
         : [
-              start,
+              ...start,
               {
                   label: formatDate(new Date(date.value.datum)),
               },

@@ -1,13 +1,23 @@
 <script setup>
 import { computed, ref } from 'vue';
 import EinwahlSelectorGroup from '@/Profundum/components/EinwahlSelectorGroup.vue';
-import EinwahlSelector from '@/Profundum/components/EinwahlSelector.vue';
-import { Button, Select, useToast, Toast } from 'primevue';
+import { Button, Select, Toast, useToast } from 'primevue';
 import { mande } from 'mande';
-import { useRouter } from 'vue-router';
+import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
+
+const navItems = [
+    {
+        label: 'Profundum',
+    },
+    {
+        label: 'Einwahl',
+        route: {
+            name: 'Profundum-Einwahl',
+        },
+    },
+];
 
 const toast = useToast();
-const router = useRouter();
 
 const options = ref([]);
 const results = ref({});
@@ -118,6 +128,8 @@ startup();
 </script>
 
 <template>
+    <nav-breadcrumb :items="navItems" />
+
     <h1>Profundums-Einwahl</h1>
 
     <p>

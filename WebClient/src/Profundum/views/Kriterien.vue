@@ -6,6 +6,25 @@ import SimpleTextDialog from '@/components/Form/SimpleTextDialog.vue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
 import KriteriumCreationForm from '@/Profundum/components/Forms/KriteriumCreationForm.vue';
 import { convertMarkdownToHtml } from '@/composables/markdown.ts';
+import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
+
+const navItems = [
+    {
+        label: 'Profundum',
+    },
+    {
+        label: 'Feedback',
+        route: {
+            name: 'Profundum-Feedback-Abgeben',
+        },
+    },
+    {
+        label: 'Kriterien',
+        route: {
+            name: 'Profundum-Feedback-Kriterien',
+        },
+    },
+];
 
 const feedback = useFeedback();
 const dialog = useDialog();
@@ -131,8 +150,9 @@ function startDeleteKategorie(evt, kategorieId) {
 </script>
 
 <template>
+    <nav-breadcrumb :items="navItems" />
     <div class="flex justify-between items-baseline">
-        <h2 class="mb-4">Kriterium-Verwaltung</h2>
+        <h1 class="mb-4">Kriterium-Verwaltung</h1>
         <Button
             class="mr-2"
             icon="pi pi-plus"

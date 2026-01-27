@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import { useFeedback } from '@/Profundum/composables/feedback';
 import { computed, shallowRef } from 'vue';
 import type { ProfundumFeedbackStatus } from '@/Profundum/models/feedback';
@@ -8,6 +8,25 @@ import AccordionPanel from 'primevue/accordionpanel';
 import AccordionHeader from 'primevue/accordionheader';
 import AccordionContent from 'primevue/accordioncontent';
 import { chooseSeverity, formatSlot, formatStudent } from '@/helpers/formatters';
+import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
+
+const navItems = [
+    {
+        label: 'Profundum',
+    },
+    {
+        label: 'Feedback',
+        route: {
+            name: 'Profundum-Feedback-Abgeben',
+        },
+    },
+    {
+        label: 'Überwachung',
+        route: {
+            name: 'Profundum-Feedback-Control',
+        },
+    },
+];
 
 const feedbackService = useFeedback();
 
@@ -30,6 +49,8 @@ const slots = computed(() =>
 </script>
 
 <template>
+    <nav-breadcrumb :items="navItems" />
+    <h1>Feedback Überwachung</h1>
     <Accordion lazy>
         <AccordionPanel v-for="slot in slots" :key="slot.id" :value="slot.id">
             <AccordionHeader>
