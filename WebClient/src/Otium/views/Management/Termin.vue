@@ -80,6 +80,8 @@ const navItems = computed(() => [
     },
 ]);
 
+const mayEdit = computed(() => user.isOtiumsverantwortlich);
+
 async function fetchData() {
     loading.value = true;
     const dataGetter = mande('/api/otium/management/termin/' + props.terminId);
@@ -275,7 +277,12 @@ await fetchData();
                 {{ otium.block }}
             </template>
         </GridEditRow>
-        <GridEditRow header="Ort" @edit="startEditOrt" @update="updateOrt">
+        <GridEditRow
+            :hide-edit="!mayEdit"
+            header="Ort"
+            @edit="startEditOrt"
+            @update="updateOrt"
+        >
             <template #body>
                 {{ otium.ort }}
             </template>
@@ -286,7 +293,12 @@ await fetchData();
                 </FloatLabel>
             </template>
         </GridEditRow>
-        <GridEditRow header="Betreuer:in" @edit="startEditTutor" @update="updateTutor">
+        <GridEditRow
+            :hide-edit="!mayEdit"
+            header="Betreuer:in"
+            @edit="startEditTutor"
+            @update="updateTutor"
+        >
             <template #body>
                 <template v-if="otium.tutor === null"> Kein:e Betreuer:in </template>
                 <template v-else>
@@ -310,6 +322,7 @@ await fetchData();
         </GridEditRow>
         <GridEditRow
             header="max. Teilnehner:innen"
+            :hide-edit="!mayEdit"
             @edit="startEditMaxEnrollments"
             @update="updateMaxEnrollments"
         >
@@ -342,6 +355,7 @@ await fetchData();
         </GridEditRow>
         <GridEditRow
             header="Bezeichnung (Termin)"
+            :hide-edit="!mayEdit"
             @edit="startEditBezeichnung"
             @update="updateBezeichnung"
         >
@@ -363,6 +377,7 @@ await fetchData();
         </GridEditRow>
         <GridEditRow
             header="Beschreibung (Termin)"
+            :hide-edit="!mayEdit"
             @edit="startEditBeschreibung"
             @update="updateBeschreibung"
         >
