@@ -42,7 +42,7 @@ function openNotes(data) {
 </script>
 
 <template>
-    <DataTable :data-key="(value) => value.student.id" :value="props.enrollments">
+    <DataTable :data-key="(value) => value.student.id" :value="enrollments">
         <Column header="Schüler:in">
             <template #body="{ data }">
                 <UserPeek :person="data.student" :showGroup="true" />
@@ -50,19 +50,25 @@ function openNotes(data) {
         </Column>
         <Column
             header="Anwesenheit"
-            v-if="props.showAttendance || props.mayEditAttendance"
+            v-if="showAttendance || mayEditAttendance || showRemove"
             class="text-right afra-col-action"
         >
             <template #body="{ data }">
                 <span class="flex justify-end items-center gap-2">
                     <afra-otium-anwesenheit
-                        v-if="data.student.rolle !== 'Oberstufe'"
+                        v-if="
+                            data.student.rolle !== 'Oberstufe' &&
+                            (showAttendance || mayEditAttendance)
+                        "
                         v-model="data.anwesenheit"
-                        :mayEdit="props.mayEditAttendance"
+                        :mayEdit="mayEditAttendance"
                         @value-changed="(value) => updateFunction(data.student, value)"
                     />
                     <badge
-                        v-else
+                        v-else-if="
+                            data.student.rolle !== 'Oberstufe' &&
+                            (showAttendance || mayEditAttendance)
+                        "
                         v-tooltip="'Oberstufenschüler:innen haben keine Anwesenheit'"
                         severity="secondary"
                     >

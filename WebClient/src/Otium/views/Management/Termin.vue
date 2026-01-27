@@ -420,9 +420,9 @@ await fetchData();
         :enrollments="otium.einschreibungen"
         :may-edit-attendance="aufsichtRunning"
         :update-function="updateAttendanceCallback"
-        :show-remove="!otium.isDoneOrRunning && !otium.isSupervisionEnabled"
+        :show-attendance="otium.isDoneOrRunning"
         :block-id="otium.blockId"
-        show-attendance
+        :show-remove="!otium.isDoneOrRunning && !aufsichtRunning"
         show-transfer
         @remove="initRemove"
         @init-move="initMove"
