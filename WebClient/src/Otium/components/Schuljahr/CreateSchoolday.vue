@@ -44,14 +44,14 @@ async function trySubmit({ valid, originalEvent }) {
         return;
     }
     loading.value = true;
-
-    openConfirmDialogWithReject(
-        originalEvent,
-        submit,
-        () => (loading.value = false),
-        'Termin speichern',
-        'Es werden möglicherweise Schüler:innen ausgeschrieben. Möchten Sie den Termin wirklich speichern?',
-    );
+    await submit();
+    // openConfirmDialogWithReject(
+    //     originalEvent,
+    //     submit,
+    //     () => (loading.value = false),
+    //     'Termin speichern',
+    //     'Es werden möglicherweise Schüler:innen ausgeschrieben. Möchten Sie den Termin wirklich speichern?',
+    // );
 }
 
 async function submit() {
