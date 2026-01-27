@@ -30,10 +30,12 @@ const buttonOptions = [
 ];
 
 function resolve({ values }) {
-    const errors = {};
+    const errors = {
+        destination: [],
+    };
 
     if (!values.destination) {
-        errors.destination = [{ message: 'Bitte wählen Sie ein Ziel aus.' }];
+        errors.destination.push('Bitte wählen Sie ein Ziel aus.');
     }
 
     return { values, errors };
@@ -78,9 +80,9 @@ function submit({ valid }) {
         <p>
             Sie versuchen
             <span class="font-bold">{{ formatStudent(dialogRef.data.student) }}</span> in ein
-            anderes Otium zu verschieben. Durch das Verschieben wird die Anwesenheit der
-            Schüler:in nicht verändert.
+            anderes Otium zu verschieben.
         </p>
+        <p>Durch das Verschieben wird die Anwesenheit auf Abwesend zurückgesetzt.</p>
         <div class="w-full">
             <FloatLabel variant="on">
                 <Select
@@ -100,7 +102,7 @@ function submit({ valid }) {
                 size="small"
                 variant="simple"
             >
-                {{ $form.destination.error.message }}
+                {{ $form.destination.error }}
             </Message>
         </div>
         <SplitButton
