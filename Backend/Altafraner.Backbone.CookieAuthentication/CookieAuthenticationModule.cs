@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Altafraner.Backbone.Abstractions;
 using Altafraner.Backbone.CookieAuthentication.Services;
 using Altafraner.Backbone.Defaults;
@@ -12,12 +13,19 @@ namespace Altafraner.Backbone.CookieAuthentication;
 ///     A module handling cookie authentication
 /// </summary>
 [DependsOn<HttpContextAccessorModule>]
-public class CookieAuthenticationModule : IModule<CookieAuthenticationSettings>
+public class CookieAuthenticationModule : IModule
 {
     /// <inheritdoc />
     public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
     {
-        var settings = config.Get<CookieAuthenticationSettings>() ?? new CookieAuthenticationSettings();
+        CookieAuthenticationSettings settings;
+        var section = config.GetSection("CookieAuthentication");
+        services.AddOptions<CookieAuthenticationSettings>().Bind(section);
+        if (section.Exists())
+            settings = section.Get<CookieAuthenticationSettings>() ??
+                       throw new ValidationException("Cannot bind CookieAuthenticationSettings");
+        else settings = new CookieAuthenticationSettings();
+
         services.AddAuthentication()
             .AddCookie(options =>
             {

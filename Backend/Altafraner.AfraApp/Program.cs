@@ -33,7 +33,7 @@ builder.UseAltafranerBackbone(configure: altafranerBuilder => altafranerBuilder
     .AddModule<AuthorizationModule>()
     .AddModule<EmergencyBackupModule>()
 // Backbone modules
-    .AddModuleAndConfigure<CookieAuthenticationModule, CookieAuthenticationSettings>()
+    .AddModule<CookieAuthenticationModule>()
     .AddModule<DataProtectionModule<AfraAppContext>>()
     .AddModule<EmailOutboxModule>()
     .AddModuleAndConfigure<EmailSchedulingModule<Person>, EmailSchedulingSettings<Person>>(settings =>
