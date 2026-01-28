@@ -62,6 +62,7 @@ public static class Bewertung
                     int schuljahr,
                     bool halbjahr,
                     DateOnly ausgabedatum,
+                    bool doublesided,
                     bool byClass = false,
                     bool byGm = false,
                     bool single = false) =>
@@ -74,7 +75,11 @@ public static class Bewertung
                         return (Results<FileContentHttpResult, BadRequest<string>>)TypedResults.BadRequest(
                             "If single is set, no other batching method may be selected.");
                     var fileContents =
-                        await profundumManagementService.GenerateFileBatched(mode, schuljahr, halbjahr, ausgabedatum);
+                        await profundumManagementService.GenerateFileBatched(mode,
+                            schuljahr,
+                            halbjahr,
+                            ausgabedatum,
+                            doublesided);
                     return TypedResults.File(fileContents, MediaTypeNames.Application.Zip);
                 })
             .RequireAuthorization(AuthorizationPolicies.ProfundumsVerantwortlich);

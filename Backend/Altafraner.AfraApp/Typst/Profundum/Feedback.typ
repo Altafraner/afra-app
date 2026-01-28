@@ -266,6 +266,10 @@
   nice(i, render(element))
 
   if (i != input.len()) {
-    pagebreak(to: "odd")
+    if input.at(0).Meta.Doublesided {
+      pagebreak(to: "odd")
+    } else {
+      pagebreak()
+    }
   }
 }

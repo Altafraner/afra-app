@@ -230,9 +230,10 @@ export const useFeedback = () => {
         byGm: boolean,
         byClass: boolean,
         ausgabedatum: Date,
+        doublesided: boolean,
     ): string | undefined {
         try {
-            const url = `/api/profundum/bewertung/batch.zip?schuljahr=${schuljahr}&halbjahr=${halbjahr}&single=${single}&byGm=${byGm}&byClass=${byClass}&ausgabedatum=${formatMachineDate(ausgabedatum)}`;
+            const url = `/api/profundum/bewertung/batch.zip?schuljahr=${schuljahr}&halbjahr=${halbjahr}&single=${single}&byGm=${byGm}&byClass=${byClass}&ausgabedatum=${formatMachineDate(ausgabedatum)}&doublesided=${doublesided}`;
             const a = document.createElement('a');
             a.href = url;
             a.download = '';
