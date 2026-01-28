@@ -60,7 +60,10 @@ internal partial class FeedbackPrintoutService
             .Where(e => e.Instanz.Slots.Any(s => s.Jahr == schuljahr && quartale.Contains(s.Quartal)))
             .ToArrayAsync();
 
-        var meta = new ProfundumFeedbackPdfData.MetaData(ausgabedatum.ToShortDateString(), schuljahr, halbjahr, false);
+        var meta = new ProfundumFeedbackPdfData.MetaData(ausgabedatum.ToString("dd.MM.yyyy"),
+            schuljahr,
+            halbjahr,
+            false);
         ProfundumFeedbackPdfData[] data =
             [FeedbackToInputData(feedback, user, userGm, meta)];
 
@@ -166,7 +169,7 @@ internal partial class FeedbackPrintoutService
             .GroupBy(e => e.BetroffenePersonId)
             .ToDictionaryAsync(e => e.Key, e => e.ToArray());
 
-        var meta = new ProfundumFeedbackPdfData.MetaData(ausgabedatum.ToShortDateString(),
+        var meta = new ProfundumFeedbackPdfData.MetaData(ausgabedatum.ToString("dd.MM.yyyy"),
             schuljahr,
             halbjahr,
             doublesided);
