@@ -145,7 +145,7 @@ setup();
     <h1>Feedback-Bogen herunterladen</h1>
     <Form v-slot="$form" :resolver="resolver" @submit="submit">
         <div class="flex flex-col w-full gap-4">
-            <div class="grid grid-cols-2 justify-between items-baseline gap-4">
+            <div class="grid grid-cols-2 justify-between items-center gap-4">
                 <label for="schuljahr">Schuljahr</label>
                 <div class="w-full">
                     <Select
@@ -325,8 +325,8 @@ setup();
 
             <Message v-if="url !== '' && url !== undefined" severity="success">
                 Der Download sollte in wenigen Momenten starten. Bei großen Downloads kann es
-                bis zu 15s dauern, bis die Dateien generiert sind. Falls der Download nicht
-                starten sollte, folgen Sie diesem Link:
+                bis zu 15 Sekunden dauern, bis die Dateien generiert sind. Falls der Download
+                nicht starten sollte, folgen Sie diesem Link:
                 <a :href="url" class="underline" download target="_blank"
                     >Download manuell starten.</a
                 >

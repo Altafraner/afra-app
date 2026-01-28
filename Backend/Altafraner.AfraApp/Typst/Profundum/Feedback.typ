@@ -47,7 +47,7 @@
         let x = radius * calc.cos(angle)
         let y = radius * calc.sin(angle)
         d.line(center, (x, y), stroke: 0.5pt + gray-color)
-        let lx = (radius + 1.2) * calc.cos(angle)
+        let lx = (radius + 1.6) * calc.cos(angle)
         let ly = (radius + 0.6) * calc.sin(angle)
         d.content((lx, ly), text(size: size-small, weight: 500, fill: text-color, categories.at(i)))
       }
