@@ -60,7 +60,7 @@ internal partial class FeedbackPrintoutService
             .Where(e => e.Instanz.Slots.Any(s => s.Jahr == schuljahr && quartale.Contains(s.Quartal)))
             .ToArrayAsync();
 
-        var meta = new ProfundumFeedbackPdfData.MetaData(ausgabedatum.ToShortDateString(), schuljahr, halbjahr);
+        var meta = new ProfundumFeedbackPdfData.MetaData(ausgabedatum.ToShortDateString(), schuljahr, halbjahr, false);
         ProfundumFeedbackPdfData[] data =
             [FeedbackToInputData(feedback, user, userGm, meta)];
 
@@ -127,7 +127,8 @@ internal partial class FeedbackPrintoutService
     public async Task<byte[]> GenerateFileBatched(BatchingModes mode,
         int schuljahr,
         bool halbjahr,
-        DateOnly ausgabedatum)
+        DateOnly ausgabedatum,
+        bool doublesided)
     {
         if (mode.HasFlag(BatchingModes.Single) && mode != BatchingModes.Single)
             throw new ArgumentException("Cannot batch and single at onec", nameof(mode));
@@ -165,7 +166,10 @@ internal partial class FeedbackPrintoutService
             .GroupBy(e => e.BetroffenePersonId)
             .ToDictionaryAsync(e => e.Key, e => e.ToArray());
 
-        var meta = new ProfundumFeedbackPdfData.MetaData(ausgabedatum.ToShortDateString(), schuljahr, halbjahr);
+        var meta = new ProfundumFeedbackPdfData.MetaData(ausgabedatum.ToShortDateString(),
+            schuljahr,
+            halbjahr,
+            doublesided);
 
         using var zipStream = new MemoryStream();
         await using (var zip = new ZipArchive(zipStream, ZipArchiveMode.Create, true))

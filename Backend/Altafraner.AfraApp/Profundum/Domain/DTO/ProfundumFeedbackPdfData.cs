@@ -15,7 +15,7 @@ internal struct ProfundumFeedbackPdfData
     public required ImmutableSortedDictionary<string, Dictionary<string, int[]>> FeedbackAllgemein { get; init; }
     public required ImmutableSortedDictionary<string, Dictionary<string, int[]>> FeedbackFachlich { get; init; }
 
-    internal record struct MetaData(string Datum, int Schuljahr, bool Halbjahr);
+    internal record struct MetaData(string Datum, int Schuljahr, bool Halbjahr, bool Doublesided);
 
     internal record struct Profundum(string Label, IEnumerable<PersonInfoMinimal> Verantwortliche);
 }

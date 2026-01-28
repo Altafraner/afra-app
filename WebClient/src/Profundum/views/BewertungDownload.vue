@@ -40,6 +40,10 @@ const singleOptions = [
     { label: 'Eine(r)', value: true },
     { label: 'Mehrere', value: false },
 ];
+const doublesidedOptions = [
+    { label: 'Einseitig', value: false },
+    { label: 'Doppelseitig', value: true },
+];
 const yesNoOption = [
     { label: 'Ja', value: true },
     { label: 'Nein', value: false },
@@ -55,6 +59,7 @@ const resolver = (e: FormResolverOptions): Record<string, any> => {
         single: [],
         byGm: [],
         byClass: [],
+        doublesided: [],
     };
 
     if (!e.values['schuljahr']) {
@@ -81,11 +86,15 @@ const resolver = (e: FormResolverOptions): Record<string, any> => {
         errors['single'].push('Bitte treffen Sie eine Auswahl!');
     }
 
-    if (e.values['batch'] && e.values['byGm'] == null) {
+    if (e.values['batch'] && !e.values['single'] && e.values['doublesided'] == null) {
+        errors['doublesided'].push('Bitte treffen Sie eine Auswahl!');
+    }
+
+    if (e.values['batch'] && !e.values['single'] && e.values['byGm'] == null) {
         errors['byGm'].push('Bitte treffen Sie eine Auswahl!');
     }
 
-    if (e.values['batch'] && e.values['byClass'] == null) {
+    if (e.values['batch'] && !e.values['single'] && e.values['byClass'] == null) {
         errors['byClass'].push('Bitte treffen Sie eine Auswahl!');
     }
 
@@ -109,6 +118,7 @@ function download(values: Record<string, any>) {
             false,
             false,
             values['ausgabe'],
+            false,
         );
     }
     return feedback.downloadForAll(
@@ -118,6 +128,7 @@ function download(values: Record<string, any>) {
         values['groupGm'],
         values['groupClass'],
         values['ausgabe'],
+        values['doublesided'],
     );
 }
 
@@ -266,6 +277,25 @@ setup();
                             variant="simple"
                         >
                             {{ $form.groupGm.error }}
+                        </Message>
+                    </div>
+                    <label class="font-semibold" for="groupGm">Druck</label>
+                    <div class="w-full">
+                        <SelectButton
+                            id="doublesided"
+                            :options="doublesidedOptions"
+                            fluid
+                            name="doublesided"
+                            optionLabel="label"
+                            optionValue="value"
+                        />
+                        <Message
+                            v-if="$form.doublesided?.invalid"
+                            severity="error"
+                            size="small"
+                            variant="simple"
+                        >
+                            {{ $form.doublesided.error }}
                         </Message>
                     </div>
                 </template>
