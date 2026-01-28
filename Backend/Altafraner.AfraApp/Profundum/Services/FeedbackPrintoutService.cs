@@ -218,7 +218,7 @@ internal partial class FeedbackPrintoutService
                 }
             }
 
-            var warningsText = string.Join(Environment.NewLine, warnings);
+            var warningsText = string.Join(Environment.NewLine, warnings.Order());
             if (!warningsText.IsNullOrWhiteSpace())
             {
                 var bytes = Encoding.UTF8.GetBytes(warningsText);
