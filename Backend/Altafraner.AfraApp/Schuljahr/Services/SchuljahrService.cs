@@ -120,13 +120,9 @@ public class SchuljahrService
                 schultag.Blocks.All(b1 => conflict.Blocks.Any(b2 => b1.SchemaId == b2.SchemaId)))
                 continue;
 
-            foreach (var block in schultag.Blocks)
-                if (conflict.Blocks.All(b => b.SchemaId != block.SchemaId))
-                    conflict.Blocks.Add(block);
-
-            foreach (var block in conflict.Blocks.ToList())
-                if (schultag.Blocks.All(b => b.SchemaId != block.SchemaId))
-                    conflict.Blocks.Remove(block);
+            conflict.Blocks.AddRange(schultag.Blocks.Where(block =>
+                conflict.Blocks.All(b => b.SchemaId != block.SchemaId)));
+            conflict.Blocks.RemoveAll(block => schultag.Blocks.All(b => b.SchemaId != block.SchemaId));
         }
 
         await _dbContext.Schultage.AddRangeAsync(schultage);

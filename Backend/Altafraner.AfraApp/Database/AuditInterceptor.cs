@@ -46,7 +46,7 @@ public class AuditInterceptor : SaveChangesInterceptor
         {
             userId = UserAccessor.GetUserIdOrThrow(ctx);
         }
-        catch
+        catch (InvalidOperationException)
         {
             userId = null;
         }
@@ -56,19 +56,16 @@ public class AuditInterceptor : SaveChangesInterceptor
     private void ApplyAudit(DbContext? context)
     {
         if (context == null) return;
-
-        Guid? userId = GetUserId();
+        var userId = GetUserId();
 
         foreach (var entry in context.ChangeTracker.Entries())
         {
-            if (entry.Entity is IHasUserTracking audit)
-            {
-                if (entry.State == EntityState.Added)
-                    audit.CreatedById = userId;
+            if (entry.Entity is not IHasUserTracking audit) continue;
 
-                if (entry.State is EntityState.Added or EntityState.Modified)
-                    audit.LastModifiedById = userId;
-            }
+            if (entry.State == EntityState.Added)
+                audit.CreatedById = userId;
+            if (entry.State is EntityState.Added or EntityState.Modified)
+                audit.LastModifiedById = userId;
         }
     }
 }

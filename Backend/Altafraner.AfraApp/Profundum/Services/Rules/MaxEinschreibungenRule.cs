@@ -34,16 +34,13 @@ public class MaxEinschreibungenRule : IProfundumAggregateRule
             .Where(pi => pi.Slots.Any(s => slots.Any(sl => sl.Id == s.Id)))
             .ToArray();
 
-        foreach (var angebot in angebote)
+        foreach (var angebot in angebote.Where(e => e.MaxEinschreibungen.HasValue))
+        foreach (var s in angebot.Slots)
         {
-            if (angebot.MaxEinschreibungen is not { } max) continue;
-            foreach (var s in angebot.Slots)
-            {
-                var v = belegVars.Where(x => x.Key.i == angebot)
-                                 .Where(x => x.Key.s == s)
-                                 .Select(x => x.Value);
-                model.Add(LinearExpr.Sum(v) <= max);
-            }
+            var v = belegVars.Where(x => x.Key.i == angebot)
+                .Where(x => x.Key.s == s)
+                .Select(x => x.Value);
+            model.Add(LinearExpr.Sum(v) <= angebot.MaxEinschreibungen!.Value);
         }
     }
 }

@@ -884,9 +884,8 @@ internal class OtiumEndpointService
             throw new ArgumentException("Kein Otium mit dieser Id existiert.");
 
         var beschreibungBuilder = new StringBuilder();
-        foreach (var line in beschreibung.Split('\n'))
-            if (!string.IsNullOrWhiteSpace(line))
-                beschreibungBuilder.AppendLine(line.Trim());
+        foreach (var line in beschreibung.Split('\n').Where(e => !string.IsNullOrWhiteSpace(e)))
+            beschreibungBuilder.AppendLine(line.Trim());
 
         otium.Beschreibung = beschreibungBuilder.ToString();
         await _dbContext.SaveChangesAsync();
