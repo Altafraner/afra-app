@@ -204,6 +204,7 @@ export const useFeedback = () => {
         ausgabedatum: Date,
     ): string | undefined {
         try {
+            ausgabedatum.setHours(12);
             const url = `/api/profundum/bewertung/${studentId}.pdf?schuljahr=${schuljahr}&halbjahr=${halbjahr}&ausgabedatum=${formatMachineDate(ausgabedatum)}`;
             const a = document.createElement('a');
             a.href = url;
@@ -233,6 +234,7 @@ export const useFeedback = () => {
         doublesided: boolean,
     ): string | undefined {
         try {
+            ausgabedatum.setHours(12);
             const url = `/api/profundum/bewertung/batch.zip?schuljahr=${schuljahr}&halbjahr=${halbjahr}&single=${single}&byGm=${byGm}&byClass=${byClass}&ausgabedatum=${formatMachineDate(ausgabedatum)}&doublesided=${doublesided}`;
             const a = document.createElement('a');
             a.href = url;
