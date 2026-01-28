@@ -217,16 +217,16 @@ internal class OtiumEndpointService
 
         var weeks = schultage.GroupBy(s => s.Datum.GetStartOfWeek());
 
+        var messageBuilder = new StringBuilder();
         foreach (var week in weeks)
         {
+            messageBuilder.Clear();
             // Increase performance by taking from the already sorted list of enrollments, then removing them from the list before the next iteration.
             var weekEnd = week.Key.AddDays(7);
             var einschreibungenForWeek = einschreibungen
                 .TakeWhile(e => e.Termin.Block.SchultagKey < weekEnd)
                 .ToList();
             einschreibungen.RemoveRange(0, einschreibungenForWeek.Count);
-
-            var messageBuilder = new StringBuilder();
 
             foreach (var schultag in week)
             {
