@@ -18,13 +18,13 @@ public class CookieAuthenticationModule : IModule
     /// <inheritdoc />
     public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
     {
-        CookieAuthenticationSettings settings;
         var section = config.GetSection("CookieAuthentication");
         services.AddOptions<CookieAuthenticationSettings>().Bind(section);
-        if (section.Exists())
-            settings = section.Get<CookieAuthenticationSettings>() ??
-                       throw new ValidationException("Cannot bind CookieAuthenticationSettings");
-        else settings = new CookieAuthenticationSettings();
+
+        var settings = section.Exists()
+            ? section.Get<CookieAuthenticationSettings>() ??
+              throw new ValidationException("Cannot bind CookieAuthenticationSettings")
+            : new CookieAuthenticationSettings();
 
         services.AddAuthentication()
             .AddCookie(options =>
