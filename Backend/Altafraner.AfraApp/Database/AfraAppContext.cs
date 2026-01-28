@@ -189,7 +189,7 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
             .PrimitiveCollection(p => p.GlobalPermissions);
 
         modelBuilder.Entity<MentorMenteeRelation>()
-            .HasKey(r => new { r.MentorId, r.StudentId });
+            .HasKey(r => new { r.MentorId, r.StudentId, r.Type });
 
         modelBuilder.Entity<OtiumDefinition>(o =>
         {

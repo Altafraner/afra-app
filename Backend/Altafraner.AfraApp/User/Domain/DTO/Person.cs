@@ -18,7 +18,7 @@ public record struct Person
         Vorname = person.FirstName;
         Nachname = person.LastName;
         Email = person.Email;
-        Mentees = person.Mentees.Select(mentee => new PersonInfoMinimal(mentee));
+        Mentees = person.Mentees.Distinct().Select(mentee => new PersonInfoMinimal(mentee));
         Rolle = person.Rolle;
     }
 

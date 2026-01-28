@@ -69,9 +69,9 @@ public class UserService
         if (student.Rolle == Rolle.Tutor)
             throw new InvalidOperationException("Tutors do not have mentors.");
 
-        await _dbContext.Entry(student).Collection(s => s.Mentors).LoadAsync();
+        var mentors = await _dbContext.Entry(student).Collection(s => s.Mentors).Query().Distinct().ToListAsync();
 
-        return student.Mentors.ToList();
+        return mentors;
     }
 
     /// <summary>
@@ -85,9 +85,9 @@ public class UserService
         if (mentor.Rolle != Rolle.Tutor)
             throw new InvalidOperationException("Only tutors can have mentees.");
 
-        await _dbContext.Entry(mentor).Collection(s => s.Mentees).LoadAsync();
+        var mentees = await _dbContext.Entry(mentor).Collection(s => s.Mentees).Query().Distinct().ToListAsync();
 
-        return mentor.Mentees.ToList();
+        return mentees;
     }
 
     /// <summary>
