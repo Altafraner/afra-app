@@ -301,8 +301,7 @@ internal partial class AttendanceHub : Hub<IAttendanceHubClient>
 
         if (Context.User is null
             || (fromBlock is not null && !_attendanceService.MaySupervise(Context.User, fromBlock))
-            || (toData is not null && !_attendanceService.MaySupervise(Context.User, toData.Block))
-            || (toData is null && fromBlock is null))
+            || (toData is not null && !_attendanceService.MaySupervise(Context.User, toData.Block)))
         {
             _logger.LogWarning(
                 "User {userId} tried to move student {studentId} from termin {fromTerminId} to termin {toTerminId} without authority",

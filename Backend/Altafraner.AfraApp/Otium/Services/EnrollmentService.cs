@@ -290,9 +290,7 @@ internal class EnrollmentService
         var numEnrollments = await _dbContext.OtiaEinschreibungen.AsNoTracking()
             .CountAsync(e => e.Termin == termin);
 
-        return termin.MaxEinschreibungen == null
-            ? null
-            : (int)Math.Round((double)numEnrollments / termin.MaxEinschreibungen.Value * 100);
+        return (int)Math.Round((double)numEnrollments / termin.MaxEinschreibungen.Value * 100);
     }
 
     /// <summary>
