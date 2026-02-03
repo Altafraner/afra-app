@@ -68,7 +68,7 @@ internal unsafe class TypstCompilerWrapper
     /// <summary>
     ///     Replace the sysInputs Dictionary used by the typst compiler
     /// </summary>
-    public void SetSysInputs(Dictionary<string, string> inputs)
+    public void SetSysInputs(string inputs)
     {
         var ok = _compiler.SetSysInputs(inputs);
         if (!ok)

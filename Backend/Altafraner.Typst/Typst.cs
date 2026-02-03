@@ -29,9 +29,9 @@ public class Typst
 
         lock (compiler)
         {
-            compiler.SetSysInputs(new Dictionary<string, string> { { "data", JsonSerializer.Serialize(inputData) } });
+            compiler.SetSysInputs(JsonSerializer.Serialize(inputData));
             var res = compiler.CompilePdf();
-            compiler.SetSysInputs(new Dictionary<string, string>());
+            compiler.SetSysInputs("{}");
             return res;
         }
     }

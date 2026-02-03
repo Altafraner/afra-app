@@ -9,7 +9,7 @@
     voraussetzungen,
     verantwortliche,
     teilnehmer
-) = json(bytes(sys.inputs.data))
+) = json("inputs.json")
 
 #let text-color = rgb("#000")
 #let gray-color = rgb("#aaa")
