@@ -99,7 +99,6 @@ impl TypstWorld {
     pub fn new(
         root: PathBuf,
         font_paths: &[PathBuf],
-        inputs: typst::foundations::Dict,
         input_content: Option<String>,
         include_system_fonts: bool,
     ) -> StrResult<Self> {
@@ -124,7 +123,7 @@ impl TypstWorld {
                 PackageStorage::new(None, None, Downloader::new("typst")),
             ),
             main,
-            library: LazyHash::new(typst::Library::builder().with_inputs(inputs).build()),
+            library: LazyHash::new(typst::Library::builder().build()),
             book: LazyHash::new(fonts.book.clone()),
             fonts: Arc::new(fonts),
             slots: Mutex::new(slots),
