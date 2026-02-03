@@ -8,7 +8,6 @@ mod world;
 
 use ecow::EcoString;
 use typst::diag::{StrResult, Warned};
-use typst::foundations::Dict;
 use typst::layout::PagedDocument;
 use world::TypstWorld;
 
@@ -85,13 +84,7 @@ pub extern "C" fn create_compiler(
             .collect()
     };
 
-    match TypstWorld::new(
-        root,
-        &font_paths,
-        Dict::new(),
-        input_content,
-        !ignore_system_fonts,
-    ) {
+    match TypstWorld::new(root, &font_paths, input_content, !ignore_system_fonts) {
         Ok(world) => Box::into_raw(Box::new(Compiler { state: world })),
         Err(_) => ptr::null_mut(),
     }
