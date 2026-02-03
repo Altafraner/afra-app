@@ -6,26 +6,26 @@ permissions:
 
 on:
   push:
-    branches: [ "*" ]
+    branches: ["*"]
     paths:
-      - 'WebClient/**'
+      - "WebClient/**"
   pull_request:
-    branches: [ "*" ]
+    branches: ["*"]
     paths:
-      - 'WebClient/**'
+      - "WebClient/**"
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 22
-    - name: Install dependencies
-      working-directory: ./WebClient
-      run: npm install
-    - name: Build
-      working-directory: ./WebClient
-      run: npm run build
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        working-directory: ./WebClient
+        run: npm install
+      - name: Build
+        working-directory: ./WebClient
+        run: npm run build
