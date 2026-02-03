@@ -67,7 +67,7 @@ internal partial class FeedbackPrintoutService
         ProfundumFeedbackPdfData[] data =
             [FeedbackToInputData(feedback, user, userGm, meta)];
 
-        var file = _typstService.GeneratePdf(Altafraner.Typst.Templates.Profundum.Feedback, data);
+        var file = _typstService.GeneratePdf(Altafraner.Typst.Templates.ProfundumFeedback.Feedback, data);
         return file;
     }
 
@@ -199,7 +199,7 @@ internal partial class FeedbackPrintoutService
                     data.Add(FeedbackToInputData(feedback!, person, gm, meta));
                     if (mode.HasFlag(BatchingModes.Single))
                     {
-                        var file = _typstService.GeneratePdf(Altafraner.Typst.Templates.Profundum.Feedback, data);
+                        var file = _typstService.GeneratePdf(Altafraner.Typst.Templates.ProfundumFeedback.Feedback, data);
                         var entry = zip.CreateEntry(
                             FilenameSanitizer.Sanitize($"{person.Gruppe}_{NicePersonName(person)}.pdf"));
                         await using var entryStream = await entry.OpenAsync();
@@ -213,7 +213,7 @@ internal partial class FeedbackPrintoutService
 
                 if (!mode.HasFlag(BatchingModes.Single))
                 {
-                    var file = _typstService.GeneratePdf(Altafraner.Typst.Templates.Profundum.Feedback, data);
+                    var file = _typstService.GeneratePdf(Altafraner.Typst.Templates.ProfundumFeedback.Feedback, data);
                     var entry = zip.CreateEntry(
                         FilenameSanitizer.Sanitize(NiceFilename(grouping.Key.Item1, grouping.Key.Item2)));
                     await using var entryStream = await entry.OpenAsync();

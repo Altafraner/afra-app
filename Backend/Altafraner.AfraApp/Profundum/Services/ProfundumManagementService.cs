@@ -456,7 +456,7 @@ internal class ProfundumManagementService
             .ThenBy(e => e.LastName)
             .ThenBy(e => e.FirstName);
 
-        const string src = Altafraner.Typst.Templates.Profundum.Instanz;
+        const string src = Altafraner.Typst.Templates.ProfundumInstanz.Instanz;
 
         var inputs = new
         {

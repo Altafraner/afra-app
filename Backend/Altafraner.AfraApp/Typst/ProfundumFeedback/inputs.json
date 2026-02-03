@@ -1,0 +1,128 @@
+[
+    {
+        "Meta": {
+            "Datum": "04.02.2026",
+            "Schuljahr": 2025,
+            "Halbjahr": true,
+            "Doublesided": true
+        },
+        "Person": {
+            "Id": "00000000-0000-0000-0000-000000000000",
+            "Vorname": "Leonie",
+            "Nachname": "Beispielmann",
+            "Rolle": "Mittelstufe",
+            "Gruppe": "8a",
+            "Email": "leonie.beispielmann@example.com"
+        },
+        "GM": {
+            "Id": "00000000-0000-0000-0000-000000000000",
+            "Vorname": "Jonas",
+            "Nachname": "Reinhardt",
+            "Rolle": "Tutor",
+            "Gruppe": "",
+            "Email": "jonas.reinhardt@example.com"
+        },
+        "Schulleiter": {
+            "Id": "00000000-0000-0000-0000-000000000000",
+            "Vorname": "Katharina",
+            "Nachname": "Vogel",
+            "Rolle": "Tutor",
+            "Gruppe": null,
+            "Email": null
+        },
+        "Profunda": [
+            {
+                "Label": "Ostasien im Wandel – Sprache & Gesellschaft",
+                "Verantwortliche": [
+                    {
+                        "Id": "00000000-0000-0000-0000-000000000000",
+                        "Vorname": "Paul",
+                        "Nachname": "Hagedorn",
+                        "Rolle": "Tutor",
+                        "Gruppe": "",
+                        "Email": "paul.hagedorn@example.com"
+                    }
+                ]
+            },
+            {
+                "Label": "Nordische Sprachen entdecken",
+                "Verantwortliche": [
+                    {
+                        "Id": "00000000-0000-0000-0000-000000000000",
+                        "Vorname": "Clara",
+                        "Nachname": "Nyström",
+                        "Rolle": "Tutor",
+                        "Gruppe": "",
+                        "Email": "clara.nystroem@example.com"
+                    }
+                ]
+            },
+            {
+                "Label": "Werkstatt für kreatives Schreiben",
+                "Verantwortliche": [
+                    {
+                        "Id": "00000000-0000-0000-0000-000000000000",
+                        "Vorname": "Sebastian",
+                        "Nachname": "Köhler",
+                        "Rolle": "Tutor",
+                        "Gruppe": "",
+                        "Email": "sebastian.koehler@example.com"
+                    }
+                ]
+            }
+        ],
+        "FeedbackAllgemein": {
+            "Innovationskompetenz": {
+                "Neugier": [1, 4, 4],
+                "Kritisches Denken": [2, 2],
+                "Kreativität": [2, 2],
+                "Problemlösefähigkeit": [3, 4]
+            },
+            "Methodische Kompetenz": {
+                "Anwenden fachspezifische Arbeitsmethoden": [3, 2],
+                "Recherchieren (Wie? Wo?)": [4],
+                "Strukturieren": [1, 4, 3],
+                "Visualisieren": [4],
+                "Multiperspektivität": [3, 2],
+                "Präsentieren": [3, 4]
+            },
+            "Selbstreflexion": {
+                "Authentizität": [2, 2],
+                "Perspektivwechsel": [3, 2],
+                "Selbstfürsorgekompetenz": [1, 4],
+                "Kritikfähigkeit": [2, 2]
+            },
+            "Selbstständigkeit": {
+                "Zeitmanagement": [1, 3, 4],
+                "Resilienz": [2, 4],
+                "Motivation": [1, 4],
+                "Zuverlässigkeit": [3, 4],
+                "Verantwortungsübernahme": [1, 4],
+                "Impulskontrolle": [3, 2],
+                "Optimismus": [2, 4]
+            },
+            "Sozialkompetenz": {
+                "Kommunikationsfähigkeit": [1, 3, 2],
+                "Empathie": [3, 2],
+                "Teamfähigkeit": [3, 2],
+                "Konfliktlösefähigkeit": [3, 2],
+                "Interkulturelle Kompetenz": [3, 2],
+                "Humor": [3, 2]
+            }
+        },
+        "FeedbackFachlich": {
+            "Gesellschaft & Zukunft": {
+                "Wiedergabe der theoretischen Inhalte": [2],
+                "Argumentation zu Anwendung, zum Transfer, zur Praxis": [2],
+                "Positionierung, Beurteilung, Problemlösung": [2]
+            },
+            "Sprache & Kommunikation": {
+                "Interkulturelle Kompetenz": [3, 2],
+                "Literarische Kompetenz": [3],
+                "Schriftliche Sprachproduktion": [3, 1],
+                "Mündliche Sprachproduktion": [1, 4],
+                "Reflexionsfähigkeit": [3, 2]
+            }
+        }
+    }
+]
