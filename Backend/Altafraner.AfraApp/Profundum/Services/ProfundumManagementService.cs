@@ -336,6 +336,7 @@ internal class ProfundumManagementService
             .Include(i => i.Profundum)
             .ThenInclude(p => p.Fachbereiche)
             .Include(i => i.Slots)
+            .Include(i => i.Einschreibungen).ThenInclude(e => e.BetroffenePerson)
             .Where(i => i.Id == instanzId)
             .Select(i => new DTOProfundumInstanz(i))
             .FirstOrDefaultAsync();
