@@ -17,12 +17,14 @@ public class OtiumTermin : OtiumInstanz, IHasTimestamps
     /// <summary>
     ///     The name of the otium respecting overrides for the Termin
     /// </summary>
-    public string Bezeichnung => OverrideBezeichnung != null ? OverrideBezeichnung : Otium.Bezeichnung;
+    public string Bezeichnung =>
+        OverrideBezeichnung != null ? OverrideBezeichnung : Otium.Bezeichnung;
 
     /// <summary>
     ///     The description of the otium respecting overrides for the Termin
     /// </summary>
-    public string Beschreibung => OverrideBeschreibung != null ? OverrideBeschreibung : Otium.Beschreibung;
+    public string Beschreibung =>
+        OverrideBeschreibung != null ? OverrideBeschreibung : Otium.Beschreibung;
 
     /// <summary>
     ///     A name for the Otium Instanz. Null to use the OtiumDefinitions Bezeichnung
@@ -49,7 +51,8 @@ public class OtiumTermin : OtiumInstanz, IHasTimestamps
     /// <summary>
     ///     A reference to all enrollments for the Termin.
     /// </summary>
-    public ICollection<OtiumEinschreibung> Enrollments { get; set; } = new List<OtiumEinschreibung>();
+    public ICollection<OtiumEinschreibung> Enrollments { get; set; } =
+        new List<OtiumEinschreibung>();
 
     /// <summary>
     ///     True, if the Termin is cancelled.

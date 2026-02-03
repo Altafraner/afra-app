@@ -46,7 +46,9 @@ public class CalendarService
     /// <param name="user">The person to delete the subscriptions for</param>
     public async Task DeleteAllCalendarSubscriptionAsync(Person user)
     {
-        _dbContext.CalendarSubscriptions.Where(s => s.BetroffenePerson.Id == user.Id).ExecuteDelete();
+        _dbContext
+            .CalendarSubscriptions.Where(s => s.BetroffenePerson.Id == user.Id)
+            .ExecuteDelete();
         await _dbContext.SaveChangesAsync();
     }
 
@@ -56,7 +58,9 @@ public class CalendarService
     /// <param name="user">The person to get the count for</param>
     public async Task<int> GetNumCalendarSubscriptionAsync(Person user)
     {
-        return await _dbContext.CalendarSubscriptions.Where(s => s.BetroffenePerson.Id == user.Id).CountAsync();
+        return await _dbContext
+            .CalendarSubscriptions.Where(s => s.BetroffenePerson.Id == user.Id)
+            .CountAsync();
     }
 
     /// <summary>
@@ -65,37 +69,48 @@ public class CalendarService
     /// <param name="subscriptionId">The Id of the Calendar Subscription</param>
     public async Task<string?> GetCalendarAsync(Guid subscriptionId)
     {
-        var sub = await _dbContext.CalendarSubscriptions
-            .Where(s => s.Id == subscriptionId)
-            .Include(s => s.BetroffenePerson).FirstOrDefaultAsync();
+        var sub = await _dbContext
+            .CalendarSubscriptions.Where(s => s.Id == subscriptionId)
+            .Include(s => s.BetroffenePerson)
+            .FirstOrDefaultAsync();
         if (sub is null)
         {
             return null;
         }
 
-        var enrollments = _dbContext.OtiaEinschreibungen
-            .Where(e => e.BetroffenePerson.Id == sub.BetroffenePerson.Id)
-            .Include(e => e.Termin).ThenInclude(t => t.Otium)
-            .Include(e => e.Termin).ThenInclude(t => t.Block).ThenInclude(b => b.Schultag);
+        var enrollments = _dbContext
+            .OtiaEinschreibungen.Where(e => e.BetroffenePerson.Id == sub.BetroffenePerson.Id)
+            .Include(e => e.Termin)
+                .ThenInclude(t => t.Otium)
+            .Include(e => e.Termin)
+                .ThenInclude(t => t.Block)
+                    .ThenInclude(b => b.Schultag);
         var enrolledEvents = enrollments.Select(e => new CalendarEvent
         {
             Uid = e.Id.ToString(),
             Summary = e.Termin.Bezeichnung,
             Description = e.Termin.Beschreibung,
             Location = e.Termin.Ort,
-            Start = new CalDateTime(new DateTime(e.Termin.Block.Schultag.Datum, e.Interval.Start), true),
-            End = new CalDateTime(new DateTime(e.Termin.Block.Schultag.Datum, e.Interval.End), true),
-            LastModified =
-                new CalDateTime(
-                    new[] { e.LastModified, e.Termin.LastModified, e.Termin.Otium.LastModified }.Max(),
-                    true),
-            Created = new CalDateTime(e.CreatedAt, true)
+            Start = new CalDateTime(
+                new DateTime(e.Termin.Block.Schultag.Datum, e.Interval.Start),
+                true
+            ),
+            End = new CalDateTime(
+                new DateTime(e.Termin.Block.Schultag.Datum, e.Interval.End),
+                true
+            ),
+            LastModified = new CalDateTime(
+                new[] { e.LastModified, e.Termin.LastModified, e.Termin.Otium.LastModified }.Max(),
+                true
+            ),
+            Created = new CalDateTime(e.CreatedAt, true),
         });
 
-        var taught = _dbContext.OtiaTermine
-            .Where(e => e.Tutor != null && e.Tutor.Id == sub.BetroffenePerson.Id)
+        var taught = _dbContext
+            .OtiaTermine.Where(e => e.Tutor != null && e.Tutor.Id == sub.BetroffenePerson.Id)
             .Include(t => t.Otium)
-            .Include(t => t.Block).ThenInclude(b => b.Schultag);
+            .Include(t => t.Block)
+                .ThenInclude(b => b.Schultag);
         var taughtEvents = taught.Select(e => new CalendarEvent
         {
             Uid = e.Id.ToString(),
@@ -103,47 +118,75 @@ public class CalendarService
             Description = e.Beschreibung,
             Location = e.Ort,
             Start = new CalDateTime(
-                new DateTime(e.Block.Schultag.Datum, _blockHelper.Get(e.Block.SchemaId)!.Interval.Start), true),
+                new DateTime(
+                    e.Block.Schultag.Datum,
+                    _blockHelper.Get(e.Block.SchemaId)!.Interval.Start
+                ),
+                true
+            ),
             End = new CalDateTime(
-                new DateTime(e.Block.Schultag.Datum, _blockHelper.Get(e.Block.SchemaId)!.Interval.End), true),
-            LastModified = new CalDateTime(new[] { e.LastModified, e.Otium.LastModified }.Max(), true),
-            Created = new CalDateTime(e.CreatedAt, true)
+                new DateTime(
+                    e.Block.Schultag.Datum,
+                    _blockHelper.Get(e.Block.SchemaId)!.Interval.End
+                ),
+                true
+            ),
+            LastModified = new CalDateTime(
+                new[] { e.LastModified, e.Otium.LastModified }.Max(),
+                true
+            ),
+            Created = new CalDateTime(e.CreatedAt, true),
         });
 
-        var profundumEnrollments = _dbContext.ProfundaEinschreibungen
-            .Where(e => e.IsFixed)
+        var profundumEnrollments = _dbContext
+            .ProfundaEinschreibungen.Where(e => e.IsFixed)
             .Where(e => e.BetroffenePerson == sub.BetroffenePerson)
             .Where(e => e.ProfundumInstanz != null)
-            .Include(e => e.ProfundumInstanz).ThenInclude(i => i!.Slots).ThenInclude(s => s.Termine);
-        var profundumEnrolledEvents = profundumEnrollments
-            .SelectMany(e => e.Slot.Termine
-            .Select(t => new CalendarEvent
+            .Include(e => e.ProfundumInstanz)
+                .ThenInclude(i => i!.Slots)
+                    .ThenInclude(s => s.Termine);
+        var profundumEnrolledEvents = profundumEnrollments.SelectMany(e =>
+            e.Slot.Termine.Select(t => new CalendarEvent
             {
                 Summary = e.ProfundumInstanz!.Profundum.Bezeichnung,
                 Description = e.ProfundumInstanz!.Profundum.Beschreibung,
                 Location = e.ProfundumInstanz!.Ort,
                 Start = new CalDateTime(new DateTime(t.Day, t.StartTime), true),
                 End = new CalDateTime(new DateTime(t.Day, t.EndTime), true),
-                LastModified = new CalDateTime(new[] { e.LastModified, e.ProfundumInstanz.LastModified, e.ProfundumInstanz.Profundum.LastModified }.Max(), true),
-                Created = new CalDateTime(e.CreatedAt, true)
-            }));
+                LastModified = new CalDateTime(
+                    new[]
+                    {
+                        e.LastModified,
+                        e.ProfundumInstanz.LastModified,
+                        e.ProfundumInstanz.Profundum.LastModified,
+                    }.Max(),
+                    true
+                ),
+                Created = new CalDateTime(e.CreatedAt, true),
+            })
+        );
 
-        var profundumTaught = _dbContext.ProfundaInstanzen
-            .Where(i => i.Verantwortliche.Contains(sub.BetroffenePerson))
-            .Include(i => i!.Slots).ThenInclude(s => s.Termine);
-        var profundumTaughtEvents = profundumTaught
-            .SelectMany(i => i.Slots
-            .SelectMany(s => s.Termine
-            .Select(t => new CalendarEvent
-            {
-                Summary = i.Profundum.Bezeichnung,
-                Description = i.Profundum.Beschreibung,
-                Location = i.Ort,
-                Start = new CalDateTime(new DateTime(t.Day, t.StartTime), true),
-                End = new CalDateTime(new DateTime(t.Day, t.EndTime), true),
-                LastModified = new CalDateTime(new[] { i.LastModified, i.Profundum.LastModified }.Max(), true),
-                Created = new CalDateTime(i.CreatedAt, true)
-            })));
+        var profundumTaught = _dbContext
+            .ProfundaInstanzen.Where(i => i.Verantwortliche.Contains(sub.BetroffenePerson))
+            .Include(i => i!.Slots)
+                .ThenInclude(s => s.Termine);
+        var profundumTaughtEvents = profundumTaught.SelectMany(i =>
+            i.Slots.SelectMany(s =>
+                s.Termine.Select(t => new CalendarEvent
+                {
+                    Summary = i.Profundum.Bezeichnung,
+                    Description = i.Profundum.Beschreibung,
+                    Location = i.Ort,
+                    Start = new CalDateTime(new DateTime(t.Day, t.StartTime), true),
+                    End = new CalDateTime(new DateTime(t.Day, t.EndTime), true),
+                    LastModified = new CalDateTime(
+                        new[] { i.LastModified, i.Profundum.LastModified }.Max(),
+                        true
+                    ),
+                    Created = new CalDateTime(i.CreatedAt, true),
+                })
+            )
+        );
 
         var calendar = new Ical.Net.Calendar();
 

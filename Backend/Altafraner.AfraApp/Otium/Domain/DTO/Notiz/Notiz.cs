@@ -30,9 +30,7 @@ public record Notiz
     public required PersonInfoMinimal Creator { get; set; }
 
     ///
-    public Notiz()
-    {
-    }
+    public Notiz() { }
 
     [SetsRequiredMembers]
     internal Notiz(OtiumAnwesenheitsNotiz notiz)

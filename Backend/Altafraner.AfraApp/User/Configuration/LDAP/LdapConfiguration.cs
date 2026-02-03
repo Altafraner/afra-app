@@ -65,7 +65,8 @@ public class LdapConfiguration
 
     internal static bool Validate(LdapConfiguration configuration)
     {
-        if (!configuration.Enabled) return true;
+        if (!configuration.Enabled)
+            return true;
         try
         {
             var connection = configuration.BuildConnection();

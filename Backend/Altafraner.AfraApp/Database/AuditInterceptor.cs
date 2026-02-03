@@ -20,7 +20,8 @@ public class AuditInterceptor : SaveChangesInterceptor
     /// <inheritdoc/>
     public override InterceptionResult<int> SavingChanges(
         DbContextEventData eventData,
-        InterceptionResult<int> result)
+        InterceptionResult<int> result
+    )
     {
         ApplyAudit(eventData.Context);
         return base.SavingChanges(eventData, result);
@@ -30,7 +31,8 @@ public class AuditInterceptor : SaveChangesInterceptor
     public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
         DbContextEventData eventData,
         InterceptionResult<int> result,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         ApplyAudit(eventData.Context);
         return base.SavingChangesAsync(eventData, result, cancellationToken);
@@ -55,12 +57,14 @@ public class AuditInterceptor : SaveChangesInterceptor
 
     private void ApplyAudit(DbContext? context)
     {
-        if (context == null) return;
+        if (context == null)
+            return;
         var userId = GetUserId();
 
         foreach (var entry in context.ChangeTracker.Entries())
         {
-            if (entry.Entity is not IHasUserTracking audit) continue;
+            if (entry.Entity is not IHasUserTracking audit)
+                continue;
 
             if (entry.State == EntityState.Added)
                 audit.CreatedById = userId;
@@ -69,4 +73,3 @@ public class AuditInterceptor : SaveChangesInterceptor
         }
     }
 }
-

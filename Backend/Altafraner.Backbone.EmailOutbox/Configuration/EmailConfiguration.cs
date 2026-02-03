@@ -50,8 +50,10 @@ public class EmailConfiguration
     /// <returns>True, iff the configuration is valid.</returns>
     public static bool Validate(EmailConfiguration config)
     {
-        if (config.Username is not null && config.Password is null) return false;
-        if (config.Username is null && config.Password is not null) return false;
+        if (config.Username is not null && config.Password is null)
+            return false;
+        if (config.Username is null && config.Password is not null)
+            return false;
         return true;
     }
 }

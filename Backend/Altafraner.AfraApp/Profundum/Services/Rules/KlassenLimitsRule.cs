@@ -21,22 +21,26 @@ public class KlassenLimitsRule : IProfundumIndividualRule
     }
 
     /// <inheritdoc/>
-    public RuleStatus CheckForSubmission(Person student,
+    public RuleStatus CheckForSubmission(
+        Person student,
         IEnumerable<ProfundumSlot> slots,
         IEnumerable<ProfundumEinschreibung> enrollments,
-        IEnumerable<ProfundumBelegWunsch> wuensche)
+        IEnumerable<ProfundumBelegWunsch> wuensche
+    )
     {
         return RuleStatus.Valid;
     }
 
     /// <inheritdoc/>
-    public void AddConstraints(Person student,
+    public void AddConstraints(
+        Person student,
         IEnumerable<ProfundumSlot> slots,
         IEnumerable<ProfundumBelegWunsch> wuensche,
         Dictionary<(ProfundumSlot, ProfundumInstanz), BoolVar> belegVars,
         Dictionary<ProfundumSlot, BoolVar> personNotEnrolledVars,
         CpModel model,
-        LinearExprBuilder objective)
+        LinearExprBuilder objective
+    )
     {
         var klasse = _userService.GetKlassenstufe(student);
 
@@ -57,7 +61,11 @@ public class KlassenLimitsRule : IProfundumIndividualRule
     }
 
     /// <inheritdoc/>
-    public IEnumerable<MatchingWarning> GetWarnings(Person student, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
+    public IEnumerable<MatchingWarning> GetWarnings(
+        Person student,
+        IEnumerable<ProfundumSlot> slots,
+        IEnumerable<ProfundumEinschreibung> enrollments
+    )
     {
         var klasse = _userService.GetKlassenstufe(student);
         var warnings = new List<MatchingWarning>();

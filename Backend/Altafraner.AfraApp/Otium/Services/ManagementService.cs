@@ -39,8 +39,8 @@ public class ManagementService
     /// <exception cref="KeyNotFoundException">There is no such termin</exception>
     public async Task<OtiumTermin> GetTerminByIdAsync(Guid terminId)
     {
-        var termin = await _dbContext.OtiaTermine
-            .Include(t => t.Otium)
+        var termin = await _dbContext
+            .OtiaTermine.Include(t => t.Otium)
             .FirstOrDefaultAsync(t => t.Id == terminId);
         if (termin is null)
             throw new KeyNotFoundException("Termin not found.");
@@ -71,7 +71,8 @@ public class ManagementService
     /// </summary>
     public async Task<Guid> GetBlockIdOfTerminIdAsync(Guid terminId)
     {
-        var id = await _dbContext.OtiaTermine.AsNoTracking()
+        var id = await _dbContext
+            .OtiaTermine.AsNoTracking()
             .Include(t => t.Block)
             .Where(t => t.Id == terminId)
             .Select(t => t.Block.Id)
@@ -129,8 +130,8 @@ public class ManagementService
     /// </summary>
     public async Task<Guid[]> GetTermineInBlock(Guid blockId)
     {
-        return await _dbContext.OtiaTermine
-            .AsNoTracking()
+        return await _dbContext
+            .OtiaTermine.AsNoTracking()
             .Where(t => t.Block.Id == blockId)
             .Select(t => t.Id)
             .ToArrayAsync();

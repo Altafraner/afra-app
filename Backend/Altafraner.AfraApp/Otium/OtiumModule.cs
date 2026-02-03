@@ -19,9 +19,14 @@ namespace Altafraner.AfraApp.Otium;
 public class OtiumModule : IModule
 {
     /// <inheritdoc />
-    public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
+    public void ConfigureServices(
+        IServiceCollection services,
+        IConfiguration config,
+        IHostEnvironment env
+    )
     {
-        services.AddOptions<OtiumConfiguration>()
+        services
+            .AddOptions<OtiumConfiguration>()
             .Bind(config.GetSection("Otium"))
             .Validate(OtiumConfiguration.Validate)
             .ValidateOnStart();
@@ -45,14 +50,14 @@ public class OtiumModule : IModule
     /// <inheritdoc />
     public void Configure(WebApplication app)
     {
-        var group = app.MapGroup("/api/otium")
-            .RequireAuthorization();
+        var group = app.MapGroup("/api/otium").RequireAuthorization();
         group.MapKategorienEndpoints();
         group.MapKatalogEndpoints();
         group.MapDashboardEndpoints();
         group.MapManagementEndpoints();
         group.MapNoteEndpoints();
-        group.MapHub<AttendanceHub>("/attendance")
+        group
+            .MapHub<AttendanceHub>("/attendance")
             .RequireAuthorization(AuthorizationPolicies.TutorOnly);
     }
 

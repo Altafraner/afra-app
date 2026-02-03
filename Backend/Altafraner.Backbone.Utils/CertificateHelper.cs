@@ -11,13 +11,18 @@ public static class CertificateHelper
     /// <summary>
     ///     Loads an X509-Certificate and corresponding private key
     /// </summary>
-    public static X509Certificate2 LoadX509CertificateAndKey(IConfiguration configuration, string name)
+    public static X509Certificate2 LoadX509CertificateAndKey(
+        IConfiguration configuration,
+        string name
+    )
     {
         var certPath = configuration[$"Certificates:{name}Cert"];
         var keyPath = configuration[$"Certificates:{name}Key"];
 
         if (certPath == null)
-            throw new KeyNotFoundException($"The certificate with the name {name} was not configured");
+            throw new KeyNotFoundException(
+                $"The certificate with the name {name} was not configured"
+            );
         return X509Certificate2.CreateFromPemFile(certPath, keyPath);
     }
 
@@ -29,7 +34,9 @@ public static class CertificateHelper
         var certPath = configuration[$"Certificates:{name}Cert"];
 
         if (certPath == null)
-            throw new KeyNotFoundException($"The certificate with the name {name} was not configured");
+            throw new KeyNotFoundException(
+                $"The certificate with the name {name} was not configured"
+            );
         return X509CertificateLoader.LoadCertificateFromFile(certPath);
     }
 }

@@ -19,4 +19,5 @@ public record EinschreibungsPreview(
     bool Eingeschrieben,
     Notiz.Notiz? Notiz,
     IEnumerable<Notiz.Notiz> Notizen,
-    TimeOnlyInterval Interval);
+    TimeOnlyInterval Interval
+);

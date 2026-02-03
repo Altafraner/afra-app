@@ -20,8 +20,11 @@ public class EmergencyBackupScheduler : BackgroundService
     /// <summary>
     /// Called from DI
     /// </summary>
-    public EmergencyBackupScheduler(ILogger<EnrollmentReminderScheduler> logger,
-        IOptions<OtiumConfiguration> otiumConfiguration, IServiceProvider serviceProvider)
+    public EmergencyBackupScheduler(
+        ILogger<EnrollmentReminderScheduler> logger,
+        IOptions<OtiumConfiguration> otiumConfiguration,
+        IServiceProvider serviceProvider
+    )
     {
         _logger = logger;
         _otiumConfiguration = otiumConfiguration;
@@ -37,7 +40,8 @@ public class EmergencyBackupScheduler : BackgroundService
 
         var key = new JobKey(JobName, GroupName);
         var exists = await scheduler.CheckExists(key, stoppingToken);
-        var trigger = TriggerBuilder.Create()
+        var trigger = TriggerBuilder
+            .Create()
             .ForJob(key)
             .WithSchedule(CronScheduleBuilder.CronSchedule("0 * * * * ? *"))
             .StartNow()
@@ -49,11 +53,10 @@ public class EmergencyBackupScheduler : BackgroundService
             _logger.LogInformation("Emergency backup disabled. Deleted existing job.");
         }
 
-        if (!_otiumConfiguration.Value.EnableEmergencyBackup) return;
+        if (!_otiumConfiguration.Value.EnableEmergencyBackup)
+            return;
 
-        var job = JobBuilder.Create<EmergencyUploadJob>()
-            .WithIdentity(key)
-            .Build();
+        var job = JobBuilder.Create<EmergencyUploadJob>().WithIdentity(key).Build();
 
         await scheduler.ScheduleJob(job, trigger, stoppingToken);
     }

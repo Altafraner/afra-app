@@ -7,7 +7,8 @@ namespace Altafraner.Backbone.EmailSchedulingModule;
 ///     Describes how a db context must be designed to include relevant fields for e-mail notifications
 /// </summary>
 /// <typeparam name="TPerson"></typeparam>
-public interface IScheduledEmailContext<TPerson> where TPerson : class, IEmailRecipient
+public interface IScheduledEmailContext<TPerson>
+    where TPerson : class, IEmailRecipient
 {
     /// <summary>
     ///     E-Mail-Notifications scheduled for later delivery

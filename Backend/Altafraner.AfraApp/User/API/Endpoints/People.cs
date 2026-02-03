@@ -22,15 +22,16 @@ public static class People
         app.MapGet("/api/people/{id:guid}/mentor", GetPersonMentors)
             .WithName("GetPersonMentors")
             .RequireAuthorization(AuthorizationPolicies.TeacherOrAdmin);
-        app.MapGet("/api/klassen", GetKlassen)
-            .RequireAuthorization();
+        app.MapGet("/api/klassen", GetKlassen).RequireAuthorization();
     }
 
-    private static Ok<IAsyncEnumerable<PersonInfoMinimal>> GetPeople(AfraAppContext dbContext,
-        HttpContext httpContext)
+    private static Ok<IAsyncEnumerable<PersonInfoMinimal>> GetPeople(
+        AfraAppContext dbContext,
+        HttpContext httpContext
+    )
     {
-        var people = dbContext.Personen
-            .OrderBy(p => p.LastName)
+        var people = dbContext
+            .Personen.OrderBy(p => p.LastName)
             .ThenBy(p => p.FirstName)
             .Select(p => new PersonInfoMinimal(p))
             .AsAsyncEnumerable();
@@ -38,7 +39,11 @@ public static class People
         return TypedResults.Ok(people);
     }
 
-    private static async Task<IResult> GetPersonMentors(AfraAppContext dbContext, UserService userService, Guid id)
+    private static async Task<IResult> GetPersonMentors(
+        AfraAppContext dbContext,
+        UserService userService,
+        Guid id
+    )
     {
         try
         {

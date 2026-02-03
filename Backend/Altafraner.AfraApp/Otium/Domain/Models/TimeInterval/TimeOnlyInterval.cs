@@ -10,9 +10,8 @@ public record struct TimeOnlyInterval : ITimeInterval<TimeOnly>
     /// </summary>
     /// <param name="start">The starting Date and Time for the TimeOnlyInterval</param>
     /// <param name="end">The ending Date and Time for the TimeOnlyInterval</param>
-    public TimeOnlyInterval(TimeOnly start, TimeOnly end) : this(start, end - start)
-    {
-    }
+    public TimeOnlyInterval(TimeOnly start, TimeOnly end)
+        : this(start, end - start) { }
 
     /// <summary>
     ///     Represents a time interval with a start <see cref="TimeOnly" /> and a duration.
@@ -28,9 +27,7 @@ public record struct TimeOnlyInterval : ITimeInterval<TimeOnly>
     /// <summary>
     ///     A default constructor for the configuration binding
     /// </summary>
-    public TimeOnlyInterval()
-    {
-    }
+    public TimeOnlyInterval() { }
 
     /// <summary>
     ///     Gets the ending Date and Time for the TimeOnlyInterval.
@@ -71,7 +68,8 @@ public record struct TimeOnlyInterval : ITimeInterval<TimeOnly>
     /// <returns>A new TimeOnlyInterval representing the intersection, or null if there is no intersection.</returns>
     public ITimeInterval<TimeOnly>? Intersection(ITimeInterval<TimeOnly> other)
     {
-        if (!Intersects(other)) return null;
+        if (!Intersects(other))
+            return null;
 
         var start = Start > other.Start ? Start : other.Start;
         var end = End < other.End ? End : other.End;
@@ -119,14 +117,19 @@ public record struct TimeOnlyInterval : ITimeInterval<TimeOnly>
     /// </summary>
     /// <param name="other">The other TimeOnlyInterval to subtract from this interval.</param>
     /// <returns>A tuple containing the intervals before and after the other interval.</returns>
-    public (ITimeInterval<TimeOnly>? Before, ITimeInterval<TimeOnly>? After) Difference(ITimeInterval<TimeOnly> other)
+    public (ITimeInterval<TimeOnly>? Before, ITimeInterval<TimeOnly>? After) Difference(
+        ITimeInterval<TimeOnly> other
+    )
     {
-        if (!Intersects(other)) return other.Start > Start ? (null, this) : (this, null);
+        if (!Intersects(other))
+            return other.Start > Start ? (null, this) : (this, null);
 
         TimeOnlyInterval? before = null;
         TimeOnlyInterval? after = null;
-        if (other.Start > Start) before = new TimeOnlyInterval(Start, other.Start);
-        if (other.End < End) after = new TimeOnlyInterval(other.End, End);
+        if (other.Start > Start)
+            before = new TimeOnlyInterval(Start, other.Start);
+        if (other.End < End)
+            after = new TimeOnlyInterval(other.End, End);
 
         return (before, after);
     }

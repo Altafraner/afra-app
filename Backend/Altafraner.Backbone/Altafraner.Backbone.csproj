@@ -1,11 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
     <PropertyGroup>
         <RootNamespace>Altafraner.Backbone</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Altafraner.Backbone.Abstractions\Altafraner.Backbone.Abstractions.csproj"/>
+        <ProjectReference Include="..\Altafraner.Backbone.Abstractions\Altafraner.Backbone.Abstractions.csproj" />
     </ItemGroup>
-
 </Project>

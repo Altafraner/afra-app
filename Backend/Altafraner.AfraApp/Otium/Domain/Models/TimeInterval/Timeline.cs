@@ -7,16 +7,15 @@ namespace Altafraner.AfraApp.Otium.Domain.Models.TimeInterval;
 ///     With some work, this could implement <see cref="ICollection{T}" /> or <see cref="IList{T}" /> mit <c>T</c> als
 ///     <see cref="ITimeInterval{T}" />
 /// </remarks>
-public class Timeline<T> where T : struct
+public class Timeline<T>
+    where T : struct
 {
     private readonly ICollection<ITimeInterval<T>> _intervals = [];
 
     /// <summary>
     ///     Creates a new empty timeline.
     /// </summary>
-    public Timeline()
-    {
-    }
+    public Timeline() { }
 
     /// <summary>
     ///     Creates a new timeline containing the given intervals.
@@ -56,12 +55,18 @@ public class Timeline<T> where T : struct
     /// <param name="interval">The interval to remove</param>
     public void Remove(ITimeInterval<T> interval)
     {
-        foreach (var listInterval in _intervals.Where(listInterval => listInterval.Intersects(interval)).ToList())
+        foreach (
+            var listInterval in _intervals
+                .Where(listInterval => listInterval.Intersects(interval))
+                .ToList()
+        )
         {
             _intervals.Remove(listInterval);
             var (before, after) = listInterval.Difference(interval);
-            if (before is not null) _intervals.Add(before);
-            if (after is not null) _intervals.Add(after);
+            if (before is not null)
+                _intervals.Add(before);
+            if (after is not null)
+                _intervals.Add(after);
         }
     }
 

@@ -13,31 +13,65 @@ namespace Altafraner.AfraApp.Backbone.Authorization;
 public class AuthorizationModule : IModule
 {
     /// <inheritdoc />
-    public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
+    public void ConfigureServices(
+        IServiceCollection services,
+        IConfiguration config,
+        IHostEnvironment env
+    )
     {
-        services.AddAuthorizationBuilder()
-            .AddPolicy(AuthorizationPolicies.StudentOnly,
-                policy => policy.RequireClaim(AfraAppClaimTypes.Role,
-                    nameof(Rolle.Oberstufe), nameof(Rolle.Mittelstufe)))
-            .AddPolicy(AuthorizationPolicies.MittelStufeStudentOnly,
-                policy => policy.RequireClaim(AfraAppClaimTypes.Role,
-                    nameof(Rolle.Mittelstufe)))
-            .AddPolicy(AuthorizationPolicies.TutorOnly,
-                policy => policy.RequireClaim(AfraAppClaimTypes.Role,
-                    nameof(Rolle.Tutor)))
-            .AddPolicy(AuthorizationPolicies.Otiumsverantwortlich,
-                policy => policy.RequireClaim(AfraAppClaimTypes.GlobalPermission,
-                    nameof(GlobalPermission.Otiumsverantwortlich)))
-            .AddPolicy(AuthorizationPolicies.ProfundumsVerantwortlich,
-                policy => policy.RequireClaim(AfraAppClaimTypes.GlobalPermission,
-                    nameof(GlobalPermission.Profundumsverantwortlich)))
-            .AddPolicy(AuthorizationPolicies.AdminOnly,
-                policy => policy.RequireClaim(AfraAppClaimTypes.GlobalPermission,
-                    nameof(GlobalPermission.Admin)))
-            .AddPolicy(AuthorizationPolicies.TeacherOrAdmin,
-                policy => policy.RequireAssertion(context =>
-                    context.User.HasClaim(AfraAppClaimTypes.GlobalPermission, nameof(GlobalPermission.Admin))
-                    || context.User.HasClaim(AfraAppClaimTypes.Role, nameof(Rolle.Tutor))));
+        services
+            .AddAuthorizationBuilder()
+            .AddPolicy(
+                AuthorizationPolicies.StudentOnly,
+                policy =>
+                    policy.RequireClaim(
+                        AfraAppClaimTypes.Role,
+                        nameof(Rolle.Oberstufe),
+                        nameof(Rolle.Mittelstufe)
+                    )
+            )
+            .AddPolicy(
+                AuthorizationPolicies.MittelStufeStudentOnly,
+                policy => policy.RequireClaim(AfraAppClaimTypes.Role, nameof(Rolle.Mittelstufe))
+            )
+            .AddPolicy(
+                AuthorizationPolicies.TutorOnly,
+                policy => policy.RequireClaim(AfraAppClaimTypes.Role, nameof(Rolle.Tutor))
+            )
+            .AddPolicy(
+                AuthorizationPolicies.Otiumsverantwortlich,
+                policy =>
+                    policy.RequireClaim(
+                        AfraAppClaimTypes.GlobalPermission,
+                        nameof(GlobalPermission.Otiumsverantwortlich)
+                    )
+            )
+            .AddPolicy(
+                AuthorizationPolicies.ProfundumsVerantwortlich,
+                policy =>
+                    policy.RequireClaim(
+                        AfraAppClaimTypes.GlobalPermission,
+                        nameof(GlobalPermission.Profundumsverantwortlich)
+                    )
+            )
+            .AddPolicy(
+                AuthorizationPolicies.AdminOnly,
+                policy =>
+                    policy.RequireClaim(
+                        AfraAppClaimTypes.GlobalPermission,
+                        nameof(GlobalPermission.Admin)
+                    )
+            )
+            .AddPolicy(
+                AuthorizationPolicies.TeacherOrAdmin,
+                policy =>
+                    policy.RequireAssertion(context =>
+                        context.User.HasClaim(
+                            AfraAppClaimTypes.GlobalPermission,
+                            nameof(GlobalPermission.Admin)
+                        ) || context.User.HasClaim(AfraAppClaimTypes.Role, nameof(Rolle.Tutor))
+                    )
+            );
     }
 
     /// <inheritdoc />

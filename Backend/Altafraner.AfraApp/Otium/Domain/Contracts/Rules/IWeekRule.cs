@@ -12,8 +12,11 @@ public interface IWeekRule
     /// <summary>
     ///     Checks if the rule is valid for the given person and enrollments during a week.
     /// </summary>
-    ValueTask<RuleStatus> IsValidAsync(Person person, IEnumerable<Schultag> schultage,
-        IEnumerable<OtiumEinschreibung> einschreibungen)
+    ValueTask<RuleStatus> IsValidAsync(
+        Person person,
+        IEnumerable<Schultag> schultage,
+        IEnumerable<OtiumEinschreibung> einschreibungen
+    )
     {
         return new ValueTask<RuleStatus>(RuleStatus.Valid);
     }
@@ -25,9 +28,12 @@ public interface IWeekRule
     /// <param name="schultage">All schooldays in the same week</param>
     /// <param name="einschreibungen">The persons other enrollments in the same week</param>
     /// <param name="termin">The termin the person wants to enroll to</param>
-    ValueTask<RuleStatus> MayEnrollAsync(Person person, IEnumerable<Schultag> schultage,
+    ValueTask<RuleStatus> MayEnrollAsync(
+        Person person,
+        IEnumerable<Schultag> schultage,
         IEnumerable<OtiumEinschreibung> einschreibungen,
-        OtiumTermin termin)
+        OtiumTermin termin
+    )
     {
         return new ValueTask<RuleStatus>(RuleStatus.Valid);
     }
@@ -39,9 +45,12 @@ public interface IWeekRule
     /// <param name="schultage">All schooldays in the same week</param>
     /// <param name="einschreibungen">The persons other enrollments in the same week</param>
     /// /// <param name="einschreibung">The enrollment the person wants to unenroll from</param>
-    ValueTask<RuleStatus> MayUnenrollAsync(Person person, IEnumerable<Schultag> schultage,
+    ValueTask<RuleStatus> MayUnenrollAsync(
+        Person person,
+        IEnumerable<Schultag> schultage,
         IEnumerable<OtiumEinschreibung> einschreibungen,
-        OtiumEinschreibung einschreibung)
+        OtiumEinschreibung einschreibung
+    )
     {
         return new ValueTask<RuleStatus>(RuleStatus.Valid);
     }

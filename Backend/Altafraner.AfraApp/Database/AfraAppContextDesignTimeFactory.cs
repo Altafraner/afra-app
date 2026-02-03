@@ -15,10 +15,7 @@ public class AfraAppContextDesignTimeFactory : IDesignTimeDbContextFactory<AfraA
     public AfraAppContext CreateDbContext(string[] args)
     {
         // We'll create the service here exactly the way we would in the normal application.
-        var builder = WebApplication.CreateSlimBuilder(new WebApplicationOptions
-        {
-            Args = args
-        });
+        var builder = WebApplication.CreateSlimBuilder(new WebApplicationOptions { Args = args });
         builder.UseAltafranerBackbone(backbone => backbone.AddModule<DatabaseModule>());
         var app = builder.Build();
         var scope = app.Services.CreateScope();

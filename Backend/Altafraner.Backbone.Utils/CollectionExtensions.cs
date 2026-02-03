@@ -19,7 +19,8 @@ public static class CollectionExtensions
     /// </remarks>
     public static bool AddOnce<T>(this ICollection<T> collection, T item)
     {
-        if (collection.Contains(item)) return false;
+        if (collection.Contains(item))
+            return false;
         collection.Add(item);
         return true;
     }

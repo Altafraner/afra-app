@@ -12,9 +12,8 @@ public record struct DateTimeInterval(DateTime Start, TimeSpan Duration) : ITime
     /// </summary>
     /// <param name="start">The starting Date and Time for the DateTimeInterval</param>
     /// <param name="end">The ending Date and Time for the DateTimeInterval</param>
-    public DateTimeInterval(DateTime start, DateTime end) : this(start, end - start)
-    {
-    }
+    public DateTimeInterval(DateTime start, DateTime end)
+        : this(start, end - start) { }
 
     /// <summary>
     ///     Gets the ending Date and Time for the DateTimeInterval.
@@ -48,7 +47,8 @@ public record struct DateTimeInterval(DateTime Start, TimeSpan Duration) : ITime
     /// <returns>A new DateTimeInterval representing the intersection, or null if there is no intersection.</returns>
     public ITimeInterval<DateTime>? Intersection(ITimeInterval<DateTime> other)
     {
-        if (!Intersects(other)) return null;
+        if (!Intersects(other))
+            return null;
 
         var start = Start > other.Start ? Start : other.Start;
         var end = End < other.End ? End : other.End;
@@ -96,14 +96,19 @@ public record struct DateTimeInterval(DateTime Start, TimeSpan Duration) : ITime
     /// </summary>
     /// <param name="other">The other DateTimeInterval to subtract from this interval.</param>
     /// <returns>A tuple containing the intervals before and after the other interval.</returns>
-    public (ITimeInterval<DateTime>? Before, ITimeInterval<DateTime>? After) Difference(ITimeInterval<DateTime> other)
+    public (ITimeInterval<DateTime>? Before, ITimeInterval<DateTime>? After) Difference(
+        ITimeInterval<DateTime> other
+    )
     {
-        if (!Intersects(other)) return other.Start > Start ? (null, this) : (this, null);
+        if (!Intersects(other))
+            return other.Start > Start ? (null, this) : (this, null);
 
         DateTimeInterval? before = null;
         DateTimeInterval? after = null;
-        if (other.Start >= Start) before = new DateTimeInterval(Start, other.Start);
-        if (other.End <= End) after = new DateTimeInterval(other.End, End);
+        if (other.Start >= Start)
+            before = new DateTimeInterval(Start, other.Start);
+        if (other.End <= End)
+            after = new DateTimeInterval(other.End, End);
 
         return (before, after);
     }

@@ -11,7 +11,11 @@ namespace Altafraner.Backbone.Defaults;
 public class CachingModule : IModule
 {
     /// <inheritdoc />
-    public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
+    public void ConfigureServices(
+        IServiceCollection services,
+        IConfiguration config,
+        IHostEnvironment env
+    )
     {
         services.AddMemoryCache();
         services.AddHybridCache();

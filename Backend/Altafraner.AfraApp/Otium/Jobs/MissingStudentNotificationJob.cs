@@ -31,7 +31,9 @@ internal sealed class MissingStudentNotificationJob : RetryJob
         IHubContext<AttendanceHub, IAttendanceHubClient> attendanceHub,
         IOptions<OtiumConfiguration> otiumConfiguration,
         ILogger<MissingStudentNotificationJob> logger,
-        BlockHelper blockHelper) : base(logger)
+        BlockHelper blockHelper
+    )
+        : base(logger)
     {
         _attendanceService = attendanceService;
         _emailOutbox = emailOutbox;
@@ -42,6 +44,7 @@ internal sealed class MissingStudentNotificationJob : RetryJob
     }
 
     protected override int MaxRetryCount => 5;
+
     protected override TimeSpan GetRetryDelay(int retryCount) => TimeSpan.FromMinutes(1);
 
     protected override async Task ExecuteAsync(IJobExecutionContext context, int _)
@@ -62,12 +65,11 @@ internal sealed class MissingStudentNotificationJob : RetryJob
         var (terminAttendance, missingPersons, missingPersonsChecked) =
             await _attendanceService.GetAttendanceForBlockAsync(blockId);
 
-        var missingEnrolled = terminAttendance.Values
-            .SelectMany(d => d.AsEnumerable())
+        var missingEnrolled = terminAttendance
+            .Values.SelectMany(d => d.AsEnumerable())
             .Where(e => e.Value == OtiumAnwesenheitsStatus.Fehlend);
         var othersAnwesenheitsStatus = schema.Verpflichtend
-            ? missingPersons
-                .Where(e => e.Value == OtiumAnwesenheitsStatus.Fehlend)
+            ? missingPersons.Where(e => e.Value == OtiumAnwesenheitsStatus.Fehlend)
             : [];
 
         var allMissing = missingEnrolled
@@ -79,26 +81,42 @@ internal sealed class MissingStudentNotificationJob : RetryJob
             .ThenBy(p => p.FirstName)
             .ToList();
 
-        if (allMissing.Count == 0) return;
+        if (allMissing.Count == 0)
+            return;
 
-        if (!context.MergedJobDataMap.TryGetBoolean("warning_send", out var warningSend) || !warningSend)
+        if (
+            !context.MergedJobDataMap.TryGetBoolean("warning_send", out var warningSend)
+            || !warningSend
+        )
         {
-            _logger.LogInformation("Sending warning notification for supervisors of block {BlockId}", blockId);
+            _logger.LogInformation(
+                "Sending warning notification for supervisors of block {BlockId}",
+                blockId
+            );
             var fireAfter = TimeOnly.Parse(context.MergedJobDataMap.GetString("fire_after")!);
             var now = TimeOnly.FromDateTime(DateTime.Now);
 
-            if (now < fireAfter && !missingPersonsChecked ||
-                terminAttendance.Keys.Any(k => !k.SindAnwesenheitenKontrolliert)) return;
+            if (
+                now < fireAfter && !missingPersonsChecked
+                || terminAttendance.Keys.Any(k => !k.SindAnwesenheitenKontrolliert)
+            )
+                return;
 
             var notification = new IAttendanceHubClient.Notification(
                 "Benachrichtigungen werden bald gesendet",
                 "In fünf Minuten wird eine Benachrichtigung über alle Personen gesendet, die im aktuellen Otium-Block fehlen.",
-                IAttendanceHubClient.NotificationSeverity.Warning);
-            await _attendanceHub.Clients.Group(AttendanceHub.BlockGroupName(blockId)).Notify(notification);
+                IAttendanceHubClient.NotificationSeverity.Warning
+            );
+            await _attendanceHub
+                .Clients.Group(AttendanceHub.BlockGroupName(blockId))
+                .Notify(notification);
             foreach (var termin in terminAttendance.Keys)
-                await _attendanceHub.Clients.Group(AttendanceHub.TerminGroupName(termin.Id)).Notify(notification);
+                await _attendanceHub
+                    .Clients.Group(AttendanceHub.TerminGroupName(termin.Id))
+                    .Notify(notification);
 
-            var trigger = TriggerBuilder.Create()
+            var trigger = TriggerBuilder
+                .Create()
                 .ForJob(context.JobDetail.Key)
                 .UsingJobData("warning_send", true)
                 .StartAt(DateTimeOffset.Now.AddMinutes(5))
@@ -111,22 +129,34 @@ internal sealed class MissingStudentNotificationJob : RetryJob
         const string subject = "Fehlende Personen zum Otium";
         var len = (int)Math.Ceiling(Math.Log10(allMissing.Count));
         var body = $"""
-                    Hallo,
+            Hallo,
 
-                    es fehlen folgende Personen im aktuellen Otiums-Block:
-                    {string.Join("\r\n", allMissing.Select((p, i) => $"{(i + 1).ToString().PadLeft(len)}. {p.FirstName} {p.LastName}"))}
-                    """;
+            es fehlen folgende Personen im aktuellen Otiums-Block:
+            {string.Join(
+                "\r\n",
+                allMissing.Select(
+                    (p, i) => $"{(i + 1).ToString().PadLeft(len)}. {p.FirstName} {p.LastName}"
+                )
+            )}
+            """;
         foreach (var recipient in _otiumConfiguration.Value.MissingStudentsReport.Recipients)
             await _emailOutbox.SendReportAsync(recipient, subject, body);
 
         var successNotification = new IAttendanceHubClient.Notification(
             "Benachrichtigungen gesendet",
             $"Es wurden Benachrichtigungen über die Abwesenheit von {allMissing.Count} Schüler:innen versandt.",
-            IAttendanceHubClient.NotificationSeverity.Info);
-        await _attendanceHub.Clients.Group(AttendanceHub.BlockGroupName(blockId)).Notify(successNotification);
+            IAttendanceHubClient.NotificationSeverity.Info
+        );
+        await _attendanceHub
+            .Clients.Group(AttendanceHub.BlockGroupName(blockId))
+            .Notify(successNotification);
         foreach (var termin in terminAttendance.Keys)
-            await _attendanceHub.Clients.Group(AttendanceHub.TerminGroupName(termin.Id))
+            await _attendanceHub
+                .Clients.Group(AttendanceHub.TerminGroupName(termin.Id))
                 .Notify(successNotification);
-        _logger.LogInformation("Successfully sent missing students report for block {BlockId}", blockId);
+        _logger.LogInformation(
+            "Successfully sent missing students report for block {BlockId}",
+            blockId
+        );
     }
 }

@@ -30,8 +30,7 @@ public class UserService
     {
         try
         {
-            return await _dbContext.Personen
-                .FirstAsync(p => p.Id == userId);
+            return await _dbContext.Personen.FirstAsync(p => p.Id == userId);
         }
         catch (InvalidOperationException)
         {
@@ -44,18 +43,18 @@ public class UserService
     /// </summary>
     public async Task<IEnumerable<Person>> GetUsersWithRoleAsync(Rolle role)
     {
-        return await _dbContext.Personen
-            .Where(p => p.Rolle == role)
-            .ToListAsync();
+        return await _dbContext.Personen.Where(p => p.Rolle == role).ToListAsync();
     }
 
     /// <summary>
     ///     Gets a list of users with a specific global permission.
     /// </summary>
-    public async Task<IEnumerable<Person>> GetUsersWithGlobalPermissionAsync(GlobalPermission permission)
+    public async Task<IEnumerable<Person>> GetUsersWithGlobalPermissionAsync(
+        GlobalPermission permission
+    )
     {
-        return await _dbContext.Personen
-            .Where(p => p.GlobalPermissions.Contains(permission))
+        return await _dbContext
+            .Personen.Where(p => p.GlobalPermissions.Contains(permission))
             .ToListAsync();
     }
 
@@ -69,7 +68,12 @@ public class UserService
         if (student.Rolle == Rolle.Tutor)
             throw new InvalidOperationException("Tutors do not have mentors.");
 
-        var mentors = await _dbContext.Entry(student).Collection(s => s.Mentors).Query().Distinct().ToListAsync();
+        var mentors = await _dbContext
+            .Entry(student)
+            .Collection(s => s.Mentors)
+            .Query()
+            .Distinct()
+            .ToListAsync();
 
         return mentors;
     }
@@ -85,7 +89,12 @@ public class UserService
         if (mentor.Rolle != Rolle.Tutor)
             throw new InvalidOperationException("Only tutors can have mentees.");
 
-        var mentees = await _dbContext.Entry(mentor).Collection(s => s.Mentees).Query().Distinct().ToListAsync();
+        var mentees = await _dbContext
+            .Entry(mentor)
+            .Collection(s => s.Mentees)
+            .Query()
+            .Distinct()
+            .ToListAsync();
 
         return mentees;
     }
@@ -111,7 +120,8 @@ public class UserService
     /// </summary>
     public IEnumerable<int> GetKlassenstufen()
     {
-        return _dbContext.Personen.Select(x => x.Gruppe)
+        return _dbContext
+            .Personen.Select(x => x.Gruppe)
             .Distinct()
             .ToArray()
             .Where(s => !string.IsNullOrWhiteSpace(s))

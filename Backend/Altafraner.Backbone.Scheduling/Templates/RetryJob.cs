@@ -21,13 +21,21 @@ public abstract partial class RetryJob : IJob
     /// <inheritdoc />
     public async Task Execute(IJobExecutionContext context)
     {
-        var hasRetryCount = context.MergedJobDataMap.TryGetIntValue("retryCount", out var retryCount);
-        if (!hasRetryCount) retryCount = 0;
+        var hasRetryCount = context.MergedJobDataMap.TryGetIntValue(
+            "retryCount",
+            out var retryCount
+        );
+        if (!hasRetryCount)
+            retryCount = 0;
 
         if (retryCount != 0)
         {
-            _logger.LogInformation("The job {JobName} is being retried. Attempt {RetryCount}/{MaxRetryCount}.",
-                context.JobDetail.Key.Name, retryCount, MaxRetryCount);
+            _logger.LogInformation(
+                "The job {JobName} is being retried. Attempt {RetryCount}/{MaxRetryCount}.",
+                context.JobDetail.Key.Name,
+                retryCount,
+                MaxRetryCount
+            );
         }
 
         try
@@ -46,16 +54,22 @@ public abstract partial class RetryJob : IJob
 
         if (retryCount > MaxRetryCount)
         {
-            _logger.LogError("The job {JobName} has reached the maximum retry count of {MaxRetryCount}.",
-                context.JobDetail.Key.Name, MaxRetryCount);
+            _logger.LogError(
+                "The job {JobName} has reached the maximum retry count of {MaxRetryCount}.",
+                context.JobDetail.Key.Name,
+                MaxRetryCount
+            );
             try
             {
                 await HandleFinalFailureAsync(context);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "The jobs {JobName} final failure handler failed.",
-                    context.JobDetail.Key.Name);
+                _logger.LogError(
+                    ex,
+                    "The jobs {JobName} final failure handler failed.",
+                    context.JobDetail.Key.Name
+                );
             }
 
             throw new JobExecutionException(e)
@@ -65,10 +79,16 @@ public abstract partial class RetryJob : IJob
             };
         }
 
-        _logger.LogError(e, "The job {JobName} failed. Scheduling retry {RetryCount}/{MaxRetryCount}.",
-            context.JobDetail.Key.Name, retryCount, MaxRetryCount);
+        _logger.LogError(
+            e,
+            "The job {JobName} failed. Scheduling retry {RetryCount}/{MaxRetryCount}.",
+            context.JobDetail.Key.Name,
+            retryCount,
+            MaxRetryCount
+        );
 
-        var trigger = TriggerBuilder.Create()
+        var trigger = TriggerBuilder
+            .Create()
             .ForJob(context.JobDetail.Key)
             .UsingJobData("retryCount", retryCount)
             .StartAt(DateTimeOffset.Now.Add(GetRetryDelay(retryCount - 1)))
@@ -78,7 +98,7 @@ public abstract partial class RetryJob : IJob
         {
             RefireImmediately = false,
             UnscheduleAllTriggers = false,
-            UnscheduleFiringTrigger = true
+            UnscheduleFiringTrigger = true,
         };
     }
 }

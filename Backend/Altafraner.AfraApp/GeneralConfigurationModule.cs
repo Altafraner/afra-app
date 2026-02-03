@@ -5,9 +5,12 @@ namespace Altafraner.AfraApp;
 
 internal class GeneralConfigurationModule : IModule
 {
-    public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
+    public void ConfigureServices(
+        IServiceCollection services,
+        IConfiguration config,
+        IHostEnvironment env
+    )
     {
-        services.AddOptions<GeneralConfiguration>()
-            .Bind(config.GetSection("General"));
+        services.AddOptions<GeneralConfiguration>().Bind(config.GetSection("General"));
     }
 }

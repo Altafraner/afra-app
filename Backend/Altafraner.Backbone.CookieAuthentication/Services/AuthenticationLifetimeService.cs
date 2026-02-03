@@ -15,19 +15,18 @@ internal class AuthenticationLifetimeService : IAuthenticationLifetimeService
 
     public async Task SignInAsync(ClaimsPrincipal principal, bool isPersistent = false)
     {
-        var context = _httpContextAccessor.HttpContext ??
-                      throw new InvalidOperationException("There is no httpContext in the current scope");
-        var props = new AuthenticationProperties
-        {
-            IsPersistent = isPersistent
-        };
+        var context =
+            _httpContextAccessor.HttpContext
+            ?? throw new InvalidOperationException("There is no httpContext in the current scope");
+        var props = new AuthenticationProperties { IsPersistent = isPersistent };
         await context.SignInAsync(principal, props);
     }
 
     public async Task SignOutAsync()
     {
-        var context = _httpContextAccessor.HttpContext ??
-                      throw new InvalidOperationException("There is no httpContext in the current scope");
+        var context =
+            _httpContextAccessor.HttpContext
+            ?? throw new InvalidOperationException("There is no httpContext in the current scope");
         await context.SignOutAsync();
     }
 }

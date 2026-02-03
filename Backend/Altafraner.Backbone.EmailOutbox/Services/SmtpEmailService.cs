@@ -35,19 +35,25 @@ internal class SmtpEmailService : IEmailService
         email.To.Add(MailboxAddress.Parse(toAddress));
         email.Subject = "[Afra-App] " + subject;
         var realbody = $"""
-                        {body}
+            {body}
 
-                        --
-                        Dies ist eine automatisch generierte Nachricht der Afra-App. Bitte antworten Sie nicht auf diese E-Mail.
-                        """;
+            --
+            Dies ist eine automatisch generierte Nachricht der Afra-App. Bitte antworten Sie nicht auf diese E-Mail.
+            """;
         email.Body = new TextPart(TextFormat.Plain) { Text = realbody };
 
         using var smtp = new SmtpClient();
-        await smtp.ConnectAsync(_emailConfiguration.Host, _emailConfiguration.Port,
-            _emailConfiguration.SecureSocketOptions);
+        await smtp.ConnectAsync(
+            _emailConfiguration.Host,
+            _emailConfiguration.Port,
+            _emailConfiguration.SecureSocketOptions
+        );
 
         if (_emailConfiguration.Username is not null)
-            await smtp.AuthenticateAsync(_emailConfiguration.Username, _emailConfiguration.Password);
+            await smtp.AuthenticateAsync(
+                _emailConfiguration.Username,
+                _emailConfiguration.Password
+            );
 
         await smtp.SendAsync(email);
         await smtp.DisconnectAsync(true);

@@ -14,7 +14,10 @@ public class LdapAutoSyncScheduler : BackgroundService
     private readonly IServiceProvider _serviceProvider;
 
     /// <inheritdoc />
-    public LdapAutoSyncScheduler(IServiceProvider serviceProvider, ILogger<LdapAutoSyncScheduler> logger)
+    public LdapAutoSyncScheduler(
+        IServiceProvider serviceProvider,
+        ILogger<LdapAutoSyncScheduler> logger
+    )
     {
         _serviceProvider = serviceProvider;
         _logger = logger;
@@ -42,19 +45,15 @@ public class LdapAutoSyncScheduler : BackgroundService
             return;
         }
 
-        var job = JobBuilder.Create<LdapAutoSyncJob>()
-            .WithIdentity(key)
-            .Build();
-        var trigger = TriggerBuilder.Create()
+        var job = JobBuilder.Create<LdapAutoSyncJob>().WithIdentity(key).Build();
+        var trigger = TriggerBuilder
+            .Create()
             .WithIdentity(TriggerIdentity, GroupIdentity)
             .ForJob(job)
             .StartNow()
-            .WithSimpleSchedule(x => x
-                .WithInterval(TimeSpan.FromHours(1))
-                .RepeatForever())
+            .WithSimpleSchedule(x => x.WithInterval(TimeSpan.FromHours(1)).RepeatForever())
             .WithPriority(0)
             .Build();
-
 
         await scheduler.ScheduleJob(job, trigger, stoppingToken);
         _logger.LogInformation("LDAP Sync Job scheduled.");

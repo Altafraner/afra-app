@@ -25,10 +25,11 @@ public class MaxEinschreibungenRule : IProfundumAggregateRule
         IEnumerable<Person> students,
         IEnumerable<ProfundumBelegWunsch> wuensche,
         Dictionary<(Person p, ProfundumSlot s, ProfundumInstanz i), BoolVar> belegVars,
-        CpModel model)
+        CpModel model
+    )
     {
-        var angebote = _dbContext.ProfundaInstanzen
-            .Include(pi => pi.Slots)
+        var angebote = _dbContext
+            .ProfundaInstanzen.Include(pi => pi.Slots)
             .Include(pi => pi.Profundum)
             .ToArray()
             .Where(pi => pi.Slots.Any(s => slots.Any(sl => sl.Id == s.Id)))
@@ -37,7 +38,8 @@ public class MaxEinschreibungenRule : IProfundumAggregateRule
         foreach (var angebot in angebote.Where(e => e.MaxEinschreibungen.HasValue))
         foreach (var s in angebot.Slots)
         {
-            var v = belegVars.Where(x => x.Key.i == angebot)
+            var v = belegVars
+                .Where(x => x.Key.i == angebot)
                 .Where(x => x.Key.s == s)
                 .Select(x => x.Value);
             model.Add(LinearExpr.Sum(v) <= angebot.MaxEinschreibungen!.Value);

@@ -21,7 +21,12 @@ public class ProfilRule : IProfundumIndividualRule
     private readonly IMemoryCache _cache;
 
     ///
-    public ProfilRule(AfraAppContext dbContext, UserService userService, IOptions<ProfundumConfiguration> profundumConfiguration, IMemoryCache cache)
+    public ProfilRule(
+        AfraAppContext dbContext,
+        UserService userService,
+        IOptions<ProfundumConfiguration> profundumConfiguration,
+        IMemoryCache cache
+    )
     {
         _dbContext = dbContext;
         _userService = userService;
@@ -30,10 +35,12 @@ public class ProfilRule : IProfundumIndividualRule
     }
 
     /// <inheritdoc/>
-    public RuleStatus CheckForSubmission(Person student,
+    public RuleStatus CheckForSubmission(
+        Person student,
         IEnumerable<ProfundumSlot> slots,
         IEnumerable<ProfundumEinschreibung> enrollments,
-        IEnumerable<ProfundumBelegWunsch> wuensche)
+        IEnumerable<ProfundumBelegWunsch> wuensche
+    )
     {
         var profilPflichtig = slots.Any(s => IsProfilPflichtig(student, s.Quartal));
         if (!profilPflichtig)
@@ -46,7 +53,9 @@ public class ProfilRule : IProfundumIndividualRule
             return RuleStatus.Valid;
         }
 
-        if (enrollments.Any(w => w.ProfundumInstanz?.Profundum?.Kategorie?.ProfilProfundum ?? false))
+        if (
+            enrollments.Any(w => w.ProfundumInstanz?.Profundum?.Kategorie?.ProfilProfundum ?? false)
+        )
         {
             if (wuensche.Any(w => w.ProfundumInstanz.Profundum.Kategorie.ProfilProfundum))
             {
@@ -63,13 +72,15 @@ public class ProfilRule : IProfundumIndividualRule
     }
 
     /// <inheritdoc/>
-    public void AddConstraints(Person student,
+    public void AddConstraints(
+        Person student,
         IEnumerable<ProfundumSlot> slots,
         IEnumerable<ProfundumBelegWunsch> wuensche,
         Dictionary<(ProfundumSlot s, ProfundumInstanz i), BoolVar> belegVars,
         Dictionary<ProfundumSlot, BoolVar> personNotEnrolledVars,
         CpModel model,
-        LinearExprBuilder objective)
+        LinearExprBuilder objective
+    )
     {
         if (IsProfilRegelBefreit(student))
         {
@@ -109,17 +120,19 @@ public class ProfilRule : IProfundumIndividualRule
         foreach (var (k, v) in belegVars)
         {
             // Profil im falschen Quartal
-            if (!IsProfilZulaessig(student, k.s.Quartal)
-             && !IsProfilPflichtig(student, k.s.Quartal)
-             && k.i.Profundum.Kategorie.ProfilProfundum)
+            if (
+                !IsProfilZulaessig(student, k.s.Quartal)
+                && !IsProfilPflichtig(student, k.s.Quartal)
+                && k.i.Profundum.Kategorie.ProfilProfundum
+            )
             {
                 objective.AddTerm(v, -4000);
             }
 
             // Profil im ganzen Jahr unzulässig
             var profilZulässig = slotsArray.Any(s =>
-                    IsProfilPflichtig(student, s.Quartal)
-                    || IsProfilZulaessig(student, s.Quartal));
+                IsProfilPflichtig(student, s.Quartal) || IsProfilZulaessig(student, s.Quartal)
+            );
             if (!profilZulässig && k.i.Profundum.Kategorie.ProfilProfundum)
             {
                 objective.AddTerm(v, -10000);
@@ -130,52 +143,89 @@ public class ProfilRule : IProfundumIndividualRule
     private bool IsProfilZulaessig(Person student, ProfundumQuartal quartal)
     {
         var klasse = student.Gruppe;
-        if (klasse is null) return false;
+        if (klasse is null)
+            return false;
 
-        var profilQuartale = _profundumConfiguration.Value.ProfilZulassung.GetValueOrDefault(klasse);
-        if (profilQuartale is null) return false;
+        var profilQuartale = _profundumConfiguration.Value.ProfilZulassung.GetValueOrDefault(
+            klasse
+        );
+        if (profilQuartale is null)
+            return false;
 
         var ret = profilQuartale.Contains(quartal);
         return ret;
     }
 
-    private bool IsProfilRegelBefreit(Person student)
-        => _cache.GetOrCreate($"profundum:befreiung:{student.Id}",
-                _ => _dbContext.ProfundumProfilBefreiungen.Any(pb => pb.BetroffenePerson == student));
+    private bool IsProfilRegelBefreit(Person student) =>
+        _cache.GetOrCreate(
+            $"profundum:befreiung:{student.Id}",
+            _ => _dbContext.ProfundumProfilBefreiungen.Any(pb => pb.BetroffenePerson == student)
+        );
 
     private bool IsProfilPflichtig(Person student, ProfundumQuartal quartal)
     {
-
         var klasse = _userService.GetKlassenstufe(student);
-        var profilQuartale = _profundumConfiguration.Value.ProfilPflichtigkeit.GetValueOrDefault(klasse);
+        var profilQuartale = _profundumConfiguration.Value.ProfilPflichtigkeit.GetValueOrDefault(
+            klasse
+        );
         return profilQuartale is not null && profilQuartale.Contains(quartal);
     }
 
     /// <inheritdoc/>
-    public IEnumerable<MatchingWarning> GetWarnings(Person student, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
+    public IEnumerable<MatchingWarning> GetWarnings(
+        Person student,
+        IEnumerable<ProfundumSlot> slots,
+        IEnumerable<ProfundumEinschreibung> enrollments
+    )
     {
         if (IsProfilRegelBefreit(student))
         {
-            return [new MatchingWarning("Person ist von der Profilregel ausgenommen worden. Anforderungen prüfen!")];
+            return
+            [
+                new MatchingWarning(
+                    "Person ist von der Profilregel ausgenommen worden. Anforderungen prüfen!"
+                ),
+            ];
         }
 
         List<MatchingWarning> warnings = [];
         var slotsArray = slots as ProfundumSlot[] ?? slots.ToArray();
         var profilPflichtig = slotsArray.Any(s => IsProfilPflichtig(student, s.Quartal));
         var enrollmentsArray = enrollments as ProfundumEinschreibung[] ?? enrollments.ToArray();
-        if (profilPflichtig && !enrollmentsArray.Any(e => e.BetroffenePerson == student
-                                                          && e.ProfundumInstanz!.Profundum.Kategorie.ProfilProfundum))
+        if (
+            profilPflichtig
+            && !enrollmentsArray.Any(e =>
+                e.BetroffenePerson == student
+                && e.ProfundumInstanz!.Profundum.Kategorie.ProfilProfundum
+            )
+        )
         {
             warnings.Add(new MatchingWarning("Profilpflicht nicht erfüllt."));
         }
 
-        warnings.AddRange(slotsArray.Select(s => (s.Jahr, s.Quartal))
-            .Distinct()
-            .Where((x => !IsProfilPflichtig(student, x.Quartal) && !IsProfilZulaessig(student, x.Quartal)))
-            .Where(x => enrollmentsArray.Any(e => e.BetroffenePerson == student
-                                                  && e.Slot.Jahr == x.Jahr && e.Slot.Quartal == x.Quartal
-                                                  && e.ProfundumInstanz!.Profundum.Kategorie.ProfilProfundum))
-            .Select(x => new MatchingWarning($"Profil nicht erlaubt für {student.Gruppe} in {x.Quartal}")));
+        warnings.AddRange(
+            slotsArray
+                .Select(s => (s.Jahr, s.Quartal))
+                .Distinct()
+                .Where(
+                    (
+                        x =>
+                            !IsProfilPflichtig(student, x.Quartal)
+                            && !IsProfilZulaessig(student, x.Quartal)
+                    )
+                )
+                .Where(x =>
+                    enrollmentsArray.Any(e =>
+                        e.BetroffenePerson == student
+                        && e.Slot.Jahr == x.Jahr
+                        && e.Slot.Quartal == x.Quartal
+                        && e.ProfundumInstanz!.Profundum.Kategorie.ProfilProfundum
+                    )
+                )
+                .Select(x => new MatchingWarning(
+                    $"Profil nicht erlaubt für {student.Gruppe} in {x.Quartal}"
+                ))
+        );
 
         return warnings;
     }

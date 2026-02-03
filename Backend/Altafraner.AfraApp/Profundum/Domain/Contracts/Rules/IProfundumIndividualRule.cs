@@ -13,21 +13,25 @@ public interface IProfundumIndividualRule
     /// <summary>
     ///     Checks the students wishes before they can be submitted.
     /// </summary>
-    RuleStatus CheckForSubmission(Person student,
-    IEnumerable<ProfundumSlot> slots,
-    IEnumerable<ProfundumEinschreibung> enrollments,
-    IEnumerable<ProfundumBelegWunsch> wuensche);
+    RuleStatus CheckForSubmission(
+        Person student,
+        IEnumerable<ProfundumSlot> slots,
+        IEnumerable<ProfundumEinschreibung> enrollments,
+        IEnumerable<ProfundumBelegWunsch> wuensche
+    );
 
     /// <summary>
     ///     Add constraints to matching solver
     /// </summary>
-    void AddConstraints(Person student,
+    void AddConstraints(
+        Person student,
         IEnumerable<ProfundumSlot> slots,
         IEnumerable<ProfundumBelegWunsch> wuensche,
         Dictionary<(ProfundumSlot s, ProfundumInstanz i), BoolVar> belegVars,
         Dictionary<ProfundumSlot, BoolVar> personNotEnrolledVars,
         CpModel model,
-        LinearExprBuilder objective);
+        LinearExprBuilder objective
+    );
 
     /// <summary>
     ///  Gets warnings for a student
@@ -36,7 +40,9 @@ public interface IProfundumIndividualRule
     /// <param name="slots">The slots the student can enroll for</param>
     /// <param name="enrollments">The students enrollments</param>
     /// <returns></returns>
-    IEnumerable<MatchingWarning> GetWarnings(Person student,
+    IEnumerable<MatchingWarning> GetWarnings(
+        Person student,
         IEnumerable<ProfundumSlot> slots,
-        IEnumerable<ProfundumEinschreibung> enrollments);
+        IEnumerable<ProfundumEinschreibung> enrollments
+    );
 }

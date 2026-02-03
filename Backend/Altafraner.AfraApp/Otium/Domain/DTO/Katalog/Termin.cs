@@ -16,10 +16,12 @@ public record Termin : ITermin
     /// <param name="einschreibung">Information on whether and how to enroll</param>
     /// <param name="kategorie">The category the Otium is in</param>
     /// <param name="schema">The schema of the block the termin is in</param>
-    public Termin(OtiumTermin termin,
+    public Termin(
+        OtiumTermin termin,
         EinschreibungsPreview einschreibung,
         Guid kategorie,
-        BlockMetadata schema)
+        BlockMetadata schema
+    )
     {
         Id = termin.Id;
         Otium = termin.Bezeichnung;
@@ -31,18 +33,20 @@ public record Termin : ITermin
         Tutor = termin.Tutor is not null ? new PersonInfoMinimal(termin.Tutor) : null;
         MaxEinschreibungen = termin.MaxEinschreibungen;
         Einschreibung = einschreibung;
-        Wiederholungen = termin.Wiederholung?.Termine
-            .Select(t => t.Block.SchultagKey)
-            .Distinct()
-            .Order()
-            .SkipWhile(d => d <= termin.Block.SchultagKey) ?? [];
+        Wiederholungen =
+            termin
+                .Wiederholung?.Termine.Select(t => t.Block.SchultagKey)
+                .Distinct()
+                .Order()
+                .SkipWhile(d => d <= termin.Block.SchultagKey)
+            ?? [];
         Block = new BlockInfo
         {
             Datum = termin.Block.Schultag.Datum,
             Id = termin.Block.Id,
             Name = schema.Bezeichnung,
             SchemaId = schema.Id,
-            Uhrzeit = schema.Interval
+            Uhrzeit = schema.Interval,
         };
     }
 

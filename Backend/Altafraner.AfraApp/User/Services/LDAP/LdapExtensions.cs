@@ -12,7 +12,10 @@ public static class LdapExtensions
     /// <summary>
     /// Builds a new LDAP connection a the given configuration
     /// </summary>
-    public static LdapConnection BuildConnection(this LdapConfiguration configuration, ILogger? logger = null)
+    public static LdapConnection BuildConnection(
+        this LdapConfiguration configuration,
+        ILogger? logger = null
+    )
     {
         var identifier = new LdapDirectoryIdentifier(configuration.Host, configuration.Port);
         var credentials = new NetworkCredential(configuration.Username, configuration.Password);
@@ -23,9 +26,9 @@ public static class LdapExtensions
             {
                 ProtocolVersion = 3,
                 SecureSocketLayer = true,
-                ReferralChasing = ReferralChasingOptions.None
+                ReferralChasing = ReferralChasingOptions.None,
             },
-            AuthType = AuthType.Basic
+            AuthType = AuthType.Basic,
         };
         if (!configuration.ValidateCertificate)
         {
@@ -47,7 +50,8 @@ public static class LdapExtensions
                 }
 
                 Log(
-                    "LDAP: Certificate validation is disabled, but 'LDAPTLS_REQCERT' is not set to 'never'. This will not work outside windows.");
+                    "LDAP: Certificate validation is disabled, but 'LDAPTLS_REQCERT' is not set to 'never'. This will not work outside windows."
+                );
             }
         }
 
@@ -65,7 +69,10 @@ public static class LdapExtensions
     /// <returns>True, if the entry has a valid Guid; Otherwise, false</returns>
     public static bool TryGetGuid(this SearchResultEntry entry, out Guid objGuid)
     {
-        if (entry.Attributes["objectGuid"]?.GetValues(typeof(byte[])).FirstOrDefault() is not byte[] objGuidBytes)
+        if (
+            entry.Attributes["objectGuid"]?.GetValues(typeof(byte[])).FirstOrDefault()
+            is not byte[] objGuidBytes
+        )
         {
             objGuid = Guid.Empty;
             return false;
@@ -90,7 +97,8 @@ public static class LdapExtensions
     /// <param name="attributeName">If exists and is a string, the value of the first instance of the attribute; Otherwise, null</param>
     public static string? GetSingleAttribute(this SearchResultEntry entry, string attributeName)
     {
-        return entry.Attributes[attributeName]?.GetValues(typeof(string)).FirstOrDefault() as string;
+        return entry.Attributes[attributeName]?.GetValues(typeof(string)).FirstOrDefault()
+            as string;
     }
 
     /// <summary>
@@ -98,7 +106,10 @@ public static class LdapExtensions
     /// </summary>
     /// <param name="entry">The entry to get the attribute from</param>
     /// <param name="attributeName">The values of the attribute</param>
-    public static IEnumerable<string> GetMulitAttribute(this SearchResultEntry entry, string attributeName)
+    public static IEnumerable<string> GetMulitAttribute(
+        this SearchResultEntry entry,
+        string attributeName
+    )
     {
         return entry.Attributes[attributeName]?.GetValues(typeof(string)).Cast<string>() ?? [];
     }

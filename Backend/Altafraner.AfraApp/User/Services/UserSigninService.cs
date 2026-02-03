@@ -23,8 +23,12 @@ public class UserSigninService
     /// <summary>
     ///     Creates a new user service.
     /// </summary>
-    public UserSigninService(AfraAppContext dbContext, LdapService ldapService, IMemoryCache cache,
-        IAuthenticationLifetimeService authenticationLifetimeService)
+    public UserSigninService(
+        AfraAppContext dbContext,
+        LdapService ldapService,
+        IMemoryCache cache,
+        IAuthenticationLifetimeService authenticationLifetimeService
+    )
     {
         _dbContext = dbContext;
         _ldapService = ldapService;
@@ -41,7 +45,8 @@ public class UserSigninService
     public async Task SignInAsync(Guid userId, bool rememberMe)
     {
         var user = await _dbContext.Personen.FindAsync(userId);
-        if (user is null) throw new InvalidOperationException("The user does not exist");
+        if (user is null)
+            throw new InvalidOperationException("The user does not exist");
         await SignInAsync(user, rememberMe);
     }
 
@@ -52,30 +57,46 @@ public class UserSigninService
     /// <param name="request">The SignInRequest</param>
     /// <param name="environment">The application environment</param>
     /// <returns>Ok, if the credentials are valid; Otherwise, unauthorized</returns>
-    public async Task<IResult> HandleSignInRequestAsync(SignInRequest request, IWebHostEnvironment environment)
+    public async Task<IResult> HandleSignInRequestAsync(
+        SignInRequest request,
+        IWebHostEnvironment environment
+    )
     {
-        var cacheResults = _cache.GetOrCreate($"user:login:{request.Username.ToLower()}", _ => new List<DateTime>()) ??
-                           [];
+        var cacheResults =
+            _cache.GetOrCreate(
+                $"user:login:{request.Username.ToLower()}",
+                _ => new List<DateTime>()
+            ) ?? [];
         var now = DateTime.Now;
 
         // Check if the user has tried to log in too many times in the last 5 minutes
         cacheResults.RemoveAll(t => t < now.AddMinutes(-5));
         if (cacheResults.Count >= 5)
-            return Results.Problem("Zu viele Anmeldeversuche. Bitte versuchen Sie es später erneut.",
-                statusCode: StatusCodes.Status429TooManyRequests);
+            return Results.Problem(
+                "Zu viele Anmeldeversuche. Bitte versuchen Sie es später erneut.",
+                statusCode: StatusCodes.Status429TooManyRequests
+            );
 
         var user = (_ldapService.IsEnabled, environment.IsDevelopment()) switch
         {
-            (true, _) => await _ldapService.VerifyUserAsync(request.Username.Trim(), request.Password.Trim()),
+            (true, _) => await _ldapService.VerifyUserAsync(
+                request.Username.Trim(),
+                request.Password.Trim()
+            ),
             (false, true) => await _dbContext.Personen.FirstOrDefaultAsync(u =>
-                u.Email.StartsWith(request.Username.Trim())),
-            _ => null
+                u.Email.StartsWith(request.Username.Trim())
+            ),
+            _ => null,
         };
 
         if (user is null)
         {
             cacheResults.Add(now);
-            _cache.Set($"user:login:{request.Username.ToLower()}", cacheResults, TimeSpan.FromMinutes(10));
+            _cache.Set(
+                $"user:login:{request.Username.ToLower()}",
+                cacheResults,
+                TimeSpan.FromMinutes(10)
+            );
             return Results.Unauthorized();
         }
 
@@ -101,13 +122,20 @@ public class UserSigninService
             new(AfraAppClaimTypes.Id, user.Id.ToString()),
             new(AfraAppClaimTypes.GivenName, user.FirstName),
             new(AfraAppClaimTypes.LastName, user.LastName),
-            new(AfraAppClaimTypes.Role, user.Rolle.ToString())
+            new(AfraAppClaimTypes.Role, user.Rolle.ToString()),
         };
 
-        claims.AddRange(user.GlobalPermissions.Select(perm =>
-            new Claim(AfraAppClaimTypes.GlobalPermission, perm.ToString())));
+        claims.AddRange(
+            user.GlobalPermissions.Select(perm => new Claim(
+                AfraAppClaimTypes.GlobalPermission,
+                perm.ToString()
+            ))
+        );
 
-        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        var identity = new ClaimsIdentity(
+            claims,
+            CookieAuthenticationDefaults.AuthenticationScheme
+        );
 
         return new ClaimsPrincipal(identity);
     }

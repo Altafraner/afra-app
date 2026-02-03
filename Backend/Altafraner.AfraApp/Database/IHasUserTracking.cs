@@ -9,6 +9,7 @@ public interface IHasUserTracking
     ///     The <see cref="User.Domain.Models.Person.Id"/> of the user responsible for creating this tuple
     /// </summary>
     Guid? CreatedById { get; set; }
+
     /// <summary>
     ///     The <see cref="User.Domain.Models.Person.Id"/> of the user responsible for last modifying this tuple
     /// </summary>

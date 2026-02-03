@@ -22,6 +22,7 @@ public class ProfundumBelegWunsch
     ///     A reference to the profundum instanz that the BelegWunsch refers to.
     /// </summary>
     public required ProfundumInstanz ProfundumInstanz { get; set; }
+
     /// <summary>
     ///     The primary key of the profundum instanz that the BelegWunsch refers to.
     /// </summary>

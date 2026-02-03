@@ -73,7 +73,12 @@ public interface IAttendanceHubClient
     /// <param name="TerminId">The termins id</param>
     /// <param name="BlockId">The blocks id</param>
     /// <param name="Status">The students updated status</param>
-    public record AttendanceUpdate(Guid StudentId, Guid TerminId, Guid BlockId, OtiumAnwesenheitsStatus Status);
+    public record AttendanceUpdate(
+        Guid StudentId,
+        Guid TerminId,
+        Guid BlockId,
+        OtiumAnwesenheitsStatus Status
+    );
 
     /// <summary>
     ///     A dto for updating the notes of a student in a specific block.
@@ -102,7 +107,8 @@ public interface IAttendanceHubClient
         string Otium,
         string Ort,
         IEnumerable<LehrerEinschreibung> Einschreibungen,
-        bool SindAnwesenheitenErfasst);
+        bool SindAnwesenheitenErfasst
+    );
 
     /// <summary>
     /// A dto for sending a notification to the client.
@@ -110,9 +116,5 @@ public interface IAttendanceHubClient
     /// <param name="Subject">The notification subject</param>
     /// <param name="Body">The notification body</param>
     /// <param name="Severity">The notification severity</param>
-    public record Notification(
-        string Subject,
-        string Body,
-        NotificationSeverity Severity
-    );
+    public record Notification(string Subject, string Body, NotificationSeverity Severity);
 }

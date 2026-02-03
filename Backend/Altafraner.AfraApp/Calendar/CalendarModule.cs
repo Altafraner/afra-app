@@ -17,7 +17,11 @@ namespace Altafraner.AfraApp.Calendar;
 public class CalendarModule : IModule
 {
     /// <inheritdoc />
-    public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
+    public void ConfigureServices(
+        IServiceCollection services,
+        IConfiguration config,
+        IHostEnvironment env
+    )
     {
         services.AddScoped<CalendarService>();
     }

@@ -21,7 +21,8 @@ public class MaxEnrollmentsRule : IIndependentRule
     /// <inheritdoc />
     public async ValueTask<RuleStatus> MayEnrollAsync(Person person, OtiumTermin termin)
     {
-        var countEnrolled = await _dbContext.OtiaEinschreibungen.AsNoTracking()
+        var countEnrolled = await _dbContext
+            .OtiaEinschreibungen.AsNoTracking()
             .CountAsync(e => e.Termin == termin);
         return termin.MaxEinschreibungen is null || countEnrolled < termin.MaxEinschreibungen
             ? RuleStatus.Valid

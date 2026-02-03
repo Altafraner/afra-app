@@ -10,11 +10,16 @@ namespace Altafraner.AfraApp.Otium.Services.Rules;
 public class ParallelEnrollmentRule : IBlockRule
 {
     /// <inheritdoc />
-    public ValueTask<RuleStatus> MayEnrollAsync(Person person, IEnumerable<OtiumEinschreibung> einschreibungen,
-        OtiumTermin termin)
+    public ValueTask<RuleStatus> MayEnrollAsync(
+        Person person,
+        IEnumerable<OtiumEinschreibung> einschreibungen,
+        OtiumTermin termin
+    )
     {
-        return new ValueTask<RuleStatus>(einschreibungen.Any()
-            ? RuleStatus.Invalid("Du bist bereits zur selben Zeit eingeschrieben")
-            : RuleStatus.Valid);
+        return new ValueTask<RuleStatus>(
+            einschreibungen.Any()
+                ? RuleStatus.Invalid("Du bist bereits zur selben Zeit eingeschrieben")
+                : RuleStatus.Valid
+        );
     }
 }

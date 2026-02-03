@@ -17,8 +17,7 @@ public static class Schuljahr
     /// <param name="app"></param>
     public static void MapSchuljahrEndpoints(this IEndpointRouteBuilder app)
     {
-        var general = app.MapGroup("/api/schuljahr")
-            .RequireAuthorization();
+        var general = app.MapGroup("/api/schuljahr").RequireAuthorization();
         general.MapGet("/", GetSchuljahr);
         general.MapGet("/now", GetNow);
         general.MapGet("/{date}", GetBlocks);
@@ -35,30 +34,46 @@ public static class Schuljahr
         return Results.Ok(await schuljahrService.GetSchuljahrAsync());
     }
 
-    private static async Task<IResult> AddSchultage(SchuljahrService schuljahrService, BlockHelper blockHelper,
-        [FromBody] IEnumerable<SchultagCreation> schultageIn)
+    private static async Task<IResult> AddSchultage(
+        SchuljahrService schuljahrService,
+        BlockHelper blockHelper,
+        [FromBody] IEnumerable<SchultagCreation> schultageIn
+    )
     {
         try
         {
             var schultage = await schuljahrService.AddRangeAsync(schultageIn);
 
-            return Results.Created(string.Empty,
-                schultage.Select(s => new Schultag(s.Datum, s.Wochentyp,
-                    s.Blocks.Select(b => new BlockSchema(b.SchemaId, blockHelper.Get(b.SchemaId)!.Bezeichnung)))));
+            return Results.Created(
+                string.Empty,
+                schultage.Select(s => new Schultag(
+                    s.Datum,
+                    s.Wochentyp,
+                    s.Blocks.Select(b => new BlockSchema(
+                        b.SchemaId,
+                        blockHelper.Get(b.SchemaId)!.Bezeichnung
+                    ))
+                ))
+            );
         }
         catch (KeyNotFoundException e)
         {
-            return Results.Problem(new ProblemDetails
-            {
-                Title = "Invalid Block",
-                Status = StatusCodes.Status400BadRequest,
-                Detail = e.Message,
-                Type = nameof(Schultag.Blocks)
-            });
+            return Results.Problem(
+                new ProblemDetails
+                {
+                    Title = "Invalid Block",
+                    Status = StatusCodes.Status400BadRequest,
+                    Detail = e.Message,
+                    Type = nameof(Schultag.Blocks),
+                }
+            );
         }
     }
 
-    private static async Task<IResult> DeleteSchultag(SchuljahrService schuljahrService, DateOnly datum)
+    private static async Task<IResult> DeleteSchultag(
+        SchuljahrService schuljahrService,
+        DateOnly datum
+    )
     {
         try
         {
@@ -77,16 +92,21 @@ public static class Schuljahr
         return block == null ? Results.NotFound() : Results.Ok(new { block.Id, block.SchemaId });
     }
 
-    private static async Task<IResult> GetBlocks(DateOnly date, SchuljahrService schuljahrService,
-        BlockHelper blockHelper)
+    private static async Task<IResult> GetBlocks(
+        DateOnly date,
+        SchuljahrService schuljahrService,
+        BlockHelper blockHelper
+    )
     {
         var blocks = await schuljahrService.GetBlocksAsync(date);
-        var blocksMapped = blocks.Select(b => new
-        {
-            schemaId = b.SchemaId,
-            name = blockHelper.Get(b.SchemaId)!.Bezeichnung,
-            id = b.Id
-        }).OrderBy(b => b.schemaId);
+        var blocksMapped = blocks
+            .Select(b => new
+            {
+                schemaId = b.SchemaId,
+                name = blockHelper.Get(b.SchemaId)!.Bezeichnung,
+                id = b.Id,
+            })
+            .OrderBy(b => b.schemaId);
 
         return Results.Ok(blocksMapped);
     }

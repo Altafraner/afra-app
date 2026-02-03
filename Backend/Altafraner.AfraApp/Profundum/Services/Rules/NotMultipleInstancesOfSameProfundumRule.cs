@@ -10,25 +10,32 @@ namespace Altafraner.AfraApp.Profundum.Services.Rules;
 public class NotMultipleInstancesOfSameProfundumRule : IProfundumIndividualRule
 {
     /// <inheritdoc/>
-    public RuleStatus CheckForSubmission(Person student,
+    public RuleStatus CheckForSubmission(
+        Person student,
         IEnumerable<ProfundumSlot> slots,
         IEnumerable<ProfundumEinschreibung> enrollments,
-        IEnumerable<ProfundumBelegWunsch> wuensche)
+        IEnumerable<ProfundumBelegWunsch> wuensche
+    )
     {
-        var emsgs = wuensche.Where(w => enrollments.Any(e => e.ProfundumInstanz?.Profundum == w.ProfundumInstanz.Profundum))
+        var emsgs = wuensche
+            .Where(w =>
+                enrollments.Any(e => e.ProfundumInstanz?.Profundum == w.ProfundumInstanz.Profundum)
+            )
             .Select(w => $"{w.ProfundumInstanz.Profundum.Bezeichnung} bereits belegt.")
             .ToArray();
         return emsgs.Length != 0 ? RuleStatus.Invalid(emsgs) : RuleStatus.Valid;
     }
 
     /// <inheritdoc/>
-    public void AddConstraints(Person student,
+    public void AddConstraints(
+        Person student,
         IEnumerable<ProfundumSlot> slots,
         IEnumerable<ProfundumBelegWunsch> wuensche,
         Dictionary<(ProfundumSlot s, ProfundumInstanz i), BoolVar> belegVars,
         Dictionary<ProfundumSlot, BoolVar> personNotEnrolledVars,
         CpModel model,
-        LinearExprBuilder objective)
+        LinearExprBuilder objective
+    )
     {
         var profundaInstanzen = belegVars.Keys.ToArray().Select(x => x.i).Distinct().ToArray();
 
@@ -43,8 +50,7 @@ public class NotMultipleInstancesOfSameProfundumRule : IProfundumIndividualRule
             if (varsForInstance.Length == 0)
                 continue;
 
-            var active = model.NewBoolVar(
-                $"active_{student.Id}_{instanz.Id}");
+            var active = model.NewBoolVar($"active_{student.Id}_{instanz.Id}");
 
             instanceActive[instanz] = active;
 
@@ -54,23 +60,22 @@ public class NotMultipleInstancesOfSameProfundumRule : IProfundumIndividualRule
             model.Add(LinearExpr.Sum(varsForInstance) >= active);
         }
 
-        var instanzenByDefinition = instanceActive.Keys
-            .GroupBy(k => k.Profundum);
+        var instanzenByDefinition = instanceActive.Keys.GroupBy(k => k.Profundum);
 
         foreach (var defGroup in instanzenByDefinition)
         {
-            var actives = defGroup
-                .Select(k => instanceActive[k])
-                .ToArray();
+            var actives = defGroup.Select(k => instanceActive[k]).ToArray();
 
-            if (actives.Length <= 1) continue;
+            if (actives.Length <= 1)
+                continue;
 
             var count = model.NewIntVar(0, actives.Length, $"count_{student.Id}_{defGroup.Key.Id}");
             model.Add(count == LinearExpr.Sum(actives));
             var excess = model.NewIntVar(
                 0,
                 actives.Length,
-                $"excess_{student.Id}_{defGroup.Key.Id}");
+                $"excess_{student.Id}_{defGroup.Key.Id}"
+            );
             model.Add(excess >= count - 1);
             model.Add(excess >= 0);
             objective.AddTerm(excess, -5000);
@@ -78,8 +83,15 @@ public class NotMultipleInstancesOfSameProfundumRule : IProfundumIndividualRule
     }
 
     /// <inheritdoc/>
-    public IEnumerable<MatchingWarning> GetWarnings(Person student, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
-        => enrollments.GroupBy(e => e.ProfundumInstanz!.Profundum)
+    public IEnumerable<MatchingWarning> GetWarnings(
+        Person student,
+        IEnumerable<ProfundumSlot> slots,
+        IEnumerable<ProfundumEinschreibung> enrollments
+    ) =>
+        enrollments
+            .GroupBy(e => e.ProfundumInstanz!.Profundum)
             .Where(x => x.Select(x => x.ProfundumInstanz).Distinct().Count() > 1)
-            .Select(x => new MatchingWarning($"Mehrere Instanzen desselben Profundums: {x.Key.Bezeichnung}"));
+            .Select(x => new MatchingWarning(
+                $"Mehrere Instanzen desselben Profundums: {x.Key.Bezeichnung}"
+            ));
 }

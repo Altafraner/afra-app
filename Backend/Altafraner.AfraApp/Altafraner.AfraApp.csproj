@@ -1,34 +1,33 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
-
     <PropertyGroup>
         <RootNamespace>Altafraner.AfraApp</RootNamespace>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Ical.Net"/>
-        <PackageReference Include="MailKit"/>
-        <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore"/>
-        <PackageReference Include="Bogus"/>
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi"/>
-        <PackageReference Include="Microsoft.EntityFrameworkCore"/>
+        <PackageReference Include="Ical.Net" />
+        <PackageReference Include="MailKit" />
+        <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" />
+        <PackageReference Include="Bogus" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.Extensions.Caching.Hybrid"/>
-        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL"/>
-        <PackageReference Include="OpenTelemetry.Exporter.Prometheus.AspNetCore"/>
-        <PackageReference Include="OpenTelemetry.Extensions.Hosting"/>
-        <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore"/>
-        <PackageReference Include="OpenTelemetry.Instrumentation.Runtime"/>
-        <PackageReference Include="Quartz"/>
-        <PackageReference Include="Quartz.AspNetCore"/>
-        <PackageReference Include="Quartz.Serialization.SystemTextJson"/>
-        <PackageReference Include="Swashbuckle.AspNetCore"/>
-        <PackageReference Include="System.DirectoryServices.Protocols"/>
-        <PackageReference Include="Google.OrTools"/>
-        <PackageReference Include="Microsoft.CodeAnalysis.Common"/>
+        <PackageReference Include="Microsoft.Extensions.Caching.Hybrid" />
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+        <PackageReference Include="OpenTelemetry.Exporter.Prometheus.AspNetCore" />
+        <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
+        <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" />
+        <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" />
+        <PackageReference Include="Quartz" />
+        <PackageReference Include="Quartz.AspNetCore" />
+        <PackageReference Include="Quartz.Serialization.SystemTextJson" />
+        <PackageReference Include="Swashbuckle.AspNetCore" />
+        <PackageReference Include="System.DirectoryServices.Protocols" />
+        <PackageReference Include="Google.OrTools" />
+        <PackageReference Include="Microsoft.CodeAnalysis.Common" />
     </ItemGroup>
 
     <ItemGroup>
@@ -38,24 +37,26 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Folder Include="Typst\"/>
+        <Folder Include="Typst\" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Altafraner.Backbone.CookieAuthentication\Altafraner.Backbone.CookieAuthentication.csproj"/>
-        <ProjectReference Include="..\Altafraner.Backbone.DataProtection\Altafraner.Backbone.DataProtection.csproj"/>
-        <ProjectReference Include="..\Altafraner.Backbone.Utils\Altafraner.Backbone.Utils.csproj"/>
-        <ProjectReference Include="..\Altafraner.Backbone.EmailOutbox\Altafraner.Backbone.EmailOutbox.csproj"/>
-        <ProjectReference Include="..\Altafraner.Backbone.Defaults\Altafraner.Backbone.Defaults.csproj"/>
-        <ProjectReference Include="..\Altafraner.Backbone.EmailSchedulingModule\Altafraner.Backbone.EmailSchedulingModule.csproj"/>
-        <ProjectReference Include="..\Altafraner.Backbone\Altafraner.Backbone.csproj"/>
-        <ProjectReference Include="..\Altafraner.Typst\Altafraner.Typst.csproj"/>
-        <ProjectReference Include="..\Altafraner.Typst.Generator\Altafraner.Typst.Generator.csproj" OutputItemType="Analyzer"/>
+        <ProjectReference Include="..\Altafraner.Backbone.CookieAuthentication\Altafraner.Backbone.CookieAuthentication.csproj" />
+        <ProjectReference Include="..\Altafraner.Backbone.DataProtection\Altafraner.Backbone.DataProtection.csproj" />
+        <ProjectReference Include="..\Altafraner.Backbone.Utils\Altafraner.Backbone.Utils.csproj" />
+        <ProjectReference Include="..\Altafraner.Backbone.EmailOutbox\Altafraner.Backbone.EmailOutbox.csproj" />
+        <ProjectReference Include="..\Altafraner.Backbone.Defaults\Altafraner.Backbone.Defaults.csproj" />
+        <ProjectReference Include="..\Altafraner.Backbone.EmailSchedulingModule\Altafraner.Backbone.EmailSchedulingModule.csproj" />
+        <ProjectReference Include="..\Altafraner.Backbone\Altafraner.Backbone.csproj" />
+        <ProjectReference Include="..\Altafraner.Typst\Altafraner.Typst.csproj" />
+        <ProjectReference
+            Include="..\Altafraner.Typst.Generator\Altafraner.Typst.Generator.csproj"
+            OutputItemType="Analyzer"
+        />
     </ItemGroup>
 
     <ItemGroup>
-        <AdditionalFiles Include="Typst/**/*.typ"/>
-        <UpToDateCheckInput Include="Typst/**/*.typ"/>
+        <AdditionalFiles Include="Typst/**/*.typ" />
+        <UpToDateCheckInput Include="Typst/**/*.typ" />
     </ItemGroup>
-
 </Project>

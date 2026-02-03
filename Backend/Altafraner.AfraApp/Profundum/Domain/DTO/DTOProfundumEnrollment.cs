@@ -9,9 +9,7 @@ namespace Altafraner.AfraApp.Profundum.Domain.DTO;
 public record struct DTOProfundumEnrollment
 {
     ///
-    public DTOProfundumEnrollment()
-    {
-    }
+    public DTOProfundumEnrollment() { }
 
     ///
     [SetsRequiredMembers]

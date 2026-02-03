@@ -18,8 +18,10 @@ public class StudentMisbehaviourNotificationScheduler : BackgroundService
     /// <summary>
     ///     Called by DI.
     /// </summary>
-    public StudentMisbehaviourNotificationScheduler(IServiceProvider serviceProvider,
-        IOptions<OtiumConfiguration> otiumConfiguration)
+    public StudentMisbehaviourNotificationScheduler(
+        IServiceProvider serviceProvider,
+        IOptions<OtiumConfiguration> otiumConfiguration
+    )
     {
         _serviceProvider = serviceProvider;
         _otiumConfiguration = otiumConfiguration;
@@ -28,23 +30,29 @@ public class StudentMisbehaviourNotificationScheduler : BackgroundService
     /// <inheritdoc />
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var defaultNotificationTime = _otiumConfiguration.Value.StudentMisbehaviourNotification.Time;
+        var defaultNotificationTime = _otiumConfiguration
+            .Value
+            .StudentMisbehaviourNotification
+            .Time;
 
         using var scope = _serviceProvider.CreateScope();
         var schedulerFactory = scope.ServiceProvider.GetRequiredService<ISchedulerFactory>();
         var scheduler = await schedulerFactory.GetScheduler(stoppingToken);
         var key = new JobKey(JobName, GroupName);
 
-        var triggerNow = TriggerBuilder.Create()
-            .ForJob(key)
-            .StartNow()
-            .Build();
+        var triggerNow = TriggerBuilder.Create().ForJob(key).StartNow().Build();
 
-        var triggerCron = TriggerBuilder.Create()
+        var triggerCron = TriggerBuilder
+            .Create()
             .ForJob(key)
-            .WithSchedule(CronScheduleBuilder
-                .DailyAtHourAndMinute(defaultNotificationTime.Hour, defaultNotificationTime.Minute)
-                .WithMisfireHandlingInstructionFireAndProceed())
+            .WithSchedule(
+                CronScheduleBuilder
+                    .DailyAtHourAndMinute(
+                        defaultNotificationTime.Hour,
+                        defaultNotificationTime.Minute
+                    )
+                    .WithMisfireHandlingInstructionFireAndProceed()
+            )
             .Build();
 
         var exists = await scheduler.CheckExists(key, stoppingToken);
@@ -58,7 +66,8 @@ public class StudentMisbehaviourNotificationScheduler : BackgroundService
             return;
         }
 
-        var job = JobBuilder.Create<StudentMisbehaviourNotificationJob>()
+        var job = JobBuilder
+            .Create<StudentMisbehaviourNotificationJob>()
             .PersistJobDataAfterExecution()
             .DisallowConcurrentExecution()
             .StoreDurably()

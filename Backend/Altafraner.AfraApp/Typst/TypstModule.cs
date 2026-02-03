@@ -9,7 +9,11 @@ namespace Altafraner.AfraApp.Typst;
 public class TypstModule : IModule
 {
     /// <inheritdoc />
-    public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
+    public void ConfigureServices(
+        IServiceCollection services,
+        IConfiguration config,
+        IHostEnvironment env
+    )
     {
         services.AddScoped<Altafraner.Typst.Typst>();
         services.AddOptions<TypstConfiguration>().Bind(config.GetSection("Typst"));

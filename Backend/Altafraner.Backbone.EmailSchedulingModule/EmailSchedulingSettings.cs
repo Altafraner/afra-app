@@ -6,7 +6,8 @@ namespace Altafraner.Backbone.EmailSchedulingModule;
 ///     Settings-Builder for scheduling e-mail notifications
 /// </summary>
 /// <typeparam name="TPerson">The data-type representing a user in the current context</typeparam>
-public class EmailSchedulingSettings<TPerson> where TPerson : class, IEmailRecipient
+public class EmailSchedulingSettings<TPerson>
+    where TPerson : class, IEmailRecipient
 {
     internal Type? DbContextType { get; set; }
 

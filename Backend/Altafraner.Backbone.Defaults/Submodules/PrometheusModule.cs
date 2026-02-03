@@ -13,18 +13,23 @@ namespace Altafraner.Backbone.Defaults;
 public class PrometheusModule : IModule
 {
     /// <inheritdoc />
-    public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
+    public void ConfigureServices(
+        IServiceCollection services,
+        IConfiguration config,
+        IHostEnvironment env
+    )
     {
         var otel = services.AddOpenTelemetry();
 
-        otel.WithMetrics(metrics => metrics
-            .AddAspNetCoreInstrumentation()
-            .AddRuntimeInstrumentation()
-            .AddMeter("System.Net.Http")
-            .AddMeter("System.Net.NameResolution")
-            .AddMeter("Microsoft.AspNetCore.Hosting")
-            .AddMeter("Microsoft.AspNetCore.Server.Kestrel")
-            .AddPrometheusExporter()
+        otel.WithMetrics(metrics =>
+            metrics
+                .AddAspNetCoreInstrumentation()
+                .AddRuntimeInstrumentation()
+                .AddMeter("System.Net.Http")
+                .AddMeter("System.Net.NameResolution")
+                .AddMeter("Microsoft.AspNetCore.Hosting")
+                .AddMeter("Microsoft.AspNetCore.Server.Kestrel")
+                .AddPrometheusExporter()
         );
     }
 

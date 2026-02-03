@@ -16,8 +16,13 @@ public record TerminPreview : ITermin
     /// <param name="istEingeschrieben">Indicates whether the requesting user is enrolled to the termin the preview ist for</param>
     /// <param name="kategorien">A list of all categories the otium for the termin is in.</param>
     /// <param name="block">The block the termin is in</param>
-    public TerminPreview(OtiumTermin termin, int? auslastung, bool istEingeschrieben,
-        IAsyncEnumerable<Guid> kategorien, string block)
+    public TerminPreview(
+        OtiumTermin termin,
+        int? auslastung,
+        bool istEingeschrieben,
+        IAsyncEnumerable<Guid> kategorien,
+        string block
+    )
     {
         Id = termin.Id;
         Otium = termin.Bezeichnung;

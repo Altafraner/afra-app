@@ -14,7 +14,10 @@ public class FilePostEmergencyBackup : IEmergencyBackupService
     private readonly ILogger<FilePostEmergencyBackup> _logger;
 
     ///
-    public FilePostEmergencyBackup(IHttpClientFactory httpClientFactory, ILogger<FilePostEmergencyBackup> logger)
+    public FilePostEmergencyBackup(
+        IHttpClientFactory httpClientFactory,
+        ILogger<FilePostEmergencyBackup> logger
+    )
     {
         _httpClientFactory = httpClientFactory;
         _logger = logger;
@@ -32,7 +35,8 @@ public class FilePostEmergencyBackup : IEmergencyBackupService
         byteContent.Headers.ContentType = new MediaTypeHeaderValue("text/html");
 
         // Sanitize the file name by replacing non-alphanumeric characters with hyphens
-        var fileName = string.Concat(name.Select(c => char.IsAsciiLetterOrDigit(c) ? c : '-')) + ".html";
+        var fileName =
+            string.Concat(name.Select(c => char.IsAsciiLetterOrDigit(c) ? c : '-')) + ".html";
 
         using var formData = new MultipartFormDataContent();
         formData.Add(byteContent, "file", fileName);

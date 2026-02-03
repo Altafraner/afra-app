@@ -6,6 +6,7 @@ namespace Altafraner.Typst;
 internal class CompilerSafe
 {
     private readonly unsafe CsBindgen.Compiler* _inner;
+
     internal unsafe CompilerSafe(CsBindgen.Compiler* x)
     {
         if (x == null)
@@ -21,7 +22,6 @@ internal class CompilerSafe
         unsafe
         {
             return new CompileResultSafe(CsBindgen.NativeMethods.compile(_inner));
-
         }
     }
 

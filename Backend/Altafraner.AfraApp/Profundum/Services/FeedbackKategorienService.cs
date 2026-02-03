@@ -12,24 +12,30 @@ internal class FeedbackKategorienService
         _dbContext = dbContext;
     }
 
-    public async Task<ProfundumFeedbackKategorie> AddKategorie(string label,
+    public async Task<ProfundumFeedbackKategorie> AddKategorie(
+        string label,
         IEnumerable<Guid> kategorieIds,
-        bool isFachlich)
+        bool isFachlich
+    )
     {
-        var categories = await _dbContext.ProfundaFachbereiche
-            .Where(k => kategorieIds.Contains(k.Id))
+        var categories = await _dbContext
+            .ProfundaFachbereiche.Where(k => kategorieIds.Contains(k.Id))
             .ToListAsync();
 
         if (kategorieIds.Count() != categories.Count)
-            throw new ArgumentException("At least one of the specified kategorieIds does not exist",
-                nameof(kategorieIds));
+            throw new ArgumentException(
+                "At least one of the specified kategorieIds does not exist",
+                nameof(kategorieIds)
+            );
 
-        var entry = await _dbContext.ProfundumFeedbackKategories.AddAsync(new ProfundumFeedbackKategorie
-        {
-            Label = label,
-            Fachbereiche = categories,
-            IsFachlich = isFachlich
-        });
+        var entry = await _dbContext.ProfundumFeedbackKategories.AddAsync(
+            new ProfundumFeedbackKategorie
+            {
+                Label = label,
+                Fachbereiche = categories,
+                IsFachlich = isFachlich,
+            }
+        );
 
         await _dbContext.SaveChangesAsync();
 
@@ -39,26 +45,35 @@ internal class FeedbackKategorienService
     public async Task RemoveKategorie(Guid id)
     {
         var entry = await _dbContext.ProfundumFeedbackKategories.FindAsync(id);
-        if (entry is null) throw new ArgumentException("Kategorie not found", nameof(id));
+        if (entry is null)
+            throw new ArgumentException("Kategorie not found", nameof(id));
         _dbContext.ProfundumFeedbackKategories.Remove(entry);
         await _dbContext.SaveChangesAsync();
     }
 
-    public async Task UpdateKategorie(Guid id, string label, IEnumerable<Guid> kategorieIds, bool isFachlich)
+    public async Task UpdateKategorie(
+        Guid id,
+        string label,
+        IEnumerable<Guid> kategorieIds,
+        bool isFachlich
+    )
     {
-        var entry = await _dbContext.ProfundumFeedbackKategories
-            .Include(e => e.Fachbereiche)
+        var entry = await _dbContext
+            .ProfundumFeedbackKategories.Include(e => e.Fachbereiche)
             .FirstOrDefaultAsync(e => e.Id == id);
 
-        if (entry is null) throw new ArgumentException("Kategorie not found", nameof(id));
+        if (entry is null)
+            throw new ArgumentException("Kategorie not found", nameof(id));
 
-        var categories = await _dbContext.ProfundaFachbereiche
-            .Where(k => kategorieIds.Contains(k.Id))
+        var categories = await _dbContext
+            .ProfundaFachbereiche.Where(k => kategorieIds.Contains(k.Id))
             .ToListAsync();
 
         if (kategorieIds.Count() != categories.Count)
-            throw new ArgumentException("At least one of the specified kategorieIds does not exist",
-                nameof(kategorieIds));
+            throw new ArgumentException(
+                "At least one of the specified kategorieIds does not exist",
+                nameof(kategorieIds)
+            );
 
         entry.Label = label;
         entry.Fachbereiche = categories;
@@ -70,8 +85,8 @@ internal class FeedbackKategorienService
 
     public async Task<IEnumerable<ProfundumFeedbackKategorie>> GetAllCategories()
     {
-        return await _dbContext.ProfundumFeedbackKategories
-            .Include(e => e.Fachbereiche)
+        return await _dbContext
+            .ProfundumFeedbackKategories.Include(e => e.Fachbereiche)
             .OrderBy(e => e.Fachbereiche.Count)
             .ThenBy(e => e.Label)
             .ToListAsync();

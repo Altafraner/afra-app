@@ -8,9 +8,7 @@ namespace Altafraner.AfraApp.Otium.Domain.Contracts.Rules;
 public record struct RuleStatus
 {
     ///
-    public RuleStatus()
-    {
-    }
+    public RuleStatus() { }
 
     /// <summary>
     ///     True, if the rule is fulfilled.
@@ -27,7 +25,8 @@ public record struct RuleStatus
     /// </summary>
     public bool IgnoreOtherRules { get; init; } = false;
 
-    [Pure] internal static RuleStatus Valid => new() { IsValid = true };
+    [Pure]
+    internal static RuleStatus Valid => new() { IsValid = true };
 
     [Pure]
     internal static RuleStatus Invalid(string message)

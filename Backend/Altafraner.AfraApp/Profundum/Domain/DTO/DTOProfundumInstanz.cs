@@ -17,7 +17,10 @@ public record DTOProfundumInstanz
         ProfundumId = dbInstanz.Profundum.Id;
         Slots = dbInstanz.Slots.Select(s => s.Id).ToArray();
         MaxEinschreibungen = dbInstanz.MaxEinschreibungen;
-        NumEinschreibungen = dbInstanz.Einschreibungen.Select(e => e.BetroffenePersonId).Distinct().Count();
+        NumEinschreibungen = dbInstanz
+            .Einschreibungen.Select(e => e.BetroffenePersonId)
+            .Distinct()
+            .Count();
         ProfundumInfo = new DTOProfundumDefinition(dbInstanz.Profundum);
         VerantwortlicheIds = dbInstanz.Verantwortliche.Select(e => e.Id);
         VerantwortlicheInfo = dbInstanz.Verantwortliche.Select(e => new PersonInfoMinimal(e));
@@ -38,7 +41,6 @@ public record DTOProfundumInstanz
 
     /// <inheritdoc cref="ProfundumInstanz.MaxEinschreibungen"/>
     public int? MaxEinschreibungen { get; set; } = null;
-
 
     /// <inheritdoc cref="ProfundumInstanz.Verantwortliche"/>
     public IEnumerable<Guid> VerantwortlicheIds { get; set; } = [];

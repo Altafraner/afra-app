@@ -20,7 +20,11 @@ public class RequiredKategorienRule : IWeekRule
     private readonly Dictionary<Wochentyp, List<Guid>> _requiredCategories = [];
 
     ///
-    public RequiredKategorienRule(BlockHelper blockHelper, AfraAppContext dbContext, KategorieService kategorieService)
+    public RequiredKategorienRule(
+        BlockHelper blockHelper,
+        AfraAppContext dbContext,
+        KategorieService kategorieService
+    )
     {
         _blockHelper = blockHelper;
         _dbContext = dbContext;
@@ -28,51 +32,79 @@ public class RequiredKategorienRule : IWeekRule
     }
 
     /// <inheritdoc />
-    public async ValueTask<RuleStatus> IsValidAsync(Person person, IEnumerable<Schultag> schultage,
-        IEnumerable<OtiumEinschreibung> einschreibungen)
+    public async ValueTask<RuleStatus> IsValidAsync(
+        Person person,
+        IEnumerable<Schultag> schultage,
+        IEnumerable<OtiumEinschreibung> einschreibungen
+    )
     {
         var schultageArray = schultage as Schultag[] ?? schultage.ToArray();
         var wochentyp = GetWochentypForSchultage(schultageArray);
 
-        var fulfilledCategories =
-            await GetFulfilledCategoriesFromEnrollments(einschreibungen, schultageArray, wochentyp);
-        var missingCategories = await GetUnfulfilledRequiredCategories(fulfilledCategories, wochentyp);
+        var fulfilledCategories = await GetFulfilledCategoriesFromEnrollments(
+            einschreibungen,
+            schultageArray,
+            wochentyp
+        );
+        var missingCategories = await GetUnfulfilledRequiredCategories(
+            fulfilledCategories,
+            wochentyp
+        );
         var messages = new List<string>();
         foreach (var missingCategory in missingCategories)
             messages.Add(
-                $"Fehlende Einschreibungen für die Kategorie „{(await _kategorieService.GetKategorieByIdAsync(missingCategory))!.Bezeichnung}“.");
+                $"Fehlende Einschreibungen für die Kategorie „{(await _kategorieService.GetKategorieByIdAsync(missingCategory))!.Bezeichnung}“."
+            );
         return missingCategories.Count == 0
             ? RuleStatus.Valid
-            : new RuleStatus
-            {
-                IsValid = false,
-                Messages = messages
-            };
+            : new RuleStatus { IsValid = false, Messages = messages };
     }
 
     /// <inheritdoc />
-    public async ValueTask<RuleStatus> MayEnrollAsync(Person person, IEnumerable<Schultag> schultage,
-        IEnumerable<OtiumEinschreibung> einschreibungen, OtiumTermin termin)
+    public async ValueTask<RuleStatus> MayEnrollAsync(
+        Person person,
+        IEnumerable<Schultag> schultage,
+        IEnumerable<OtiumEinschreibung> einschreibungen,
+        OtiumTermin termin
+    )
     {
-        if (termin.Otium.Kategorie.IgnoreEnrollmentRule) return RuleStatus.Valid;
+        if (termin.Otium.Kategorie.IgnoreEnrollmentRule)
+            return RuleStatus.Valid;
 
         var tage = schultage as Schultag[] ?? schultage.ToArray();
-        var einschreibungsArray = einschreibungen as OtiumEinschreibung[] ?? einschreibungen.ToArray();
+        var einschreibungsArray =
+            einschreibungen as OtiumEinschreibung[] ?? einschreibungen.ToArray();
         var wochentyp = GetWochentypForSchultage(tage);
-        var fulfilledCategories =
-            await GetFulfilledCategoriesFromEnrollments(einschreibungsArray, tage, wochentyp);
+        var fulfilledCategories = await GetFulfilledCategoriesFromEnrollments(
+            einschreibungsArray,
+            tage,
+            wochentyp
+        );
 
         if (!_requiredCategories.ContainsKey(wochentyp))
-            _requiredCategories.Add(wochentyp, await _kategorieService.GetRequiredKategorienIdsAsync(wochentyp));
+            _requiredCategories.Add(
+                wochentyp,
+                await _kategorieService.GetRequiredKategorienIdsAsync(wochentyp)
+            );
 
-        var missingCategories = await GetUnfulfilledRequiredCategories(fulfilledCategories, wochentyp);
+        var missingCategories = await GetUnfulfilledRequiredCategories(
+            fulfilledCategories,
+            wochentyp
+        );
 
-        var currentCategoriesRequiredParentId =
-            await _kategorieService.GetRequiredParentIdAsync(termin.Otium.Kategorie, wochentyp);
+        var currentCategoriesRequiredParentId = await _kategorieService.GetRequiredParentIdAsync(
+            termin.Otium.Kategorie,
+            wochentyp
+        );
 
         // The easy part: Check if the rule is fulfilled after this enrollment
-        if (missingCategories.Count == 0 ||
-            (missingCategories.Count == 1 && missingCategories.First() == currentCategoriesRequiredParentId))
+        if (
+            missingCategories.Count == 0
+            || (
+                missingCategories.Count == 1
+                && missingCategories.First() == currentCategoriesRequiredParentId
+            )
+        )
             return RuleStatus.Valid;
 
         // The hard part: Check if enrolling in this termin would still allow fulfilling all required categories
@@ -80,55 +112,76 @@ public class RequiredKategorienRule : IWeekRule
         var today = DateOnly.FromDateTime(now);
         var time = TimeOnly.FromDateTime(now);
 
-        var blocksInFutureWithoutEnrollments = tage
-            .SelectMany(s => s.Blocks)
-            .Where(b => b.SchultagKey > today ||
-                        (b.SchultagKey == today && _blockHelper.Get(b.SchemaId)!.Interval.Start > time))
+        var blocksInFutureWithoutEnrollments = tage.SelectMany(s => s.Blocks)
+            .Where(b =>
+                b.SchultagKey > today
+                || (b.SchultagKey == today && _blockHelper.Get(b.SchemaId)!.Interval.Start > time)
+            )
             .Where(b => einschreibungsArray.All(e => e.Termin.Block != b))
             .ToList();
 
-        var angeboteByBlocks =
-            await GetPossibleRequiredCategoriesForBlocks(blocksInFutureWithoutEnrollments, wochentyp);
-        foreach (var (_, angebote) in angeboteByBlocks) angebote.ExceptWith(fulfilledCategories);
+        var angeboteByBlocks = await GetPossibleRequiredCategoriesForBlocks(
+            blocksInFutureWithoutEnrollments,
+            wochentyp
+        );
+        foreach (var (_, angebote) in angeboteByBlocks)
+            angebote.ExceptWith(fulfilledCategories);
 
         var angeboteForCurrentBlock = angeboteByBlocks.GetValueOrDefault(termin.Block.Id, []);
-        if (angeboteForCurrentBlock.Count == 0) return RuleStatus.Valid;
+        if (angeboteForCurrentBlock.Count == 0)
+            return RuleStatus.Valid;
 
         // Remove this so we can backtrack without it.
         angeboteByBlocks.Remove(termin.Block.Id);
-        var currentCategoryStillMissing = currentCategoriesRequiredParentId is not null &&
-                                          missingCategories.Contains(currentCategoriesRequiredParentId.Value);
+        var currentCategoryStillMissing =
+            currentCategoriesRequiredParentId is not null
+            && missingCategories.Contains(currentCategoriesRequiredParentId.Value);
         if (currentCategoryStillMissing)
             missingCategories.Remove(currentCategoriesRequiredParentId!.Value);
 
-        var isFulfillableWithEnrollment =
-            IsFulfillable(missingCategories.ToHashSet(), angeboteByBlocks.Values.ToList());
-        if (isFulfillableWithEnrollment) return RuleStatus.Valid;
+        var isFulfillableWithEnrollment = IsFulfillable(
+            missingCategories.ToHashSet(),
+            angeboteByBlocks.Values.ToList()
+        );
+        if (isFulfillableWithEnrollment)
+            return RuleStatus.Valid;
 
         // If we reach this point, the enrollment would make it impossible to fulfill all required categories, but it could still be possible that there is no way whatsoever to fulfill all required categories. In that case, we should allow the enrollment.
-        if (currentCategoryStillMissing) missingCategories.Add(currentCategoriesRequiredParentId!.Value);
+        if (currentCategoryStillMissing)
+            missingCategories.Add(currentCategoriesRequiredParentId!.Value);
         angeboteByBlocks.Add(termin.Block.Id, angeboteForCurrentBlock);
 
-        var isFulfillableWithoutEnrollment =
-            IsFulfillable(missingCategories.ToHashSet(), angeboteByBlocks.Values.ToList());
+        var isFulfillableWithoutEnrollment = IsFulfillable(
+            missingCategories.ToHashSet(),
+            angeboteByBlocks.Values.ToList()
+        );
 
         if (isFulfillableWithoutEnrollment)
             return RuleStatus.Invalid(
-                "Mit dieser Einschreibung können nicht mehr alle Pflichtkategorien erfüllt werden.");
+                "Mit dieser Einschreibung können nicht mehr alle Pflichtkategorien erfüllt werden."
+            );
 
         // Now we know that there is no way to fulfill all required categories. But there might be a way to fulfill more categories than without this enrollment. We will not check all combinations, but we will check if this enrollment allows to fulfill at least one more category than without this enrollment.
-        if (currentCategoryStillMissing) return RuleStatus.Valid;
+        if (currentCategoryStillMissing)
+            return RuleStatus.Valid;
 
         return angeboteForCurrentBlock.Count == 0
             ? RuleStatus.Valid
             : RuleStatus.Invalid(
-                "Es ist nicht mehr möglich, alle Pflichtkategorien zu erfüllen. Mit einer anderen Einschreibung in diesem Block kannst du aber noch mehr Pflichtkategorien wahrnehmen.");
+                "Es ist nicht mehr möglich, alle Pflichtkategorien zu erfüllen. Mit einer anderen Einschreibung in diesem Block kannst du aber noch mehr Pflichtkategorien wahrnehmen."
+            );
     }
 
-    private async Task<HashSet<Guid>> GetUnfulfilledRequiredCategories(IEnumerable<Guid> categories, Wochentyp typ)
+    private async Task<HashSet<Guid>> GetUnfulfilledRequiredCategories(
+        IEnumerable<Guid> categories,
+        Wochentyp typ
+    )
     {
         if (!_requiredCategories.ContainsKey(typ))
-            _requiredCategories.Add(typ, await _kategorieService.GetRequiredKategorienIdsAsync(typ));
+            _requiredCategories.Add(
+                typ,
+                await _kategorieService.GetRequiredKategorienIdsAsync(typ)
+            );
 
         // Clone the required categories to avoid modifying the original list
         var categoriesUnfulfilled = _requiredCategories[typ].ToHashSet();
@@ -137,7 +190,8 @@ public class RequiredKategorienRule : IWeekRule
             categoriesUnfulfilled.Remove(category);
 
             // Small optimization as this is a very common case
-            if (categoriesUnfulfilled.Count == 0) break;
+            if (categoriesUnfulfilled.Count == 0)
+                break;
         }
 
         return categoriesUnfulfilled;
@@ -146,26 +200,41 @@ public class RequiredKategorienRule : IWeekRule
     private async Task<HashSet<Guid>> GetFulfilledCategoriesFromEnrollments(
         IEnumerable<OtiumEinschreibung> einschreibungen,
         IEnumerable<Schultag> schultage,
-        Wochentyp typ)
+        Wochentyp typ
+    )
     {
         if (!_requiredCategories.ContainsKey(typ))
-            _requiredCategories.Add(typ, await _kategorieService.GetRequiredKategorienIdsAsync(typ));
+            _requiredCategories.Add(
+                typ,
+                await _kategorieService.GetRequiredKategorienIdsAsync(typ)
+            );
         var requiredCategories = _requiredCategories[typ];
 
         var timelines = new Dictionary<Guid, Timeline<DateTime>>();
         foreach (var einschreibung in einschreibungen)
         {
-            var requiredCategory =
-                await _kategorieService.GetRequiredParentIdAsync(einschreibung.Termin.Otium.Kategorie, typ);
+            var requiredCategory = await _kategorieService.GetRequiredParentIdAsync(
+                einschreibung.Termin.Otium.Kategorie,
+                typ
+            );
 
-            if (requiredCategory is null) continue;
+            if (requiredCategory is null)
+                continue;
             timelines.TryAdd(requiredCategory.Value, new Timeline<DateTime>());
             timelines[requiredCategory.Value]
-                .Add(einschreibung.Interval.ToDateTimeInterval(einschreibung.Termin.Block.SchultagKey));
+                .Add(
+                    einschreibung.Interval.ToDateTimeInterval(
+                        einschreibung.Termin.Block.SchultagKey
+                    )
+                );
         }
 
-        var blockIntervals = schultage.SelectMany(s =>
-                s.Blocks.Select(b => _blockHelper.Get(b.SchemaId)!.Interval.ToDateTimeInterval(s.Datum)))
+        var blockIntervals = schultage
+            .SelectMany(s =>
+                s.Blocks.Select(b =>
+                    _blockHelper.Get(b.SchemaId)!.Interval.ToDateTimeInterval(s.Datum)
+                )
+            )
             .ToList();
 
         var fulfilledCategories = new HashSet<Guid>();
@@ -179,25 +248,32 @@ public class RequiredKategorienRule : IWeekRule
 
     private async Task<Dictionary<Guid, HashSet<Guid>>> GetPossibleRequiredCategoriesForBlocks(
         List<Block> blocks,
-        Wochentyp typ)
+        Wochentyp typ
+    )
     {
         if (!_requiredCategories.ContainsKey(typ))
-            _requiredCategories.Add(typ, await _kategorieService.GetRequiredKategorienIdsAsync(typ));
+            _requiredCategories.Add(
+                typ,
+                await _kategorieService.GetRequiredKategorienIdsAsync(typ)
+            );
         var requiredCategories = _requiredCategories[typ];
 
-        var result = await _dbContext.OtiaTermine
-            .Where(t => blocks.Contains(t.Block))
+        var result = await _dbContext
+            .OtiaTermine.Where(t => blocks.Contains(t.Block))
             .Where(t => t.Enrollments.Count < (t.MaxEinschreibungen ?? int.MaxValue))
             .Select(t => new { BlockId = t.Block.Id, t.Otium.Kategorie })
             .Distinct()
             .GroupBy(g => g.BlockId)
             .ToDictionaryAsync(g => g.Key, g => g.Select(e => e.Kategorie).Distinct().ToList());
 
-        return blocks.ToDictionary(b => b.Id,
-            b => result.GetValueOrDefault(b.Id, [])
-                .Select(c => c.Id)
-                .Where(requiredCategories.Contains)
-                .ToHashSet()
+        return blocks.ToDictionary(
+            b => b.Id,
+            b =>
+                result
+                    .GetValueOrDefault(b.Id, [])
+                    .Select(c => c.Id)
+                    .Where(requiredCategories.Contains)
+                    .ToHashSet()
         );
     }
 
@@ -206,22 +282,28 @@ public class RequiredKategorienRule : IWeekRule
     /// </summary>
     private static bool IsFulfillable(HashSet<Guid> missingCategories, List<HashSet<Guid>> blocks)
     {
-        if (blocks.Count == 0) return missingCategories.Count == 0;
-        if (missingCategories.Count == 0) return true;
+        if (blocks.Count == 0)
+            return missingCategories.Count == 0;
+        if (missingCategories.Count == 0)
+            return true;
 
         var currentBlock = blocks[0];
         var remainingBlocks = blocks.Skip(1).ToList();
 
         var availableCategories = currentBlock.Intersect(missingCategories).ToArray();
-        if (availableCategories.Length == 0) return IsFulfillable(missingCategories, remainingBlocks);
+        if (availableCategories.Length == 0)
+            return IsFulfillable(missingCategories, remainingBlocks);
         foreach (var availableCategory in availableCategories)
         {
             // Trying to remove side effects so the category is always readded after the recursive call
             var foundSomething = false;
             var wasRemoved = missingCategories.Remove(availableCategory);
-            if (IsFulfillable(missingCategories, remainingBlocks)) foundSomething = true;
-            if (wasRemoved) missingCategories.Add(availableCategory);
-            if (foundSomething) return true;
+            if (IsFulfillable(missingCategories, remainingBlocks))
+                foundSomething = true;
+            if (wasRemoved)
+                missingCategories.Add(availableCategory);
+            if (foundSomething)
+                return true;
         }
 
         return false;

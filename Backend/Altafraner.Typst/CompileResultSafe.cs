@@ -28,7 +28,8 @@ internal class CompileResultSafe
             unsafe
             {
                 var managedBuffers = new List<byte[]>((int)_inner.buffers_len);
-                if (_inner.buffers == null) return managedBuffers;
+                if (_inner.buffers == null)
+                    return managedBuffers;
 
                 for (nuint i = 0; i < _inner.buffers_len; i++)
                 {
@@ -41,8 +42,6 @@ internal class CompileResultSafe
 
                 return managedBuffers;
             }
-
-
         }
     }
 

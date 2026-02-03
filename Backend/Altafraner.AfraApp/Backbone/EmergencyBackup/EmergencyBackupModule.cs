@@ -14,9 +14,14 @@ namespace Altafraner.AfraApp.Backbone.EmergencyBackup;
 public class EmergencyBackupModule : IModule
 {
     /// <inheritdoc />
-    public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
+    public void ConfigureServices(
+        IServiceCollection services,
+        IConfiguration config,
+        IHostEnvironment env
+    )
     {
-        services.AddOptions<FilePostConfiguration>()
+        services
+            .AddOptions<FilePostConfiguration>()
             .Bind(config.GetSection("EmergencyBackup"))
             .ValidateOnStart();
         services.AddTransient<IEmergencyBackupService, FilePostEmergencyBackup>();
@@ -27,9 +32,14 @@ public class EmergencyBackupModule : IModule
     {
         var config = serviceProvider.GetRequiredService<IOptions<FilePostConfiguration>>().Value;
         client.BaseAddress = new Uri(config.BaseUri);
-        if (string.IsNullOrWhiteSpace(config.Username) || string.IsNullOrWhiteSpace(config.Password)) return;
+        if (
+            string.IsNullOrWhiteSpace(config.Username) || string.IsNullOrWhiteSpace(config.Password)
+        )
+            return;
         var byteArray = Encoding.ASCII.GetBytes($"{config.Username}:{config.Password}");
-        client.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+            "Basic",
+            Convert.ToBase64String(byteArray)
+        );
     }
 }

@@ -41,7 +41,8 @@ public static class LdapSanitizer
                     if (c >= 0x80)
                     {
                         var bytes = Encoding.UTF8.GetBytes([c]);
-                        foreach (var b in bytes) sb.Append($"\\{b:X2}");
+                        foreach (var b in bytes)
+                            sb.Append($"\\{b:X2}");
 
                         break;
                     }

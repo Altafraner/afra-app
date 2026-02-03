@@ -15,5 +15,5 @@ public enum MentorType
     /// <summary>
     ///     The students academic mentor
     /// </summary>
-    GM
+    GM,
 }

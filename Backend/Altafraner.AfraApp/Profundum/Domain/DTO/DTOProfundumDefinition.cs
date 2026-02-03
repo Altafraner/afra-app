@@ -17,7 +17,9 @@ public record DTOProfundumDefinition
         MinKlasse = dbProfundumDefinition.MinKlasse;
         MaxKlasse = dbProfundumDefinition.MaxKlasse;
         DependencyIds = dbProfundumDefinition.Dependencies.Select(d => d.Id).ToArray();
-        Fachbereiche = dbProfundumDefinition.Fachbereiche.Select(e => new DtoProfundumFachbereich(e));
+        Fachbereiche = dbProfundumDefinition.Fachbereiche.Select(e => new DtoProfundumFachbereich(
+            e
+        ));
         FachbereichIds = dbProfundumDefinition.Fachbereiche.Select(e => e.Id);
     }
 

@@ -44,9 +44,11 @@ public interface IAttendanceService
     ///     A dictionary containing all enrolled students attendance status grouped by their termin along with all
     ///     the attendance statuses for students not enrolled
     /// </returns>
-    Task<(Dictionary<OtiumTermin, Dictionary<Person, OtiumAnwesenheitsStatus>> termine,
-            Dictionary<Person, OtiumAnwesenheitsStatus> missingPersons, bool missingPersonsChecked)>
-        GetAttendanceForBlockAsync(Guid blockId);
+    Task<(
+        Dictionary<OtiumTermin, Dictionary<Person, OtiumAnwesenheitsStatus>> termine,
+        Dictionary<Person, OtiumAnwesenheitsStatus> missingPersons,
+        bool missingPersonsChecked
+    )> GetAttendanceForBlockAsync(Guid blockId);
 
     /// <summary>
     ///     Retrieves the attendance status for a list of blocks for a specific student.
@@ -54,8 +56,10 @@ public interface IAttendanceService
     /// <param name="blockIds">The blocks to retrieve the attendances for</param>
     /// <param name="personId">The student whose attendances should be retrieved</param>
     /// <returns>A dictionary with the key being the blocks ID and the value the attendance status for the block with the id</returns>
-    Task<Dictionary<Guid, OtiumAnwesenheitsStatus>> GetAttendanceForBlocksAsync(IEnumerable<Guid> blockIds,
-        Guid personId);
+    Task<Dictionary<Guid, OtiumAnwesenheitsStatus>> GetAttendanceForBlocksAsync(
+        IEnumerable<Guid> blockIds,
+        Guid personId
+    );
 
     /// <summary>
     ///     Sets the attendance status for a specific enrollment
@@ -72,7 +76,11 @@ public interface IAttendanceService
     /// <param name="blockId">The <see cref="Guid" /> of the <see cref="Block" /></param>
     /// <param name="status">The status to set</param>
     /// <exception cref="KeyNotFoundException">The student or block does not exist.</exception>
-    Task SetAttendanceForStudentInBlockAsync(Guid studentId, Guid blockId, OtiumAnwesenheitsStatus status);
+    Task SetAttendanceForStudentInBlockAsync(
+        Guid studentId,
+        Guid blockId,
+        OtiumAnwesenheitsStatus status
+    );
 
     /// <summary>
     ///     Sets the checked status for a specific termin

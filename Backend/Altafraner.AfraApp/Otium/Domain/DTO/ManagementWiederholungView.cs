@@ -14,9 +14,7 @@ public record ManagementWiederholungView
     /// <summary>
     ///     Construct an empty ManagementWiederholungView
     /// </summary>
-    public ManagementWiederholungView()
-    {
-    }
+    public ManagementWiederholungView() { }
 
     /// <summary>
     ///     Construct a ManagementWiederholungView from a Database Wiederholung
@@ -26,7 +24,9 @@ public record ManagementWiederholungView
     {
         Id = dbWiederholung.Id;
         OtiumId = dbWiederholung.Otium.Id;
-        Tutor = dbWiederholung.Tutor is not null ? new PersonInfoMinimal(dbWiederholung.Tutor) : null;
+        Tutor = dbWiederholung.Tutor is not null
+            ? new PersonInfoMinimal(dbWiederholung.Tutor)
+            : null;
         Ort = dbWiederholung.Ort;
         Wochentag = dbWiederholung.Wochentag;
         Wochentyp = dbWiederholung.Wochentyp;

@@ -8,7 +8,8 @@ namespace Altafraner.AfraApp.Otium.Domain.Models.TimeInterval;
 ///     This is mostly here to enforce consistency between <see cref="DateTimeInterval" /> and
 ///     <see cref="TimeOnlyInterval" />
 /// </remarks>
-public interface ITimeInterval<T> where T : struct
+public interface ITimeInterval<T>
+    where T : struct
 {
     /// <summary>
     ///     Gets the starting point for a time-interval

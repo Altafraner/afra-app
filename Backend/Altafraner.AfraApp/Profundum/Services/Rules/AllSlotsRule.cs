@@ -12,20 +12,23 @@ namespace Altafraner.AfraApp.Profundum.Services.Rules;
 public class AllSlotsRule : IProfundumIndividualRule
 {
     /// <inheritdoc/>
-    public RuleStatus CheckForSubmission(Person student,
+    public RuleStatus CheckForSubmission(
+        Person student,
         IEnumerable<ProfundumSlot> slots,
-    IEnumerable<ProfundumEinschreibung> enrollments,
-            IEnumerable<ProfundumBelegWunsch> wuensche)
-        => RuleStatus.Valid;
+        IEnumerable<ProfundumEinschreibung> enrollments,
+        IEnumerable<ProfundumBelegWunsch> wuensche
+    ) => RuleStatus.Valid;
 
     /// <inheritdoc/>
-    public void AddConstraints(Person student,
+    public void AddConstraints(
+        Person student,
         IEnumerable<ProfundumSlot> slots,
         IEnumerable<ProfundumBelegWunsch> wuensche,
         Dictionary<(ProfundumSlot s, ProfundumInstanz i), BoolVar> belegVars,
         Dictionary<ProfundumSlot, BoolVar> personNotEnrolledVars,
         CpModel model,
-        LinearExprBuilder objective)
+        LinearExprBuilder objective
+    )
     {
         var angebote = belegVars.Keys.Select(x => x.i).Distinct();
         foreach (var i in angebote)
@@ -42,23 +45,39 @@ public class AllSlotsRule : IProfundumIndividualRule
     }
 
     /// <inheritdoc/>
-    public IEnumerable<MatchingWarning> GetWarnings(Person student, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
+    public IEnumerable<MatchingWarning> GetWarnings(
+        Person student,
+        IEnumerable<ProfundumSlot> slots,
+        IEnumerable<ProfundumEinschreibung> enrollments
+    )
     {
         List<MatchingWarning> warnings = [];
         var enrollmentsArray = enrollments as ProfundumEinschreibung[] ?? enrollments.ToArray();
         var angebote = enrollmentsArray
             .Where(p => p.ProfundumInstanz is not null)
-            .Select(x => x.ProfundumInstanz!).Distinct();
+            .Select(x => x.ProfundumInstanz!)
+            .Distinct();
         foreach (var i in angebote)
         {
-            var belegtSlots = enrollmentsArray.Where(e => e.ProfundumInstanz == i).Select(e => e.Slot).ToArray();
+            var belegtSlots = enrollmentsArray
+                .Where(e => e.ProfundumInstanz == i)
+                .Select(e => e.Slot)
+                .ToArray();
             foreach (var b in belegtSlots.Except(i.Slots))
             {
-                warnings.Add(new MatchingWarning($"Einschreibung in {i.Profundum.Bezeichnung}. Obwohl es in {b} nicht stattfindet. Vermutlich wurde das Profundum nach der Wahl geändert."));
+                warnings.Add(
+                    new MatchingWarning(
+                        $"Einschreibung in {i.Profundum.Bezeichnung}. Obwohl es in {b} nicht stattfindet. Vermutlich wurde das Profundum nach der Wahl geändert."
+                    )
+                );
             }
             foreach (var b in i.Slots.Except(belegtSlots))
             {
-                warnings.Add(new MatchingWarning($"Der Einschreibung in {i.Profundum.Bezeichnung} fehlt der Slot {b}."));
+                warnings.Add(
+                    new MatchingWarning(
+                        $"Der Einschreibung in {i.Profundum.Bezeichnung} fehlt der Slot {b}."
+                    )
+                );
             }
         }
         return warnings;

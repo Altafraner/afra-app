@@ -1,12 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
     <ItemGroup>
-        <ProjectReference Include="..\Altafraner.Backbone.Abstractions\Altafraner.Backbone.Abstractions.csproj"/>
-        <ProjectReference Include="..\Altafraner.Backbone.EmailOutbox\Altafraner.Backbone.EmailOutbox.csproj"/>
+        <ProjectReference Include="..\Altafraner.Backbone.Abstractions\Altafraner.Backbone.Abstractions.csproj" />
+        <ProjectReference Include="..\Altafraner.Backbone.EmailOutbox\Altafraner.Backbone.EmailOutbox.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.EntityFrameworkCore"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore" />
     </ItemGroup>
-
 </Project>

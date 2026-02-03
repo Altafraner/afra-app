@@ -90,4 +90,5 @@ public record LehrerTermin : ITermin
 public record LehrerEinschreibung(
     PersonInfoMinimal? Student,
     OtiumAnwesenheitsStatus Anwesenheit,
-    IEnumerable<Notiz.Notiz> Notizen);
+    IEnumerable<Notiz.Notiz> Notizen
+);

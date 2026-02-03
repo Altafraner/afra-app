@@ -1,12 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
     <ItemGroup>
-        <ProjectReference Include="..\Altafraner.Backbone.Abstractions\Altafraner.Backbone.Abstractions.csproj"/>
-        <ProjectReference Include="..\Altafraner.Backbone.Scheduling\Altafraner.Backbone.Scheduling.csproj"/>
+        <ProjectReference Include="..\Altafraner.Backbone.Abstractions\Altafraner.Backbone.Abstractions.csproj" />
+        <ProjectReference Include="..\Altafraner.Backbone.Scheduling\Altafraner.Backbone.Scheduling.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="MailKit"/>
+        <PackageReference Include="MailKit" />
     </ItemGroup>
-
 </Project>
