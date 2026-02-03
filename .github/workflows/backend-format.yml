@@ -2,12 +2,13 @@ name: backend-format
 
 permissions:
   contents: read
+  pull-requests: read
 
 on:
   push:
     branches: ["*"]
     paths:
-      - ".github/workflows/backend.yml"
+      - ".github/workflows/backend-format.yml"
       - "Backend/**"
   pull_request:
     branches: ["*"]

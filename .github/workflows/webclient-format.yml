@@ -1,4 +1,4 @@
-name: webclient
+name: webclient-format
 
 permissions:
   contents: read
@@ -8,7 +8,7 @@ on:
   push:
     branches: ["*"]
     paths:
-      - ".github/workflows/webclient.yml"
+      - ".github/workflows/webclient-format.yml"
       - "WebClient/**"
   pull_request:
     branches: ["*"]
@@ -27,6 +27,6 @@ jobs:
       - name: Install dependencies
         working-directory: ./WebClient
         run: npm install
-      - name: Build
+      - name: Check formatting
         working-directory: ./WebClient
-        run: npm run build
+        run: npx prettier --check .
