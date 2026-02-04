@@ -9,13 +9,13 @@
     voraussetzungen,
     verantwortliche,
     teilnehmer
-) = json(bytes(sys.inputs.data))
+) = json("inputs.json")
 
 #let text-color = rgb("#000")
 #let gray-color = rgb("#aaa")
 #let accent-color = rgb("#0069B4")
-#let accent-font = ("TheSerif", "TimesNewRoman", "Noto Serif", "Noto Sans", "Arial")
-#let primary-font = ("TheSansOSF", "Noto Sans", "Arial")
+#let accent-font = ("TheSerif")
+#let primary-font = ("TheSansOSF")
 
 #let weekdays = (
   "Sonntag",

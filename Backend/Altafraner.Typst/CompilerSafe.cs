@@ -1,5 +1,4 @@
 using System.Runtime.InteropServices;
-using System.Text.Json;
 
 namespace Altafraner.Typst;
 
@@ -25,13 +24,11 @@ internal class CompilerSafe
         }
     }
 
-    internal unsafe bool SetSysInputs(Dictionary<string, string> inputs)
+    internal unsafe bool SetSysInputs(String inputs)
     {
         bool ok;
 
-        var sysInputsJson = JsonSerializer.Serialize(inputs);
-
-        var sysInputsPtr = Marshal.StringToHGlobalAnsi(sysInputsJson);
+        var sysInputsPtr = Marshal.StringToHGlobalAnsi(inputs);
         try
         {
             ok = CsBindgen.NativeMethods.set_sys_inputs(_inner, (byte*)sysInputsPtr);

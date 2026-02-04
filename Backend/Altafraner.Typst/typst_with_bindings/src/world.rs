@@ -49,6 +49,7 @@ pub struct TypstWorld {
     slots: Mutex<HashMap<FileId, LoadedFile>>,
     resolver: FileResolver,
     now: OnceLock<DateTime<Local>>,
+    virtual_files: Mutex<HashMap<VirtualPath, Vec<u8>>>,
 }
 
 impl World for TypstWorld {
@@ -67,6 +68,12 @@ impl World for TypstWorld {
     }
 
     fn file(&self, id: FileId) -> FileResult<Bytes> {
+        let vpath = id.vpath();
+
+        if let Some(bytes) = self.virtual_files.lock().unwrap().get(vpath).cloned() {
+            return Ok(Bytes::new(bytes));
+        }
+
         self.with_slot(id, |slot| slot.load_bytes(&self.resolver))
     }
 
@@ -92,7 +99,6 @@ impl TypstWorld {
     pub fn new(
         root: PathBuf,
         font_paths: &[PathBuf],
-        inputs: typst::foundations::Dict,
         input_content: Option<String>,
         include_system_fonts: bool,
     ) -> StrResult<Self> {
@@ -117,27 +123,18 @@ impl TypstWorld {
                 PackageStorage::new(None, None, Downloader::new("typst")),
             ),
             main,
-            library: LazyHash::new(
-                typst::Library::builder()
-                    .with_features([typst::Feature::Html].into_iter().collect())
-                    .with_inputs(inputs)
-                    .build(),
-            ),
+            library: LazyHash::new(typst::Library::builder().build()),
             book: LazyHash::new(fonts.book.clone()),
             fonts: Arc::new(fonts),
             slots: Mutex::new(slots),
             now: OnceLock::new(),
+            virtual_files: Mutex::new(HashMap::new()),
         })
     }
 
-    pub fn set_inputs(&mut self, inputs: typst::foundations::Dict) -> StrResult<()> {
-        self.library = LazyHash::new(
-            typst::Library::builder()
-                .with_features([typst::Feature::Html].into_iter().collect())
-                .with_inputs(inputs)
-                .build(),
-        );
-        Ok(())
+    pub fn set_inputs(&self, inputs: &str) {
+        let mut vf = self.virtual_files.lock().unwrap();
+        vf.insert(VirtualPath::new("inputs.json"), inputs.as_bytes().to_vec());
     }
 
     fn with_slot<F, T>(&self, id: FileId, f: F) -> T

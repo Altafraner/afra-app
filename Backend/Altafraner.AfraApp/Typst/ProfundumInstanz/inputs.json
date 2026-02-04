@@ -1,0 +1,248 @@
+{
+    "bezeichnung": "Profilkurs - Mediengestaltung",
+    "beschreibung": "",
+    "voraussetzungen": [],
+    "ort": "B201/B202",
+    "slots": [
+        {
+            "Id": "00000000-0000-0000-0000-000000000000",
+            "Jahr": 2025,
+            "Quartal": 1,
+            "Wochentag": 4,
+            "EinwahlZeitraum": {
+                "Id": "00000000-0000-0000-0000-000000000000",
+                "EinwahlStart": "2025-09-03T09:00:00Z",
+                "EinwahlStop": "2025-09-05T00:00:00Z"
+            },
+            "Termine": null
+        },
+        {
+            "Id": "00000000-0000-0000-0000-000000000000",
+            "Jahr": 2025,
+            "Quartal": 2,
+            "Wochentag": 4,
+            "EinwahlZeitraum": {
+                "Id": "00000000-0000-0000-0000-000000000000",
+                "EinwahlStart": "2025-09-03T09:00:00Z",
+                "EinwahlStop": "2025-09-05T00:00:00Z"
+            },
+            "Termine": null
+        },
+        {
+            "Id": "00000000-0000-0000-0000-000000000000",
+            "Jahr": 2025,
+            "Quartal": 3,
+            "Wochentag": 4,
+            "EinwahlZeitraum": {
+                "Id": "00000000-0000-0000-0000-000000000000",
+                "EinwahlStart": "2026-01-14T07:30:00Z",
+                "EinwahlStop": "2026-01-15T21:00:00Z"
+            },
+            "Termine": null
+        },
+        {
+            "Id": "00000000-0000-0000-0000-000000000000",
+            "Jahr": 2025,
+            "Quartal": 4,
+            "Wochentag": 4,
+            "EinwahlZeitraum": {
+                "Id": "00000000-0000-0000-0000-000000000000",
+                "EinwahlStart": "2026-01-14T07:30:00Z",
+                "EinwahlStop": "2026-01-15T21:00:00Z"
+            },
+            "Termine": null
+        }
+    ],
+    "verantwortliche": [
+        {
+            "Id": "00000000-0000-0000-0000-000000000000",
+            "Vorname": "Anna",
+            "Nachname": "Müller",
+            "Rolle": "Tutor",
+            "Gruppe": "Lehrkräfte",
+            "Email": "anna.mueller@example.com"
+        }
+    ],
+    "teilnehmer": [
+        {
+            "Id": "00000000-0000-0000-0000-000000000000",
+            "Vorname": "Lukas",
+            "Nachname": "Schmidt",
+            "Rolle": "Mittelstufe",
+            "Gruppe": "9a",
+            "Email": "lukas.schmidt@example.com"
+        },
+        {
+            "Id": "00000000-0000-0000-0000-000000000000",
+            "Vorname": "Marie",
+            "Nachname": "Weber",
+            "Rolle": "Mittelstufe",
+            "Gruppe": "9a",
+            "Email": "marie.weber@example.com"
+        },
+        {
+            "Id": "00000000-0000-0000-0000-000000000000",
+            "Vorname": "Jonas",
+            "Nachname": "Fischer",
+            "Rolle": "Mittelstufe",
+            "Gruppe": "9a",
+            "Email": "jonas.fischer@example.com"
+        },
+        {
+            "Id": "00000000-0000-0000-0000-000000000000",
+            "Vorname": "Lea",
+            "Nachname": "Klein",
+            "Rolle": "Mittelstufe",
+            "Gruppe": "9a",
+            "Email": "lea.klein@example.com"
+        },
+        {
+            "Id": "00000000-0000-0000-0000-000000000000",
+            "Vorname": "Tim",
+            "Nachname": "Hoffmann",
+            "Rolle": "Mittelstufe",
+            "Gruppe": "9a",
+            "Email": "tim.hoffmann@example.com"
+        },
+        {
+            "Id": "00000000-0000-0000-0000-000000000000",
+            "Vorname": "Sophie",
+            "Nachname": "Richter",
+            "Rolle": "Mittelstufe",
+            "Gruppe": "9a",
+            "Email": "sophie.richter@example.com"
+        },
+        {
+            "Id": "00000000-0000-0000-0000-000000000000",
+            "Vorname": "Ben",
+            "Nachname": "Neumann",
+            "Rolle": "Mittelstufe",
+            "Gruppe": "9a",
+            "Email": "ben.neumann@example.com"
+        },
+        {
+            "Id": "00000000-0000-0000-0000-000000000000",
+            "Vorname": "Emma",
+            "Nachname": "Braun",
+            "Rolle": "Mittelstufe",
+            "Gruppe": "9a",
+            "Email": "emma.braun@example.com"
+        },
+
+        {
+            "Id": "00000000-0000-0000-0000-000000000000",
+            "Vorname": "Paul",
+            "Nachname": "Krüger",
+            "Rolle": "Mittelstufe",
+            "Gruppe": "9b",
+            "Email": "paul.krueger@example.com"
+        },
+        {
+            "Id": "00000000-0000-0000-0000-000000000000",
+            "Vorname": "Lena",
+            "Nachname": "Meier",
+            "Rolle": "Mittelstufe",
+            "Gruppe": "9b",
+            "Email": "lena.meier@example.com"
+        },
+        {
+            "Id": "00000000-0000-0000-0000-000000000000",
+            "Vorname": "Noah",
+            "Nachname": "Schulz",
+            "Rolle": "Mittelstufe",
+            "Gruppe": "9b",
+            "Email": "noah.schulz@example.com"
+        },
+
+        {
+            "Id": "00000000-0000-0000-0000-000000000000",
+            "Vorname": "Mia",
+            "Nachname": "Bauer",
+            "Rolle": "Mittelstufe",
+            "Gruppe": "9c",
+            "Email": "mia.bauer@example.com"
+        },
+
+        {
+            "Id": "00000000-0000-0000-0000-000000000000",
+            "Vorname": "Leon",
+            "Nachname": "Koch",
+            "Rolle": "Mittelstufe",
+            "Gruppe": "10a",
+            "Email": "leon.koch@example.com"
+        },
+        {
+            "Id": "00000000-0000-0000-0000-000000000000",
+            "Vorname": "Clara",
+            "Nachname": "Wolf",
+            "Rolle": "Mittelstufe",
+            "Gruppe": "10a",
+            "Email": "clara.wolf@example.com"
+        },
+
+        {
+            "Id": "00000000-0000-0000-0000-000000000000",
+            "Vorname": "Finn",
+            "Nachname": "Becker",
+            "Rolle": "Mittelstufe",
+            "Gruppe": "10b",
+            "Email": "finn.becker@example.com"
+        },
+        {
+            "Id": "00000000-0000-0000-0000-000000000000",
+            "Vorname": "Laura",
+            "Nachname": "Schneider",
+            "Rolle": "Mittelstufe",
+            "Gruppe": "10b",
+            "Email": "laura.schneider@example.com"
+        },
+        {
+            "Id": "00000000-0000-0000-0000-000000000000",
+            "Vorname": "Tom",
+            "Nachname": "Zimmermann",
+            "Rolle": "Mittelstufe",
+            "Gruppe": "10b",
+            "Email": "tom.zimmermann@example.com"
+        },
+        {
+            "Id": "00000000-0000-0000-0000-000000000000",
+            "Vorname": "Nina",
+            "Nachname": "Lang",
+            "Rolle": "Mittelstufe",
+            "Gruppe": "10b",
+            "Email": "nina.lang@example.com"
+        },
+        {
+            "Id": "00000000-0000-0000-0000-000000000000",
+            "Vorname": "Max",
+            "Nachname": "Hartmann",
+            "Rolle": "Mittelstufe",
+            "Gruppe": "10b",
+            "Email": "max.hartmann@example.com"
+        },
+        {
+            "Id": "00000000-0000-0000-0000-000000000000",
+            "Vorname": "Julia",
+            "Nachname": "Krause",
+            "Rolle": "Mittelstufe",
+            "Gruppe": "10c",
+            "Email": "julia.krause@example.com"
+        },
+        {
+            "Id": "00000000-0000-0000-0000-000000000000",
+            "Vorname": "Erik",
+            "Nachname": "Peters",
+            "Rolle": "Mittelstufe",
+            "Gruppe": "10c",
+            "Email": "erik.peters@example.com"
+        },
+        {
+            "Id": "00000000-0000-0000-0000-000000000000",
+            "Vorname": "Hannah",
+            "Nachname": "Simon",
+            "Rolle": "Mittelstufe",
+            "Gruppe": "10c",
+            "Email": "hannah.simon@example.com"
+        }
+    ]
+}

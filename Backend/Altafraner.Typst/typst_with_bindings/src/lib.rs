@@ -8,7 +8,6 @@ mod world;
 
 use ecow::EcoString;
 use typst::diag::{StrResult, Warned};
-use typst::foundations::Dict;
 use typst::layout::PagedDocument;
 use world::TypstWorld;
 
@@ -85,13 +84,7 @@ pub extern "C" fn create_compiler(
             .collect()
     };
 
-    match TypstWorld::new(
-        root,
-        &font_paths,
-        Dict::new(),
-        input_content,
-        !ignore_system_fonts,
-    ) {
+    match TypstWorld::new(root, &font_paths, input_content, !ignore_system_fonts) {
         Ok(world) => Box::into_raw(Box::new(Compiler { state: world })),
         Err(_) => ptr::null_mut(),
     }
@@ -111,13 +104,9 @@ pub extern "C" fn set_sys_inputs(ptr: *mut Compiler, sys_inputs: *const c_char) 
     }
     let compiler = unsafe { &mut *ptr };
 
-    let json = unsafe { cstr_to_str(sys_inputs, "{}") };
-    let inputs: Dict = match serde_json::from_str(json) {
-        Ok(v) => v,
-        Err(_) => return false,
-    };
-
-    compiler.state.set_inputs(inputs).is_ok()
+    let inputs = unsafe { cstr_to_str(sys_inputs, "{}") };
+    compiler.state.set_inputs(inputs);
+    true
 }
 
 fn compile_inner(world: &mut TypstWorld) -> StrResult<Vec<Vec<u8>>> {
