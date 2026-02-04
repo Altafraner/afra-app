@@ -19,14 +19,24 @@ internal partial class AttendanceHub
         return $"block-{blockId}";
     }
 
-    private async Task UpdateAttendance(OtiumAnwesenheitsStatus status, Guid studentId, Guid blockId, Guid terminId)
+    private async Task UpdateAttendance(
+        OtiumAnwesenheitsStatus status,
+        Guid studentId,
+        Guid blockId,
+        Guid terminId
+    )
     {
         await _attendanceService.SetAttendanceForStudentInBlockAsync(studentId, blockId, status);
-        await Clients.Groups([TerminGroupName(terminId), BlockGroupName(blockId)])
-            .UpdateAttendance(new IAttendanceHubClient.AttendanceUpdate(studentId, terminId, blockId, status));
+        await Clients
+            .Groups([TerminGroupName(terminId), BlockGroupName(blockId)])
+            .UpdateAttendance(
+                new IAttendanceHubClient.AttendanceUpdate(studentId, terminId, blockId, status)
+            );
     }
 
-    private async Task<List<IAttendanceHubClient.TerminInformation>> GetBlockAttendances(Guid blockId)
+    private async Task<List<IAttendanceHubClient.TerminInformation>> GetBlockAttendances(
+        Guid blockId
+    )
     {
         var (attendancesByTermin, missingPersons, missingPersonsChecked) =
             await _attendanceService.GetAttendanceForBlockAsync(blockId);
@@ -37,36 +47,46 @@ internal partial class AttendanceHub
         foreach (var (termin, anwesenheitByPerson) in attendancesByTermin)
         {
             var enrollments = anwesenheitByPerson
-                .Select(entry =>
-                    new LehrerEinschreibung(new PersonInfoMinimal(entry.Key),
-                        entry.Value,
-                        notesByPerson.GetValueOrDefault(entry.Key.Id, []).Select(n => new Notiz(n))))
+                .Select(entry => new LehrerEinschreibung(
+                    new PersonInfoMinimal(entry.Key),
+                    entry.Value,
+                    notesByPerson.GetValueOrDefault(entry.Key.Id, []).Select(n => new Notiz(n))
+                ))
                 .OrderBy(e => e.Student?.Vorname)
                 .ThenBy(e => e.Student?.Nachname)
                 .ToList();
-            updates.Add(new IAttendanceHubClient.TerminInformation(termin.Id,
-                termin.Bezeichnung,
-                termin.Ort,
-                enrollments,
-                termin.SindAnwesenheitenKontrolliert));
+            updates.Add(
+                new IAttendanceHubClient.TerminInformation(
+                    termin.Id,
+                    termin.Bezeichnung,
+                    termin.Ort,
+                    enrollments,
+                    termin.SindAnwesenheitenKontrolliert
+                )
+            );
         }
 
         updates = updates.OrderBy(e => e.Ort).ToList();
 
         var missingPersonsEnrollments = missingPersons
-            .Select(entry =>
-                new LehrerEinschreibung(new PersonInfoMinimal(entry.Key),
-                    entry.Value,
-                    notesByPerson.GetValueOrDefault(entry.Key.Id, []).Select(n => new Notiz(n))))
+            .Select(entry => new LehrerEinschreibung(
+                new PersonInfoMinimal(entry.Key),
+                entry.Value,
+                notesByPerson.GetValueOrDefault(entry.Key.Id, []).Select(n => new Notiz(n))
+            ))
             .OrderBy(e => e.Student?.Vorname)
             .ThenBy(e => e.Student?.Nachname)
             .ToList();
-        updates.Insert(0,
-            new IAttendanceHubClient.TerminInformation(Guid.Empty,
+        updates.Insert(
+            0,
+            new IAttendanceHubClient.TerminInformation(
+                Guid.Empty,
                 "Nicht eingeschrieben",
                 "FEHLEND",
                 missingPersonsEnrollments,
-                missingPersonsChecked));
+                missingPersonsChecked
+            )
+        );
 
         return updates;
     }
@@ -76,11 +96,16 @@ internal partial class AttendanceHub
         var enrollments = await _attendanceService.GetAttendanceForTerminAsync(terminId);
         return await enrollments
             .ToAsyncEnumerable()
-            .Select<KeyValuePair<Person, OtiumAnwesenheitsStatus>, LehrerEinschreibung>(async (entry, _) =>
-                new LehrerEinschreibung(
-                    new PersonInfoMinimal(entry.Key),
-                    entry.Value,
-                    (await _notesService.GetNotesAsync(entry.Key.Id, blockId)).Select(n => new Notiz(n))))
+            .Select<KeyValuePair<Person, OtiumAnwesenheitsStatus>, LehrerEinschreibung>(
+                async (entry, _) =>
+                    new LehrerEinschreibung(
+                        new PersonInfoMinimal(entry.Key),
+                        entry.Value,
+                        (await _notesService.GetNotesAsync(entry.Key.Id, blockId)).Select(
+                            n => new Notiz(n)
+                        )
+                    )
+            )
             .ToListAsync();
     }
 
@@ -89,14 +114,19 @@ internal partial class AttendanceHub
         return SendUpdateToAffected(blockId, Guid.Empty, terminId);
     }
 
-    private async Task SendNotificationToAffected(string subject,
+    private async Task SendNotificationToAffected(
+        string subject,
         string message,
         Guid blockId,
         Guid fromTerminId,
-        Guid toTerminId)
+        Guid toTerminId
+    )
     {
-        var notification =
-            new IAttendanceHubClient.Notification(subject, message, IAttendanceHubClient.NotificationSeverity.Info);
+        var notification = new IAttendanceHubClient.Notification(
+            subject,
+            message,
+            IAttendanceHubClient.NotificationSeverity.Info
+        );
         await Clients.Groups([BlockGroupName(blockId)]).Notify(notification);
         if (fromTerminId != Guid.Empty)
             await Clients.Groups([TerminGroupName(fromTerminId)]).Notify(notification);
@@ -111,18 +141,26 @@ internal partial class AttendanceHub
 
         var toTerminUpdates = blockUpdates.FirstOrDefault(t => t.TerminId == toTerminId);
         if (toTerminUpdates is not null)
-            await Clients.Group(TerminGroupName(toTerminId))
+            await Clients
+                .Group(TerminGroupName(toTerminId))
                 .UpdateTerminAttendances(toTerminUpdates.Einschreibungen);
         else
-            _logger.LogWarning("Tried to update termine for {fromTerminId}, but did not find any", fromTerminId);
+            _logger.LogWarning(
+                "Tried to update termine for {fromTerminId}, but did not find any",
+                fromTerminId
+            );
 
         if (fromTerminId == Guid.Empty)
             return;
         var fromTerminUpdates = blockUpdates.FirstOrDefault(t => t.TerminId == fromTerminId);
         if (fromTerminUpdates is not null)
-            await Clients.Group(TerminGroupName(fromTerminId))
+            await Clients
+                .Group(TerminGroupName(fromTerminId))
                 .UpdateTerminAttendances(fromTerminUpdates.Einschreibungen);
         else
-            _logger.LogWarning("Tried to update termine for {fromTerminId}, but did not find any", fromTerminId);
+            _logger.LogWarning(
+                "Tried to update termine for {fromTerminId}, but did not find any",
+                fromTerminId
+            );
     }
 }

@@ -23,26 +23,39 @@ public class AlwaysAttendedRule : IBlockRule
     }
 
     /// <inheritdoc />
-    public async ValueTask<RuleStatus> IsValidAsync(Person person, Block block,
-        IEnumerable<OtiumEinschreibung> einschreibungen)
+    public async ValueTask<RuleStatus> IsValidAsync(
+        Person person,
+        Block block,
+        IEnumerable<OtiumEinschreibung> einschreibungen
+    )
     {
         var now = DateTime.Now;
         var today = DateOnly.FromDateTime(now);
         var time = TimeOnly.FromDateTime(now);
 
         var blockSchema = _blockHelper.Get(block.SchemaId)!;
-        if (block.SchultagKey > today || (block.SchultagKey == today && blockSchema.Interval.End >= time) ||
-            (!blockSchema.Verpflichtend && !einschreibungen.Any()))
+        if (
+            block.SchultagKey > today
+            || (block.SchultagKey == today && blockSchema.Interval.End >= time)
+            || (!blockSchema.Verpflichtend && !einschreibungen.Any())
+        )
             return RuleStatus.Valid;
 
-        var attendance = await _attendanceService.GetAttendanceForStudentInBlockAsync(block.Id, person.Id);
+        var attendance = await _attendanceService.GetAttendanceForStudentInBlockAsync(
+            block.Id,
+            person.Id
+        );
         return attendance switch
         {
             OtiumAnwesenheitsStatus.Anwesend => RuleStatus.Valid,
-            OtiumAnwesenheitsStatus.Entschuldigt => RuleStatus.Valid with { IgnoreOtherRules = true },
+            OtiumAnwesenheitsStatus.Entschuldigt => RuleStatus.Valid with
+            {
+                IgnoreOtherRules = true,
+            },
             OtiumAnwesenheitsStatus.Fehlend => RuleStatus.Invalid(
-                $"Unentschuldigtes Fehlen im Block „{blockSchema.Bezeichnung}“"),
-            _ => throw new InvalidEnumArgumentException("Unrecognized attendance status")
+                $"Unentschuldigtes Fehlen im Block „{blockSchema.Bezeichnung}“"
+            ),
+            _ => throw new InvalidEnumArgumentException("Unrecognized attendance status"),
         };
     }
 }

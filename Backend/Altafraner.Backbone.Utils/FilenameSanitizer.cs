@@ -12,7 +12,10 @@ public static class FilenameSanitizer
     /// </summary>
     public static string Sanitize(string input)
     {
-        return new string(input.Select(c => char.IsLetterOrDigit(c) || AllowedChars.Contains(c) ? c : '_')
-            .ToArray()).Trim(AllowedChars);
+        return new string(
+            input
+                .Select(c => char.IsLetterOrDigit(c) || AllowedChars.Contains(c) ? c : '_')
+                .ToArray()
+        ).Trim(AllowedChars);
     }
 }

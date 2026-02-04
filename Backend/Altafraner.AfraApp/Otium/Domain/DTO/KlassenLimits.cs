@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+
 namespace Altafraner.AfraApp.Otium.Domain.DTO;
 
 /// <summary>
@@ -19,7 +20,8 @@ public record KlassenLimits : IValidatableObject
         {
             yield return new ValidationResult(
                 "Klassen-Minimum darf nicht größer als Klassen-Maximum sein.",
-                new[] { nameof(MaxKlasse), nameof(MinKlasse) });
+                new[] { nameof(MaxKlasse), nameof(MinKlasse) }
+            );
         }
     }
 }

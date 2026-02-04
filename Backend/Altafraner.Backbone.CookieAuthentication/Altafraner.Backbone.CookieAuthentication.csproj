@@ -1,9 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
-
     <ItemGroup>
-        <ProjectReference Include="..\Altafraner.Backbone.Defaults\Altafraner.Backbone.Defaults.csproj"/>
-        <ProjectReference Include="..\Altafraner.Backbone.Abstractions\Altafraner.Backbone.Abstractions.csproj"/>
+        <ProjectReference Include="..\Altafraner.Backbone.Defaults\Altafraner.Backbone.Defaults.csproj" />
+        <ProjectReference Include="..\Altafraner.Backbone.Abstractions\Altafraner.Backbone.Abstractions.csproj" />
     </ItemGroup>
-
 </Project>

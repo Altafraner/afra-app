@@ -16,9 +16,7 @@ public class DtoProfundumFachbereich
     }
 
     ///
-    public DtoProfundumFachbereich()
-    {
-    }
+    public DtoProfundumFachbereich() { }
 
     /// <summary>
     /// The unique id of the fachbereich

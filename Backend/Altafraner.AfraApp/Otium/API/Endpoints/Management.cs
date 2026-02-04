@@ -28,16 +28,23 @@ public static class Management
 
         group.MapGet("/otium", GetOtia);
         group.MapGet("/otium/{otiumId:guid}", GetOtium);
-        group.MapPost("/otium", CreateOtium)
+        group
+            .MapPost("/otium", CreateOtium)
             .RequireAuthorization(AuthorizationPolicies.Otiumsverantwortlich);
-        group.MapDelete("/otium/{otiumId:guid}", DeleteOtium)
+        group
+            .MapDelete("/otium/{otiumId:guid}", DeleteOtium)
             .RequireAuthorization(AuthorizationPolicies.Otiumsverantwortlich);
         group.MapPatch("/otium/{otiumId:guid}/bezeichnung", OtiumSetBezeichnung);
         group.MapPatch("/otium/{otiumId:guid}/beschreibung", OtiumSetBeschreibung);
         group.MapPatch("/otium/{otiumId:guid}/kategorie", OtiumSetKategorie);
-        group.MapPost("/otium/{otiumId:guid}/verantwortliche", OtiumAddVerantwortlich)
+        group
+            .MapPost("/otium/{otiumId:guid}/verantwortliche", OtiumAddVerantwortlich)
             .RequireAuthorization(AuthorizationPolicies.Otiumsverantwortlich);
-        group.MapDelete("/otium/{otiumId:guid}/verantwortliche/{persId:guid}", OtiumRemoveVerantwortlich)
+        group
+            .MapDelete(
+                "/otium/{otiumId:guid}/verantwortliche/{persId:guid}",
+                OtiumRemoveVerantwortlich
+            )
             .RequireAuthorization(AuthorizationPolicies.Otiumsverantwortlich);
         group.MapPatch("/otium/{otiumId:guid}/klassenLimits", OtiumSetKlassenLimits);
 
@@ -47,7 +54,10 @@ public static class Management
         termin.MapDelete("/{otiumTerminId:guid}", DeleteOtiumTermin);
         termin.MapPut("/{otiumTerminId:guid}/cancel", OtiumTerminAbsagen);
         termin.MapDelete("/{otiumTerminId:guid}/cancel", OtiumTerminFortsetzen);
-        termin.MapPatch("/{otiumTerminId:guid}/maxEinschreibungen", OtiumTerminSetMaxEinschreibungen);
+        termin.MapPatch(
+            "/{otiumTerminId:guid}/maxEinschreibungen",
+            OtiumTerminSetMaxEinschreibungen
+        );
         termin.MapPatch("/{otiumTerminId:guid}/tutor", OtiumTerminSetTutor);
         termin.MapPatch("/{otiumTerminId:guid}/ort", OtiumTerminSetOrt);
         termin.MapPatch("/{otiumTerminId:guid}/bezeichnung", OtiumTerminSetBezeichnung);
@@ -56,7 +66,10 @@ public static class Management
 
         group.MapPost("/wiederholung", CreateOtiumWiederholung);
         group.MapDelete("/wiederholung/{otiumWiederholungId:guid}", DeleteOtiumWiederholung);
-        group.MapPatch("/wiederholung/{otiumWiederholungId:guid}/discontinue", DiscontinueOtiumWiederholung);
+        group.MapPatch(
+            "/wiederholung/{otiumWiederholungId:guid}/discontinue",
+            DiscontinueOtiumWiederholung
+        );
         group.MapPut("/wiederholung/{otiumWiederholungId:guid}", UpdateOtiumWiederholung);
     }
 
@@ -66,7 +79,8 @@ public static class Management
         UserAccessor userAccessor,
         UserAuthorizationHelper authHelper,
         HttpContext httpContext,
-        Guid otiumTerminId)
+        Guid otiumTerminId
+    )
     {
         var terminForTeacher = await service.GetTerminForTeacher(otiumTerminId, httpContext.User);
         return terminForTeacher is null ? Results.BadRequest() : Results.Ok(terminForTeacher);
@@ -84,7 +98,10 @@ public static class Management
         return Results.Ok(otium);
     }
 
-    private static async Task<IResult> CreateOtium(OtiumEndpointService service, ManagementOtiumCreation otium)
+    private static async Task<IResult> CreateOtium(
+        OtiumEndpointService service,
+        ManagementOtiumCreation otium
+    )
     {
         try
         {
@@ -110,8 +127,12 @@ public static class Management
         }
     }
 
-    private static async Task<IResult> CreateOtiumTermin(ManagementService managementService,
-        UserAuthorizationHelper authHelper, OtiumEndpointService service, ManagementTerminCreation otiumTermin)
+    private static async Task<IResult> CreateOtiumTermin(
+        ManagementService managementService,
+        UserAuthorizationHelper authHelper,
+        OtiumEndpointService service,
+        ManagementTerminCreation otiumTermin
+    )
     {
         OtiumDefinition otium;
         try
@@ -123,7 +144,8 @@ public static class Management
             return Results.NotFound("Otium not found.");
         }
 
-        if (!await MayEditAsync(authHelper, managementService, otium)) return Results.Forbid();
+        if (!await MayEditAsync(authHelper, managementService, otium))
+            return Results.Forbid();
 
         try
         {
@@ -140,8 +162,12 @@ public static class Management
         }
     }
 
-    private static async Task<IResult> DeleteOtiumTermin(ManagementService managementService,
-        UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumTerminId)
+    private static async Task<IResult> DeleteOtiumTermin(
+        ManagementService managementService,
+        UserAuthorizationHelper authHelper,
+        OtiumEndpointService service,
+        Guid otiumTerminId
+    )
     {
         OtiumDefinition otium;
         try
@@ -154,7 +180,8 @@ public static class Management
             return Results.NotFound("Otium not found.");
         }
 
-        if (!await MayEditAsync(authHelper, managementService, otium)) return Results.Forbid();
+        if (!await MayEditAsync(authHelper, managementService, otium))
+            return Results.Forbid();
 
         try
         {
@@ -167,9 +194,12 @@ public static class Management
         }
     }
 
-    private static async Task<IResult> CreateOtiumWiederholung(ManagementService managementService,
-        UserAuthorizationHelper authHelper, OtiumEndpointService service,
-        ManagementWiederholungCreation otiumWiederholung)
+    private static async Task<IResult> CreateOtiumWiederholung(
+        ManagementService managementService,
+        UserAuthorizationHelper authHelper,
+        OtiumEndpointService service,
+        ManagementWiederholungCreation otiumWiederholung
+    )
     {
         OtiumDefinition otium;
         try
@@ -181,7 +211,8 @@ public static class Management
             return Results.NotFound("Otium not found.");
         }
 
-        if (!await MayEditAsync(authHelper, managementService, otium)) return Results.Forbid();
+        if (!await MayEditAsync(authHelper, managementService, otium))
+            return Results.Forbid();
 
         try
         {
@@ -194,8 +225,12 @@ public static class Management
         }
     }
 
-    private static async Task<IResult> DeleteOtiumWiederholung(ManagementService managementService,
-        UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumWiederholungId)
+    private static async Task<IResult> DeleteOtiumWiederholung(
+        ManagementService managementService,
+        UserAuthorizationHelper authHelper,
+        OtiumEndpointService service,
+        Guid otiumWiederholungId
+    )
     {
         OtiumDefinition otium;
         try
@@ -208,7 +243,8 @@ public static class Management
             return Results.NotFound("Otium not found.");
         }
 
-        if (!await MayEditAsync(authHelper, managementService, otium)) return Results.Forbid();
+        if (!await MayEditAsync(authHelper, managementService, otium))
+            return Results.Forbid();
         try
         {
             await service.DeleteOtiumWiederholungAsync(otiumWiederholungId);
@@ -220,9 +256,13 @@ public static class Management
         }
     }
 
-    private static async Task<IResult> DiscontinueOtiumWiederholung(ManagementService managementService,
-        UserAuthorizationHelper authHelper, OtiumEndpointService service,
-        Guid otiumWiederholungId, ValueWrapper<DateOnly> firstDayAfter)
+    private static async Task<IResult> DiscontinueOtiumWiederholung(
+        ManagementService managementService,
+        UserAuthorizationHelper authHelper,
+        OtiumEndpointService service,
+        Guid otiumWiederholungId,
+        ValueWrapper<DateOnly> firstDayAfter
+    )
     {
         OtiumDefinition otium;
         try
@@ -235,10 +275,14 @@ public static class Management
             return Results.NotFound("Otium not found.");
         }
 
-        if (!await MayEditAsync(authHelper, managementService, otium)) return Results.Forbid();
+        if (!await MayEditAsync(authHelper, managementService, otium))
+            return Results.Forbid();
         try
         {
-            await service.DiscontinueOtiumWiederholungAsync(otiumWiederholungId, firstDayAfter.Value);
+            await service.DiscontinueOtiumWiederholungAsync(
+                otiumWiederholungId,
+                firstDayAfter.Value
+            );
             return Results.Ok();
         }
         catch (OtiumEndpointService.EntityDeletionException e)
@@ -251,9 +295,13 @@ public static class Management
         }
     }
 
-    private static async Task<IResult> UpdateOtiumWiederholung(ManagementService managementService,
-        UserAuthorizationHelper authHelper, OtiumEndpointService service,
-        Guid otiumWiederholungId, ManagementWiederholungEdit otiumWiederholung)
+    private static async Task<IResult> UpdateOtiumWiederholung(
+        ManagementService managementService,
+        UserAuthorizationHelper authHelper,
+        OtiumEndpointService service,
+        Guid otiumWiederholungId,
+        ManagementWiederholungEdit otiumWiederholung
+    )
     {
         OtiumDefinition otium;
 
@@ -267,12 +315,16 @@ public static class Management
             return Results.NotFound("Otium not found.");
         }
 
-        if (!await MayEditAsync(authHelper, managementService, otium)) return Results.Forbid();
+        if (!await MayEditAsync(authHelper, managementService, otium))
+            return Results.Forbid();
 
         try
         {
-            await service.UpdateOtiumWiederholungAsync(otiumWiederholungId, otiumWiederholung,
-                DateOnly.FromDateTime(DateTime.Today));
+            await service.UpdateOtiumWiederholungAsync(
+                otiumWiederholungId,
+                otiumWiederholung,
+                DateOnly.FromDateTime(DateTime.Today)
+            );
             return Results.Ok();
         }
         catch (ArgumentException e)
@@ -281,8 +333,12 @@ public static class Management
         }
     }
 
-    private static async Task<IResult> OtiumTerminAbsagen(ManagementService managementService,
-        UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumTerminId)
+    private static async Task<IResult> OtiumTerminAbsagen(
+        ManagementService managementService,
+        UserAuthorizationHelper authHelper,
+        OtiumEndpointService service,
+        Guid otiumTerminId
+    )
     {
         OtiumDefinition otium;
         try
@@ -295,7 +351,8 @@ public static class Management
             return Results.NotFound("Otium not found.");
         }
 
-        if (!await MayEditAsync(authHelper, managementService, otium)) return Results.Forbid();
+        if (!await MayEditAsync(authHelper, managementService, otium))
+            return Results.Forbid();
 
         try
         {
@@ -308,8 +365,11 @@ public static class Management
         }
     }
 
-    private static async Task<IResult> OtiumTerminFortsetzen(ManagementService managementService,
-        UserAuthorizationHelper authHelper, Guid otiumTerminId)
+    private static async Task<IResult> OtiumTerminFortsetzen(
+        ManagementService managementService,
+        UserAuthorizationHelper authHelper,
+        Guid otiumTerminId
+    )
     {
         OtiumDefinition otium;
         OtiumTermin termin;
@@ -323,7 +383,8 @@ public static class Management
             return Results.NotFound("Otium not found.");
         }
 
-        if (!await MayEditAsync(authHelper, managementService, otium)) return Results.Forbid();
+        if (!await MayEditAsync(authHelper, managementService, otium))
+            return Results.Forbid();
 
         try
         {
@@ -335,15 +396,19 @@ public static class Management
             return Results.ValidationProblem(
                 new Dictionary<string, string[]>
                 {
-                    ["otiumTerminId"] = ["The termin is not cancelled."]
+                    ["otiumTerminId"] = ["The termin is not cancelled."],
                 }
             );
         }
     }
 
-    private static async Task<IResult> OtiumSetBezeichnung(ManagementService managementService,
-        UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumId,
-        ValueWrapper<string> value)
+    private static async Task<IResult> OtiumSetBezeichnung(
+        ManagementService managementService,
+        UserAuthorizationHelper authHelper,
+        OtiumEndpointService service,
+        Guid otiumId,
+        ValueWrapper<string> value
+    )
     {
         OtiumDefinition otium;
         try
@@ -355,18 +420,27 @@ public static class Management
             return Results.NotFound("Otium not found.");
         }
 
-        if (!await MayEditAsync(authHelper, managementService, otium)) return Results.Forbid();
+        if (!await MayEditAsync(authHelper, managementService, otium))
+            return Results.Forbid();
 
-        if (string.IsNullOrWhiteSpace(value.Value) || value.Value.Length <= 3 || value.Value.Length > 50)
+        if (
+            string.IsNullOrWhiteSpace(value.Value)
+            || value.Value.Length <= 3
+            || value.Value.Length > 50
+        )
             return Results.BadRequest();
 
         await service.OtiumSetBezeichnungAsync(otiumId, value.Value);
         return Results.Ok();
     }
 
-    private static async Task<IResult> OtiumSetKlassenLimits(ManagementService managementService,
-        UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumId,
-        KlassenLimits limits)
+    private static async Task<IResult> OtiumSetKlassenLimits(
+        ManagementService managementService,
+        UserAuthorizationHelper authHelper,
+        OtiumEndpointService service,
+        Guid otiumId,
+        KlassenLimits limits
+    )
     {
         OtiumDefinition otium;
         try
@@ -378,7 +452,8 @@ public static class Management
             return Results.NotFound("Otium not found.");
         }
 
-        if (!await MayEditAsync(authHelper, managementService, otium)) return Results.Forbid();
+        if (!await MayEditAsync(authHelper, managementService, otium))
+            return Results.Forbid();
 
         var validationContext = new ValidationContext(limits);
         var validationResults = new List<ValidationResult>();
@@ -391,9 +466,13 @@ public static class Management
         return Results.Ok();
     }
 
-    private static async Task<IResult> OtiumSetBeschreibung(ManagementService managementService,
-        UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumId,
-        ValueWrapper<string> value)
+    private static async Task<IResult> OtiumSetBeschreibung(
+        ManagementService managementService,
+        UserAuthorizationHelper authHelper,
+        OtiumEndpointService service,
+        Guid otiumId,
+        ValueWrapper<string> value
+    )
     {
         OtiumDefinition otium;
         try
@@ -405,28 +484,40 @@ public static class Management
             return Results.NotFound("Otium not found.");
         }
 
-        if (!await MayEditAsync(authHelper, managementService, otium)) return Results.Forbid();
+        if (!await MayEditAsync(authHelper, managementService, otium))
+            return Results.Forbid();
 
         await service.OtiumSetBeschreibungAsync(otiumId, value.Value);
         return Results.Ok();
     }
 
-    private static async Task<IResult> OtiumAddVerantwortlich(OtiumEndpointService service, Guid otiumId, Guid persId)
+    private static async Task<IResult> OtiumAddVerantwortlich(
+        OtiumEndpointService service,
+        Guid otiumId,
+        Guid persId
+    )
     {
         await service.OtiumAddVerantwortlichAsync(otiumId, persId);
         return Results.Ok();
     }
 
-    private static async Task<IResult> OtiumRemoveVerantwortlich(OtiumEndpointService service, Guid otiumId,
-        Guid persId)
+    private static async Task<IResult> OtiumRemoveVerantwortlich(
+        OtiumEndpointService service,
+        Guid otiumId,
+        Guid persId
+    )
     {
         await service.OtiumRemoveVerantwortlichAsync(otiumId, persId);
         return Results.Ok();
     }
 
-    private static async Task<IResult> OtiumSetKategorie(ManagementService managementService,
-        UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumId,
-        ValueWrapper<Guid> kategorie)
+    private static async Task<IResult> OtiumSetKategorie(
+        ManagementService managementService,
+        UserAuthorizationHelper authHelper,
+        OtiumEndpointService service,
+        Guid otiumId,
+        ValueWrapper<Guid> kategorie
+    )
     {
         OtiumDefinition otium;
         try
@@ -438,7 +529,8 @@ public static class Management
             return Results.NotFound("Otium not found.");
         }
 
-        if (!await MayEditAsync(authHelper, managementService, otium)) return Results.Forbid();
+        if (!await MayEditAsync(authHelper, managementService, otium))
+            return Results.Forbid();
 
         try
         {
@@ -451,9 +543,13 @@ public static class Management
         }
     }
 
-    private static async Task<IResult> OtiumTerminSetMaxEinschreibungen(ManagementService managementService,
-        UserAuthorizationHelper authHelper, OtiumEndpointService service,
-        Guid otiumTerminId, ValueWrapper<int?> maxEinschreibungen)
+    private static async Task<IResult> OtiumTerminSetMaxEinschreibungen(
+        ManagementService managementService,
+        UserAuthorizationHelper authHelper,
+        OtiumEndpointService service,
+        Guid otiumTerminId,
+        ValueWrapper<int?> maxEinschreibungen
+    )
     {
         OtiumDefinition otium;
         try
@@ -466,11 +562,15 @@ public static class Management
             return Results.NotFound("Otium not found.");
         }
 
-        if (!await MayEditAsync(authHelper, managementService, otium)) return Results.Forbid();
+        if (!await MayEditAsync(authHelper, managementService, otium))
+            return Results.Forbid();
 
         try
         {
-            await service.OtiumTerminSetMaxEinschreibungenAsync(otiumTerminId, maxEinschreibungen.Value);
+            await service.OtiumTerminSetMaxEinschreibungenAsync(
+                otiumTerminId,
+                maxEinschreibungen.Value
+            );
             return Results.Ok();
         }
         catch (InvalidOperationException)
@@ -479,9 +579,13 @@ public static class Management
         }
     }
 
-    private static async Task<IResult> OtiumTerminSetTutor(ManagementService managementService,
-        UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumTerminId,
-        ValueWrapper<Guid?> personId)
+    private static async Task<IResult> OtiumTerminSetTutor(
+        ManagementService managementService,
+        UserAuthorizationHelper authHelper,
+        OtiumEndpointService service,
+        Guid otiumTerminId,
+        ValueWrapper<Guid?> personId
+    )
     {
         OtiumDefinition otium;
         try
@@ -494,7 +598,8 @@ public static class Management
             return Results.NotFound("Otium not found.");
         }
 
-        if (!await MayEditAsync(authHelper, managementService, otium)) return Results.Forbid();
+        if (!await MayEditAsync(authHelper, managementService, otium))
+            return Results.Forbid();
 
         try
         {
@@ -507,9 +612,13 @@ public static class Management
         }
     }
 
-    private static async Task<IResult> OtiumTerminSetOrt(ManagementService managementService,
-        UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumTerminId,
-        ValueWrapper<string> ort)
+    private static async Task<IResult> OtiumTerminSetOrt(
+        ManagementService managementService,
+        UserAuthorizationHelper authHelper,
+        OtiumEndpointService service,
+        Guid otiumTerminId,
+        ValueWrapper<string> ort
+    )
     {
         OtiumDefinition otium;
         try
@@ -522,7 +631,8 @@ public static class Management
             return Results.NotFound("Otium not found.");
         }
 
-        if (!await MayEditAsync(authHelper, managementService, otium)) return Results.Forbid();
+        if (!await MayEditAsync(authHelper, managementService, otium))
+            return Results.Forbid();
 
         try
         {
@@ -535,9 +645,13 @@ public static class Management
         }
     }
 
-    private static async Task<IResult> OtiumTerminSetBezeichnung(ManagementService managementService,
-        UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumTerminId,
-        ValueWrapper<string?> bezeichnung)
+    private static async Task<IResult> OtiumTerminSetBezeichnung(
+        ManagementService managementService,
+        UserAuthorizationHelper authHelper,
+        OtiumEndpointService service,
+        Guid otiumTerminId,
+        ValueWrapper<string?> bezeichnung
+    )
     {
         OtiumDefinition otium;
         try
@@ -550,7 +664,8 @@ public static class Management
             return Results.NotFound("Otium not found.");
         }
 
-        if (!await MayEditAsync(authHelper, managementService, otium)) return Results.Forbid();
+        if (!await MayEditAsync(authHelper, managementService, otium))
+            return Results.Forbid();
 
         try
         {
@@ -563,9 +678,13 @@ public static class Management
         }
     }
 
-    private static async Task<IResult> OtiumTerminSetBeschreibung(ManagementService managementService,
-        UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumTerminId,
-        ValueWrapper<string?> beschreibung)
+    private static async Task<IResult> OtiumTerminSetBeschreibung(
+        ManagementService managementService,
+        UserAuthorizationHelper authHelper,
+        OtiumEndpointService service,
+        Guid otiumTerminId,
+        ValueWrapper<string?> beschreibung
+    )
     {
         OtiumDefinition otium;
         try
@@ -578,11 +697,15 @@ public static class Management
             return Results.NotFound("Otium not found.");
         }
 
-        if (!await MayEditAsync(authHelper, managementService, otium)) return Results.Forbid();
+        if (!await MayEditAsync(authHelper, managementService, otium))
+            return Results.Forbid();
 
         try
         {
-            await service.OtiumTerminSetOverrideBeschreibungAsync(otiumTerminId, beschreibung.Value);
+            await service.OtiumTerminSetOverrideBeschreibungAsync(
+                otiumTerminId,
+                beschreibung.Value
+            );
             return Results.Ok();
         }
         catch (InvalidOperationException)
@@ -591,26 +714,33 @@ public static class Management
         }
     }
 
-    private static async Task<IResult> OtiumTerminForceUnenroll(Guid otiumTerminId, ValueWrapper<Guid> personIdWrapper,
-        UserAuthorizationHelper authHelper, AfraAppContext dbContext, UserService userService,
-        EnrollmentService enrollmentService, BlockHelper blockHelper)
+    private static async Task<IResult> OtiumTerminForceUnenroll(
+        Guid otiumTerminId,
+        ValueWrapper<Guid> personIdWrapper,
+        UserAuthorizationHelper authHelper,
+        AfraAppContext dbContext,
+        UserService userService,
+        EnrollmentService enrollmentService,
+        BlockHelper blockHelper
+    )
     {
         var user = await authHelper.GetUserAsync();
-        var termin = await dbContext.OtiaTermine
-            .AsNoTracking()
+        var termin = await dbContext
+            .OtiaTermine.AsNoTracking()
             .Include(t => t.Otium)
-            .ThenInclude(o => o.Verantwortliche)
+                .ThenInclude(o => o.Verantwortliche)
             .Include(t => t.Block)
             .Where(t => t.Id == otiumTerminId)
             .Select(t => new
             {
                 t.Block,
                 t.Otium.Verantwortliche,
-                IsTutor = t.Tutor != null && t.Tutor.Id == user.Id
+                IsTutor = t.Tutor != null && t.Tutor.Id == user.Id,
             })
             .FirstOrDefaultAsync();
 
-        if (termin is null) return Results.NotFound("Termin oder Otium nicht gefunden");
+        if (termin is null)
+            return Results.NotFound("Termin oder Otium nicht gefunden");
 
         if (!termin.IsTutor && !await MayEditAsync(user, authHelper, termin.Verantwortliche))
             return Results.Forbid();
@@ -623,17 +753,22 @@ public static class Management
         return Results.Ok();
     }
 
-    private static async Task<IEnumerable<BlockInfo>> GetNowSupervising(AfraAppContext dbContext,
-        BlockHelper blockHelper, IAttendanceService attendanceService, HttpContext context)
+    private static async Task<IEnumerable<BlockInfo>> GetNowSupervising(
+        AfraAppContext dbContext,
+        BlockHelper blockHelper,
+        IAttendanceService attendanceService,
+        HttpContext context
+    )
     {
         var today = DateOnly.FromDateTime(DateTime.Now);
-        var blocksToday = await dbContext.Blocks
-            .AsNoTracking()
+        var blocksToday = await dbContext
+            .Blocks.AsNoTracking()
             .Where(b => b.SchultagKey == today)
             .OrderBy(b => b.SchemaId)
             .ToListAsync();
 
-        return blocksToday.Where(b => attendanceService.MaySupervise(context.User, b))
+        return blocksToday
+            .Where(b => attendanceService.MaySupervise(context.User, b))
             .Select(b =>
             {
                 var schema = blockHelper.Get(b.SchemaId)!;
@@ -643,13 +778,16 @@ public static class Management
                     SchemaId = b.SchemaId,
                     Name = schema.Bezeichnung,
                     Uhrzeit = schema.Interval,
-                    Datum = b.SchultagKey
+                    Datum = b.SchultagKey,
                 };
             });
     }
 
-    private static async Task<bool> MayEditAsync(UserAuthorizationHelper authHelper,
-        ManagementService managementService, OtiumDefinition otium)
+    private static async Task<bool> MayEditAsync(
+        UserAuthorizationHelper authHelper,
+        ManagementService managementService,
+        OtiumDefinition otium
+    )
     {
         var currentUser = await authHelper.GetUserAsync();
         var verantwortliche = await managementService.GetVerantwortlicheAsync(otium);
@@ -657,8 +795,11 @@ public static class Management
         return await MayEditAsync(currentUser, authHelper, verantwortliche);
     }
 
-    private static async Task<bool> MayEditAsync(Person user,
-        UserAuthorizationHelper authHelper, ICollection<Person> verantwortliche)
+    private static async Task<bool> MayEditAsync(
+        Person user,
+        UserAuthorizationHelper authHelper,
+        ICollection<Person> verantwortliche
+    )
     {
         if (await authHelper.CurrentUserHasGlobalPermission(GlobalPermission.Otiumsverantwortlich))
             return true;

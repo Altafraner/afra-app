@@ -27,16 +27,15 @@ internal class EmailOutbox : IEmailOutbox
             { "subject", subject },
             { "body", body },
             { "recipient", recipient },
-            { "retryCount", 0 }
+            { "retryCount", 0 },
         };
-        var job = JobBuilder.Create<FlushEmailJob>()
+        var job = JobBuilder
+            .Create<FlushEmailJob>()
             .WithIdentity($"report-{Guid.CreateVersion7()}", "flush-report")
             .UsingJobData(jobDataMap)
             .Build();
 
-        var trigger = TriggerBuilder.Create()
-            .StartNow()
-            .Build();
+        var trigger = TriggerBuilder.Create().StartNow().Build();
 
         return _scheduler.ScheduleJob(job, trigger);
     }

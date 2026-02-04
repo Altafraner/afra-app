@@ -12,8 +12,14 @@ namespace Altafraner.Backbone.Defaults;
 public class HttpJsonOptionsModule : IModule
 {
     /// <inheritdoc />
-    public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
+    public void ConfigureServices(
+        IServiceCollection services,
+        IConfiguration config,
+        IHostEnvironment env
+    )
     {
-        services.ConfigureHttpJsonOptions(options => JsonOptions.Configure(options.SerializerOptions));
+        services.ConfigureHttpJsonOptions(options =>
+            JsonOptions.Configure(options.SerializerOptions)
+        );
     }
 }

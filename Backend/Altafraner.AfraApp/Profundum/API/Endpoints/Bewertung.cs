@@ -21,7 +21,8 @@ public static class Bewertung
         var bewertung = app.MapGroup("/bewertung")
             .RequireAuthorization(AuthorizationPolicies.TutorOnly);
 
-        var anker = bewertung.MapGroup("/anker")
+        var anker = bewertung
+            .MapGroup("/anker")
             .RequireAuthorization(AuthorizationPolicies.ProfundumsVerantwortlich);
 
         anker.MapGet("/", GetAllAnker);
@@ -29,7 +30,8 @@ public static class Bewertung
         anker.MapDelete("/{id:guid}", DeleteAnkerAsync);
         anker.MapPut("/{id:guid}", UpdateAnkerAsync);
 
-        var kategorie = bewertung.MapGroup("/kategorie")
+        var kategorie = bewertung
+            .MapGroup("/kategorie")
             .RequireAuthorization(AuthorizationPolicies.ProfundumsVerantwortlich);
         kategorie.MapPost("/", AddKategorieAsync);
         kategorie.MapDelete("/{id:guid}", DeleteKategorieAsync);
@@ -39,55 +41,76 @@ public static class Bewertung
         bewertung.MapGet("/{profundumId:guid}/{studentId:guid}", GetBewertungAsync);
         bewertung.MapPut("/{profundumId:guid}/{studentId:guid}", UpdateBewertungAsync);
 
-        bewertung.MapGet("/control/status", GetStatusAsync)
+        bewertung
+            .MapGet("/control/status", GetStatusAsync)
             .RequireAuthorization(AuthorizationPolicies.ProfundumsVerantwortlich);
 
-        bewertung.MapGet("/{userId:guid}.pdf",
-                async (FeedbackPrintoutService profundumManagementService,
+        bewertung
+            .MapGet(
+                "/{userId:guid}.pdf",
+                async (
+                    FeedbackPrintoutService profundumManagementService,
                     Guid userId,
                     UserService userService,
                     int schuljahr,
                     bool halbjahr,
-                    DateOnly ausgabedatum) =>
-            {
-                var user = await userService.GetUserByIdAsync(userId);
-                var fileContents =
-                    await profundumManagementService.GenerateFileForPerson(user, schuljahr, halbjahr, ausgabedatum);
-                return TypedResults.File(fileContents, MediaTypeNames.Application.Pdf);
-            })
+                    DateOnly ausgabedatum
+                ) =>
+                {
+                    var user = await userService.GetUserByIdAsync(userId);
+                    var fileContents = await profundumManagementService.GenerateFileForPerson(
+                        user,
+                        schuljahr,
+                        halbjahr,
+                        ausgabedatum
+                    );
+                    return TypedResults.File(fileContents, MediaTypeNames.Application.Pdf);
+                }
+            )
             .RequireAuthorization(AuthorizationPolicies.ProfundumsVerantwortlich);
 
-        bewertung.MapGet("/batch.zip",
-                async (FeedbackPrintoutService profundumManagementService,
+        bewertung
+            .MapGet(
+                "/batch.zip",
+                async (
+                    FeedbackPrintoutService profundumManagementService,
                     int schuljahr,
                     bool halbjahr,
                     DateOnly ausgabedatum,
                     bool doublesided,
                     bool byClass = false,
                     bool byGm = false,
-                    bool single = false) =>
+                    bool single = false
+                ) =>
                 {
                     FeedbackPrintoutService.BatchingModes mode = 0;
-                    if (byClass) mode |= FeedbackPrintoutService.BatchingModes.ByClass;
-                    if (byGm) mode |= FeedbackPrintoutService.BatchingModes.ByGm;
-                    if (single) mode |= FeedbackPrintoutService.BatchingModes.Single;
+                    if (byClass)
+                        mode |= FeedbackPrintoutService.BatchingModes.ByClass;
+                    if (byGm)
+                        mode |= FeedbackPrintoutService.BatchingModes.ByGm;
+                    if (single)
+                        mode |= FeedbackPrintoutService.BatchingModes.Single;
                     if (single && (byClass || byGm))
-                        return (Results<FileContentHttpResult, BadRequest<string>>)TypedResults.BadRequest(
-                            "If single is set, no other batching method may be selected.");
-                    var fileContents =
-                        await profundumManagementService.GenerateFileBatched(mode,
-                            schuljahr,
-                            halbjahr,
-                            ausgabedatum,
-                            doublesided);
+                        return (Results<FileContentHttpResult, BadRequest<string>>)
+                            TypedResults.BadRequest(
+                                "If single is set, no other batching method may be selected."
+                            );
+                    var fileContents = await profundumManagementService.GenerateFileBatched(
+                        mode,
+                        schuljahr,
+                        halbjahr,
+                        ausgabedatum,
+                        doublesided
+                    );
                     return TypedResults.File(fileContents, MediaTypeNames.Application.Zip);
-                })
+                }
+            )
             .RequireAuthorization(AuthorizationPolicies.ProfundumsVerantwortlich);
     }
 
-    private static async Task<Results<Ok<Anker>, NotFound<HttpValidationProblemDetails>>> AddAnkerAsync(
-        AnkerChangeRequest request,
-        FeedbackAnkerService ankerService)
+    private static async Task<
+        Results<Ok<Anker>, NotFound<HttpValidationProblemDetails>>
+    > AddAnkerAsync(AnkerChangeRequest request, FeedbackAnkerService ankerService)
     {
         try
         {
@@ -96,17 +119,20 @@ public static class Bewertung
         }
         catch (ArgumentException)
         {
-            return TypedResults.NotFound(new HttpValidationProblemDetails(
-                new Dictionary<string, string[]>
-                {
-                    { nameof(request.KategorieId), ["Kategorie not found"] }
-                }));
+            return TypedResults.NotFound(
+                new HttpValidationProblemDetails(
+                    new Dictionary<string, string[]>
+                    {
+                        { nameof(request.KategorieId), ["Kategorie not found"] },
+                    }
+                )
+            );
         }
     }
 
-    private static async Task<Results<NoContent, BadRequest<HttpValidationProblemDetails>>> UpdateAnkerAsync(Guid id,
-        AnkerChangeRequest request,
-        FeedbackAnkerService ankerService)
+    private static async Task<
+        Results<NoContent, BadRequest<HttpValidationProblemDetails>>
+    > UpdateAnkerAsync(Guid id, AnkerChangeRequest request, FeedbackAnkerService ankerService)
     {
         try
         {
@@ -115,14 +141,18 @@ public static class Bewertung
         }
         catch (ArgumentException e)
         {
-            return TypedResults.BadRequest(new HttpValidationProblemDetails(new Dictionary<string, string[]>
-            {
-                { e.ParamName ?? "unknown", [e.Message] }
-            }));
+            return TypedResults.BadRequest(
+                new HttpValidationProblemDetails(
+                    new Dictionary<string, string[]> { { e.ParamName ?? "unknown", [e.Message] } }
+                )
+            );
         }
     }
 
-    private static async Task<Results<NoContent, NotFound>> DeleteAnkerAsync(Guid id, FeedbackAnkerService ankerService)
+    private static async Task<Results<NoContent, NotFound>> DeleteAnkerAsync(
+        Guid id,
+        FeedbackAnkerService ankerService
+    )
     {
         try
         {
@@ -137,11 +167,16 @@ public static class Bewertung
 
     private static async Task<Results<Ok<FeedbackCategory>, NotFound<string>>> AddKategorieAsync(
         FeedbackCategoryChangeRequest request,
-        FeedbackKategorienService kategorienService)
+        FeedbackKategorienService kategorienService
+    )
     {
         try
         {
-            var entry = await kategorienService.AddKategorie(request.Label, request.Kategorien, request.IsFachlich);
+            var entry = await kategorienService.AddKategorie(
+                request.Label,
+                request.Kategorien,
+                request.IsFachlich
+            );
             return TypedResults.Ok(new FeedbackCategory(entry));
         }
         catch (ArgumentException)
@@ -150,27 +185,38 @@ public static class Bewertung
         }
     }
 
-    private static async Task<Results<NoContent, BadRequest<HttpValidationProblemDetails>>> UpdateKategorieAsync(
+    private static async Task<
+        Results<NoContent, BadRequest<HttpValidationProblemDetails>>
+    > UpdateKategorieAsync(
         Guid id,
         FeedbackCategoryChangeRequest request,
-        FeedbackKategorienService kategorienService)
+        FeedbackKategorienService kategorienService
+    )
     {
         try
         {
-            await kategorienService.UpdateKategorie(id, request.Label, request.Kategorien, request.IsFachlich);
+            await kategorienService.UpdateKategorie(
+                id,
+                request.Label,
+                request.Kategorien,
+                request.IsFachlich
+            );
             return TypedResults.NoContent();
         }
         catch (ArgumentException e)
         {
-            return TypedResults.BadRequest(new HttpValidationProblemDetails(new Dictionary<string, string[]>
-            {
-                { e.ParamName ?? "unknown", [e.Message] }
-            }));
+            return TypedResults.BadRequest(
+                new HttpValidationProblemDetails(
+                    new Dictionary<string, string[]> { { e.ParamName ?? "unknown", [e.Message] } }
+                )
+            );
         }
     }
 
-    private static async Task<Results<NoContent, NotFound>> DeleteKategorieAsync(Guid id,
-        FeedbackKategorienService kategorienService)
+    private static async Task<Results<NoContent, NotFound>> DeleteKategorieAsync(
+        Guid id,
+        FeedbackKategorienService kategorienService
+    )
     {
         try
         {
@@ -183,27 +229,33 @@ public static class Bewertung
         }
     }
 
-    private static async Task<Ok<AnkerOverview>> GetAllAnker(FeedbackAnkerService ankerService,
-        FeedbackKategorienService kategorienService)
+    private static async Task<Ok<AnkerOverview>> GetAllAnker(
+        FeedbackAnkerService ankerService,
+        FeedbackKategorienService kategorienService
+    )
     {
         var anker = await ankerService.GetAnkerByCategories();
         var kategorien = await kategorienService.GetAllCategories();
 
         var dto = new AnkerOverview
         {
-            AnkerByKategorie = anker
-                .ToDictionary(a => a.Key.Id, a => a.Value.Select(e => new Anker(e))),
-            Kategorien = kategorien.Select(k => new FeedbackCategory(k))
+            AnkerByKategorie = anker.ToDictionary(
+                a => a.Key.Id,
+                a => a.Value.Select(e => new Anker(e))
+            ),
+            Kategorien = kategorien.Select(k => new FeedbackCategory(k)),
         };
 
         return TypedResults.Ok(dto);
     }
 
-    private static async Task<Results<Ok<AnkerOverview>, ForbidHttpResult>> GetAnkerForProfundum(Guid profundumId,
+    private static async Task<Results<Ok<AnkerOverview>, ForbidHttpResult>> GetAnkerForProfundum(
+        Guid profundumId,
         FeedbackAnkerService ankerService,
         FeedbackKategorienService kategorienService,
         FeedbackService feedbackService,
-        UserAccessor userAccessor)
+        UserAccessor userAccessor
+    )
     {
         var user = await userAccessor.GetUserAsync();
         if (!await feedbackService.MayProvideFeedbackForProfundumAsync(user, profundumId))
@@ -214,18 +266,26 @@ public static class Bewertung
 
         var dto = new AnkerOverview
         {
-            AnkerByKategorie = anker
-                .ToDictionary(a => a.Key.Id, a => a.Value.Select(e => new Anker(e))),
-            Kategorien = kategorien.Where(k => anker.ContainsKey(k)).Select(k => new FeedbackCategory(k))
+            AnkerByKategorie = anker.ToDictionary(
+                a => a.Key.Id,
+                a => a.Value.Select(e => new Anker(e))
+            ),
+            Kategorien = kategorien
+                .Where(k => anker.ContainsKey(k))
+                .Select(k => new FeedbackCategory(k)),
         };
 
         return TypedResults.Ok(dto);
     }
 
-    private static async Task<Results<Ok<Dictionary<Guid, int?>>, ForbidHttpResult>> GetBewertungAsync(Guid studentId,
+    private static async Task<
+        Results<Ok<Dictionary<Guid, int?>>, ForbidHttpResult>
+    > GetBewertungAsync(
+        Guid studentId,
         Guid profundumId,
         FeedbackService feedbackService,
-        UserAccessor userAccessor)
+        UserAccessor userAccessor
+    )
     {
         var user = await userAccessor.GetUserAsync();
         if (!await feedbackService.MayProvideFeedbackForProfundumAsync(user, profundumId))
@@ -235,38 +295,45 @@ public static class Bewertung
         return TypedResults.Ok(feedback.ToDictionary(f => f.Key.Id, f => f.Value));
     }
 
-    private static async Task<Results<NoContent, ForbidHttpResult, BadRequest<HttpValidationProblemDetails>>>
-        UpdateBewertungAsync(Guid studentId,
+    private static async Task<
+        Results<NoContent, ForbidHttpResult, BadRequest<HttpValidationProblemDetails>>
+    > UpdateBewertungAsync(
+        Guid studentId,
         Guid profundumId,
         Dictionary<Guid, int?> bewertungen,
         FeedbackService feedbackService,
-        UserAccessor userAccessor)
+        UserAccessor userAccessor
+    )
     {
         var user = await userAccessor.GetUserAsync();
         if (!await feedbackService.MayProvideFeedbackForProfundumAsync(user, profundumId))
             return TypedResults.Forbid();
         try
         {
-            await feedbackService.UpdateFeedback(studentId,
+            await feedbackService.UpdateFeedback(
+                studentId,
                 profundumId,
-                bewertungen.Where(b => b.Value.HasValue)
-                    .ToDictionary(f => f.Key, f => f.Value!.Value));
+                bewertungen
+                    .Where(b => b.Value.HasValue)
+                    .ToDictionary(f => f.Key, f => f.Value!.Value)
+            );
 
             return TypedResults.NoContent();
         }
         catch (ArgumentException e)
         {
-            return TypedResults.BadRequest(new HttpValidationProblemDetails(new Dictionary<string, string[]>
-            {
-                { e.ParamName ?? "unknown", [e.Message] }
-            }));
+            return TypedResults.BadRequest(
+                new HttpValidationProblemDetails(
+                    new Dictionary<string, string[]> { { e.ParamName ?? "unknown", [e.Message] } }
+                )
+            );
         }
     }
 
-    private static async Task<Ok<Dictionary<Guid, IEnumerable<FeedbackOverview>>>>
-        GetStatusAsync(
-            FeedbackService feedbackService,
-            ProfundumManagementService managementService)
+    private static async Task<Ok<Dictionary<Guid, IEnumerable<FeedbackOverview>>>> GetStatusAsync(
+        FeedbackService feedbackService,
+        ProfundumManagementService managementService
+    )
     {
         var slots = await managementService.GetSlotsAsync();
         var allInstances = await managementService.GetInstanzenAsync();
@@ -284,7 +351,7 @@ public static class Bewertung
                 {
                     Instanz = i,
                     Slot = slot,
-                    Status = bewertungsStatus.Single(e => e.instanz.Id == i.Id).status
+                    Status = bewertungsStatus.Single(e => e.instanz.Id == i.Id).status,
                 });
             dict.Add(slot.Id, data);
         }

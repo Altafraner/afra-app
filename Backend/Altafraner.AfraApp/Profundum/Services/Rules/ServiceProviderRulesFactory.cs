@@ -11,8 +11,9 @@ public class ServiceProviderRulesFactory : IRulesFactory
 
     ///
     public ServiceProviderRulesFactory(
-            IEnumerable<IProfundumAggregateRule> aggregate,
-            IEnumerable<IProfundumIndividualRule> individual)
+        IEnumerable<IProfundumAggregateRule> aggregate,
+        IEnumerable<IProfundumIndividualRule> individual
+    )
     {
         _aggregate = aggregate;
         _individual = individual;

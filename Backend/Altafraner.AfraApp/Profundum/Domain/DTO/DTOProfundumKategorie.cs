@@ -22,9 +22,7 @@ public record DTOProfundumKategorie
     }
 
     ///
-    public DTOProfundumKategorie()
-    {
-    }
+    public DTOProfundumKategorie() { }
 
     /// <inheritdoc cref="ProfundumKategorie.Id"/>
     public Guid Id { get; set; }

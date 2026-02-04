@@ -11,7 +11,8 @@ public class TimestampInterceptor : SaveChangesInterceptor
     /// <inheritdoc/>
     public override InterceptionResult<int> SavingChanges(
         DbContextEventData eventData,
-        InterceptionResult<int> result)
+        InterceptionResult<int> result
+    )
     {
         SetTimestamps(eventData.Context);
         return base.SavingChanges(eventData, result);
@@ -21,7 +22,8 @@ public class TimestampInterceptor : SaveChangesInterceptor
     public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
         DbContextEventData eventData,
         InterceptionResult<int> result,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         SetTimestamps(eventData.Context);
         return base.SavingChangesAsync(eventData, result, cancellationToken);
@@ -29,7 +31,8 @@ public class TimestampInterceptor : SaveChangesInterceptor
 
     private static void SetTimestamps(DbContext? context)
     {
-        if (context == null) return;
+        if (context == null)
+            return;
 
         var entries = context.ChangeTracker.Entries<IHasTimestamps>();
         foreach (var entry in entries)

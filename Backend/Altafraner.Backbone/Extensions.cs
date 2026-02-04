@@ -13,8 +13,10 @@ public static class Extensions
     /// <summary>
     ///     Add the altafraner backbone to the project
     /// </summary>
-    public static void UseAltafranerBackbone(this IHostApplicationBuilder builder,
-        Action<ModuleBuilder>? configure = null)
+    public static void UseAltafranerBackbone(
+        this IHostApplicationBuilder builder,
+        Action<ModuleBuilder>? configure = null
+    )
     {
         var moduleBuilder = new ModuleBuilder(builder.Services);
         configure?.Invoke(moduleBuilder);
@@ -24,7 +26,8 @@ public static class Extensions
         var modules = new List<IModule>(sortedModules.Count);
         foreach (var moduleType in sortedModules)
         {
-            if (Activator.CreateInstance(moduleType) is not IModule module) continue;
+            if (Activator.CreateInstance(moduleType) is not IModule module)
+                continue;
             modules.Add(module);
             module.ConfigureServices(builder.Services, builder.Configuration, builder.Environment);
         }
@@ -39,7 +42,8 @@ public static class Extensions
     public static void AddAltafranerMiddleware(this WebApplication app)
     {
         var modules = app.Services.GetRequiredService<IReadOnlyList<IModule>>();
-        foreach (var m in modules) m.RegisterMiddleware(app);
+        foreach (var m in modules)
+            m.RegisterMiddleware(app);
     }
 
     /// <summary>
@@ -48,7 +52,8 @@ public static class Extensions
     public static void MapAltafranerBackbone(this WebApplication app)
     {
         var modules = app.Services.GetRequiredService<IReadOnlyList<IModule>>();
-        foreach (var m in modules) m.Configure(app);
+        foreach (var m in modules)
+            m.Configure(app);
     }
 
     /// <summary>
@@ -58,6 +63,7 @@ public static class Extensions
     public static async Task WarmupAltafranerBackbone(this WebApplication app)
     {
         var modules = app.Services.GetRequiredService<IReadOnlyList<IModule>>();
-        foreach (var m in modules) await m.InitializeAsync(app);
+        foreach (var m in modules)
+            await m.InitializeAsync(app);
     }
 }

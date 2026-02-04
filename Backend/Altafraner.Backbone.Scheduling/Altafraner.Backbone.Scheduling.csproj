@@ -1,13 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
     <ItemGroup>
-        <ProjectReference Include="..\Altafraner.Backbone.Abstractions\Altafraner.Backbone.Abstractions.csproj"/>
+        <ProjectReference Include="..\Altafraner.Backbone.Abstractions\Altafraner.Backbone.Abstractions.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Quartz"/>
-        <PackageReference Include="Quartz.AspNetCore"/>
-        <PackageReference Include="Quartz.Serialization.SystemTextJson"/>
+        <PackageReference Include="Quartz" />
+        <PackageReference Include="Quartz.AspNetCore" />
+        <PackageReference Include="Quartz.Serialization.SystemTextJson" />
     </ItemGroup>
-
 </Project>

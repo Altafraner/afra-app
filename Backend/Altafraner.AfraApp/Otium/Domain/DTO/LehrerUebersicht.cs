@@ -7,7 +7,10 @@ namespace Altafraner.AfraApp.Otium.Domain.DTO;
 /// </summary>
 /// <param name="Termine">The overview over the teachers schedule</param>
 /// <param name="Mentees">The overview over the teachers mentee</param>
-public record LehrerUebersicht(IEnumerable<LehrerTerminPreview> Termine, IEnumerable<MenteePreview> Mentees);
+public record LehrerUebersicht(
+    IEnumerable<LehrerTerminPreview> Termine,
+    IEnumerable<MenteePreview> Mentees
+);
 
 /// <summary>
 /// Represents a preview of a <see cref="Models.OtiumTermin"/> the teacher is tutoring.
@@ -18,7 +21,14 @@ public record LehrerUebersicht(IEnumerable<LehrerTerminPreview> Termine, IEnumer
 /// <param name="Auslastung">The calculated load factor of the termin.</param>
 /// <param name="Datum">The date the termin is happening on</param>
 /// <param name="Block">The block the termin is happening in</param>
-public record LehrerTerminPreview(Guid Id, string Otium, string Ort, int? Auslastung, DateOnly Datum, string Block);
+public record LehrerTerminPreview(
+    Guid Id,
+    string Otium,
+    string Ort,
+    int? Auslastung,
+    DateOnly Datum,
+    string Block
+);
 
 /// <summary>
 /// Represents the preview of a student as seen by his mentor.
@@ -31,7 +41,8 @@ public record MenteePreview(
     PersonInfoMinimal Mentee,
     MenteePreviewStatus LetzteWoche,
     MenteePreviewStatus DieseWoche,
-    MenteePreviewStatus NächsteWoche);
+    MenteePreviewStatus NächsteWoche
+);
 
 /// <summary>
 /// An enum that represents the status of a student on any given day.
@@ -56,5 +67,5 @@ public enum MenteePreviewStatus
     /// <summary>
     /// No information is available for this day
     /// </summary>
-    NichtVerfuegbar
+    NichtVerfuegbar,
 }

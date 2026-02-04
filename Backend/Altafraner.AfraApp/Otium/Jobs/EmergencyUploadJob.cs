@@ -24,8 +24,13 @@ public class EmergencyUploadJob : IJob
     /// <summary>
     /// Called from DI
     /// </summary>
-    public EmergencyUploadJob(IEmergencyBackupService backupService, IAttendanceService attendanceService,
-        SchuljahrService schuljahrService, BlockHelper blockHelper, ILogger<EmergencyUploadJob> logger)
+    public EmergencyUploadJob(
+        IEmergencyBackupService backupService,
+        IAttendanceService attendanceService,
+        SchuljahrService schuljahrService,
+        BlockHelper blockHelper,
+        ILogger<EmergencyUploadJob> logger
+    )
     {
         _backupService = backupService;
         _attendanceService = attendanceService;
@@ -40,12 +45,14 @@ public class EmergencyUploadJob : IJob
         try
         {
             var block = await _schuljahrService.GetCurrentBlockAsync();
-            if (block == null) return;
+            if (block == null)
+                return;
 
-            var (termine, missingPersons, _) = await _attendanceService.GetAttendanceForBlockAsync(block.Id);
+            var (termine, missingPersons, _) = await _attendanceService.GetAttendanceForBlockAsync(
+                block.Id
+            );
 
-            var html =
-                $$"""
+            var html = $$"""
                   <!DOCTYPE html>
                   <html lang="de">
                       <head>
@@ -81,7 +88,9 @@ public class EmergencyUploadJob : IJob
                   </html>
                   """;
             await _backupService.SaveHtmlAsync(
-                $"Otium {DateTime.Now:yyyy-MM-dd} {_blockHelper.Get(block.SchemaId)!.Bezeichnung}", html);
+                $"Otium {DateTime.Now:yyyy-MM-dd} {_blockHelper.Get(block.SchemaId)!.Bezeichnung}",
+                html
+            );
         }
         catch (Exception e)
         {
@@ -90,7 +99,7 @@ public class EmergencyUploadJob : IJob
             {
                 RefireImmediately = false,
                 UnscheduleAllTriggers = false,
-                UnscheduleFiringTrigger = false
+                UnscheduleFiringTrigger = false,
             };
         }
     }
@@ -98,10 +107,14 @@ public class EmergencyUploadJob : IJob
     private static string GenerateHtmlTable(Dictionary<Person, OtiumAnwesenheitsStatus> attendances)
     {
         return attendances
-            .OrderBy(a => a.Key.LastName)
-            .ThenBy(a => a.Key.FirstName)
-            .Select(attendance =>
-                $"<tr><td>{HttpUtility.HtmlEncode(attendance.Key.LastName)}, {HttpUtility.HtmlEncode(attendance.Key.FirstName)}</td><td>{HttpUtility.HtmlEncode(attendance.Value)}</td></tr>")
-            .Aggregate("<table><tr><th>Name</th><th>Status</th></tr>", (current, row) => current + row) + "</table>";
+                .OrderBy(a => a.Key.LastName)
+                .ThenBy(a => a.Key.FirstName)
+                .Select(attendance =>
+                    $"<tr><td>{HttpUtility.HtmlEncode(attendance.Key.LastName)}, {HttpUtility.HtmlEncode(attendance.Key.FirstName)}</td><td>{HttpUtility.HtmlEncode(attendance.Value)}</td></tr>"
+                )
+                .Aggregate(
+                    "<table><tr><th>Name</th><th>Status</th></tr>",
+                    (current, row) => current + row
+                ) + "</table>";
     }
 }

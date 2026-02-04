@@ -1,0 +1,30 @@
+name: backend-format
+
+permissions:
+  contents: read
+  pull-requests: read
+
+on:
+  push:
+    branches: ["*"]
+    paths:
+      - ".github/workflows/backend-format.yml"
+      - "Backend/**"
+  pull_request:
+    branches: ["*"]
+    paths:
+      - "Backend/**"
+
+jobs:
+  check_formatting:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - run: |
+          dotnet tool restore
+          dotnet csharpier check .
+        working-directory: Backend/

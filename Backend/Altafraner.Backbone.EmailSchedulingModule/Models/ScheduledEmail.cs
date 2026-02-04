@@ -5,7 +5,8 @@ namespace Altafraner.Backbone.EmailSchedulingModule.Models;
 /// <summary>
 /// A record representing an Email scheduled for sending
 /// </summary>
-public class ScheduledEmail<TPerson> where TPerson : class, IEmailRecipient
+public class ScheduledEmail<TPerson>
+    where TPerson : class, IEmailRecipient
 {
     /// <summary>
     /// The unique identifier of the email.

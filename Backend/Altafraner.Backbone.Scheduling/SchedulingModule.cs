@@ -13,21 +13,24 @@ namespace Altafraner.Backbone.Scheduling;
 public class SchedulingModule : IModule
 {
     /// <inheritdoc />
-    public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
+    public void ConfigureServices(
+        IServiceCollection services,
+        IConfiguration config,
+        IHostEnvironment env
+    )
     {
         services.AddQuartz(q =>
+        {
+            q.UsePersistentStore(storeOptions =>
             {
-                q.UsePersistentStore(storeOptions =>
-                    {
-                        var conString = config.GetConnectionString("DefaultConnection")!;
-                        storeOptions.UsePostgres(pgOptions =>
-                            pgOptions.ConnectionString = conString
-                        );
-                        storeOptions.UseSystemTextJsonSerializer();
-                    }
-                );
-            }
-        );
-        services.AddQuartzServer(options => { options.WaitForJobsToComplete = true; });
+                var conString = config.GetConnectionString("DefaultConnection")!;
+                storeOptions.UsePostgres(pgOptions => pgOptions.ConnectionString = conString);
+                storeOptions.UseSystemTextJsonSerializer();
+            });
+        });
+        services.AddQuartzServer(options =>
+        {
+            options.WaitForJobsToComplete = true;
+        });
     }
 }

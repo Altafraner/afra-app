@@ -12,7 +12,11 @@ namespace Altafraner.Backbone.Defaults;
 public class DevelopmentModule : IModule
 {
     /// <inheritdoc />
-    public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
+    public void ConfigureServices(
+        IServiceCollection services,
+        IConfiguration config,
+        IHostEnvironment env
+    )
     {
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
@@ -23,8 +27,12 @@ public class DevelopmentModule : IModule
     {
         app.MapOpenApi();
 
-        if (!app.Environment.IsDevelopment()) return;
+        if (!app.Environment.IsDevelopment())
+            return;
         app.UseSwagger();
-        app.UseSwaggerUI(c => { c.SwaggerEndpoint("/swagger/v1/swagger.json", app.Environment.ApplicationName); });
+        app.UseSwaggerUI(c =>
+        {
+            c.SwaggerEndpoint("/swagger/v1/swagger.json", app.Environment.ApplicationName);
+        });
     }
 }

@@ -13,7 +13,11 @@ namespace Altafraner.AfraApp.Schuljahr;
 public class SchuljahrModule : IModule
 {
     /// <inheritdoc />
-    public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
+    public void ConfigureServices(
+        IServiceCollection services,
+        IConfiguration config,
+        IHostEnvironment env
+    )
     {
         services.AddScoped<SchuljahrService>();
     }

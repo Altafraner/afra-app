@@ -1,17 +1,35 @@
 <Solution>
-  <Folder Name="/Solution Items/">
-    <File Path="../compose.yaml" />
-  </Folder>
-  <Project Path="Altafraner.AfraApp\Altafraner.AfraApp.csproj" Type="C#" />
-  <Project Path="Altafraner.Typst.Generator/Altafraner.Typst.Generator.csproj" />
-  <Project Path="Altafraner.Typst\Altafraner.Typst.csproj" Type="C#" />
-  <Project Path="Altafraner.Backbone.Abstractions\Altafraner.Backbone.Abstractions.csproj" Type="C#" />
-  <Project Path="Altafraner.Backbone.CookieAuthentication\Altafraner.Backbone.CookieAuthentication.csproj" Type="C#" />
-  <Project Path="Altafraner.Backbone.DataProtection\Altafraner.Backbone.DataProtection.csproj" Type="C#" />
-  <Project Path="Altafraner.Backbone.Defaults\Altafraner.Backbone.Defaults.csproj" Type="C#" />
-  <Project Path="Altafraner.Backbone.EmailOutbox\Altafraner.Backbone.EmailOutbox.csproj" Type="C#" />
-  <Project Path="Altafraner.Backbone.EmailSchedulingModule\Altafraner.Backbone.EmailSchedulingModule.csproj" Type="C#" />
-  <Project Path="Altafraner.Backbone.Scheduling\Altafraner.Backbone.Scheduling.csproj" Type="C#" />
-  <Project Path="Altafraner.Backbone.Utils\Altafraner.Backbone.Utils.csproj" Type="C#" />
-  <Project Path="Altafraner.Backbone\Altafraner.Backbone.csproj" Type="C#" />
+    <Folder Name="/Solution Items/">
+        <File Path="../compose.yaml" />
+    </Folder>
+    <Project Path="Altafraner.AfraApp\Altafraner.AfraApp.csproj" Type="C#" />
+    <Project Path="Altafraner.Typst.Generator/Altafraner.Typst.Generator.csproj" />
+    <Project Path="Altafraner.Typst\Altafraner.Typst.csproj" Type="C#" />
+    <Project
+        Path="Altafraner.Backbone.Abstractions\Altafraner.Backbone.Abstractions.csproj"
+        Type="C#"
+    />
+    <Project
+        Path="Altafraner.Backbone.CookieAuthentication\Altafraner.Backbone.CookieAuthentication.csproj"
+        Type="C#"
+    />
+    <Project
+        Path="Altafraner.Backbone.DataProtection\Altafraner.Backbone.DataProtection.csproj"
+        Type="C#"
+    />
+    <Project Path="Altafraner.Backbone.Defaults\Altafraner.Backbone.Defaults.csproj" Type="C#" />
+    <Project
+        Path="Altafraner.Backbone.EmailOutbox\Altafraner.Backbone.EmailOutbox.csproj"
+        Type="C#"
+    />
+    <Project
+        Path="Altafraner.Backbone.EmailSchedulingModule\Altafraner.Backbone.EmailSchedulingModule.csproj"
+        Type="C#"
+    />
+    <Project
+        Path="Altafraner.Backbone.Scheduling\Altafraner.Backbone.Scheduling.csproj"
+        Type="C#"
+    />
+    <Project Path="Altafraner.Backbone.Utils\Altafraner.Backbone.Utils.csproj" Type="C#" />
+    <Project Path="Altafraner.Backbone\Altafraner.Backbone.csproj" Type="C#" />
 </Solution>

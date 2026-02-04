@@ -10,7 +10,8 @@ internal sealed class LdapAutoSyncJob : RetryJob
 {
     private readonly IServiceProvider _serviceProvider;
 
-    public LdapAutoSyncJob(IServiceProvider serviceProvider, ILogger<LdapAutoSyncJob> logger) : base(logger)
+    public LdapAutoSyncJob(IServiceProvider serviceProvider, ILogger<LdapAutoSyncJob> logger)
+        : base(logger)
     {
         _serviceProvider = serviceProvider;
     }
@@ -34,6 +35,7 @@ internal sealed class LdapAutoSyncJob : RetryJob
         const string body =
             "LDAP synchronisierung ist mehrmals fehlgeschlagen. Bitte überprüfen Sie die Konfiguration.";
 
-        foreach (var mail in config.Value.NotificationEmails) await outbox.SendReportAsync(mail, subject, body);
+        foreach (var mail in config.Value.NotificationEmails)
+            await outbox.SendReportAsync(mail, subject, body);
     }
 }

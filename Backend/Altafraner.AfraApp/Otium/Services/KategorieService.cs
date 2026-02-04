@@ -35,15 +35,19 @@ public class KategorieService
     /// </summary>
     public async Task<List<Guid>> GetRequiredKategorienIdsAsync(Wochentyp typ)
     {
-        return await _cache.GetOrCreateAsync($"otium-kategorie-required-{typ}",
-            async _ => await FetchRequiredKategorienAsync(typ)) ?? throw new Exception(
-            "Somehow we could neither fetch nor retrieve from cache the required categories. This should never happen.");
+        return await _cache.GetOrCreateAsync(
+                $"otium-kategorie-required-{typ}",
+                async _ => await FetchRequiredKategorienAsync(typ)
+            )
+            ?? throw new Exception(
+                "Somehow we could neither fetch nor retrieve from cache the required categories. This should never happen."
+            );
     }
 
     private async Task<List<Guid>> FetchRequiredKategorienAsync(Wochentyp typ)
     {
-        return await _dbContext.OtiaKategorien
-            .AsNoTracking()
+        return await _dbContext
+            .OtiaKategorien.AsNoTracking()
             .Include(k => k.Children)
             .Include(kategorie => kategorie.Parent)
             .Where(k => k.RequiredIn.Contains(typ))
@@ -56,7 +60,8 @@ public class KategorieService
     /// </summary>
     public IAsyncEnumerable<OtiumKategorie> GetKategorienTreeAsyncEnumerable()
     {
-        return _dbContext.OtiaKategorien.AsNoTracking()
+        return _dbContext
+            .OtiaKategorien.AsNoTracking()
             .Include(k => k.Children)
             .Where(k => k.Parent == null)
             .AsAsyncEnumerable();
@@ -67,7 +72,9 @@ public class KategorieService
     /// </summary>
     /// <param name="kategorie">The kategorie to find all parents for.</param>
     /// <returns>An Async Enumerable containing a kategorie and all its parents.</returns>
-    public async IAsyncEnumerable<Guid> GetTransitiveKategoriesIdsAsyncEnumerable(OtiumKategorie kategorie)
+    public async IAsyncEnumerable<Guid> GetTransitiveKategoriesIdsAsyncEnumerable(
+        OtiumKategorie kategorie
+    )
     {
         // Extra variable needed to avoid null reference exception
         var currentCategory = await _dbContext.OtiaKategorien.FindAsync(kategorie.Id);
@@ -87,8 +94,10 @@ public class KategorieService
     /// <returns>the first required parent if exists; Otherwise, null.</returns>
     public async Task<Guid?> GetRequiredParentIdAsync(OtiumKategorie kategorie, Wochentyp typ)
     {
-        return await _cache.GetOrCreateAsync($"otium-kategorie-required-parent-{typ}-{kategorie.Id}",
-            async _ => await FetchRequiredParentAsync(kategorie, typ));
+        return await _cache.GetOrCreateAsync(
+            $"otium-kategorie-required-parent-{typ}-{kategorie.Id}",
+            async _ => await FetchRequiredParentAsync(kategorie, typ)
+        );
     }
 
     private async Task<Guid?> FetchRequiredParentAsync(OtiumKategorie kategorie, Wochentyp typ)

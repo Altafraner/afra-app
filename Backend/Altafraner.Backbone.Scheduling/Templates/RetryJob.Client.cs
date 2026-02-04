@@ -28,5 +28,6 @@ public abstract partial class RetryJob
     /// This method is called when the job has failed to execute and has reached the maximum retry count.
     /// </summary>
     /// <param name="context">The execution context</param>
-    protected virtual Task HandleFinalFailureAsync(IJobExecutionContext context) => Task.CompletedTask;
+    protected virtual Task HandleFinalFailureAsync(IJobExecutionContext context) =>
+        Task.CompletedTask;
 }

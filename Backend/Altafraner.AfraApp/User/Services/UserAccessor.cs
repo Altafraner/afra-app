@@ -18,8 +18,11 @@ public class UserAccessor
     /// <summary>
     ///     Constructs a new instance of the <see cref="UserAccessor" /> class.
     /// </summary>
-    public UserAccessor(IHttpContextAccessor httpContextAccessor, IServiceScopeFactory serviceScopeFactory,
-        AfraAppContext dbContext)
+    public UserAccessor(
+        IHttpContextAccessor httpContextAccessor,
+        IServiceScopeFactory serviceScopeFactory,
+        AfraAppContext dbContext
+    )
     {
         _httpContextAccessor = httpContextAccessor;
         _serviceScopeFactory = serviceScopeFactory;
@@ -40,7 +43,8 @@ public class UserAccessor
         var httpContext = GetHttpContextOrThrow();
 
         var cachedUser = GetUserFromCache(httpContext);
-        if (cachedUser != null) return cachedUser;
+        if (cachedUser != null)
+            return cachedUser;
 
         var user = await _dbContext.Personen.FindAsync(GetUserIdOrThrow(httpContext));
 
@@ -74,14 +78,16 @@ public class UserAccessor
 
     private HttpContext GetHttpContextOrThrow()
     {
-        return _httpContextAccessor.HttpContext ??
-               throw new InvalidOperationException("The HttpContext is not available!");
+        return _httpContextAccessor.HttpContext
+            ?? throw new InvalidOperationException("The HttpContext is not available!");
     }
 
     private Person? GetUserFromCache(HttpContext httpContext)
     {
-        if (httpContext.Items.TryGetValue(UserPersonObjectCacheKey, out var cachedUserObject) &&
-            cachedUserObject is Person cachedUser)
+        if (
+            httpContext.Items.TryGetValue(UserPersonObjectCacheKey, out var cachedUserObject)
+            && cachedUserObject is Person cachedUser
+        )
             return cachedUser;
         return null;
     }
@@ -93,7 +99,11 @@ public class UserAccessor
             throw new InvalidOperationException("The user is not logged in!");
 
         return !httpContext.User.HasClaim(claim => claim.Type == AfraAppClaimTypes.Id)
-            ? throw new InvalidOperationException($"The user does not have a {AfraAppClaimTypes.Id} claim")
-            : new Guid(httpContext.User.Claims.First(claim => claim.Type == AfraAppClaimTypes.Id).Value);
+            ? throw new InvalidOperationException(
+                $"The user does not have a {AfraAppClaimTypes.Id} claim"
+            )
+            : new Guid(
+                httpContext.User.Claims.First(claim => claim.Type == AfraAppClaimTypes.Id).Value
+            );
     }
 }

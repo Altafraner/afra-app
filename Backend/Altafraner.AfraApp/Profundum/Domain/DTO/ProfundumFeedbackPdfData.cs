@@ -12,8 +12,14 @@ internal struct ProfundumFeedbackPdfData
     public required PersonInfoMinimal? GM { get; init; }
     public required PersonInfoMinimal? Schulleiter { get; init; }
     public required IEnumerable<Profundum> Profunda { get; init; }
-    public required ImmutableSortedDictionary<string, Dictionary<string, int[]>> FeedbackAllgemein { get; init; }
-    public required ImmutableSortedDictionary<string, Dictionary<string, int[]>> FeedbackFachlich { get; init; }
+    public required ImmutableSortedDictionary<
+        string,
+        Dictionary<string, int[]>
+    > FeedbackAllgemein { get; init; }
+    public required ImmutableSortedDictionary<
+        string,
+        Dictionary<string, int[]>
+    > FeedbackFachlich { get; init; }
 
     internal record struct MetaData(string Datum, int Schuljahr, bool Halbjahr, bool Doublesided);
 

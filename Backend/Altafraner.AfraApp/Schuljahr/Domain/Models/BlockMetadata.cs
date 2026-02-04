@@ -10,9 +10,7 @@ public record BlockMetadata
     /// <summary>
     ///     An empty constructor needed for deserialization. Do not delete.
     /// </summary>
-    public BlockMetadata()
-    {
-    }
+    public BlockMetadata() { }
 
     /// <summary>
     ///     The interval the block is in

@@ -18,5 +18,5 @@ public enum OtiumAnwesenheitsStatus
     /// <summary>
     /// The person has not attended and has (per our knowledge) no valid excuse
     /// </summary>
-    Fehlend
+    Fehlend,
 }

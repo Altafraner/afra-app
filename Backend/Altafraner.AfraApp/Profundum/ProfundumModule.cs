@@ -17,10 +17,13 @@ namespace Altafraner.AfraApp.Profundum;
 [DependsOn<GeneralConfigurationModule>]
 internal class ProfundumModule : IModule
 {
-    public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
+    public void ConfigureServices(
+        IServiceCollection services,
+        IConfiguration config,
+        IHostEnvironment env
+    )
     {
-        services.AddOptions<ProfundumConfiguration>()
-            .Bind(config.GetSection("Profundum"));
+        services.AddOptions<ProfundumConfiguration>().Bind(config.GetSection("Profundum"));
 
         services.AddScoped<ProfundumEnrollmentService>();
         services.AddScoped<ProfundumManagementService>();

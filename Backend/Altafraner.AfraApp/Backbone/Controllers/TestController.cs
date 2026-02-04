@@ -15,7 +15,8 @@ namespace Altafraner.AfraApp.Backbone.Controllers;
 
 [ApiController]
 [Route("/api/[controller]")]
-public class TestController(AfraAppContext dbContext, UserSigninService userSigninService) : ControllerBase
+public class TestController(AfraAppContext dbContext, UserSigninService userSigninService)
+    : ControllerBase
 {
     [HttpGet("reset")]
     public ActionResult ResetDb()
@@ -40,25 +41,78 @@ public class TestController(AfraAppContext dbContext, UserSigninService userSign
             Bezeichnung = "Akademisches",
             Icon = "pi pi-graduation-cap",
             CssColor = "var(--p-blue-500)",
-            RequiredIn = [Wochentyp.N]
+            RequiredIn = [Wochentyp.N],
         };
         var otiumsKategorien = new List<OtiumKategorie>
         {
             akademisches,
-            new() { Bezeichnung = "Bewegung", Icon = "pi pi-heart", CssColor = "var(--p-teal-500)" },
-            new() { Bezeichnung = "Muße", Icon = "pi pi-headphones", CssColor = "var(--p-orange-500)" },
-            new() { Bezeichnung = "Besinnung", Icon = "pi pi-hourglass", CssColor = "var(--p-yellow-500)" },
-            new() { Bezeichnung = "Beratung", Icon = "pi pi-user", CssColor = "var(--p-purple-500)" },
-            new() { Bezeichnung = "Teamräume", Icon = "pi pi-home", CssColor = "var(--p-red-500)" },
+            new()
+            {
+                Bezeichnung = "Bewegung",
+                Icon = "pi pi-heart",
+                CssColor = "var(--p-teal-500)",
+            },
+            new()
+            {
+                Bezeichnung = "Muße",
+                Icon = "pi pi-headphones",
+                CssColor = "var(--p-orange-500)",
+            },
+            new()
+            {
+                Bezeichnung = "Besinnung",
+                Icon = "pi pi-hourglass",
+                CssColor = "var(--p-yellow-500)",
+            },
+            new()
+            {
+                Bezeichnung = "Beratung",
+                Icon = "pi pi-user",
+                CssColor = "var(--p-purple-500)",
+            },
+            new()
+            {
+                Bezeichnung = "Teamräume",
+                Icon = "pi pi-home",
+                CssColor = "var(--p-red-500)",
+            },
             new() { Parent = akademisches, Bezeichnung = "Studienzeit" },
-            new() { Parent = akademisches, Bezeichnung = "Schüler:innen unterrichten Schüler:innen" },
+            new()
+            {
+                Parent = akademisches,
+                Bezeichnung = "Schüler:innen unterrichten Schüler:innen",
+            },
             new() { Parent = akademisches, Bezeichnung = "Wettbewerbe" },
-            new() { Parent = akademisches, Bezeichnung = "Sonstige" }
+            new() { Parent = akademisches, Bezeichnung = "Sonstige" },
         };
         List<string> rooms =
         [
-            "102", "103", "104", "105", "106", "108", "109", "110", "202", "203", "204", "205", "206",
-            "207", "208", "209", "211", "212", "213", "214", "215", "216", "217", "301", "307", "308"
+            "102",
+            "103",
+            "104",
+            "105",
+            "106",
+            "108",
+            "109",
+            "110",
+            "202",
+            "203",
+            "204",
+            "205",
+            "206",
+            "207",
+            "208",
+            "209",
+            "211",
+            "212",
+            "213",
+            "214",
+            "215",
+            "216",
+            "217",
+            "301",
+            "307",
+            "308",
         ];
         List<(string, OtiumKategorie)> possibleOtia =
         [
@@ -78,14 +132,15 @@ public class TestController(AfraAppContext dbContext, UserSigninService userSign
             ("Offenes Atelier", otiumsKategorien[2]),
             ("Ruheraum", otiumsKategorien[3]),
             ("Handarbeit", otiumsKategorien[3]),
-            ("Lernen Lernen", otiumsKategorien[5])
+            ("Lernen Lernen", otiumsKategorien[5]),
         ];
 
         var personFaker = new Faker<Models_Person>("de")
             .RuleFor(p => p.LastName, f => f.Person.LastName)
             .RuleFor(p => p.FirstName, f => f.Person.FirstName)
-            .RuleFor(p => p.Email, (_, p)
-                => $"{p.FirstName.ToLower()}.{p.LastName.ToLower()}@example.org"
+            .RuleFor(
+                p => p.Email,
+                (_, p) => $"{p.FirstName.ToLower()}.{p.LastName.ToLower()}@example.org"
             )
             .RuleFor(p => p.Rolle, Rolle.Tutor);
 
@@ -97,7 +152,6 @@ public class TestController(AfraAppContext dbContext, UserSigninService userSign
             .RuleFor(p => p.Mentors, f => [f.PickRandom(mentoren)])
             .RuleFor(p => p.Rolle, f => f.PickRandomWithout(Rolle.Tutor));
 
-
         var students = seedUsers
             ? studentsFaker.Generate(250)
             : await dbContext.Personen.Where(p => p.Rolle != Rolle.Tutor).ToListAsync();
@@ -107,30 +161,30 @@ public class TestController(AfraAppContext dbContext, UserSigninService userSign
         var nextFriday = today.AddDays((int)DayOfWeek.Friday - (int)today.DayOfWeek);
 
         var schultagGenerator = new Faker<Schultag>()
-            .RuleFor(s => s.Datum,
-                f => DateOnly.FromDateTime(f.PickRandomParam(nextMonday, nextFriday)).AddDays(f.IndexFaker * 7))
+            .RuleFor(
+                s => s.Datum,
+                f =>
+                    DateOnly
+                        .FromDateTime(f.PickRandomParam(nextMonday, nextFriday))
+                        .AddDays(f.IndexFaker * 7)
+            )
             .RuleFor(s => s.Wochentyp, f => f.PickRandom<Wochentyp>());
         var schultage = schultagGenerator.Generate(20);
 
         List<Block> blocks = [];
         foreach (var schultag in schultage)
         {
-            blocks.Add(new Block
-            {
-                SchemaId = '1',
-                Schultag = schultag
-            });
-            blocks.Add(new Block
-            {
-                SchemaId = '2',
-                Schultag = schultag
-            });
+            blocks.Add(new Block { SchemaId = '1', Schultag = schultag });
+            blocks.Add(new Block { SchemaId = '2', Schultag = schultag });
         }
 
         var otiumGenerator = new Faker<OtiumDefinition>("de")
             .RuleFor(o => o.Bezeichnung, f => possibleOtia[f.IndexFaker].Item1)
             .RuleFor(o => o.Beschreibung, f => f.Commerce.ProductDescription())
-            .RuleFor(o => o.Verantwortliche, f => f.Random.Bool(0.7f) ? [f.PickRandom(mentoren)] : [])
+            .RuleFor(
+                o => o.Verantwortliche,
+                f => f.Random.Bool(0.7f) ? [f.PickRandom(mentoren)] : []
+            )
             .RuleFor(o => o.Kategorie, f => possibleOtia[f.IndexFaker].Item2);
 
         var otia = otiumGenerator.Generate(possibleOtia.Count);
@@ -153,8 +207,7 @@ public class TestController(AfraAppContext dbContext, UserSigninService userSign
         dbContext.Blocks.AddRange(blocks);
         dbContext.OtiaKategorien.AddRange(otiumsKategorien);
         dbContext.AddRange(otia);
-        dbContext.OtiaTermine.AddRange(
-            otiumTerminGenerator.Generate(300).ToList());
+        dbContext.OtiaTermine.AddRange(otiumTerminGenerator.Generate(300).ToList());
 
         await dbContext.SaveChangesAsync();
 

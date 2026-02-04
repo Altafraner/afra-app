@@ -21,8 +21,13 @@ internal sealed class EnrollmentReminderJob : RetryJob
     /// <summary>
     /// Constructor for the EnrollmentReminderJob. Called by the DI container.
     /// </summary>
-    public EnrollmentReminderJob(ILogger<EnrollmentReminderJob> logger, EnrollmentService enrollmentService,
-        IOptions<OtiumConfiguration> otiumConfiguration, INotificationService notificationService) : base(logger)
+    public EnrollmentReminderJob(
+        ILogger<EnrollmentReminderJob> logger,
+        EnrollmentService enrollmentService,
+        IOptions<OtiumConfiguration> otiumConfiguration,
+        INotificationService notificationService
+    )
+        : base(logger)
     {
         _logger = logger;
         _enrollmentService = enrollmentService;
@@ -34,21 +39,28 @@ internal sealed class EnrollmentReminderJob : RetryJob
 
     protected override async Task ExecuteAsync(IJobExecutionContext context, int _)
     {
-        if (!_otiumConfiguration.Value.EnrollmentReminder.Enabled) return;
+        if (!_otiumConfiguration.Value.EnrollmentReminder.Enabled)
+            return;
 
         var now = DateTime.Now;
         var tomorrow = DateOnly.FromDateTime(now.AddDays(1));
         var hasRun = context.JobDetail.JobDataMap.TryGetDateTime("last_run", out var lastRun);
-        if (TimeOnly.FromDateTime(now) < _otiumConfiguration.Value.EnrollmentReminder.Time.AddMinutes(-5))
+        if (
+            TimeOnly.FromDateTime(now)
+            < _otiumConfiguration.Value.EnrollmentReminder.Time.AddMinutes(-5)
+        )
         {
             _logger.LogWarning(
-                "Enrollment reminder job was scheduled before the default reminder time. Skipping execution.");
+                "Enrollment reminder job was scheduled before the default reminder time. Skipping execution."
+            );
             return;
         }
 
         if (hasRun && lastRun.Date == now.Date)
         {
-            _logger.LogInformation("Enrollment reminder job has already run today. Skipping execution.");
+            _logger.LogInformation(
+                "Enrollment reminder job has already run today. Skipping execution."
+            );
             return;
         }
 
@@ -57,7 +69,10 @@ internal sealed class EnrollmentReminderJob : RetryJob
         var missing = (await _enrollmentService.GetNotEnrolledPersonsForDayAsync(tomorrow))
             .Where(p => p.Rolle == Rolle.Mittelstufe)
             .ToList();
-        _logger.LogInformation("Found {Count} persons without enrollments for tomorrow.", missing.Count);
+        _logger.LogInformation(
+            "Found {Count} persons without enrollments for tomorrow.",
+            missing.Count
+        );
 
         foreach (var person in missing)
         {
@@ -65,7 +80,12 @@ internal sealed class EnrollmentReminderJob : RetryJob
             const string body =
                 "Du hast dich für morgen noch nicht für alle Otiums-Blöcke eingeschrieben. Bitte hole das schnellstmöglich nach.";
 
-            await _notificationService.ScheduleNotificationAsync(person.Id, subject, body, TimeSpan.FromMinutes(5));
+            await _notificationService.ScheduleNotificationAsync(
+                person.Id,
+                subject,
+                body,
+                TimeSpan.FromMinutes(5)
+            );
         }
 
         context.JobDetail.JobDataMap.Put("last_run", now);

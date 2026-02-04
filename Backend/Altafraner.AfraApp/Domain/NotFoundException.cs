@@ -6,5 +6,6 @@ namespace Altafraner.AfraApp.Domain;
 public sealed class NotFoundException : Exception
 {
     /// <inheritdoc/>
-    public NotFoundException(string message) : base(message) { }
+    public NotFoundException(string message)
+        : base(message) { }
 }

@@ -20,9 +20,11 @@ public class EnrollmentReminderScheduler : BackgroundService
     /// <summary>
     ///     Constructor for the EnrollmentReminderService.
     /// </summary>
-    public EnrollmentReminderScheduler(IServiceProvider serviceProvider,
+    public EnrollmentReminderScheduler(
+        IServiceProvider serviceProvider,
         IOptions<OtiumConfiguration> otiumConfiguration,
-        ILogger<EnrollmentReminderScheduler> logger)
+        ILogger<EnrollmentReminderScheduler> logger
+    )
     {
         _serviceProvider = serviceProvider;
         _otiumConfiguration = otiumConfiguration;
@@ -34,7 +36,9 @@ public class EnrollmentReminderScheduler : BackgroundService
     {
         if (!_otiumConfiguration.Value.EnrollmentReminder.Enabled)
         {
-            _logger.LogInformation("Reminders are disabled. Skipping enrollment reminder job scheduling.");
+            _logger.LogInformation(
+                "Reminders are disabled. Skipping enrollment reminder job scheduling."
+            );
             return;
         }
 
@@ -45,15 +49,16 @@ public class EnrollmentReminderScheduler : BackgroundService
         var scheduler = await schedulerFactory.GetScheduler(stoppingToken);
         var key = new JobKey(JobName, GroupName);
 
-        var triggerNow = TriggerBuilder.Create()
-            .ForJob(key)
-            .StartNow()
-            .Build();
+        var triggerNow = TriggerBuilder.Create().ForJob(key).StartNow().Build();
 
-        var triggerCron = TriggerBuilder.Create()
+        var triggerCron = TriggerBuilder
+            .Create()
             .ForJob(key)
-            .WithSchedule(CronScheduleBuilder.DailyAtHourAndMinute(defaultReminderTime.Hour, defaultReminderTime.Minute)
-                .WithMisfireHandlingInstructionFireAndProceed())
+            .WithSchedule(
+                CronScheduleBuilder
+                    .DailyAtHourAndMinute(defaultReminderTime.Hour, defaultReminderTime.Minute)
+                    .WithMisfireHandlingInstructionFireAndProceed()
+            )
             .Build();
 
         var exists = await scheduler.CheckExists(key, stoppingToken);
@@ -67,7 +72,8 @@ public class EnrollmentReminderScheduler : BackgroundService
             return;
         }
 
-        var job = JobBuilder.Create<EnrollmentReminderJob>()
+        var job = JobBuilder
+            .Create<EnrollmentReminderJob>()
             .PersistJobDataAfterExecution()
             .DisallowConcurrentExecution()
             .StoreDurably()

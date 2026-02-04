@@ -20,9 +20,8 @@ namespace Altafraner.AfraApp;
 public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEmailContext<Person>
 {
     /// <inheritdoc />
-    public AfraAppContext(DbContextOptions<AfraAppContext> options) : base(options)
-    {
-    }
+    public AfraAppContext(DbContextOptions<AfraAppContext> options)
+        : base(options) { }
 
     /// <summary>
     ///     The DbSet for the people using the application.
@@ -163,12 +162,13 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
     ///     Configures the npgsql specific options for the context
     /// </summary>
     internal static Action<NpgsqlDbContextOptionsBuilder> ConfigureNpgsql =>
-        builder => builder
-            .MapEnum<Rolle>("person_rolle")
-            .MapEnum<MentorType>("mentor_type")
-            .MapEnum<GlobalPermission>("global_permission")
-            .MapEnum<Wochentyp>("wochentyp")
-            .MapEnum<OtiumAnwesenheitsStatus>("anwesenheits_status");
+        builder =>
+            builder
+                .MapEnum<Rolle>("person_rolle")
+                .MapEnum<MentorType>("mentor_type")
+                .MapEnum<GlobalPermission>("global_permission")
+                .MapEnum<Wochentyp>("wochentyp")
+                .MapEnum<OtiumAnwesenheitsStatus>("anwesenheits_status");
 
     /// <summary>
     ///     The keys used by the ASP.NET Core Domain Protection API.
@@ -178,65 +178,65 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Person>()
+        modelBuilder
+            .Entity<Person>()
             .HasMany(p => p.Mentors)
             .WithMany(p => p.Mentees)
             .UsingEntity<MentorMenteeRelation>(
                 r => r.HasOne<Person>().WithMany().HasForeignKey(e => e.MentorId),
-                l => l.HasOne<Person>().WithMany(e => e.MentorMenteeRelations).HasForeignKey(e => e.StudentId));
+                l =>
+                    l.HasOne<Person>()
+                        .WithMany(e => e.MentorMenteeRelations)
+                        .HasForeignKey(e => e.StudentId)
+            );
 
-        modelBuilder.Entity<Person>()
-            .PrimitiveCollection(p => p.GlobalPermissions);
+        modelBuilder.Entity<Person>().PrimitiveCollection(p => p.GlobalPermissions);
 
-        modelBuilder.Entity<MentorMenteeRelation>()
-            .HasKey(r => new { r.MentorId, r.StudentId, r.Type });
+        modelBuilder
+            .Entity<MentorMenteeRelation>()
+            .HasKey(r => new
+            {
+                r.MentorId,
+                r.StudentId,
+                r.Type,
+            });
 
         modelBuilder.Entity<OtiumDefinition>(o =>
         {
-            o.HasOne(e => e.Kategorie)
-                .WithMany(k => k.Otia);
-            o.HasMany(e => e.Verantwortliche)
-                .WithMany(p => p.VerwalteteOtia);
+            o.HasOne(e => e.Kategorie).WithMany(k => k.Otia);
+            o.HasMany(e => e.Verantwortliche).WithMany(p => p.VerwalteteOtia);
         });
 
         modelBuilder.Entity<OtiumTermin>(t =>
         {
-            t.HasOne(ot => ot.Otium)
-                .WithMany(o => o.Termine);
+            t.HasOne(ot => ot.Otium).WithMany(o => o.Termine);
             t.HasOne(ot => ot.Tutor).WithMany();
-            t.HasOne(ot => ot.Block).WithMany()
-                .OnDelete(DeleteBehavior.Cascade);
+            t.HasOne(ot => ot.Block).WithMany().OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<OtiumWiederholung>(w =>
         {
-            w.HasOne(or => or.Otium)
-                .WithMany(o => o.Wiederholungen);
-            w.HasOne(or => or.Tutor)
-                .WithMany();
+            w.HasOne(or => or.Otium).WithMany(o => o.Wiederholungen);
+            w.HasOne(or => or.Tutor).WithMany();
             w.HasMany(or => or.Termine)
                 .WithOne(or => or.Wiederholung)
                 .OnDelete(DeleteBehavior.SetNull);
         });
 
         // record structs do not work with the [ComplexType] attribute.
-        modelBuilder.Entity<OtiumEinschreibung>()
-            .ComplexProperty(e => e.Interval);
+        modelBuilder.Entity<OtiumEinschreibung>().ComplexProperty(e => e.Interval);
 
         modelBuilder.Entity<OtiumAnwesenheit>(e =>
         {
-            e.HasOne(a => a.Student)
-                .WithMany()
-                .HasForeignKey(a => a.StudentId);
+            e.HasOne(a => a.Student).WithMany().HasForeignKey(a => a.StudentId);
 
-            e.HasOne(a => a.Block)
-                .WithMany()
-                .HasForeignKey(a => a.BlockId);
+            e.HasOne(a => a.Block).WithMany().HasForeignKey(a => a.BlockId);
 
             e.HasKey(a => new { a.BlockId, a.StudentId });
         });
 
-        modelBuilder.Entity<ScheduledEmail<Person>>()
+        modelBuilder
+            .Entity<ScheduledEmail<Person>>()
             .HasOne(e => e.Recipient)
             .WithMany()
             .HasForeignKey(e => e.RecipientId);
@@ -248,43 +248,56 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
                 .HasForeignKey(e => e.SchultagKey)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            b.HasIndex(e => new { e.SchultagKey, Nummer = e.SchemaId })
-                .IsUnique();
+            b.HasIndex(e => new { e.SchultagKey, Nummer = e.SchemaId }).IsUnique();
         });
 
         modelBuilder.Entity<ProfundumDefinition>(p =>
         {
-            p.HasOne(e => e.Kategorie)
-                .WithMany(k => k.Profunda);
-            p.HasMany(e => e.Dependants).WithMany(e => e.Dependencies)
+            p.HasOne(e => e.Kategorie).WithMany(k => k.Profunda);
+            p.HasMany(e => e.Dependants)
+                .WithMany(e => e.Dependencies)
                 .UsingEntity<ProfundaDefinitionDependency>(
-                    r => r.HasOne<ProfundumDefinition>().WithMany().HasForeignKey(e => e.DependantId),
-                    l => l.HasOne<ProfundumDefinition>().WithMany().HasForeignKey(e => e.DependencyId)
+                    r =>
+                        r.HasOne<ProfundumDefinition>()
+                            .WithMany()
+                            .HasForeignKey(e => e.DependantId),
+                    l =>
+                        l.HasOne<ProfundumDefinition>()
+                            .WithMany()
+                            .HasForeignKey(e => e.DependencyId)
                 );
             p.HasMany(e => e.Fachbereiche).WithMany(e => e.Profunda);
         });
 
-        modelBuilder.Entity<ProfundaDefinitionDependency>()
+        modelBuilder
+            .Entity<ProfundaDefinitionDependency>()
             .HasKey(r => new { r.DependencyId, r.DependantId });
 
         modelBuilder.Entity<ProfundumInstanz>(p =>
         {
-            p.HasOne(i => i.Profundum)
-                .WithMany(e => e.Instanzen);
+            p.HasOne(i => i.Profundum).WithMany(e => e.Instanzen);
             p.HasMany(e => e.Slots).WithMany();
             p.HasMany(e => e.Verantwortliche).WithMany(e => e.BetreuteProfunda);
         });
 
         modelBuilder.Entity<ProfundumEinschreibung>(e =>
         {
-            e.HasOne(f => f.ProfundumInstanz).WithMany(pi => pi.Einschreibungen).HasForeignKey(f => f.ProfundumInstanzId).IsRequired(false);
+            e.HasOne(f => f.ProfundumInstanz)
+                .WithMany(pi => pi.Einschreibungen)
+                .HasForeignKey(f => f.ProfundumInstanzId)
+                .IsRequired(false);
             e.HasOne(f => f.BetroffenePerson).WithMany(pe => pe.ProfundaEinschreibungen);
             e.HasKey(b => new { b.BetroffenePersonId, b.SlotId });
         });
 
         modelBuilder.Entity<ProfundumBelegWunsch>(w =>
         {
-            w.HasKey(b => new { b.ProfundumInstanzId, b.BetroffenePersonId, b.Stufe });
+            w.HasKey(b => new
+            {
+                b.ProfundumInstanzId,
+                b.BetroffenePersonId,
+                b.Stufe,
+            });
             w.HasOne(b => b.BetroffenePerson).WithMany(p => p.ProfundaBelegwuensche);
         });
 
@@ -296,16 +309,23 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
 
         modelBuilder.Entity<ProfundumProfilBefreiung>(w =>
         {
-            w.HasKey(b => new { b.BetroffenePersonId, b.Jahr, b.Quartal });
+            w.HasKey(b => new
+            {
+                b.BetroffenePersonId,
+                b.Jahr,
+                b.Quartal,
+            });
             w.HasOne(b => b.BetroffenePerson).WithMany();
         });
 
-        modelBuilder.Entity<CalendarSubscription>(s => { s.HasOne(b => b.BetroffenePerson).WithMany(); });
+        modelBuilder.Entity<CalendarSubscription>(s =>
+        {
+            s.HasOne(b => b.BetroffenePerson).WithMany();
+        });
 
         modelBuilder.Entity<ProfundumFeedbackKategorie>(e =>
         {
-            e.HasMany(k => k.Fachbereiche)
-                .WithMany();
+            e.HasMany(k => k.Fachbereiche).WithMany();
         });
 
         /*
@@ -314,13 +334,9 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
          * However, the npgsql provider uses libpg for db access, which uses c strings, therefore thinks the string ends
          * at the first null character and fails.
          */
-        modelBuilder.Entity<Block>()
-            .Property(b => b.SchemaId)
-            .HasDefaultValueSql("''");
+        modelBuilder.Entity<Block>().Property(b => b.SchemaId).HasDefaultValueSql("''");
 
-        modelBuilder.Entity<OtiumWiederholung>()
-            .Property(w => w.Block)
-            .HasDefaultValueSql("''");
+        modelBuilder.Entity<OtiumWiederholung>().Property(w => w.Block).HasDefaultValueSql("''");
 
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
@@ -370,7 +386,6 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
                 if (!string.IsNullOrEmpty(indexName))
                     index.SetDatabaseName(indexName.UpperCamelToLowerSnakeCase());
             }
-
         }
     }
 }

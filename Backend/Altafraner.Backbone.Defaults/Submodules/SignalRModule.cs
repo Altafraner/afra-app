@@ -12,9 +12,14 @@ namespace Altafraner.Backbone.Defaults;
 public class SignalRModule : IModule
 {
     /// <inheritdoc />
-    public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
+    public void ConfigureServices(
+        IServiceCollection services,
+        IConfiguration config,
+        IHostEnvironment env
+    )
     {
-        services.AddSignalR()
+        services
+            .AddSignalR()
             .AddJsonProtocol(options => JsonOptions.Configure(options.PayloadSerializerOptions));
     }
 }

@@ -50,6 +50,6 @@ public class BlockHelper
         var nowTime = TimeOnly.FromDateTime(now);
 
         return block.SchultagKey < today
-               || (block.SchultagKey == today && Get(block.SchemaId)!.Interval.Start <= nowTime);
+            || (block.SchultagKey == today && Get(block.SchemaId)!.Interval.Start <= nowTime);
     }
 }

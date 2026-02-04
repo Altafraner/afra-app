@@ -1,12 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
     <ItemGroup>
-        <ProjectReference Include="..\Altafraner.Backbone.Abstractions\Altafraner.Backbone.Abstractions.csproj"/>
-        <ProjectReference Include="..\Altafraner.Backbone.Utils\Altafraner.Backbone.Utils.csproj"/>
+        <ProjectReference Include="..\Altafraner.Backbone.Abstractions\Altafraner.Backbone.Abstractions.csproj" />
+        <ProjectReference Include="..\Altafraner.Backbone.Utils\Altafraner.Backbone.Utils.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore"/>
+        <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" />
     </ItemGroup>
-
 </Project>

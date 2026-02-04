@@ -24,16 +24,24 @@ public class EnrollmentTimeframeRule : IIndependentRule
         var now = DateTime.Now;
         var today = DateOnly.FromDateTime(now);
         var time = TimeOnly.FromDateTime(now);
-        if (today < termin.Block.SchultagKey || (today == termin.Block.SchultagKey && time < block.EinschreibenBis))
+        if (
+            today < termin.Block.SchultagKey
+            || (today == termin.Block.SchultagKey && time < block.EinschreibenBis)
+        )
             return new ValueTask<RuleStatus>(RuleStatus.Valid);
 
-        return new ValueTask<RuleStatus>(today > termin.Block.SchultagKey
-            ? RuleStatus.Invalid("Der Termin liegt in der Vergangenheit.")
-            : RuleStatus.Invalid("Die Einschreibefrist ist abgelaufen."));
+        return new ValueTask<RuleStatus>(
+            today > termin.Block.SchultagKey
+                ? RuleStatus.Invalid("Der Termin liegt in der Vergangenheit.")
+                : RuleStatus.Invalid("Die Einschreibefrist ist abgelaufen.")
+        );
     }
 
     /// <inheritdoc />
-    public ValueTask<RuleStatus> MayUnenrollAsync(Models_Person person, OtiumEinschreibung einschreibung)
+    public ValueTask<RuleStatus> MayUnenrollAsync(
+        Models_Person person,
+        OtiumEinschreibung einschreibung
+    )
     {
         return MayEnrollAsync(person, einschreibung.Termin);
     }

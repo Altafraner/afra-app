@@ -14,23 +14,33 @@ namespace Altafraner.Backbone.DataProtection;
 ///     A module for configuring data protection services
 /// </summary>
 /// <typeparam name="T"></typeparam>
-public class DataProtectionModule<T> : IModule where T : DbContext, IDataProtectionKeyContext
+public class DataProtectionModule<T> : IModule
+    where T : DbContext, IDataProtectionKeyContext
 {
     /// <inheritdoc />
-    public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
+    public void ConfigureServices(
+        IServiceCollection services,
+        IConfiguration config,
+        IHostEnvironment env
+    )
     {
         try
         {
-            var dataProtectionCert =
-                CertificateHelper.LoadX509CertificateAndKey(config, "DataProtection");
-            services.AddDataProtection()
+            var dataProtectionCert = CertificateHelper.LoadX509CertificateAndKey(
+                config,
+                "DataProtection"
+            );
+            services
+                .AddDataProtection()
                 .SetApplicationName(env.ApplicationName)
                 .PersistKeysToDbContext<T>()
                 .ProtectKeysWithCertificate(dataProtectionCert);
         }
         catch (CryptographicException exception)
         {
-            Console.WriteLine($"Could not load certificate for Domain Protection {exception.Message}");
+            Console.WriteLine(
+                $"Could not load certificate for Domain Protection {exception.Message}"
+            );
             Environment.Exit(1);
         }
     }

@@ -25,11 +25,13 @@ public sealed class ModuleBuilder
     ///     You tried to register a module that needs configuration without configuring
     ///     it
     /// </exception>
-    public ModuleBuilder AddModule<T>() where T : IModule
+    public ModuleBuilder AddModule<T>()
+        where T : IModule
     {
         if (typeof(T).IsAssignableTo(typeof(IModule<>)))
             throw new InvalidOperationException(
-                "You must add modules that implement IModule<TConfig> with their respective configuration!");
+                "You must add modules that implement IModule<TConfig> with their respective configuration!"
+            );
         Catalog.AddModule<T>();
         return this;
     }

@@ -20,16 +20,20 @@ public class Typst
     ///
     public byte[] GeneratePdf(string source, object inputData)
     {
-        var compiler = _cachedCompilers.GetOrAdd(source, s =>
-            new TypstCompilerWrapper(
+        var compiler = _cachedCompilers.GetOrAdd(
+            source,
+            s => new TypstCompilerWrapper(
                 s,
                 _typstConfiguration.Value.TypstFontPaths ?? [],
-                _typstConfiguration.Value.TypstResourcePath)
+                _typstConfiguration.Value.TypstResourcePath
+            )
         );
 
         lock (compiler)
         {
-            compiler.SetSysInputs(new Dictionary<string, string> { { "data", JsonSerializer.Serialize(inputData) } });
+            compiler.SetSysInputs(
+                new Dictionary<string, string> { { "data", JsonSerializer.Serialize(inputData) } }
+            );
             var res = compiler.CompilePdf();
             compiler.SetSysInputs(new Dictionary<string, string>());
             return res;

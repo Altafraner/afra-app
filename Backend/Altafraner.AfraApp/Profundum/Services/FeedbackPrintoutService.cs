@@ -24,10 +24,12 @@ internal partial class FeedbackPrintoutService
     private readonly UserService _userService;
     private readonly IOptions<GeneralConfiguration> _generalConfig;
 
-    public FeedbackPrintoutService(Altafraner.Typst.Typst typstService,
+    public FeedbackPrintoutService(
+        Altafraner.Typst.Typst typstService,
         UserService userService,
         AfraAppContext dbContext,
-        IOptions<GeneralConfiguration> generalConfig)
+        IOptions<GeneralConfiguration> generalConfig
+    )
     {
         _typstService = typstService;
         _userService = userService;
@@ -35,60 +37,81 @@ internal partial class FeedbackPrintoutService
         _generalConfig = generalConfig;
     }
 
-    public async Task<byte[]> GenerateFileForPerson(Person user, int schuljahr, bool halbjahr, DateOnly ausgabedatum)
+    public async Task<byte[]> GenerateFileForPerson(
+        Person user,
+        int schuljahr,
+        bool halbjahr,
+        DateOnly ausgabedatum
+    )
     {
-        var userGm = await _dbContext.Personen.Where(p =>
-                _dbContext.MentorMenteeRelations.Where(e => e.StudentId == user.Id && e.Type == MentorType.GM)
+        var userGm = await _dbContext
+            .Personen.Where(p =>
+                _dbContext
+                    .MentorMenteeRelations.Where(e =>
+                        e.StudentId == user.Id && e.Type == MentorType.GM
+                    )
                     .Select(e => e.MentorId)
-                    .Contains(p.Id))
+                    .Contains(p.Id)
+            )
             .FirstOrDefaultAsync();
 
         var quartale = GetQuartaleForHalbjahr(halbjahr);
 
-        var feedback = await _dbContext.ProfundumFeedbackEntries
-            .AsSplitQuery()
+        var feedback = await _dbContext
+            .ProfundumFeedbackEntries.AsSplitQuery()
             .Include(e => e.Anker)
-            .ThenInclude(a => a.Kategorie)
-            .ThenInclude(e => e.Fachbereiche)
+                .ThenInclude(a => a.Kategorie)
+                    .ThenInclude(e => e.Fachbereiche)
             .Include(e => e.Instanz)
-            .ThenInclude(e => e.Profundum)
+                .ThenInclude(e => e.Profundum)
             .Include(e => e.Instanz)
-            .ThenInclude(e => e.Slots)
+                .ThenInclude(e => e.Slots)
             .Include(e => e.Instanz)
-            .ThenInclude(e => e.Verantwortliche)
+                .ThenInclude(e => e.Verantwortliche)
             .Where(e => e.BetroffenePerson == user)
-            .Where(e => e.Instanz.Slots.Any(s => s.Jahr == schuljahr && quartale.Contains(s.Quartal)))
+            .Where(e =>
+                e.Instanz.Slots.Any(s => s.Jahr == schuljahr && quartale.Contains(s.Quartal))
+            )
             .ToArrayAsync();
 
-        var meta = new ProfundumFeedbackPdfData.MetaData(ausgabedatum.ToString("dd.MM.yyyy"),
+        var meta = new ProfundumFeedbackPdfData.MetaData(
+            ausgabedatum.ToString("dd.MM.yyyy"),
             schuljahr,
             halbjahr,
-            false);
-        ProfundumFeedbackPdfData[] data =
-            [FeedbackToInputData(feedback, user, userGm, meta)];
+            false
+        );
+        ProfundumFeedbackPdfData[] data = [FeedbackToInputData(feedback, user, userGm, meta)];
 
         var file = _typstService.GeneratePdf(Altafraner.Typst.Templates.Profundum.Feedback, data);
         return file;
     }
 
-    private ProfundumFeedbackPdfData FeedbackToInputData(ProfundumFeedbackEntry[] feedback,
+    private ProfundumFeedbackPdfData FeedbackToInputData(
+        ProfundumFeedbackEntry[] feedback,
         Person user,
         Person? userGm,
-        ProfundumFeedbackPdfData.MetaData meta)
+        ProfundumFeedbackPdfData.MetaData meta
+    )
     {
-        var profunda = feedback.Select(e => e.Instanz)
+        var profunda = feedback
+            .Select(e => e.Instanz)
             .DistinctBy(e => e.Profundum)
-            .Select(e => new ProfundumFeedbackPdfData.Profundum(e.Profundum.Bezeichnung,
-                e.Verantwortliche.Select(v => new PersonInfoMinimal(v))));
+            .Select(e => new ProfundumFeedbackPdfData.Profundum(
+                e.Profundum.Bezeichnung,
+                e.Verantwortliche.Select(v => new PersonInfoMinimal(v))
+            ));
 
-        var feedbackByKategorie = feedback.GroupBy(e => e.Anker, e => e.Grad)
+        var feedbackByKategorie = feedback
+            .GroupBy(e => e.Anker, e => e.Grad)
             .GroupBy(e => e.Key.Kategorie)
             .ToArray();
 
-        List<IGrouping<ProfundumFeedbackKategorie, IGrouping<ProfundumFeedbackAnker, int>>> allgemein =
-            new(feedbackByKategorie.Length / 2);
-        List<IGrouping<ProfundumFeedbackKategorie, IGrouping<ProfundumFeedbackAnker, int>>> fachlich =
-            new(feedbackByKategorie.Length / 2);
+        List<
+            IGrouping<ProfundumFeedbackKategorie, IGrouping<ProfundumFeedbackAnker, int>>
+        > allgemein = new(feedbackByKategorie.Length / 2);
+        List<
+            IGrouping<ProfundumFeedbackKategorie, IGrouping<ProfundumFeedbackAnker, int>>
+        > fachlich = new(feedbackByKategorie.Length / 2);
 
         foreach (var kategorie in feedbackByKategorie)
         {
@@ -104,82 +127,107 @@ internal partial class FeedbackPrintoutService
         var allgemeinSorted = allgemein
             .OrderByDescending(g => g.Key.Fachbereiche.Count)
             .ThenBy(g => g.Key.Label)
-            .ToImmutableSortedDictionary(k => k.Key.Label,
-                k => k.ToDictionary(e => ExtractFirstMarkdownBoldIfExists(e.Key.Label), e => e.ToArray()));
+            .ToImmutableSortedDictionary(
+                k => k.Key.Label,
+                k =>
+                    k.ToDictionary(
+                        e => ExtractFirstMarkdownBoldIfExists(e.Key.Label),
+                        e => e.ToArray()
+                    )
+            );
 
         var fachlichSorted = fachlich
             .OrderByDescending(g => g.Key.Fachbereiche.Count)
             .ThenBy(g => g.Key.Label)
-            .ToImmutableSortedDictionary(k => k.Key.Label,
-                k => k.ToDictionary(e => ExtractFirstMarkdownBoldIfExists(e.Key.Label), e => e.ToArray()));
+            .ToImmutableSortedDictionary(
+                k => k.Key.Label,
+                k =>
+                    k.ToDictionary(
+                        e => ExtractFirstMarkdownBoldIfExists(e.Key.Label),
+                        e => e.ToArray()
+                    )
+            );
 
-        var data =
-            new ProfundumFeedbackPdfData
-            {
-                Meta = meta,
-                Person = new PersonInfoMinimal(user),
-                GM = userGm is not null ? new PersonInfoMinimal(userGm) : null,
-                Schulleiter = _generalConfig.Value.Schulleiter,
-                Profunda = profunda,
-                FeedbackAllgemein = allgemeinSorted,
-                FeedbackFachlich = fachlichSorted
-            };
+        var data = new ProfundumFeedbackPdfData
+        {
+            Meta = meta,
+            Person = new PersonInfoMinimal(user),
+            GM = userGm is not null ? new PersonInfoMinimal(userGm) : null,
+            Schulleiter = _generalConfig.Value.Schulleiter,
+            Profunda = profunda,
+            FeedbackAllgemein = allgemeinSorted,
+            FeedbackFachlich = fachlichSorted,
+        };
         return data;
     }
 
-    public async Task<byte[]> GenerateFileBatched(BatchingModes mode,
+    public async Task<byte[]> GenerateFileBatched(
+        BatchingModes mode,
         int schuljahr,
         bool halbjahr,
         DateOnly ausgabedatum,
-        bool doublesided)
+        bool doublesided
+    )
     {
         if (mode.HasFlag(BatchingModes.Single) && mode != BatchingModes.Single)
             throw new ArgumentException("Cannot batch and single at onec", nameof(mode));
 
         var warnings = new List<string>();
 
-        var allUsers = await _dbContext.Personen.Where(e => e.Rolle == Rolle.Mittelstufe)
+        var allUsers = await _dbContext
+            .Personen.Where(e => e.Rolle == Rolle.Mittelstufe)
             .Include(e => e.MentorMenteeRelations.Where(m => m.Type == MentorType.GM))
             .OrderBy(e => e.FirstName)
             .ThenBy(e => e.LastName)
             .AsAsyncEnumerable()
-            .GroupBy(e => (
-                mode.HasFlag(BatchingModes.ByClass) ? e.Gruppe ?? "unbekannt" : "beliebig",
-                mode.HasFlag(BatchingModes.ByGm)
-                    ? e.MentorMenteeRelations.FirstOrDefault()?.MentorId
-                    : Guid.AllBitsSet))
+            .GroupBy(e =>
+                (
+                    mode.HasFlag(BatchingModes.ByClass) ? e.Gruppe ?? "unbekannt" : "beliebig",
+                    mode.HasFlag(BatchingModes.ByGm)
+                        ? e.MentorMenteeRelations.FirstOrDefault()?.MentorId
+                        : Guid.AllBitsSet
+                )
+            )
             .ToArrayAsync();
 
-        var allMentors = (await _userService.GetUsersWithRoleAsync(Rolle.Tutor)).ToDictionary(e => e.Id, e => e)
+        var allMentors = (await _userService.GetUsersWithRoleAsync(Rolle.Tutor))
+            .ToDictionary(e => e.Id, e => e)
             .AsReadOnly();
 
         var quartale = GetQuartaleForHalbjahr(halbjahr);
 
-        var allFeedback = await _dbContext.ProfundumFeedbackEntries.AsSplitQuery()
+        var allFeedback = await _dbContext
+            .ProfundumFeedbackEntries.AsSplitQuery()
             .Include(e => e.Anker)
-            .ThenInclude(a => a.Kategorie)
-            .ThenInclude(e => e.Fachbereiche)
+                .ThenInclude(a => a.Kategorie)
+                    .ThenInclude(e => e.Fachbereiche)
             .Include(e => e.Instanz)
-            .ThenInclude(e => e.Profundum)
+                .ThenInclude(e => e.Profundum)
             .Include(e => e.Instanz)
-            .ThenInclude(e => e.Slots)
+                .ThenInclude(e => e.Slots)
             .Include(e => e.Instanz)
-            .ThenInclude(e => e.Verantwortliche)
-            .Where(e => e.Instanz.Slots.Any(s => s.Jahr == schuljahr && quartale.Contains(s.Quartal)))
+                .ThenInclude(e => e.Verantwortliche)
+            .Where(e =>
+                e.Instanz.Slots.Any(s => s.Jahr == schuljahr && quartale.Contains(s.Quartal))
+            )
             .GroupBy(e => e.BetroffenePersonId)
             .ToDictionaryAsync(e => e.Key, e => e.ToArray());
 
-        var meta = new ProfundumFeedbackPdfData.MetaData(ausgabedatum.ToString("dd.MM.yyyy"),
+        var meta = new ProfundumFeedbackPdfData.MetaData(
+            ausgabedatum.ToString("dd.MM.yyyy"),
             schuljahr,
             halbjahr,
-            doublesided);
+            doublesided
+        );
 
         using var zipStream = new MemoryStream();
         await using (var zip = new ZipArchive(zipStream, ZipArchiveMode.Create, true))
         {
             foreach (var grouping in allUsers)
             {
-                List<ProfundumFeedbackPdfData> data = new(mode.HasFlag(BatchingModes.Single) ? 1 : grouping.Count());
+                List<ProfundumFeedbackPdfData> data = new(
+                    mode.HasFlag(BatchingModes.Single) ? 1 : grouping.Count()
+                );
                 foreach (var person in grouping)
                 {
                     var feedbackExists = allFeedback.TryGetValue(person.Id, out var feedback);
@@ -189,19 +237,29 @@ internal partial class FeedbackPrintoutService
                         continue;
                     }
 
-                    var gm = person.MentorMenteeRelations.Count != 0
-                        ? allMentors[person.MentorMenteeRelations.First().MentorId]
-                        : null;
-                    if (gm == null) warnings.Add(WarningForUser(person, "Kein GM gefunden"));
+                    var gm =
+                        person.MentorMenteeRelations.Count != 0
+                            ? allMentors[person.MentorMenteeRelations.First().MentorId]
+                            : null;
+                    if (gm == null)
+                        warnings.Add(WarningForUser(person, "Kein GM gefunden"));
                     if (person.MentorMenteeRelations.Count > 1)
-                        warnings.Add(WarningForUser(person, "Mehrere GMs registriert, nehme ersten"));
+                        warnings.Add(
+                            WarningForUser(person, "Mehrere GMs registriert, nehme ersten")
+                        );
 
                     data.Add(FeedbackToInputData(feedback!, person, gm, meta));
                     if (mode.HasFlag(BatchingModes.Single))
                     {
-                        var file = _typstService.GeneratePdf(Altafraner.Typst.Templates.Profundum.Feedback, data);
+                        var file = _typstService.GeneratePdf(
+                            Altafraner.Typst.Templates.Profundum.Feedback,
+                            data
+                        );
                         var entry = zip.CreateEntry(
-                            FilenameSanitizer.Sanitize($"{person.Gruppe}_{NicePersonName(person)}.pdf"));
+                            FilenameSanitizer.Sanitize(
+                                $"{person.Gruppe}_{NicePersonName(person)}.pdf"
+                            )
+                        );
                         await using var entryStream = await entry.OpenAsync();
                         await entryStream.WriteAsync(file);
                         data.Clear();
@@ -213,9 +271,15 @@ internal partial class FeedbackPrintoutService
 
                 if (!mode.HasFlag(BatchingModes.Single))
                 {
-                    var file = _typstService.GeneratePdf(Altafraner.Typst.Templates.Profundum.Feedback, data);
+                    var file = _typstService.GeneratePdf(
+                        Altafraner.Typst.Templates.Profundum.Feedback,
+                        data
+                    );
                     var entry = zip.CreateEntry(
-                        FilenameSanitizer.Sanitize(NiceFilename(grouping.Key.Item1, grouping.Key.Item2)));
+                        FilenameSanitizer.Sanitize(
+                            NiceFilename(grouping.Key.Item1, grouping.Key.Item2)
+                        )
+                    );
                     await using var entryStream = await entry.OpenAsync();
                     await entryStream.WriteAsync(file);
                 }
@@ -235,8 +299,7 @@ internal partial class FeedbackPrintoutService
 
         string NiceFilename(string klasse, Guid? mentor)
         {
-            return
-                $"{klasse}-{(mentor is null
+            return $"{klasse}-{(mentor is null
                     ? "unbekannt"
                     : mentor == Guid.AllBitsSet
                         ? "beliebig"
@@ -266,7 +329,7 @@ internal partial class FeedbackPrintoutService
     {
         ByGm = 1,
         ByClass = 2,
-        Single = 4
+        Single = 4,
     }
 
     private static string ExtractFirstMarkdownBoldIfExists(string input)

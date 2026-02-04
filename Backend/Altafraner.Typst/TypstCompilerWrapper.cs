@@ -14,7 +14,11 @@ internal unsafe class TypstCompilerWrapper
     /// <summary>
     ///     Construct a new instance of the typst compiler
     /// </summary>
-    internal TypstCompilerWrapper(string inputSource, IEnumerable<string> fontPaths, string? root = null)
+    internal TypstCompilerWrapper(
+        string inputSource,
+        IEnumerable<string> fontPaths,
+        string? root = null
+    )
     {
         var ignoreSystemFonts = false;
 
@@ -38,19 +42,25 @@ internal unsafe class TypstCompilerWrapper
             fixed (IntPtr* fontPathsRawPtr = fontPathPtrs)
             {
                 var fontPathsPtr = fontPathsList.Count == 0 ? null : fontPathsRawPtr;
-                _compiler = new CompilerSafe(NativeMethods.create_compiler(
-                    (byte*)rootPtr,
-                    (byte*)inputSourcePtr,
-                    (byte**)fontPathsPtr,
-                    (nuint)fontPathsList.Count,
-                    ignoreSystemFonts));
+                _compiler = new CompilerSafe(
+                    NativeMethods.create_compiler(
+                        (byte*)rootPtr,
+                        (byte*)inputSourcePtr,
+                        (byte**)fontPathsPtr,
+                        (nuint)fontPathsList.Count,
+                        ignoreSystemFonts
+                    )
+                );
             }
         }
         finally
         {
-            if (rootPtr != IntPtr.Zero) Marshal.FreeHGlobal(rootPtr);
-            if (inputSourcePtr != IntPtr.Zero) Marshal.FreeHGlobal(inputSourcePtr);
-            foreach (var ptr in fontPathPtrs) Marshal.FreeHGlobal(ptr);
+            if (rootPtr != IntPtr.Zero)
+                Marshal.FreeHGlobal(rootPtr);
+            if (inputSourcePtr != IntPtr.Zero)
+                Marshal.FreeHGlobal(inputSourcePtr);
+            foreach (var ptr in fontPathPtrs)
+                Marshal.FreeHGlobal(ptr);
         }
     }
 
@@ -61,9 +71,10 @@ internal unsafe class TypstCompilerWrapper
     public byte[] CompilePdf()
     {
         var cres = _compiler.Compile();
-        return cres.Error is null ? cres.Buffers[0] : throw new InvalidOperationException(cres.Error);
+        return cres.Error is null
+            ? cres.Buffers[0]
+            : throw new InvalidOperationException(cres.Error);
     }
-
 
     /// <summary>
     ///     Replace the sysInputs Dictionary used by the typst compiler

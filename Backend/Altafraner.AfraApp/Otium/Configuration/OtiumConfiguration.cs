@@ -38,7 +38,8 @@ public class OtiumConfiguration
     /// <returns>True, iff the configuration looks valid</returns>
     public static bool Validate(OtiumConfiguration config)
     {
-        if (config.Blocks is []) return false;
+        if (config.Blocks is [])
+            return false;
         if (config.Blocks.Any(sb => sb.Interval.Duration <= TimeSpan.Zero))
             return false;
         if (config is { EnrollmentReminder: null })
@@ -52,18 +53,12 @@ public class OtiumConfiguration
     /// </summary>
     /// <param name="Enabled">Whether to send notifications</param>
     /// <param name="Time">The time to send the notifications at</param>
-    public record NotificationInfo(
-        bool Enabled,
-        TimeOnly Time
-    );
+    public record NotificationInfo(bool Enabled, TimeOnly Time);
 
     /// <summary>
     ///     Information about the automatic report of missing students
     /// </summary>
     /// <param name="Enabled">Whether to send automatic reports</param>
     /// <param name="Recipients">The mail adresses of the notifications recipients</param>
-    public record MissingStudentsReportInfo(
-        bool Enabled,
-        string[] Recipients
-    );
+    public record MissingStudentsReportInfo(bool Enabled, string[] Recipients);
 }

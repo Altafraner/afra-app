@@ -16,17 +16,22 @@ namespace Altafraner.Backbone.CookieAuthentication;
 public class CookieAuthenticationModule : IModule
 {
     /// <inheritdoc />
-    public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
+    public void ConfigureServices(
+        IServiceCollection services,
+        IConfiguration config,
+        IHostEnvironment env
+    )
     {
         var section = config.GetSection("CookieAuthentication");
         services.AddOptions<CookieAuthenticationSettings>().Bind(section);
 
         var settings = section.Exists()
-            ? section.Get<CookieAuthenticationSettings>() ??
-              throw new ValidationException("Cannot bind CookieAuthenticationSettings")
+            ? section.Get<CookieAuthenticationSettings>()
+                ?? throw new ValidationException("Cannot bind CookieAuthenticationSettings")
             : new CookieAuthenticationSettings();
 
-        services.AddAuthentication()
+        services
+            .AddAuthentication()
             .AddCookie(options =>
             {
                 options.ExpireTimeSpan = settings.CookieTimeout;

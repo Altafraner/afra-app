@@ -10,7 +10,11 @@ namespace Altafraner.Backbone.Utils;
 public class TimeOnlyJsonConverter : JsonConverter<TimeOnly>
 {
     /// <inheritdoc />
-    public override TimeOnly Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override TimeOnly Read(
+        ref Utf8JsonReader reader,
+        Type typeToConvert,
+        JsonSerializerOptions options
+    )
     {
         return TimeOnly.Parse(reader.GetString() ?? "0:0:0");
     }

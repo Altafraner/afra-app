@@ -44,15 +44,15 @@ public record ProfundumSlot
 
 internal class ProfundumSlotComparer : IComparer<ProfundumSlot>, IEqualityComparer<ProfundumSlot>
 {
-    public int Compare(ProfundumSlot? slot1, ProfundumSlot? slot2)
-        => (slot1, slot2) switch
+    public int Compare(ProfundumSlot? slot1, ProfundumSlot? slot2) =>
+        (slot1, slot2) switch
         {
             (null, null) => 0,
             (null, _) => 1,
             (_, null) => -1,
-            var (s1, s2) =>
-                ((s1.Jahr * 10 + (int)s1.Quartal) * 10 + (int)s1.Wochentag)
-                .CompareTo((s2.Jahr * 10 + (int)s2.Quartal) * 10 + (int)s2.Wochentag),
+            var (s1, s2) => ((s1.Jahr * 10 + (int)s1.Quartal) * 10 + (int)s1.Wochentag).CompareTo(
+                (s2.Jahr * 10 + (int)s2.Quartal) * 10 + (int)s2.Wochentag
+            ),
         };
 
     public bool Equals(ProfundumSlot? x, ProfundumSlot? y)

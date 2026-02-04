@@ -23,7 +23,12 @@ internal class MockEmailService : IEmailService
     /// </summary>
     public Task SendEmailAsync(string toAddress, string subject, string body)
     {
-        _logger.LogInformation("Sending Mail for {to}, subject: {subject}, body:\n{body}", toAddress, subject, body);
+        _logger.LogInformation(
+            "Sending Mail for {to}, subject: {subject}, body:\n{body}",
+            toAddress,
+            subject,
+            body
+        );
         return Task.CompletedTask;
     }
 }

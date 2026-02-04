@@ -18,29 +18,32 @@ using Altafraner.Backbone.EmailSchedulingModule;
 using Altafraner.Backbone.Scheduling;
 using Microsoft.AspNetCore.Diagnostics;
 
-CultureInfo.CurrentCulture = CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfoByIetfLanguageTag("de-DE");
+CultureInfo.CurrentCulture = CultureInfo.CurrentUICulture =
+    CultureInfo.GetCultureInfoByIetfLanguageTag("de-DE");
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.UseAltafranerBackbone(configure: altafranerBuilder => altafranerBuilder
-// Afra-App modules
-    .AddModule<CalendarModule>()
-    .AddModule<DatabaseModule>()
-    .AddModule<OtiumModule>()
-    .AddModule<UserModule>()
-    .AddModule<SchuljahrModule>()
-    .AddModule<ProfundumModule>()
-    .AddModule<AuthorizationModule>()
-    .AddModule<EmergencyBackupModule>()
-// Backbone modules
-    .AddModule<CookieAuthenticationModule>()
-    .AddModule<DataProtectionModule<AfraAppContext>>()
-    .AddModule<EmailOutboxModule>()
-    .AddModuleAndConfigure<EmailSchedulingModule<Person>, EmailSchedulingSettings<Person>>(settings =>
-        settings.WithDbContextStore<AfraAppContext>())
-    .AddModule<DefaultsModule>()
-    .AddModule<ReverseProxyHandlerModule>()
-    .AddModule<SchedulingModule>()
+builder.UseAltafranerBackbone(configure: altafranerBuilder =>
+    altafranerBuilder
+        // Afra-App modules
+        .AddModule<CalendarModule>()
+        .AddModule<DatabaseModule>()
+        .AddModule<OtiumModule>()
+        .AddModule<UserModule>()
+        .AddModule<SchuljahrModule>()
+        .AddModule<ProfundumModule>()
+        .AddModule<AuthorizationModule>()
+        .AddModule<EmergencyBackupModule>()
+        // Backbone modules
+        .AddModule<CookieAuthenticationModule>()
+        .AddModule<DataProtectionModule<AfraAppContext>>()
+        .AddModule<EmailOutboxModule>()
+        .AddModuleAndConfigure<EmailSchedulingModule<Person>, EmailSchedulingSettings<Person>>(
+            settings => settings.WithDbContextStore<AfraAppContext>()
+        )
+        .AddModule<DefaultsModule>()
+        .AddModule<ReverseProxyHandlerModule>()
+        .AddModule<SchedulingModule>()
 );
 
 builder.Services.AddControllers();
@@ -52,10 +55,7 @@ if (!app.Environment.IsDevelopment())
     {
         errorApp.Run(async context =>
         {
-            var exception = context.Features
-                .Get<IExceptionHandlerFeature>()
-                ?
-                .Error;
+            var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
 
             switch (exception)
             {
@@ -69,7 +69,9 @@ if (!app.Environment.IsDevelopment())
                     return;
                 default:
                     context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-                    await context.Response.WriteAsJsonAsync(new { error = "An unspecified error occurred" });
+                    await context.Response.WriteAsJsonAsync(
+                        new { error = "An unspecified error occurred" }
+                    );
                     break;
             }
         });
@@ -77,7 +79,8 @@ if (!app.Environment.IsDevelopment())
 
 app.AddAltafranerMiddleware();
 app.MapAltafranerBackbone();
-if (app.Environment.IsDevelopment()) app.MapControllers();
+if (app.Environment.IsDevelopment())
+    app.MapControllers();
 await app.WarmupAltafranerBackbone();
 
 app.Run();

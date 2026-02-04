@@ -13,21 +13,21 @@ public interface IModule
     /// <summary>
     ///     Adds the services to the service collection
     /// </summary>
-    void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env);
+    void ConfigureServices(
+        IServiceCollection services,
+        IConfiguration config,
+        IHostEnvironment env
+    );
 
     /// <summary>
     ///     Configures the web application
     /// </summary>
-    void Configure(WebApplication app)
-    {
-    }
+    void Configure(WebApplication app) { }
 
     /// <summary>
     ///     Registers the middleware provided by this module. Is run before <see cref="Configure" />
     /// </summary>
-    void RegisterMiddleware(WebApplication app)
-    {
-    }
+    void RegisterMiddleware(WebApplication app) { }
 
     /// <summary>
     ///     Performs initializing steps
@@ -38,4 +38,5 @@ public interface IModule
 // ReSharper disable once UnusedTypeParameter
 /// <inheritdoc />
 /// <typeparam name="TConfig">The type used for configuring this module</typeparam>
-public interface IModule<TConfig> : IModule where TConfig : class;
+public interface IModule<TConfig> : IModule
+    where TConfig : class;

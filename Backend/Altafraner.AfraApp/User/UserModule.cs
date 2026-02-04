@@ -15,9 +15,14 @@ namespace Altafraner.AfraApp.User;
 public class UserModule : IModule
 {
     /// <inheritdoc />
-    public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
+    public void ConfigureServices(
+        IServiceCollection services,
+        IConfiguration config,
+        IHostEnvironment env
+    )
     {
-        services.AddOptions<LdapConfiguration>()
+        services
+            .AddOptions<LdapConfiguration>()
             .Bind(config.GetSection("LDAP"))
             .Validate(LdapConfiguration.Validate)
             .ValidateOnStart();

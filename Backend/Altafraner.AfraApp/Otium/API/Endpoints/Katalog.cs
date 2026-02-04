@@ -17,43 +17,65 @@ public static class Katalog
     {
         routeBuilder.MapGet("/{date}", GetDay);
         routeBuilder.MapGet("/{terminId:guid}", GetTermin);
-        routeBuilder.MapPut("/{terminId:guid}", EnrollAsync)
+        routeBuilder
+            .MapPut("/{terminId:guid}", EnrollAsync)
             .RequireAuthorization(AuthorizationPolicies.StudentOnly);
-        routeBuilder.MapPut("/{terminId:guid}/multi-enroll", MultiEnrollAsync)
+        routeBuilder
+            .MapPut("/{terminId:guid}/multi-enroll", MultiEnrollAsync)
             .RequireAuthorization(AuthorizationPolicies.StudentOnly);
-        routeBuilder.MapDelete("/{terminId:guid}", UnenrollAsync)
+        routeBuilder
+            .MapDelete("/{terminId:guid}", UnenrollAsync)
             .RequireAuthorization(AuthorizationPolicies.StudentOnly);
     }
 
-    private static async Task<IResult> GetDay(OtiumEndpointService service, UserAccessor userAccessor, DateOnly date)
+    private static async Task<IResult> GetDay(
+        OtiumEndpointService service,
+        UserAccessor userAccessor,
+        DateOnly date
+    )
     {
         var user = await userAccessor.GetUserAsync();
 
         return Results.Ok(await service.GetKatalogForDay(user, date));
     }
 
-    private static async Task<IResult> GetTermin(OtiumEndpointService service, Guid terminId, UserAccessor userAccessor)
+    private static async Task<IResult> GetTermin(
+        OtiumEndpointService service,
+        Guid terminId,
+        UserAccessor userAccessor
+    )
     {
         var user = await userAccessor.GetUserAsync();
 
         var termin = await service.GetTerminAsync(terminId, user);
-        if (termin == null) return Results.NotFound();
+        if (termin == null)
+            return Results.NotFound();
 
         return Results.Ok(termin);
     }
 
-    private static async Task<IResult> EnrollAsync(OtiumEndpointService service, EnrollmentService enrollmentService,
-        UserAccessor userAccessor, Guid terminId)
+    private static async Task<IResult> EnrollAsync(
+        OtiumEndpointService service,
+        EnrollmentService enrollmentService,
+        UserAccessor userAccessor,
+        Guid terminId
+    )
     {
         var user = await userAccessor.GetUserAsync();
 
         var termin = await enrollmentService.EnrollAsync(terminId, user);
-        return termin is null ? Results.BadRequest() : Results.Ok(await service.GetTerminAsync(terminId, user));
+        return termin is null
+            ? Results.BadRequest()
+            : Results.Ok(await service.GetTerminAsync(terminId, user));
     }
 
-    private static async Task<IResult> MultiEnrollAsync(OtiumEndpointService service,
+    private static async Task<IResult> MultiEnrollAsync(
+        OtiumEndpointService service,
         EnrollmentService enrollmentService,
-        UserAccessor userAccessor, Guid terminId, [FromBody] IEnumerable<DateOnly> dates)
+        UserAccessor userAccessor,
+        Guid terminId,
+        [FromBody] IEnumerable<DateOnly> dates
+    )
     {
         var user = await userAccessor.GetUserAsync();
 
@@ -72,12 +94,18 @@ public static class Katalog
         }
     }
 
-    private static async Task<IResult> UnenrollAsync(OtiumEndpointService service, EnrollmentService enrollmentService,
-        UserAccessor userAccessor, Guid terminId)
+    private static async Task<IResult> UnenrollAsync(
+        OtiumEndpointService service,
+        EnrollmentService enrollmentService,
+        UserAccessor userAccessor,
+        Guid terminId
+    )
     {
         var user = await userAccessor.GetUserAsync();
 
         var termin = await enrollmentService.UnenrollAsync(terminId, user);
-        return termin is null ? Results.BadRequest() : Results.Ok(await service.GetTerminAsync(terminId, user));
+        return termin is null
+            ? Results.BadRequest()
+            : Results.Ok(await service.GetTerminAsync(terminId, user));
     }
 }

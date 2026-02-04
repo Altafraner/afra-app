@@ -31,10 +31,16 @@ internal sealed class StudentMisbehaviourNotificationJob : RetryJob
     /// <summary>
     ///     Called from DI
     /// </summary>
-    public StudentMisbehaviourNotificationJob(ILogger<StudentMisbehaviourNotificationJob> logger,
-        SchuljahrService schuljahrService, UserService userService, IOptions<OtiumConfiguration> otiumConfiguration,
-        AfraAppContext dbContext, RulesValidationService rulesValidationService,
-        INotificationService notificationService) : base(logger)
+    public StudentMisbehaviourNotificationJob(
+        ILogger<StudentMisbehaviourNotificationJob> logger,
+        SchuljahrService schuljahrService,
+        UserService userService,
+        IOptions<OtiumConfiguration> otiumConfiguration,
+        AfraAppContext dbContext,
+        RulesValidationService rulesValidationService,
+        INotificationService notificationService
+    )
+        : base(logger)
     {
         _logger = logger;
         _schuljahrService = schuljahrService;
@@ -51,20 +57,27 @@ internal sealed class StudentMisbehaviourNotificationJob : RetryJob
     /// <inheritdoc />
     protected override async Task ExecuteAsync(IJobExecutionContext context, int _)
     {
-        if (!_otiumConfiguration.Value.StudentMisbehaviourNotification.Enabled) return;
+        if (!_otiumConfiguration.Value.StudentMisbehaviourNotification.Enabled)
+            return;
 
         var now = DateTime.Now;
         var hasRun = context.JobDetail.JobDataMap.TryGetDateTime("last_run", out var lastRun);
-        if (TimeOnly.FromDateTime(now) < _otiumConfiguration.Value.StudentMisbehaviourNotification.Time.AddMinutes(-5))
+        if (
+            TimeOnly.FromDateTime(now)
+            < _otiumConfiguration.Value.StudentMisbehaviourNotification.Time.AddMinutes(-5)
+        )
         {
             _logger.LogWarning(
-                "Student Misbehaviour job was scheduled before the default reminder time. Skipping execution.");
+                "Student Misbehaviour job was scheduled before the default reminder time. Skipping execution."
+            );
             return;
         }
 
         if (hasRun && lastRun.Date == now.Date)
         {
-            _logger.LogInformation("Student Misbehaviour job has already run today. Skipping execution.");
+            _logger.LogInformation(
+                "Student Misbehaviour job has already run today. Skipping execution."
+            );
             return;
         }
 
@@ -87,14 +100,14 @@ internal sealed class StudentMisbehaviourNotificationJob : RetryJob
             return;
         }
 
-        var todaysEnrollments = await _dbContext.OtiaEinschreibungen
-            .Where(e => schultag.Blocks.Contains(e.Termin.Block))
+        var todaysEnrollments = await _dbContext
+            .OtiaEinschreibungen.Where(e => schultag.Blocks.Contains(e.Termin.Block))
             .Include(e => e.BetroffenePerson)
             .Include(e => e.Termin)
-            .ThenInclude(t => t.Block)
+                .ThenInclude(t => t.Block)
             .Include(e => e.Termin)
-            .ThenInclude(t => t.Otium)
-            .ThenInclude(o => o.Kategorie)
+                .ThenInclude(t => t.Otium)
+                    .ThenInclude(o => o.Kategorie)
             .GroupBy(e => e.BetroffenePerson.Id)
             .ToDictionaryAsync(e => e.Key, e => e.ToList());
         var students = await _userService.GetUsersWithRoleAsync(Rolle.Mittelstufe);
@@ -106,17 +119,18 @@ internal sealed class StudentMisbehaviourNotificationJob : RetryJob
         {
             var startOfWeek = today.GetStartOfWeek();
             var endOfWeek = startOfWeek.AddDays(7);
-            schultageInWeek = await _dbContext.Schultage
-                .Include(s => s.Blocks).Where(s => s.Datum >= startOfWeek && s.Datum < endOfWeek)
+            schultageInWeek = await _dbContext
+                .Schultage.Include(s => s.Blocks)
+                .Where(s => s.Datum >= startOfWeek && s.Datum < endOfWeek)
                 .ToListAsync();
-            weeksEnrollments = await _dbContext.OtiaEinschreibungen
-                .Where(e => schultageInWeek.Contains(e.Termin.Block.Schultag))
+            weeksEnrollments = await _dbContext
+                .OtiaEinschreibungen.Where(e => schultageInWeek.Contains(e.Termin.Block.Schultag))
                 .Include(e => e.BetroffenePerson)
                 .Include(e => e.Termin)
-                .ThenInclude(t => t.Block)
+                    .ThenInclude(t => t.Block)
                 .Include(e => e.Termin)
-                .ThenInclude(t => t.Otium)
-                .ThenInclude(o => o.Kategorie)
+                    .ThenInclude(t => t.Otium)
+                        .ThenInclude(o => o.Kategorie)
                 .GroupBy(e => e.BetroffenePerson.Id)
                 .ToDictionaryAsync(e => e.Key, e => e.ToList());
         }
@@ -127,21 +141,38 @@ internal sealed class StudentMisbehaviourNotificationJob : RetryJob
             List<string> messages = [];
 
             messages.AddRange(
-                await _rulesValidationService.GetMessagesForEnrollmentsAsync(student, studentsEnrollments));
+                await _rulesValidationService.GetMessagesForEnrollmentsAsync(
+                    student,
+                    studentsEnrollments
+                )
+            );
             messages.AddRange(
-                await _rulesValidationService.GetMessagesForDayAsync(student, schultag, studentsEnrollments));
+                await _rulesValidationService.GetMessagesForDayAsync(
+                    student,
+                    schultag,
+                    studentsEnrollments
+                )
+            );
             if (lastDayWithBlocks)
             {
                 var studentsEnrollmentsInWeek = weeksEnrollments.GetValueOrDefault(student.Id, []);
-                messages.AddRange(await _rulesValidationService.GetMessagesForWeekAsync(student, schultageInWeek,
-                    studentsEnrollmentsInWeek));
+                messages.AddRange(
+                    await _rulesValidationService.GetMessagesForWeekAsync(
+                        student,
+                        schultageInWeek,
+                        studentsEnrollmentsInWeek
+                    )
+                );
             }
 
-            if (messages.Count == 0) continue;
+            if (messages.Count == 0)
+                continue;
 
             // Send E-Mail
             var contentBuilder = new StringBuilder();
-            contentBuilder.AppendLine("Die Afra-App hat im Bezug auf Ihren Mentee folgendes festgestellt:");
+            contentBuilder.AppendLine(
+                "Die Afra-App hat im Bezug auf Ihren Mentee folgendes festgestellt:"
+            );
             foreach (var message in messages)
                 contentBuilder.AppendLine($"  - {message}");
 
@@ -150,7 +181,12 @@ internal sealed class StudentMisbehaviourNotificationJob : RetryJob
 
             var mentoren = await _userService.GetMentorsAsync(student);
             foreach (var mentor in mentoren)
-                await _notificationService.ScheduleNotificationAsync(mentor, subject, body, TimeSpan.FromMinutes(10));
+                await _notificationService.ScheduleNotificationAsync(
+                    mentor,
+                    subject,
+                    body,
+                    TimeSpan.FromMinutes(10)
+                );
         }
     }
 }

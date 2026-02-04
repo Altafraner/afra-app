@@ -18,5 +18,5 @@ public enum FeedbackStatus
     /// <summary>
     ///     Feedback has been provided for all students
     /// </summary>
-    Done
+    Done,
 }

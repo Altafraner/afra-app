@@ -11,8 +11,11 @@ public class ServiceProviderRulesFactory : IRulesFactory
     private readonly IEnumerable<IWeekRule> _week;
 
     ///
-    public ServiceProviderRulesFactory(IEnumerable<IBlockRule> block, IEnumerable<IIndependentRule> independent,
-        IEnumerable<IWeekRule> week)
+    public ServiceProviderRulesFactory(
+        IEnumerable<IBlockRule> block,
+        IEnumerable<IIndependentRule> independent,
+        IEnumerable<IWeekRule> week
+    )
     {
         _block = block;
         _independent = independent;

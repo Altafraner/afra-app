@@ -15,9 +15,14 @@ namespace Altafraner.Backbone.EmailOutbox;
 public class EmailOutboxModule : IModule
 {
     /// <inheritdoc />
-    public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
+    public void ConfigureServices(
+        IServiceCollection services,
+        IConfiguration config,
+        IHostEnvironment env
+    )
     {
-        services.AddOptions<EmailConfiguration>()
+        services
+            .AddOptions<EmailConfiguration>()
             .Bind(config.GetSection("SMTP"))
             .Validate(EmailConfiguration.Validate)
             .ValidateOnStart();

@@ -19,7 +19,9 @@ namespace Altafraner.Backbone.Defaults;
 public class DefaultsModule : IModule
 {
     /// <inheritdoc />
-    public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
-    {
-    }
+    public void ConfigureServices(
+        IServiceCollection services,
+        IConfiguration config,
+        IHostEnvironment env
+    ) { }
 }

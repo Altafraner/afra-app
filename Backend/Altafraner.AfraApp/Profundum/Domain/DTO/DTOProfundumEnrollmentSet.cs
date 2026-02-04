@@ -26,5 +26,4 @@ public record struct DTOProfundumEnrollmentSet
     ///     Warnings about the students status of enrollment
     /// </summary>
     public required IEnumerable<MatchingWarning> Warnings { get; set; }
-
 }

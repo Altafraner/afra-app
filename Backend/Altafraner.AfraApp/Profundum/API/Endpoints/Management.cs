@@ -29,97 +29,165 @@ public static class Management
 
         var ez = gp.MapGroup("einwahlzeitraum");
         ez.MapGet("/", (Mgmt svc) => svc.GetEinwahlZeiträumeAsync());
-        ez.MapPost("/", async (Mgmt svc, DTOProfundumEinwahlZeitraumCreation zeitraum) => (await svc.CreateEinwahlZeitraumAsync(zeitraum)).Id);
-        ez.MapPut("/{id:guid}",
+        ez.MapPost(
+            "/",
+            async (Mgmt svc, DTOProfundumEinwahlZeitraumCreation zeitraum) =>
+                (await svc.CreateEinwahlZeitraumAsync(zeitraum)).Id
+        );
+        ez.MapPut(
+            "/{id:guid}",
             (Mgmt managementService, Guid id, DTOProfundumEinwahlZeitraumCreation dto) =>
-                managementService.UpdateEinwahlZeitraumAsync(id, dto));
+                managementService.UpdateEinwahlZeitraumAsync(id, dto)
+        );
         ez.MapDelete("/{id:guid}", (Mgmt svc, Guid id) => svc.DeleteEinwahlZeitraumAsync(id));
 
         gp.MapGet("/slot", (Mgmt svc) => svc.GetSlotsAsync());
-        gp.MapPost("/slot", async (Mgmt svc, DTOProfundumSlotCreation slot) => (await svc.CreateSlotAsync(slot)).Id);
-        gp.MapPut("/slot/{id:guid}", (Mgmt svc, Guid id, DTOProfundumSlotCreation dto) => svc.UpdateSlotAsync(id, dto));
+        gp.MapPost(
+            "/slot",
+            async (Mgmt svc, DTOProfundumSlotCreation slot) => (await svc.CreateSlotAsync(slot)).Id
+        );
+        gp.MapPut(
+            "/slot/{id:guid}",
+            (Mgmt svc, Guid id, DTOProfundumSlotCreation dto) => svc.UpdateSlotAsync(id, dto)
+        );
         gp.MapDelete("/slot/{id:guid}", (Mgmt svc, Guid id) => svc.DeleteSlotAsync(id));
 
         var kat = gp.MapGroup("kategorie");
         kat.MapGet("/", (Mgmt svc) => svc.GetKategorienAsync());
-        kat.MapPost("/", async (Mgmt svc, DTOProfundumKategorieCreation kategorie) => (await svc.CreateKategorieAsync(kategorie)).Id);
-        kat.MapPut("/{id:guid}", (Mgmt svc, Guid id, DTOProfundumKategorieCreation kategorie) => svc.UpdateKategorieAsync(id, kategorie));
+        kat.MapPost(
+            "/",
+            async (Mgmt svc, DTOProfundumKategorieCreation kategorie) =>
+                (await svc.CreateKategorieAsync(kategorie)).Id
+        );
+        kat.MapPut(
+            "/{id:guid}",
+            (Mgmt svc, Guid id, DTOProfundumKategorieCreation kategorie) =>
+                svc.UpdateKategorieAsync(id, kategorie)
+        );
         kat.MapDelete("/{id:guid}", (Mgmt svc, Guid id) => svc.DeleteKategorieAsync(id));
 
         var pf = gp.MapGroup("profundum");
         pf.MapGet("/{id:guid}", (Mgmt svc, Guid id) => svc.GetProfundumAsync(id));
         pf.MapGet("/", (Mgmt svc) => svc.GetProfundaAsync());
-        pf.MapPost("/", async (Mgmt svc, DTOProfundumDefinitionCreation definition) => (await svc.CreateProfundumAsync(definition)).Id);
-        pf.MapPut("/{id:guid}", async (Mgmt svc, Guid id, DTOProfundumDefinitionCreation definition) => (await svc.UpdateProfundumAsync(id, definition)).Id);
+        pf.MapPost(
+            "/",
+            async (Mgmt svc, DTOProfundumDefinitionCreation definition) =>
+                (await svc.CreateProfundumAsync(definition)).Id
+        );
+        pf.MapPut(
+            "/{id:guid}",
+            async (Mgmt svc, Guid id, DTOProfundumDefinitionCreation definition) =>
+                (await svc.UpdateProfundumAsync(id, definition)).Id
+        );
         pf.MapDelete("/{id:guid}", (Mgmt svc, Guid id) => svc.DeleteProfundumAsync(id));
 
         var ins = gp.MapGroup("instanz");
-        ins.MapPost("/", async (Mgmt svc, DTOProfundumInstanzCreation instanz) => (await svc.CreateInstanzAsync(instanz)).Id);
+        ins.MapPost(
+            "/",
+            async (Mgmt svc, DTOProfundumInstanzCreation instanz) =>
+                (await svc.CreateInstanzAsync(instanz)).Id
+        );
         ins.MapGet("/", (Mgmt svc) => svc.GetInstanzenAsync());
         ins.MapGet("/{id:guid}", (Mgmt svc, Guid id) => svc.GetInstanzAsync(id));
-        ins.MapPut("/{id:guid}", async (Mgmt svc, Guid id, DTOProfundumInstanzCreation instanz) => (await svc.UpdateInstanzAsync(id, instanz)).Id);
+        ins.MapPut(
+            "/{id:guid}",
+            async (Mgmt svc, Guid id, DTOProfundumInstanzCreation instanz) =>
+                (await svc.UpdateInstanzAsync(id, instanz)).Id
+        );
         ins.MapDelete("/{id:guid}", (Mgmt svc, Guid id) => svc.DeleteInstanzAsync(id));
-        ins.MapGet("/{id:guid}.pdf",
-            new Func<Mgmt, Guid, Task<Results<NotFound, FileContentHttpResult>>>(async (svc, id) =>
-            {
-                var instanz = await svc.GetInstanzAsync(id);
-                if (instanz is null)
+        ins.MapGet(
+            "/{id:guid}.pdf",
+            new Func<Mgmt, Guid, Task<Results<NotFound, FileContentHttpResult>>>(
+                async (svc, id) =>
                 {
-                    return TypedResults.NotFound();
-                }
+                    var instanz = await svc.GetInstanzAsync(id);
+                    if (instanz is null)
+                    {
+                        return TypedResults.NotFound();
+                    }
 
-                var slotId = instanz.Slots.First();
-                var slot = (await svc.GetSlotsAsync()).First(s => s.Id == slotId);
-                var nameSanitized = new string(instanz.ProfundumInfo.Bezeichnung
-                    .Select(c => char.IsLetterOrDigit(c) || c == ' ' ? c : '_')
-                    .ToArray());
-                return TypedResults.File((await svc.GetInstanzPdfAsync(id)),
-                    MediaTypeNames.Application.Pdf,
-                    $"{slot.Jahr}_{slot.Quartal}_{slot.Wochentag}_{nameSanitized}.pdf");
-            }));
-        ins.MapGet("/{id:guid}.zip",
+                    var slotId = instanz.Slots.First();
+                    var slot = (await svc.GetSlotsAsync()).First(s => s.Id == slotId);
+                    var nameSanitized = new string(
+                        instanz
+                            .ProfundumInfo.Bezeichnung.Select(c =>
+                                char.IsLetterOrDigit(c) || c == ' ' ? c : '_'
+                            )
+                            .ToArray()
+                    );
+                    return TypedResults.File(
+                        (await svc.GetInstanzPdfAsync(id)),
+                        MediaTypeNames.Application.Pdf,
+                        $"{slot.Jahr}_{slot.Quartal}_{slot.Wochentag}_{nameSanitized}.pdf"
+                    );
+                }
+            )
+        );
+        ins.MapGet(
+            "/{id:guid}.zip",
             async (Mgmt svc, Guid id) =>
             {
                 var (f, fn) = await svc.GetSlotPdfsZipAsync(id);
                 return TypedResults.File(f, MediaTypeNames.Application.Zip, $"{fn}.zip");
-            });
+            }
+        );
 
         var fachbereich = gp.MapGroup("fachbereich");
-        fachbereich.MapGet("/",
+        fachbereich.MapGet(
+            "/",
             async (ProfundumFachbereicheService fbs) =>
-                TypedResults.Ok((await fbs.GetFachbereicheAsync()).Select(fb => new DtoProfundumFachbereich(fb))));
-        fachbereich.MapPost("/",
+                TypedResults.Ok(
+                    (await fbs.GetFachbereicheAsync()).Select(fb => new DtoProfundumFachbereich(fb))
+                )
+        );
+        fachbereich.MapPost(
+            "/",
             async (ProfundumFachbereicheService fbs, ValueWrapper<string> request) =>
             {
                 await fbs.CreateFachbereichAsync(request.Value);
                 return TypedResults.NoContent();
-            });
-        fachbereich.MapPut("/",
+            }
+        );
+        fachbereich.MapPut(
+            "/",
             async (ProfundumFachbereicheService fbs, DtoProfundumFachbereich request) =>
             {
                 await fbs.UpdateFachbereichAsync(request.Id, request.Label);
                 return TypedResults.NoContent();
-            });
-        fachbereich.MapDelete("/{id:guid}",
+            }
+        );
+        fachbereich.MapDelete(
+            "/{id:guid}",
             async (ProfundumFachbereicheService fbs, Guid id) =>
             {
                 await fbs.DeleteFachbereichAsync(id);
                 return TypedResults.NoContent();
-            });
+            }
+        );
 
         gp.MapPost("/matching", PerformMatchingSynchronized);
         gp.MapPost("/finalize", (Match svc) => svc.FinalizeMatching());
         gp.MapGet("/enrollments", (Match svc) => svc.GetAllEnrollmentsAsync());
         gp.MapPut("/enrollment/{personId:guid}", PutEnrollmentsAsync);
 
-        gp.MapGet("/matching.csv", async (Mgmt svc) => TypedResults.File(Encoding.UTF8.GetBytes(await svc.GetStudentMatchingCsv()), MediaTypeNames.Text.Csv));
+        gp.MapGet(
+            "/matching.csv",
+            async (Mgmt svc) =>
+                TypedResults.File(
+                    Encoding.UTF8.GetBytes(await svc.GetStudentMatchingCsv()),
+                    MediaTypeNames.Text.Csv
+                )
+        );
 
         app.MapGet("/management/feedback/belegung", GetAllQuartaleWithEnrollments)
             .RequireAuthorization(AuthorizationPolicies.TutorOnly);
     }
 
     private static readonly SemaphoreSlim _matchingSemaphore = new SemaphoreSlim(1, 1);
-    private static async Task<Results<Ok<MatchingStats>, StatusCodeHttpResult>> PerformMatchingSynchronized(Match svc)
+
+    private static async Task<
+        Results<Ok<MatchingStats>, StatusCodeHttpResult>
+    > PerformMatchingSynchronized(Match svc)
     {
         if (!await _matchingSemaphore.WaitAsync(0))
             return TypedResults.StatusCode(429);
@@ -133,7 +201,11 @@ public static class Management
         }
     }
 
-    private static async Task<Results<Ok, StatusCodeHttpResult>> PutEnrollmentsAsync(Mgmt svc, Guid personId, List<DTOProfundumEnrollment> enrollments)
+    private static async Task<Results<Ok, StatusCodeHttpResult>> PutEnrollmentsAsync(
+        Mgmt svc,
+        Guid personId,
+        List<DTOProfundumEnrollment> enrollments
+    )
     {
         if (!await _matchingSemaphore.WaitAsync(0))
             return TypedResults.StatusCode(429);
@@ -151,14 +223,15 @@ public static class Management
     // TODO This is slow and should be replaced by something more in line with the new matching interface.
     private static async Task<Ok<QuartalEnrollmentOverview[]>> GetAllQuartaleWithEnrollments(
         AfraAppContext dbContext,
-        UserAccessor userAccessor)
+        UserAccessor userAccessor
+    )
     {
         var user = await userAccessor.GetUserAsync();
-        IQueryable<ProfundumInstanz> quartalQuery = dbContext.ProfundaInstanzen
-            .AsSplitQuery()
+        IQueryable<ProfundumInstanz> quartalQuery = dbContext
+            .ProfundaInstanzen.AsSplitQuery()
             .Include(e => e.Profundum)
             .Include(e => e.Einschreibungen.Where(enr => enr.IsFixed))
-            .ThenInclude(e => e.BetroffenePerson)
+                .ThenInclude(e => e.BetroffenePerson)
             .Include(e => e.Slots);
 
         if (!user.GlobalPermissions.Contains(GlobalPermission.Profundumsverantwortlich))

@@ -14,25 +14,30 @@ namespace Altafraner.Backbone.Defaults;
 public class ReverseProxyHandlerModule : IModule
 {
     /// <inheritdoc />
-    public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
-    {
-    }
+    public void ConfigureServices(
+        IServiceCollection services,
+        IConfiguration config,
+        IHostEnvironment env
+    ) { }
 
     /// <inheritdoc />
     public void RegisterMiddleware(WebApplication app)
     {
-        app.UseForwardedHeaders(new ForwardedHeadersOptions
-        {
-            ForwardedHeaders = ForwardedHeaders.XForwardedFor
-                               | ForwardedHeaders.XForwardedProto
-                               | ForwardedHeaders.XForwardedHost,
-            KnownIPNetworks =
+        app.UseForwardedHeaders(
+            new ForwardedHeadersOptions
             {
-                IPNetwork.Parse("10.0.0.0/8"),
-                IPNetwork.Parse("172.16.0.0/12"),
-                IPNetwork.Parse("192.168.0.0/16"),
-                IPNetwork.Parse("fc00::/7")
+                ForwardedHeaders =
+                    ForwardedHeaders.XForwardedFor
+                    | ForwardedHeaders.XForwardedProto
+                    | ForwardedHeaders.XForwardedHost,
+                KnownIPNetworks =
+                {
+                    IPNetwork.Parse("10.0.0.0/8"),
+                    IPNetwork.Parse("172.16.0.0/12"),
+                    IPNetwork.Parse("192.168.0.0/16"),
+                    IPNetwork.Parse("fc00::/7"),
+                },
             }
-        });
+        );
     }
 }

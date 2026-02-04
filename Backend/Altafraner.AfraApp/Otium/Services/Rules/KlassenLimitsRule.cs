@@ -26,12 +26,18 @@ public class KlassenLimitsRule : IIndependentRule
         if (termin.Otium.MinKlasse is not null && termin.Otium.MinKlasse > klasse)
         {
             return new ValueTask<RuleStatus>(
-                    RuleStatus.Invalid($"Dieses Otium ist nur für Schüler:innen ab Klasse {termin.Otium.MinKlasse} vorgesehen"));
+                RuleStatus.Invalid(
+                    $"Dieses Otium ist nur für Schüler:innen ab Klasse {termin.Otium.MinKlasse} vorgesehen"
+                )
+            );
         }
         if (termin.Otium.MaxKlasse is not null && termin.Otium.MaxKlasse < klasse)
         {
             return new ValueTask<RuleStatus>(
-                    RuleStatus.Invalid($"Dieses Otium ist nur für Schüler:innen bis Klasse {termin.Otium.MinKlasse} vorgesehen"));
+                RuleStatus.Invalid(
+                    $"Dieses Otium ist nur für Schüler:innen bis Klasse {termin.Otium.MinKlasse} vorgesehen"
+                )
+            );
         }
         return new ValueTask<RuleStatus>(RuleStatus.Valid);
     }

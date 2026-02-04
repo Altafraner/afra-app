@@ -7,23 +7,28 @@ internal sealed class ModuleCatalog
 {
     private readonly Dictionary<Type, HashSet<Type>> _modules = [];
 
-    public void AddModule<T>() where T : IModule
+    public void AddModule<T>()
+        where T : IModule
     {
         AddModuleWithDependencies(typeof(T));
     }
 
     private void AddModuleWithDependencies(Type module)
     {
-        if (_modules.ContainsKey(module)) return;
+        if (_modules.ContainsKey(module))
+            return;
 
-        var dependencies = module.GetCustomAttributes(typeof(DependsOnAttribute), true)
+        var dependencies = module
+            .GetCustomAttributes(typeof(DependsOnAttribute), true)
             .Cast<DependsOnAttribute>()
             .Select(a => a.ModuleType)
             .ToHashSet();
         _modules.Add(module, dependencies);
 
         // Make sure dependencies are also included
-        foreach (var dependency in dependencies.Where(dependency => !_modules.ContainsKey(dependency)))
+        foreach (
+            var dependency in dependencies.Where(dependency => !_modules.ContainsKey(dependency))
+        )
             AddModuleWithDependencies(dependency);
     }
 
@@ -31,7 +36,8 @@ internal sealed class ModuleCatalog
     public IReadOnlyCollection<Type> GetOrderedModules() => ReverseTopologicalSort(_modules);
 
     [Pure]
-    private static List<T> ReverseTopologicalSort<T>(Dictionary<T, HashSet<T>> dependencyGraph) where T : notnull
+    private static List<T> ReverseTopologicalSort<T>(Dictionary<T, HashSet<T>> dependencyGraph)
+        where T : notnull
     {
         var nodes = dependencyGraph.ToDictionary(d => d.Key, d => d.Value.ToHashSet());
         var result = new List<T>();

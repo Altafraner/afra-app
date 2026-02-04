@@ -12,9 +12,7 @@ public record ManagementTerminView
     /// <summary>
     ///     Construct an empty ManagementTerminView
     /// </summary>
-    public ManagementTerminView()
-    {
-    }
+    public ManagementTerminView() { }
 
     /// <summary>
     ///     Construct a ManagementTerminView from a Database Termin

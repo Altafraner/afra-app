@@ -11,7 +11,8 @@ internal sealed class FlushEmailJob : RetryJob
 {
     private readonly IEmailService _emailService;
 
-    public FlushEmailJob(IEmailService emailService, ILogger<FlushEmailJob> logger) : base(logger)
+    public FlushEmailJob(IEmailService emailService, ILogger<FlushEmailJob> logger)
+        : base(logger)
     {
         _emailService = emailService;
     }
@@ -23,10 +24,16 @@ internal sealed class FlushEmailJob : RetryJob
         var subject = context.MergedJobDataMap.GetString("subject");
         var body = context.MergedJobDataMap.GetString("body");
         var recipient = context.MergedJobDataMap.GetString("recipient");
-        if (string.IsNullOrEmpty(subject) || string.IsNullOrEmpty(body) || string.IsNullOrEmpty(recipient))
-            throw new JobExecutionException("Subject, body, and recipient must be provided for the report job.")
+        if (
+            string.IsNullOrEmpty(subject)
+            || string.IsNullOrEmpty(body)
+            || string.IsNullOrEmpty(recipient)
+        )
+            throw new JobExecutionException(
+                "Subject, body, and recipient must be provided for the report job."
+            )
             {
-                RefireImmediately = false
+                RefireImmediately = false,
             };
 
         await _emailService.SendEmailAsync(recipient, subject, body);
