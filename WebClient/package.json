@@ -19,14 +19,14 @@
         "@tailwindcss/vite": "^4.0.12",
         "dompurify": "^3.3.0",
         "mande": "^2.0.9",
-        "marked": "^17.0.1",
+        "marked": "^17.0.2",
         "pinia": "^3.0.1",
         "primeicons": "^7.0.0",
         "primelocale": "^2.2.4",
         "primevue": "^4.5.1",
         "tailwindcss": "^4.0.12",
         "tailwindcss-primeui": "^0.6.1",
-        "vue": "^3.5.27",
+        "vue": "^3.5.28",
         "vue-router": "^4.5.0"
     },
     "devDependencies": {
@@ -40,7 +40,7 @@
         "vite": "^7.3.1",
         "vite-plugin-pwa": "^1.0.3",
         "vite-plugin-vue-devtools": "^8.0.6",
-        "vue-eslint-parser": "^10.2.0",
+        "vue-eslint-parser": "^10.3.0",
         "vue-tsc": "^3.2.4"
     }
 }
