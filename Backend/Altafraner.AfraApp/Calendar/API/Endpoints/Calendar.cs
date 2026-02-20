@@ -18,7 +18,7 @@ public static class Calendar
         app.MapGet("/api/calendar", SubscribeCalendarAsync).RequireAuthorization();
         app.MapGet("/api/calendar/count", GetNumberOfSubscriptionsAsync).RequireAuthorization();
         app.MapDelete("/api/calendar", DeleteAllSubscriptionsAsync).RequireAuthorization();
-        app.MapGet("/api/calendar.ics", GetCalendarAsync);
+        app.MapGet("/api/calendar.ics", GetCalendarAsync).RequireAuthorization();
         app.MapGet("/api/calendar/{subId:guid}.ics", GetCalendarViaSubAsync);
     }
 
@@ -44,7 +44,7 @@ public static class Calendar
         return Results.Ok(subId);
     }
 
-    private static async Task<IResult> GetCalendarViaSubAsync(UserAccessor userAccessor, CalendarService calendarService, Guid subId)
+    private static async Task<IResult> GetCalendarViaSubAsync(CalendarService calendarService, Guid subId)
     {
         var cal = await calendarService.GetCalendarAsync(subId);
         if (cal is null)
