@@ -1,4 +1,4 @@
-﻿<script lang="ts" setup>
+<script lang="ts" setup>
 import { useFeedback } from '@/Profundum/composables/feedback';
 import { computed, shallowRef } from 'vue';
 import type { ProfundumFeedbackStatus } from '@/Profundum/models/feedback';

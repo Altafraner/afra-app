@@ -1,4 +1,4 @@
-﻿export interface NavBreadcrumbElement {
+export interface NavBreadcrumbElement {
     icon?: string;
     label?: string;
     ariaLabel?: string;
