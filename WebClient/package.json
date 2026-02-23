@@ -16,7 +16,7 @@
         "@microsoft/signalr": "^10.0.0",
         "@primevue/forms": "^4.5.1",
         "@primevue/themes": "^4.5.1",
-        "@tailwindcss/vite": "^4.2.0",
+        "@tailwindcss/vite": "^4.2.1",
         "dompurify": "^3.3.0",
         "mande": "^2.0.9",
         "marked": "^17.0.3",
@@ -33,7 +33,7 @@
         "@eslint/js": "^10.0.1",
         "@vitejs/plugin-vue": "^6.0.4",
         "@vue/tsconfig": "^0.8.1",
-        "eslint": "^10.0.0",
+        "eslint": "^10.0.1",
         "eslint-plugin-vue": "^10.8.0",
         "npm-run-all2": "^8.0.4",
         "prettier": "^3.8.1",
@@ -41,6 +41,6 @@
         "vite-plugin-pwa": "^1.0.3",
         "vite-plugin-vue-devtools": "^8.0.6",
         "vue-eslint-parser": "^10.4.0",
-        "vue-tsc": "^3.2.4"
+        "vue-tsc": "^3.2.5"
     }
 }
