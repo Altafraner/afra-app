@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using Altafraner.AfraApp.Calendar.Domain.Models;
+using Altafraner.AfraApp.Freistellung.Domain.Models;
 using Altafraner.AfraApp.Otium.Domain.Models;
 using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.Profundum.Domain.Models.Bewertung;
@@ -97,6 +98,21 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
     public DbSet<ProfundumDefinition> Profunda { get; set; }
 
     /// <summary>
+    ///     All leave requests (Freistellungsanträge)
+    /// </summary>
+    public DbSet<Freistellungsantrag> Freistellungsantraege { get; set; }
+
+    /// <summary>
+    ///     All individual missed lessons within leave requests
+    /// </summary>
+    public DbSet<BetroffeneStunde> BetroffeneStunden { get; set; }
+
+    /// <summary>
+    ///     All teacher and mentor decisions on leave requests
+    /// </summary>
+    public DbSet<LehrerEntscheidung> LehrerEntscheidungen { get; set; }
+
+    /// <summary>
     ///     The slot instances op all registered Profunda
     /// </summary>
     public DbSet<ProfundumInstanz> ProfundaInstanzen { get; set; }
@@ -180,7 +196,9 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
             .MapEnum<MentorType>("mentor_type")
             .MapEnum<GlobalPermission>("global_permission")
             .MapEnum<Wochentyp>("wochentyp")
-            .MapEnum<OtiumAnwesenheitsStatus>("anwesenheits_status");
+            .MapEnum<OtiumAnwesenheitsStatus>("anwesenheits_status")
+            .MapEnum<FreistellungsStatus>("freistellungs_status")
+            .MapEnum<EntscheidungsStatus>("entscheidungs_status");
 
     /// <summary>
     ///     The keys used by the ASP.NET Core Domain Protection API.
@@ -333,6 +351,35 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
                 .HasForeignKey(e => e.PersonId)
                 .OnDelete(DeleteBehavior.Cascade);
             p.HasIndex(e => e.Endpoint).IsUnique();
+        });
+
+        modelBuilder.Entity<Freistellungsantrag>(a =>
+        {
+            a.HasOne(e => e.Student)
+                .WithMany()
+                .HasForeignKey(e => e.StudentId);
+            a.HasMany(e => e.BetroffeneStunden)
+                .WithOne(s => s.Freistellungsantrag)
+                .HasForeignKey(s => s.FreistellungsantragId)
+                .OnDelete(DeleteBehavior.Cascade);
+            a.HasMany(e => e.Entscheidungen)
+                .WithOne(e => e.Freistellungsantrag)
+                .HasForeignKey(e => e.FreistellungsantragId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<BetroffeneStunde>(s =>
+        {
+            s.HasOne(b => b.Lehrer)
+                .WithMany()
+                .HasForeignKey(b => b.LehrerId);
+        });
+
+        modelBuilder.Entity<LehrerEntscheidung>(e =>
+        {
+            e.HasOne(l => l.Lehrer)
+                .WithMany()
+                .HasForeignKey(l => l.LehrerId);
         });
 
         modelBuilder.Entity<ProfundumFeedbackKategorie>(e =>
