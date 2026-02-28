@@ -5,11 +5,17 @@ import wappenLight from '/vdaa/favicon.svg?url';
 import wappenDark from '/vdaa/favicon-dark.svg?url';
 import { useUser } from '@/stores/user';
 import { useProfundumEinwahl } from '@/Profundum/stores/profundumEinwahlStore';
+import { useFreistellungStore } from '@/Freistellung/stores/freistellung';
 import { useRouter } from 'vue-router';
 import { isDark } from '@/helpers/isdark';
 import type { NavigationMenuItem } from '@nuxt/ui/components/NavigationMenu.d.vue.ts';
 
-type GlobalPermissions = 'Otiumsverantwortlich' | 'Profundumsverantwortlich' | 'Admin';
+type GlobalPermissions =
+    | 'Otiumsverantwortlich'
+    | 'Profundumsverantwortlich'
+    | 'Admin'
+    | 'Sekretariat'
+    | 'Schulleiter';
 type Role = 'Tutor' | 'Oberstufe' | 'Mittelstufe';
 
 interface Conditions {
@@ -144,6 +150,51 @@ const all_items: MenuItemWithCondition[] = [
         },
     },
     {
+        label: 'Freistellung',
+        children: [
+            {
+                label: 'Neuer Antrag',
+                to: { name: 'Freistellung-Neu' },
+                icon: 'i-lucide-file-plus',
+                conditions: {
+                    roles: ['Oberstufe', 'Mittelstufe'],
+                },
+            },
+            {
+                label: 'Meine Anträge',
+                to: { name: 'Freistellung-Meine' },
+                icon: 'i-lucide-list',
+                conditions: {
+                    roles: ['Oberstufe', 'Mittelstufe'],
+                },
+            },
+            {
+                label: 'Anträge bearbeiten',
+                to: { name: 'Freistellung-Lehrer' },
+                icon: 'i-lucide-inbox',
+                conditions: {
+                    roles: ['Tutor'],
+                },
+            },
+            {
+                label: 'Sekretariat',
+                to: { name: 'Freistellung-Sekretariat' },
+                icon: 'i-lucide-square-check',
+                conditions: {
+                    permissions: ['Sekretariat'],
+                },
+            },
+            {
+                label: 'Schulleiter',
+                to: { name: 'Freistellung-Schulleiter' },
+                icon: 'i-lucide-badge-check',
+                conditions: {
+                    permissions: ['Schulleiter'],
+                },
+            },
+        ],
+    },
+    {
         label: 'Admin',
         icon: 'i-lucide-asterisk',
         children: [
@@ -180,10 +231,14 @@ const toast = useToast();
 const router = useRouter();
 const user = useUser();
 const profundumEinwahl = useProfundumEinwahl();
+const freistellung = useFreistellungStore();
 
 onMounted(() => {
     if (user.isMittelstufe) {
         profundumEinwahl.update();
+    }
+    if (user.user) {
+        freistellung.updateOffeneAnzahl();
     }
 });
 
@@ -250,7 +305,14 @@ function evaluateItems(items: MenuItemWithCondition[]): NavigationMenuItem[] {
     return selectedItems;
 }
 
-const items = computed(() => evaluateItems(all_items));
+const items = computed(() => {
+    const evaluated = evaluateItems(all_items);
+    if (freistellung.offeneAnzahl) {
+        const freistellungItem = evaluated.find((item) => item.label === 'Freistellung');
+        if (freistellungItem) freistellungItem.badge = freistellung.offeneAnzahl;
+    }
+    return evaluated;
+});
 const logo = computed(() => (isDark().value ? wappenDark : wappenLight));
 </script>
 
