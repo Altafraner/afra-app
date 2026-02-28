@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import Home from '@/views/Home.vue';
 import { routes as otium } from '@/Otium/router/routes.js';
 import { routes as profundum } from '@/Profundum/router/routes.js';
+import { routes as freistellung } from '@/Freistellung/router/routes.js';
 
 const routes = [
     {
@@ -21,6 +22,7 @@ const routes = [
     },
     ...otium,
     ...profundum,
+    ...freistellung,
     {
         path: '/:pathMatch(?!api/)(.*)*',
         name: 'NotFound',

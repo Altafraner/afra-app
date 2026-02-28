@@ -4,6 +4,7 @@ using Altafraner.AfraApp.Backbone.Authorization;
 using Altafraner.AfraApp.Backbone.EmergencyBackup;
 using Altafraner.AfraApp.Calendar;
 using Altafraner.AfraApp.Domain;
+using Altafraner.AfraApp.Freistellung;
 using Altafraner.AfraApp.Otium;
 using Altafraner.AfraApp.Profundum;
 using Altafraner.AfraApp.Schuljahr;
@@ -30,6 +31,7 @@ builder.UseAltafranerBackbone(configure: altafranerBuilder => altafranerBuilder
     .AddModule<UserModule>()
     .AddModule<SchuljahrModule>()
     .AddModule<ProfundumModule>()
+    .AddModule<FreistellungModule>()
     .AddModule<AuthorizationModule>()
     .AddModule<EmergencyBackupModule>()
 // Backbone modules
