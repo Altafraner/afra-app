@@ -1,6 +1,7 @@
 using Altafraner.AfraApp.Freistellung.Domain.DTO;
 using Altafraner.AfraApp.Freistellung.Domain.Models;
 using Altafraner.AfraApp.User.Domain.Models;
+using Altafraner.Backbone.EmailSchedulingModule;
 using Microsoft.EntityFrameworkCore;
 
 namespace Altafraner.AfraApp.Freistellung.Services;
@@ -11,13 +12,15 @@ namespace Altafraner.AfraApp.Freistellung.Services;
 public class FreistellungsService
 {
     private readonly AfraAppContext _dbContext;
+    private readonly INotificationService _notificationService;
 
     /// <summary>
     ///     Constructs a new instance of the <see cref="FreistellungsService" />.
     /// </summary>
-    public FreistellungsService(AfraAppContext dbContext)
+    public FreistellungsService(AfraAppContext dbContext, INotificationService notificationService)
     {
         _dbContext = dbContext;
+        _notificationService = notificationService;
     }
 
     /// <summary>
@@ -52,6 +55,20 @@ public class FreistellungsService
 
         _dbContext.Freistellungsantraege.Add(antrag);
         await _dbContext.SaveChangesAsync();
+
+        // Notify each assigned teacher
+        foreach (var teacher in lehrer)
+            await _notificationService.ScheduleNotificationAsync(
+                teacher,
+                "Neuer Freistellungsantrag",
+                $"""
+                 {student.FirstName} {student.LastName} hat einen Freistellungsantrag für den {dto.Datum:dd.MM.yyyy} gestellt.
+                 Bitte melde dich in der Afra-App an, um den Antrag zu bearbeiten.
+
+                 Grund: {dto.Grund}
+                 """,
+                TimeSpan.FromMinutes(5)
+            );
 
         return new FreistellungsantragDto(antrag);
     }
@@ -134,6 +151,41 @@ public class FreistellungsService
         }
 
         await _dbContext.SaveChangesAsync();
+
+        // Notify the student about the teacher's decision
+        var kommentarZeile = string.IsNullOrWhiteSpace(dto.Kommentar)
+            ? string.Empty
+            : $"\nKommentar: {dto.Kommentar}";
+        var entscheidungText = dto.Status == EntscheidungsStatus.Genehmigt ? "genehmigt" : "abgelehnt";
+        await _notificationService.ScheduleNotificationAsync(
+            antrag.Student,
+            $"Freistellungsantrag {entscheidungText}",
+            $"""
+             Dein Freistellungsantrag für den {antrag.Datum:dd.MM.yyyy} wurde von {lehrer.FirstName} {lehrer.LastName} {entscheidungText}.{kommentarZeile}
+             Melde dich in der Afra-App an, um den aktuellen Status zu sehen.
+             """,
+            TimeSpan.FromMinutes(5)
+        );
+
+        // If all teachers have now approved, also notify the Sekretariat
+        if (antrag.Status == FreistellungsStatus.AlleLehrerGenehmigt)
+        {
+            var sekretariat = await _dbContext.Personen
+                .Where(p => p.GlobalPermissions.Contains(GlobalPermission.Sekretariat))
+                .ToListAsync();
+
+            foreach (var sekretariatMember in sekretariat)
+                await _notificationService.ScheduleNotificationAsync(
+                    sekretariatMember,
+                    "Freistellungsantrag wartet auf Bestätigung",
+                    $"""
+                     Der Freistellungsantrag von {antrag.Student.FirstName} {antrag.Student.LastName} für den {antrag.Datum:dd.MM.yyyy} wurde von allen Lehrkräften genehmigt.
+                     Bitte melde dich in der Afra-App an, um den Antrag abschließend zu bestätigen.
+                     """,
+                    TimeSpan.FromMinutes(5)
+                );
+        }
+
         return new FreistellungsantragDto(antrag);
     }
 
@@ -172,6 +224,18 @@ public class FreistellungsService
 
         antrag.Status = FreistellungsStatus.Bestaetigt;
         await _dbContext.SaveChangesAsync();
+
+        // Notify the student that their request has been officially confirmed
+        await _notificationService.ScheduleNotificationAsync(
+            antrag.Student,
+            "Freistellungsantrag bestätigt",
+            $"""
+             Dein Freistellungsantrag für den {antrag.Datum:dd.MM.yyyy} wurde vom Sekretariat bestätigt.
+             Die Freistellung ist damit gültig. Melde dich in der Afra-App an, um die Details einzusehen.
+             """,
+            TimeSpan.FromMinutes(5)
+        );
+
         return new FreistellungsantragDto(antrag);
     }
 }
