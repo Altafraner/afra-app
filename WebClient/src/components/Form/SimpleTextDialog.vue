@@ -24,7 +24,7 @@ interface FormSchema {
 }
 
 const state = reactive<FormSchema>({
-    value: props.default,
+    value: props.default ?? '',
 });
 
 function validate(state: Partial<FormSchema>): FormError[] {

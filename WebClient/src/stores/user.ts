@@ -21,6 +21,8 @@ export const useUser = defineStore('user', {
             state.user?.berechtigungen.includes('Profundumsverantwortlich') ?? false,
         isAdmin: (state) => state.user?.berechtigungen.includes('Admin') ?? false,
         isImpersonating: (state) => state.user?.impersonationId != null,
+        isSekretariat: (state) => state.user?.berechtigungen.includes('Sekretariat') ?? false,
+        isSchulleiter: (state) => state.user?.berechtigungen.includes('Schulleiter') ?? false,
     },
     actions: {
         async update() {

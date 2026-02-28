@@ -2,7 +2,9 @@ export type UserRolle = 'Oberstufe' | 'Mittelstufe' | 'Tutor';
 export type UserGlobalPermission =
     | 'Admin'
     | 'Otiumsverantwortlich'
-    | 'Profundumsverantwortlich';
+    | 'Profundumsverantwortlich'
+    | 'Sekretariat'
+    | 'Schulleiter';
 
 export interface UserInfoMinimal {
     id: string;

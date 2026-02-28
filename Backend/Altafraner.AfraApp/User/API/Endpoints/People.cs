@@ -26,6 +26,9 @@ internal static class People
         app.MapGet("/api/people/{id:guid}/mentor", GetPersonMentors)
             .WithName("GetPersonMentors")
             .RequireAuthorization(AuthorizationPolicies.TeacherOrAdmin);
+        app.MapGet("/api/teachers", GetTeachers)
+            .RequireAuthorization();
+
         app.MapGet("/api/klassen", GetKlassen)
             .RequireAuthorization();
         var attendanceConfiguration = app.ServiceProvider.GetService<IOptions<AttendanceConfiguration>>();
@@ -46,6 +49,19 @@ internal static class People
             .AsAsyncEnumerable();
 
         return TypedResults.Ok(people);
+    }
+
+    private static Ok<IAsyncEnumerable<PersonInfoMinimal>> GetTeachers(AfraAppContext dbContext,
+        HttpContext httpContext)
+    {
+        var teachers = dbContext.Personen
+            .Where(p => p.Rolle == Rolle.Tutor)
+            .OrderBy(p => p.LastName)
+            .ThenBy(p => p.FirstName)
+            .Select(p => new PersonInfoMinimal(p))
+            .AsAsyncEnumerable();
+
+        return TypedResults.Ok(teachers);
     }
 
     private static async Task<IResult> GetPersonMentors(AfraAppContext dbContext, UserService userService, Guid id)
