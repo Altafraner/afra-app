@@ -24,9 +24,15 @@ public class Freistellungsantrag
     public Guid StudentId { get; set; }
 
     /// <summary>
-    ///     The date for which the leave is requested.
+    ///     The first day of the requested leave period.
     /// </summary>
-    public DateOnly Datum { get; set; }
+    public DateOnly DatumVon { get; set; }
+
+    /// <summary>
+    ///     The last day of the requested leave period (inclusive).
+    ///     Equal to <see cref="DatumVon" /> for single-day requests.
+    /// </summary>
+    public DateOnly DatumBis { get; set; }
 
     /// <summary>
     ///     The reason for the leave.

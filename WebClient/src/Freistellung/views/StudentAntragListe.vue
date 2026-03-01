@@ -42,6 +42,10 @@ function formatDate(dateStr) {
     const [year, month, day] = dateStr.split('-');
     return `${day}.${month}.${year}`;
 }
+
+function formatDateRange(von, bis) {
+    return von === bis ? formatDate(von) : `${formatDate(von)} – ${formatDate(bis)}`;
+}
 </script>
 
 <template>
@@ -70,7 +74,7 @@ function formatDate(dateStr) {
         >
             <div class="flex items-start justify-between gap-2 mb-2">
                 <div>
-                    <span class="font-semibold text-lg">{{ formatDate(antrag.datum) }}</span>
+                    <span class="font-semibold text-lg">{{ formatDateRange(antrag.datumVon, antrag.datumBis) }}</span>
                     <Tag
                         class="ml-2"
                         :severity="statusSeverity[antrag.status]"

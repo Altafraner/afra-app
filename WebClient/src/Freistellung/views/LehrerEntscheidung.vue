@@ -18,11 +18,18 @@ const kommentar = ref('');
 const pendingStatus = ref(null);
 const submitting = ref(false);
 
-await store.updatePendingAntraege();
+await Promise.all([
+    store.updatePendingAntraege(),
+    store.updateProcessedLehrerAntraege(),
+]);
 
 function formatDate(dateStr) {
     const [year, month, day] = dateStr.split('-');
     return `${day}.${month}.${year}`;
+}
+
+function formatDateRange(von, bis) {
+    return von === bis ? formatDate(von) : `${formatDate(von)} – ${formatDate(bis)}`;
 }
 
 function openDialog(antrag, status) {
@@ -51,7 +58,11 @@ async function submitDecision() {
         });
         dialogVisible.value = false;
         store.pendingAntraege = null;
-        await store.updatePendingAntraege();
+        store.processedLehrerAntraege = null;
+        await Promise.all([
+            store.updatePendingAntraege(),
+            store.updateProcessedLehrerAntraege(),
+        ]);
     } catch (e) {
         const errorMessage = e.body?.error ?? 'Ein unbekannter Fehler ist aufgetreten.';
         toast.add({
@@ -64,6 +75,18 @@ async function submitDecision() {
         submitting.value = false;
     }
 }
+
+const entscheidungSeverity = {
+    Ausstehend: 'secondary',
+    Genehmigt: 'success',
+    Abgelehnt: 'danger',
+};
+
+const entscheidungLabel = {
+    Ausstehend: 'Ausstehend',
+    Genehmigt: 'Genehmigt',
+    Abgelehnt: 'Abgelehnt',
+};
 </script>
 
 <template>
@@ -71,11 +94,14 @@ async function submitDecision() {
 
     <h1>Freistellungsanträge (Lehrkraft)</h1>
 
-    <p v-if="!store.pendingAntraege?.length" class="mt-4">
+    <!-- Pending section -->
+    <h2 class="text-lg font-semibold mt-4 mb-2">Ausstehende Anträge</h2>
+
+    <p v-if="!store.pendingAntraege?.length" class="mt-2">
         Aktuell liegen keine ausstehenden Freistellungsanträge für dich vor.
     </p>
 
-    <div v-else class="flex flex-col gap-4 mt-4">
+    <div v-else class="flex flex-col gap-4">
         <div
             v-for="antrag in store.pendingAntraege"
             :key="antrag.id"
@@ -90,7 +116,7 @@ async function submitDecision() {
                         {{ antrag.student.gruppe ?? '' }}
                     </span>
                 </div>
-                <Tag severity="info" :value="formatDate(antrag.datum)" />
+                <Tag severity="info" :value="formatDateRange(antrag.datumVon, antrag.datumBis)" />
             </div>
 
             <p class="text-sm mb-3">
@@ -116,6 +142,54 @@ async function submitDecision() {
         </div>
     </div>
 
+    <!-- Already-processed section -->
+    <h2 class="text-lg font-semibold mt-8 mb-2">Bereits bearbeitete Anträge</h2>
+
+    <p v-if="!store.processedLehrerAntraege?.length" class="mt-2">
+        Du hast noch keine Freistellungsanträge bearbeitet.
+    </p>
+
+    <div v-else class="flex flex-col gap-4">
+        <div
+            v-for="antrag in store.processedLehrerAntraege"
+            :key="antrag.id"
+            class="border rounded-lg p-4 shadow-sm opacity-80"
+        >
+            <div class="flex items-start justify-between gap-2 mb-2">
+                <div>
+                    <span class="font-semibold text-lg">
+                        {{ antrag.student.nachname }}, {{ antrag.student.vorname }}
+                    </span>
+                    <span class="ml-2 text-sm text-gray-500">
+                        {{ antrag.student.gruppe ?? '' }}
+                    </span>
+                </div>
+                <Tag severity="secondary" :value="formatDateRange(antrag.datumVon, antrag.datumBis)" />
+            </div>
+
+            <p class="text-sm mb-2">
+                <span class="font-semibold">Grund:</span> {{ antrag.grund }}
+            </p>
+
+            <div class="flex flex-col gap-1">
+                <div
+                    v-for="e in antrag.entscheidungen"
+                    :key="e.id"
+                    class="flex items-center gap-2 text-sm"
+                >
+                    <Tag
+                        :severity="entscheidungSeverity[e.status]"
+                        :value="entscheidungLabel[e.status]"
+                    />
+                    <span>{{ e.lehrer.nachname }}, {{ e.lehrer.vorname }}</span>
+                    <span v-if="e.kommentar" class="text-xs text-gray-500 italic">
+                        „{{ e.kommentar }}"
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <Dialog
         v-model:visible="dialogVisible"
         modal
@@ -129,8 +203,8 @@ async function submitDecision() {
                     {{ selectedAntrag?.student?.nachname }},
                     {{ selectedAntrag?.student?.vorname }}
                 </strong>
-                für den
-                <strong>{{ selectedAntrag ? formatDate(selectedAntrag.datum) : '' }}</strong>
+                für
+                <strong>{{ selectedAntrag ? formatDateRange(selectedAntrag.datumVon, selectedAntrag.datumBis) : '' }}</strong>
                 {{ pendingStatus === 'Genehmigt' ? 'genehmigen' : 'ablehnen' }}?
             </p>
             <div class="flex flex-col gap-1">

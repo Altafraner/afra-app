@@ -32,12 +32,14 @@ public static class FreistellungsEndpoints
         var lehrer = app.MapGroup("/lehrer")
             .RequireAuthorization(AuthorizationPolicies.TutorOnly);
         lehrer.MapGet("/", GetPendingAntraegeForLehrer);
+        lehrer.MapGet("/bearbeitet", GetProcessedAntraegeForLehrer);
         lehrer.MapPut("/{antragId:guid}/entscheidung", RecordEntscheidung);
 
         // Sekretariat endpoints
         var sekretariat = app.MapGroup("/sekretariat")
             .RequireAuthorization(AuthorizationPolicies.Sekretariat);
         sekretariat.MapGet("/", GetAntraegeForSekretariat);
+        sekretariat.MapGet("/bearbeitet", GetProcessedAntraegeForSekretariat);
         sekretariat.MapPut("/{antragId:guid}/bestaetigen", BestaetigeAntrag);
     }
 
@@ -91,6 +93,15 @@ public static class FreistellungsEndpoints
         return Results.Ok(result);
     }
 
+    private static async Task<IResult> GetProcessedAntraegeForLehrer(
+        FreistellungsService service,
+        UserAccessor userAccessor)
+    {
+        var lehrer = await userAccessor.GetUserAsync();
+        var result = await service.GetProcessedAntraegeForLehrerAsync(lehrer);
+        return Results.Ok(result);
+    }
+
     private static async Task<IResult> RecordEntscheidung(
         FreistellungsService service,
         UserAccessor userAccessor,
@@ -121,6 +132,13 @@ public static class FreistellungsEndpoints
         FreistellungsService service)
     {
         var result = await service.GetAntraegeForSekretariatAsync();
+        return Results.Ok(result);
+    }
+
+    private static async Task<IResult> GetProcessedAntraegeForSekretariat(
+        FreistellungsService service)
+    {
+        var result = await service.GetProcessedAntraegeForSekretariatAsync();
         return Results.Ok(result);
     }
 

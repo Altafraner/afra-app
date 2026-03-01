@@ -14,12 +14,29 @@ const navItems = [
 
 const confirming = ref(null);
 
-await store.updateSekretariatAntraege();
+await Promise.all([
+    store.updateSekretariatAntraege(),
+    store.updateProcessedSekretariatAntraege(),
+]);
 
 function formatDate(dateStr) {
     const [year, month, day] = dateStr.split('-');
     return `${day}.${month}.${year}`;
 }
+
+function formatDateRange(von, bis) {
+    return von === bis ? formatDate(von) : `${formatDate(von)} – ${formatDate(bis)}`;
+}
+
+const statusSeverity = {
+    Bestaetigt: 'success',
+    Abgelehnt: 'danger',
+};
+
+const statusLabel = {
+    Bestaetigt: 'Bestätigt',
+    Abgelehnt: 'Abgelehnt',
+};
 
 async function bestaetigen(antragId) {
     confirming.value = antragId;
@@ -33,7 +50,11 @@ async function bestaetigen(antragId) {
             life: 3000,
         });
         store.sekretariatAntraege = null;
-        await store.updateSekretariatAntraege();
+        store.processedSekretariatAntraege = null;
+        await Promise.all([
+            store.updateSekretariatAntraege(),
+            store.updateProcessedSekretariatAntraege(),
+        ]);
     } catch (e) {
         const errorMessage = e.body?.error ?? 'Ein unbekannter Fehler ist aufgetreten.';
         toast.add({
@@ -52,16 +73,19 @@ async function bestaetigen(antragId) {
     <NavBreadcrumb :items="navItems" />
 
     <h1>Freistellungsanträge (Sekretariat)</h1>
-    <p>
+
+    <!-- Pending confirmation section -->
+    <h2 class="text-lg font-semibold mt-4 mb-1">Warten auf Bestätigung</h2>
+    <p class="mb-3 text-sm">
         Die folgenden Anträge wurden von allen betroffenen Lehrkräften genehmigt und warten auf
         die abschließende Bestätigung durch das Sekretariat.
     </p>
 
-    <p v-if="!store.sekretariatAntraege?.length" class="mt-4">
+    <p v-if="!store.sekretariatAntraege?.length" class="mt-2">
         Aktuell liegen keine zu bearbeitenden Freistellungsanträge vor.
     </p>
 
-    <div v-else class="flex flex-col gap-4 mt-4">
+    <div v-else class="flex flex-col gap-4">
         <div
             v-for="antrag in store.sekretariatAntraege"
             :key="antrag.id"
@@ -76,7 +100,7 @@ async function bestaetigen(antragId) {
                         {{ antrag.student.gruppe ?? '' }}
                     </span>
                 </div>
-                <Tag severity="warn" :value="formatDate(antrag.datum)" />
+                <Tag severity="warn" :value="formatDateRange(antrag.datumVon, antrag.datumBis)" />
             </div>
 
             <p class="text-sm mb-2">
@@ -106,6 +130,57 @@ async function bestaetigen(antragId) {
                 :loading="confirming === antrag.id"
                 @click="bestaetigen(antrag.id)"
             />
+        </div>
+    </div>
+
+    <!-- Already-processed section -->
+    <h2 class="text-lg font-semibold mt-8 mb-2">Bereits bearbeitete Anträge</h2>
+
+    <p v-if="!store.processedSekretariatAntraege?.length" class="mt-2">
+        Es wurden noch keine Freistellungsanträge abschließend bearbeitet.
+    </p>
+
+    <div v-else class="flex flex-col gap-4">
+        <div
+            v-for="antrag in store.processedSekretariatAntraege"
+            :key="antrag.id"
+            class="border rounded-lg p-4 shadow-sm opacity-80"
+        >
+            <div class="flex items-start justify-between gap-2 mb-2">
+                <div>
+                    <span class="font-semibold text-lg">
+                        {{ antrag.student.nachname }}, {{ antrag.student.vorname }}
+                    </span>
+                    <span class="ml-2 text-sm text-gray-500">
+                        {{ antrag.student.gruppe ?? '' }}
+                    </span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <Tag
+                        :severity="statusSeverity[antrag.status]"
+                        :value="statusLabel[antrag.status]"
+                    />
+                    <Tag severity="secondary" :value="formatDateRange(antrag.datumVon, antrag.datumBis)" />
+                </div>
+            </div>
+
+            <p class="text-sm mb-2">
+                <span class="font-semibold">Grund:</span> {{ antrag.grund }}
+            </p>
+
+            <div class="flex flex-col gap-1">
+                <div
+                    v-for="e in antrag.entscheidungen"
+                    :key="e.id"
+                    class="flex items-center gap-2 text-sm"
+                >
+                    <Tag severity="success" value="Genehmigt" />
+                    <span>{{ e.lehrer.nachname }}, {{ e.lehrer.vorname }}</span>
+                    <span v-if="e.kommentar" class="text-xs text-gray-500 italic">
+                        „{{ e.kommentar }}"
+                    </span>
+                </div>
+            </div>
         </div>
     </div>
 </template>

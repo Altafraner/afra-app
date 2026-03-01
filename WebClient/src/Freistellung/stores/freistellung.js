@@ -5,7 +5,9 @@ export const useFreistellungStore = defineStore('freistellung', {
     state: () => ({
         meineAntraege: null,
         pendingAntraege: null,
+        processedLehrerAntraege: null,
         sekretariatAntraege: null,
+        processedSekretariatAntraege: null,
         lehrer: null,
     }),
     actions: {
@@ -25,12 +27,28 @@ export const useFreistellungStore = defineStore('freistellung', {
                 console.error('Error fetching pending Freistellungsanträge', error);
             }
         },
+        async updateProcessedLehrerAntraege() {
+            const api = mande('/api/freistellung/lehrer/bearbeitet');
+            try {
+                this.processedLehrerAntraege = await api.get();
+            } catch (error) {
+                console.error('Error fetching processed Freistellungsanträge', error);
+            }
+        },
         async updateSekretariatAntraege() {
             const api = mande('/api/freistellung/sekretariat');
             try {
                 this.sekretariatAntraege = await api.get();
             } catch (error) {
                 console.error('Error fetching Sekretariat Freistellungsanträge', error);
+            }
+        },
+        async updateProcessedSekretariatAntraege() {
+            const api = mande('/api/freistellung/sekretariat/bearbeitet');
+            try {
+                this.processedSekretariatAntraege = await api.get();
+            } catch (error) {
+                console.error('Error fetching processed Sekretariat Freistellungsanträge', error);
             }
         },
         async updateLehrer() {

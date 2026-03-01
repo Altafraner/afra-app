@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { Button, DatePicker, InputText, MultiSelect, Textarea, useToast } from 'primevue';
 import { mande } from 'mande';
 import { useRouter } from 'vue-router';
@@ -15,6 +15,7 @@ const navItems = [
     { label: 'Neuer Antrag', route: { name: 'Freistellung-Neu' } },
 ];
 
+// datum is a [startDate, endDate] array when a range is selected
 const datum = ref(null);
 const grund = ref('');
 const selectedLehrer = ref([]);
@@ -27,8 +28,14 @@ const lehrerOptions = store.lehrer?.map((l) => ({
     value: l.id,
 })) ?? [];
 
+const datumValid = computed(() => Array.isArray(datum.value) && datum.value[0] != null);
+
+function toDateStr(d) {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 async function submit() {
-    if (!datum.value || !grund.value.trim() || selectedLehrer.value.length === 0) {
+    if (!datumValid.value || !grund.value.trim() || selectedLehrer.value.length === 0) {
         toast.add({
             severity: 'warn',
             summary: 'Fehlende Angaben',
@@ -41,12 +48,15 @@ async function submit() {
     loading.value = true;
     const api = mande('/api/freistellung/sus');
 
-    const d = datum.value;
-    const datumStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const [von, bis] = datum.value;
+    const datumVonStr = toDateStr(von);
+    // If only a start date is picked (no end date), treat it as a single-day request
+    const datumBisStr = bis ? toDateStr(bis) : datumVonStr;
 
     try {
         await api.post({
-            datum: datumStr,
+            datumVon: datumVonStr,
+            datumBis: datumBisStr,
             grund: grund.value.trim(),
             lehrerIds: selectedLehrer.value,
         });
@@ -79,19 +89,22 @@ async function submit() {
     <h1>Freistellungsantrag stellen</h1>
     <p>
         Hier kannst du einen Freistellungsantrag (Antrag auf Unterrichtsbefreiung) einreichen.
-        Bitte gib das Datum, den Grund sowie alle Lehrkräfte an, deren Unterricht du an diesem
-        Tag besuchst.
+        Bitte gib den Zeitraum, den Grund sowie alle Lehrkräfte an, deren Unterricht du an
+        diesen Tagen besuchst. Für einen einzelnen Tag wähle denselben Tag als Start- und
+        Enddatum.
     </p>
 
     <div class="flex flex-col gap-4 mt-4" style="max-width: 40rem">
         <div class="flex flex-col gap-1">
-            <label for="datum">Datum der Freistellung</label>
+            <label for="datum">Zeitraum der Freistellung</label>
             <DatePicker
                 id="datum"
                 v-model="datum"
+                selection-mode="range"
                 date-format="dd.mm.yy"
                 show-icon
                 fluid
+                :manual-input="false"
             />
         </div>
 
@@ -125,7 +138,7 @@ async function submit() {
             label="Antrag einreichen"
             icon="pi pi-send"
             :loading="loading"
-            :disabled="!datum || !grund.trim() || selectedLehrer.length === 0"
+            :disabled="!datumValid || !grund.trim() || selectedLehrer.length === 0"
             @click="submit"
         />
     </div>

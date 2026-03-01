@@ -44,7 +44,8 @@ public class FreistellungsService
         var antrag = new Domain.Models.Freistellungsantrag
         {
             Student = student,
-            Datum = dto.Datum,
+            DatumVon = dto.DatumVon,
+            DatumBis = dto.DatumBis,
             Grund = dto.Grund,
             Entscheidungen = lehrer.Select(l => new LehrerEntscheidung
             {
@@ -62,7 +63,7 @@ public class FreistellungsService
                 teacher,
                 "Neuer Freistellungsantrag",
                 $"""
-                 {student.FirstName} {student.LastName} hat einen Freistellungsantrag für den {dto.Datum:dd.MM.yyyy} gestellt.
+                 {student.FirstName} {student.LastName} hat einen Freistellungsantrag für {FormatDateRange(dto.DatumVon, dto.DatumBis)} gestellt.
                  Bitte melde dich in der Afra-App an, um den Antrag zu bearbeiten.
 
                  Grund: {dto.Grund}
@@ -101,7 +102,7 @@ public class FreistellungsService
             .Where(a => a.Entscheidungen.Any(e =>
                 e.LehrerId == lehrer.Id && e.Status == EntscheidungsStatus.Ausstehend)
                 && a.Status == FreistellungsStatus.Gestellt)
-            .OrderBy(a => a.Datum)
+            .OrderBy(a => a.DatumVon)
             .ToListAsync();
 
         return antraege.Select(a => new FreistellungsantragDto(a)).ToList();
@@ -161,7 +162,7 @@ public class FreistellungsService
             antrag.Student,
             $"Freistellungsantrag {entscheidungText}",
             $"""
-             Dein Freistellungsantrag für den {antrag.Datum:dd.MM.yyyy} wurde von {lehrer.FirstName} {lehrer.LastName} {entscheidungText}.{kommentarZeile}
+             Dein Freistellungsantrag für {FormatDateRange(antrag.DatumVon, antrag.DatumBis)} wurde von {lehrer.FirstName} {lehrer.LastName} {entscheidungText}.{kommentarZeile}
              Melde dich in der Afra-App an, um den aktuellen Status zu sehen.
              """,
             TimeSpan.FromMinutes(5)
@@ -179,7 +180,7 @@ public class FreistellungsService
                     sekretariatMember,
                     "Freistellungsantrag wartet auf Bestätigung",
                     $"""
-                     Der Freistellungsantrag von {antrag.Student.FirstName} {antrag.Student.LastName} für den {antrag.Datum:dd.MM.yyyy} wurde von allen Lehrkräften genehmigt.
+                     Der Freistellungsantrag von {antrag.Student.FirstName} {antrag.Student.LastName} für {FormatDateRange(antrag.DatumVon, antrag.DatumBis)} wurde von allen Lehrkräften genehmigt.
                      Bitte melde dich in der Afra-App an, um den Antrag abschließend zu bestätigen.
                      """,
                     TimeSpan.FromMinutes(5)
@@ -199,7 +200,7 @@ public class FreistellungsService
             .Include(a => a.Entscheidungen)
             .ThenInclude(e => e.Lehrer)
             .Where(a => a.Status == FreistellungsStatus.AlleLehrerGenehmigt)
-            .OrderBy(a => a.Datum)
+            .OrderBy(a => a.DatumVon)
             .ToListAsync();
 
         return antraege.Select(a => new FreistellungsantragDto(a)).ToList();
@@ -230,7 +231,7 @@ public class FreistellungsService
             antrag.Student,
             "Freistellungsantrag bestätigt",
             $"""
-             Dein Freistellungsantrag für den {antrag.Datum:dd.MM.yyyy} wurde vom Sekretariat bestätigt.
+             Dein Freistellungsantrag für {FormatDateRange(antrag.DatumVon, antrag.DatumBis)} wurde vom Sekretariat bestätigt.
              Die Freistellung ist damit gültig. Melde dich in der Afra-App an, um die Details einzusehen.
              """,
             TimeSpan.FromMinutes(5)
@@ -238,4 +239,44 @@ public class FreistellungsService
 
         return new FreistellungsantragDto(antrag);
     }
+
+    /// <summary>
+    ///     Gets all leave requests that the given teacher has already decided on.
+    /// </summary>
+    public async Task<List<FreistellungsantragDto>> GetProcessedAntraegeForLehrerAsync(Person lehrer)
+    {
+        var antraege = await _dbContext.Freistellungsantraege
+            .Include(a => a.Student)
+            .Include(a => a.Entscheidungen)
+            .ThenInclude(e => e.Lehrer)
+            .Where(a => a.Entscheidungen.Any(e =>
+                e.LehrerId == lehrer.Id && e.Status != EntscheidungsStatus.Ausstehend))
+            .OrderByDescending(a => a.DatumVon)
+            .ToListAsync();
+
+        return antraege.Select(a => new FreistellungsantragDto(a)).ToList();
+    }
+
+    /// <summary>
+    ///     Gets all leave requests that have been fully processed by the Sekretariat
+    ///     (either confirmed or rejected).
+    /// </summary>
+    public async Task<List<FreistellungsantragDto>> GetProcessedAntraegeForSekretariatAsync()
+    {
+        var antraege = await _dbContext.Freistellungsantraege
+            .Include(a => a.Student)
+            .Include(a => a.Entscheidungen)
+            .ThenInclude(e => e.Lehrer)
+            .Where(a => a.Status == FreistellungsStatus.Bestaetigt
+                        || a.Status == FreistellungsStatus.Abgelehnt)
+            .OrderByDescending(a => a.DatumVon)
+            .ToListAsync();
+
+        return antraege.Select(a => new FreistellungsantragDto(a)).ToList();
+    }
+
+    private static string FormatDateRange(DateOnly von, DateOnly bis)
+        => von == bis
+            ? $"den {von:dd.MM.yyyy}"
+            : $"den Zeitraum {von:dd.MM.yyyy} – {bis:dd.MM.yyyy}";
 }

@@ -15,7 +15,8 @@ public record FreistellungsantragDto
     public FreistellungsantragDto(Models.Freistellungsantrag antrag)
     {
         Id = antrag.Id;
-        Datum = antrag.Datum;
+        DatumVon = antrag.DatumVon;
+        DatumBis = antrag.DatumBis;
         Grund = antrag.Grund;
         Status = antrag.Status;
         ErstelltAm = antrag.ErstelltAm;
@@ -28,8 +29,11 @@ public record FreistellungsantragDto
     /// <inheritdoc cref="Models.Freistellungsantrag.Id" />
     public Guid Id { get; init; }
 
-    /// <inheritdoc cref="Models.Freistellungsantrag.Datum" />
-    public DateOnly Datum { get; init; }
+    /// <inheritdoc cref="Models.Freistellungsantrag.DatumVon" />
+    public DateOnly DatumVon { get; init; }
+
+    /// <inheritdoc cref="Models.Freistellungsantrag.DatumBis" />
+    public DateOnly DatumBis { get; init; }
 
     /// <inheritdoc cref="Models.Freistellungsantrag.Grund" />
     public string Grund { get; init; }
