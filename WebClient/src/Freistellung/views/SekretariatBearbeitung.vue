@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { Button, Tag, useToast } from 'primevue';
 import { mande } from 'mande';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
@@ -14,10 +14,15 @@ const navItems = [
 
 const confirming = ref(null);
 
-await Promise.all([
-    store.updateSekretariatAntraege(),
-    store.updateProcessedSekretariatAntraege(),
-]);
+await store.updateSekretariatAntraege();
+
+// Split client-side: pending confirmation = AlleLehrerGenehmigt, processed = everything else
+const pendingAntraege = computed(() =>
+    store.sekretariatAntraege?.filter((a) => a.status === 'AlleLehrerGenehmigt') ?? []
+);
+const processedAntraege = computed(() =>
+    store.sekretariatAntraege?.filter((a) => a.status !== 'AlleLehrerGenehmigt') ?? []
+);
 
 function formatDate(dateStr) {
     const [year, month, day] = dateStr.split('-');
@@ -50,11 +55,7 @@ async function bestaetigen(antragId) {
             life: 3000,
         });
         store.sekretariatAntraege = null;
-        store.processedSekretariatAntraege = null;
-        await Promise.all([
-            store.updateSekretariatAntraege(),
-            store.updateProcessedSekretariatAntraege(),
-        ]);
+        await store.updateSekretariatAntraege();
     } catch (e) {
         const errorMessage = e.body?.error ?? 'Ein unbekannter Fehler ist aufgetreten.';
         toast.add({
@@ -81,13 +82,13 @@ async function bestaetigen(antragId) {
         die abschließende Bestätigung durch das Sekretariat.
     </p>
 
-    <p v-if="!store.sekretariatAntraege?.length" class="mt-2">
+    <p v-if="!pendingAntraege.length" class="mt-2">
         Aktuell liegen keine zu bearbeitenden Freistellungsanträge vor.
     </p>
 
     <div v-else class="flex flex-col gap-4">
         <div
-            v-for="antrag in store.sekretariatAntraege"
+            v-for="antrag in pendingAntraege"
             :key="antrag.id"
             class="border rounded-lg p-4 shadow-sm"
         >
@@ -160,13 +161,13 @@ async function bestaetigen(antragId) {
     <!-- Already-processed section -->
     <h2 class="text-lg font-semibold mt-8 mb-2">Bereits bearbeitete Anträge</h2>
 
-    <p v-if="!store.processedSekretariatAntraege?.length" class="mt-2">
+    <p v-if="!processedAntraege.length" class="mt-2">
         Es wurden noch keine Freistellungsanträge abschließend bearbeitet.
     </p>
 
     <div v-else class="flex flex-col gap-4">
         <div
-            v-for="antrag in store.processedSekretariatAntraege"
+            v-for="antrag in processedAntraege"
             :key="antrag.id"
             class="border rounded-lg p-4 shadow-sm opacity-80"
         >

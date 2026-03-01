@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { Button, Dialog, Tag, Textarea, useToast } from 'primevue';
 import { mande } from 'mande';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
@@ -18,10 +18,15 @@ const kommentar = ref('');
 const pendingStatus = ref(null);
 const submitting = ref(false);
 
-await Promise.all([
-    store.updatePendingAntraege(),
-    store.updateProcessedLehrerAntraege(),
-]);
+await store.updateLehrerAntraege();
+
+// Split client-side: pending = overall request still open, processed = decided
+const pendingAntraege = computed(() =>
+    store.lehrerAntraege?.filter((a) => a.status === 'Gestellt') ?? []
+);
+const processedAntraege = computed(() =>
+    store.lehrerAntraege?.filter((a) => a.status !== 'Gestellt') ?? []
+);
 
 function formatDate(dateStr) {
     const [year, month, day] = dateStr.split('-');
@@ -57,12 +62,8 @@ async function submitDecision() {
             life: 3000,
         });
         dialogVisible.value = false;
-        store.pendingAntraege = null;
-        store.processedLehrerAntraege = null;
-        await Promise.all([
-            store.updatePendingAntraege(),
-            store.updateProcessedLehrerAntraege(),
-        ]);
+        store.lehrerAntraege = null;
+        await store.updateLehrerAntraege();
     } catch (e) {
         const errorMessage = e.body?.error ?? 'Ein unbekannter Fehler ist aufgetreten.';
         toast.add({
@@ -97,13 +98,13 @@ const entscheidungLabel = {
     <!-- Pending section -->
     <h2 class="text-lg font-semibold mt-4 mb-2">Ausstehende Anträge</h2>
 
-    <p v-if="!store.pendingAntraege?.length" class="mt-2">
+    <p v-if="!pendingAntraege.length" class="mt-2">
         Aktuell liegen keine ausstehenden Freistellungsanträge für dich vor.
     </p>
 
     <div v-else class="flex flex-col gap-4">
         <div
-            v-for="antrag in store.pendingAntraege"
+            v-for="antrag in pendingAntraege"
             :key="antrag.id"
             class="border rounded-lg p-4 shadow-sm"
         >
@@ -168,13 +169,13 @@ const entscheidungLabel = {
     <!-- Already-processed section -->
     <h2 class="text-lg font-semibold mt-8 mb-2">Bereits bearbeitete Anträge</h2>
 
-    <p v-if="!store.processedLehrerAntraege?.length" class="mt-2">
+    <p v-if="!processedAntraege.length" class="mt-2">
         Du hast noch keine Freistellungsanträge bearbeitet.
     </p>
 
     <div v-else class="flex flex-col gap-4">
         <div
-            v-for="antrag in store.processedLehrerAntraege"
+            v-for="antrag in processedAntraege"
             :key="antrag.id"
             class="border rounded-lg p-4 shadow-sm opacity-80"
         >

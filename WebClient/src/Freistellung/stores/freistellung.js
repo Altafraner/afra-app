@@ -4,10 +4,8 @@ import { mande } from 'mande';
 export const useFreistellungStore = defineStore('freistellung', {
     state: () => ({
         meineAntraege: null,
-        pendingAntraege: null,
-        processedLehrerAntraege: null,
+        lehrerAntraege: null,
         sekretariatAntraege: null,
-        processedSekretariatAntraege: null,
         lehrer: null,
     }),
     actions: {
@@ -19,20 +17,12 @@ export const useFreistellungStore = defineStore('freistellung', {
                 console.error('Error fetching Freistellungsanträge', error);
             }
         },
-        async updatePendingAntraege() {
+        async updateLehrerAntraege() {
             const api = mande('/api/freistellung/lehrer');
             try {
-                this.pendingAntraege = await api.get();
+                this.lehrerAntraege = await api.get();
             } catch (error) {
-                console.error('Error fetching pending Freistellungsanträge', error);
-            }
-        },
-        async updateProcessedLehrerAntraege() {
-            const api = mande('/api/freistellung/lehrer/bearbeitet');
-            try {
-                this.processedLehrerAntraege = await api.get();
-            } catch (error) {
-                console.error('Error fetching processed Freistellungsanträge', error);
+                console.error('Error fetching Lehrer Freistellungsanträge', error);
             }
         },
         async updateSekretariatAntraege() {
@@ -41,14 +31,6 @@ export const useFreistellungStore = defineStore('freistellung', {
                 this.sekretariatAntraege = await api.get();
             } catch (error) {
                 console.error('Error fetching Sekretariat Freistellungsanträge', error);
-            }
-        },
-        async updateProcessedSekretariatAntraege() {
-            const api = mande('/api/freistellung/sekretariat/bearbeitet');
-            try {
-                this.processedSekretariatAntraege = await api.get();
-            } catch (error) {
-                console.error('Error fetching processed Sekretariat Freistellungsanträge', error);
             }
         },
         async updateLehrer() {

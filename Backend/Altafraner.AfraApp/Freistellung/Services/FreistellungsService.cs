@@ -110,9 +110,10 @@ public class FreistellungsService
     }
 
     /// <summary>
-    ///     Gets all pending leave requests that need a decision from the given teacher.
+    ///     Gets all leave requests that the given teacher is involved in,
+    ///     both pending and already decided, ordered newest-first.
     /// </summary>
-    public async Task<List<FreistellungsantragDto>> GetPendingAntraegeForLehrerAsync(Person lehrer)
+    public async Task<List<FreistellungsantragDto>> GetAntraegeForLehrerAsync(Person lehrer)
     {
         var antraege = await _dbContext.Freistellungsantraege
             .Include(a => a.Student)
@@ -120,10 +121,8 @@ public class FreistellungsService
             .ThenInclude(s => s.Lehrer)
             .Include(a => a.Entscheidungen)
             .ThenInclude(e => e.Lehrer)
-            .Where(a => a.Entscheidungen.Any(e =>
-                e.LehrerId == lehrer.Id && e.Status == EntscheidungsStatus.Ausstehend)
-                && a.Status == FreistellungsStatus.Gestellt)
-            .OrderBy(a => a.DatumVon)
+            .Where(a => a.Entscheidungen.Any(e => e.LehrerId == lehrer.Id))
+            .OrderByDescending(a => a.DatumVon)
             .ToListAsync();
 
         return antraege.Select(a => new FreistellungsantragDto(a)).ToList();
@@ -214,7 +213,8 @@ public class FreistellungsService
     }
 
     /// <summary>
-    ///     Gets all leave requests where all teachers have approved, waiting for Sekretariat confirmation.
+    ///     Gets all leave requests relevant to the Sekretariat — those awaiting confirmation
+    ///     as well as those already confirmed or rejected — ordered newest-first.
     /// </summary>
     public async Task<List<FreistellungsantragDto>> GetAntraegeForSekretariatAsync()
     {
@@ -224,8 +224,10 @@ public class FreistellungsService
             .ThenInclude(s => s.Lehrer)
             .Include(a => a.Entscheidungen)
             .ThenInclude(e => e.Lehrer)
-            .Where(a => a.Status == FreistellungsStatus.AlleLehrerGenehmigt)
-            .OrderBy(a => a.DatumVon)
+            .Where(a => a.Status == FreistellungsStatus.AlleLehrerGenehmigt
+                        || a.Status == FreistellungsStatus.Bestaetigt
+                        || a.Status == FreistellungsStatus.Abgelehnt)
+            .OrderByDescending(a => a.DatumVon)
             .ToListAsync();
 
         return antraege.Select(a => new FreistellungsantragDto(a)).ToList();
@@ -265,45 +267,6 @@ public class FreistellungsService
         );
 
         return new FreistellungsantragDto(antrag);
-    }
-
-    /// <summary>
-    ///     Gets all leave requests that the given teacher has already decided on.
-    /// </summary>
-    public async Task<List<FreistellungsantragDto>> GetProcessedAntraegeForLehrerAsync(Person lehrer)
-    {
-        var antraege = await _dbContext.Freistellungsantraege
-            .Include(a => a.Student)
-            .Include(a => a.BetroffeneStunden)
-            .ThenInclude(s => s.Lehrer)
-            .Include(a => a.Entscheidungen)
-            .ThenInclude(e => e.Lehrer)
-            .Where(a => a.Entscheidungen.Any(e =>
-                e.LehrerId == lehrer.Id && e.Status != EntscheidungsStatus.Ausstehend))
-            .OrderByDescending(a => a.DatumVon)
-            .ToListAsync();
-
-        return antraege.Select(a => new FreistellungsantragDto(a)).ToList();
-    }
-
-    /// <summary>
-    ///     Gets all leave requests that have been fully processed by the Sekretariat
-    ///     (either confirmed or rejected).
-    /// </summary>
-    public async Task<List<FreistellungsantragDto>> GetProcessedAntraegeForSekretariatAsync()
-    {
-        var antraege = await _dbContext.Freistellungsantraege
-            .Include(a => a.Student)
-            .Include(a => a.BetroffeneStunden)
-            .ThenInclude(s => s.Lehrer)
-            .Include(a => a.Entscheidungen)
-            .ThenInclude(e => e.Lehrer)
-            .Where(a => a.Status == FreistellungsStatus.Bestaetigt
-                        || a.Status == FreistellungsStatus.Abgelehnt)
-            .OrderByDescending(a => a.DatumVon)
-            .ToListAsync();
-
-        return antraege.Select(a => new FreistellungsantragDto(a)).ToList();
     }
 
     private static string FormatDateRange(DateOnly von, DateOnly bis)

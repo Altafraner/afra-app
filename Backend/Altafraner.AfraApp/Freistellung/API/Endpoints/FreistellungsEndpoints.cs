@@ -31,15 +31,13 @@ public static class FreistellungsEndpoints
         // Teacher endpoints
         var lehrer = app.MapGroup("/lehrer")
             .RequireAuthorization(AuthorizationPolicies.TutorOnly);
-        lehrer.MapGet("/", GetPendingAntraegeForLehrer);
-        lehrer.MapGet("/bearbeitet", GetProcessedAntraegeForLehrer);
+        lehrer.MapGet("/", GetAntraegeForLehrer);
         lehrer.MapPut("/{antragId:guid}/entscheidung", RecordEntscheidung);
 
         // Sekretariat endpoints
         var sekretariat = app.MapGroup("/sekretariat")
             .RequireAuthorization(AuthorizationPolicies.Sekretariat);
         sekretariat.MapGet("/", GetAntraegeForSekretariat);
-        sekretariat.MapGet("/bearbeitet", GetProcessedAntraegeForSekretariat);
         sekretariat.MapPut("/{antragId:guid}/bestaetigen", BestaetigeAntrag);
     }
 
@@ -84,21 +82,12 @@ public static class FreistellungsEndpoints
         return Results.Ok(result);
     }
 
-    private static async Task<IResult> GetPendingAntraegeForLehrer(
+    private static async Task<IResult> GetAntraegeForLehrer(
         FreistellungsService service,
         UserAccessor userAccessor)
     {
         var lehrer = await userAccessor.GetUserAsync();
-        var result = await service.GetPendingAntraegeForLehrerAsync(lehrer);
-        return Results.Ok(result);
-    }
-
-    private static async Task<IResult> GetProcessedAntraegeForLehrer(
-        FreistellungsService service,
-        UserAccessor userAccessor)
-    {
-        var lehrer = await userAccessor.GetUserAsync();
-        var result = await service.GetProcessedAntraegeForLehrerAsync(lehrer);
+        var result = await service.GetAntraegeForLehrerAsync(lehrer);
         return Results.Ok(result);
     }
 
@@ -132,13 +121,6 @@ public static class FreistellungsEndpoints
         FreistellungsService service)
     {
         var result = await service.GetAntraegeForSekretariatAsync();
-        return Results.Ok(result);
-    }
-
-    private static async Task<IResult> GetProcessedAntraegeForSekretariat(
-        FreistellungsService service)
-    {
-        var result = await service.GetProcessedAntraegeForSekretariatAsync();
         return Results.Ok(result);
     }
 
