@@ -25,7 +25,8 @@ public record CreateFreistellungsantragDto
     public required string Grund { get; init; }
 
     /// <summary>
-    ///     The IDs of the teachers whose lessons the student attends on the requested day.
+    ///     The individual lessons the student will miss during the leave period.
+    ///     Each entry specifies the date, block number, subject, and teacher.
     /// </summary>
-    public required List<Guid> LehrerIds { get; init; }
+    public required List<CreateBetroffeneStundeDto> Stunden { get; init; }
 }

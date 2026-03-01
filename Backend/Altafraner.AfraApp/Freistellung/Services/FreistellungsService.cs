@@ -31,15 +31,24 @@ public class FreistellungsService
         if (student.Rolle == Rolle.Tutor)
             throw new InvalidOperationException("Teachers cannot create leave requests.");
 
-        if (dto.LehrerIds.Count == 0)
-            throw new ArgumentException("At least one teacher must be specified.");
+        if (dto.Stunden.Count == 0)
+            throw new ArgumentException("At least one lesson must be specified.");
+
+        foreach (var stunde in dto.Stunden)
+            if (stunde.Datum < dto.DatumVon || stunde.Datum > dto.DatumBis)
+                throw new ArgumentException(
+                    $"Lesson date {stunde.Datum:dd.MM.yyyy} is outside the requested leave period.");
+
+        var uniqueLehrerIds = dto.Stunden.Select(s => s.LehrerId).Distinct().ToList();
 
         var lehrer = await _dbContext.Personen
-            .Where(p => dto.LehrerIds.Contains(p.Id) && p.Rolle == Rolle.Tutor)
+            .Where(p => uniqueLehrerIds.Contains(p.Id) && p.Rolle == Rolle.Tutor)
             .ToListAsync();
 
-        if (lehrer.Count != dto.LehrerIds.Distinct().Count())
+        if (lehrer.Count != uniqueLehrerIds.Count)
             throw new ArgumentException("One or more specified teacher IDs are invalid.");
+
+        var lehrerById = lehrer.ToDictionary(l => l.Id);
 
         var antrag = new Domain.Models.Freistellungsantrag
         {
@@ -47,6 +56,14 @@ public class FreistellungsService
             DatumVon = dto.DatumVon,
             DatumBis = dto.DatumBis,
             Grund = dto.Grund,
+            BetroffeneStunden = dto.Stunden.Select(s => new Domain.Models.BetroffeneStunde
+            {
+                Datum = s.Datum,
+                Block = s.Block,
+                Fach = s.Fach,
+                Lehrer = lehrerById[s.LehrerId],
+                Freistellungsantrag = null!,
+            }).ToList(),
             Entscheidungen = lehrer.Select(l => new LehrerEntscheidung
             {
                 Lehrer = l,
@@ -81,6 +98,8 @@ public class FreistellungsService
     {
         var antraege = await _dbContext.Freistellungsantraege
             .Include(a => a.Student)
+            .Include(a => a.BetroffeneStunden)
+            .ThenInclude(s => s.Lehrer)
             .Include(a => a.Entscheidungen)
             .ThenInclude(e => e.Lehrer)
             .Where(a => a.StudentId == student.Id)
@@ -97,6 +116,8 @@ public class FreistellungsService
     {
         var antraege = await _dbContext.Freistellungsantraege
             .Include(a => a.Student)
+            .Include(a => a.BetroffeneStunden)
+            .ThenInclude(s => s.Lehrer)
             .Include(a => a.Entscheidungen)
             .ThenInclude(e => e.Lehrer)
             .Where(a => a.Entscheidungen.Any(e =>
@@ -118,6 +139,8 @@ public class FreistellungsService
 
         var antrag = await _dbContext.Freistellungsantraege
             .Include(a => a.Student)
+            .Include(a => a.BetroffeneStunden)
+            .ThenInclude(s => s.Lehrer)
             .Include(a => a.Entscheidungen)
             .ThenInclude(e => e.Lehrer)
             .FirstOrDefaultAsync(a => a.Id == antragId);
@@ -197,6 +220,8 @@ public class FreistellungsService
     {
         var antraege = await _dbContext.Freistellungsantraege
             .Include(a => a.Student)
+            .Include(a => a.BetroffeneStunden)
+            .ThenInclude(s => s.Lehrer)
             .Include(a => a.Entscheidungen)
             .ThenInclude(e => e.Lehrer)
             .Where(a => a.Status == FreistellungsStatus.AlleLehrerGenehmigt)
@@ -213,6 +238,8 @@ public class FreistellungsService
     {
         var antrag = await _dbContext.Freistellungsantraege
             .Include(a => a.Student)
+            .Include(a => a.BetroffeneStunden)
+            .ThenInclude(s => s.Lehrer)
             .Include(a => a.Entscheidungen)
             .ThenInclude(e => e.Lehrer)
             .FirstOrDefaultAsync(a => a.Id == antragId);
@@ -247,6 +274,8 @@ public class FreistellungsService
     {
         var antraege = await _dbContext.Freistellungsantraege
             .Include(a => a.Student)
+            .Include(a => a.BetroffeneStunden)
+            .ThenInclude(s => s.Lehrer)
             .Include(a => a.Entscheidungen)
             .ThenInclude(e => e.Lehrer)
             .Where(a => a.Entscheidungen.Any(e =>
@@ -265,6 +294,8 @@ public class FreistellungsService
     {
         var antraege = await _dbContext.Freistellungsantraege
             .Include(a => a.Student)
+            .Include(a => a.BetroffeneStunden)
+            .ThenInclude(s => s.Lehrer)
             .Include(a => a.Entscheidungen)
             .ThenInclude(e => e.Lehrer)
             .Where(a => a.Status == FreistellungsStatus.Bestaetigt

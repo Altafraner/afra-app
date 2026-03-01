@@ -21,6 +21,11 @@ public record FreistellungsantragDto
         Status = antrag.Status;
         ErstelltAm = antrag.ErstelltAm;
         Student = new PersonInfoMinimal(antrag.Student);
+        BetroffeneStunden = antrag.BetroffeneStunden
+            .OrderBy(s => s.Datum)
+            .ThenBy(s => s.Block)
+            .Select(s => new BetroffeneStundeDto(s))
+            .ToList();
         Entscheidungen = antrag.Entscheidungen
             .Select(e => new LehrerEntscheidungDto(e))
             .ToList();
@@ -49,6 +54,11 @@ public record FreistellungsantragDto
     ///     The student who submitted this request.
     /// </summary>
     public PersonInfoMinimal Student { get; init; }
+
+    /// <summary>
+    ///     The individual lessons the student will miss during the leave period.
+    /// </summary>
+    public List<BetroffeneStundeDto> BetroffeneStunden { get; init; }
 
     /// <summary>
     ///     The teacher decisions associated with this request.

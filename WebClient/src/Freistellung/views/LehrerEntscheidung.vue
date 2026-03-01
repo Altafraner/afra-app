@@ -123,6 +123,29 @@ const entscheidungLabel = {
                 <span class="font-semibold">Grund:</span> {{ antrag.grund }}
             </p>
 
+            <table v-if="antrag.betroffeneStunden?.length" class="w-full text-sm mb-3">
+                <thead>
+                    <tr class="text-left border-b text-gray-500">
+                        <th class="py-1 pr-3 font-medium">Datum</th>
+                        <th class="py-1 pr-3 font-medium">Block</th>
+                        <th class="py-1 pr-3 font-medium">Fach</th>
+                        <th class="py-1 font-medium">Lehrkraft</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr
+                        v-for="s in antrag.betroffeneStunden"
+                        :key="s.id"
+                        class="border-b last:border-0"
+                    >
+                        <td class="py-1 pr-3">{{ formatDate(s.datum) }}</td>
+                        <td class="py-1 pr-3">{{ s.block }}</td>
+                        <td class="py-1 pr-3">{{ s.fach }}</td>
+                        <td class="py-1">{{ s.lehrer.nachname }}, {{ s.lehrer.vorname }}</td>
+                    </tr>
+                </tbody>
+            </table>
+
             <div class="flex gap-2">
                 <Button
                     label="Genehmigen"
@@ -170,6 +193,29 @@ const entscheidungLabel = {
             <p class="text-sm mb-2">
                 <span class="font-semibold">Grund:</span> {{ antrag.grund }}
             </p>
+
+            <table v-if="antrag.betroffeneStunden?.length" class="w-full text-sm mb-2">
+                <thead>
+                    <tr class="text-left border-b text-gray-500">
+                        <th class="py-1 pr-3 font-medium">Datum</th>
+                        <th class="py-1 pr-3 font-medium">Block</th>
+                        <th class="py-1 pr-3 font-medium">Fach</th>
+                        <th class="py-1 font-medium">Lehrkraft</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr
+                        v-for="s in antrag.betroffeneStunden"
+                        :key="s.id"
+                        class="border-b last:border-0"
+                    >
+                        <td class="py-1 pr-3">{{ formatDate(s.datum) }}</td>
+                        <td class="py-1 pr-3">{{ s.block }}</td>
+                        <td class="py-1 pr-3">{{ s.fach }}</td>
+                        <td class="py-1">{{ s.lehrer.nachname }}, {{ s.lehrer.vorname }}</td>
+                    </tr>
+                </tbody>
+            </table>
 
             <div class="flex flex-col gap-1">
                 <div

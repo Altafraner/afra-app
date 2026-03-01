@@ -51,6 +51,11 @@ public class Freistellungsantrag
     public DateTime ErstelltAm { get; set; } = DateTime.UtcNow;
 
     /// <summary>
+    ///     The individual lessons the student will miss during the leave period.
+    /// </summary>
+    public List<BetroffeneStunde> BetroffeneStunden { get; set; } = [];
+
+    /// <summary>
     ///     The teacher decisions associated with this request.
     /// </summary>
     public List<LehrerEntscheidung> Entscheidungen { get; set; } = [];

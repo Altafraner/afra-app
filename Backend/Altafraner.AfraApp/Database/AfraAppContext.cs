@@ -101,6 +101,11 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
     public DbSet<Freistellungsantrag> Freistellungsantraege { get; set; }
 
     /// <summary>
+    ///     All individual missed lessons within leave requests
+    /// </summary>
+    public DbSet<BetroffeneStunde> BetroffeneStunden { get; set; }
+
+    /// <summary>
     ///     All teacher decisions on leave requests
     /// </summary>
     public DbSet<LehrerEntscheidung> LehrerEntscheidungen { get; set; }
@@ -320,10 +325,21 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
             a.HasOne(e => e.Student)
                 .WithMany()
                 .HasForeignKey(e => e.StudentId);
+            a.HasMany(e => e.BetroffeneStunden)
+                .WithOne(s => s.Freistellungsantrag)
+                .HasForeignKey(s => s.FreistellungsantragId)
+                .OnDelete(DeleteBehavior.Cascade);
             a.HasMany(e => e.Entscheidungen)
                 .WithOne(e => e.Freistellungsantrag)
                 .HasForeignKey(e => e.FreistellungsantragId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<BetroffeneStunde>(s =>
+        {
+            s.HasOne(b => b.Lehrer)
+                .WithMany()
+                .HasForeignKey(b => b.LehrerId);
         });
 
         modelBuilder.Entity<LehrerEntscheidung>(e =>
