@@ -4,9 +4,11 @@ import { Button, Dialog, Tag, Textarea, useToast } from 'primevue';
 import { mande } from 'mande';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
 import { useFreistellungStore } from '@/Freistellung/stores/freistellung.js';
+import { useUser } from '@/stores/user.ts';
 
 const toast = useToast();
 const store = useFreistellungStore();
+const userStore = useUser();
 
 const navItems = [
     { label: 'Freistellungsantrag', route: { name: 'Freistellung-Lehrer' } },
@@ -20,13 +22,21 @@ const submitting = ref(false);
 
 await store.updateLehrerAntraege();
 
-// Split client-side: pending = overall request still open, processed = decided
-const pendingAntraege = computed(() =>
-    store.lehrerAntraege?.filter((a) => a.status === 'Gestellt') ?? []
-);
-const processedAntraege = computed(() =>
-    store.lehrerAntraege?.filter((a) => a.status !== 'Gestellt') ?? []
-);
+// Split client-side: pending = this teacher hasn't decided yet, processed = already decided
+const pendingAntraege = computed(() => {
+    if (!userStore.user) return [];
+    return store.lehrerAntraege?.filter((a) => {
+        const meineEntscheidung = a.entscheidungen.find((e) => e.lehrer.id === userStore.user.id);
+        return meineEntscheidung?.status === 'Ausstehend';
+    }) ?? [];
+});
+const processedAntraege = computed(() => {
+    if (!userStore.user) return [];
+    return store.lehrerAntraege?.filter((a) => {
+        const meineEntscheidung = a.entscheidungen.find((e) => e.lehrer.id === userStore.user.id);
+        return meineEntscheidung?.status !== 'Ausstehend';
+    }) ?? [];
+});
 
 function formatDate(dateStr) {
     const [year, month, day] = dateStr.split('-');
