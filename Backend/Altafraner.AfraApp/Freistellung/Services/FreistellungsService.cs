@@ -97,6 +97,7 @@ public class FreistellungsService
     public async Task<List<FreistellungsantragDto>> GetAntraegeForStudentAsync(Person student)
     {
         var antraege = await _dbContext.Freistellungsantraege
+            .AsSplitQuery()
             .Include(a => a.Student)
             .Include(a => a.BetroffeneStunden)
             .ThenInclude(s => s.Lehrer)
@@ -116,6 +117,7 @@ public class FreistellungsService
     public async Task<List<FreistellungsantragDto>> GetAntraegeForLehrerAsync(Person lehrer)
     {
         var antraege = await _dbContext.Freistellungsantraege
+            .AsSplitQuery()
             .Include(a => a.Student)
             .Include(a => a.BetroffeneStunden)
             .ThenInclude(s => s.Lehrer)
@@ -137,6 +139,7 @@ public class FreistellungsService
             throw new ArgumentException("Decision status must be Genehmigt or Abgelehnt.");
 
         var antrag = await _dbContext.Freistellungsantraege
+            .AsSplitQuery()
             .Include(a => a.Student)
             .Include(a => a.BetroffeneStunden)
             .ThenInclude(s => s.Lehrer)
@@ -219,6 +222,7 @@ public class FreistellungsService
     public async Task<List<FreistellungsantragDto>> GetAntraegeForSekretariatAsync()
     {
         var antraege = await _dbContext.Freistellungsantraege
+            .AsSplitQuery()
             .Include(a => a.Student)
             .Include(a => a.BetroffeneStunden)
             .ThenInclude(s => s.Lehrer)
@@ -239,6 +243,7 @@ public class FreistellungsService
     public async Task<FreistellungsantragDto> BestaetigeAntragAsync(Guid antragId)
     {
         var antrag = await _dbContext.Freistellungsantraege
+            .AsSplitQuery()
             .Include(a => a.Student)
             .Include(a => a.BetroffeneStunden)
             .ThenInclude(s => s.Lehrer)
