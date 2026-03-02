@@ -12,8 +12,6 @@ const calLink = ref(null);
 
 const numSubs = ref(null);
 
-const baseUrl = import.meta.env.BASE_URL;
-
 async function fetchNum() {
     loading.value = true;
     const dataGetter = mande('/api/calendar/count');
@@ -145,9 +143,9 @@ const navItems = [
 
         <Button
             icon="pi pi-clipboard"
-            :label="`${baseUrl}api/calendar/${calLink}.ics`"
+            :label=calLink
             variant="text"
-            @click.prevent="copy(`${baseUrl}api/calendar/${calLink}.ics`)"
+            @click.prevent="copy(calLink)"
         />
     </div>
 </template>

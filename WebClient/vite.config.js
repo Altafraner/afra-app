@@ -44,7 +44,7 @@ const pwaOptions = {
 
 // https://vite.dev/config/
 export default defineConfig({
-    base: 'https://afra.altafraner.de/',
+    base: '/',
     plugins: [vue(), vueDevTools(), tailwindcss(), VitePWA(pwaOptions)],
     resolve: {
         alias: {

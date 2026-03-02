@@ -21,11 +21,12 @@ public static class Calendar
         app.MapGet("/api/calendar/{subId:guid}.ics", GetCalendarAsync);
     }
 
-    private static async Task<IResult> SubscribeCalendarAsync(UserAccessor userAccessor, CalendarService calendarService)
+    private static async Task<IResult> SubscribeCalendarAsync(UserAccessor userAccessor, CalendarService calendarService, IConfiguration configuration)
     {
+        var baseUrl = new Uri(configuration["ApplicationSettings:BaseUrl"]!);
         var user = await userAccessor.GetUserAsync();
         var subId = await calendarService.AddCalendarSubscriptionAsync(user);
-        return Results.Ok(subId);
+        return Results.Ok(new Uri(baseUrl, $"api/calendar/{subId}.ics"));
     }
 
     private static async Task<IResult> DeleteAllSubscriptionsAsync(UserAccessor userAccessor, CalendarService calendarService)
