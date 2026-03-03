@@ -10,9 +10,7 @@ const toast = useToast();
 const store = useFreistellungStore();
 const userStore = useUser();
 
-const navItems = [
-    { label: 'Freistellungsantrag', route: { name: 'Freistellung-Lehrer' } },
-];
+const navItems = [{ label: 'Freistellungsantrag', route: { name: 'Freistellung-Lehrer' } }];
 
 const dialogVisible = ref(false);
 const selectedAntrag = ref(null);
@@ -25,17 +23,25 @@ await store.updateLehrerAntraege();
 // Split client-side: pending = this teacher hasn't decided yet, processed = already decided
 const pendingAntraege = computed(() => {
     if (!userStore.user) return [];
-    return store.lehrerAntraege?.filter((a) => {
-        const meineEntscheidung = a.entscheidungen.find((e) => e.lehrer.id === userStore.user.id);
-        return meineEntscheidung?.status === 'Ausstehend';
-    }) ?? [];
+    return (
+        store.lehrerAntraege?.filter((a) => {
+            const meineEntscheidung = a.entscheidungen.find(
+                (e) => e.lehrer.id === userStore.user.id,
+            );
+            return meineEntscheidung?.status === 'Ausstehend';
+        }) ?? []
+    );
 });
 const processedAntraege = computed(() => {
     if (!userStore.user) return [];
-    return store.lehrerAntraege?.filter((a) => {
-        const meineEntscheidung = a.entscheidungen.find((e) => e.lehrer.id === userStore.user.id);
-        return meineEntscheidung?.status !== 'Ausstehend';
-    }) ?? [];
+    return (
+        store.lehrerAntraege?.filter((a) => {
+            const meineEntscheidung = a.entscheidungen.find(
+                (e) => e.lehrer.id === userStore.user.id,
+            );
+            return meineEntscheidung?.status !== 'Ausstehend';
+        }) ?? []
+    );
 });
 
 function formatDate(dateStr) {
@@ -66,8 +72,7 @@ async function submitDecision() {
         });
         toast.add({
             severity: pendingStatus.value === 'Genehmigt' ? 'success' : 'warn',
-            summary:
-                pendingStatus.value === 'Genehmigt' ? 'Genehmigt' : 'Abgelehnt',
+            summary: pendingStatus.value === 'Genehmigt' ? 'Genehmigt' : 'Abgelehnt',
             detail: `Der Freistellungsantrag wurde ${pendingStatus.value === 'Genehmigt' ? 'genehmigt' : 'abgelehnt'}.`,
             life: 3000,
         });
@@ -127,7 +132,10 @@ const entscheidungLabel = {
                         {{ antrag.student.gruppe ?? '' }}
                     </span>
                 </div>
-                <Tag severity="info" :value="formatDateRange(antrag.datumVon, antrag.datumBis)" />
+                <Tag
+                    severity="info"
+                    :value="formatDateRange(antrag.datumVon, antrag.datumBis)"
+                />
             </div>
 
             <p class="text-sm mb-3">
@@ -198,7 +206,10 @@ const entscheidungLabel = {
                         {{ antrag.student.gruppe ?? '' }}
                     </span>
                 </div>
-                <Tag severity="secondary" :value="formatDateRange(antrag.datumVon, antrag.datumBis)" />
+                <Tag
+                    severity="secondary"
+                    :value="formatDateRange(antrag.datumVon, antrag.datumBis)"
+                />
             </div>
 
             <p class="text-sm mb-2">
@@ -261,7 +272,11 @@ const entscheidungLabel = {
                     {{ selectedAntrag?.student?.vorname }}
                 </strong>
                 für
-                <strong>{{ selectedAntrag ? formatDateRange(selectedAntrag.datumVon, selectedAntrag.datumBis) : '' }}</strong>
+                <strong>{{
+                    selectedAntrag
+                        ? formatDateRange(selectedAntrag.datumVon, selectedAntrag.datumBis)
+                        : ''
+                }}</strong>
                 {{ pendingStatus === 'Genehmigt' ? 'genehmigen' : 'ablehnen' }}?
             </p>
             <div class="flex flex-col gap-1">
@@ -277,11 +292,7 @@ const entscheidungLabel = {
             </div>
         </div>
         <template #footer>
-            <Button
-                label="Abbrechen"
-                severity="secondary"
-                @click="dialogVisible = false"
-            />
+            <Button label="Abbrechen" severity="secondary" @click="dialogVisible = false" />
             <Button
                 :label="pendingStatus === 'Genehmigt' ? 'Genehmigen' : 'Ablehnen'"
                 :severity="pendingStatus === 'Genehmigt' ? 'success' : 'danger'"

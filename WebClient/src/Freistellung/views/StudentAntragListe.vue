@@ -6,9 +6,7 @@ import { useFreistellungStore } from '@/Freistellung/stores/freistellung.js';
 const toast = useToast();
 const store = useFreistellungStore();
 
-const navItems = [
-    { label: 'Freistellungsantrag', route: { name: 'Freistellung-Meine' } },
-];
+const navItems = [{ label: 'Freistellungsantrag', route: { name: 'Freistellung-Meine' } }];
 
 await store.updateMeineAntraege();
 
@@ -74,7 +72,9 @@ function formatDateRange(von, bis) {
         >
             <div class="flex items-start justify-between gap-2 mb-2">
                 <div>
-                    <span class="font-semibold text-lg">{{ formatDateRange(antrag.datumVon, antrag.datumBis) }}</span>
+                    <span class="font-semibold text-lg">{{
+                        formatDateRange(antrag.datumVon, antrag.datumBis)
+                    }}</span>
                     <Tag
                         class="ml-2"
                         :severity="statusSeverity[antrag.status]"

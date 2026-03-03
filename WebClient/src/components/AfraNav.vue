@@ -9,7 +9,11 @@ import { useUser } from '@/stores/user';
 import { useRouter } from 'vue-router';
 import { isDark } from '@/helpers/isdark';
 
-type GlobalPermissions = 'Otiumsverantwortlich' | 'Profundumsverantwortlich' | 'Admin' | 'Sekretariat';
+type GlobalPermissions =
+    | 'Otiumsverantwortlich'
+    | 'Profundumsverantwortlich'
+    | 'Admin'
+    | 'Sekretariat';
 type Role = 'Tutor' | 'Oberstufe' | 'Mittelstufe';
 
 interface Conditions {

@@ -1,6 +1,14 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
-import { Button, DatePicker, InputNumber, InputText, Select, Textarea, useToast } from 'primevue';
+import {
+    Button,
+    DatePicker,
+    InputNumber,
+    InputText,
+    Select,
+    Textarea,
+    useToast,
+} from 'primevue';
 import { mande } from 'mande';
 import { useRouter } from 'vue-router';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
@@ -23,10 +31,11 @@ const loading = ref(false);
 
 await store.updateLehrer();
 
-const lehrerOptions = store.lehrer?.map((l) => ({
-    label: `${l.nachname}, ${l.vorname}`,
-    value: l.id,
-})) ?? [];
+const lehrerOptions =
+    store.lehrer?.map((l) => ({
+        label: `${l.nachname}, ${l.vorname}`,
+        value: l.id,
+    })) ?? [];
 
 // The list of days within the selected range
 const tage = computed(() => {
@@ -47,7 +56,7 @@ const tagOptions = computed(() =>
     tage.value.map((d) => ({
         label: formatDateJs(d),
         value: toDateStr(d),
-    }))
+    })),
 );
 
 // When date range changes, remove stunden rows whose date is no longer in range
@@ -57,9 +66,10 @@ watch(tage, (newTage) => {
 });
 
 const datumValid = computed(() => Array.isArray(datum.value) && datum.value[0] != null);
-const stundenValid = computed(() =>
-    stunden.value.length > 0 &&
-    stunden.value.every((s) => s.datum && s.block > 0 && s.fach.trim() && s.lehrerId)
+const stundenValid = computed(
+    () =>
+        stunden.value.length > 0 &&
+        stunden.value.every((s) => s.datum && s.block > 0 && s.fach.trim() && s.lehrerId),
 );
 
 function toDateStr(d) {
@@ -189,7 +199,11 @@ async function submit() {
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="(stunde, index) in stunden" :key="index" class="border-b last:border-0">
+                            <tr
+                                v-for="(stunde, index) in stunden"
+                                :key="index"
+                                class="border-b last:border-0"
+                            >
                                 <td class="py-2 pr-3" style="min-width: 9rem">
                                     <Select
                                         v-model="stunde.datum"
@@ -243,9 +257,7 @@ async function submit() {
                     </table>
                 </div>
 
-                <p v-else class="text-sm text-gray-500">
-                    Noch keine Stunden hinzugefügt.
-                </p>
+                <p v-else class="text-sm text-gray-500">Noch keine Stunden hinzugefügt.</p>
 
                 <div>
                     <Button
@@ -270,4 +282,3 @@ async function submit() {
 </template>
 
 <style scoped></style>
-

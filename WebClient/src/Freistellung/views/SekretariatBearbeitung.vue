@@ -17,11 +17,11 @@ const confirming = ref(null);
 await store.updateSekretariatAntraege();
 
 // Split client-side: pending confirmation = AlleLehrerGenehmigt, processed = everything else
-const pendingAntraege = computed(() =>
-    store.sekretariatAntraege?.filter((a) => a.status === 'AlleLehrerGenehmigt') ?? []
+const pendingAntraege = computed(
+    () => store.sekretariatAntraege?.filter((a) => a.status === 'AlleLehrerGenehmigt') ?? [],
 );
-const processedAntraege = computed(() =>
-    store.sekretariatAntraege?.filter((a) => a.status !== 'AlleLehrerGenehmigt') ?? []
+const processedAntraege = computed(
+    () => store.sekretariatAntraege?.filter((a) => a.status !== 'AlleLehrerGenehmigt') ?? [],
 );
 
 function formatDate(dateStr) {
@@ -101,7 +101,10 @@ async function bestaetigen(antragId) {
                         {{ antrag.student.gruppe ?? '' }}
                     </span>
                 </div>
-                <Tag severity="warn" :value="formatDateRange(antrag.datumVon, antrag.datumBis)" />
+                <Tag
+                    severity="warn"
+                    :value="formatDateRange(antrag.datumVon, antrag.datumBis)"
+                />
             </div>
 
             <p class="text-sm mb-2">
@@ -185,7 +188,10 @@ async function bestaetigen(antragId) {
                         :severity="statusSeverity[antrag.status]"
                         :value="statusLabel[antrag.status]"
                     />
-                    <Tag severity="secondary" :value="formatDateRange(antrag.datumVon, antrag.datumBis)" />
+                    <Tag
+                        severity="secondary"
+                        :value="formatDateRange(antrag.datumVon, antrag.datumBis)"
+                    />
                 </div>
             </div>
 
