@@ -143,7 +143,7 @@ const navItems = [
 
         <Button
             icon="pi pi-clipboard"
-            :label=calLink
+            :label="calLink"
             variant="text"
             @click.prevent="copy(calLink)"
         />
