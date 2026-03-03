@@ -186,15 +186,20 @@ await setup();
             <Tag v-if="otium.istAbgesagt" icon="pi pi-exclamation-triangle" severity="danger"
                 >Abgesagt
             </Tag>
-            <span v-if="otium.tutor">
+            <span v-if="otium.tutor" class="inline-flex items-center gap-1">
                 <i class="pi pi-user" />
                 {{ formatTutor(otium.tutor) }}
             </span>
-            <span v-if="otium.ort"> <i class="pi pi-map-marker" /> {{ otium.ort }} </span>
-            <span v-if="otium.block.datum">
+            <span v-if="otium.ort" class="inline-flex items-center gap-1">
+                <i class="pi pi-map-marker" /> {{ otium.ort }}
+            </span>
+            <span v-if="otium.block.datum" class="inline-flex items-center gap-1">
                 <i class="pi pi-clock" />
                 {{ formatDate(new Date(otium.block.datum)) }},
                 {{ otium.block.uhrzeit.start }} Uhr
+            </span>
+            <span class="inline-flex items-center gap-1">
+                <i class="pi pi-users"></i> {{ otium.maxEinschreibungen ?? '—' }}
             </span>
         </div>
 
@@ -261,7 +266,7 @@ await setup();
         <!-- Row 2 Column 1 -->
         <SimpleBreadcrumb :model="findPath(settings.kategorien, otium.kategorie)" wrap>
             <template #item="{ item }">
-                <AfraKategorieTag :value="item" minimal />
+                <AfraKategorieTag :value="item" class="gap-1 items-center" minimal />
             </template>
         </SimpleBreadcrumb>
 
