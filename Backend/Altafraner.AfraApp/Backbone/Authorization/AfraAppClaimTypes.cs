@@ -35,4 +35,9 @@ public static class AfraAppClaimTypes
     /// </summary>
     /// <remarks>Should be one of <see cref="GlobalPermission" /></remarks>
     public static string GlobalPermission => "GlobalPermission";
+
+    /// <summary>
+    ///     Indicates that the current session is an impersonation session.
+    /// </summary>
+    public static string IsImpersonating => "IsImpersonating";
 }

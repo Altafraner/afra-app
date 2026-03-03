@@ -25,4 +25,9 @@ public record PersonLoginInfo
     ///     A list of global permissions the user is assigned.
     /// </summary>
     public required GlobalPermission[] Berechtigungen { get; set; }
+
+    /// <summary>
+    ///     Whether the current session is an impersonation session.
+    /// </summary>
+    public bool IsImpersonating { get; set; }
 }
