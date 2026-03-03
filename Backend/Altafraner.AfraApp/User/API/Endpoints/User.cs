@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Altafraner.AfraApp.Backbone.Authorization;
 using Altafraner.AfraApp.User.Domain.DTO;
 using Altafraner.AfraApp.User.Services;
@@ -23,18 +24,21 @@ public static class User
             .AllowAnonymous();
 
         app.MapGet("/api/user",
-            async (UserAccessor userAccessor) =>
+            async (UserAccessor userAccessor, ClaimsPrincipal claimsPrincipal) =>
             {
                 try
                 {
                     var user = await userAccessor.GetUserAsync();
+                    var isImpersonating = claimsPrincipal.HasClaim(c =>
+                        c.Type == AfraAppClaimTypes.IsImpersonating && c.Value == bool.TrueString);
                     return Results.Ok(new PersonLoginInfo
                     {
                         Id = user.Id,
                         Vorname = user.FirstName,
                         Nachname = user.LastName,
                         Rolle = user.Rolle,
-                        Berechtigungen = user.GlobalPermissions.ToArray()
+                        Berechtigungen = user.GlobalPermissions.ToArray(),
+                        IsImpersonating = isImpersonating
                     });
                 }
                 catch (InvalidOperationException)
@@ -52,7 +56,7 @@ public static class User
                 async (UserSigninService userSigninService, ILogger<Program> logger, Guid id) =>
                 {
                     logger.LogWarning("Impersonating user with ID {Id}", id);
-                    await userSigninService.SignInAsync(id, rememberMe: false);
+                    await userSigninService.SignInAsync(id, rememberMe: false, isImpersonating: true);
                 })
             .RequireAuthorization(AuthorizationPolicies.AdminOnly);
     }

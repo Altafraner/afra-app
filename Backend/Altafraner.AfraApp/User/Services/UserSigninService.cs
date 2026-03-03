@@ -37,12 +37,13 @@ public class UserSigninService
     /// </summary>
     /// <param name="userId">The id of the <see cref="Person" /> to sign in</param>
     /// <param name="rememberMe">Whether to issue a persistent cookie</param>
+    /// <param name="isImpersonating">Whether this sign-in is an impersonation session</param>
     /// <exception cref="InvalidOperationException">The user with the given id does not exist.</exception>
-    public async Task SignInAsync(Guid userId, bool rememberMe)
+    public async Task SignInAsync(Guid userId, bool rememberMe, bool isImpersonating = false)
     {
         var user = await _dbContext.Personen.FindAsync(userId);
         if (user is null) throw new InvalidOperationException("The user does not exist");
-        await SignInAsync(user, rememberMe);
+        await SignInAsync(user, rememberMe, isImpersonating);
     }
 
     /// <summary>
@@ -83,9 +84,9 @@ public class UserSigninService
         return Results.Ok();
     }
 
-    private async Task SignInAsync(Models_Person user, bool rememberMe)
+    private async Task SignInAsync(Models_Person user, bool rememberMe, bool isImpersonating = false)
     {
-        var claimsPrincipal = GenerateClaimsPrincipal(user);
+        var claimsPrincipal = GenerateClaimsPrincipal(user, isImpersonating);
         await _authenticationLifetimeService.SignInAsync(claimsPrincipal, rememberMe);
     }
 
@@ -93,8 +94,9 @@ public class UserSigninService
     ///     Generates a <see cref="ClaimsPrincipal" /> for the given <see cref="Person" />
     /// </summary>
     /// <param name="user">The user to generate the <see cref="ClaimsPrincipal" /> for.</param>
+    /// <param name="isImpersonating">Whether this is an impersonation session</param>
     /// <returns>A <see cref="ClaimsPrincipal" /> for the user</returns>
-    private static ClaimsPrincipal GenerateClaimsPrincipal(Models_Person user)
+    private static ClaimsPrincipal GenerateClaimsPrincipal(Models_Person user, bool isImpersonating = false)
     {
         var claims = new List<Claim>
         {
@@ -106,6 +108,9 @@ public class UserSigninService
 
         claims.AddRange(user.GlobalPermissions.Select(perm =>
             new Claim(AfraAppClaimTypes.GlobalPermission, perm.ToString())));
+
+        if (isImpersonating)
+            claims.Add(new Claim(AfraAppClaimTypes.IsImpersonating, bool.TrueString));
 
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
 
