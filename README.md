@@ -11,7 +11,7 @@ Nachmittagsangebote ermöglichen soll.
 
 ## Entwicklungsumgebung
 
-Das Projekt besteht aus einer Vue-SPA im Ordner `/WebClient` und einer ASP.NET Core WebAPI im Ordner `/Afra-App`. In
+Das Projekt besteht aus einer Vue-SPA im Ordner `/WebClient` und einer ASP.NET Core WebAPI im Ordner `/Backend`. In
 Zukunft würde es sich anbieten, die Teile zu trennen.
 
 Zum Aufsetzen muss in den Ordner `/dev` navigiert und (z. B. mit dem WSL) das Skript `create_dev.sh` ausgeführt werden.
@@ -24,23 +24,13 @@ Mailcatcher (Port 8090) und einem kleinen Service zum Testen der Emergency-Backu
 Passwort: admin) gestartet werden.
 
 Die WebApi und die Client-App müssen jeweils eigenständig aus ihren entsprechenden Ordnern heraus gestartet werden. (in
-`WebClient`: `npm run dev` und in `Afra-App` `dotnet run`)
-
-Die Entwicklungsumgebung setzt die Datenbank bei jedem Neustart zurück. Durch einen Aufruf von
-`http://localhost:5043/api/test/seed` kann ein Grundbestand an Daten angelegt werden.
-
-### Endpunkte zum Testen:
-
-- `http://localhost:5173/api/test/seed` (Datenbank füllen)
-- `http://localhost:5173/api/test/seed/users` (Datenbank füllen)
-- `http://localhost:5173/api/test/reset` (Datenbank zurücksetzen)
+`WebClient`: `npm run dev` und in `Backend` `dotnet run`)
 
 ### Hinweise zum Login:
 
 Normalerweise wird zur Authentifizierung ein Microsoft AD mit LDAP verwendet. In Zukunft soll evtl. SAML zum Einsatz
 kommen. Da beides zum Testen unpraktisch ist, kann LDAP in der `appsettings(.Development).json` deaktiviert werden. Für
-diesen Fall erfolgt der Login mit beliebigem Passwort und dem Anfang einer E-Mail-Adresse. Am besten liest man einfach
-einmal die Datenbank aus um die über den `/api/test/seed/users`-Endpunkt generierten Nutzer einzusehen.
+diesen Fall erfolgt der Login mit beliebigem Passwort und dem Anfang einer E-Mail-Adresse.
 
 # Lizenz:
 
