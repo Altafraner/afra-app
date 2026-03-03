@@ -10,13 +10,13 @@ const user = useUser();
 const toast = useToast();
 const calLink = ref(null);
 
-const numSubs = ref(null);
+const numSubs = ref(0);
 
 async function fetchNum() {
     loading.value = true;
-    const dataGetter = mande('/api/calendar/count');
+    const endpoint = mande('/api/calendar/count');
     try {
-        numSubs.value = await dataGetter.get();
+        numSubs.value = await endpoint.get();
     } catch (e) {
         await user.update();
         toast.add({
@@ -32,9 +32,9 @@ async function fetchNum() {
 
 async function fetchKey() {
     loading.value = true;
-    const dataGetter = mande('/api/calendar');
+    const endpoint = mande('/api/calendar');
     try {
-        calLink.value = await dataGetter.get();
+        calLink.value = await endpoint.get();
     } catch (e) {
         await user.update();
         toast.add({
@@ -51,9 +51,9 @@ async function fetchKey() {
 
 async function deleteKeys() {
     loading.value = true;
-    const dataGetter = mande('/api/calendar');
+    const endpoint = mande('/api/calendar');
     try {
-        await dataGetter.delete();
+        await endpoint.delete();
         calLink.value = null;
         toast.add({
             severity: 'success',
@@ -114,7 +114,7 @@ const navItems = [
     </p>
 
     <p>
-        Generiere einen Link und füge ihn in ein solches Programm als Kalender-Abbonement ein.
+        Generiere einen Link und füge ihn in ein solches Programm als Kalender-Abonement ein.
         Solltest du den Link verlieren oder er aufhören zu funktionieren, kannst du beliebig oft
         einen neuen erstellen.
     </p>
