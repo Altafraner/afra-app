@@ -77,7 +77,6 @@ if (!app.Environment.IsDevelopment())
 
 app.AddAltafranerMiddleware();
 app.MapAltafranerBackbone();
-if (app.Environment.IsDevelopment()) app.MapControllers();
 await app.WarmupAltafranerBackbone();
 
 app.Run();
