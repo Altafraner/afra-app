@@ -266,7 +266,7 @@ await setup();
         <!-- Row 2 Column 1 -->
         <SimpleBreadcrumb :model="findPath(settings.kategorien, otium.kategorie)" wrap>
             <template #item="{ item }">
-                <AfraKategorieTag :value="item" class="gap-1 items-center" minimal />
+                <AfraKategorieTag :value="item" minimal />
             </template>
         </SimpleBreadcrumb>
 
