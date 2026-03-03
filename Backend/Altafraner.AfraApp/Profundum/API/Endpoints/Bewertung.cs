@@ -51,6 +51,8 @@ public static class Bewertung
                     DateOnly ausgabedatum) =>
             {
                 var user = await userService.GetUserByIdAsync(userId);
+                if (user is null)
+                    return (Results<UnauthorizedHttpResult, FileContentHttpResult>)TypedResults.Unauthorized();
                 var fileContents =
                     await profundumManagementService.GenerateFileForPerson(user, schuljahr, halbjahr, ausgabedatum);
                 return TypedResults.File(fileContents, MediaTypeNames.Application.Pdf);

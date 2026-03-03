@@ -103,7 +103,7 @@ public class UserSigninService
     /// </summary>
     /// <param name="user">The user to generate the <see cref="ClaimsPrincipal" /> for.</param>
     /// <returns>A <see cref="ClaimsPrincipal" /> for the user</returns>
-    private static List<Claim> GenerateClaims(Models_Person user)
+    internal static List<Claim> GenerateClaims(Models_Person user)
     {
         var claims = new List<Claim>
         {

@@ -619,6 +619,7 @@ public static class Management
             return Results.BadRequest("Der Block ist bereits abgeschlossen oder läuft.");
 
         var student = await userService.GetUserByIdAsync(personIdWrapper.Value);
+        if (student is null) return Results.Unauthorized();
         await enrollmentService.UnenrollAsync(otiumTerminId, student, true);
         return Results.Ok();
     }
