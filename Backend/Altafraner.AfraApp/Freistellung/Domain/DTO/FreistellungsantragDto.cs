@@ -15,8 +15,9 @@ public record FreistellungsantragDto
     public FreistellungsantragDto(Models.Freistellungsantrag antrag)
     {
         Id = antrag.Id;
-        DatumVon = antrag.DatumVon;
-        DatumBis = antrag.DatumBis;
+        Titel = antrag.Titel;
+        Von = antrag.Von;
+        Bis = antrag.Bis;
         Grund = antrag.Grund;
         Status = antrag.Status;
         ErstelltAm = antrag.ErstelltAm;
@@ -34,11 +35,14 @@ public record FreistellungsantragDto
     /// <inheritdoc cref="Models.Freistellungsantrag.Id" />
     public Guid Id { get; init; }
 
-    /// <inheritdoc cref="Models.Freistellungsantrag.DatumVon" />
-    public DateOnly DatumVon { get; init; }
+    /// <inheritdoc cref="Models.Freistellungsantrag.Titel" />
+    public string Titel { get; init; }
 
-    /// <inheritdoc cref="Models.Freistellungsantrag.DatumBis" />
-    public DateOnly DatumBis { get; init; }
+    /// <inheritdoc cref="Models.Freistellungsantrag.Von" />
+    public DateTime Von { get; init; }
+
+    /// <inheritdoc cref="Models.Freistellungsantrag.Bis" />
+    public DateTime Bis { get; init; }
 
     /// <inheritdoc cref="Models.Freistellungsantrag.Grund" />
     public string Grund { get; init; }
@@ -61,7 +65,7 @@ public record FreistellungsantragDto
     public List<BetroffeneStundeDto> BetroffeneStunden { get; init; }
 
     /// <summary>
-    ///     The teacher decisions associated with this request.
+    ///     The decisions associated with this request (both teachers and mentors).
     /// </summary>
     public List<LehrerEntscheidungDto> Entscheidungen { get; init; }
 }

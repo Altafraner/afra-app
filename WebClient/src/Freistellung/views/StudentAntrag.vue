@@ -25,6 +25,9 @@ const navItems = [
 
 // datum is a [startDate, endDate] array when a range is selected
 const datum = ref(null);
+const titel = ref('');
+const zeitVon = ref(null);
+const zeitBis = ref(null);
 const grund = ref('');
 const stunden = ref([]); // list of { datum, block, fach, lehrerId }
 const loading = ref(false);
@@ -66,6 +69,7 @@ watch(tage, (newTage) => {
 });
 
 const datumValid = computed(() => Array.isArray(datum.value) && datum.value[0] != null);
+const zeitValid = computed(() => zeitVon.value != null && zeitBis.value != null);
 const stundenValid = computed(
     () =>
         stunden.value.length > 0 &&
@@ -74,6 +78,10 @@ const stundenValid = computed(
 
 function toDateStr(d) {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function toTimeStr(d) {
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:00`;
 }
 
 function formatDateJs(d) {
@@ -90,7 +98,7 @@ function removeStunde(index) {
 }
 
 async function submit() {
-    if (!datumValid.value || !grund.value.trim() || !stundenValid.value) {
+    if (!datumValid.value || !titel.value.trim() || !zeitValid.value || !grund.value.trim() || !stundenValid.value) {
         toast.add({
             severity: 'warn',
             summary: 'Fehlende Angaben',
@@ -104,13 +112,20 @@ async function submit() {
     const api = mande('/api/freistellung/sus');
 
     const [von, bis] = datum.value;
-    const datumVonStr = toDateStr(von);
-    const datumBisStr = bis ? toDateStr(bis) : datumVonStr;
+    const bisDate = bis ?? von;
+
+    // Combine date and time into a single DateTime string (ISO local time)
+    function toDateTimeStr(date, time) {
+        const d = toDateStr(date);
+        const t = toTimeStr(time);
+        return `${d}T${t}`;
+    }
 
     try {
         await api.post({
-            datumVon: datumVonStr,
-            datumBis: datumBisStr,
+            titel: titel.value.trim(),
+            von: toDateTimeStr(von, zeitVon.value),
+            bis: toDateTimeStr(bisDate, zeitBis.value),
             grund: grund.value.trim(),
             stunden: stunden.value.map((s) => ({
                 datum: s.datum,
@@ -152,6 +167,18 @@ async function submit() {
     </p>
 
     <div class="flex flex-col gap-6 mt-4" style="max-width: 50rem">
+        <!-- Title -->
+        <div class="flex flex-col gap-1">
+            <label for="titel">Kurztitel</label>
+            <InputText
+                id="titel"
+                v-model="titel"
+                placeholder="z.B. Sportwettkampf, Musikwettbewerb…"
+                :max-length="200"
+                fluid
+            />
+        </div>
+
         <!-- Date range -->
         <div class="flex flex-col gap-1">
             <label for="datum">Zeitraum der Freistellung</label>
@@ -164,6 +191,34 @@ async function submit() {
                 fluid
                 :manual-input="false"
             />
+        </div>
+
+        <!-- Time range -->
+        <div class="flex gap-4">
+            <div class="flex flex-col gap-1 flex-1">
+                <label for="zeitVon">Uhrzeit von</label>
+                <DatePicker
+                    id="zeitVon"
+                    v-model="zeitVon"
+                    time-only
+                    show-icon
+                    icon="pi pi-clock"
+                    fluid
+                    :manual-input="false"
+                />
+            </div>
+            <div class="flex flex-col gap-1 flex-1">
+                <label for="zeitBis">Uhrzeit bis</label>
+                <DatePicker
+                    id="zeitBis"
+                    v-model="zeitBis"
+                    time-only
+                    show-icon
+                    icon="pi pi-clock"
+                    fluid
+                    :manual-input="false"
+                />
+            </div>
         </div>
 
         <!-- Reason -->
@@ -275,7 +330,7 @@ async function submit() {
             label="Antrag einreichen"
             icon="pi pi-send"
             :loading="loading"
-            :disabled="!datumValid || !grund.trim() || !stundenValid"
+            :disabled="!datumValid || !titel.trim() || !zeitValid || !grund.trim() || !stundenValid"
             @click="submit"
         />
     </div>

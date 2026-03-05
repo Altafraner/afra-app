@@ -14,14 +14,16 @@ const statusSeverity = {
     Gestellt: 'info',
     AlleLehrerGenehmigt: 'warn',
     Abgelehnt: 'danger',
-    Bestaetigt: 'success',
+    Bestaetigt: 'warn',
+    SchulleiterBestaetigt: 'success',
 };
 
 const statusLabel = {
     Gestellt: 'Eingereicht',
-    AlleLehrerGenehmigt: 'Alle Lehrkräfte genehmigt',
+    AlleLehrerGenehmigt: 'Alle genehmigt',
     Abgelehnt: 'Abgelehnt',
-    Bestaetigt: 'Bestätigt',
+    Bestaetigt: 'Sekretariat bestätigt',
+    SchulleiterBestaetigt: 'Genehmigt',
 };
 
 const entscheidungSeverity = {
@@ -37,12 +39,20 @@ const entscheidungLabel = {
 };
 
 function formatDate(dateStr) {
-    const [year, month, day] = dateStr.split('-');
-    return `${day}.${month}.${year}`;
+    const d = new Date(dateStr);
+    return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
 }
 
 function formatDateRange(von, bis) {
-    return von === bis ? formatDate(von) : `${formatDate(von)} – ${formatDate(bis)}`;
+    const vonDate = new Date(von).toDateString();
+    const bisDate = new Date(bis).toDateString();
+    return vonDate === bisDate ? formatDate(von) : `${formatDate(von)} – ${formatDate(bis)}`;
+}
+
+function formatTime(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 </script>
 
@@ -70,17 +80,19 @@ function formatDateRange(von, bis) {
             :key="antrag.id"
             class="border rounded-lg p-4 shadow-sm"
         >
-            <div class="flex items-start justify-between gap-2 mb-2">
+            <div class="flex items-start justify-between gap-2 mb-1">
                 <div>
-                    <span class="font-semibold text-lg">{{
-                        formatDateRange(antrag.datumVon, antrag.datumBis)
-                    }}</span>
+                    <span class="font-semibold text-lg">{{ antrag.titel }}</span>
                     <Tag
                         class="ml-2"
                         :severity="statusSeverity[antrag.status]"
                         :value="statusLabel[antrag.status]"
                     />
                 </div>
+                <span class="text-sm text-gray-500 whitespace-nowrap">
+                    {{ formatDateRange(antrag.von, antrag.bis) }}
+                    {{ formatTime(antrag.von) }} – {{ formatTime(antrag.bis) }}
+                </span>
             </div>
 
             <p class="text-sm mb-3">{{ antrag.grund }}</p>
@@ -109,8 +121,8 @@ function formatDateRange(von, bis) {
                 </tbody>
             </table>
 
-            <h4 class="font-semibold mb-1 text-sm">Entscheidungen der Lehrkräfte:</h4>
-            <div class="flex flex-col gap-1">
+            <h4 class="font-semibold mb-1 text-sm">Entscheidungen:</h4>
+            <div class="flex flex-col gap-1 mb-2">
                 <div
                     v-for="e in antrag.entscheidungen"
                     :key="e.id"

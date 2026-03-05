@@ -13,7 +13,8 @@ type GlobalPermissions =
     | 'Otiumsverantwortlich'
     | 'Profundumsverantwortlich'
     | 'Admin'
-    | 'Sekretariat';
+    | 'Sekretariat'
+    | 'Schulleiter';
 type Role = 'Tutor' | 'Oberstufe' | 'Mittelstufe';
 
 interface Conditions {
@@ -168,6 +169,14 @@ const all_items: MenuItemWithCondition[] = [
                 icon: 'pi pi-check-square',
                 conditions: {
                     permissions: ['Sekretariat'],
+                },
+            },
+            {
+                label: 'Schulleiter',
+                route: { name: 'Freistellung-Schulleiter' },
+                icon: 'pi pi-verified',
+                conditions: {
+                    permissions: ['Schulleiter'],
                 },
             },
         ],

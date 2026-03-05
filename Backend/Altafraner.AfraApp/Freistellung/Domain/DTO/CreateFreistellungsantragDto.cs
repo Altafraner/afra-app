@@ -8,15 +8,20 @@ namespace Altafraner.AfraApp.Freistellung.Domain.DTO;
 public record CreateFreistellungsantragDto
 {
     /// <summary>
-    ///     The first day of the requested leave period.
+    ///     A short title summarising the reason for the leave.
     /// </summary>
-    public required DateOnly DatumVon { get; init; }
+    [MaxLength(200)]
+    public required string Titel { get; init; }
 
     /// <summary>
-    ///     The last day of the requested leave period (inclusive).
-    ///     Equal to <see cref="DatumVon" /> for single-day requests.
+    ///     The start of the requested leave period (date and time).
     /// </summary>
-    public required DateOnly DatumBis { get; init; }
+    public required DateTime Von { get; init; }
+
+    /// <summary>
+    ///     The end of the requested leave period (date and time, inclusive).
+    /// </summary>
+    public required DateTime Bis { get; init; }
 
     /// <summary>
     ///     The reason for the leave.

@@ -9,19 +9,19 @@ const toast = useToast();
 const store = useFreistellungStore();
 
 const navItems = [
-    { label: 'Freistellungsantrag', route: { name: 'Freistellung-Sekretariat' } },
+    { label: 'Freistellungsantrag (Schulleiter)', route: { name: 'Freistellung-Schulleiter' } },
 ];
 
-const confirming = ref(null);
+const approving = ref(null);
 
-await store.updateSekretariatAntraege();
+await store.updateSchulleiterAntraege();
 
-// Split client-side: pending confirmation = AlleLehrerGenehmigt, processed = everything else
+// Split: pending = Bestaetigt (Sekretariat confirmed, Schulleiter hasn't acted yet)
 const pendingAntraege = computed(
-    () => store.sekretariatAntraege?.filter((a) => a.status === 'AlleLehrerGenehmigt') ?? [],
+    () => store.schulleiterAntraege?.filter((a) => a.status === 'Bestaetigt') ?? [],
 );
 const processedAntraege = computed(
-    () => store.sekretariatAntraege?.filter((a) => a.status !== 'AlleLehrerGenehmigt') ?? [],
+    () => store.schulleiterAntraege?.filter((a) => a.status !== 'Bestaetigt') ?? [],
 );
 
 function formatDate(dateStr) {
@@ -42,30 +42,28 @@ function formatTime(dateStr) {
 }
 
 const statusSeverity = {
-    Bestaetigt: 'warn',
     SchulleiterBestaetigt: 'success',
     Abgelehnt: 'danger',
 };
 
 const statusLabel = {
-    Bestaetigt: 'Bestätigt (wartet auf Schulleiter)',
-    SchulleiterBestaetigt: 'Endgültig genehmigt',
+    SchulleiterBestaetigt: 'Genehmigt',
     Abgelehnt: 'Abgelehnt',
 };
 
 async function bestaetigen(antragId) {
-    confirming.value = antragId;
-    const api = mande(`/api/freistellung/sekretariat/${antragId}/bestaetigen`);
+    approving.value = antragId;
+    const api = mande(`/api/freistellung/schulleiter/${antragId}/bestaetigen`);
     try {
         await api.put({});
         toast.add({
             severity: 'success',
-            summary: 'Bestätigt',
-            detail: 'Der Freistellungsantrag wurde vom Sekretariat bestätigt und wartet auf die Genehmigung des Schulleiters.',
+            summary: 'Genehmigt',
+            detail: 'Der Freistellungsantrag wurde endgültig genehmigt.',
             life: 3000,
         });
-        store.sekretariatAntraege = null;
-        await store.updateSekretariatAntraege();
+        store.schulleiterAntraege = null;
+        await store.updateSchulleiterAntraege();
     } catch (e) {
         const errorMessage = e.body?.error ?? 'Ein unbekannter Fehler ist aufgetreten.';
         toast.add({
@@ -75,7 +73,7 @@ async function bestaetigen(antragId) {
             life: 5000,
         });
     } finally {
-        confirming.value = null;
+        approving.value = null;
     }
 }
 </script>
@@ -83,17 +81,17 @@ async function bestaetigen(antragId) {
 <template>
     <NavBreadcrumb :items="navItems" />
 
-    <h1>Freistellungsanträge (Sekretariat)</h1>
+    <h1>Freistellungsanträge (Schulleiter)</h1>
 
-    <!-- Pending confirmation section -->
-    <h2 class="text-lg font-semibold mt-4 mb-1">Warten auf Bestätigung</h2>
+    <!-- Pending section -->
+    <h2 class="text-lg font-semibold mt-4 mb-1">Warten auf abschließende Genehmigung</h2>
     <p class="mb-3 text-sm">
-        Die folgenden Anträge wurden von allen betroffenen Lehrkräften und Mentor:innen genehmigt
-        und warten auf die Bestätigung durch das Sekretariat.
+        Die folgenden Anträge wurden vom Sekretariat bestätigt und warten auf Ihre abschließende
+        Genehmigung.
     </p>
 
     <p v-if="!pendingAntraege.length" class="mt-2">
-        Aktuell liegen keine zu bearbeitenden Freistellungsanträge vor.
+        Aktuell liegen keine Freistellungsanträge zur Genehmigung vor.
     </p>
 
     <div v-else class="flex flex-col gap-4">
@@ -105,14 +103,18 @@ async function bestaetigen(antragId) {
             <div class="flex items-start justify-between gap-2 mb-2">
                 <div>
                     <span class="font-semibold text-lg">{{ antrag.titel }}</span>
-                    <span class="ml-2 text-sm text-gray-500">
+                    <span class="ml-2 text-base">
                         {{ antrag.student.nachname }}, {{ antrag.student.vorname }}
-                        {{ antrag.student.gruppe ? `(${antrag.student.gruppe})` : '' }}
+                    </span>
+                    <span class="ml-1 text-sm text-gray-500">
+                        {{ antrag.student.gruppe ?? '' }}
                     </span>
                 </div>
-                <div class="text-right text-sm text-gray-600 whitespace-nowrap">
+                <div class="text-right text-sm whitespace-nowrap">
                     <Tag severity="warn" :value="formatDateRange(antrag.von, antrag.bis)" />
-                    <div>{{ formatTime(antrag.von) }} – {{ formatTime(antrag.bis) }}</div>
+                    <div class="text-gray-500 mt-1">
+                        {{ formatTime(antrag.von) }} – {{ formatTime(antrag.bis) }}
+                    </div>
                 </div>
             </div>
 
@@ -144,27 +146,12 @@ async function bestaetigen(antragId) {
                 </tbody>
             </table>
 
-            <h4 class="font-semibold mb-1 text-sm">Entscheidungen:</h4>
-            <div class="flex flex-col gap-1 mb-3">
-                <div
-                    v-for="e in antrag.entscheidungen"
-                    :key="e.id"
-                    class="flex items-center gap-2 text-sm"
-                >
-                    <Tag severity="success" value="Genehmigt" />
-                    <span>{{ e.lehrer.nachname }}, {{ e.lehrer.vorname }}</span>
-                    <span v-if="e.kommentar" class="text-xs text-gray-500 italic">
-                        „{{ e.kommentar }}"
-                    </span>
-                </div>
-            </div>
-
             <Button
-                label="Antrag bestätigen"
+                label="Antrag genehmigen"
                 icon="pi pi-check-circle"
                 severity="success"
                 size="small"
-                :loading="confirming === antrag.id"
+                :loading="approving === antrag.id"
                 @click="bestaetigen(antrag.id)"
             />
         </div>
@@ -174,7 +161,7 @@ async function bestaetigen(antragId) {
     <h2 class="text-lg font-semibold mt-8 mb-2">Bereits bearbeitete Anträge</h2>
 
     <p v-if="!processedAntraege.length" class="mt-2">
-        Es wurden noch keine Freistellungsanträge abschließend bearbeitet.
+        Es wurden noch keine Freistellungsanträge endgültig bearbeitet.
     </p>
 
     <div v-else class="flex flex-col gap-4">
@@ -186,7 +173,7 @@ async function bestaetigen(antragId) {
             <div class="flex items-start justify-between gap-2 mb-2">
                 <div>
                     <span class="font-semibold text-lg">{{ antrag.titel }}</span>
-                    <span class="ml-2 text-sm text-gray-500">
+                    <span class="ml-2 text-base">
                         {{ antrag.student.nachname }}, {{ antrag.student.vorname }}
                     </span>
                 </div>

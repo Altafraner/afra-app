@@ -38,6 +38,10 @@ public class AuthorizationModule : IModule
                 policy => policy.RequireAssertion(context =>
                     context.User.HasClaim(AfraAppClaimTypes.GlobalPermission, nameof(GlobalPermission.Admin))
                     || context.User.HasClaim(AfraAppClaimTypes.GlobalPermission, nameof(GlobalPermission.Sekretariat))))
+            .AddPolicy(AuthorizationPolicies.Schulleiter,
+                policy => policy.RequireAssertion(context =>
+                    context.User.HasClaim(AfraAppClaimTypes.GlobalPermission, nameof(GlobalPermission.Admin))
+                    || context.User.HasClaim(AfraAppClaimTypes.GlobalPermission, nameof(GlobalPermission.Schulleiter))))
             .AddPolicy(AuthorizationPolicies.TeacherOrAdmin,
                 policy => policy.RequireAssertion(context =>
                     context.User.HasClaim(AfraAppClaimTypes.GlobalPermission, nameof(GlobalPermission.Admin))

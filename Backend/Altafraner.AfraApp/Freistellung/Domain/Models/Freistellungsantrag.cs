@@ -24,15 +24,20 @@ public class Freistellungsantrag
     public Guid StudentId { get; set; }
 
     /// <summary>
-    ///     The first day of the requested leave period.
+    ///     A short title summarising the reason for the leave.
     /// </summary>
-    public DateOnly DatumVon { get; set; }
+    [MaxLength(200)]
+    public required string Titel { get; set; }
 
     /// <summary>
-    ///     The last day of the requested leave period (inclusive).
-    ///     Equal to <see cref="DatumVon" /> for single-day requests.
+    ///     The start of the requested leave period (date and time).
     /// </summary>
-    public DateOnly DatumBis { get; set; }
+    public DateTime Von { get; set; }
+
+    /// <summary>
+    ///     The end of the requested leave period (date and time, inclusive).
+    /// </summary>
+    public DateTime Bis { get; set; }
 
     /// <summary>
     ///     The reason for the leave.
@@ -56,7 +61,7 @@ public class Freistellungsantrag
     public List<BetroffeneStunde> BetroffeneStunden { get; set; } = [];
 
     /// <summary>
-    ///     The teacher decisions associated with this request.
+    ///     The decisions associated with this request (both teachers and mentors).
     /// </summary>
     public List<LehrerEntscheidung> Entscheidungen { get; set; } = [];
 }

@@ -44,4 +44,9 @@ public static class AuthorizationPolicies
     /// Only users with the Sekretariat permission may access this endpoint.
     /// </summary>
     public const string Sekretariat = "Sekretariat";
+
+    /// <summary>
+    /// Only users with the Schulleiter permission (or Admin) may access this endpoint.
+    /// </summary>
+    public const string Schulleiter = "Schulleiter";
 }

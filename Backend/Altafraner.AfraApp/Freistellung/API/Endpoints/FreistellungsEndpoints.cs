@@ -28,7 +28,7 @@ public static class FreistellungsEndpoints
         student.MapPost("/", CreateAntrag);
         student.MapGet("/", GetAntraegeForStudent);
 
-        // Teacher endpoints
+        // Teacher and mentor endpoints (both are just approvers)
         var lehrer = app.MapGroup("/lehrer")
             .RequireAuthorization(AuthorizationPolicies.TutorOnly);
         lehrer.MapGet("/", GetAntraegeForLehrer);
@@ -39,6 +39,12 @@ public static class FreistellungsEndpoints
             .RequireAuthorization(AuthorizationPolicies.Sekretariat);
         sekretariat.MapGet("/", GetAntraegeForSekretariat);
         sekretariat.MapPut("/{antragId:guid}/bestaetigen", BestaetigeAntrag);
+
+        // Schulleiter endpoints
+        var schulleiter = app.MapGroup("/schulleiter")
+            .RequireAuthorization(AuthorizationPolicies.Schulleiter);
+        schulleiter.MapGet("/", GetAntraegeForSchulleiter);
+        schulleiter.MapPut("/{antragId:guid}/bestaetigen", SchulleiterBestaetigen);
     }
 
     private static IResult GetLehrerListe(AfraAppContext dbContext)
@@ -131,6 +137,32 @@ public static class FreistellungsEndpoints
         try
         {
             var result = await service.BestaetigeAntragAsync(antragId);
+            return Results.Ok(result);
+        }
+        catch (KeyNotFoundException)
+        {
+            return Results.NotFound();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Results.BadRequest(new { error = ex.Message });
+        }
+    }
+
+    private static async Task<IResult> GetAntraegeForSchulleiter(
+        FreistellungsService service)
+    {
+        var result = await service.GetAntraegeForSchulleiterAsync();
+        return Results.Ok(result);
+    }
+
+    private static async Task<IResult> SchulleiterBestaetigen(
+        FreistellungsService service,
+        Guid antragId)
+    {
+        try
+        {
+            var result = await service.SchulleiterBestaetigenAsync(antragId);
             return Results.Ok(result);
         }
         catch (KeyNotFoundException)

@@ -106,7 +106,7 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
     public DbSet<BetroffeneStunde> BetroffeneStunden { get; set; }
 
     /// <summary>
-    ///     All teacher decisions on leave requests
+    ///     All teacher and mentor decisions on leave requests
     /// </summary>
     public DbSet<LehrerEntscheidung> LehrerEntscheidungen { get; set; }
 

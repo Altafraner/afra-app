@@ -6,6 +6,7 @@ export const useFreistellungStore = defineStore('freistellung', {
         meineAntraege: null,
         lehrerAntraege: null,
         sekretariatAntraege: null,
+        schulleiterAntraege: null,
         lehrer: null,
     }),
     actions: {
@@ -31,6 +32,14 @@ export const useFreistellungStore = defineStore('freistellung', {
                 this.sekretariatAntraege = await api.get();
             } catch (error) {
                 console.error('Error fetching Sekretariat Freistellungsanträge', error);
+            }
+        },
+        async updateSchulleiterAntraege() {
+            const api = mande('/api/freistellung/schulleiter');
+            try {
+                this.schulleiterAntraege = await api.get();
+            } catch (error) {
+                console.error('Error fetching Schulleiter Freistellungsanträge', error);
             }
         },
         async updateLehrer() {

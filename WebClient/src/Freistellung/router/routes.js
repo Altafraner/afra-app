@@ -19,4 +19,9 @@ export const routes = [
         name: 'Freistellung-Sekretariat',
         component: () => import('@/Freistellung/views/SekretariatBearbeitung.vue'),
     },
+    {
+        path: '/freistellung/schulleiter',
+        name: 'Freistellung-Schulleiter',
+        component: () => import('@/Freistellung/views/SchulleiterBearbeitung.vue'),
+    },
 ];
