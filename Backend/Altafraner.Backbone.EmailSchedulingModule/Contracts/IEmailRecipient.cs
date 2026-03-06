@@ -27,4 +27,9 @@ public interface IEmailRecipient
     /// </summary>
     [EmailAddress]
     string Email { get; }
+
+    /// <summary>
+    ///     The greeting to use to adress the recipient
+    /// </summary>
+    public string Greeting { get; }
 }

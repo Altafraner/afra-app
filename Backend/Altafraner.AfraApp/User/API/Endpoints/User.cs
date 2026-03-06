@@ -37,7 +37,7 @@ public static class User
                         Nachname = user.LastName,
                         Rolle = user.Rolle,
                         Berechtigungen = user.GlobalPermissions.ToArray(),
-                        ImpersonationId = impersonationId
+                        ImpersonationId = impersonationId,
                         Greeting = user.Greeting,
                     });
                 }
