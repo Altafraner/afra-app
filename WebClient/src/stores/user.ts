@@ -18,6 +18,7 @@ export const useUser = defineStore('user', {
             state.user.berechtigungen.includes('Profundumsverantwortlich'),
         isAdmin: (state) => state.user.berechtigungen.includes('Admin'),
         isSekretariat: (state) => state.user.berechtigungen.includes('Sekretariat'),
+        isSchulleiter: (state) => state.user.berechtigungen.includes('Schulleiter'),
     },
     actions: {
         async update() {
