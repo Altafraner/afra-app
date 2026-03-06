@@ -37,6 +37,21 @@
     .m-trim *:last-child {
         @apply mb-0;
     }
+
+    body:has(.impersonation-tag) {
+        @apply m-[1rem];
+
+        &::after {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            @apply border-[1rem] border-red-500;
+        }
+    }
 }
 
 :root {
