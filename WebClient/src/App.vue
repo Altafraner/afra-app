@@ -33,7 +33,7 @@ const logo = computed(() => (isDark().value ? wappenDark : wappenLight));
     <ConfirmPopup />
     <DynamicDialog />
     <ReloadPrompt />
-    <div v-if="user.isImpersonating" class="impersonation-border" aria-hidden="true"></div>
+    <div v-if="user.isImpersonating" aria-hidden="true" class="impersonation-tag hidden"></div>
     <template v-if="!user.loading">
         <afra-nav v-if="user.loggedIn" />
         <main class="flex justify-center min-h-[90vh] mt-4">
@@ -116,13 +116,5 @@ const logo = computed(() => (isDark().value ? wappenDark : wappenLight));
     .container {
         width: 95%;
     }
-}
-
-.impersonation-border {
-    position: fixed;
-    inset: 0;
-    border: 20px solid #ef4444;
-    pointer-events: none;
-    z-index: 9999;
 }
 </style>
