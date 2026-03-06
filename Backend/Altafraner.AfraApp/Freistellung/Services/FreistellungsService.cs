@@ -91,8 +91,8 @@ public class FreistellungsService
         {
             Student = student,
             Titel = dto.Titel.Trim(),
-            Von = dto.Von,
-            Bis = dto.Bis,
+            Von = DateTime.SpecifyKind(dto.Von, DateTimeKind.Utc),
+            Bis = DateTime.SpecifyKind(dto.Bis, DateTimeKind.Utc),
             Grund = dto.Grund,
             BetroffeneStunden = dto.Stunden.Select(s => new Domain.Models.BetroffeneStunde
             {
