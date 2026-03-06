@@ -29,5 +29,5 @@ public record PersonLoginInfo
     /// <summary>
     ///     Whether the current session is an impersonation session.
     /// </summary>
-    public bool IsImpersonating { get; set; }
+    public string? ImpersonationId { get; set; }
 }

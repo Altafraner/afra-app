@@ -29,8 +29,7 @@ public static class User
                 try
                 {
                     var user = await userAccessor.GetUserAsync();
-                    var isImpersonating = claimsPrincipal.HasClaim(c =>
-                        c.Type == AfraAppClaimTypes.IsImpersonating && c.Value == bool.TrueString);
+                    var impersonationId = claimsPrincipal.FindFirst(AfraAppClaimTypes.ImpersonatingUserId)?.Value;
                     return Results.Ok(new PersonLoginInfo
                     {
                         Id = user.Id,
@@ -38,7 +37,7 @@ public static class User
                         Nachname = user.LastName,
                         Rolle = user.Rolle,
                         Berechtigungen = user.GlobalPermissions.ToArray(),
-                        IsImpersonating = isImpersonating
+                        ImpersonationId = impersonationId
                     });
                 }
                 catch (InvalidOperationException)
@@ -53,10 +52,18 @@ public static class User
             .RequireAuthorization();
 
         app.MapGet("/api/user/{id:guid}/impersonate",
-                async (UserSigninService userSigninService, ILogger<Program> logger, Guid id) =>
+                async (UserSigninService userSigninService,
+                    ILogger<Program> logger,
+                    Guid id,
+                    UserAccessor userAccessor,
+                    ClaimsPrincipal claimsPrincipal) =>
                 {
-                    logger.LogWarning("Impersonating user with ID {Id}", id);
-                    await userSigninService.SignInAsync(id, rememberMe: false, isImpersonating: true);
+                    var impersonationId = claimsPrincipal.FindFirst(AfraAppClaimTypes.ImpersonatingUserId)?.Value;
+                    var currentUserId = impersonationId is not null
+                        ? Guid.Parse(impersonationId)
+                        : userAccessor.GetUserId();
+                    logger.LogWarning("{oldUser} is Impersonating user with ID {newUser}", currentUserId, id);
+                    await userSigninService.SignInAsync(id, false, currentUserId);
                 })
             .RequireAuthorization(AuthorizationPolicies.AdminOnly);
     }

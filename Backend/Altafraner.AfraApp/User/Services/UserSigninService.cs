@@ -37,13 +37,13 @@ public class UserSigninService
     /// </summary>
     /// <param name="userId">The id of the <see cref="Person" /> to sign in</param>
     /// <param name="rememberMe">Whether to issue a persistent cookie</param>
-    /// <param name="isImpersonating">Whether this sign-in is an impersonation session</param>
+    /// <param name="impersonatingUserId">Contains the id of the user that is starting an impersonation</param>
     /// <exception cref="InvalidOperationException">The user with the given id does not exist.</exception>
-    public async Task SignInAsync(Guid userId, bool rememberMe, bool isImpersonating = false)
+    public async Task SignInAsync(Guid userId, bool rememberMe, Guid? impersonatingUserId = null)
     {
         var user = await _dbContext.Personen.FindAsync(userId);
         if (user is null) throw new InvalidOperationException("The user does not exist");
-        await SignInAsync(user, rememberMe, isImpersonating);
+        await SignInAsync(user, rememberMe, impersonatingUserId);
     }
 
     /// <summary>
@@ -84,9 +84,17 @@ public class UserSigninService
         return Results.Ok();
     }
 
-    private async Task SignInAsync(Models_Person user, bool rememberMe, bool isImpersonating = false)
+    private async Task SignInAsync(Models_Person user, bool rememberMe, Guid? impersonatingUserId = null)
     {
-        var claimsPrincipal = GenerateClaimsPrincipal(user, isImpersonating);
+        var claims = GenerateClaims(user);
+
+        if (impersonatingUserId.HasValue)
+            claims.Add(new Claim(AfraAppClaimTypes.ImpersonatingUserId, impersonatingUserId.Value.ToString()));
+
+        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+        var claimsPrincipal = new ClaimsPrincipal(identity);
+
         await _authenticationLifetimeService.SignInAsync(claimsPrincipal, rememberMe);
     }
 
@@ -94,9 +102,8 @@ public class UserSigninService
     ///     Generates a <see cref="ClaimsPrincipal" /> for the given <see cref="Person" />
     /// </summary>
     /// <param name="user">The user to generate the <see cref="ClaimsPrincipal" /> for.</param>
-    /// <param name="isImpersonating">Whether this is an impersonation session</param>
     /// <returns>A <see cref="ClaimsPrincipal" /> for the user</returns>
-    private static ClaimsPrincipal GenerateClaimsPrincipal(Models_Person user, bool isImpersonating = false)
+    private static List<Claim> GenerateClaims(Models_Person user)
     {
         var claims = new List<Claim>
         {
@@ -109,12 +116,7 @@ public class UserSigninService
         claims.AddRange(user.GlobalPermissions.Select(perm =>
             new Claim(AfraAppClaimTypes.GlobalPermission, perm.ToString())));
 
-        if (isImpersonating)
-            claims.Add(new Claim(AfraAppClaimTypes.IsImpersonating, bool.TrueString));
-
-        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-
-        return new ClaimsPrincipal(identity);
+        return claims;
     }
 
     /// <summary>
