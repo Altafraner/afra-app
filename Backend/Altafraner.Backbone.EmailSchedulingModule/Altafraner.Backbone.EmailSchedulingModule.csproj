@@ -6,7 +6,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="MailKit" VersionOverride="4.15.0" />
+        <PackageReference Include="MailKit"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore"/>
     </ItemGroup>
 
