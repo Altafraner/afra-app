@@ -39,5 +39,5 @@ public static class AfraAppClaimTypes
     /// <summary>
     ///     Indicates that the current session is an impersonation session.
     /// </summary>
-    public static string IsImpersonating => "IsImpersonating";
+    public static string ImpersonatingUserId => "ImpersonatingUserId";
 }
