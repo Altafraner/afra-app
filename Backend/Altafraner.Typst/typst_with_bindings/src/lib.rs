@@ -2,6 +2,7 @@
 use std::ffi::{c_char, CStr, CString};
 use std::path::PathBuf;
 use std::ptr;
+use std::sync::Mutex;
 
 mod compiler;
 mod world;
@@ -12,7 +13,7 @@ use typst::layout::PagedDocument;
 use world::TypstWorld;
 
 pub struct Compiler {
-    pub state: TypstWorld,
+    pub state: Mutex<TypstWorld>,
 }
 
 #[repr(C)]
@@ -85,7 +86,9 @@ pub extern "C" fn create_compiler(
     };
 
     match TypstWorld::new(root, &font_paths, input_content, !ignore_system_fonts) {
-        Ok(world) => Box::into_raw(Box::new(Compiler { state: world })),
+        Ok(world) => Box::into_raw(Box::new(Compiler {
+            state: Mutex::new(world),
+        })),
         Err(_) => ptr::null_mut(),
     }
 }
@@ -97,18 +100,6 @@ pub extern "C" fn free_compiler(ptr: *mut Compiler) {
     }
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn set_sys_inputs(ptr: *mut Compiler, sys_inputs: *const c_char) -> bool {
-    if ptr.is_null() {
-        return false;
-    }
-    let compiler = unsafe { &mut *ptr };
-
-    let inputs = unsafe { cstr_to_str(sys_inputs, "{}") };
-    compiler.state.set_inputs(inputs);
-    true
-}
-
 fn compile_inner(world: &mut TypstWorld) -> StrResult<Vec<Vec<u8>>> {
     let doc = match typst::compile::<PagedDocument>(world) {
         Warned { output, .. } => output.map_err(|e| EcoString::from(format!("{:?}", e)))?,
@@ -117,7 +108,7 @@ fn compile_inner(world: &mut TypstWorld) -> StrResult<Vec<Vec<u8>>> {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn compile(ptr: *mut Compiler) -> CompileResult {
+pub extern "C" fn compile_with_inputs(ptr: *mut Compiler, inputs: *const c_char) -> CompileResult {
     if ptr.is_null() {
         return CompileResult {
             error: CString::new("compiler ptr was null").unwrap().into_raw(),
@@ -125,8 +116,21 @@ pub extern "C" fn compile(ptr: *mut Compiler) -> CompileResult {
         };
     }
 
-    let compiler = unsafe { &mut *ptr };
-    match compile_inner(&mut compiler.state) {
+    let compiler = unsafe { &*ptr };
+    let mut world = match compiler.state.lock() {
+        Ok(g) => g,
+        Err(_) => {
+            return CompileResult {
+                error: CString::new("compiler mutex poisoned").unwrap().into_raw(),
+                ..Default::default()
+            }
+        }
+    };
+
+    let inputs = unsafe { cstr_to_str(inputs, "{}") };
+    world.set_inputs(inputs);
+
+    match compile_inner(&mut world) {
         Ok(buffers) => {
             let mut out: Vec<Buffer> = buffers
                 .into_iter()
@@ -146,7 +150,7 @@ pub extern "C" fn compile(ptr: *mut Compiler) -> CompileResult {
             let result = CompileResult {
                 buffers: out.as_mut_ptr(),
                 buffers_len: out.len(),
-                error: ptr::null_mut(),
+                error: std::ptr::null_mut(),
             };
 
             std::mem::forget(out);

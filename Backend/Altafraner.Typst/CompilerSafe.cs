@@ -1,50 +1,81 @@
 using System.Runtime.InteropServices;
+using System.Text;
+using CsBindgen;
 
 namespace Altafraner.Typst;
 
 internal class CompilerSafe
 {
     private readonly unsafe CsBindgen.Compiler* _inner;
-    internal unsafe CompilerSafe(CsBindgen.Compiler* x)
+    internal unsafe CompilerSafe(
+                    string? root,
+                    string inputSource,
+                    IEnumerable<string> fontPaths
+                    )
     {
-        if (x == null)
+        var inputSourcePtr = StringToHGlobalUtf8(inputSource);
+        var rootPtr = IntPtr.Zero;
+        if (!string.IsNullOrWhiteSpace(root))
         {
-            throw new ArgumentNullException();
+            rootPtr = Marshal.StringToHGlobalAnsi(root);
+        }
+        var fontPathsList = fontPaths.ToList();
+        var fontPathPtrs = new IntPtr[fontPathsList.Count];
+        for (var i = 0; i < fontPathsList.Count; i++)
+        {
+            fontPathPtrs[i] = Marshal.StringToHGlobalAnsi(fontPathsList[i]);
         }
 
-        _inner = x;
-    }
-
-    internal CompileResultSafe Compile()
-    {
-        unsafe
+        fixed (IntPtr* fontPathsRawPtr = fontPathPtrs)
         {
-            return new CompileResultSafe(CsBindgen.NativeMethods.compile(_inner));
-
+            var fontPathsPtr = fontPathsList.Count() == 0 ? null : fontPathsRawPtr;
+            _inner = NativeMethods.create_compiler(
+                (byte*)rootPtr,
+                (byte*)inputSourcePtr,
+                (byte**)fontPathsPtr,
+                (nuint)fontPathsList.Count(),
+                false);
         }
     }
 
-    internal unsafe bool SetSysInputs(String inputs)
+    internal unsafe CompileResultSafe CompileWithInputsOrNull(string inputs)
     {
-        bool ok;
-
         var sysInputsPtr = Marshal.StringToHGlobalAnsi(inputs);
         try
         {
-            ok = CsBindgen.NativeMethods.set_sys_inputs(_inner, (byte*)sysInputsPtr);
+            return new CompileResultSafe(
+                NativeMethods.compile_with_inputs(_inner, (byte*)sysInputsPtr));
         }
         finally
         {
             Marshal.FreeHGlobal(sysInputsPtr);
         }
-        return ok;
     }
 
     ~CompilerSafe()
     {
         unsafe
         {
-            CsBindgen.NativeMethods.free_compiler(_inner);
+            NativeMethods.free_compiler(_inner);
         }
+    }
+
+    private static IntPtr StringToHGlobalUtf8(string input)
+    {
+        var bytes = Encoding.UTF8.GetBytes(input);
+
+        var ptr = Marshal.AllocHGlobal(bytes.Length + 1);
+        Marshal.Copy(bytes, 0, ptr, bytes.Length);
+        Marshal.WriteByte(ptr, bytes.Length, 0);
+
+        return ptr;
+    }
+
+    /// Set inputs and compile atomically (thread-safe via Rust-side mutex)
+    /// <returns> The binary pdf output </returns>
+    public byte[] CompileWithInputs(string inputs)
+    {
+        var cres = CompileWithInputsOrNull(inputs);
+        return cres.Error is null ? cres.Buffers[0] : throw new InvalidOperationException(cres.Error);
     }
 }
