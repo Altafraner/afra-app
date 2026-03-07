@@ -35,6 +35,10 @@ internal class CompilerSafe
                 (byte**)fontPathsPtr,
                 (nuint)fontPathsList.Count(),
                 false);
+            if (_inner == null)
+            {
+                throw new InvalidOperationException("Failed to create Typst compiler (native create_compiler returned null).");
+            }
         }
     }
 
