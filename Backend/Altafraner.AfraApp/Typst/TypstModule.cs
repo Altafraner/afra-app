@@ -11,7 +11,7 @@ public class TypstModule : IModule
     /// <inheritdoc />
     public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
     {
-        services.AddScoped<Altafraner.Typst.Typst>();
+        services.AddSingleton<Altafraner.Typst.Typst>();
         services.AddOptions<TypstConfiguration>().Bind(config.GetSection("Typst"));
     }
 }
