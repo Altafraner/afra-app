@@ -16,7 +16,7 @@ const props = defineProps({
     blockId: String,
 });
 
-const emit = defineEmits(['initMove', 'remove']);
+const emit = defineEmits(['initMove', 'initMoveHere', 'remove']);
 
 const dialog = useDialog();
 const user = useUser();
@@ -38,6 +38,10 @@ function openNotes(data) {
             studentId: data.student.id,
         },
     });
+}
+
+function openMoveHere() {
+    emit('initMoveHere');
 }
 </script>
 
@@ -107,6 +111,15 @@ function openNotes(data) {
                 </span>
             </template>
         </Column>
+        <template v-if="mayEditAttendance && showTransfer" #footer>
+            <Button
+                icon="pi pi-plus"
+                label="Schüler:in hinzufügen"
+                severity="secondary"
+                size="small"
+                @click="openMoveHere"
+            />
+        </template>
         <template #empty>
             <div class="flex justify-center">Keine Einschreibungen</div>
         </template>

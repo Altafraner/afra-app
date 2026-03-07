@@ -12,9 +12,20 @@ const loading = ref(true);
 
 const props = defineProps({
     multi: Boolean,
+    hideRolle: Boolean,
     id: {
         type: String,
         default: 'betreuerSelect',
+        required: false,
+    },
+    name: {
+        type: String,
+        default: 'betreuerSelect',
+        required: false,
+    },
+    filter: {
+        type: Function,
+        default: () => true,
         required: false,
     },
 });
@@ -23,12 +34,14 @@ async function getPersonen() {
     const personenMapper = (person) => {
         return {
             id: person.id,
-            name: `${formatTutor(person)} (${person.rolle})`,
+            name: props.hideRolle
+                ? formatTutor(person)
+                : `${formatTutor(person)} (${person.rolle})`,
         };
     };
 
     await settings.updatePersonen();
-    personen.value = settings.personen.map(personenMapper);
+    personen.value = settings.personen.filter(props.filter).map(personenMapper);
     loading.value = false;
 }
 
@@ -40,6 +53,7 @@ getPersonen();
         <template v-if="!props.multi">
             <Select
                 :id="id"
+                :name="name"
                 v-model="model"
                 :loading="loading"
                 :options="personen"
@@ -54,6 +68,7 @@ getPersonen();
         <template v-else>
             <MultiSelect
                 :id="id"
+                :name="name"
                 v-model="model"
                 :loading="loading"
                 :options="personen"

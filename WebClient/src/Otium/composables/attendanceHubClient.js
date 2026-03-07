@@ -154,12 +154,12 @@ export function useAttendance(scope, id, toastService = { add: () => undefined }
         await sendMessage('MoveStudent', studentId, terminId);
     }
 
-    async function sendUnenroll(studentId, terminId) {
-        await sendMessage('ForceUnenroll', studentId, terminId);
+    async function sendUnenroll(studentId, blockId) {
+        await sendMessage('ForceUnenroll', studentId, blockId);
     }
 
-    async function sendMoveNow(studentId, fromTerminId, toTerminId) {
-        await sendMessage('MoveStudentNow', studentId, fromTerminId, toTerminId);
+    async function sendMoveNow(studentId, blockId, toTerminId) {
+        await sendMessage('MoveStudentNow', studentId, blockId, toTerminId);
     }
 
     async function close() {

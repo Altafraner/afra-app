@@ -22,6 +22,7 @@ import { useAttendance } from '@/Otium/composables/attendanceHubClient.js';
 import MoveStudentForm from '@/Otium/components/Supervision/MoveStudentForm.vue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
 import { isNowInInterval } from '@/helpers/time.js';
+import SelectStudentToMoveForm from '@/Otium/components/Supervision/SelectStudentToMoveForm.vue';
 
 const props = defineProps({
     terminId: String,
@@ -243,14 +244,14 @@ const initMove = async (student) => {
         console.log(data);
         if (!data) return;
         if (data.all && data.destination === '00000000-0000-0000-0000-000000000000') {
-            unenroll.value(student.id, otium.value.id);
+            unenroll.value(student.id, otium.value.blockId);
             return;
         }
         if (data.all) {
             moveStudent.value(student.id, data.destination);
             return;
         }
-        await moveStudentNow.value(student.id, otium.value.id, data.destination);
+        await moveStudentNow.value(student.id, otium.value.blockId, data.destination);
     }
 };
 
@@ -263,6 +264,29 @@ const initRemove = async (evt, student) => {
         await fetchData();
     }
 };
+
+function initMoveHere() {
+    dialog.open(SelectStudentToMoveForm, {
+        props: {
+            header: 'Schüler:in verschieben',
+            modal: true,
+            class: 'sm:max-w-xl',
+        },
+        data: {
+            canMoveNow: isNowInInterval(otium.value.datum, otium.value.uhrzeit),
+        },
+        onClose: move,
+    });
+
+    function move({ data }) {
+        if (!data) return;
+        if (data.all) {
+            moveStudent.value(data.student, props.terminId);
+            return;
+        }
+        moveStudentNow.value(data.student, otium.value.blockId, props.terminId);
+    }
+}
 
 await fetchData();
 </script>
@@ -447,6 +471,7 @@ await fetchData();
         show-transfer
         @remove="initRemove"
         @init-move="initMove"
+        @init-move-here="initMoveHere"
     />
 </template>
 

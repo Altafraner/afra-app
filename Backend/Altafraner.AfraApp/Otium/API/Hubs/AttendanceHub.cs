@@ -6,6 +6,7 @@ using Altafraner.AfraApp.Otium.Jobs;
 using Altafraner.AfraApp.Otium.Services;
 using Altafraner.AfraApp.Schuljahr.Domain.Models;
 using Altafraner.AfraApp.User.Domain.DTO;
+using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.AfraApp.User.Services;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -21,15 +22,20 @@ internal partial class AttendanceHub : Hub<IAttendanceHubClient>
     private readonly IAttendanceService _attendanceService;
     private readonly NotesService _notesService;
     private readonly ILogger<AttendanceHub> _logger;
+    private readonly BlockHelper _blockHelper;
 
     /// <summary>
     ///     Constructs a new instance of the <see cref="AttendanceHub" /> class.
     /// </summary>
-    public AttendanceHub(IAttendanceService attendanceService, ILogger<AttendanceHub> logger, NotesService notesService)
+    public AttendanceHub(IAttendanceService attendanceService,
+        ILogger<AttendanceHub> logger,
+        NotesService notesService,
+        BlockHelper blockHelper)
     {
         _attendanceService = attendanceService;
         _logger = logger;
         _notesService = notesService;
+        _blockHelper = blockHelper;
     }
 
     /// <summary>
@@ -83,7 +89,7 @@ internal partial class AttendanceHub : Hub<IAttendanceHubClient>
         }
 
         await Groups.AddToGroupAsync(Context.ConnectionId, BlockGroupName(blockId));
-        var updates = await GetBlockAttendances(blockId);
+        var updates = await GetBlockAttendances(block);
         await Clients.Caller.UpdateBlockAttendances(updates);
         var scheduler = await schedulerFactory.GetScheduler();
         var jobKey = new JobKey($"MissingStudentNotification-{blockId}");
@@ -252,26 +258,25 @@ internal partial class AttendanceHub : Hub<IAttendanceHubClient>
     ///     Moves a student from one termin to another.
     /// </summary>
     /// <param name="studentId">The id of the student to move</param>
-    /// <param name="fromTerminId">
-    ///     The id of the termin to move the student from. Use <see cref="Guid.Empty">Guid.Empty</see>
-    ///     when the student is not enrolled.
+    /// <param name="blockId">
+    ///     The id of the block the student should be moved in. This is needed for unenrolling but always required.
     /// </param>
     /// <param name="toTerminId">The id of the termin to move the student to</param>
     /// <param name="enrollmentService">From DI</param>
     /// <param name="dbContext">From DI</param>
     /// <param name="userService">From DI</param>
-    public async Task MoveStudentNow(Guid studentId, Guid fromTerminId, Guid toTerminId,
-        EnrollmentService enrollmentService, AfraAppContext dbContext, UserService userService)
+    public async Task MoveStudentNow(Guid studentId,
+        Guid blockId,
+        Guid toTerminId,
+        EnrollmentService enrollmentService,
+        AfraAppContext dbContext,
+        UserService userService)
     {
-        if (fromTerminId == toTerminId)
-            return;
+        // find out where student is currently enrolled.
 
-        var fromBlock = await dbContext.OtiaTermine
-            .Where(t => t.Id == fromTerminId)
-            .Select(t => t.Block)
-            .FirstOrDefaultAsync();
         var toData = await dbContext.OtiaTermine
             .Where(t => t.Id == toTerminId)
+            .Where(t => t.Block.Id == blockId)
             .Select(t => new
             {
                 t.Block,
@@ -279,52 +284,56 @@ internal partial class AttendanceHub : Hub<IAttendanceHubClient>
             })
             .FirstOrDefaultAsync();
 
-        var blockId = fromBlock?.Id ?? toData?.Block.Id;
-        if ((fromBlock is null && fromTerminId != Guid.Empty) || (toData is null && toTerminId != Guid.Empty))
-            throw new HubException("One of the termin IDs provided was not found in the database.");
-        if ((fromBlock is not null && toData is not null && fromBlock.Id != toData.Block.Id) ||
-            blockId is null)
-        {
-            _logger.LogWarning(
-                "Someone tried to move a student ({studentId}) from a termin ({fromTerminId}) to a termin ({toTerminId}) that is not in the same block",
-                studentId, fromTerminId, toTerminId);
-            throw new HubException("The termin is not in the same block as the target termin.");
-        }
+        if (toData?.Block == null && toTerminId != Guid.Empty)
+            throw new HubException("Either Termin oder BlockId do not exist or they do not correspond to each other");
 
-        if (toData is null && fromBlock is null)
-        {
-            _logger.LogWarning(
-                "User {userId} tried to move student {studentId} from termin {fromTerminId} to termin {toTerminId}, but i dont seem to be able to find either one.",
-                Context.UserIdentifier, studentId, fromTerminId, toTerminId);
-            throw new HubException("Can't find either termin.");
-        }
+        var fromData = await dbContext.OtiaEinschreibungen
+            .Include(e => e.Termin)
+            .ThenInclude(t => t.Block)
+            .Where(e => e.BetroffenePerson.Id == studentId)
+            .Where(e => e.Termin.Block.Id == blockId)
+            .OrderByDescending(e => e.Interval.Start)
+            .FirstOrDefaultAsync();
+
+        if (fromData?.Id == toTerminId || (toTerminId == Guid.Empty && fromData is null))
+            return;
 
         if (Context.User is null
-            || (fromBlock is not null && !_attendanceService.MaySupervise(Context.User, fromBlock))
-            || (toData is not null && !_attendanceService.MaySupervise(Context.User, toData.Block)))
+            || !_attendanceService.MaySupervise(Context.User, toData?.Block ?? fromData!.Termin.Block))
         {
             _logger.LogWarning(
                 "User {userId} tried to move student {studentId} from termin {fromTerminId} to termin {toTerminId} without authority",
-                Context.UserIdentifier, studentId, fromTerminId, toTerminId);
+                Context.UserIdentifier,
+                studentId,
+                fromData?.Termin.Id,
+                toTerminId);
             throw new HubException("You do not have permission to move students in this block.");
         }
 
         try
         {
-            await enrollmentService.ForceMoveNow(studentId, fromTerminId, toTerminId);
-            await _attendanceService.SetAttendanceForStudentInBlockAsync(studentId, blockId.Value,
-                OtiumAnwesenheitsStatus.Fehlend);
-            if (toTerminId != Guid.Empty)
-                await _attendanceService.SetStatusForTerminAsync(toTerminId, false);
-            else
-                await _attendanceService.SetStatusForMissingPersonsAsync(blockId.Value, false);
-
             var student = await userService.GetUserByIdAsync(studentId);
+            await enrollmentService.ForceMoveNow(studentId, fromData?.Termin.Id ?? Guid.Empty, toTerminId);
+            if (student.Rolle == Rolle.Mittelstufe)
+            {
+                await _attendanceService.SetAttendanceForStudentInBlockAsync(studentId,
+                    blockId,
+                    OtiumAnwesenheitsStatus.Fehlend);
+                if (toTerminId != Guid.Empty)
+                    await _attendanceService.SetStatusForTerminAsync(toTerminId, false);
+                else
+                    await _attendanceService.SetStatusForMissingPersonsAsync(blockId, false);
+            }
+
             await SendNotificationToAffected("Schüler:in verschoben", toData is not null
                     ? $"{student.FirstName} {student.LastName} wurde zum Termin „{toData.Bezeichnung}“ verschoben."
                     : $"{student.FirstName} {student.LastName} wurde ausgetragen.",
-                blockId.Value, fromTerminId, toTerminId);
-            await SendUpdateToAffected(blockId.Value, fromTerminId, toTerminId);
+                blockId,
+                fromData?.Termin.Id ?? Guid.Empty,
+                toTerminId);
+            await SendUpdateToAffected(fromData?.Termin.Block ?? toData!.Block,
+                fromData?.Termin.Id ?? Guid.Empty,
+                toTerminId);
         }
         catch (KeyNotFoundException)
         {
@@ -334,7 +343,8 @@ internal partial class AttendanceHub : Hub<IAttendanceHubClient>
         {
             _logger.LogWarning(
                 "Someone tried to move a student ({studentId}) from a termin ({fromTerminId}) that is not currently running",
-                studentId, fromTerminId);
+                studentId,
+                fromData?.Termin.Id);
             throw new HubException("The termin is not currently running");
         }
     }
@@ -375,10 +385,20 @@ internal partial class AttendanceHub : Hub<IAttendanceHubClient>
 
         try
         {
-            var (fromTerminId, blockId) = await enrollmentService.ForceMove(studentId, toTerminId);
-            await _attendanceService.SetStatusForTerminAsync(toTerminId, false);
             var student = await userService.GetUserByIdAsync(studentId);
-            await SendUpdateToAffected(blockId, fromTerminId, toTerminId);
+            var (fromTerminId, blockId) = await enrollmentService.ForceMove(studentId, toTerminId);
+            if (student.Rolle == Rolle.Mittelstufe)
+            {
+                await _attendanceService.SetAttendanceForStudentInBlockAsync(studentId,
+                    blockId,
+                    OtiumAnwesenheitsStatus.Fehlend);
+                if (toTerminId != Guid.Empty)
+                    await _attendanceService.SetStatusForTerminAsync(toTerminId, false);
+                else
+                    await _attendanceService.SetStatusForMissingPersonsAsync(blockId, false);
+            }
+            await _attendanceService.SetStatusForTerminAsync(toTerminId, false);
+            await SendUpdateToAffected(toData.Block, fromTerminId, toTerminId);
             await SendNotificationToAffected("Schüler:in verschoben",
                 $"{student.FirstName} {student.LastName} wurde zum Termin „{toData.Bezeichnung}“ verschoben.",
                 blockId, fromTerminId, toTerminId);
@@ -392,22 +412,37 @@ internal partial class AttendanceHub : Hub<IAttendanceHubClient>
     /// <summary>
     /// Unenrolls a student from a specific termin.
     /// </summary>
-    public async Task ForceUnenroll(Guid studentId, Guid fromTerminId, EnrollmentService enrollmentService,
-        UserService userService, AfraAppContext dbContext)
+    public async Task ForceUnenroll(Guid studentId,
+        Guid blockId,
+        EnrollmentService enrollmentService,
+        UserService userService,
+        AfraAppContext dbContext)
     {
-        var block = await dbContext.OtiaTermine
-            .Where(t => t.Id == fromTerminId)
-            .Select(t => t.Block)
+        var termin = await dbContext.OtiaTermine
+            .Include(t => t.Block)
+            .Where(t => t.Block.Id == blockId)
+            .Where(t => t.Enrollments.Any(s => s.BetroffenePerson.Id == studentId))
+            .OrderByDescending(t => t.Enrollments.Max(e => e.Interval.Start))
             .FirstOrDefaultAsync();
-        if (block is null || Context.User is null || !_attendanceService.MaySupervise(Context.User, block))
+        if (termin is null || Context.User is null || !_attendanceService.MaySupervise(Context.User, termin.Block))
             throw new HubException("You do not have permission to unenroll students in this block.");
 
-        var user = await userService.GetUserByIdAsync(studentId);
-        await enrollmentService.UnenrollAsync(fromTerminId, user, true);
-        await _attendanceService.SetStatusForMissingPersonsAsync(block.Id, false);
-        await SendUpdateToAffected(block.Id, fromTerminId);
+        var student = await userService.GetUserByIdAsync(studentId);
+        await enrollmentService.UnenrollAsync(termin.Id, student, true);
+        if (student.Rolle == Rolle.Mittelstufe)
+        {
+            await _attendanceService.SetAttendanceForStudentInBlockAsync(studentId,
+                blockId,
+                OtiumAnwesenheitsStatus.Fehlend);
+            await _attendanceService.SetStatusForMissingPersonsAsync(blockId, false);
+        }
+
+        await _attendanceService.SetStatusForMissingPersonsAsync(termin.Block.Id, false);
+        await SendUpdateToAffected(termin.Block, termin.Id);
         await SendNotificationToAffected("Schüler:in verschoben",
-            $"{user.FirstName} {user.LastName} wurde ausgetragen.",
-            block.Id, fromTerminId, Guid.Empty);
+            $"{student.FirstName} {student.LastName} wurde ausgetragen.",
+            termin.Block.Id,
+            termin.Id,
+            Guid.Empty);
     }
 }
