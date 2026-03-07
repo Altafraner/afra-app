@@ -3,7 +3,7 @@ import { ref } from 'vue';
 import { Form } from '@primevue/forms';
 import { Button, FloatLabel, InputText, Message, Textarea } from 'primevue';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
-import AfraKategorySelector from '@/Otium/components/Form/AfraKategorySelector.vue';
+import OtiumKategorySelector from '@/Otium/components/Form/OtiumKategorySelector.vue';
 
 const emits = defineEmits(['submit']);
 
@@ -98,7 +98,7 @@ setup();
         </div>
         <div class="w-full">
             <FloatLabel class="w-full" variant="on">
-                <AfraKategorySelector
+                <OtiumKategorySelector
                     id="kategorie"
                     v-model="kategorie"
                     :options="settings.kategorien"

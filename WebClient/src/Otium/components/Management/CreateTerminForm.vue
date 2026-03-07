@@ -12,8 +12,8 @@ import {
 import { Form } from '@primevue/forms';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
 import { formatTutor } from '@/helpers/formatters';
-import AfraPersonSelector from '@/Otium/components/Form/AfraPersonSelector.vue';
-import AfraDateSelector from '@/Otium/components/Form/AfraDateSelector.vue';
+import PersonSelector from '@/components/PersonSelector.vue';
+import OtiumDateSelector from '@/Otium/components/Form/OtiumDateSelector.vue';
 
 const emit = defineEmits(['submit']);
 
@@ -126,7 +126,7 @@ setup();
         @submit="submit"
     >
         <div class="font-bold">Zeitpunkt</div>
-        <AfraDateSelector
+        <OtiumDateSelector
             v-if="!loading"
             v-model="dateSelected"
             :options="dates"
@@ -155,7 +155,7 @@ setup();
             <label for="betreuerSwitch">Betreuer:in zuweisen</label>
             <ToggleSwitch v-model="betreuerZuweisenSelected" if="betreuerSwitch" />
         </div>
-        <AfraPersonSelector
+        <PersonSelector
             id="betreuerSelect"
             v-model="personSelected"
             :disabled="!betreuerZuweisenSelected"

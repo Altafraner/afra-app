@@ -7,7 +7,7 @@ import { mande } from 'mande';
 import { findPath } from '@/helpers/tree.js';
 import SimpleBreadcrumb from '@/components/SimpleBreadcrumb.vue';
 import { RouterLink } from 'vue-router';
-import AfraKategorieTag from '@/Otium/components/Shared/AfraKategorieTag.vue';
+import OtiumKategorieTag from '@/Otium/components/Shared/OtiumKategorieTag.vue';
 import CreateOtiumForm from '@/Otium/components/Management/CreateOtiumForm.vue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
 
@@ -105,7 +105,7 @@ setup();
                         wrap
                     >
                         <template #item="{ item }">
-                            <AfraKategorieTag :value="item" minimal />
+                            <OtiumKategorieTag :value="item" minimal />
                         </template>
                     </SimpleBreadcrumb>
                 </template>

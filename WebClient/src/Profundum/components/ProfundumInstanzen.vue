@@ -13,7 +13,7 @@ import {
 import { useConfirmPopover } from '@/composables/confirmPopover';
 import Dialog from 'primevue/dialog';
 import { formatSlot, formatStudent } from '@/helpers/formatters.ts';
-import AfraPersonSelector from '@/Otium/components/Form/AfraPersonSelector.vue';
+import PersonSelector from '@/components/PersonSelector.vue';
 
 const props = defineProps({ profundumId: String });
 const toast = useToast();
@@ -138,7 +138,7 @@ onMounted(load);
                 <label for="newOrt">Ort</label>
             </FloatLabel>
 
-            <AfraPersonSelector
+            <PersonSelector
                 v-model="newInstanz.verantwortlicheIds"
                 multi
                 name="tutor"
@@ -147,7 +147,7 @@ onMounted(load);
                 id="newVerantwortliche"
             >
                 <template #label>Verantwortliche</template>
-            </AfraPersonSelector>
+            </PersonSelector>
 
             <Button label="Anlegen" icon="pi pi-plus" @click="createInstanz" fluid />
         </div>
@@ -245,7 +245,7 @@ onMounted(load);
                             <label :for="`ort-${angebot.id}`">Ort</label>
                         </FloatLabel>
 
-                        <AfraPersonSelector
+                        <PersonSelector
                             v-model="angebot.verantwortlicheIds"
                             multi
                             name="tutor"
@@ -254,7 +254,7 @@ onMounted(load);
                             :id="`verantwortliche-${angebot.id}`"
                         >
                             <template #label>Verantwortliche</template>
-                        </AfraPersonSelector>
+                        </PersonSelector>
 
                         <Button label="Speichern" @click="updateInstanz(angebot)" />
                     </div>

@@ -1,7 +1,7 @@
 <script setup>
 import { ref, Suspense } from 'vue';
 import { Button } from 'primevue';
-import AfraOtiumSupervisionView from '@/Otium/components/Supervision/AfraOtiumSupervisionView.vue';
+import OtiumSupervision from '@/Otium/components/Supervision/OtiumSupervision.vue';
 import { useRoute } from 'vue-router';
 import { mande } from 'mande';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
@@ -80,7 +80,7 @@ await setup();
     </div>
     <div v-else>
         <Suspense>
-            <afra-otium-supervision-view
+            <OtiumSupervision
                 :block="blockSelected"
                 :use-query-block="route.query.blockId !== undefined"
             />

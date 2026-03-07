@@ -3,7 +3,7 @@ import { Button, Column, DataTable, Skeleton } from 'primevue';
 import { formatPerson } from '@/helpers/formatters';
 import AuslastungsTag from '@/Otium/components/Shared/AuslastungsTag.vue';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
-import AfraKategorieTag from '@/Otium/components/Shared/AfraKategorieTag.vue';
+import OtiumKategorieTag from '@/Otium/components/Shared/OtiumKategorieTag.vue';
 import Termin from '@/Otium/components/Katalog/Termin.vue';
 import { ref } from 'vue';
 
@@ -50,7 +50,7 @@ await settings.updateKategorien();
         <Column header="Bezeichnung">
             <template #body="{ data }">
                 <Button v-if="data.istAbgesagt" disabled variant="text">
-                    <afra-kategorie-tag
+                    <otium-kategorie-tag
                         v-if="findKategorie(data)"
                         :value="findKategorie(data)"
                         hide-name
@@ -73,7 +73,7 @@ await settings.updateKategorien();
                         }"
                         class="pi text-lg w-[1rem]"
                     />
-                    <afra-kategorie-tag
+                    <otium-kategorie-tag
                         v-if="findKategorie(data)?.icon ?? false"
                         :value="findKategorie(data)"
                         hide-name

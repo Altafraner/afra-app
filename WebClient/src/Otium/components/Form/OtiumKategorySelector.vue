@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 import { TreeSelect } from 'primevue';
 import { findPath } from '@/helpers/tree.js';
-import AfraKategorieTag from '@/Otium/components/Shared/AfraKategorieTag.vue';
+import OtiumKategorieTag from '@/Otium/components/Shared/OtiumKategorieTag.vue';
 import SimpleBreadcrumb from '@/components/SimpleBreadcrumb.vue';
 
 const props = defineProps({
@@ -68,7 +68,7 @@ function treeMappingFunction(element) {
                 :model="findPath(options, value[0].key)"
             >
                 <template #item="{ item }">
-                    <AfraKategorieTag :value="item" minimal />
+                    <OtiumKategorieTag :value="item" minimal />
                 </template>
             </SimpleBreadcrumb>
         </template>

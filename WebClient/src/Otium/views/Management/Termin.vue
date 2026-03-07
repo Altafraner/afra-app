@@ -16,8 +16,8 @@ import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
 import { formatDate, formatPerson } from '@/helpers/formatters';
 import Grid from '@/components/Form/Grid.vue';
 import GridEditRow from '@/components/Form/GridEditRow.vue';
-import AfraPersonSelector from '@/Otium/components/Form/AfraPersonSelector.vue';
-import AfraOtiumEnrollmentTable from '@/Otium/components/Management/AfraOtiumEnrollmentTable.vue';
+import PersonSelector from '@/components/PersonSelector.vue';
+import OtiumEnrollmentTable from '@/Otium/components/Management/OtiumEnrollmentTable.vue';
 import { useAttendance } from '@/Otium/composables/attendanceHubClient.js';
 import MoveStudentForm from '@/Otium/components/Supervision/MoveStudentForm.vue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
@@ -317,7 +317,7 @@ await fetchData();
                         <label for="betreuerSwitch">Betreuer:in zuweisen</label>
                         <ToggleSwitch v-model="betreuerZuweisenSelected" if="betreuerSwitch" />
                     </div>
-                    <AfraPersonSelector
+                    <PersonSelector
                         v-model="personSelected"
                         :disabled="!betreuerZuweisenSelected"
                         name="tutor"
@@ -437,7 +437,7 @@ await fetchData();
             />
         </template>
     </div>
-    <AfraOtiumEnrollmentTable
+    <OtiumEnrollmentTable
         :enrollments="otium.einschreibungen"
         :may-edit-attendance="aufsichtRunning"
         :update-function="updateAttendanceCallback"

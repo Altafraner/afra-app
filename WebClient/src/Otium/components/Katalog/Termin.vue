@@ -6,7 +6,7 @@ import { mande } from 'mande';
 import { useUser } from '@/stores/user';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
 import { useRouter } from 'vue-router';
-import AfraKategorieTag from '@/Otium/components/Shared/AfraKategorieTag.vue';
+import OtiumKategorieTag from '@/Otium/components/Shared/OtiumKategorieTag.vue';
 import { findPath } from '@/helpers/tree.js';
 import SimpleBreadcrumb from '@/components/SimpleBreadcrumb.vue';
 import MultipleEnrollmentForm from '@/Otium/components/Katalog/Forms/MultipleEnrollmentForm.vue';
@@ -266,7 +266,7 @@ await setup();
         <!-- Row 2 Column 1 -->
         <SimpleBreadcrumb :model="findPath(settings.kategorien, otium.kategorie)" wrap>
             <template #item="{ item }">
-                <AfraKategorieTag :value="item" minimal />
+                <OtiumKategorieTag :value="item" minimal />
             </template>
         </SimpleBreadcrumb>
 

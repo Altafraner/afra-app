@@ -3,7 +3,7 @@ import { useOtiumStore } from '@/Otium/stores/otium.js';
 import { computed, ref } from 'vue';
 import { Form } from '@primevue/forms';
 import { Button } from 'primevue';
-import AfraDateSelector from '@/Otium/components/Form/AfraDateSelector.vue';
+import OtiumDateSelector from '@/Otium/components/Form/OtiumDateSelector.vue';
 
 const props = defineProps({
     wiederholung: {
@@ -52,7 +52,7 @@ setup();
 <template>
     <template v-if="!loading">
         <Form v-if="canBeShortened" class="flex flex-col gap-3" @submit="onSubmit">
-            <AfraDateSelector
+            <OtiumDateSelector
                 v-model="end"
                 :label="'Ende der Wiederholung'"
                 :options="datesAvailable"

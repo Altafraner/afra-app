@@ -14,12 +14,12 @@ import { mande } from 'mande';
 import { computed, ref } from 'vue';
 import SimpleBreadcrumb from '@/components/SimpleBreadcrumb.vue';
 import { findChildren, findPath } from '@/helpers/tree.js';
-import AfraKategorieTag from '@/Otium/components/Shared/AfraKategorieTag.vue';
-import AfraKategorySelector from '@/Otium/components/Form/AfraKategorySelector.vue';
+import OtiumKategorieTag from '@/Otium/components/Shared/OtiumKategorieTag.vue';
+import OtiumKategorySelector from '@/Otium/components/Form/OtiumKategorySelector.vue';
 import Grid from '@/components/Form/Grid.vue';
 import GridEditRow from '@/components/Form/GridEditRow.vue';
-import AfraOtiumRegTable from '@/Otium/components/Management/AfraOtiumRegTable.vue';
-import AfraOtiumDateTable from '@/Otium/components/Management/AfraOtiumDateTable.vue';
+import OtiumRegTable from '@/Otium/components/Management/OtiumRegTable.vue';
+import OtiumDateTable from '@/Otium/components/Management/OtiumDateTable.vue';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
 import KlassenrangeSelector from '@/components/KlassenRangeSelector.vue';
 
@@ -344,12 +344,12 @@ setup();
                 <template #body>
                     <SimpleBreadcrumb :model="findPath(settings.kategorien, otium.kategorie)">
                         <template #item="{ item }">
-                            <AfraKategorieTag :value="item" minimal />
+                            <OtiumKategorieTag :value="item" minimal />
                         </template>
                     </SimpleBreadcrumb>
                 </template>
                 <template #edit>
-                    <AfraKategorySelector
+                    <OtiumKategorySelector
                         v-model="kategorie"
                         :options="settings.kategorien"
                         fluid
@@ -412,7 +412,7 @@ setup();
             <AccordionPanel value="0">
                 <AccordionHeader>Termine</AccordionHeader>
                 <AccordionContent>
-                    <afra-otium-date-table
+                    <OtiumDateTable
                         :dates="otium.termine"
                         allowEdit
                         @cancel="cancelTermin"
@@ -425,7 +425,7 @@ setup();
             <AccordionPanel value="1">
                 <AccordionHeader>Regelmäßigkeiten</AccordionHeader>
                 <AccordionContent>
-                    <afra-otium-reg-table
+                    <OtiumRegTable
                         :regs="otium.wiederholungen"
                         allowEdit
                         @cancel="cancelReg"

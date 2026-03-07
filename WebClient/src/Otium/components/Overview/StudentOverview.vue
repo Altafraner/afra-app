@@ -15,9 +15,9 @@ import { useUser } from '@/stores/user';
 import { computed } from 'vue';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
 import { findPath } from '@/helpers/tree.js';
-import AfraKategorieTag from '@/Otium/components/Shared/AfraKategorieTag.vue';
+import OtiumKategorieTag from '@/Otium/components/Shared/OtiumKategorieTag.vue';
 import { marked } from 'marked';
-import AfraOtiumAnwesenheit from '@/Otium/components/Shared/AfraOtiumAnwesenheit.vue';
+import OtiumAnwesenheit from '@/Otium/components/Shared/OtiumAnwesenheit.vue';
 
 const props = defineProps({
     termine: Array,
@@ -141,7 +141,7 @@ const isOs = computed(() => {
                                     class="px-2"
                                 >
                                     <span class="flex gap-2 items-baseline">
-                                        <AfraKategorieTag
+                                        <OtiumKategorieTag
                                             v-if="data.kategorieId"
                                             :value="findKategorie(data.kategorieId)"
                                             hide-name
@@ -172,7 +172,7 @@ const isOs = computed(() => {
                     </Column>
                     <Column>
                         <template #body="{ data }">
-                            <AfraOtiumAnwesenheit
+                            <OtiumAnwesenheit
                                 v-if="data.anwesenheit"
                                 v-model="data.anwesenheit"
                                 minimal

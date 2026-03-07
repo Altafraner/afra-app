@@ -1,6 +1,6 @@
 <script setup>
 import { Badge, Button, Column, DataTable, useDialog } from 'primevue';
-import AfraOtiumAnwesenheit from '@/Otium/components/Shared/AfraOtiumAnwesenheit.vue';
+import OtiumAnwesenheit from '@/Otium/components/Shared/OtiumAnwesenheit.vue';
 import UserPeek from '@/components/UserPeek.vue';
 import Notes from '@/Otium/components/Notes/Notes.vue';
 import { useUser } from '@/stores/user';
@@ -55,7 +55,7 @@ function openNotes(data) {
         >
             <template #body="{ data }">
                 <span class="flex justify-end items-center gap-2">
-                    <afra-otium-anwesenheit
+                    <OtiumAnwesenheit
                         v-if="
                             data.student.rolle !== 'Oberstufe' &&
                             (showAttendance || mayEditAttendance)

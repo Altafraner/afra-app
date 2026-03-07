@@ -1,9 +1,9 @@
 <script setup>
 import { computed, ref, Suspense, watch } from 'vue';
 import { Column, DataTable, Message, Skeleton, useToast } from 'primevue';
-import AfraDateSelector from '@/Otium/components/Form/AfraDateSelector.vue';
-import AfraKategorySelector from '@/Otium/components/Form/AfraKategorySelector.vue';
-import AfraOtiumKatalogView from '@/Otium/components/Katalog/AfraOtiumKatalogView.vue';
+import OtiumDateSelector from '@/Otium/components/Form/OtiumDateSelector.vue';
+import OtiumKategorySelector from '@/Otium/components/Form/OtiumKategorySelector.vue';
+import OtiumKatalog from '@/Otium/components/Katalog/OtiumKatalog.vue';
 import { mande } from 'mande';
 import { useUser } from '@/stores/user';
 import { useRoute, useRouter } from 'vue-router';
@@ -170,14 +170,14 @@ startup();
     <div class="flex gap-3 flex-col">
         <template v-if="!loading">
             <div class="flex gap-3">
-                <AfraDateSelector
+                <OtiumDateSelector
                     v-model="date"
                     :options="datesAvailable"
                     @dateChanged="dateChanged"
                     @today="selectToday"
                 />
             </div>
-            <AfraKategorySelector
+            <OtiumKategorySelector
                 v-model="kategorie"
                 :options="kategorieOptionsTree"
                 @change="categoryChanged"
@@ -199,7 +199,7 @@ startup();
                 </Message>
             </template>
             <Suspense>
-                <AfraOtiumKatalogView
+                <OtiumKatalog
                     :otia="selectedOtia"
                     :termin-id="terminId"
                     @reload="getAngebote"

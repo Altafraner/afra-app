@@ -12,7 +12,7 @@ import {
 import { Form } from '@primevue/forms';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
 import { formatDayOfWeek, formatTutor } from '@/helpers/formatters';
-import AfraDateSelector from '@/Otium/components/Form/AfraDateSelector.vue';
+import OtiumDateSelector from '@/Otium/components/Form/OtiumDateSelector.vue';
 
 const emit = defineEmits(['submit']);
 
@@ -252,7 +252,7 @@ setup();
                 </Message>
             </div>
             <div class="font-bold">Zeitraum</div>
-            <AfraDateSelector
+            <OtiumDateSelector
                 v-if="!loading"
                 v-model="von"
                 :options="datesAvailable"
@@ -261,7 +261,7 @@ setup();
                 name="von"
                 show-label
             />
-            <AfraDateSelector
+            <OtiumDateSelector
                 v-if="!loading"
                 v-model="bis"
                 :options="datesAvailable"

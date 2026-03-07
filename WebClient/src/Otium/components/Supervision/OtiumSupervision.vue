@@ -10,7 +10,7 @@ import {
 } from 'primevue';
 import { computed, onUnmounted, ref } from 'vue';
 import MoveStudentForm from '@/Otium/components/Supervision/MoveStudentForm.vue';
-import AfraOtiumEnrollmentTable from '@/Otium/components/Management/AfraOtiumEnrollmentTable.vue';
+import OtiumEnrollmentTable from '@/Otium/components/Management/OtiumEnrollmentTable.vue';
 import { useAttendance } from '@/Otium/composables/attendanceHubClient.js';
 import { useRoute } from 'vue-router';
 import { isNowInInterval } from '@/helpers/time.js';
@@ -126,7 +126,7 @@ function initMove(student, terminId) {
                 </div>
             </accordion-header>
             <accordion-content>
-                <afra-otium-enrollment-table
+                <OtiumEnrollmentTable
                     :enrollments="room.einschreibungen"
                     :update-function="updateAttendanceCallback"
                     :block-id="blockId"

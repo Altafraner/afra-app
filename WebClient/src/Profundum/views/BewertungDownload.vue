@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import Form from '@primevue/forms/form';
 import { Button, DatePicker, Message, Select, SelectButton } from 'primevue';
-import AfraPersonSelector from '@/Otium/components/Form/AfraPersonSelector.vue';
+import PersonSelector from '@/components/PersonSelector.vue';
 import { ref, shallowRef } from 'vue';
 import type { FormResolverOptions, FormSubmitEvent } from '@primevue/forms';
 import { useManagement } from '@/Profundum/composables/verwaltung';
@@ -322,13 +322,13 @@ setup();
                 <template v-if="$form.batch?.value === false">
                     <span>Schüler:in</span>
                     <div>
-                        <AfraPersonSelector
+                        <PersonSelector
                             v-if="$form.batch?.value === false"
                             id="person"
                             name="person"
                         >
                             <template #label>Schüler:in wählen</template>
-                        </AfraPersonSelector>
+                        </PersonSelector>
                         <Message
                             v-if="$form.person?.invalid"
                             severity="error"
