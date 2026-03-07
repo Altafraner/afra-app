@@ -14,6 +14,7 @@ import OtiumEnrollmentTable from '@/Otium/components/Management/OtiumEnrollmentT
 import { useAttendance } from '@/Otium/composables/attendanceHubClient.js';
 import { useRoute } from 'vue-router';
 import { isNowInInterval } from '@/helpers/time.js';
+import SelectStudentToMoveForm from '@/Otium/components/Supervision/SelectStudentToMoveForm.vue';
 
 const props = defineProps({
     rooms: Array,
@@ -51,7 +52,7 @@ function updateStatusCallback(evt, terminId, status) {
     attendanceService.updateStatus(terminId, status);
 }
 
-function initMove(student, terminId) {
+function initMove(student) {
     dialog.open(MoveStudentForm, {
         props: {
             header: 'Schüler:in verschieben',
@@ -71,14 +72,43 @@ function initMove(student, terminId) {
     function move({ data }) {
         if (!data) return;
         if (data.all && data.destination === '00000000-0000-0000-0000-000000000000') {
-            attendanceService.unenroll(student.id, terminId);
+            attendanceService.unenroll(student.id, blockId.value);
             return;
         }
         if (data.all) {
             attendanceService.moveStudent(student.id, data.destination);
             return;
         }
-        attendanceService.moveStudentNow(student.id, terminId, data.destination);
+        attendanceService.moveStudentNow(student.id, blockId.value, data.destination);
+    }
+}
+
+function initMoveHere(terminId) {
+    dialog.open(SelectStudentToMoveForm, {
+        props: {
+            header: 'Schüler:in verschieben',
+            modal: true,
+            class: 'sm:max-w-xl',
+        },
+        data: {
+            canMoveNow:
+                !useDataFromQuery.value &&
+                isNowInInterval(props.block.datum, props.block.uhrzeit),
+        },
+        onClose: move,
+    });
+
+    function move({ data }) {
+        if (!data) return;
+        if (data.all && terminId === '00000000-0000-0000-0000-000000000000') {
+            attendanceService.unenroll(data.student, blockId.value);
+            return;
+        }
+        if (data.all) {
+            attendanceService.moveStudent(data.student, terminId);
+            return;
+        }
+        attendanceService.moveStudentNow(data.student, blockId.value, terminId);
     }
 }
 </script>
@@ -132,7 +162,8 @@ function initMove(student, terminId) {
                     :block-id="blockId"
                     may-edit-attendance
                     show-transfer
-                    @initMove="(student) => initMove(student, room.terminId)"
+                    @initMove="(student) => initMove(student)"
+                    @init-move-here="() => initMoveHere(room.terminId)"
                 />
             </accordion-content>
         </accordion-panel>
