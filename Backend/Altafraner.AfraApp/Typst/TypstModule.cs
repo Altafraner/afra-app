@@ -12,6 +12,8 @@ public class TypstModule : IModule
     public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
     {
         services.AddSingleton<Altafraner.Typst.Typst>();
-        services.AddOptions<TypstConfiguration>().Bind(config.GetSection("Typst"));
+        services.AddOptions<TypstConfiguration>().Bind(config.GetSection("Typst"))
+            .Validate(TypstConfiguration.Validate)
+            .ValidateOnStart();
     }
 }
