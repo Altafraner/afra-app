@@ -17,13 +17,13 @@ internal class CompilerSafe
         var rootPtr = IntPtr.Zero;
         if (!string.IsNullOrWhiteSpace(root))
         {
-            rootPtr = Marshal.StringToHGlobalAnsi(root);
+            rootPtr = StringToHGlobalUtf8(root);
         }
         var fontPathsList = fontPaths.ToList();
         var fontPathPtrs = new IntPtr[fontPathsList.Count];
         for (var i = 0; i < fontPathsList.Count; i++)
         {
-            fontPathPtrs[i] = Marshal.StringToHGlobalAnsi(fontPathsList[i]);
+            fontPathPtrs[i] = StringToHGlobalUtf8(fontPathsList[i]);
         }
 
         fixed (IntPtr* fontPathsRawPtr = fontPathPtrs)
@@ -35,12 +35,16 @@ internal class CompilerSafe
                 (byte**)fontPathsPtr,
                 (nuint)fontPathsList.Count(),
                 false);
+            if (_inner == null)
+            {
+                throw new InvalidOperationException("Failed to create Typst compiler (native create_compiler returned null).");
+            }
         }
     }
 
     internal unsafe CompileResultSafe CompileWithInputsOrNull(string inputs)
     {
-        var sysInputsPtr = Marshal.StringToHGlobalAnsi(inputs);
+        var sysInputsPtr = StringToHGlobalUtf8(inputs);
         try
         {
             return new CompileResultSafe(
