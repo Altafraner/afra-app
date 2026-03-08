@@ -48,6 +48,7 @@
         <ProjectReference Include="..\Altafraner.Backbone.EmailOutbox\Altafraner.Backbone.EmailOutbox.csproj"/>
         <ProjectReference Include="..\Altafraner.Backbone.Defaults\Altafraner.Backbone.Defaults.csproj"/>
         <ProjectReference Include="..\Altafraner.Backbone.EmailSchedulingModule\Altafraner.Backbone.EmailSchedulingModule.csproj"/>
+        <ProjectReference Include="..\Altafraner.Backbone.WebNotification\Altafraner.Backbone.WebNotification.csproj"/>
         <ProjectReference Include="..\Altafraner.Backbone\Altafraner.Backbone.csproj"/>
         <ProjectReference Include="..\Altafraner.Typst\Altafraner.Typst.csproj"/>
         <ProjectReference Include="..\Altafraner.Typst.Generator\Altafraner.Typst.Generator.csproj" OutputItemType="Analyzer"/>

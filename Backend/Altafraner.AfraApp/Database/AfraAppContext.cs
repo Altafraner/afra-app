@@ -7,6 +7,8 @@ using Altafraner.AfraApp.Schuljahr.Domain.Models;
 using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.Backbone.EmailSchedulingModule;
 using Altafraner.Backbone.EmailSchedulingModule.Models;
+using Altafraner.Backbone.WebNotifications;
+using Altafraner.Backbone.WebNotifications.Domain.Models;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -17,7 +19,7 @@ namespace Altafraner.AfraApp;
 /// <summary>
 ///     The database context for the Afra-App
 /// </summary>
-public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEmailContext<Person>
+public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEmailContext<Person>, IWebNotificationContext<Person>
 {
     /// <inheritdoc />
     public AfraAppContext(DbContextOptions<AfraAppContext> options) : base(options)
@@ -160,6 +162,16 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
     public DbSet<CalendarSubscription> CalendarSubscriptions { get; set; }
 
     /// <summary>
+    ///     In-app notifications for all users.
+    /// </summary>
+    public DbSet<InAppNotification<Person>> InAppNotifications { get; set; }
+
+    /// <summary>
+    ///     Web Push subscriptions for all users.
+    /// </summary>
+    public DbSet<PushSubscription<Person>> PushSubscriptions { get; set; }
+
+    /// <summary>
     ///     Configures the npgsql specific options for the context
     /// </summary>
     internal static Action<NpgsqlDbContextOptionsBuilder> ConfigureNpgsql =>
@@ -187,6 +199,10 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
 
         modelBuilder.Entity<Person>()
             .PrimitiveCollection(p => p.GlobalPermissions);
+
+        modelBuilder.Entity<Person>()
+            .Property(p => p.ReceiveEmailNotifications)
+            .HasDefaultValue(true);
 
         modelBuilder.Entity<MentorMenteeRelation>()
             .HasKey(r => new { r.MentorId, r.StudentId, r.Type });
@@ -301,6 +317,23 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
         });
 
         modelBuilder.Entity<CalendarSubscription>(s => { s.HasOne(b => b.BetroffenePerson).WithMany(); });
+
+        modelBuilder.Entity<InAppNotification<Person>>(n =>
+        {
+            n.HasOne(e => e.Recipient)
+                .WithMany()
+                .HasForeignKey(e => e.RecipientId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<PushSubscription<Person>>(p =>
+        {
+            p.HasOne(e => e.Person)
+                .WithMany()
+                .HasForeignKey(e => e.PersonId)
+                .OnDelete(DeleteBehavior.Cascade);
+            p.HasIndex(e => e.Endpoint).IsUnique();
+        });
 
         modelBuilder.Entity<ProfundumFeedbackKategorie>(e =>
         {
