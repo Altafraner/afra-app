@@ -479,24 +479,67 @@ internal class ProfundumManagementService
             throw new NotFoundException("no such slot");
         }
 
-        var instanzen = _dbContext.ProfundaInstanzen
+        var instanzen = await _dbContext.ProfundaInstanzen
+            .AsSplitQuery()
+            .Include(p => p.Verantwortliche)
+            .Include(i => i.Profundum).ThenInclude(p => p.Dependencies)
             .Include(i => i.Slots)
-            .Include(i => i.Profundum)
-            .ToArray()
-            .Where(i => i.Slots.Contains(slot));
+            .Where(i => i.Slots.Any(s => s.Id == slotId))
+            .ToListAsync();
+
+        var einschreibungen = await _dbContext.ProfundaEinschreibungen
+            .Include(e => e.BetroffenePerson)
+            .Where(e => e.ProfundumInstanz != null && instanzen.Select(i => i.Id).Contains(e.ProfundumInstanz.Id))
+            .ToListAsync();
+
+        const string src = Altafraner.Typst.Templates.Profundum.Instanz;
+
+        var jobs = instanzen.Select(inst =>
+        {
+            var teilnehmer = einschreibungen
+                .Where(e => e.ProfundumInstanz!.Id == inst.Id)
+                .Select(e => e.BetroffenePerson)
+                .Distinct()
+                .OrderBy(x => int.Parse((x.Gruppe ?? "0").TakeWhile(char.IsDigit).ToArray()))
+                .ThenBy(x =>
+                    (x.Gruppe ?? "").SkipWhile(c => !char.IsDigit(c))
+                    .Aggregate(new StringBuilder(), (a, b) => a.Append(b)).ToString())
+                .ThenBy(e => e.LastName)
+                .ThenBy(e => e.FirstName)
+                .Select(v => new PersonInfoMinimal(v))
+                .ToArray();
+
+            var inputs = new
+            {
+                bezeichnung = inst.Profundum.Bezeichnung,
+                beschreibung = "",
+                voraussetzungen = inst.Profundum.Dependencies.Select(d => d.Bezeichnung),
+                ort = inst.Ort,
+                slots = inst.Slots.OrderBy(e => e.Jahr).ThenBy(e => e.Quartal).ThenBy(e => e.Wochentag),
+                verantwortliche = inst.Verantwortliche.Select(v => new PersonInfoMinimal(v)),
+                teilnehmer
+            };
+
+            var sanitizedName = FilenameSanitizer.Sanitize(inst.Profundum.Bezeichnung);
+            var fname = $"{sanitizedName}.pdf";
+
+            return (fname, inputs);
+        }).ToList();
+
+        var pdfTasks = jobs.Select(job => Task.Run(() => (job.fname,
+                        pdf: _typst.GeneratePdf(src, job.inputs))));
+
+        var results = await Task.WhenAll(pdfTasks);
 
         using var ms = new MemoryStream();
 
         await using (var archive = new ZipArchive(ms, ZipArchiveMode.Create, leaveOpen: true))
         {
-            foreach (var i in instanzen)
+            foreach (var (fname, pdf) in results)
             {
-                var sanitizedName = FilenameSanitizer.Sanitize(i.Profundum.Bezeichnung);
-                var fname = $"{sanitizedName}.pdf";
                 var entry = archive.CreateEntry(fname);
                 await using var entryStream = await entry.OpenAsync();
-                var pdf = await GetInstanzPdfAsync(i.Id);
-                await entryStream.WriteAsync(pdf, 0, pdf.Length);
+                await entryStream.WriteAsync(pdf);
             }
         }
         return (ms.ToArray(), slot.ToString());
