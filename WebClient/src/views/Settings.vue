@@ -1,9 +1,11 @@
 <script setup>
-import { Button, useToast } from 'primevue';
-import { ref } from 'vue';
+import { Button, useToast, ToggleSwitch } from 'primevue';
+import { ref, onMounted } from 'vue';
 import { mande } from 'mande';
 import { useUser } from '@/stores/user';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
+import { useNotifications } from '@/stores/notifications';
+import { usePushNotifications } from '@/composables/pushNotifications';
 
 const loading = ref(false);
 const user = useUser();
@@ -89,7 +91,113 @@ const copy = async (text) => {
     }
 };
 
+const notifStore = useNotifications();
+const pushHelper = usePushNotifications();
+
+const receiveEmailNotifications = ref(true);
+const notifSettingsLoading = ref(false);
+const pushSubscribed = ref(false);
+const pushLoading = ref(false);
+
+async function loadNotifSettings() {
+    try {
+        const settings = await notifStore.fetchSettings();
+        receiveEmailNotifications.value = settings.receiveEmailNotifications;
+    } catch (e) {
+        console.error('Failed to load notification settings', e);
+    }
+}
+
+async function saveNotifSettings() {
+    notifSettingsLoading.value = true;
+    try {
+        await notifStore.saveSettings({
+            receiveEmailNotifications: receiveEmailNotifications.value,
+        });
+        toast.add({
+            severity: 'success',
+            summary: 'Gespeichert',
+            detail: 'Benachrichtigungseinstellungen wurden gespeichert.',
+            life: 2000,
+        });
+    } catch (e) {
+        console.error('Failed to save notification settings', e);
+        toast.add({ severity: 'error', summary: 'Fehler beim Speichern' });
+    } finally {
+        notifSettingsLoading.value = false;
+    }
+}
+
+async function checkPushSubscription() {
+    if (!pushHelper.isSupported()) return;
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription();
+    pushSubscribed.value = !!sub;
+}
+
+async function togglePush() {
+    pushLoading.value = true;
+    try {
+        if (pushSubscribed.value) {
+            await pushHelper.unsubscribe();
+            pushSubscribed.value = false;
+            toast.add({
+                severity: 'info',
+                summary: 'Push-Benachrichtigungen deaktiviert',
+                life: 2000,
+            });
+        } else {
+            const sub = await pushHelper.subscribe();
+            if (sub) {
+                pushSubscribed.value = true;
+                toast.add({
+                    severity: 'success',
+                    summary: 'Push-Benachrichtigungen aktiviert',
+                    life: 2000,
+                });
+            } else if (pushHelper.getPermission() === 'denied') {
+                toast.add({
+                    severity: 'warn',
+                    summary: 'Berechtigung verweigert',
+                    detail: 'Bitte erlauben Sie Benachrichtigungen in den Browser-Einstellungen.',
+                });
+            }
+        }
+    } catch (e) {
+        console.error(e);
+        toast.add({ severity: 'error', summary: 'Fehler beim Ändern der Push-Einstellung' });
+    } finally {
+        pushLoading.value = false;
+    }
+}
+
+const testLoading = ref(false);
+async function sendTestNotification() {
+    testLoading.value = true;
+    try {
+        await notifStore.sendTestNotification();
+        toast.add({
+            severity: 'success',
+            summary: 'Testbenachrichtigung gesendet',
+            detail: 'Schau in das Benachrichtigungsglöckchen oben rechts.',
+            life: 3000,
+        });
+    } catch (e) {
+        console.error(e);
+        toast.add({
+            severity: 'error',
+            summary: 'Fehler beim Senden der Testbenachrichtigung',
+        });
+    } finally {
+        testLoading.value = false;
+    }
+}
+
 await fetchNum();
+onMounted(async () => {
+    await loadNotifSettings();
+    await checkPushSubscription();
+});
 
 const navItems = [
     {
@@ -147,6 +255,53 @@ const navItems = [
             variant="text"
             @click.prevent="copy(calLink)"
         />
+    </div>
+
+    <h2>Benachrichtigungen</h2>
+
+    <div class="flex flex-col gap-4">
+        <div class="flex items-center justify-between gap-4">
+            <div>
+                <p class="font-medium m-0">E-Mail-Benachrichtigungen</p>
+                <p class="text-sm text-surface-500 m-0 mt-1">
+                    Benachrichtigungen werden zusätzlich per E-Mail zugestellt.
+                </p>
+            </div>
+            <ToggleSwitch v-model="receiveEmailNotifications" @change="saveNotifSettings" />
+        </div>
+
+        <div v-if="pushHelper.isSupported()" class="flex items-center justify-between gap-4">
+            <div>
+                <p class="font-medium m-0">Push-Benachrichtigungen</p>
+                <p class="text-sm text-surface-500 m-0 mt-1">
+                    Benachrichtigungen auch dann anzeigen, wenn die App nicht geöffnet ist.
+                </p>
+            </div>
+            <Button
+                :label="pushSubscribed ? 'Deaktivieren' : 'Aktivieren'"
+                :severity="pushSubscribed ? 'danger' : 'primary'"
+                :loading="pushLoading"
+                size="small"
+                @click="togglePush"
+            />
+        </div>
+
+        <div class="flex items-center justify-between gap-4">
+            <div>
+                <p class="font-medium m-0">Testbenachrichtigung</p>
+                <p class="text-sm text-surface-500 m-0 mt-1">
+                    Sendet eine Testbenachrichtigung, um das System zu prüfen.
+                </p>
+            </div>
+            <Button
+                label="Senden"
+                icon="pi pi-send"
+                severity="secondary"
+                size="small"
+                :loading="testLoading"
+                @click="sendTestNotification"
+            />
+        </div>
     </div>
 </template>
 

@@ -9,6 +9,9 @@ import { VitePWA } from 'vite-plugin-pwa';
 const pwaOptions = {
     base: '/',
     registerType: 'prompt',
+    strategies: 'injectManifest',
+    srcDir: 'src',
+    filename: 'sw.js',
     manifest: {
         name: 'Afra-App',
         short_name: 'Afra-App',
@@ -37,8 +40,8 @@ const pwaOptions = {
             },
         ],
     },
-    workbox: {
-        navigateFallbackDenylist: [/^\/api/],
+    injectManifest: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
     },
 };
 
