@@ -31,7 +31,7 @@ export const useUser = defineStore('user', {
                 if (error.response.status === 401) {
                     this.loggedIn = false;
                     this.user = null;
-                    console.debug('Not logged in');
+                    console.info('Not logged in');
                 } else {
                     console.error('Error fetching user', error);
                     throw error;
