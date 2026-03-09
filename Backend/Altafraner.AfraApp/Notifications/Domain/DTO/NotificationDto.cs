@@ -1,4 +1,4 @@
-namespace Altafraner.Backbone.WebNotifications.Domain.DTO;
+namespace Altafraner.AfraApp.Notifications.Domain.DTO;
 
 /// <summary>
 ///     A DTO for communicating an in-app notification to the client.

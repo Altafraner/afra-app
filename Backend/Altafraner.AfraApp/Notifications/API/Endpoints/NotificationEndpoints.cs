@@ -1,7 +1,7 @@
 using Altafraner.AfraApp.Notifications.Services;
 using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.AfraApp.User.Services;
-using Altafraner.Backbone.WebNotifications.Domain.DTO;
+using Altafraner.AfraApp.Notifications.Domain.DTO;
 using Altafraner.Backbone.WebNotifications.Services;
 using Microsoft.EntityFrameworkCore;
 
