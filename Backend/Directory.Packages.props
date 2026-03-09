@@ -27,5 +27,14 @@
     <PackageVersion Include="Google.OrTools" Version="9.15.6755" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
     <PackageVersion Include="OpenTelemetry.Exporter.Prometheus.AspNetCore" Version="1.13.0-beta.1" />
+    <PackageVersion Include="Altafraner.Backbone" Version="1.0.0" />
+    <PackageVersion Include="Altafraner.Backbone.Abstractions" Version="1.0.0" />
+    <PackageVersion Include="Altafraner.Backbone.CookieAuthentication" Version="1.0.0" />
+    <PackageVersion Include="Altafraner.Backbone.DataProtection" Version="1.0.0" />
+    <PackageVersion Include="Altafraner.Backbone.Defaults" Version="1.0.0" />
+    <PackageVersion Include="Altafraner.Backbone.EmailOutbox" Version="1.0.0" />
+    <PackageVersion Include="Altafraner.Backbone.EmailSchedulingModule" Version="1.0.0" />
+    <PackageVersion Include="Altafraner.Backbone.Scheduling" Version="1.0.0" />
+    <PackageVersion Include="Altafraner.Backbone.Utils" Version="1.0.0" />
   </ItemGroup>
 </Project>
