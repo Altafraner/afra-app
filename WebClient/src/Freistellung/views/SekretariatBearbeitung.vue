@@ -167,12 +167,7 @@ async function submitAblehnung() {
     </div>
 
     <!-- Reject dialog -->
-    <Dialog
-        v-model:visible="dialogVisible"
-        modal
-        header="Antrag ablehnen"
-        style="width: 30rem"
-    >
+    <Dialog v-model:visible="dialogVisible" modal header="Antrag ablehnen" style="width: 30rem">
         <div class="flex flex-col gap-3">
             <p>
                 Bitte geben Sie einen Kommentar an, was am Antrag

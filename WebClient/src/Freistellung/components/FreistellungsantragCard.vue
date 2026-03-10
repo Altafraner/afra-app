@@ -1,5 +1,5 @@
 <script setup>
-import { Tag } from 'primevue';
+import { Message, Tag } from 'primevue';
 import { formatTutor } from '@/helpers/formatters';
 import UserPeek from '@/components/UserPeek.vue';
 import {
@@ -58,7 +58,7 @@ defineProps({
                         <th class="py-1 pr-3">Datum</th>
                         <th class="py-1 pr-3">Block</th>
                         <th class="py-1 pr-3">Fach</th>
-                        <th class="py-1 ">Lehrkraft</th>
+                        <th class="py-1">Lehrkraft</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -70,7 +70,7 @@ defineProps({
                         <td class="py-1 pr-3">{{ formatFreistellungDate(s.datum) }}</td>
                         <td class="py-1 pr-3">{{ s.block }}</td>
                         <td class="py-1 pr-3">{{ s.fach }}</td>
-                        <UserPeek :person="s.lehrer"/>
+                        <UserPeek :person="s.lehrer" />
                     </tr>
                 </tbody>
             </table>
@@ -96,17 +96,17 @@ defineProps({
             </div>
         </template>
         <template v-if="antrag.sekretariatKommentar">
-            <div class="mb-2 p-2 rounded border border-red-200 bg-red-50 text-sm">
-                <span class="font-semibold text-red-700">Sekretariat:</span>
+            <Message severity="warn">
+                <span class="font-semibold">Kommentar des Sekretariats:</span>
                 <span class="ml-1">{{ antrag.sekretariatKommentar }}</span>
-            </div>
+            </Message>
         </template>
 
         <template v-if="antrag.schulleiterKommentar">
-            <div class="mb-2 p-2 rounded border border-red-200 bg-red-50 text-sm">
-                <span class="font-semibold text-red-700">Schulleiter:</span>
+            <Message severity="warn">
+                <span class="font-semibold">Kommentar des Schulleiters:</span>
                 <span class="ml-1">{{ antrag.schulleiterKommentar }}</span>
-            </div>
+            </Message>
         </template>
         <slot />
     </div>
