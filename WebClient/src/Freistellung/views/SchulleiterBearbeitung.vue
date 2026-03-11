@@ -138,6 +138,19 @@ async function submitAblehnung() {
                     size="small"
                     @click="openAblehnenDialog(antrag)"
                 />
+                <a
+                    :href="`/api/freistellung/schulleiter/${antrag.id}.pdf`"
+                    download
+                >
+                    <Button
+                        icon="pi pi-file-pdf"
+                        severity="info"
+                        variant="text"
+                        size="small"
+                        v-tooltip.left="'Als PDF exportieren'"
+                        aria-label="Als PDF exportieren"
+                    />
+                </a>
             </div>
         </FreistellungsantragCard>
     </div>
@@ -163,7 +176,21 @@ async function submitAblehnung() {
                 severity: statusSeverity[antrag.status],
                 value: statusLabel[antrag.status],
             }"
-        />
+        >
+            <a
+                :href="`/api/freistellung/schulleiter/${antrag.id}.pdf`"
+                download
+            >
+                <Button
+                    icon="pi pi-file-pdf"
+                    severity="info"
+                    variant="text"
+                    size="small"
+                    v-tooltip.left="'Als PDF exportieren'"
+                    aria-label="Als PDF exportieren"
+                />
+            </a>
+        </FreistellungsantragCard>
     </div>
 
     <!-- Reject dialog -->

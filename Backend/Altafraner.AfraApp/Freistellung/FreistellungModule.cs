@@ -1,5 +1,6 @@
 using Altafraner.AfraApp.Freistellung.API.Endpoints;
 using Altafraner.AfraApp.Freistellung.Services;
+using Altafraner.AfraApp.Typst;
 using Altafraner.AfraApp.User;
 using Altafraner.Backbone.Abstractions;
 
@@ -10,6 +11,7 @@ namespace Altafraner.AfraApp.Freistellung;
 /// </summary>
 [DependsOn<UserModule>]
 [DependsOn<DatabaseModule>]
+[DependsOn<TypstModule>]
 public class FreistellungModule : IModule
 {
     /// <inheritdoc />

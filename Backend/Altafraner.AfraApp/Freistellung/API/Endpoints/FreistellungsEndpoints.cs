@@ -1,7 +1,9 @@
+using System.Net.Mime;
 using Altafraner.AfraApp.Backbone.Authorization;
 using Altafraner.AfraApp.Freistellung.Domain.DTO;
 using Altafraner.AfraApp.Freistellung.Services;
 using Altafraner.AfraApp.User.Services;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace Altafraner.AfraApp.Freistellung.API.Endpoints;
 
@@ -31,12 +33,14 @@ public static class FreistellungsEndpoints
         sekretariat.MapGet("/", GetAntraegeForSekretariat);
         sekretariat.MapPut("/{antragId:guid}/bestaetigen", BestaetigeAntrag);
         sekretariat.MapPut("/{antragId:guid}/ablehnen", SekretariatAblehnen);
+        sekretariat.MapGet("/{antragId:guid}.pdf", GetAntragPdf);
 
         var schulleiter = app.MapGroup("/schulleiter")
             .RequireAuthorization(AuthorizationPolicies.Schulleiter);
         schulleiter.MapGet("/", GetAntraegeForSchulleiter);
         schulleiter.MapPut("/{antragId:guid}/bestaetigen", SchulleiterBestaetigen);
         schulleiter.MapPut("/{antragId:guid}/ablehnen", SchulleiterAblehnen);
+        schulleiter.MapGet("/{antragId:guid}.pdf", GetAntragPdf);
     }
 
     private static async Task<IResult> CreateAntrag(
@@ -214,6 +218,21 @@ public static class FreistellungsEndpoints
         catch (InvalidOperationException ex)
         {
             return Results.BadRequest(new { error = ex.Message });
+        }
+    }
+
+    private static async Task<IResult> GetAntragPdf(
+        FreistellungsService service,
+        Guid antragId)
+    {
+        try
+        {
+            var pdf = await service.GeneratePdfAsync(antragId);
+            return Results.File(pdf, MediaTypeNames.Application.Pdf, $"Freistellungsantrag_{antragId}.pdf");
+        }
+        catch (KeyNotFoundException)
+        {
+            return Results.NotFound();
         }
     }
 }

@@ -13,14 +13,17 @@ public class FreistellungsService
 {
     private readonly AfraAppContext _dbContext;
     private readonly INotificationService _notificationService;
+    private readonly Altafraner.Typst.Typst _typstService;
 
     /// <summary>
     ///     Constructs a new instance of the <see cref="FreistellungsService" />.
     /// </summary>
-    public FreistellungsService(AfraAppContext dbContext, INotificationService notificationService)
+    public FreistellungsService(AfraAppContext dbContext, INotificationService notificationService,
+        Altafraner.Typst.Typst typstService)
     {
         _dbContext = dbContext;
         _notificationService = notificationService;
+        _typstService = typstService;
     }
 
     /// <summary>
@@ -526,6 +529,19 @@ public class FreistellungsService
                  """,
                 TimeSpan.FromMinutes(5)
             );
+    }
+
+    /// <summary>
+    ///     Generates a PDF document for the given leave request.
+    /// </summary>
+    public async Task<byte[]> GeneratePdfAsync(Guid antragId)
+    {
+        var antrag = await LoadAntragAsync(antragId);
+        if (antrag is null)
+            throw new KeyNotFoundException("Leave request not found.");
+
+        var dto = new FreistellungsantragDto(antrag);
+        return _typstService.GeneratePdf(Altafraner.Typst.Templates.Freistellung.Antrag, dto);
     }
 
     private static string FormatDateRange(DateTime von, DateTime bis)
