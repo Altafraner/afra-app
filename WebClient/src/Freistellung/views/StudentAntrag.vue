@@ -179,8 +179,6 @@ async function submit() {
                 show-time
                 hour-format="24"
                 show-icon
-                fluid
-                :manual-input="false"
                 date-format="dd.mm.yy"
             />
         </div>
@@ -193,9 +191,8 @@ async function submit() {
                 show-time
                 hour-format="24"
                 show-icon
-                fluid
-                :manual-input="false"
                 date-format="dd.mm.yy"
+                :invalid="bisDateTime < vonDateTime"
             />
         </div>
 
