@@ -8,7 +8,7 @@ import {
     useDialog,
     useToast,
 } from 'primevue';
-import { computed, onUnmounted, ref } from 'vue';
+import { computed, onUnmounted } from 'vue';
 import MoveStudentForm from '@/Otium/components/Supervision/MoveStudentForm.vue';
 import OtiumEnrollmentTable from '@/Otium/components/Management/OtiumEnrollmentTable.vue';
 import { useAttendance } from '@/Otium/composables/attendanceHubClient.js';
@@ -22,7 +22,6 @@ const props = defineProps({
     block: Object,
 });
 
-const inactive = ref(false);
 const toast = useToast();
 const dialog = useDialog();
 const route = props.useQueryBlock ? useRoute() : undefined;
@@ -34,7 +33,6 @@ const useDataFromQuery = computed(
 const blockId = computed(() => (useDataFromQuery.value ? route.query.blockId : props.block.id));
 
 async function setup() {
-    inactive.value = false;
     return useAttendance('block', blockId.value, toast);
 }
 
@@ -114,13 +112,7 @@ function initMoveHere(terminId) {
 </script>
 
 <template>
-    <div v-if="inactive" class="flex justify-center">
-        <span
-            >Aktuell findet kein Otium statt. Der / die Otiumsbeauftragte(n) kann / können
-            Anwesenheiten im Nachhinein in der Verwaltungsansicht des Termins ändern.</span
-        >
-    </div>
-    <accordion v-else lazy>
+    <accordion lazy>
         <accordion-panel v-for="room of attendance" :key="room.terminId" :value="room.terminId">
             <accordion-header>
                 <div
@@ -141,7 +133,7 @@ function initMoveHere(terminId) {
                                         : 'success'
                                     : 'danger'
                             "
-                            class="confirm-button"
+                            class="w-28"
                             size="small"
                             @click="
                                 (evt) =>
@@ -170,8 +162,4 @@ function initMoveHere(terminId) {
     </accordion>
 </template>
 
-<style scoped>
-.confirm-button {
-    width: 7rem;
-}
-</style>
+<style scoped></style>
