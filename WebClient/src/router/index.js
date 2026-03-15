@@ -2,8 +2,21 @@ import { createRouter, createWebHistory } from 'vue-router';
 import Home from '@/views/Home.vue';
 import { routes as otium } from '@/Otium/router/routes.js';
 import { routes as profundum } from '@/Profundum/router/routes.js';
+import LoggedOutHome from '@/views/LoggedOutHome.vue';
 
-const routes = [
+const loggedOutRoutes = [
+    {
+        path: '/',
+        name: 'Home',
+        component: LoggedOutHome,
+    },
+    {
+        path: '/:pathMatch(?!api/)(.*)*',
+        name: 'NotFound',
+        component: LoggedOutHome,
+    },
+];
+const loggedInRoutes = [
     {
         path: '/',
         name: 'Home',
@@ -28,9 +41,32 @@ const routes = [
     },
 ];
 
-const router = createRouter({
-    history: createWebHistory(import.meta.env.BASE_URL),
-    routes,
-});
+export function createAppRouter() {
+    return createRouter({
+        history: createWebHistory(import.meta.env.BASE_URL),
+        routes: loggedOutRoutes,
+    });
+}
 
-export default router;
+function removeRoutes(router, routes) {
+    for (const route of routes) {
+        if (route.name && router.hasRoute(route.name)) {
+            router.removeRoute(route.name);
+        }
+    }
+}
+
+function addRoutes(router, routes) {
+    for (const route of routes) {
+        router.addRoute(route);
+    }
+}
+
+export function registerLoggedInRoutes(router) {
+    addRoutes(router, loggedInRoutes);
+}
+
+export function registerLoggedOutRoutes(router) {
+    removeRoutes(router, loggedInRoutes);
+    addRoutes(router, loggedOutRoutes);
+}

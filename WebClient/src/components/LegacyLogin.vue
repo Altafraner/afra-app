@@ -3,10 +3,10 @@ import { Form } from '@primevue/forms';
 import { Button, Checkbox, FloatLabel, InputText, Password, useToast } from 'primevue';
 import { ref } from 'vue';
 import { mande } from 'mande';
-import { useUser } from '@/stores/user';
+import { useUserManagement } from '@/composables/userManagement.ts';
 
 const loading = ref(false);
-const user = useUser();
+const userManagement = useUserManagement();
 const toast = useToast();
 
 const submit = async (evt) => {
@@ -17,7 +17,7 @@ const submit = async (evt) => {
     if (!(username && password)) return;
     loading.value = true;
     try {
-        const loginRequest = await mande('/api/user/login').post(
+        await mande('/api/user/login').post(
             {
                 username: username,
                 password: password,
@@ -25,7 +25,7 @@ const submit = async (evt) => {
             },
             { responseAs: 'response' },
         );
-        await user.update();
+        await userManagement.updateUser();
     } catch (error) {
         if (error.response.status === 401) {
             toast.add({

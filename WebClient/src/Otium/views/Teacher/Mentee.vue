@@ -6,6 +6,7 @@ import { useUser } from '@/stores/user';
 import StudentOverview from '@/Otium/components/Overview/StudentOverview.vue';
 import { formatStudent } from '@/helpers/formatters';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
+import { useUserManagement } from '@/composables/userManagement.ts';
 
 const props = defineProps({
     studentId: String,
@@ -14,6 +15,7 @@ const props = defineProps({
 const loading = ref(true);
 const mentee = ref(null);
 const user = useUser();
+const userManagement = useUserManagement();
 const toast = useToast();
 const termine = ref(null);
 const all = ref(false);
@@ -44,7 +46,7 @@ async function fetchData(getAll = false) {
         mentee.value = result.mentee;
         all.value = getAll;
     } catch (e) {
-        await user.update();
+        await userManagement.updateUser();
         toast.add({
             severity: 'error',
             summary: 'Fehler',
