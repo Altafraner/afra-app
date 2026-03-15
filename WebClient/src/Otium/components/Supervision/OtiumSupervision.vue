@@ -5,16 +5,19 @@ import {
     AccordionHeader,
     AccordionPanel,
     Button,
+    InputGroup,
+    InputGroupAddon,
     useDialog,
     useToast,
 } from 'primevue';
-import { computed, onUnmounted, ref } from 'vue';
+import { computed, onUnmounted, shallowRef, watch } from 'vue';
 import MoveStudentForm from '@/Otium/components/Supervision/MoveStudentForm.vue';
 import OtiumEnrollmentTable from '@/Otium/components/Management/OtiumEnrollmentTable.vue';
 import { useAttendance } from '@/Otium/composables/attendanceHubClient.js';
 import { useRoute } from 'vue-router';
 import { isNowInInterval } from '@/helpers/time.js';
 import SelectStudentToMoveForm from '@/Otium/components/Supervision/SelectStudentToMoveForm.vue';
+import PersonSelector from '@/components/PersonSelector.vue';
 
 const props = defineProps({
     rooms: Array,
@@ -22,10 +25,12 @@ const props = defineProps({
     block: Object,
 });
 
-const inactive = ref(false);
 const toast = useToast();
 const dialog = useDialog();
 const route = props.useQueryBlock ? useRoute() : undefined;
+
+const filterPerson = shallowRef();
+const accordionValue = shallowRef(null);
 
 const useDataFromQuery = computed(
     () => props.useQueryBlock && route.query.blockId !== undefined,
@@ -34,7 +39,6 @@ const useDataFromQuery = computed(
 const blockId = computed(() => (useDataFromQuery.value ? route.query.blockId : props.block.id));
 
 async function setup() {
-    inactive.value = false;
     return useAttendance('block', blockId.value, toast);
 }
 
@@ -111,24 +115,60 @@ function initMoveHere(terminId) {
         attendanceService.moveStudentNow(data.student, blockId.value, terminId);
     }
 }
+
+const filterActive = computed(() => filterPerson.value != undefined);
+
+const filteredAttendance = computed(() => {
+    if (!filterPerson.value) return attendance.value;
+    return attendance.value
+        .map((a) => {
+            const temp = Object.assign({}, a);
+            temp.einschreibungen = a.einschreibungen?.filter(
+                (e) => e.student.id === filterPerson.value,
+            );
+            return temp;
+        })
+        .filter((a) => a.einschreibungen?.length ?? 0 > 0);
+});
+
+watch(filteredAttendance, (newAttendance) => {
+    if (newAttendance.length === 1) accordionValue.value = newAttendance[0].terminId;
+});
 </script>
 
 <template>
-    <div v-if="inactive" class="flex justify-center">
-        <span
-            >Aktuell findet kein Otium statt. Der / die Otiumsbeauftragte(n) kann / können
-            Anwesenheiten im Nachhinein in der Verwaltungsansicht des Termins ändern.</span
+    <InputGroup class="mb-6">
+        <PersonSelector
+            v-model="filterPerson"
+            :filter="(s) => s.rolle === 'Mittelstufe'"
+            hide-rolle
         >
-    </div>
-    <accordion v-else lazy>
-        <accordion-panel v-for="room of attendance" :key="room.terminId" :value="room.terminId">
+            <template #label>Schüler:in suchen</template>
+        </PersonSelector>
+        <InputGroupAddon>
+            <Button
+                :disabled="filterPerson == undefined"
+                aria-label="Filter entfernen"
+                icon="pi pi-times"
+                severity="secondary"
+                variant="text"
+                @click="filterPerson = undefined"
+            />
+        </InputGroupAddon>
+    </InputGroup>
+    <accordion v-model:value="accordionValue" lazy>
+        <accordion-panel
+            v-for="room of filteredAttendance"
+            :key="room.terminId"
+            :value="room.terminId"
+        >
             <accordion-header>
                 <div
                     class="flex justify-between w-full items-center"
                     style="margin-right: 1rem"
                 >
                     <span class="flex-1"> {{ room.ort }} - {{ room.otium }} </span>
-                    <span class="inline-flex gap-3 items-baseline">
+                    <span v-if="!filterActive" class="inline-flex gap-3 items-baseline">
                         {{ room.einschreibungen.length }} Schüler:innen
                         <Button
                             :label="room.sindAnwesenheitenErfasst ? 'Fertig' : 'Ausstehend'"
@@ -141,7 +181,7 @@ function initMoveHere(terminId) {
                                         : 'success'
                                     : 'danger'
                             "
-                            class="confirm-button"
+                            class="w-28"
                             size="small"
                             @click="
                                 (evt) =>
@@ -160,6 +200,7 @@ function initMoveHere(terminId) {
                     :enrollments="room.einschreibungen"
                     :update-function="updateAttendanceCallback"
                     :block-id="blockId"
+                    :hide-move-here="filterActive"
                     may-edit-attendance
                     show-transfer
                     @initMove="(student) => initMove(student)"
@@ -170,8 +211,4 @@ function initMoveHere(terminId) {
     </accordion>
 </template>
 
-<style scoped>
-.confirm-button {
-    width: 7rem;
-}
-</style>
+<style scoped></style>
