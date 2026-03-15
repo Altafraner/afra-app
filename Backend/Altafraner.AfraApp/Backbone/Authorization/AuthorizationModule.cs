@@ -78,7 +78,25 @@ internal class AuthorizationModule : IModule
 
                     options.Events = new OpenIdConnectEvents
                     {
-                        OnTokenValidated = OidcOnTokenValidated
+                        OnTokenValidated = OidcOnTokenValidated,
+                        OnAccessDenied = context =>
+                        {
+                            var logger = context.HttpContext.RequestServices
+                                .GetRequiredService<ILogger<AuthorizationModule>>();
+                            logger.LogWarning("OIDC Access Denied");
+                            context.Response.Redirect("/oidc/access-denied");
+                            context.HandleResponse();
+                            return Task.CompletedTask;
+                        },
+                        OnRemoteFailure = context =>
+                        {
+                            var logger = context.HttpContext.RequestServices
+                                .GetRequiredService<ILogger<AuthorizationModule>>();
+                            logger.LogWarning("OIDC Unexpected Remote Error: {message}", context.Failure?.Message);
+                            context.Response.Redirect("/oidc/remote-error");
+                            context.HandleResponse();
+                            return Task.CompletedTask;
+                        }
                     };
                 });
 

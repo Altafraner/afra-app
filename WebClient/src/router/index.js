@@ -3,12 +3,29 @@ import Home from '@/views/Home.vue';
 import { routes as otium } from '@/Otium/router/routes.js';
 import { routes as profundum } from '@/Profundum/router/routes.js';
 import LoggedOutHome from '@/views/LoggedOutHome.vue';
+import AccessDenied from '@/views/oidc/AccessDenied.vue';
+import RemoteFailure from '@/views/oidc/RemoteFailure.vue';
 
 const loggedOutRoutes = [
     {
         path: '/',
         name: 'Home',
         component: LoggedOutHome,
+    },
+    {
+        path: '/oidc',
+        children: [
+            {
+                name: 'oidc-access-denied',
+                path: 'access-denied',
+                component: AccessDenied,
+            },
+            {
+                name: 'oidc-error',
+                path: 'remote-error',
+                component: RemoteFailure,
+            },
+        ],
     },
     {
         path: '/:pathMatch(?!api/)(.*)*',
