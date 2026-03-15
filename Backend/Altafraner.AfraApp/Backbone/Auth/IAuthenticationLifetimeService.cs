@@ -1,6 +1,6 @@
 using System.Security.Claims;
 
-namespace Altafraner.Backbone.CookieAuthentication;
+namespace Altafraner.AfraApp.Backbone.Auth;
 
 /// <summary>
 ///     A service handling signing in and out users.

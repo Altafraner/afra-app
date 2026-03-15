@@ -1,5 +1,4 @@
 <script setup>
-import { useUser } from '@/stores/user';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
 import { Button, Column, DataTable, Dialog, Skeleton, useToast } from 'primevue';
 import { ref } from 'vue';
@@ -10,8 +9,9 @@ import { RouterLink } from 'vue-router';
 import OtiumKategorieTag from '@/Otium/components/Shared/OtiumKategorieTag.vue';
 import CreateOtiumForm from '@/Otium/components/Management/CreateOtiumForm.vue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
+import { useUserManagement } from '@/composables/userManagement.ts';
 
-const user = useUser();
+const userManagement = useUserManagement();
 const settings = useOtiumStore();
 const toast = useToast();
 const { openConfirmDialog } = useConfirmPopover();
@@ -76,7 +76,7 @@ async function setup() {
             summary: 'Fehler',
             detail: 'Ein unerwarteter Fehler ist beim Laden der Daten aufgetreten',
         });
-        await user.update();
+        await userManagement.updateUser();
     }
 }
 

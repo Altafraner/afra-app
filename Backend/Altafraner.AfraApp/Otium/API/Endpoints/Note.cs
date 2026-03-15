@@ -24,6 +24,8 @@ internal static class Note
         if (user.Id != request.StudentId && user.Rolle != Rolle.Tutor) return Results.Forbid();
 
         var affected = await userService.GetUserByIdAsync(request.StudentId);
+        if (affected is null)
+            return Results.Unauthorized();
         if (affected.Rolle is not Rolle.Mittelstufe and not Rolle.Oberstufe) return Results.BadRequest();
 
         var success = await service.TryAddNoteAsync(request.Content, request.StudentId, request.BlockId, user.Id);
@@ -40,6 +42,7 @@ internal static class Note
         if (user.Id != request.StudentId && user.Rolle != Rolle.Tutor) return Results.Forbid();
 
         var affected = await userService.GetUserByIdAsync(request.StudentId);
+        if (affected is null) return Results.Unauthorized();
         if (affected.Rolle is not Rolle.Mittelstufe and not Rolle.Oberstufe)
             return Results.BadRequest("The person represented by studentId is not a student.");
 

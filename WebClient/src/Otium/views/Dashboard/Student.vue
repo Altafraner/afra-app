@@ -4,9 +4,11 @@ import { ref } from 'vue';
 import { mande } from 'mande';
 import { useUser } from '@/stores/user';
 import StudentOverview from '@/Otium/components/Overview/StudentOverview.vue';
+import { useUserManagement } from '@/composables/userManagement.ts';
 
 const loading = ref(true);
 const user = useUser();
+const userManagement = useUserManagement();
 const toast = useToast();
 const termine = ref(null);
 const all = ref(false);
@@ -18,7 +20,7 @@ async function fetchData(getAll = false) {
         termine.value = await (getAll ? dataGetter.get('all') : dataGetter.get());
         all.value = getAll;
     } catch (e) {
-        await user.update();
+        await userManagement.updateUser();
         toast.add({
             severity: 'error',
             summary: 'Fehler',

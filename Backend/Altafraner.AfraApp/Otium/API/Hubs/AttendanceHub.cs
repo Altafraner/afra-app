@@ -313,6 +313,7 @@ internal partial class AttendanceHub : Hub<IAttendanceHubClient>
         try
         {
             var student = await userService.GetUserByIdAsync(studentId);
+            if (student is null) throw new HubException("User not found");
             await enrollmentService.ForceMoveNow(studentId, fromData?.Termin.Id ?? Guid.Empty, toTerminId);
             if (student.Rolle == Rolle.Mittelstufe)
             {
@@ -386,6 +387,8 @@ internal partial class AttendanceHub : Hub<IAttendanceHubClient>
         try
         {
             var student = await userService.GetUserByIdAsync(studentId);
+            if (student is null)
+                throw new HubException("Unauthorized");
             var (fromTerminId, blockId) = await enrollmentService.ForceMove(studentId, toTerminId);
             if (student.Rolle == Rolle.Mittelstufe)
             {
@@ -428,6 +431,7 @@ internal partial class AttendanceHub : Hub<IAttendanceHubClient>
             throw new HubException("You do not have permission to unenroll students in this block.");
 
         var student = await userService.GetUserByIdAsync(studentId);
+        if (student is null) throw new HubException("Unauthorized");
         await enrollmentService.UnenrollAsync(termin.Id, student, true);
         if (student.Rolle == Rolle.Mittelstufe)
         {

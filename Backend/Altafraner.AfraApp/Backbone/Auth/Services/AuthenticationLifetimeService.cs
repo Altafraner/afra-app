@@ -1,8 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Http;
 
-namespace Altafraner.Backbone.CookieAuthentication.Services;
+namespace Altafraner.AfraApp.Backbone.Auth.Services;
 
 internal class AuthenticationLifetimeService : IAuthenticationLifetimeService
 {

@@ -5,9 +5,11 @@ import { ref } from 'vue';
 import { mande } from 'mande';
 import { useUser } from '@/stores/user';
 import AuslastungsTag from '@/Otium/components/Shared/AuslastungsTag.vue';
+import { useUserManagement } from '@/composables/userManagement.ts';
 
 const toast = useToast();
 const user = useUser();
+const userManagement = useUserManagement();
 const termine = ref([]);
 const mentees = ref([]);
 const loading = ref(true);
@@ -44,7 +46,7 @@ async function update() {
             summary: 'Fehler',
             detail: 'Ein unerwarteter Fehler ist beim Laden der Daten aufgetreten',
         });
-        await user.update();
+        await userManagement.updateUser();
     } finally {
         loading.value = false;
     }

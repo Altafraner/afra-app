@@ -1,5 +1,5 @@
 using System.Net.Mime;
-using Altafraner.AfraApp.Backbone.Authorization;
+using Altafraner.AfraApp.Backbone.Auth;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Services;
 using Altafraner.AfraApp.User.Services;
@@ -51,6 +51,8 @@ public static class Bewertung
                     DateOnly ausgabedatum) =>
             {
                 var user = await userService.GetUserByIdAsync(userId);
+                if (user is null)
+                    return (Results<UnauthorizedHttpResult, FileContentHttpResult>)TypedResults.Unauthorized();
                 var fileContents =
                     await profundumManagementService.GenerateFileForPerson(user, schuljahr, halbjahr, ausgabedatum);
                 return TypedResults.File(fileContents, MediaTypeNames.Application.Pdf);

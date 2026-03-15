@@ -8,6 +8,7 @@ import wappenDark from '/vdaa/favicon-dark.svg?url';
 import { useUser } from '@/stores/user';
 import { useRouter } from 'vue-router';
 import { isDark } from '@/helpers/isdark';
+import { useUserManagement } from '@/composables/userManagement';
 
 type GlobalPermissions = 'Otiumsverantwortlich' | 'Profundumsverantwortlich' | 'Admin';
 type Role = 'Tutor' | 'Oberstufe' | 'Mittelstufe';
@@ -153,11 +154,11 @@ const all_items: MenuItemWithCondition[] = [
 const toast = useToast();
 const router = useRouter();
 const user = useUser();
+const userManagement = useUserManagement();
 
 const logout = async () => {
-    const user = useUser();
     try {
-        await user.logout();
+        await userManagement.logout();
         await router.push('/');
         toast.add({
             severity: 'success',

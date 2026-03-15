@@ -10,6 +10,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
 import { formatDate } from '@/helpers/formatters';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
+import { useUserManagement } from '@/composables/userManagement.ts';
 
 const props = defineProps({
     datum: {
@@ -30,6 +31,7 @@ const settings = useOtiumStore();
 
 const loading = ref(true);
 const user = useUser();
+const userManagement = useUserManagement();
 const datesAvailable = ref([]);
 const dateDefault = ref(null);
 const kategorieOptionsTree = ref();
@@ -102,7 +104,7 @@ async function startup() {
             summary: 'Fehler',
             detail: 'Ein unerwarteter Fehler ist beim Laden der Daten aufgetreten',
         });
-        await user.update();
+        await userManagement.updateUser();
     }
     loading.value = false;
 }
