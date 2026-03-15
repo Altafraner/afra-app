@@ -14,6 +14,7 @@ const props = defineProps({
     showTransfer: Boolean,
     showRemove: Boolean,
     blockId: String,
+    hideMoveHere: Boolean,
 });
 
 const emit = defineEmits(['initMove', 'initMoveHere', 'remove']);
@@ -111,7 +112,7 @@ function openMoveHere() {
                 </span>
             </template>
         </Column>
-        <template v-if="mayEditAttendance && showTransfer" #footer>
+        <template v-if="mayEditAttendance && showTransfer && !hideMoveHere" #footer>
             <Button
                 icon="pi pi-plus"
                 label="Schüler:in hinzufügen"
