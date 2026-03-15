@@ -1,8 +1,7 @@
 using System.Security.Claims;
-using Altafraner.AfraApp.Backbone.Authorization;
+using Altafraner.AfraApp.Backbone.Auth;
 using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.AfraApp.User.Services.LDAP;
-using Altafraner.Backbone.CookieAuthentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;

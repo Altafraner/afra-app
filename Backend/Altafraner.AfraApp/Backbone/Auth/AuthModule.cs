@@ -5,7 +5,6 @@ using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.AfraApp.User.Services;
 using Altafraner.AfraApp.User.Services.LDAP;
 using Altafraner.Backbone.Abstractions;
-using Altafraner.Backbone.CookieAuthentication;
 using Altafraner.Backbone.Defaults;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -13,13 +12,13 @@ using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
-namespace Altafraner.AfraApp.Backbone.Authorization;
+namespace Altafraner.AfraApp.Backbone.Auth;
 
 /// <summary>
 /// A module for handling simple authorization cases
 /// </summary>
 [DependsOn<ReverseProxyHandlerModule>]
-internal class AuthorizationModule : IModule
+internal class AuthModule : IModule
 {
     public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
     {
@@ -82,7 +81,7 @@ internal class AuthorizationModule : IModule
                         OnAccessDenied = context =>
                         {
                             var logger = context.HttpContext.RequestServices
-                                .GetRequiredService<ILogger<AuthorizationModule>>();
+                                .GetRequiredService<ILogger<AuthModule>>();
                             logger.LogWarning("OIDC Access Denied");
                             context.Response.Redirect("/oidc/access-denied");
                             context.HandleResponse();
@@ -91,7 +90,7 @@ internal class AuthorizationModule : IModule
                         OnRemoteFailure = context =>
                         {
                             var logger = context.HttpContext.RequestServices
-                                .GetRequiredService<ILogger<AuthorizationModule>>();
+                                .GetRequiredService<ILogger<AuthModule>>();
                             logger.LogWarning("OIDC Unexpected Remote Error: {message}", context.Failure?.Message);
                             context.Response.Redirect("/oidc/remote-error");
                             context.HandleResponse();

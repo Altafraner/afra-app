@@ -1,6 +1,4 @@
-using Microsoft.AspNetCore.Http;
-
-namespace Altafraner.Backbone.CookieAuthentication;
+namespace Altafraner.AfraApp.Domain.Configuration;
 
 /// <summary>
 ///     Settings for handling cookie authentication
