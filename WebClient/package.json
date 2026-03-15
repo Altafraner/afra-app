@@ -13,11 +13,16 @@
         "format": "prettier --write src/"
     },
     "dependencies": {
+        "@fullcalendar/core": "^6.1.20",
+        "@fullcalendar/icalendar": "^6.1.20",
+        "@fullcalendar/timegrid": "^6.1.20",
+        "@fullcalendar/vue3": "^6.1.20",
         "@microsoft/signalr": "^10.0.0",
         "@primevue/forms": "^4.5.1",
         "@primevue/themes": "^4.5.1",
         "@tailwindcss/vite": "^4.2.1",
         "dompurify": "^3.3.2",
+        "fullcalendar": "^6.1.20",
         "mande": "^2.0.9",
         "marked": "^17.0.4",
         "pinia": "^3.0.1",
