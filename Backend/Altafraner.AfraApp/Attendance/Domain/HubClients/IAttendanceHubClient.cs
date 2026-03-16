@@ -1,12 +1,11 @@
-using Altafraner.AfraApp.Otium.API.Hubs;
+using Altafraner.AfraApp.Attendance.Domain.Dto.Notiz;
+using Altafraner.AfraApp.Attendance.Domain.Models;
 using Altafraner.AfraApp.Otium.Domain.DTO;
-using Altafraner.AfraApp.Otium.Domain.DTO.Notiz;
-using Altafraner.AfraApp.Otium.Domain.Models;
 
-namespace Altafraner.AfraApp.Otium.Domain.HubClients;
+namespace Altafraner.AfraApp.Attendance.Domain.HubClients;
 
 /// <summary>
-/// Represents the client interface for the <see cref="AttendanceHub"/>.
+/// Represents the client interface for the <see cref="API.Hubs.AttendanceHub"/>.
 /// </summary>
 public interface IAttendanceHubClient
 {

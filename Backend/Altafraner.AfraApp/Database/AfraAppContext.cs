@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Altafraner.AfraApp.Attendance.Domain.Models;
 using Altafraner.AfraApp.Calendar.Domain.Models;
 using Altafraner.AfraApp.Otium.Domain.Models;
 using Altafraner.AfraApp.Profundum.Domain.Models;

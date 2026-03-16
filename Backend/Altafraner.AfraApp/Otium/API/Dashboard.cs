@@ -3,7 +3,7 @@ using Altafraner.AfraApp.Otium.Services;
 using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.AfraApp.User.Services;
 
-namespace Altafraner.AfraApp.Otium.API.Endpoints;
+namespace Altafraner.AfraApp.Otium.API;
 
 /// <summary>
 ///     A class containing the endpoints for the dashboard.

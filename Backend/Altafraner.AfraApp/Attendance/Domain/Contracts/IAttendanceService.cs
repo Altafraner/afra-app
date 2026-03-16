@@ -1,9 +1,10 @@
 using System.Security.Claims;
+using Altafraner.AfraApp.Attendance.Domain.Models;
 using Altafraner.AfraApp.Otium.Domain.Models;
 using Altafraner.AfraApp.Schuljahr.Domain.Models;
 using Altafraner.AfraApp.User.Domain.Models;
 
-namespace Altafraner.AfraApp.Otium.Domain.Contracts.Services;
+namespace Altafraner.AfraApp.Attendance.Domain.Contracts;
 
 /// <summary>
 ///     A service interface for managing attendance in the Otium module

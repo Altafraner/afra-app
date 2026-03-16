@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using Altafraner.AfraApp.Attendance.Domain.Contracts;
 using Altafraner.AfraApp.Backbone.Authorization;
-using Altafraner.AfraApp.Otium.Domain.Contracts.Services;
 using Altafraner.AfraApp.Otium.Domain.DTO;
 using Altafraner.AfraApp.Otium.Domain.Models;
 using Altafraner.AfraApp.Otium.Services;
@@ -8,7 +8,7 @@ using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.AfraApp.User.Services;
 using Microsoft.EntityFrameworkCore;
 
-namespace Altafraner.AfraApp.Otium.API.Endpoints;
+namespace Altafraner.AfraApp.Otium.API;
 
 /// <summary>
 ///     A class containing the endpoints for the management of otia.

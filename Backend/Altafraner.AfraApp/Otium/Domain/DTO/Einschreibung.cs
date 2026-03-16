@@ -1,4 +1,4 @@
-using Altafraner.AfraApp.Otium.Domain.Models;
+using Altafraner.AfraApp.Attendance.Domain.Models;
 
 namespace Altafraner.AfraApp.Otium.Domain.DTO;
 

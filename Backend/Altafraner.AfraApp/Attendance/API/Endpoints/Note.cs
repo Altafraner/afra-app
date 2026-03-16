@@ -1,10 +1,10 @@
-using Altafraner.AfraApp.Otium.Domain.DTO.Notiz;
-using Altafraner.AfraApp.Otium.Domain.Models;
-using Altafraner.AfraApp.Otium.Services;
+using Altafraner.AfraApp.Attendance.Domain.Dto.Notiz;
+using Altafraner.AfraApp.Attendance.Domain.Models;
+using Altafraner.AfraApp.Attendance.Services;
 using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.AfraApp.User.Services;
 
-namespace Altafraner.AfraApp.Otium.API.Endpoints;
+namespace Altafraner.AfraApp.Attendance.API.Endpoints;
 
 internal static class Note
 {

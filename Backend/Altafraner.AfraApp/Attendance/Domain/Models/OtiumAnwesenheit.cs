@@ -1,7 +1,7 @@
 using Altafraner.AfraApp.Schuljahr.Domain.Models;
 using Altafraner.AfraApp.User.Domain.Models;
 
-namespace Altafraner.AfraApp.Otium.Domain.Models;
+namespace Altafraner.AfraApp.Attendance.Domain.Models;
 
 /// <summary>
 /// Represents a DB entry with attendance information

@@ -1,8 +1,8 @@
 using System.Text;
 using System.Web;
+using Altafraner.AfraApp.Attendance.Domain.Contracts;
+using Altafraner.AfraApp.Attendance.Domain.Models;
 using Altafraner.AfraApp.Backbone.EmergencyBackup.Services.Contracts;
-using Altafraner.AfraApp.Otium.Domain.Contracts.Services;
-using Altafraner.AfraApp.Otium.Domain.Models;
 using Altafraner.AfraApp.Otium.Services;
 using Altafraner.AfraApp.Schuljahr.Services;
 using Altafraner.AfraApp.User.Domain.Models;

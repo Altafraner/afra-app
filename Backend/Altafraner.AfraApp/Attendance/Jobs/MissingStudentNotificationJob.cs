@@ -1,8 +1,7 @@
-using Altafraner.AfraApp.Otium.API.Hubs;
+using Altafraner.AfraApp.Attendance.Domain.Contracts;
+using Altafraner.AfraApp.Attendance.Domain.HubClients;
+using Altafraner.AfraApp.Attendance.Domain.Models;
 using Altafraner.AfraApp.Otium.Configuration;
-using Altafraner.AfraApp.Otium.Domain.Contracts.Services;
-using Altafraner.AfraApp.Otium.Domain.HubClients;
-using Altafraner.AfraApp.Otium.Domain.Models;
 using Altafraner.AfraApp.Otium.Services;
 using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.Backbone.EmailOutbox;
@@ -10,8 +9,9 @@ using Altafraner.Backbone.Scheduling;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Options;
 using Quartz;
+using AttendanceHub = Altafraner.AfraApp.Attendance.API.Hubs.AttendanceHub;
 
-namespace Altafraner.AfraApp.Otium.Jobs;
+namespace Altafraner.AfraApp.Attendance.Jobs;
 
 /// <summary>
 ///     Sends a notification to a list of recipients about missing students in a block.

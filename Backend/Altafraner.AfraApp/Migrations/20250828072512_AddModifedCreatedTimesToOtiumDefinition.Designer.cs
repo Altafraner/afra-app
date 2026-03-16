@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using Altafraner.AfraApp;
+using Altafraner.AfraApp.Attendance.Domain.Models;
 using Altafraner.AfraApp.Otium.Domain.Models;
 using Altafraner.AfraApp.Schuljahr.Domain.Models;
 using Altafraner.AfraApp.User.Domain.Models;

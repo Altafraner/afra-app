@@ -4,7 +4,7 @@ using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.Backbone.Utils;
 using Microsoft.EntityFrameworkCore;
 
-namespace Altafraner.AfraApp.Otium.Domain.Models;
+namespace Altafraner.AfraApp.Attendance.Domain.Models;
 
 /// <summary>
 ///     A note that can be attached to an enrollment

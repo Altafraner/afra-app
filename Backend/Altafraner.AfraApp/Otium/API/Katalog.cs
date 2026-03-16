@@ -3,7 +3,7 @@ using Altafraner.AfraApp.Otium.Services;
 using Altafraner.AfraApp.User.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Altafraner.AfraApp.Otium.API.Endpoints;
+namespace Altafraner.AfraApp.Otium.API;
 
 /// <summary>
 ///     Contains endpoints for managing kategories.

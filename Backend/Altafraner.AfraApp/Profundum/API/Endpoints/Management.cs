@@ -1,7 +1,7 @@
 using System.Net.Mime;
 using System.Text;
 using Altafraner.AfraApp.Backbone.Authorization;
-using Altafraner.AfraApp.Otium.API.Endpoints;
+using Altafraner.AfraApp.Otium.API;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.Profundum.Services;

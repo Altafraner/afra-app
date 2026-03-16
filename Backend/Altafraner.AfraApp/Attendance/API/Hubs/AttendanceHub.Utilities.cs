@@ -1,12 +1,12 @@
+using Altafraner.AfraApp.Attendance.Domain.Dto.Notiz;
+using Altafraner.AfraApp.Attendance.Domain.HubClients;
+using Altafraner.AfraApp.Attendance.Domain.Models;
 using Altafraner.AfraApp.Otium.Domain.DTO;
-using Altafraner.AfraApp.Otium.Domain.DTO.Notiz;
-using Altafraner.AfraApp.Otium.Domain.HubClients;
-using Altafraner.AfraApp.Otium.Domain.Models;
 using Altafraner.AfraApp.Schuljahr.Domain.Models;
 using Altafraner.AfraApp.User.Domain.DTO;
 using Person = Altafraner.AfraApp.User.Domain.Models.Person;
 
-namespace Altafraner.AfraApp.Otium.API.Hubs;
+namespace Altafraner.AfraApp.Attendance.API.Hubs;
 
 internal partial class AttendanceHub
 {

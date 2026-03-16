@@ -1,10 +1,11 @@
-using Altafraner.AfraApp.Otium.API.Hubs;
-using Altafraner.AfraApp.Otium.Domain.DTO.Notiz;
-using Altafraner.AfraApp.Otium.Domain.HubClients;
-using Altafraner.AfraApp.Otium.Domain.Models;
+using Altafraner.AfraApp.Attendance.Domain.Dto.Notiz;
+using Altafraner.AfraApp.Attendance.Domain.HubClients;
+using Altafraner.AfraApp.Attendance.Domain.Models;
+using Altafraner.AfraApp.Otium.Services;
 using Microsoft.AspNetCore.SignalR;
+using AttendanceHub = Altafraner.AfraApp.Attendance.API.Hubs.AttendanceHub;
 
-namespace Altafraner.AfraApp.Otium.Services;
+namespace Altafraner.AfraApp.Attendance.Services;
 
 internal sealed class AttendanceRealtimeService
 {

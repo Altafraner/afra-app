@@ -1,8 +1,10 @@
-using Altafraner.AfraApp.Otium.Domain.Contracts.Services;
+using Altafraner.AfraApp.Attendance.Domain.Contracts;
+using Altafraner.AfraApp.Attendance.Domain.HubClients;
+using Altafraner.AfraApp.Attendance.Domain.Models;
+using Altafraner.AfraApp.Attendance.Jobs;
+using Altafraner.AfraApp.Attendance.Services;
 using Altafraner.AfraApp.Otium.Domain.DTO;
-using Altafraner.AfraApp.Otium.Domain.HubClients;
 using Altafraner.AfraApp.Otium.Domain.Models;
-using Altafraner.AfraApp.Otium.Jobs;
 using Altafraner.AfraApp.Otium.Services;
 using Altafraner.AfraApp.Schuljahr.Domain.Models;
 using Altafraner.AfraApp.User.Domain.DTO;
@@ -12,7 +14,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Quartz;
 
-namespace Altafraner.AfraApp.Otium.API.Hubs;
+namespace Altafraner.AfraApp.Attendance.API.Hubs;
 
 /// <summary>
 ///     A hub for managing attendance updates in the Otium application.
@@ -41,7 +43,7 @@ internal partial class AttendanceHub : Hub<IAttendanceHubClient>
     /// <summary>
     ///     Subscribes a user to get updates for a specific termin.
     /// </summary>
-    /// <param name="terminId">The <see cref="Guid" /> of the <see cref="Domain.Models.OtiumTermin" /> to subscribe to.</param>
+    /// <param name="terminId">The <see cref="Guid" /> of the <see cref="OtiumTermin" /> to subscribe to.</param>
     /// <param name="managementService">From DI</param>
     public async Task SubscribeToTermin(Guid terminId, ManagementService managementService)
     {
@@ -62,7 +64,7 @@ internal partial class AttendanceHub : Hub<IAttendanceHubClient>
     /// <summary>
     ///     Unsubscribes a user from updates for a specific termin.
     /// </summary>
-    /// <param name="terminId">The <see cref="Guid" /> of the <see cref="Domain.Models.OtiumTermin" /> to unsubscribe from.</param>
+    /// <param name="terminId">The <see cref="Guid" /> of the <see cref="OtiumTermin" /> to unsubscribe from.</param>
     public Task UnsubscribeFromTermin(Guid terminId)
     {
         return Groups.RemoveFromGroupAsync(Context.ConnectionId, TerminGroupName(terminId));
@@ -165,7 +167,7 @@ internal partial class AttendanceHub : Hub<IAttendanceHubClient>
     /// <summary>
     ///     Set the attendance status for a specific termin for a specific student.
     /// </summary>
-    /// <param name="terminId">The id of the <see cref="Domain.Models.OtiumTermin" /></param>
+    /// <param name="terminId">The id of the <see cref="OtiumTermin" /></param>
     /// <param name="studentId">The id of the students <see cref="User.Domain.Models.Person" /> entity</param>
     /// <param name="status">The new status</param>
     /// <param name="dbContext">Injected from DI-Container</param>

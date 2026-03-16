@@ -2,7 +2,7 @@ namespace Altafraner.Backbone.Abstractions;
 
 /// <inheritdoc />
 /// <typeparam name="T">The module that is depended upon</typeparam>
-public class DependsOnAttribute<T>() : DependsOnAttribute(typeof(T));
+public class DependsOnAttribute<T>() : DependsOnAttribute(typeof(T)) where T : IModule;
 
 /// <summary>
 ///     Specifies that a module depends on another module

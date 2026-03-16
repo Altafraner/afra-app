@@ -1,7 +1,7 @@
+using Altafraner.AfraApp.Attendance;
+using Altafraner.AfraApp.Otium.API;
 using Altafraner.AfraApp.Backbone.Authorization;
 using Altafraner.AfraApp.Calendar;
-using Altafraner.AfraApp.Otium.API.Endpoints;
-using Altafraner.AfraApp.Otium.API.Hubs;
 using Altafraner.AfraApp.Otium.Configuration;
 using Altafraner.AfraApp.Otium.Domain.Contracts.Rules;
 using Altafraner.AfraApp.Otium.Domain.Contracts.Services;
@@ -17,6 +17,7 @@ namespace Altafraner.AfraApp.Otium;
 /// </summary>
 [DependsOn<UserModule>]
 [DependsOn<DatabaseModule>]
+[DependsOn<AttendanceModule>]
 public class OtiumModule : IModule
 {
     /// <inheritdoc />
@@ -32,9 +33,6 @@ public class OtiumModule : IModule
         services.AddScoped<OtiumEndpointService>();
         services.AddScoped<EnrollmentService>();
         services.AddScoped<ManagementService>();
-        services.AddScoped<IAttendanceService, AttendanceService>();
-        services.AddScoped<AttendanceRealtimeService>();
-        services.AddScoped<NotesService>();
 
         services.AddScoped<ICalendarProvider, OtiumCalendarProvider>();
 
@@ -54,9 +52,6 @@ public class OtiumModule : IModule
         group.MapKatalogEndpoints();
         group.MapDashboardEndpoints();
         group.MapManagementEndpoints();
-        group.MapNoteEndpoints();
-        group.MapHub<AttendanceHub>("/attendance")
-            .RequireAuthorization(AuthorizationPolicies.TutorOnly);
     }
 
     private static void AddRules(IServiceCollection services)

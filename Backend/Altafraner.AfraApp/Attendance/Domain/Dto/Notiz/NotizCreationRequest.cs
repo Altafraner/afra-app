@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Altafraner.AfraApp.Otium.Domain.DTO.Notiz;
+namespace Altafraner.AfraApp.Attendance.Domain.Dto.Notiz;
 
 /// <summary>
 ///     A request to create a new note

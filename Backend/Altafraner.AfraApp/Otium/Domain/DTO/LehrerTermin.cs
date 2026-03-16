@@ -1,4 +1,5 @@
-using Altafraner.AfraApp.Otium.Domain.Models;
+using Altafraner.AfraApp.Attendance.Domain.Dto.Notiz;
+using Altafraner.AfraApp.Attendance.Domain.Models;
 using Altafraner.AfraApp.Otium.Domain.Models.TimeInterval;
 using Altafraner.AfraApp.User.Domain.DTO;
 
@@ -90,4 +91,4 @@ public record LehrerTermin : ITermin
 public record LehrerEinschreibung(
     PersonInfoMinimal? Student,
     OtiumAnwesenheitsStatus Anwesenheit,
-    IEnumerable<Notiz.Notiz> Notizen);
+    IEnumerable<Notiz> Notizen);

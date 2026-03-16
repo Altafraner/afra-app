@@ -1,8 +1,8 @@
 using System.Diagnostics.CodeAnalysis;
-using Altafraner.AfraApp.Otium.Domain.Models;
+using Altafraner.AfraApp.Attendance.Domain.Models;
 using Altafraner.AfraApp.User.Domain.DTO;
 
-namespace Altafraner.AfraApp.Otium.Domain.DTO.Notiz;
+namespace Altafraner.AfraApp.Attendance.Domain.Dto.Notiz;
 
 /// <summary>
 ///     A DTO representing an attendance note

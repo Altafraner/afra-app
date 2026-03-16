@@ -1,13 +1,15 @@
 using System.Security.Claims;
+using Altafraner.AfraApp.Attendance.Domain.Contracts;
+using Altafraner.AfraApp.Attendance.Domain.Models;
 using Altafraner.AfraApp.Backbone.Authorization;
-using Altafraner.AfraApp.Otium.Domain.Contracts.Services;
 using Altafraner.AfraApp.Otium.Domain.Models;
 using Altafraner.AfraApp.Otium.Domain.Models.TimeInterval;
+using Altafraner.AfraApp.Otium.Services;
 using Altafraner.AfraApp.Schuljahr.Domain.Models;
 using Altafraner.AfraApp.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace Altafraner.AfraApp.Otium.Services;
+namespace Altafraner.AfraApp.Attendance.Services;
 
 /// <summary>
 /// A service for managing attendance in the Otium module of the Afra App.

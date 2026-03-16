@@ -1,7 +1,7 @@
-using Altafraner.AfraApp.Otium.Domain.Models;
+using Altafraner.AfraApp.Attendance.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace Altafraner.AfraApp.Otium.Services;
+namespace Altafraner.AfraApp.Attendance.Services;
 
 internal sealed class NotesService
 {
