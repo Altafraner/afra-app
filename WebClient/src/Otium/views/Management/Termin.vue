@@ -23,6 +23,7 @@ import MoveStudentForm from '@/Otium/components/Supervision/MoveStudentForm.vue'
 import { useConfirmPopover } from '@/composables/confirmPopover';
 import { isNowInInterval } from '@/helpers/time.js';
 import SelectStudentToMoveForm from '@/Otium/components/Supervision/SelectStudentToMoveForm.vue';
+import { useUserManagement } from '@/composables/userManagement.ts';
 
 const props = defineProps({
     terminId: String,
@@ -30,6 +31,7 @@ const props = defineProps({
 
 const loading = ref(true);
 const user = useUser();
+const userManagement = useUserManagement();
 const toast = useToast();
 const dialog = useDialog();
 const { openConfirmDialog } = useConfirmPopover();
@@ -95,7 +97,7 @@ async function fetchData() {
     try {
         otium.value = await dataGetter.get();
     } catch (e) {
-        await user.update();
+        await userManagement.updateUser();
         toast.add({
             severity: 'error',
             summary: 'Fehler',

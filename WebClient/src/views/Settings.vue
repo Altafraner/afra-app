@@ -4,9 +4,11 @@ import { ref } from 'vue';
 import { mande } from 'mande';
 import { useUser } from '@/stores/user';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
+import { useUserManagement } from '@/composables/userManagement.ts';
 
 const loading = ref(false);
 const user = useUser();
+const userManagement = useUserManagement();
 const toast = useToast();
 const calLink = ref(null);
 
@@ -18,7 +20,7 @@ async function fetchNum() {
     try {
         numSubs.value = await endpoint.get();
     } catch (e) {
-        await user.update();
+        await userManagement.updateUser();
         toast.add({
             severity: 'error',
             summary: 'Fehler',
@@ -36,7 +38,7 @@ async function fetchKey() {
     try {
         calLink.value = await endpoint.get();
     } catch (e) {
-        await user.update();
+        await userManagement.updateUser();
         toast.add({
             severity: 'error',
             summary: 'Fehler',
@@ -62,7 +64,7 @@ async function deleteKeys() {
             life: 2000,
         });
     } catch (e) {
-        await user.update();
+        await userManagement.updateUser();
         toast.add({
             severity: 'error',
             summary: 'Fehler',

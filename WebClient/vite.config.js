@@ -55,8 +55,11 @@ export default defineConfig({
         proxy: {
             '/api': {
                 target: 'http://127.0.0.1:5043',
-                changeOrigin: true,
+                changeOrigin: false,
                 ws: true,
+                xfwd: true,
+                hostRewrite: true,
+                cookieDomainRewrite: 'localhost:5173',
             },
         },
     },

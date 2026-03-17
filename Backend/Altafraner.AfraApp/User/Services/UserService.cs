@@ -1,7 +1,5 @@
-using Altafraner.AfraApp.User.Configuration.LDAP;
 using Altafraner.AfraApp.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 namespace Altafraner.AfraApp.User.Services;
 
@@ -11,32 +9,33 @@ namespace Altafraner.AfraApp.User.Services;
 public class UserService
 {
     private readonly AfraAppContext _dbContext;
-    private readonly LdapConfiguration _ldapConfiguration;
 
     /// <summary>
     ///     Called by DI
     /// </summary>
-    public UserService(AfraAppContext dbContext, IOptions<LdapConfiguration> ldapConfiguration)
+    public UserService(AfraAppContext dbContext)
     {
         _dbContext = dbContext;
-        _ldapConfiguration = ldapConfiguration.Value;
     }
 
     /// <summary>
     ///     Gets a user by their ID.
     /// </summary>
     /// <returns>The users Person entity</returns>
-    public async Task<Person> GetUserByIdAsync(Guid userId)
+    public async Task<Person?> GetUserByIdAsync(Guid userId)
     {
-        try
-        {
-            return await _dbContext.Personen
-                .FirstAsync(p => p.Id == userId);
-        }
-        catch (InvalidOperationException)
-        {
-            throw new KeyNotFoundException("User not found.");
-        }
+        return await _dbContext.Personen
+            .FirstOrDefaultAsync(p => p.Id == userId);
+    }
+
+    /// <summary>
+    ///     Gets a user by their LDAP ID.
+    /// </summary>
+    /// <returns>The users Person entity</returns>
+    public async Task<Person?> GetUserByLdapIdAsync(Guid ldapId)
+    {
+        return await _dbContext.Personen
+            .FirstOrDefaultAsync(p => p.LdapObjectId == ldapId);
     }
 
     /// <summary>

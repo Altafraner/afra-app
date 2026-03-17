@@ -1,4 +1,4 @@
-using Altafraner.AfraApp.Backbone.Authorization;
+using Altafraner.AfraApp.Backbone.Auth;
 using Altafraner.AfraApp.User.Domain.DTO;
 using Altafraner.AfraApp.User.Services;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -43,6 +43,8 @@ public static class People
         try
         {
             var student = await userService.GetUserByIdAsync(id);
+            if (student is null)
+                return Results.Unauthorized();
             var mentors = await userService.GetMentorsAsync(student);
             return Results.Ok(mentors.Select(s => new PersonInfoMinimal(s)));
         }

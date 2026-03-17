@@ -12,9 +12,11 @@ import SimpleBreadcrumb from '@/components/SimpleBreadcrumb.vue';
 import MultipleEnrollmentForm from '@/Otium/components/Katalog/Forms/MultipleEnrollmentForm.vue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
 import Notes from '@/Otium/components/Notes/Notes.vue';
+import { useUserManagement } from '@/composables/userManagement.ts';
 
 const settings = useOtiumStore();
 const user = useUser();
+const userManagement = useUserManagement();
 const { openConfirmDialog } = useConfirmPopover();
 const toast = useToast();
 const router = useRouter();
@@ -40,7 +42,7 @@ async function loadTermin() {
             detail: 'Es ist ein Fehler beim Laden aufgetreten.',
         });
         await router.push('/katalog');
-        await user.update();
+        await userManagement.updateUser();
     }
 }
 

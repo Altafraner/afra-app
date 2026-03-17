@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using Altafraner.AfraApp.Backbone.Authorization;
+using Altafraner.AfraApp.Backbone.Auth;
 using Altafraner.AfraApp.Otium.Domain.Contracts.Services;
 using Altafraner.AfraApp.Otium.Domain.DTO;
 using Altafraner.AfraApp.Otium.Domain.Models;
@@ -619,6 +619,7 @@ public static class Management
             return Results.BadRequest("Der Block ist bereits abgeschlossen oder läuft.");
 
         var student = await userService.GetUserByIdAsync(personIdWrapper.Value);
+        if (student is null) return Results.Unauthorized();
         await enrollmentService.UnenrollAsync(otiumTerminId, student, true);
         return Results.Ok();
     }

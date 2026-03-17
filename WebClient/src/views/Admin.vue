@@ -4,11 +4,12 @@ import { useOtiumStore } from '@/Otium/stores/otium.js';
 import { computed } from 'vue';
 import { formatTutor } from '@/helpers/formatters';
 import { Button } from 'primevue';
-import { mande } from 'mande';
 import { useRouter } from 'vue-router';
 import UserPeek from '@/components/UserPeek.vue';
+import { useUserManagement } from '@/composables/userManagement.ts';
 
 const user = useUser();
+const userManagement = useUserManagement();
 const otium = useOtiumStore();
 const router = useRouter();
 
@@ -58,9 +59,7 @@ const personen = computed(() => {
 });
 
 const impersonate = async (userToImpersonate) => {
-    console.log(userToImpersonate);
-    await mande(`/api/user/${userToImpersonate.id}/impersonate`).get();
-    await user.update();
+    await userManagement.impersonateUser(userToImpersonate.id);
     await router.push('/');
 };
 </script>

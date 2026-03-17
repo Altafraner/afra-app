@@ -1,4 +1,4 @@
-using Altafraner.AfraApp.Backbone.Authorization;
+using Altafraner.AfraApp.Backbone.Auth;
 using Altafraner.AfraApp.Otium.Services;
 using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.AfraApp.User.Services;
@@ -48,15 +48,9 @@ public static class Dashboard
         Guid studentId,
         bool all = false)
     {
-        Person student;
-        try
-        {
-            student = await userService.GetUserByIdAsync(studentId);
-        }
-        catch (KeyNotFoundException)
-        {
+        var student = await userService.GetUserByIdAsync(studentId);
+        if (student is null)
             return Results.NotFound();
-        }
 
         var isMentor = await authHelper.CurrentUserIsMentorOf(student);
         var hasBypass = await authHelper.CurrentUserHasGlobalPermission(GlobalPermission.Otiumsverantwortlich) ||
