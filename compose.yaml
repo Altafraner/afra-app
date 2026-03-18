@@ -28,3 +28,8 @@ services:
     #volumes:
     #  - './storage/db:/var/lib/postgresql/data'
     restart: unless-stopped
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "16686:16686"
+      - "4317:4317"

@@ -9,7 +9,7 @@ namespace Altafraner.Backbone.Defaults;
 ///     A pseudo-module for including some commonly used modules
 /// </summary>
 [DependsOn<DevelopmentModule>]
-[DependsOn<PrometheusModule>]
+[DependsOn<TelemetryModule>]
 [DependsOn<SignalRModule>]
 [DependsOn<CachingModule>]
 [DependsOn<HttpJsonOptionsModule>]
