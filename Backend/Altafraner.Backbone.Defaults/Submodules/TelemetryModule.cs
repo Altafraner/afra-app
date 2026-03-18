@@ -39,6 +39,7 @@ public class TelemetryModule : IModule
                 .AddEntityFrameworkCoreInstrumentation()
                 .AddQuartzInstrumentation()
                 .AddAspNetCoreInstrumentation()
+                .AddSource("Altafraner.Typst")
             );
         }
 
