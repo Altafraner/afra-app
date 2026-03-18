@@ -18,7 +18,8 @@ public static class Calendar
         app.MapGet("/api/calendar", SubscribeCalendarAsync).RequireAuthorization();
         app.MapGet("/api/calendar/count", GetNumberOfSubscriptionsAsync).RequireAuthorization();
         app.MapDelete("/api/calendar", DeleteAllSubscriptionsAsync).RequireAuthorization();
-        app.MapGet("/api/calendar/{subId:guid}.ics", GetCalendarAsync);
+        app.MapGet("/api/calendar.ics", GetCalendarAsync).RequireAuthorization();
+        app.MapGet("/api/calendar/{subId:guid}.ics", GetCalendarViaSubAsync);
     }
 
     private static async Task<IResult> SubscribeCalendarAsync(UserAccessor userAccessor, CalendarService calendarService, IConfiguration configuration)
@@ -43,13 +44,20 @@ public static class Calendar
         return Results.Ok(subId);
     }
 
-    private static async Task<IResult> GetCalendarAsync(UserAccessor userAccessor, CalendarService calendarService, Guid subId)
+    private static async Task<IResult> GetCalendarViaSubAsync(CalendarService calendarService, Guid subId)
     {
         var cal = await calendarService.GetCalendarAsync(subId);
         if (cal is null)
         {
             return Results.NotFound("No subscription found");
         }
+        return Results.File(Encoding.UTF8.GetBytes(cal), "text/calendar");
+    }
+
+    private static async Task<IResult> GetCalendarAsync(UserAccessor userAccessor, CalendarService calendarService)
+    {
+        var user = await userAccessor.GetUserAsync();
+        var cal = await calendarService.GetCalendarAsync(user);
         return Results.File(Encoding.UTF8.GetBytes(cal), "text/calendar");
     }
 }

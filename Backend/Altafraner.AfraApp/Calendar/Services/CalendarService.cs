@@ -72,9 +72,14 @@ public class CalendarService
         {
             return null;
         }
+        return await GetCalendarAsync(sub.BetroffenePerson);
+    }
 
+    ///
+    public async Task<string> GetCalendarAsync(Person person)
+    {
         var enrollments = _dbContext.OtiaEinschreibungen
-            .Where(e => e.BetroffenePerson.Id == sub.BetroffenePerson.Id)
+            .Where(e => e.BetroffenePerson == person)
             .Include(e => e.Termin).ThenInclude(t => t.Otium)
             .Include(e => e.Termin).ThenInclude(t => t.Block).ThenInclude(b => b.Schultag);
         var enrolledEvents = enrollments.Select(e => new CalendarEvent
@@ -93,7 +98,7 @@ public class CalendarService
         });
 
         var taught = _dbContext.OtiaTermine
-            .Where(e => e.Tutor != null && e.Tutor.Id == sub.BetroffenePerson.Id)
+            .Where(e => e.Tutor != null && e.Tutor == person)
             .Include(t => t.Otium)
             .Include(t => t.Block).ThenInclude(b => b.Schultag);
         var taughtEvents = taught.Select(e => new CalendarEvent
@@ -112,7 +117,7 @@ public class CalendarService
 
         var profundumEnrollments = _dbContext.ProfundaEinschreibungen
             .Where(e => e.IsFixed)
-            .Where(e => e.BetroffenePerson == sub.BetroffenePerson)
+            .Where(e => e.BetroffenePerson == person)
             .Where(e => e.ProfundumInstanz != null)
             .Include(e => e.ProfundumInstanz).ThenInclude(i => i!.Slots).ThenInclude(s => s.Termine);
         var profundumEnrolledEvents = profundumEnrollments
@@ -129,7 +134,7 @@ public class CalendarService
             }));
 
         var profundumTaught = _dbContext.ProfundaInstanzen
-            .Where(i => i.Verantwortliche.Contains(sub.BetroffenePerson))
+            .Where(i => i.Verantwortliche.Contains(person))
             .Include(i => i!.Slots).ThenInclude(s => s.Termine);
         var profundumTaughtEvents = profundumTaught
             .SelectMany(i => i.Slots
