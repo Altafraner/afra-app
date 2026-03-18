@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Altafraner.AfraApp.Attendance.Domain.Models;
 
 namespace Altafraner.AfraApp.Attendance.Domain.Dto.Notiz;
 
@@ -14,9 +15,14 @@ public record NotizCreationRequest
     public required string Content { get; set; }
 
     /// <summary>
-    ///     The block the note is for
+    ///     The scope the slot is in
     /// </summary>
-    public Guid BlockId { get; set; }
+    public AttendanceScope Scope { get; set; }
+
+    /// <summary>
+    ///     The slot the note is for
+    /// </summary>
+    public Guid SlotId { get; set; }
 
     /// <summary>
     ///     The student the note is for

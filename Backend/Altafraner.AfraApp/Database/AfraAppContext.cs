@@ -68,12 +68,17 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
     /// <summary>
     ///     All notes for enrollments
     /// </summary>
-    public DbSet<OtiumAnwesenheitsNotiz> OtiaEinschreibungsNotizen { get; set; }
+    public DbSet<AttendanceNote> OtiaEinschreibungsNotizen { get; set; }
 
     /// <summary>
     ///     All attendances for Otia
     /// </summary>
-    public DbSet<OtiumAnwesenheit> OtiaAnwesenheiten { get; set; }
+    public DbSet<Attendance.Domain.Models.Attendance> OtiaAnwesenheiten { get; set; }
+
+    /// <summary>
+    ///     All event attendance states
+    /// </summary>
+    public DbSet<AttendanceEventStatus> AttendanceEventStatus { get; set; }
 
     /// <summary>
     ///     All school days
@@ -169,7 +174,7 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
             .MapEnum<MentorType>("mentor_type")
             .MapEnum<GlobalPermission>("global_permission")
             .MapEnum<Wochentyp>("wochentyp")
-            .MapEnum<OtiumAnwesenheitsStatus>("anwesenheits_status");
+            .MapEnum<AttendanceState>("anwesenheits_status");
 
     /// <summary>
     ///     The keys used by the ASP.NET Core Domain Protection API.
@@ -224,17 +229,13 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
         modelBuilder.Entity<OtiumEinschreibung>()
             .ComplexProperty(e => e.Interval);
 
-        modelBuilder.Entity<OtiumAnwesenheit>(e =>
+        modelBuilder.Entity<Attendance.Domain.Models.Attendance>(e =>
         {
             e.HasOne(a => a.Student)
                 .WithMany()
                 .HasForeignKey(a => a.StudentId);
 
-            e.HasOne(a => a.Block)
-                .WithMany()
-                .HasForeignKey(a => a.BlockId);
-
-            e.HasKey(a => new { a.BlockId, a.StudentId });
+            e.HasKey(a => new { a.Scope, a.SlotId, a.StudentId });
         });
 
         modelBuilder.Entity<ScheduledEmail<Person>>()

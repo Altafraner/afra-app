@@ -1,131 +1,117 @@
-using Altafraner.AfraApp.Attendance.Domain.Dto.Notiz;
-using Altafraner.AfraApp.Attendance.Domain.HubClients;
+using Altafraner.AfraApp.Attendance.Domain.Contracts;
+using Altafraner.AfraApp.Attendance.Domain.Dto.Enrollments;
 using Altafraner.AfraApp.Attendance.Domain.Models;
-using Altafraner.AfraApp.Otium.Domain.DTO;
-using Altafraner.AfraApp.Schuljahr.Domain.Models;
-using Altafraner.AfraApp.User.Domain.DTO;
-using Person = Altafraner.AfraApp.User.Domain.Models.Person;
+using Altafraner.AfraApp.Attendance.Jobs;
+using Microsoft.AspNetCore.SignalR;
+using Quartz;
 
 namespace Altafraner.AfraApp.Attendance.API.Hubs;
 
 internal partial class AttendanceHub
 {
-    internal static string TerminGroupName(Guid terminId)
+    private const string ScopeItem = "scope";
+    private const string TypeItem = "type";
+    private const string SlotIdItem = "slot_id";
+    private const string EventIdItem = "event_id";
+
+    private AttendanceScope? Scope
     {
-        return $"termin-{terminId}";
+        get => (AttendanceScope?)Context.Items[ScopeItem];
+        set => Context.Items[ScopeItem] = value;
     }
 
-    internal static string BlockGroupName(Guid blockId)
+    private AttendanceType Type
     {
-        return $"block-{blockId}";
+        get => (AttendanceType)Context.Items[TypeItem]!;
+        set => Context.Items[TypeItem] = value;
     }
 
-    private async Task UpdateAttendance(OtiumAnwesenheitsStatus status, Guid studentId, Guid blockId, Guid terminId)
+    private Guid SlotId
     {
-        await _attendanceService.SetAttendanceForStudentInBlockAsync(studentId, blockId, status);
-        await Clients.Groups([TerminGroupName(terminId), BlockGroupName(blockId)])
-            .UpdateAttendance(new IAttendanceHubClient.AttendanceUpdate(studentId, terminId, blockId, status));
+        get => (Guid)Context.Items[SlotIdItem]!;
+        set => Context.Items[SlotIdItem] = value;
     }
 
-    private async Task<List<IAttendanceHubClient.TerminInformation>> GetBlockAttendances(Block block)
+    private Guid? EventId
     {
-        var (attendancesByTermin, missingPersons, missingPersonsChecked) =
-            await _attendanceService.GetAttendanceForBlockAsync(block.Id);
+        get => (Guid?)Context.Items[EventIdItem];
+        set => Context.Items[EventIdItem] = value;
+    }
 
-        var notesByPerson = await _notesService.GetNotesByBlockAsync(block.Id);
+    internal static string EventGroupName(AttendanceScope scope, Guid eventId)
+    {
+        return $"event-{scope}-{eventId}";
+    }
 
-        List<IAttendanceHubClient.TerminInformation> updates = [];
-        foreach (var (termin, anwesenheitByPerson) in attendancesByTermin)
+    internal static string SlotGroupName(AttendanceScope scope, Guid terminId)
+    {
+        return $"block-{scope}-{terminId}";
+    }
+
+    private IAttendanceInformationProvider GetInformationProvider()
+    {
+        var scope = (AttendanceScope)Context.Items[ScopeItem]!;
+        return _serviceProvider.GetRequiredKeyedService<IAttendanceInformationProvider>(scope);
+    }
+
+    private async Task Authorize(IAttendanceInformationProvider informationProvider)
+    {
+        var isAuthenticated = await informationProvider.Authorize(SlotId, Context.User!);
+        if (!isAuthenticated) throw new HubException("You are not authorized to access this slot");
+    }
+
+    private void EnsureSubscribed()
+    {
+        if (!Context.Items.ContainsKey(ScopeItem))
+            throw new HubException("You must subscribe to a slot or event first");
+    }
+
+    private async Task ScheduleMissingStudentNotifications(AttendanceSlotMetadata metadata)
+    {
+        if (!metadata.MissingStudentsNotificationTime.HasValue) return;
+
+        var warningTime = metadata.MissingStudentsNotificationTime.Value.AddMinutes(-5);
+        if (DateTime.Now >= warningTime) return;
+
+        var schedulerFactory = _serviceProvider.GetRequiredService<ISchedulerFactory>();
+        var scheduler = await schedulerFactory.GetScheduler();
+        var warningJobKey = new JobKey($"missing_student_notification_warning-{Scope!.Value}-{SlotId}");
+        var notificationJobKey = new JobKey($"missing_student_notification-{Scope!.Value}-{SlotId}");
+
+        if (!await scheduler.CheckExists(warningJobKey))
         {
-            var enrollments = anwesenheitByPerson
-                .Select(entry =>
-                    new LehrerEinschreibung(new PersonInfoMinimal(entry.Key),
-                        entry.Value,
-                        notesByPerson.GetValueOrDefault(entry.Key.Id, []).Select(n => new Notiz(n))))
-                .OrderBy(e => e.Student?.Vorname)
-                .ThenBy(e => e.Student?.Nachname)
-                .ToList();
-            updates.Add(new IAttendanceHubClient.TerminInformation(termin.Id,
-                termin.Bezeichnung,
-                termin.Ort,
-                enrollments,
-                termin.SindAnwesenheitenKontrolliert));
+            var job = JobBuilder.Create<MissingStudentsNotificationWarningJob>()
+                .WithIdentity(warningJobKey)
+                .UsingJobData(MissingStudentsNotificationWarningJob.ScopeItem, (int)Scope!.Value)
+                .UsingJobData(MissingStudentsNotificationWarningJob.SlotIdItem, SlotId)
+                .DisallowConcurrentExecution()
+                .Build();
+            var trigger = TriggerBuilder.Create()
+                .WithIdentity($"missing_student_notification_warning-trigger-{Scope!.Value}-{SlotId}")
+                .StartAt(warningTime)
+                .Build();
+            await scheduler.ScheduleJob(job, trigger);
         }
 
-        updates = updates.OrderBy(e => e.Ort).ToList();
-
-        if (!_blockHelper.Get(block.SchemaId)!.Verpflichtend) return updates;
-
-        var missingPersonsEnrollments = missingPersons
-            .Select(entry =>
-                new LehrerEinschreibung(new PersonInfoMinimal(entry.Key),
-                    entry.Value,
-                    notesByPerson.GetValueOrDefault(entry.Key.Id, []).Select(n => new Notiz(n))))
-            .OrderBy(e => e.Student?.Vorname)
-            .ThenBy(e => e.Student?.Nachname)
-            .ToList();
-        updates.Insert(0,
-            new IAttendanceHubClient.TerminInformation(Guid.Empty,
-                "Nicht eingeschrieben",
-                "FEHLEND",
-                missingPersonsEnrollments,
-                missingPersonsChecked));
-
-        return updates;
+        if (!await scheduler.CheckExists(notificationJobKey))
+        {
+            var job = JobBuilder.Create<MissingStudentNotificationJob>()
+                .WithIdentity(notificationJobKey)
+                .UsingJobData(MissingStudentNotificationJob.ScopeItem, (int)Scope!.Value)
+                .UsingJobData(MissingStudentNotificationJob.SlotIdItem, SlotId)
+                .DisallowConcurrentExecution()
+                .Build();
+            var trigger = TriggerBuilder.Create()
+                .WithIdentity($"missing_student_notification-trigger-{Scope!.Value}-{SlotId}")
+                .StartAt(metadata.MissingStudentsNotificationTime.Value)
+                .Build();
+            await scheduler.ScheduleJob(job, trigger);
+        }
     }
 
-    private async Task<List<LehrerEinschreibung>> GetTerminAttendances(Guid terminId, Guid blockId)
+    private enum AttendanceType
     {
-        var enrollments = await _attendanceService.GetAttendanceForTerminAsync(terminId);
-        return await enrollments
-            .ToAsyncEnumerable()
-            .Select<KeyValuePair<Person, OtiumAnwesenheitsStatus>, LehrerEinschreibung>(async (entry, _) =>
-                new LehrerEinschreibung(
-                    new PersonInfoMinimal(entry.Key),
-                    entry.Value,
-                    (await _notesService.GetNotesAsync(entry.Key.Id, blockId)).Select(n => new Notiz(n))))
-            .ToListAsync();
-    }
-
-    private Task SendUpdateToAffected(Block block, Guid terminId)
-    {
-        return SendUpdateToAffected(block, Guid.Empty, terminId);
-    }
-
-    private async Task SendNotificationToAffected(string subject,
-        string message,
-        Guid blockId,
-        Guid fromTerminId,
-        Guid toTerminId)
-    {
-        var notification =
-            new IAttendanceHubClient.Notification(subject, message, IAttendanceHubClient.NotificationSeverity.Info);
-        await Clients.Groups([BlockGroupName(blockId)]).Notify(notification);
-        if (fromTerminId != Guid.Empty)
-            await Clients.Groups([TerminGroupName(fromTerminId)]).Notify(notification);
-        if (toTerminId != Guid.Empty)
-            await Clients.Groups([TerminGroupName(toTerminId)]).Notify(notification);
-    }
-
-    private async Task SendUpdateToAffected(Block block, Guid fromTerminId, Guid toTerminId)
-    {
-        var blockUpdates = await GetBlockAttendances(block);
-        await Clients.Group(BlockGroupName(block.Id)).UpdateBlockAttendances(blockUpdates);
-
-        var toTerminUpdates = blockUpdates.FirstOrDefault(t => t.TerminId == toTerminId);
-        if (toTerminUpdates is not null)
-            await Clients.Group(TerminGroupName(toTerminId))
-                .UpdateTerminAttendances(toTerminUpdates.Einschreibungen);
-        else
-            _logger.LogWarning("Tried to update termine for {fromTerminId}, but did not find any", fromTerminId);
-
-        if (fromTerminId == Guid.Empty)
-            return;
-        var fromTerminUpdates = blockUpdates.FirstOrDefault(t => t.TerminId == fromTerminId);
-        if (fromTerminUpdates is not null)
-            await Clients.Group(TerminGroupName(fromTerminId))
-                .UpdateTerminAttendances(fromTerminUpdates.Einschreibungen);
-        else
-            _logger.LogWarning("Tried to update termine for {fromTerminId}, but did not find any", fromTerminId);
+        Event,
+        Slot
     }
 }

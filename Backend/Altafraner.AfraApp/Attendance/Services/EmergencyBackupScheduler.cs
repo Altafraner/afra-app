@@ -1,31 +1,30 @@
-using Altafraner.AfraApp.Otium.Configuration;
-using Altafraner.AfraApp.Otium.Jobs;
-using Microsoft.Extensions.Options;
+using Altafraner.AfraApp.Attendance.Jobs;
 using Quartz;
 
-namespace Altafraner.AfraApp.Otium.Services;
+namespace Altafraner.AfraApp.Attendance.Services;
 
 /// <summary>
 /// Service that schedules emergency backups for Otium enrollments.
 /// </summary>
 public class EmergencyBackupScheduler : BackgroundService
 {
-    private const string GroupName = "otium-emergency-backup";
-    private const string JobName = "otium-emergency-backup";
-    private readonly ILogger<EnrollmentReminderScheduler> _logger;
-    private readonly IOptions<OtiumConfiguration> _otiumConfiguration;
+    private const string GroupName = "attendance-emergency-backup";
+    private const string JobName = "attendance-emergency-backup";
+    private readonly ILogger<EmergencyBackupScheduler> _logger;
+    private readonly IConfiguration _config;
 
     private readonly IServiceProvider _serviceProvider;
 
     /// <summary>
     /// Called from DI
     /// </summary>
-    public EmergencyBackupScheduler(ILogger<EnrollmentReminderScheduler> logger,
-        IOptions<OtiumConfiguration> otiumConfiguration, IServiceProvider serviceProvider)
+    public EmergencyBackupScheduler(ILogger<EmergencyBackupScheduler> logger,
+        IServiceProvider serviceProvider,
+        IConfiguration config)
     {
         _logger = logger;
-        _otiumConfiguration = otiumConfiguration;
         _serviceProvider = serviceProvider;
+        _config = config;
     }
 
     /// <inheritdoc />
@@ -46,10 +45,13 @@ public class EmergencyBackupScheduler : BackgroundService
         if (exists)
         {
             await scheduler.DeleteJob(key, stoppingToken);
-            _logger.LogInformation("Emergency backup disabled. Deleted existing job.");
         }
 
-        if (!_otiumConfiguration.Value.EnableEmergencyBackup) return;
+        if (!_config.GetValue<bool>("Attendance:Backup"))
+        {
+            _logger.LogInformation("Attendance backup job disabled");
+            return;
+        }
 
         var job = JobBuilder.Create<EmergencyUploadJob>()
             .WithIdentity(key)

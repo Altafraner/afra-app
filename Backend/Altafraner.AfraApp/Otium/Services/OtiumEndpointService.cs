@@ -36,6 +36,7 @@ internal class OtiumEndpointService
     private readonly UserService _userService;
     private readonly INotificationService _notificationService;
     private readonly NotesService _notesService;
+    private readonly IAttendanceInformationProvider _informationProvider;
 
     /// <summary>
     ///     Constructor for the OtiumEndpointService. Usually called by the DI container.
@@ -44,7 +45,9 @@ internal class OtiumEndpointService
         EnrollmentService enrollmentService, BlockHelper blockHelper, IAttendanceService attendanceService,
         UserService userService, RulesValidationService rulesValidationService,
         INotificationService notificationService,
-        NotesService notesService)
+        NotesService notesService,
+        [FromKeyedServices(OtiumAttendanceInformationProvider.ScopeValue)]
+        IAttendanceInformationProvider informationProvider)
     {
         _dbContext = dbContext;
         _kategorieService = kategorieService;
@@ -55,6 +58,7 @@ internal class OtiumEndpointService
         _rulesValidationService = rulesValidationService;
         _notificationService = notificationService;
         _notesService = notesService;
+        _informationProvider = informationProvider;
     }
 
     /// <summary>
@@ -278,17 +282,22 @@ internal class OtiumEndpointService
             _enrollmentService.GetNotEnrolledBlocks(enrollments, allBlocks);
 
         var blocksDoneOrRunning = user.Rolle == Rolle.Mittelstufe
-            ? allBlocks.Where(_blockHelper.IsBlockDoneOrRunning).Select(b => b.Id).ToHashSet()
+            ? allBlocks.Where(e =>
+                    _blockHelper.GetBlockStatus(e) is BlockHelper.BlockStatus.Running or BlockHelper.BlockStatus.Done)
+                .Select(b => (OtiumAttendanceInformationProvider.ScopeValue, b.Id))
+                .ToHashSet()
             : [];
         var attendances = user.Rolle == Rolle.Mittelstufe
-            ? await _attendanceService.GetAttendanceForBlocksAsync(blocksDoneOrRunning, user.Id)
+            ? await _attendanceService.GetAttendanceForStudentInSlotsAsync(blocksDoneOrRunning, user.Id)
             : [];
 
         var additionalEnrollments = blocksUnenrolled.Select(b => (b.SchemaId, new Einschreibung
         {
             Datum = b.SchultagKey,
             Block = _blockHelper.Get(b.SchemaId)!.Bezeichnung,
-            Anwesenheit = blocksDoneOrRunning.Contains(b.Id) ? attendances[b.Id] : null
+            Anwesenheit = blocksDoneOrRunning.Contains((OtiumAttendanceInformationProvider.ScopeValue, b.Id))
+                ? attendances[(OtiumAttendanceInformationProvider.ScopeValue, b.Id)]
+                : null
         }));
 
         return enrollments.Select(e => (e.Termin.Block.SchemaId, new Einschreibung
@@ -299,7 +308,10 @@ internal class OtiumEndpointService
             Ort = e.Termin.Ort,
             Otium = e.Termin.Bezeichnung,
             TerminId = e.Termin.Id,
-            Anwesenheit = blocksDoneOrRunning.Contains(e.Termin.Block.Id) ? attendances[e.Termin.Block.Id] : null
+            Anwesenheit =
+                blocksDoneOrRunning.Contains((OtiumAttendanceInformationProvider.ScopeValue, e.Termin.Block.Id))
+                    ? attendances[(OtiumAttendanceInformationProvider.ScopeValue, e.Termin.Block.Id)]
+                    : null
         }))
             .Concat(additionalEnrollments)
             .OrderBy(e => e.Item2.Datum)
@@ -448,6 +460,8 @@ internal class OtiumEndpointService
             .Include(t => t.Tutor)
             .Include(t => t.Block)
             .ThenInclude(b => b.Schultag)
+            .Include(e => e.Enrollments)
+            .ThenInclude(e => e.BetroffenePerson)
             .Include(t => t.Otium)
             .Where(t => !t.IstAbgesagt)
             .FirstOrDefaultAsync(t => t.Id == terminId);
@@ -455,17 +469,26 @@ internal class OtiumEndpointService
         if (termin is null)
             return null;
 
-        var anwesenheiten = await (await _attendanceService.GetAttendanceForTerminAsync(terminId))
-            .ToAsyncEnumerable()
-            .Select<KeyValuePair<Models_Person, OtiumAnwesenheitsStatus>, LehrerEinschreibung>(async (e, _) =>
-                new LehrerEinschreibung(new PersonInfoMinimal(e.Key),
-                    e.Value,
-                    (await _notesService.GetNotesAsync(e.Key.Id, termin.Block.Id)).Select(n => new Notiz(n))))
-            .ToListAsync();
-
-        var isDoneOrRunning = _blockHelper.IsBlockDoneOrRunning(termin.Block);
-
+        var blockStatus = _blockHelper.GetBlockStatus(termin.Block);
         var schema = _blockHelper.Get(termin.Block.SchemaId)!;
+
+        // This WILL break should we decide to allow partial enrollments upfront. But then we've got other problems to, so I think this is acceptable.
+        var persons = termin.Enrollments.Where(e => e.Interval.End == schema.Interval.End)
+            .ToDictionary(e => e.BetroffenePerson.Id, e => e.BetroffenePerson);
+
+        var anwesenheiten =
+            await (await _attendanceService.GetAttendanceForStudentsInSlotAsync(
+                    OtiumAttendanceInformationProvider.ScopeValue,
+                    termin.Block.Id,
+                    persons.Keys))
+            .ToAsyncEnumerable()
+            .Select<KeyValuePair<Guid, AttendanceState>, LehrerEinschreibung>(async (e, _) =>
+                new LehrerEinschreibung(new PersonInfoMinimal(persons[e.Key]),
+                    e.Value,
+                    (await _notesService.GetNotesAsync(OtiumAttendanceInformationProvider.ScopeValue,
+                        termin.Block.Id,
+                        e.Key)).Select(n => new Notiz(n))))
+            .ToListAsync();
 
         return new LehrerTermin
         {
@@ -480,8 +503,9 @@ internal class OtiumEndpointService
             Uhrzeit = schema.Interval,
             MaxEinschreibungen = termin.MaxEinschreibungen,
             IstAbgesagt = termin.IstAbgesagt,
-            IsSupervisionEnabled = _attendanceService.MaySupervise(user, termin.Block),
-            IsDoneOrRunning = isDoneOrRunning,
+            // since this'll use find, this should be synchronous
+            IsSupervisionEnabled = await _informationProvider.Authorize(termin.Block.Id, user),
+            IsDoneOrRunning = blockStatus is BlockHelper.BlockStatus.Done or BlockHelper.BlockStatus.Running,
             Tutor = termin.Tutor is not null
                 ? new PersonInfoMinimal(termin.Tutor)
                 : null,

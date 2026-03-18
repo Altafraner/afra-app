@@ -3,7 +3,7 @@ namespace Altafraner.AfraApp.Attendance.Domain.Models;
 /// <summary>
 ///     An enum representing the status of a person's attendence
 /// </summary>
-public enum OtiumAnwesenheitsStatus
+public enum AttendanceState
 {
     /// <summary>
     ///     The person has attended

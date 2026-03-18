@@ -71,7 +71,7 @@ namespace Altafraner.AfraApp.Migrations
                     b.Property<Guid>("StudentId")
                         .HasColumnType("uuid");
 
-                    b.Property<OtiumAnwesenheitsStatus>("Status")
+                    b.Property<AttendanceState>("Status")
                         .HasColumnType("anwesenheits_status");
 
                     b.HasKey("BlockId", "StudentId");

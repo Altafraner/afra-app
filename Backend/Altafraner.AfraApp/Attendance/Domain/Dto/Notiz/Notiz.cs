@@ -35,7 +35,7 @@ public record Notiz
     }
 
     [SetsRequiredMembers]
-    internal Notiz(OtiumAnwesenheitsNotiz notiz)
+    internal Notiz(AttendanceNote notiz)
     {
         Created = notiz.CreatedAt;
         Changed = notiz.LastModified;

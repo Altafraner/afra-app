@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using Altafraner.AfraApp.Schuljahr.Domain.Models;
 using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.Backbone.Utils;
 using Microsoft.EntityFrameworkCore;
@@ -9,8 +8,8 @@ namespace Altafraner.AfraApp.Attendance.Domain.Models;
 /// <summary>
 ///     A note that can be attached to an enrollment
 /// </summary>
-[PrimaryKey(nameof(BlockId), nameof(StudentId), nameof(AuthorId))]
-public class OtiumAnwesenheitsNotiz : IHasTimestamps
+[PrimaryKey(nameof(Scope), nameof(SlotId), nameof(StudentId), nameof(AuthorId))]
+public class AttendanceNote : IHasTimestamps
 {
     /// <summary>
     ///     The content of the note
@@ -19,14 +18,14 @@ public class OtiumAnwesenheitsNotiz : IHasTimestamps
     public required string Content { get; set; }
 
     /// <summary>
-    ///     The block this note is for
+    ///     The scope the slot is part of
     /// </summary>
-    public Block Block { get; set; } = null!;
+    public required AttendanceScope Scope { get; set; }
 
     /// <summary>
-    ///     The ID of the block this note is for
+    ///     The slot the note is for
     /// </summary>
-    public Guid BlockId { get; set; }
+    public required Guid SlotId { get; set; }
 
     /// <summary>
     ///     The student this note is for

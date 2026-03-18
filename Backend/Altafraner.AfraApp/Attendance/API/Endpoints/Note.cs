@@ -26,7 +26,11 @@ internal static class Note
         var affected = await userService.GetUserByIdAsync(request.StudentId);
         if (affected.Rolle is not Rolle.Mittelstufe and not Rolle.Oberstufe) return Results.BadRequest();
 
-        var success = await service.TryAddNoteAsync(request.Content, request.StudentId, request.BlockId, user.Id);
+        var success = await service.TryAddNoteAsync(request.Scope,
+            request.SlotId,
+            request.Content,
+            request.StudentId,
+            user.Id);
         return success ? Results.Created() : Results.Conflict();
     }
 
@@ -43,18 +47,26 @@ internal static class Note
         if (affected.Rolle is not Rolle.Mittelstufe and not Rolle.Oberstufe)
             return Results.BadRequest("The person represented by studentId is not a student.");
 
-        List<OtiumAnwesenheitsNotiz> notes;
-        var success = await service.UpdateNoteAsync(request.Content, request.StudentId, request.BlockId, user.Id);
+        List<AttendanceNote> notes;
+        var success = await service.UpdateNoteAsync(request.Scope,
+            request.SlotId,
+            request.Content,
+            request.StudentId,
+            user.Id);
         if (success)
         {
-            notes = await service.GetNotesAsync(affected.Id, request.BlockId);
+            notes = await service.GetNotesAsync(request.Scope, request.SlotId, affected.Id);
             return Results.Ok(notes.Select(n => new Notiz(n)));
         }
 
-        success = await service.TryAddNoteAsync(request.Content, request.StudentId, request.BlockId, user.Id);
+        success = await service.TryAddNoteAsync(request.Scope,
+            request.SlotId,
+            request.Content,
+            request.StudentId,
+            user.Id);
         if (!success) return Results.Conflict();
 
-        notes = await service.GetNotesAsync(affected.Id, request.BlockId);
+        notes = await service.GetNotesAsync(request.Scope, request.SlotId, affected.Id);
         return Results.Ok(notes.Select(n => new Notiz(n)));
     }
 }

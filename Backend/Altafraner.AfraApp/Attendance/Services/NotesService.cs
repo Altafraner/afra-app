@@ -6,34 +6,45 @@ namespace Altafraner.AfraApp.Attendance.Services;
 internal sealed class NotesService
 {
     private readonly AfraAppContext _dbContext;
-    private readonly AttendanceRealtimeService _attendanceRealtimeService;
+    private readonly SimpleAttendanceNotificationService _simpleAttendanceNotificationService;
 
-    public NotesService(AfraAppContext dbContext, AttendanceRealtimeService attendanceRealtimeService)
+    public NotesService(AfraAppContext dbContext,
+        SimpleAttendanceNotificationService simpleAttendanceNotificationService)
     {
         _dbContext = dbContext;
-        _attendanceRealtimeService = attendanceRealtimeService;
+        _simpleAttendanceNotificationService = simpleAttendanceNotificationService;
     }
 
-    public async Task<bool> TryAddNoteAsync(string content, Guid studentId, Guid blockId, Guid authorId)
+    public async Task<bool> TryAddNoteAsync(AttendanceScope scope,
+        Guid slotId,
+        string content,
+        Guid studentId,
+        Guid authorId)
     {
-        if (await HasNoteAsync(studentId, blockId, authorId)) return false;
+        if (await HasNoteAsync(scope, slotId, studentId, authorId)) return false;
 
-        await _dbContext.OtiaEinschreibungsNotizen.AddAsync(new OtiumAnwesenheitsNotiz
+        await _dbContext.OtiaEinschreibungsNotizen.AddAsync(new AttendanceNote
         {
+            Scope = scope,
+            SlotId = slotId,
             Content = content,
             AuthorId = authorId,
             StudentId = studentId,
-            BlockId = blockId
         });
         await _dbContext.SaveChangesAsync();
-        await SendRealtimeUpdate(studentId, blockId);
+        await SendRealtimeUpdate(scope, slotId, studentId);
         return true;
     }
 
-    public async Task<bool> UpdateNoteAsync(string content, Guid studentId, Guid blockId, Guid authorId)
+    public async Task<bool> UpdateNoteAsync(AttendanceScope scope,
+        Guid slotId,
+        string content,
+        Guid studentId,
+        Guid authorId)
     {
         var note = await _dbContext.OtiaEinschreibungsNotizen.FirstOrDefaultAsync(e => e.StudentId == studentId
-            && e.BlockId == blockId
+            && e.Scope == scope
+            && e.SlotId == slotId
             && e.AuthorId == authorId);
 
         if (note == null) return false;
@@ -41,68 +52,73 @@ internal sealed class NotesService
         {
             _dbContext.OtiaEinschreibungsNotizen.Remove(note);
             await _dbContext.SaveChangesAsync();
-            await SendRealtimeUpdate(studentId, blockId);
+            await SendRealtimeUpdate(scope, slotId, studentId);
             return true;
         }
 
         note.Content = content;
         await _dbContext.SaveChangesAsync();
-        await SendRealtimeUpdate(studentId, blockId);
+        await SendRealtimeUpdate(scope, slotId, studentId);
         return true;
     }
 
-    public async Task<bool> RemoveNoteAsync(Guid studentId, Guid blockId, Guid authorId)
+    public async Task<bool> RemoveNoteAsync(AttendanceScope scope, Guid slotId, Guid studentId, Guid authorId)
     {
-        if (!await HasNoteAsync(studentId, blockId, authorId)) return false;
+        if (!await HasNoteAsync(scope, slotId, studentId, authorId)) return false;
 
-        _dbContext.Remove(new OtiumAnwesenheitsNotiz
+        _dbContext.Remove(new AttendanceNote
         {
             Content = null!,
-            BlockId = blockId,
+            Scope = scope,
+            SlotId = slotId,
             StudentId = studentId,
             AuthorId = authorId
         });
         await _dbContext.SaveChangesAsync();
-        await SendRealtimeUpdate(studentId, blockId);
+        await SendRealtimeUpdate(scope, slotId, studentId);
         return true;
     }
 
-    public async Task<bool> HasNoteAsync(Guid studentId, Guid blockId, Guid authorId)
+    public async Task<bool> HasNoteAsync(AttendanceScope scope, Guid slotId, Guid studentId, Guid authorId)
     {
         return await _dbContext.OtiaEinschreibungsNotizen.AnyAsync(e => e.AuthorId == authorId
                                                                         && e.StudentId == studentId
-                                                                        && e.BlockId == blockId);
+                                                                        && e.Scope == scope
+                                                                        && e.SlotId == slotId);
     }
 
-    public async Task<bool> HasNoteAsync(Guid studentId, Guid blockId)
+    public async Task<bool> HasNoteAsync(AttendanceScope scope, Guid slotId, Guid studentId)
     {
         return await _dbContext.OtiaEinschreibungsNotizen.AnyAsync(e => e.StudentId == studentId
-                                                                        && e.BlockId == blockId);
+                                                                        && e.SlotId == slotId
+                                                                        && e.Scope == scope);
     }
 
-    public async Task<List<OtiumAnwesenheitsNotiz>> GetNotesAsync(Guid studentId, Guid blockId)
+    public async Task<List<AttendanceNote>> GetNotesAsync(AttendanceScope scope, Guid slotId, Guid studentId)
     {
         return await _dbContext.OtiaEinschreibungsNotizen
             .Include(e => e.Author)
-            .Where(e => e.StudentId == studentId)
-            .Where(e => e.BlockId == blockId)
+            .Where(e => e.StudentId == studentId && e.SlotId == slotId && e.Scope == scope)
             .OrderByDescending(n => n.LastModified)
             .ToListAsync();
     }
 
-    public async Task<Dictionary<Guid, OtiumAnwesenheitsNotiz[]>> GetNotesByBlockAsync(Guid blockId)
+    public async Task<Dictionary<Guid, AttendanceNote[]>> GetNotesByBlockAsync(AttendanceScope scope, Guid slotId)
     {
         return await _dbContext.OtiaEinschreibungsNotizen
             .Include(e => e.Author)
-            .Where(e => e.BlockId == blockId)
+            .Where(e => e.SlotId == slotId && e.Scope == scope)
             .OrderByDescending(n => n.LastModified)
             .GroupBy(e => e.StudentId)
             .ToDictionaryAsync(e => e.Key, e => e.ToArray());
     }
 
-    private async Task SendRealtimeUpdate(Guid studentId, Guid blockId)
+    private async Task SendRealtimeUpdate(AttendanceScope scope, Guid slotId, Guid studentId)
     {
-        var notes = await GetNotesAsync(studentId, blockId);
-        await _attendanceRealtimeService.SendNoteUpdate(studentId, blockId, notes);
+        var notes = await GetNotesAsync(scope, slotId, studentId);
+        await _simpleAttendanceNotificationService.UpdateNotesForSingleStudent(scope,
+            slotId,
+            studentId,
+            notes);
     }
 }

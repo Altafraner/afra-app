@@ -353,7 +353,7 @@ namespace Altafraner.AfraApp.Migrations
                 {
                     BlockId = table.Column<Guid>(type: "uuid", nullable: false),
                     StudentId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Status = table.Column<OtiumAnwesenheitsStatus>(type: "anwesenheits_status", nullable: false)
+                    Status = table.Column<AttendanceState>(type: "anwesenheits_status", nullable: false)
                 },
                 constraints: table =>
                 {

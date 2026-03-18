@@ -90,5 +90,5 @@ public record LehrerTermin : ITermin
 /// <param name="Notizen">Notes left regarding this attendance</param>
 public record LehrerEinschreibung(
     PersonInfoMinimal? Student,
-    OtiumAnwesenheitsStatus Anwesenheit,
+    AttendanceState Anwesenheit,
     IEnumerable<Notiz> Notizen);

@@ -1,3 +1,4 @@
+using Altafraner.AfraApp.Attendance.Domain.Contracts;
 using Altafraner.AfraApp.Attendance.Domain.Dto.Notiz;
 using Altafraner.AfraApp.Attendance.Services;
 using Altafraner.AfraApp.Otium.Domain.Contracts.Rules;
@@ -25,8 +26,9 @@ internal class EnrollmentService
     private readonly AfraAppContext _dbContext;
     private readonly ILogger _logger;
     private readonly IRulesFactory _rulesFactory;
-    private readonly INotificationService _notificationService;
+    private readonly INotificationService _userNotificationService;
     private readonly NotesService _notesService;
+    private readonly IAttendanceNotificationService _attendanceNotificationService;
 
     /// <summary>
     ///     Constructs the EnrollmentService. Usually called by the DI container.
@@ -35,15 +37,17 @@ internal class EnrollmentService
         ILogger<EnrollmentService> logger,
         BlockHelper blockHelper,
         IRulesFactory rulesFactory,
-        INotificationService notificationService,
-        NotesService notesService)
+        INotificationService userNotificationService,
+        NotesService notesService,
+        IAttendanceNotificationService attendanceNotificationService)
     {
         _dbContext = dbContext;
         _logger = logger;
         _blockHelper = blockHelper;
         _rulesFactory = rulesFactory;
-        _notificationService = notificationService;
+        _userNotificationService = userNotificationService;
         _notesService = notesService;
+        _attendanceNotificationService = attendanceNotificationService;
     }
 
     /// <summary>
@@ -76,6 +80,9 @@ internal class EnrollmentService
 
         _dbContext.OtiaEinschreibungen.Add(einschreibung);
         await _dbContext.SaveChangesAsync();
+        await _attendanceNotificationService.UpdateSlotAttendances(OtiumAttendanceInformationProvider.ScopeValue,
+            termin.Block.Id,
+            true);
         return termin;
     }
 
@@ -135,6 +142,7 @@ internal class EnrollmentService
 
         List<DateOnly> success = [startingTermin.Block.SchultagKey];
         List<DateOnly> failure = [];
+        List<(Guid slotId, Guid eventId)> successEventIds = [(einschreibung.Termin.Block.Id, einschreibung.Termin.Id)];
         _dbContext.OtiaEinschreibungen.Add(einschreibung);
         foreach (var date in dates)
         {
@@ -160,16 +168,24 @@ internal class EnrollmentService
             };
             _dbContext.OtiaEinschreibungen.Add(einschreibungRec);
             success.Add(recurringTermin.Block.SchultagKey);
+            successEventIds.Add((einschreibungRec.Termin.Block.Id, einschreibungRec.Termin.Id));
         }
 
         await _dbContext.SaveChangesAsync();
+
+        foreach (var occurence in successEventIds)
+            // Update all because we'd need to update multiple events either way (occurence.eventId and Guid.Empty) and i'm not motivated enough to implement that efficiently. So that'll forever be a problem for future me.
+            await _attendanceNotificationService.UpdateSlotAttendances(OtiumAttendanceInformationProvider.ScopeValue,
+                occurence.slotId,
+                true);
+
         return new MultiEnrollmentStatus(success, failure);
     }
 
     /// <summary>
     ///     Unenrolls a user from a termin for the subblock starting at a given time.
     /// </summary>
-    /// <param name="terminId">the id of the termin entity</param>
+    /// <param name="blockId">the id of the block for which to unenroll the student</param>
     /// <param name="student">the student wanting to enroll</param>
     /// <param name="force">
     ///     If true, will forcefully delete the users enrollment, even if normally not allowed. For use within
@@ -177,48 +193,54 @@ internal class EnrollmentService
     /// </param>
     /// <param name="save">If true, will persist changes to database. Useful for bulk operations.</param>
     /// <returns>null, if the user may not enroll with the given parameters; Otherwise the termin the user has unenrolled from.</returns>
-    public async Task<Models_OtiumTermin?> UnenrollAsync(Guid terminId, Models_Person student, bool force = false,
+    public async Task UnenrollAsync(Guid blockId,
+        Models_Person student,
+        bool force = false,
         bool save = true)
     {
-        var enrollment = await _dbContext.OtiaEinschreibungen
+        var enrollments = await _dbContext.OtiaEinschreibungen
             .Include(e => e.Termin)
             .ThenInclude(t => t.Block)
             .ThenInclude(b => b.Schultag)
             .Include(e => e.Termin)
             .ThenInclude(t => t.Otium)
             .Include(e => e.BetroffenePerson)
-            .FirstOrDefaultAsync(e => e.BetroffenePerson.Id == student.Id && e.Termin.Id == terminId);
+            .Where(e => e.BetroffenePerson == student && e.Termin.Block.Id == blockId)
+            .ToListAsync();
 
-        if (enrollment == null) return null;
-
-        if (!force)
-            try
+        var success = true;
+        foreach (var enrollment in enrollments)
+        {
+            if (!force)
             {
                 var mayUnenroll = await MayUnenroll(student, enrollment);
-                if (!mayUnenroll.IsValid) return null;
+                if (!mayUnenroll.IsValid)
+                {
+                    success = false;
+                    continue;
+                }
             }
-            catch (InvalidOperationException)
-            {
-                return null;
-            }
 
-        _dbContext.OtiaEinschreibungen.Remove(enrollment);
+            _dbContext.OtiaEinschreibungen.Remove(enrollment);
 
-        if (!save) return enrollment.Termin;
+            var sendNotification = force && !_blockHelper.IsBlockDoneOrRunning(enrollment.Termin.Block);
+            if (sendNotification)
+                await _userNotificationService.ScheduleNotificationAsync(enrollment.BetroffenePerson,
+                    "Abmeldung von Termin",
+                    $"""
+                     Du wurdest aus dem Termin {enrollment.Termin.Bezeichnung} am {enrollment.Termin.Block.Schultag.Datum:dd.MM.yyyy} im Block {_blockHelper.Get(enrollment.Termin.Block.SchemaId)?.Bezeichnung ?? "unbekannt"} abgemeldet.
 
+                     Schreibe dich für den Block ggf. erneut ein.
+                     """,
+                    TimeSpan.FromMinutes(5));
+        }
+
+        if (!success) throw new InvalidOperationException();
+        if (!save) return;
         await _dbContext.SaveChangesAsync();
-
-        var sendNotification = force && !_blockHelper.IsBlockDoneOrRunning(enrollment.Termin.Block);
-        if (sendNotification)
-            await _notificationService.ScheduleNotificationAsync(enrollment.BetroffenePerson, "Abmeldung von Termin",
-                $"""
-                 Du wurdest aus dem Termin {enrollment.Termin.Bezeichnung} am {enrollment.Termin.Block.Schultag.Datum:dd.MM.yyyy} im Block {_blockHelper.Get(enrollment.Termin.Block.SchemaId)?.Bezeichnung ?? "unbekannt"} abgemeldet.
-
-                 Schreibe dich für den Block ggf. erneut ein.
-                 """,
-                TimeSpan.FromMinutes(5));
-
-        return enrollment.Termin;
+        await _attendanceNotificationService.UpdateSlotAttendances(OtiumAttendanceInformationProvider.ScopeValue,
+            enrollments.First().Termin.Id,
+            true);
     }
 
     /// <summary>
@@ -267,7 +289,9 @@ internal class EnrollmentService
         var changeResult = usersEnrollment != null
             ? await MayUnenroll(user, usersEnrollment)
             : await MayEnroll(user, termin);
-        var notes = await _notesService.GetNotesAsync(user.Id, termin.Block.Id);
+        var notes = await _notesService.GetNotesAsync(OtiumAttendanceInformationProvider.ScopeValue,
+            termin.Block.Id,
+            user.Id);
         var myNote = notes.FirstOrDefault(n => n.AuthorId == user.Id);
         return new EinschreibungsPreview(countEnrolled,
             changeResult.IsValid,
@@ -325,6 +349,9 @@ internal class EnrollmentService
         });
 
         await _dbContext.SaveChangesAsync();
+        await _attendanceNotificationService.UpdateSlotAttendances(OtiumAttendanceInformationProvider.ScopeValue,
+            toTermin.Block.Id,
+            true);
         return (GetOldTerminId(),
             toTermin.Block.Id);
 
@@ -356,10 +383,11 @@ internal class EnrollmentService
         var now = DateTime.Now;
         var nowTime = TimeOnly.FromDateTime(now);
         var today = DateOnly.FromDateTime(now);
+        Models_OtiumEinschreibung? fromEinschreibung = null;
         if (fromTerminId != Guid.Empty)
         {
             // EF Core struggles with the OrderBy here, so I'll load all the einschreibungen and order them in memory.
-            var fromEinschreibung = (await _dbContext.OtiaEinschreibungen
+            fromEinschreibung = (await _dbContext.OtiaEinschreibungen
                     .Include(e => e.Termin)
                     .ThenInclude(e => e.Block)
                     .Where(e => e.BetroffenePerson.Id == studentId && e.Termin.Id == fromTerminId)
@@ -383,6 +411,11 @@ internal class EnrollmentService
         if (toTermin == null)
         {
             await _dbContext.SaveChangesAsync();
+            if (fromTerminId != Guid.Empty)
+                await _attendanceNotificationService.UpdateSlotAttendances(
+                    OtiumAttendanceInformationProvider.ScopeValue,
+                    fromEinschreibung!.Termin.Block.Id,
+                    true);
             return;
         }
 
@@ -404,6 +437,9 @@ internal class EnrollmentService
         });
 
         await _dbContext.SaveChangesAsync();
+        await _attendanceNotificationService.UpdateSlotAttendances(OtiumAttendanceInformationProvider.ScopeValue,
+            toTermin.Block.Id,
+            true);
     }
 
 

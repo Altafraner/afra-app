@@ -70,9 +70,8 @@ public interface IAttendanceHubClient
     /// </summary>
     /// <param name="StudentId">The students id</param>
     /// <param name="TerminId">The termins id</param>
-    /// <param name="BlockId">The blocks id</param>
     /// <param name="Status">The students updated status</param>
-    public record AttendanceUpdate(Guid StudentId, Guid TerminId, Guid BlockId, OtiumAnwesenheitsStatus Status);
+    record AttendanceUpdate(Guid StudentId, Guid TerminId, AttendanceState Status);
 
     /// <summary>
     ///     A dto for updating the notes of a student in a specific block.

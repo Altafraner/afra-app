@@ -77,7 +77,15 @@ public static class Katalog
     {
         var user = await userAccessor.GetUserAsync();
 
-        var termin = await enrollmentService.UnenrollAsync(terminId, user);
-        return termin is null ? Results.BadRequest() : Results.Ok(await service.GetTerminAsync(terminId, user));
+        try
+        {
+            await enrollmentService.UnenrollAsync(terminId, user);
+        }
+        catch (InvalidOperationException)
+        {
+            return Results.BadRequest();
+        }
+
+        return Results.Ok(await service.GetTerminAsync(terminId, user));
     }
 }

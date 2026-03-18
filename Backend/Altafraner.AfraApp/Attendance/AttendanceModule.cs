@@ -1,5 +1,6 @@
 using Altafraner.AfraApp.Attendance.API.Endpoints;
 using Altafraner.AfraApp.Attendance.Domain.Contracts;
+using Altafraner.AfraApp.Attendance.Jobs;
 using Altafraner.AfraApp.Attendance.Services;
 using Altafraner.AfraApp.Backbone.Authorization;
 using Altafraner.Backbone.Abstractions;
@@ -12,8 +13,11 @@ internal class AttendanceModule : IModule
     public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
     {
         services.AddScoped<IAttendanceService, AttendanceService>();
-        services.AddScoped<AttendanceRealtimeService>();
+        services.AddScoped<SimpleAttendanceNotificationService>();
         services.AddScoped<NotesService>();
+        services.AddScoped<EmergencyUploadJob>();
+
+        services.AddHostedService<EmergencyBackupScheduler>();
     }
 
     public void Configure(WebApplication app)

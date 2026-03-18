@@ -1,4 +1,5 @@
 using Altafraner.AfraApp.Attendance;
+using Altafraner.AfraApp.Attendance.Domain.Contracts;
 using Altafraner.AfraApp.Otium.API;
 using Altafraner.AfraApp.Backbone.Authorization;
 using Altafraner.AfraApp.Calendar;
@@ -36,9 +37,11 @@ public class OtiumModule : IModule
 
         services.AddScoped<ICalendarProvider, OtiumCalendarProvider>();
 
+        services.AddKeyedScoped<IAttendanceInformationProvider, OtiumAttendanceInformationProvider>(
+            OtiumAttendanceInformationProvider.ScopeValue);
+
         services.AddHostedService<EnrollmentReminderScheduler>();
         services.AddHostedService<StudentMisbehaviourNotificationScheduler>();
-        services.AddHostedService<EmergencyBackupScheduler>();
 
         AddRules(services);
     }

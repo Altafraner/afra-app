@@ -43,6 +43,7 @@ public class BlockHelper
     /// <summary>
     ///     Checks if a block is done or currently running.
     /// </summary>
+    [Obsolete("Use GetBlockStatus instead")]
     public bool IsBlockDoneOrRunning(Block block)
     {
         var now = DateTime.Now;
@@ -52,4 +53,36 @@ public class BlockHelper
         return block.SchultagKey < today
                || (block.SchultagKey == today && Get(block.SchemaId)!.Interval.Start <= nowTime);
     }
+
+    /// <summary>
+    ///     Checks if a block is done
+    /// </summary>
+    /// <param name="block"></param>
+    /// <returns></returns>
+    public BlockStatus GetBlockStatus(Block block)
+    {
+        var now = DateTime.Now;
+        var dateToday = DateOnly.FromDateTime(now);
+        var nowTime = TimeOnly.FromDateTime(now);
+        var schema = Get(block.SchemaId)!;
+
+        var dayPast = block.SchultagKey < dateToday;
+        var today = block.SchultagKey == dateToday;
+
+        if (dayPast || (today && nowTime <= schema.Interval.Start)) return BlockStatus.Pending;
+        if (today && nowTime <= schema.Interval.End) return BlockStatus.Running;
+        return BlockStatus.Done;
+    }
+
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+    /// <summary>
+    ///     A blocks status
+    /// </summary>
+    public enum BlockStatus
+    {
+        Pending,
+        Running,
+        Done
+    }
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }

@@ -65,7 +65,7 @@ namespace Altafraner.AfraApp.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("student_id");
 
-                    b.Property<OtiumAnwesenheitsStatus>("Status")
+                    b.Property<AttendanceState>("Status")
                         .HasColumnType("anwesenheits_status")
                         .HasColumnName("status");
 

@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using Altafraner.AfraApp.Attendance.Domain.Contracts;
 using Altafraner.AfraApp.Backbone.Authorization;
 using Altafraner.AfraApp.Otium.Domain.DTO;
 using Altafraner.AfraApp.Otium.Domain.Models;
@@ -23,8 +22,6 @@ public static class Management
     {
         var group = app.MapGroup("/management")
             .RequireAuthorization(AuthorizationPolicies.TutorOnly);
-
-        group.MapGet("/supervision/now", GetNowSupervising);
 
         group.MapGet("/otium", GetOtia);
         group.MapGet("/otium/{otiumId:guid}", GetOtium);
@@ -615,37 +612,12 @@ public static class Management
         if (!termin.IsTutor && !await MayEditAsync(user, authHelper, termin.Verantwortliche))
             return Results.Forbid();
 
-        if (blockHelper.IsBlockDoneOrRunning(termin.Block))
+        if (blockHelper.GetBlockStatus(termin.Block) is BlockHelper.BlockStatus.Done or BlockHelper.BlockStatus.Running)
             return Results.BadRequest("Der Block ist bereits abgeschlossen oder läuft.");
 
         var student = await userService.GetUserByIdAsync(personIdWrapper.Value);
-        await enrollmentService.UnenrollAsync(otiumTerminId, student, true);
+        await enrollmentService.UnenrollAsync(termin.Block.Id, student, true);
         return Results.Ok();
-    }
-
-    private static async Task<IEnumerable<BlockInfo>> GetNowSupervising(AfraAppContext dbContext,
-        BlockHelper blockHelper, IAttendanceService attendanceService, HttpContext context)
-    {
-        var today = DateOnly.FromDateTime(DateTime.Now);
-        var blocksToday = await dbContext.Blocks
-            .AsNoTracking()
-            .Where(b => b.SchultagKey == today)
-            .OrderBy(b => b.SchemaId)
-            .ToListAsync();
-
-        return blocksToday.Where(b => attendanceService.MaySupervise(context.User, b))
-            .Select(b =>
-            {
-                var schema = blockHelper.Get(b.SchemaId)!;
-                return new BlockInfo
-                {
-                    Id = b.Id,
-                    SchemaId = b.SchemaId,
-                    Name = schema.Bezeichnung,
-                    Uhrzeit = schema.Interval,
-                    Datum = b.SchultagKey
-                };
-            });
     }
 
     private static async Task<bool> MayEditAsync(UserAuthorizationHelper authHelper,
