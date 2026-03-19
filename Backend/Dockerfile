@@ -2,10 +2,10 @@
 
 FROM rust:trixie AS rust-build
 WORKDIR /rust-src
-COPY Altafraner.Typst/typst_with_bindings/Cargo.toml Altafraner.Typst/typst_with_bindings/Cargo.toml
-COPY Altafraner.Typst/typst_with_bindings/Cargo.lock  Altafraner.Typst/typst_with_bindings/Cargo.lock
-COPY Altafraner.Typst/typst_with_bindings/ Altafraner.Typst/typst_with_bindings/
-WORKDIR /rust-src/Altafraner.Typst/typst_with_bindings/
+COPY Altafraner.Typst/typst_bindings/Cargo.toml Altafraner.Typst/typst_bindings/Cargo.toml
+COPY Altafraner.Typst/typst_bindings/Cargo.lock  Altafraner.Typst/typst_bindings/Cargo.lock
+COPY Altafraner.Typst/typst_bindings/ Altafraner.Typst/typst_bindings/
+WORKDIR /rust-src/Altafraner.Typst/typst_bindings/
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/usr/local/cargo/git \
     --mount=type=cache,target=/rust-src/target \
@@ -18,8 +18,8 @@ COPY --link --parents **/*.csproj ./
 RUN dotnet restore "Afra-App.slnx" \
     --runtime linux-x64
 COPY ./ ./
-COPY --from=rust-build /rust-src/Altafraner.Typst/typst_with_bindings/Typst.g.cs                               /src/Altafraner.Typst/typst_with_bindings/Typst.g.cs
-COPY --from=rust-build /rust-src/Altafraner.Typst/typst_with_bindings/target/release/libtypst_with_bindings.so /src/Altafraner.Typst/typst_with_bindings/target/release/libtypst_with_bindings.so
+COPY --from=rust-build /rust-src/Altafraner.Typst/typst_bindings/Typst.g.cs                               /src/Altafraner.Typst/typst_bindings/Typst.g.cs
+COPY --from=rust-build /rust-src/Altafraner.Typst/typst_bindings/target/release/libtypst_bindings.so /src/Altafraner.Typst/typst_bindings/target/release/libtypst_bindings.so
 RUN dotnet publish "Altafraner.AfraApp/Altafraner.AfraApp.csproj" \
     -c release \
     --no-restore \
