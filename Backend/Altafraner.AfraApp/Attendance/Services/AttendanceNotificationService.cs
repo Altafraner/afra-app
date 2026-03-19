@@ -1,6 +1,6 @@
 using Altafraner.AfraApp.Attendance.API.Hubs;
 using Altafraner.AfraApp.Attendance.Domain.Contracts;
-using Altafraner.AfraApp.Attendance.Domain.Dto.Notiz;
+using Altafraner.AfraApp.Attendance.Domain.Dto.Notes;
 using Altafraner.AfraApp.Attendance.Domain.HubClients;
 using Altafraner.AfraApp.Attendance.Domain.Models;
 using Altafraner.AfraApp.User.Domain.DTO;
@@ -55,8 +55,8 @@ internal class AttendanceNotificationService : IAttendanceNotificationService
                 var enrollmentsForEvent = e.Enrollments.Select(student =>
                     new IAttendanceHubClient.StudentStatus(new PersonInfoMinimal(student),
                         attendances.GetValueOrDefault(student, IAttendanceService.DefaultAttendanceStatus),
-                        notes.GetValueOrDefault(student.Id, []).Select(note => new Notiz(note))));
-                return new IAttendanceHubClient.TerminInformation(e.EventId,
+                        notes.GetValueOrDefault(student.Id, []).Select(note => new Note(note))));
+                return new IAttendanceHubClient.EventWithEnrollments(e.EventId,
                     e.Name,
                     e.Location,
                     enrollmentsForEvent,
@@ -74,7 +74,7 @@ internal class AttendanceNotificationService : IAttendanceNotificationService
 
         foreach (var terminInformation in events)
             await _hubContext.Clients.Group(AttendanceHub.EventGroupName(scope, slotId, terminInformation.EventId))
-                .UpdateEvent(terminInformation.Einschreibungen);
+                .UpdateEvent(terminInformation.Enrollments);
     }
 
     public async Task UpdateEventAttendance(AttendanceScope scope,
@@ -95,7 +95,7 @@ internal class AttendanceNotificationService : IAttendanceNotificationService
         await target.UpdateEvent(enrollments.Select(e =>
             new IAttendanceHubClient.StudentStatus(new PersonInfoMinimal(e),
                 attendances[e.Id],
-                notes.GetValueOrDefault(e.Id, []).Select(note => new Notiz(note)))));
+                notes.GetValueOrDefault(e.Id, []).Select(note => new Note(note)))));
     }
 
     private IAttendanceInformationProvider GetProvider(AttendanceScope scope)

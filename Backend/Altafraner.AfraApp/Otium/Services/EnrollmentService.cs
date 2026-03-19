@@ -1,5 +1,5 @@
 using Altafraner.AfraApp.Attendance.Domain.Contracts;
-using Altafraner.AfraApp.Attendance.Domain.Dto.Notiz;
+using Altafraner.AfraApp.Attendance.Domain.Dto.Notes;
 using Altafraner.AfraApp.Attendance.Services;
 using Altafraner.AfraApp.Domain.TimeInterval;
 using Altafraner.AfraApp.Otium.Domain.Contracts.Rules;
@@ -297,8 +297,8 @@ internal class EnrollmentService
             changeResult.IsValid,
             string.Join(Environment.NewLine, changeResult.Messages),
             usersEnrollment != null,
-            myNote is not null ? new Notiz(myNote) : null,
-            notes.Select(n => new Notiz(n)),
+            myNote is not null ? new Note(myNote) : null,
+            notes.Select(n => new Note(n)),
             schema.Interval);
     }
 

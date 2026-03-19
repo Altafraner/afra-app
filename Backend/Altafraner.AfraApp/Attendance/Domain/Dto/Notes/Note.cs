@@ -2,12 +2,12 @@ using System.Diagnostics.CodeAnalysis;
 using Altafraner.AfraApp.Attendance.Domain.Models;
 using Altafraner.AfraApp.User.Domain.DTO;
 
-namespace Altafraner.AfraApp.Attendance.Domain.Dto.Notiz;
+namespace Altafraner.AfraApp.Attendance.Domain.Dto.Notes;
 
 /// <summary>
 ///     A DTO representing an attendance note
 /// </summary>
-public record Notiz
+public record Note
 {
     /// <summary>
     ///     The time the note was created
@@ -30,12 +30,12 @@ public record Notiz
     public required PersonInfoMinimal Creator { get; set; }
 
     ///
-    public Notiz()
+    public Note()
     {
     }
 
     [SetsRequiredMembers]
-    internal Notiz(AttendanceNote notiz)
+    internal Note(AttendanceNote notiz)
     {
         Created = notiz.CreatedAt;
         Changed = notiz.LastModified;

@@ -1,6 +1,6 @@
 using Altafraner.AfraApp.Attendance.API.Hubs;
 using Altafraner.AfraApp.Attendance.Domain.Contracts;
-using Altafraner.AfraApp.Attendance.Domain.Dto.Notiz;
+using Altafraner.AfraApp.Attendance.Domain.Dto.Notes;
 using Altafraner.AfraApp.Attendance.Domain.HubClients;
 using Altafraner.AfraApp.Attendance.Domain.Models;
 using Microsoft.AspNetCore.SignalR;
@@ -46,6 +46,6 @@ internal sealed class SimpleAttendanceNotificationService
         var eventId = await informationProvider.GetEventForStudentAndSlot(slotId, studentId);
         await _hubContext.Clients.Groups(AttendanceHub.EventGroupName(scope, slotId, eventId),
                 AttendanceHub.SlotGroupName(scope, slotId))
-            .UpdateNote(new IAttendanceHubClient.NoteUpdate(studentId, notes.Select(n => new Notiz(n))));
+            .UpdateNote(new IAttendanceHubClient.NoteUpdate(studentId, notes.Select(n => new Note(n))));
     }
 }

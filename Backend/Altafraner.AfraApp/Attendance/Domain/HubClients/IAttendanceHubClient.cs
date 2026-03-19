@@ -1,4 +1,4 @@
-using Altafraner.AfraApp.Attendance.Domain.Dto.Notiz;
+using Altafraner.AfraApp.Attendance.Domain.Dto.Notes;
 using Altafraner.AfraApp.Attendance.Domain.Models;
 using Altafraner.AfraApp.Domain.TimeInterval;
 using Altafraner.AfraApp.User.Domain.DTO;
@@ -46,7 +46,7 @@ public interface IAttendanceHubClient
     /// <summary>
     /// Tells the client to update the attendance status of all students in a block.
     /// </summary>
-    Task UpdateSlot(IEnumerable<TerminInformation> updates);
+    Task UpdateSlot(IEnumerable<EventWithEnrollments> updates);
 
     /// <summary>
     /// Tells the client to update the attendance status of all students in a specific termin.
@@ -70,37 +70,37 @@ public interface IAttendanceHubClient
     /// A dto for updating the attendance status of a student in a specific block.
     /// </summary>
     /// <param name="StudentId">The students id</param>
-    /// <param name="TerminId">The termins id</param>
+    /// <param name="EventId">The events id</param>
     /// <param name="Status">The students updated status</param>
-    record AttendanceUpdate(Guid StudentId, Guid TerminId, AttendanceState Status);
+    record AttendanceUpdate(Guid StudentId, Guid EventId, AttendanceState Status);
 
     /// <summary>
     ///     A dto for updating the notes of a student in a specific block.
     /// </summary>
     /// <param name="StudentId">The students id</param>
-    /// <param name="Notizen">All notes for the student during the block</param>
-    record NoteUpdate(Guid StudentId, IEnumerable<Notiz> Notizen);
+    /// <param name="Notes">All notes for the student during the block</param>
+    record NoteUpdate(Guid StudentId, IEnumerable<Note> Notes);
 
     /// <summary>
     /// A dto for updating the status of a specific termin.
     /// </summary>
-    /// <param name="TerminId">The id of the termin the update is for</param>
+    /// <param name="EventId">The id of the event the update is for</param>
     /// <param name="Status">The new status</param>
-    record TerminStatusUpdate(Guid TerminId, bool Status);
+    record TerminStatusUpdate(Guid EventId, bool Status);
 
     /// <summary>
     /// A dto for sending the information about a specific termin to the client.
     /// </summary>
-    /// <param name="EventId">The ID of the termin</param>
-    /// <param name="Label">The name of the event</param>
-    /// <param name="Ort">The location of the event</param>
-    /// <param name="Einschreibungen">a list of all enrollments with their attendance state</param>
+    /// <param name="EventId">The ID of the event</param>
+    /// <param name="Name">The name of the event</param>
+    /// <param name="Location">The location of the event</param>
+    /// <param name="Enrollments">a list of all enrollments with their attendance state</param>
     /// <param name="Status">whether a supervisor has checked attendance for this termin</param>
-    public record TerminInformation(
+    record EventWithEnrollments(
         Guid EventId,
-        string Label,
-        string Ort,
-        IEnumerable<StudentStatus> Einschreibungen,
+        string Name,
+        string Location,
+        IEnumerable<StudentStatus> Enrollments,
         bool Status);
 
     /// <summary>
@@ -121,7 +121,7 @@ public interface IAttendanceHubClient
     /// <param name="Student">The student</param>
     /// <param name="Status">The enrollment status</param>
     /// <param name="Notes">The notes registered for this student in this block</param>
-    record struct StudentStatus(PersonInfoMinimal Student, AttendanceState Status, IEnumerable<Notiz> Notes);
+    record struct StudentStatus(PersonInfoMinimal Student, AttendanceState Status, IEnumerable<Note> Notes);
 
     /// <summary>
     ///     The capabilities of this supervision session

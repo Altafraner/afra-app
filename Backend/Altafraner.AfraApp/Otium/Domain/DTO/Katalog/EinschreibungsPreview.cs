@@ -1,4 +1,4 @@
-using Altafraner.AfraApp.Attendance.Domain.Dto.Notiz;
+using Altafraner.AfraApp.Attendance.Domain.Dto.Notes;
 using Altafraner.AfraApp.Domain.TimeInterval;
 
 namespace Altafraner.AfraApp.Otium.Domain.DTO.Katalog;
@@ -18,6 +18,6 @@ public record EinschreibungsPreview(
     bool KannBearbeiten,
     string? Grund,
     bool Eingeschrieben,
-    Notiz? Notiz,
-    IEnumerable<Notiz> Notizen,
+    Note? Notiz,
+    IEnumerable<Note> Notizen,
     TimeOnlyInterval Interval);

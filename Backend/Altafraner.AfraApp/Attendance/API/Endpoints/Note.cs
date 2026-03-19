@@ -1,4 +1,4 @@
-using Altafraner.AfraApp.Attendance.Domain.Dto.Notiz;
+using Altafraner.AfraApp.Attendance.Domain.Dto.Notes;
 using Altafraner.AfraApp.Attendance.Domain.Models;
 using Altafraner.AfraApp.Attendance.Services;
 using Altafraner.AfraApp.User.Domain.Models;
@@ -17,7 +17,7 @@ internal static class Note
     private static async Task<IResult> AddNote(NotesService service,
         UserAccessor userAccessor,
         UserService userService,
-        NotizCreationRequest request)
+        NoteCreationRequest request)
     {
         var user = await userAccessor.GetUserAsync();
 
@@ -37,7 +37,7 @@ internal static class Note
     private static async Task<IResult> UpdateNote(NotesService service,
         UserAccessor userAccessor,
         UserService userService,
-        NotizCreationRequest request)
+        NoteCreationRequest request)
     {
         var user = await userAccessor.GetUserAsync();
 
@@ -56,7 +56,7 @@ internal static class Note
         if (success)
         {
             notes = await service.GetNotesAsync(request.Scope, request.SlotId, affected.Id);
-            return Results.Ok(notes.Select(n => new Notiz(n)));
+            return Results.Ok(notes.Select(n => new Domain.Dto.Notes.Note(n)));
         }
 
         success = await service.TryAddNoteAsync(request.Scope,
@@ -67,6 +67,6 @@ internal static class Note
         if (!success) return Results.Conflict();
 
         notes = await service.GetNotesAsync(request.Scope, request.SlotId, affected.Id);
-        return Results.Ok(notes.Select(n => new Notiz(n)));
+        return Results.Ok(notes.Select(n => new Domain.Dto.Notes.Note(n)));
     }
 }

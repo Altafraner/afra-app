@@ -1,4 +1,4 @@
-using Altafraner.AfraApp.Attendance.Domain.Dto.Notiz;
+using Altafraner.AfraApp.Attendance.Domain.Dto.Notes;
 using Altafraner.AfraApp.Attendance.Domain.Models;
 using Altafraner.AfraApp.Domain.TimeInterval;
 using Altafraner.AfraApp.User.Domain.DTO;
@@ -91,4 +91,4 @@ public record LehrerTermin : ITermin
 public record LehrerEinschreibung(
     PersonInfoMinimal? Student,
     AttendanceState Anwesenheit,
-    IEnumerable<Notiz> Notizen);
+    IEnumerable<Note> Notizen);

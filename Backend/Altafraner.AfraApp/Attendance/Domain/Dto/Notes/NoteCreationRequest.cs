@@ -1,12 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using Altafraner.AfraApp.Attendance.Domain.Models;
 
-namespace Altafraner.AfraApp.Attendance.Domain.Dto.Notiz;
+namespace Altafraner.AfraApp.Attendance.Domain.Dto.Notes;
 
 /// <summary>
 ///     A request to create a new note
 /// </summary>
-public record NotizCreationRequest
+public record NoteCreationRequest
 {
     /// <summary>
     ///     The notes content

@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using System.Text;
 using Altafraner.AfraApp.Attendance.Domain.Contracts;
-using Altafraner.AfraApp.Attendance.Domain.Dto.Notiz;
+using Altafraner.AfraApp.Attendance.Domain.Dto.Notes;
 using Altafraner.AfraApp.Attendance.Domain.Models;
 using Altafraner.AfraApp.Attendance.Services;
 using Altafraner.AfraApp.Domain;
@@ -487,7 +487,7 @@ internal class OtiumEndpointService
                     e.Value,
                     (await _notesService.GetNotesAsync(OtiumAttendanceInformationProvider.ScopeValue,
                         termin.Block.Id,
-                        e.Key)).Select(n => new Notiz(n))))
+                        e.Key)).Select(n => new Note(n))))
             .ToListAsync();
 
         return new LehrerTermin
