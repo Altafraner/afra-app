@@ -10,6 +10,6 @@ export interface Note {
 
 export interface NoteCreationRequest {
     content: string;
-    blockId: string;
+    slotId: string;
     studentId: string;
 }

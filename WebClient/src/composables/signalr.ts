@@ -3,11 +3,15 @@ import * as signalR from '@microsoft/signalr';
 
 /**
  * Establishes a SignalR connection to the specified URL and provides methods to send messages and register handlers.
- * @param {string} url The URL of the SignalR hub.
- * @param {boolean} reconnect Whether to enable automatic reconnection.
- * @param {Object} toastService Optional service for displaying toast notifications.
+ * @param url The URL of the SignalR hub.
+ * @param reconnect Whether to enable automatic reconnection.
+ * @param toastService Optional service for displaying toast notifications.
  */
-export function useSignalR(url, reconnect = true, toastService = { add: () => undefined }) {
+export function useSignalR(
+    url: string,
+    reconnect: boolean = true,
+    toastService: { add: (message: any) => void } = { add: () => undefined },
+) {
     const connection = ref(null);
     const { resolve, reject, promise } = createDeferred();
 
@@ -21,7 +25,7 @@ export function useSignalR(url, reconnect = true, toastService = { add: () => un
 
     connection.value = con;
 
-    con.onclose((error) => {
+    con.onclose((error: Error): void => {
         console.log('Connection closed: ', error);
         if (error) {
             toastService.add({
@@ -33,7 +37,7 @@ export function useSignalR(url, reconnect = true, toastService = { add: () => un
     });
 
     con.start()
-        .then(() => resolve())
+        .then(() => resolve(undefined))
         .catch((err) => {
             reject(err);
             console.error('Error starting SignalR connection: ', err);
@@ -44,30 +48,32 @@ export function useSignalR(url, reconnect = true, toastService = { add: () => un
             });
         });
 
-    function registerReconnectHandler(handler) {
+    function registerReconnectHandler(handler: (connectionId?: string) => void): void {
         con.onreconnected(handler);
     }
 
-    function registerCloseHandler(handler) {
+    function registerCloseHandler(handler: (error: Error) => void): void {
         con.onclose(handler);
     }
 
-    function registerMessageHandler(eventName, handler) {
+    function registerMessageHandler(eventName: string, handler: (...args: any[]) => any): void {
         con.on(eventName, handler);
     }
 
-    function sendMessage(eventName, ...args) {
-        return con.invoke(eventName, ...args).catch((err) => {
+    async function sendMessage(eventName: string, ...args: any[]): Promise<any> {
+        try {
+            return await con.invoke(eventName, ...args);
+        } catch (err) {
             console.error(`Error sending message '${eventName}': `, err);
             toastService.add({
                 severity: 'error',
                 summary: 'Nachrichtenfehler',
                 detail: `Fehler beim Senden einer Nachricht an den Server.`,
             });
-        });
+        }
     }
 
-    async function closeConnection() {
+    async function closeConnection(): Promise<void> {
         try {
             await con.stop();
             console.log('SignalR connection closed successfully.');
@@ -86,8 +92,12 @@ export function useSignalR(url, reconnect = true, toastService = { add: () => un
     };
 }
 
-function createDeferred() {
-    let resolve, reject;
+function createDeferred(): {
+    promise: Promise<unknown>;
+    resolve: (value: unknown) => void;
+    reject: (reason?: unknown) => void;
+} {
+    let resolve: (value: unknown) => void, reject: (reason?: unknown) => void;
     const promise = new Promise((res, rej) => {
         resolve = res;
         reject = rej;
