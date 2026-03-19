@@ -30,30 +30,34 @@ internal partial class AttendanceHub : Hub<IAttendanceHubClient>
     /// <summary>
     ///     Subscribes a user to get updates for a specific termin.
     /// </summary>
-    public async Task SubscribeToEvent(AttendanceScope scope, Guid eventId)
+    public async Task<IAttendanceHubClient.Capabilities> SubscribeToEvent(AttendanceScope scope,
+        Guid slotId,
+        Guid eventId)
     {
         if (Scope is not null) throw new HubException("AttendanceHub already subscribed");
 
         Scope = scope;
         Type = AttendanceType.Event;
         EventId = eventId;
+        SlotId = slotId;
 
         var informationProvider = GetInformationProvider();
-        SlotId = await informationProvider.GetSlotForEvent(eventId);
-
         await Authorize(informationProvider);
-
         var metadata = await informationProvider.GetMetadataForSlot(SlotId);
 
-        await Groups.AddToGroupAsync(Context.ConnectionId, EventGroupName(scope, eventId));
-        await _notificationService.UpdateEventAttendance(scope, SlotId, eventId, true);
+        await Groups.AddToGroupAsync(Context.ConnectionId, EventGroupName(scope, slotId, eventId));
+        await _notificationService.UpdateEventAttendance(scope, slotId, eventId, Context.ConnectionId);
         await ScheduleMissingStudentNotifications(metadata);
+
+        return new IAttendanceHubClient.Capabilities(metadata.EnableNotes,
+            metadata.EnableMove,
+            metadata.MoveNowIntervall);
     }
 
     /// <summary>
     ///     Subscribes a user to get updates for a specific block.
     /// </summary>
-    public async Task SubscribeToSlot(AttendanceScope scope, Guid slotId)
+    public async Task<IAttendanceHubClient.Capabilities> SubscribeToSlot(AttendanceScope scope, Guid slotId)
     {
         if (Scope is not null) throw new HubException("AttendanceHub already subscribed");
 
@@ -67,8 +71,12 @@ internal partial class AttendanceHub : Hub<IAttendanceHubClient>
         var metadata = await informationProvider.GetMetadataForSlot(SlotId);
 
         await Groups.AddToGroupAsync(Context.ConnectionId, SlotGroupName(scope, slotId));
-        await _notificationService.UpdateSlotAttendances(scope, slotId, false, true);
+        await _notificationService.UpdateSlotAttendances(scope, slotId, false, Context.ConnectionId);
         await ScheduleMissingStudentNotifications(metadata);
+
+        return new IAttendanceHubClient.Capabilities(metadata.EnableNotes,
+            metadata.EnableMove,
+            metadata.MoveNowIntervall);
     }
 
     /// <summary>

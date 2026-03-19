@@ -30,7 +30,7 @@ internal sealed class SimpleAttendanceNotificationService
         var informationProvider = _serviceProvider.GetRequiredKeyedService<IAttendanceInformationProvider>(scope);
         var eventId = await informationProvider.GetEventForStudentAndSlot(slotId, studentId);
         await _hubContext.Clients.Groups(AttendanceHub.SlotGroupName(scope, slotId),
-                AttendanceHub.EventGroupName(scope, eventId))
+                AttendanceHub.EventGroupName(scope, slotId, eventId))
             .UpdateAttendance(new IAttendanceHubClient.AttendanceUpdate(studentId, eventId, attendanceState));
     }
 
@@ -44,7 +44,7 @@ internal sealed class SimpleAttendanceNotificationService
     {
         var informationProvider = _serviceProvider.GetRequiredKeyedService<IAttendanceInformationProvider>(scope);
         var eventId = await informationProvider.GetEventForStudentAndSlot(slotId, studentId);
-        await _hubContext.Clients.Groups(AttendanceHub.EventGroupName(scope, eventId),
+        await _hubContext.Clients.Groups(AttendanceHub.EventGroupName(scope, slotId, eventId),
                 AttendanceHub.SlotGroupName(scope, slotId))
             .UpdateNote(new IAttendanceHubClient.NoteUpdate(studentId, notes.Select(n => new Notiz(n))));
     }

@@ -19,8 +19,8 @@ public interface IAttendanceNotificationService
     /// <param name="scope">The scope the slot is in</param>
     /// <param name="slotId">The slot to update attendances for</param>
     /// <param name="includeEvents">Iff true, also updates attendances for events included in the slot.</param>
-    /// <param name="callerOnly">Iff true, only sends information to the hubs caller</param>
-    Task UpdateSlotAttendances(AttendanceScope scope, Guid slotId, bool includeEvents, bool callerOnly = false);
+    /// <param name="callerOnlyId">If set, only sends information to the hubs caller</param>
+    Task UpdateSlotAttendances(AttendanceScope scope, Guid slotId, bool includeEvents, string? callerOnlyId = null);
 
     /// <summary>
     ///     Updates the attendances for a single event in a slot
@@ -28,6 +28,6 @@ public interface IAttendanceNotificationService
     /// <param name="scope">The slots scope</param>
     /// <param name="slotId">The events slot</param>
     /// <param name="eventId">The events unique id</param>
-    /// <param name="callerOnly">Iff true, only sends information to the hubs caller</param>
-    Task UpdateEventAttendance(AttendanceScope scope, Guid slotId, Guid eventId, bool callerOnly = false);
+    /// <param name="callerOnlyId">If set, only sends information to the hubs caller</param>
+    Task UpdateEventAttendance(AttendanceScope scope, Guid slotId, Guid eventId, string? callerOnlyId = null);
 }

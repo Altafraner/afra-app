@@ -4,8 +4,8 @@ using Altafraner.AfraApp.Attendance.Domain.Dto;
 using Altafraner.AfraApp.Attendance.Domain.Dto.Enrollments;
 using Altafraner.AfraApp.Attendance.Domain.Models;
 using Altafraner.AfraApp.Backbone.Authorization;
+using Altafraner.AfraApp.Domain.TimeInterval;
 using Altafraner.AfraApp.Otium.Configuration;
-using Altafraner.AfraApp.Otium.Domain.Models.TimeInterval;
 using Altafraner.AfraApp.Schuljahr.Domain.Models;
 using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.AfraApp.User.Services;
@@ -84,22 +84,20 @@ internal sealed class OtiumAttendanceInformationProvider : IAttendanceInformatio
         return enrollment?.Id ?? Guid.Empty;
     }
 
-    public async Task<IEnumerable<Person>> GetEnrollmentsForEvent(Guid eventId)
+    public async Task<IEnumerable<Person>> GetEnrollmentsForEvent(Guid slotId, Guid eventId)
     {
-        return await _dbContext.OtiaEinschreibungen.Where(e => e.Termin.Id == eventId)
-            .Select(e => e.BetroffenePerson)
+        if (eventId != Guid.Empty)
+            return await _dbContext.OtiaEinschreibungen.Where(e => e.Termin.Id == eventId)
+                .Select(e => e.BetroffenePerson)
+                .ToListAsync();
+        return await _dbContext.Personen.LeftJoin(
+                _dbContext.OtiaEinschreibungen.Where(e => e.Termin.Block.Id == slotId),
+                e => e.Id,
+                e => e.BetroffenePerson.Id,
+                (p, e) => new { Person = p, Einschreibung = e })
+            .Where(e => e.Einschreibung == null && e.Person.Rolle == Rolle.Mittelstufe)
+            .Select(e => e.Person)
             .ToListAsync();
-    }
-
-    public async Task<Guid> GetSlotForEvent(Guid eventId)
-    {
-        var termin = await _dbContext.OtiaTermine.Select(e => new
-            {
-                OtiumId = e.Otium.Id,
-                e.Id
-            })
-            .FirstAsync(e => e.Id == eventId);
-        return termin.OtiumId;
     }
 
     public async Task<IEnumerable<Event>> GetEventsForSlot(Guid slotId)

@@ -1,4 +1,4 @@
-using Altafraner.AfraApp.Otium.Domain.Models.TimeInterval;
+using Altafraner.AfraApp.Domain.TimeInterval;
 
 namespace Altafraner.AfraApp.Schuljahr.Domain.Models;
 

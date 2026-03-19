@@ -66,19 +66,19 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
     public DbSet<OtiumEinschreibung> OtiaEinschreibungen { get; set; }
 
     /// <summary>
-    ///     All notes for enrollments
-    /// </summary>
-    public DbSet<AttendanceNote> OtiaEinschreibungsNotizen { get; set; }
-
-    /// <summary>
     ///     All attendances for Otia
     /// </summary>
-    public DbSet<Attendance.Domain.Models.Attendance> OtiaAnwesenheiten { get; set; }
+    public DbSet<Attendance.Domain.Models.Attendance> Attendances { get; set; }
 
     /// <summary>
     ///     All event attendance states
     /// </summary>
     public DbSet<AttendanceEventStatus> AttendanceEventStatus { get; set; }
+
+    /// <summary>
+    ///     All notes for enrollments
+    /// </summary>
+    public DbSet<AttendanceNote> AttendanceNotes { get; set; }
 
     /// <summary>
     ///     All school days

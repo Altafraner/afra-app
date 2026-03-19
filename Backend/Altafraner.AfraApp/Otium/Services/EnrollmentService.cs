@@ -1,10 +1,10 @@
 using Altafraner.AfraApp.Attendance.Domain.Contracts;
 using Altafraner.AfraApp.Attendance.Domain.Dto.Notiz;
 using Altafraner.AfraApp.Attendance.Services;
+using Altafraner.AfraApp.Domain.TimeInterval;
 using Altafraner.AfraApp.Otium.Domain.Contracts.Rules;
 using Altafraner.AfraApp.Otium.Domain.Contracts.Services;
 using Altafraner.AfraApp.Otium.Domain.DTO.Katalog;
-using Altafraner.AfraApp.Otium.Domain.Models.TimeInterval;
 using Altafraner.AfraApp.Schuljahr.Domain.Models;
 using Altafraner.AfraApp.User.Domain.DTO;
 using Altafraner.AfraApp.User.Domain.Models;

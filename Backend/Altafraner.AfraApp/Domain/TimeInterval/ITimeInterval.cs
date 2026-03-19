@@ -1,4 +1,4 @@
-namespace Altafraner.AfraApp.Otium.Domain.Models.TimeInterval;
+namespace Altafraner.AfraApp.Domain.TimeInterval;
 
 /// <summary>
 ///     A time-interval with a start and end point.

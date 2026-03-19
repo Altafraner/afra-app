@@ -1,4 +1,4 @@
-namespace Altafraner.AfraApp.Otium.Domain.Models.TimeInterval;
+namespace Altafraner.AfraApp.Domain.TimeInterval;
 
 /// <summary>
 ///     A collection of DateTimeIntervals where removing an interval can split existing intervals.

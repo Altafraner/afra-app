@@ -38,9 +38,9 @@ internal partial class AttendanceHub
         set => Context.Items[EventIdItem] = value;
     }
 
-    internal static string EventGroupName(AttendanceScope scope, Guid eventId)
+    internal static string EventGroupName(AttendanceScope scope, Guid slotId, Guid eventId)
     {
-        return $"event-{scope}-{eventId}";
+        return $"event-{scope}-{slotId}-{eventId}";
     }
 
     internal static string SlotGroupName(AttendanceScope scope, Guid terminId)

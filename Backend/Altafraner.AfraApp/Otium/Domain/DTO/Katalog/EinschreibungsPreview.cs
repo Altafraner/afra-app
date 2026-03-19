@@ -1,5 +1,5 @@
 using Altafraner.AfraApp.Attendance.Domain.Dto.Notiz;
-using Altafraner.AfraApp.Otium.Domain.Models.TimeInterval;
+using Altafraner.AfraApp.Domain.TimeInterval;
 
 namespace Altafraner.AfraApp.Otium.Domain.DTO.Katalog;
 

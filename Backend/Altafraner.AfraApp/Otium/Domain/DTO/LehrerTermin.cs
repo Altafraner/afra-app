@@ -1,6 +1,6 @@
 using Altafraner.AfraApp.Attendance.Domain.Dto.Notiz;
 using Altafraner.AfraApp.Attendance.Domain.Models;
-using Altafraner.AfraApp.Otium.Domain.Models.TimeInterval;
+using Altafraner.AfraApp.Domain.TimeInterval;
 using Altafraner.AfraApp.User.Domain.DTO;
 
 namespace Altafraner.AfraApp.Otium.Domain.DTO;

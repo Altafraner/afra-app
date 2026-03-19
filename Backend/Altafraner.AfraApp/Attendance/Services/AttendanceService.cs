@@ -27,7 +27,7 @@ internal sealed class AttendanceService : IAttendanceService
         Guid slotId,
         Guid studentId)
     {
-        var attendanceEntry = await _dbContext.OtiaAnwesenheiten
+        var attendanceEntry = await _dbContext.Attendances
             .Where(e =>
                 e.Scope == scope && e.SlotId == slotId && e.StudentId == studentId)
             .Select(e => new { e.Status })
@@ -39,7 +39,7 @@ internal sealed class AttendanceService : IAttendanceService
         Guid slotId,
         IEnumerable<Guid> studentIds)
     {
-        var attendanceEntry = await _dbContext.OtiaAnwesenheiten
+        var attendanceEntry = await _dbContext.Attendances
             .Where(e =>
                 e.Scope == scope && e.SlotId == slotId && studentIds.Contains(e.StudentId))
             .Select(e => new { e.StudentId, e.Status })
@@ -55,7 +55,7 @@ internal sealed class AttendanceService : IAttendanceService
             IEnumerable<(AttendanceScope Scope, Guid SlotId)> slots,
             Guid personId)
     {
-        var attendanceEntries = await _dbContext.OtiaAnwesenheiten
+        var attendanceEntries = await _dbContext.Attendances
             .Where(e => slots.Any(s => s.Scope == e.Scope && s.SlotId == e.SlotId)
                         && e.StudentId == personId)
             .Select(e => new { e.Scope, e.SlotId, e.Status })
@@ -72,7 +72,7 @@ internal sealed class AttendanceService : IAttendanceService
     {
         return await _dbContext.Personen
             .LeftJoin(
-                _dbContext.OtiaAnwesenheiten
+                _dbContext.Attendances
                     .Where(e => e.Scope == scope && e.SlotId == slotId),
                 p => p.Id,
                 a => a.StudentId,
@@ -82,11 +82,11 @@ internal sealed class AttendanceService : IAttendanceService
 
     public async Task SetAttendanceAsync(AttendanceScope scope, Guid slotId, Guid studentId, AttendanceState status)
     {
-        var attendanceEntry = await _dbContext.OtiaAnwesenheiten
+        var attendanceEntry = await _dbContext.Attendances
             .FirstOrDefaultAsync(e => e.Scope == scope && e.SlotId == slotId && e.StudentId == studentId);
         if (attendanceEntry is null)
         {
-            _dbContext.OtiaAnwesenheiten.Add(new Domain.Models.Attendance
+            _dbContext.Attendances.Add(new Domain.Models.Attendance
             {
                 Scope = scope,
                 SlotId = slotId,

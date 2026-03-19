@@ -30,13 +30,7 @@ public interface IAttendanceInformationProvider
     /// <summary>
     ///     Gets all Enrollments for a given Event
     /// </summary>
-    Task<IEnumerable<Person>> GetEnrollmentsForEvent(Guid eventId);
-
-    /// <summary>
-    ///     Gets the slot an event is in
-    /// </summary>
-    /// <remarks>The result of this function should be stable and may be cashed</remarks>
-    Task<Guid> GetSlotForEvent(Guid eventId);
+    Task<IEnumerable<Person>> GetEnrollmentsForEvent(Guid slotId, Guid eventId);
 
     /// <summary>
     ///     Gets the events in a slot

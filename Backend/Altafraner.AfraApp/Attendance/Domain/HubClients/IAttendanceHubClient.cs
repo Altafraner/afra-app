@@ -1,6 +1,7 @@
 using Altafraner.AfraApp.Attendance.Domain.Dto.Notiz;
 using Altafraner.AfraApp.Attendance.Domain.Models;
-using Altafraner.AfraApp.Otium.Domain.DTO;
+using Altafraner.AfraApp.Domain.TimeInterval;
+using Altafraner.AfraApp.User.Domain.DTO;
 
 namespace Altafraner.AfraApp.Attendance.Domain.HubClients;
 
@@ -45,13 +46,13 @@ public interface IAttendanceHubClient
     /// <summary>
     /// Tells the client to update the attendance status of all students in a block.
     /// </summary>
-    Task UpdateBlockAttendances(IEnumerable<TerminInformation> updates);
+    Task UpdateSlot(IEnumerable<TerminInformation> updates);
 
     /// <summary>
     /// Tells the client to update the attendance status of all students in a specific termin.
     /// </summary>
     /// <param name="updates">A list of all attendees</param>
-    Task UpdateTerminAttendances(IEnumerable<LehrerEinschreibung> updates);
+    Task UpdateEvent(IEnumerable<StudentStatus> updates);
 
     /// <summary>
     /// Tells the client to update the status of a specific termin.
@@ -84,23 +85,23 @@ public interface IAttendanceHubClient
     /// A dto for updating the status of a specific termin.
     /// </summary>
     /// <param name="TerminId">The id of the termin the update is for</param>
-    /// <param name="SindAnwesenheitenErfasst">The new status</param>
-    public record TerminStatusUpdate(Guid TerminId, bool SindAnwesenheitenErfasst);
+    /// <param name="Status">The new status</param>
+    record TerminStatusUpdate(Guid TerminId, bool Status);
 
     /// <summary>
     /// A dto for sending the information about a specific termin to the client.
     /// </summary>
-    /// <param name="TerminId">The Id of the termin</param>
-    /// <param name="Otium">The name of the otium the termin is for</param>
-    /// <param name="Ort">The location the termin is at</param>
+    /// <param name="EventId">The ID of the termin</param>
+    /// <param name="Label">The name of the event</param>
+    /// <param name="Ort">The location of the event</param>
     /// <param name="Einschreibungen">a list of all enrollments with their attendance state</param>
-    /// <param name="SindAnwesenheitenErfasst">whether a supervisor has checked attendance for this termin</param>
+    /// <param name="Status">whether a supervisor has checked attendance for this termin</param>
     public record TerminInformation(
-        Guid TerminId,
-        string Otium,
+        Guid EventId,
+        string Label,
         string Ort,
-        IEnumerable<LehrerEinschreibung> Einschreibungen,
-        bool SindAnwesenheitenErfasst);
+        IEnumerable<StudentStatus> Einschreibungen,
+        bool Status);
 
     /// <summary>
     /// A dto for sending a notification to the client.
@@ -113,4 +114,23 @@ public interface IAttendanceHubClient
         string Body,
         NotificationSeverity Severity
     );
+
+    /// <summary>
+    ///     Correlates a student with his/her enrollment status
+    /// </summary>
+    /// <param name="Student">The student</param>
+    /// <param name="Status">The enrollment status</param>
+    /// <param name="Notes">The notes registered for this student in this block</param>
+    record struct StudentStatus(PersonInfoMinimal Student, AttendanceState Status, IEnumerable<Notiz> Notes);
+
+    /// <summary>
+    ///     The capabilities of this supervision session
+    /// </summary>
+    /// <param name="EnableNotes">Whether notes are enabled</param>
+    /// <param name="EnableMove">Whether moving students is allowed</param>
+    /// <param name="MoveNowInterval">
+    ///     The timeInterval for which a valid interpretation of moving a student for only the time
+    ///     after the current time exists
+    /// </param>
+    record Capabilities(bool EnableNotes, bool EnableMove, DateTimeInterval? MoveNowInterval);
 }

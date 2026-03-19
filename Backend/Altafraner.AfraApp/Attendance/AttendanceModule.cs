@@ -16,6 +16,7 @@ internal class AttendanceModule : IModule
         services.AddScoped<SimpleAttendanceNotificationService>();
         services.AddScoped<NotesService>();
         services.AddScoped<EmergencyUploadJob>();
+        services.AddScoped<IAttendanceNotificationService, AttendanceNotificationService>();
 
         services.AddHostedService<EmergencyBackupScheduler>();
     }
@@ -25,7 +26,7 @@ internal class AttendanceModule : IModule
         var group = app.MapGroup("/attendance")
             .RequireAuthorization();
         group.MapNoteEndpoints();
-        group.MapHub<AttendanceHub>("/attendance")
+        group.MapHub<AttendanceHub>("/hub")
             .RequireAuthorization(AuthorizationPolicies.TutorOnly);
     }
 }
