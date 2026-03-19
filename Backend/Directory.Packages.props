@@ -27,5 +27,6 @@
     <PackageVersion Include="Google.OrTools" Version="9.15.6755" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
     <PackageVersion Include="OpenTelemetry.Exporter.Prometheus.AspNetCore" Version="1.13.0-beta.1" />
+    <PackageVersion Include="Altafraner.Typst" Version="1.0.0" />
   </ItemGroup>
 </Project>

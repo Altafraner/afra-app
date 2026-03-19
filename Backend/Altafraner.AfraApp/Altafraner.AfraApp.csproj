@@ -29,6 +29,7 @@
         <PackageReference Include="System.DirectoryServices.Protocols"/>
         <PackageReference Include="Google.OrTools"/>
         <PackageReference Include="Microsoft.CodeAnalysis.Common"/>
+        <PackageReference Include="Altafraner.Typst"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -49,7 +50,6 @@
         <ProjectReference Include="..\Altafraner.Backbone.Defaults\Altafraner.Backbone.Defaults.csproj"/>
         <ProjectReference Include="..\Altafraner.Backbone.EmailSchedulingModule\Altafraner.Backbone.EmailSchedulingModule.csproj"/>
         <ProjectReference Include="..\Altafraner.Backbone\Altafraner.Backbone.csproj"/>
-        <ProjectReference Include="..\Altafraner.Typst\Altafraner.Typst.csproj"/>
         <ProjectReference Include="..\Altafraner.Typst.Generator\Altafraner.Typst.Generator.csproj" OutputItemType="Analyzer"/>
     </ItemGroup>
 
