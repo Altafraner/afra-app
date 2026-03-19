@@ -1,0 +1,3 @@
+[submodule "Backend/Altafraner.Typst"]
+	path = Backend/Altafraner.Typst
+	url = git@github.com:Altafraner/typst.git

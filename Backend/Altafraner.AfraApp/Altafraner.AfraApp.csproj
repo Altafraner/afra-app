@@ -3,6 +3,7 @@
     <PropertyGroup>
         <RootNamespace>Altafraner.AfraApp</RootNamespace>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+        <LocalTypstProject>$(MSBuildProjectDirectory)\..\Altafraner.Typst\Altafraner.Typst.csproj</LocalTypstProject>
     </PropertyGroup>
 
     <ItemGroup>
@@ -13,8 +14,8 @@
         <PackageReference Include="Microsoft.AspNetCore.OpenApi"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
-            <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Microsoft.Extensions.Caching.Hybrid"/>
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL"/>
@@ -29,7 +30,13 @@
         <PackageReference Include="System.DirectoryServices.Protocols"/>
         <PackageReference Include="Google.OrTools"/>
         <PackageReference Include="Microsoft.CodeAnalysis.Common"/>
-        <PackageReference Include="Altafraner.Typst"/>
+    </ItemGroup>
+
+    <ItemGroup Condition="Exists('$(LocalTypstProject)')">
+      <ProjectReference Include="$(LocalTypstProject)" />
+    </ItemGroup>
+    <ItemGroup Condition="!Exists('$(LocalTypstProject)')">
+      <PackageReference Include="Altafraner.Typst" />
     </ItemGroup>
 
     <ItemGroup>
