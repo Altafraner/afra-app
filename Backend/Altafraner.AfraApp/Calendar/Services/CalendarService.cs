@@ -15,15 +15,15 @@ namespace Altafraner.AfraApp.Calendar.Services;
 public class CalendarService
 {
     private readonly AfraAppContext _dbContext;
-    private readonly BlockHelper _blockHelper;
+    private readonly IEnumerable<ICalendarProvider> _calendarProviders;
 
     /// <summary>
     ///     Constructor for the CalendarService. Usually called by the DI container.
     /// </summary>
-    public CalendarService(AfraAppContext dbContext, BlockHelper blockHelper)
+    public CalendarService(AfraAppContext dbContext, IEnumerable<ICalendarProvider> calendarProviders)
     {
         _dbContext = dbContext;
-        _blockHelper = blockHelper;
+        _calendarProviders = calendarProviders;
     }
 
     /// <summary>
@@ -72,85 +72,17 @@ public class CalendarService
         {
             return null;
         }
-
-        var enrollments = _dbContext.OtiaEinschreibungen
-            .Where(e => e.BetroffenePerson.Id == sub.BetroffenePerson.Id)
-            .Include(e => e.Termin).ThenInclude(t => t.Otium)
-            .Include(e => e.Termin).ThenInclude(t => t.Block).ThenInclude(b => b.Schultag);
-        var enrolledEvents = enrollments.Select(e => new CalendarEvent
-        {
-            Uid = e.Id.ToString(),
-            Summary = e.Termin.Bezeichnung,
-            Description = e.Termin.Beschreibung,
-            Location = e.Termin.Ort,
-            Start = new CalDateTime(new DateTime(e.Termin.Block.Schultag.Datum, e.Interval.Start), true),
-            End = new CalDateTime(new DateTime(e.Termin.Block.Schultag.Datum, e.Interval.End), true),
-            LastModified =
-                new CalDateTime(
-                    new[] { e.LastModified, e.Termin.LastModified, e.Termin.Otium.LastModified }.Max(),
-                    true),
-            Created = new CalDateTime(e.CreatedAt, true)
-        });
-
-        var taught = _dbContext.OtiaTermine
-            .Where(e => e.Tutor != null && e.Tutor.Id == sub.BetroffenePerson.Id)
-            .Include(t => t.Otium)
-            .Include(t => t.Block).ThenInclude(b => b.Schultag);
-        var taughtEvents = taught.Select(e => new CalendarEvent
-        {
-            Uid = e.Id.ToString(),
-            Summary = e.Bezeichnung,
-            Description = e.Beschreibung,
-            Location = e.Ort,
-            Start = new CalDateTime(
-                new DateTime(e.Block.Schultag.Datum, _blockHelper.Get(e.Block.SchemaId)!.Interval.Start), true),
-            End = new CalDateTime(
-                new DateTime(e.Block.Schultag.Datum, _blockHelper.Get(e.Block.SchemaId)!.Interval.End), true),
-            LastModified = new CalDateTime(new[] { e.LastModified, e.Otium.LastModified }.Max(), true),
-            Created = new CalDateTime(e.CreatedAt, true)
-        });
-
-        var profundumEnrollments = _dbContext.ProfundaEinschreibungen
-            .Where(e => e.IsFixed)
-            .Where(e => e.BetroffenePerson == sub.BetroffenePerson)
-            .Where(e => e.ProfundumInstanz != null)
-            .Include(e => e.ProfundumInstanz).ThenInclude(i => i!.Slots).ThenInclude(s => s.Termine);
-        var profundumEnrolledEvents = profundumEnrollments
-            .SelectMany(e => e.Slot.Termine
-            .Select(t => new CalendarEvent
-            {
-                Summary = e.ProfundumInstanz!.Profundum.Bezeichnung,
-                Description = e.ProfundumInstanz!.Profundum.Beschreibung,
-                Location = e.ProfundumInstanz!.Ort,
-                Start = new CalDateTime(new DateTime(t.Day, t.StartTime), true),
-                End = new CalDateTime(new DateTime(t.Day, t.EndTime), true),
-                LastModified = new CalDateTime(new[] { e.LastModified, e.ProfundumInstanz.LastModified, e.ProfundumInstanz.Profundum.LastModified }.Max(), true),
-                Created = new CalDateTime(e.CreatedAt, true)
-            }));
-
-        var profundumTaught = _dbContext.ProfundaInstanzen
-            .Where(i => i.Verantwortliche.Contains(sub.BetroffenePerson))
-            .Include(i => i!.Slots).ThenInclude(s => s.Termine);
-        var profundumTaughtEvents = profundumTaught
-            .SelectMany(i => i.Slots
-            .SelectMany(s => s.Termine
-            .Select(t => new CalendarEvent
-            {
-                Summary = i.Profundum.Bezeichnung,
-                Description = i.Profundum.Beschreibung,
-                Location = i.Ort,
-                Start = new CalDateTime(new DateTime(t.Day, t.StartTime), true),
-                End = new CalDateTime(new DateTime(t.Day, t.EndTime), true),
-                LastModified = new CalDateTime(new[] { i.LastModified, i.Profundum.LastModified }.Max(), true),
-                Created = new CalDateTime(i.CreatedAt, true)
-            })));
-
+        return await GetCalendarAsync(sub.BetroffenePerson);
+    }
+    ///
+    public async Task<string> GetCalendarAsync(Person person)
+    {
         var calendar = new Ical.Net.Calendar();
 
-        calendar.Events.AddRange(enrolledEvents);
-        calendar.Events.AddRange(taughtEvents);
-        calendar.Events.AddRange(profundumEnrolledEvents);
-        calendar.Events.AddRange(profundumTaughtEvents);
+        calendar.Events.AddRange(_calendarProviders
+                .Select(c => c.GetEventsForPerson(person))
+                .SelectMany(x => x));
+
         calendar.AddTimeZone(new VTimeZone("Europe/Berlin"));
 
         var serializer = new CalendarSerializer();
