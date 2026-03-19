@@ -42,7 +42,7 @@ services:
     ports:
       - "8000:8000"
   jaeger:
-    image: jaegertracing/all-in-one:latest
+    image: jaegertracing/jaeger:latest
     ports:
       - "16686:16686"
       - "4317:4317"
