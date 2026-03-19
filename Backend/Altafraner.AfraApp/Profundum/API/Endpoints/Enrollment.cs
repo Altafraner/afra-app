@@ -22,6 +22,10 @@ public static class Enrollment
         );
         group.MapGet("/wuensche", async (ProfundumEnrollmentService svc, UserAccessor userAccessor) => svc.GetKatalog(await userAccessor.GetUserAsync()));
         group.MapGet("/einschreibungen", GetEnrollmentsAsync);
+        group.MapGet("/einwahl/aktiv", (AfraAppContext db) => {
+            var now = DateTime.UtcNow;
+            return db.ProfundumEinwahlZeitraeume.Any(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop);
+        });
     }
 
     ///

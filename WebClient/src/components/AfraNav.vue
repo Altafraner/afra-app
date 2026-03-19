@@ -1,11 +1,12 @@
 <script lang="ts" setup>
 import { Button, Image, Menubar, useToast } from 'primevue';
 import type { MenuItem } from 'primevue/menuitem';
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
 
 import wappenLight from '/vdaa/favicon.svg?url';
 import wappenDark from '/vdaa/favicon-dark.svg?url';
 import { useUser } from '@/stores/user';
+import { useProfundumEinwahl } from '@/Profundum/stores/profundumEinwahlStore';
 import { useRouter } from 'vue-router';
 import { isDark } from '@/helpers/isdark';
 
@@ -71,6 +72,7 @@ const all_items: MenuItemWithCondition[] = [
                 icon: 'pi pi-check-square',
                 conditions: {
                     roles: ['Mittelstufe'],
+                    feature: () => profundumEinwahl.isEinwahlActive,
                 },
             },
             {
@@ -153,6 +155,13 @@ const all_items: MenuItemWithCondition[] = [
 const toast = useToast();
 const router = useRouter();
 const user = useUser();
+const profundumEinwahl = useProfundumEinwahl();
+
+onMounted(() => {
+    if (user.isMittelstufe) {
+        profundumEinwahl.update();
+    }
+});
 
 const logout = async () => {
     const user = useUser();
@@ -192,6 +201,9 @@ function evaluateCondition(item: MenuItemWithCondition): boolean {
         }
         if (!success) return false;
     }
+
+    if (item.conditions.feature !== undefined && !item.conditions.feature()) return false;
+
     return true;
 }
 
