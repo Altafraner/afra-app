@@ -174,7 +174,8 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
             .MapEnum<MentorType>("mentor_type")
             .MapEnum<GlobalPermission>("global_permission")
             .MapEnum<Wochentyp>("wochentyp")
-            .MapEnum<AttendanceState>("anwesenheits_status");
+            .MapEnum<AttendanceState>("attendance_state")
+            .MapEnum<AttendanceScope>("attendance_scope");
 
     /// <summary>
     ///     The keys used by the ASP.NET Core Domain Protection API.

@@ -56,11 +56,6 @@ public class OtiumTermin : OtiumInstanz, IHasTimestamps
     /// </summary>
     public bool IstAbgesagt { get; set; }
 
-    /// <summary>
-    ///     True, iff a supervisor has checked the attendance for this Termin.
-    /// </summary>
-    public bool SindAnwesenheitenKontrolliert { get; set; } = false;
-
     /// <inheritdoc/>
     public DateTime CreatedAt { get; set; }
 
