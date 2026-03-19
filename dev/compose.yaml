@@ -25,9 +25,7 @@ services:
     stdin_open: true
     tty: true
   mailcatcher:
-    build:
-      context: mock-smtp-server
-      dockerfile: Dockerfile
+    image: ghcr.io/altafraner/mailcatcher:main
     ports:
       - "8090:1080"
       - "1025:1025"
