@@ -90,7 +90,7 @@ public class EmergencyUploadJob : IJob
                   </head>
                   <body>
                       <h1>Aufsichts Notfall-Backup {{HttpUtility.HtmlEncode($"{DateTime.Now:yyyy-MM-dd HH:mm}")}}</h1>
-                      <p>Slot: {{HttpUtility.HtmlEncode(slot.Bezeichnung)}}</p>
+                      <p>Slot: {{HttpUtility.HtmlEncode(slot.Label)}}</p>
                       <h2>Termine</h2>
                       {{termine.Select(t => $"<h3>{HttpUtility.HtmlEncode(t.Location)} {HttpUtility.HtmlEncode(t.Name)}</h3>"
                                             + GenerateHtmlTable(t.Enrollments)).Aggregate(new StringBuilder(), (current, next) => current.Append(next))}}
@@ -98,7 +98,7 @@ public class EmergencyUploadJob : IJob
               </html>
               """;
         await _backupService.SaveHtmlAsync(
-            $"Otium {DateTime.Now:yyyy-MM-dd} {slot.Bezeichnung}",
+            $"Otium {DateTime.Now:yyyy-MM-dd} {slot.Label}",
             html);
         return;
 

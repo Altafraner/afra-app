@@ -23,8 +23,9 @@ internal class AttendanceModule : IModule
 
     public void Configure(WebApplication app)
     {
-        var group = app.MapGroup("/attendance")
+        var group = app.MapGroup("/api/attendance")
             .RequireAuthorization();
+        group.MapSupervisionEndpoints();
         group.MapNoteEndpoints();
         group.MapHub<AttendanceHub>("/hub")
             .RequireAuthorization(AuthorizationPolicies.TutorOnly);

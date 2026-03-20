@@ -2,7 +2,7 @@ using System.Security.Claims;
 using System.Text;
 using Altafraner.AfraApp.Attendance.Domain.Contracts;
 using Altafraner.AfraApp.Attendance.Domain.Dto.Notes;
-using Altafraner.AfraApp.Attendance.Domain.Models;
+using Altafraner.AfraApp.Attendance.Domain.HubClients;
 using Altafraner.AfraApp.Attendance.Services;
 using Altafraner.AfraApp.Domain;
 using Altafraner.AfraApp.Domain.TimeInterval;
@@ -476,19 +476,22 @@ internal class OtiumEndpointService
         var persons = termin.Enrollments.Where(e => e.Interval.End == schema.Interval.End)
             .ToDictionary(e => e.BetroffenePerson.Id, e => e.BetroffenePerson);
 
+        var notes = await _notesService.GetNotesBySlotAsync(OtiumAttendanceInformationProvider.ScopeValue,
+            termin.Block.Id);
+
         var anwesenheiten =
             await (await _attendanceService.GetAttendanceForStudentsInSlotAsync(
                     OtiumAttendanceInformationProvider.ScopeValue,
                     termin.Block.Id,
                     persons.Keys))
             .ToAsyncEnumerable()
-            .Select<KeyValuePair<Guid, AttendanceState>, LehrerEinschreibung>(async (e, _) =>
-                new LehrerEinschreibung(new PersonInfoMinimal(persons[e.Key]),
+            .Select(e =>
+                new IAttendanceHubClient.StudentStatus(new PersonInfoMinimal(persons[e.Key]),
                     e.Value,
-                    (await _notesService.GetNotesAsync(OtiumAttendanceInformationProvider.ScopeValue,
-                        termin.Block.Id,
-                        e.Key)).Select(n => new Note(n))))
-            .ToListAsync();
+                    notes.GetValueOrDefault(e.Key, []).Select(n => new Note(n))))
+            .OrderBy(e => e.Student.Nachname)
+            .ThenBy(e => e.Student.Vorname)
+            .ToArrayAsync();
 
         return new LehrerTermin
         {

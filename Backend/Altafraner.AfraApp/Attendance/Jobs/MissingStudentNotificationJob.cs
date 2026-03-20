@@ -41,7 +41,7 @@ internal sealed class MissingStudentNotificationJob : RetryJob
     protected override async Task ExecuteAsync(IJobExecutionContext context, int _)
     {
         var scope = (AttendanceScope)context.MergedJobDataMap[ScopeItem];
-        var slotId = (Guid)context.MergedJobDataMap[SlotIdItem];
+        var slotId = Guid.Parse((string)context.MergedJobDataMap[SlotIdItem]);
 
         var informationProvider = _serviceProvider.GetRequiredKeyedService<IAttendanceInformationProvider>(scope);
         var metadata = await informationProvider.GetMetadataForSlot(slotId);

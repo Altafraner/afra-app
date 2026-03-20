@@ -1,4 +1,5 @@
 using Altafraner.AfraApp.Attendance.Domain.Dto.Notes;
+using Altafraner.AfraApp.Attendance.Domain.HubClients;
 using Altafraner.AfraApp.Attendance.Domain.Models;
 using Altafraner.AfraApp.Domain.TimeInterval;
 using Altafraner.AfraApp.User.Domain.DTO;
@@ -13,7 +14,7 @@ public record LehrerTermin : ITermin
     /// <summary>
     ///     A list of enrollments for the termin
     /// </summary>
-    public required IEnumerable<LehrerEinschreibung> Einschreibungen { get; set; }
+    public required IEnumerable<IAttendanceHubClient.StudentStatus> Einschreibungen { get; set; }
 
     /// <summary>
     ///     The date of the termin

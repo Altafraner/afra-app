@@ -20,5 +20,5 @@ public class AttendanceSlot
     /// <summary>
     ///     The name of the slot
     /// </summary>
-    public required string Bezeichnung { get; set; }
+    public required string Label { get; set; }
 }

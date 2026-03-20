@@ -239,7 +239,7 @@ internal class EnrollmentService
         if (!save) return;
         await _dbContext.SaveChangesAsync();
         await _attendanceNotificationService.UpdateSlotAttendances(OtiumAttendanceInformationProvider.ScopeValue,
-            enrollments.First().Termin.Id,
+            blockId,
             true);
     }
 

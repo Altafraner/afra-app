@@ -6,6 +6,7 @@ using Altafraner.AfraApp.Attendance.Domain.Models;
 using Altafraner.AfraApp.Backbone.Authorization;
 using Altafraner.AfraApp.Domain.TimeInterval;
 using Altafraner.AfraApp.Otium.Configuration;
+using Altafraner.AfraApp.Otium.Domain.Models;
 using Altafraner.AfraApp.Schuljahr.Domain.Models;
 using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.AfraApp.User.Services;
@@ -38,26 +39,55 @@ internal sealed class OtiumAttendanceInformationProvider : IAttendanceInformatio
     internal const AttendanceScope ScopeValue = AttendanceScope.Otium;
     public AttendanceScope Scope => ScopeValue;
 
+    // This function could propab. be heavily optimized. I'm not doing that just yet.
     public async Task<IEnumerable<EventWithEnrollments>> GetEnrollmentsForSlot(Guid slotId)
     {
         var block = await _dbContext.Blocks.FindAsync(slotId);
         var schema = _blockHelper.Get(block!.SchemaId)!;
 
-        var attendances = await _dbContext.OtiaEinschreibungen
-            .Where(e => e.Termin.Block.Id == slotId)
-            .GroupBy(e => e.BetroffenePerson)
-            .Select(e => e.OrderByDescending(ei => ei.Interval.End).Last())
-            .GroupBy(e => e.Termin)
-            .OrderBy(e => e.Key.Ort)
-            .ThenBy(e => e.Key.Bezeichnung)
-            .Select(e => new EventWithEnrollments
+        var now = DateTime.Now;
+        var nowTime = TimeOnly.FromDateTime(now);
+        var blockStatus = _blockHelper.GetBlockStatus(block);
+
+        var attendancesQuery = BuildStatusFilteredEnrollmentsQuery(slotId, blockStatus, nowTime, schema.Interval.End);
+        attendancesQuery = blockStatus switch
+        {
+            BlockHelper.BlockStatus.Running => SelectOneEnrollmentPerStudentByStart(attendancesQuery,
+                true),
+            BlockHelper.BlockStatus.Done => SelectOneEnrollmentPerStudentByStart(attendancesQuery,
+                false),
+            _ => attendancesQuery
+        };
+
+        var attendanceRows = await attendancesQuery
+            .Include(e => e.Termin)
+            .ThenInclude(e => e.Otium)
+            .Include(e => e.BetroffenePerson)
+            .Select(e => new
             {
-                Enrollments = e.Select(ei => ei.BetroffenePerson),
-                EventId = e.Key.Id,
-                Name = e.Key.Bezeichnung,
-                Location = e.Key.Ort
+                e.Termin,
+                e.BetroffenePerson
             })
             .ToListAsync();
+
+        // For some reason we don't like ordering in the db.
+        var attendances = attendanceRows
+            .GroupBy(e => e.Termin.Id)
+            .Select(g => new
+            {
+                g.First().Termin,
+                Enrollments = g.Select(x => x.BetroffenePerson).OrderBy(e => e.LastName).ThenBy(e => e.FirstName)
+            })
+            .OrderBy(e => e.Termin.Ort)
+            .ThenBy(e => e.Termin.Bezeichnung)
+            .Select(e => new EventWithEnrollments
+            {
+                Enrollments = e.Enrollments,
+                EventId = e.Termin.Id,
+                Name = e.Termin.Bezeichnung,
+                Location = e.Termin.Ort
+            })
+            .ToArray();
 
         if (!schema.Verpflichtend) return attendances;
 
@@ -75,9 +105,28 @@ internal sealed class OtiumAttendanceInformationProvider : IAttendanceInformatio
 
     public async Task<Guid> GetEventForStudentAndSlot(Guid slotId, Guid studentId)
     {
-        var enrollment = await _dbContext.OtiaEinschreibungen
-            .Where(e => e.BetroffenePerson.Id == studentId && e.Termin.Block.Id == slotId)
-            .OrderByDescending(e => e.Interval.Start)
+        var block = await _dbContext.Blocks.FindAsync(slotId);
+        if (block is null)
+            throw new KeyNotFoundException("Block not found");
+        var schema = _blockHelper.Get(block.SchemaId)!;
+        var now = DateTime.Now;
+        var nowTime = TimeOnly.FromDateTime(now);
+        var blockStatus = _blockHelper.GetBlockStatus(block);
+
+        var enrollmentQuery = BuildStatusFilteredEnrollmentsQuery(slotId, blockStatus, nowTime, schema.Interval.End)
+            .Where(e => e.BetroffenePerson.Id == studentId);
+
+        enrollmentQuery = blockStatus switch
+        {
+            BlockHelper.BlockStatus.Running => enrollmentQuery
+                .OrderByDescending(e => e.Interval.Start),
+            BlockHelper.BlockStatus.Done => enrollmentQuery
+                .OrderBy(e => e.Interval.Start),
+            _ => enrollmentQuery
+                .OrderBy(e => e.Interval.Start)
+        };
+
+        var enrollment = await enrollmentQuery
             .Select(e => new { e.Termin.Id })
             .FirstOrDefaultAsync();
 
@@ -86,12 +135,34 @@ internal sealed class OtiumAttendanceInformationProvider : IAttendanceInformatio
 
     public async Task<IEnumerable<Person>> GetEnrollmentsForEvent(Guid slotId, Guid eventId)
     {
+        var block = await _dbContext.Blocks.FindAsync(slotId);
+        if (block is null)
+            throw new KeyNotFoundException("Block not found");
+
+        var schema = _blockHelper.Get(block.SchemaId)!;
+        var nowTime = TimeOnly.FromDateTime(DateTime.Now);
+        var blockStatus = _blockHelper.GetBlockStatus(block);
+
+        var selectedEnrollments =
+            BuildStatusFilteredEnrollmentsQuery(slotId, blockStatus, nowTime, schema.Interval.End);
+        selectedEnrollments = blockStatus switch
+        {
+            BlockHelper.BlockStatus.Running => SelectOneEnrollmentPerStudentByStart(selectedEnrollments,
+                true),
+            BlockHelper.BlockStatus.Done => SelectOneEnrollmentPerStudentByStart(selectedEnrollments,
+                false),
+            _ => selectedEnrollments
+        };
+
         if (eventId != Guid.Empty)
-            return await _dbContext.OtiaEinschreibungen.Where(e => e.Termin.Id == eventId)
+            return await selectedEnrollments.Where(e => e.Termin.Id == eventId)
                 .Select(e => e.BetroffenePerson)
+                .OrderBy(e => e.LastName)
+                .ThenBy(e => e.FirstName)
                 .ToListAsync();
+
         return await _dbContext.Personen.LeftJoin(
-                _dbContext.OtiaEinschreibungen.Where(e => e.Termin.Block.Id == slotId),
+                selectedEnrollments,
                 e => e.Id,
                 e => e.BetroffenePerson.Id,
                 (p, e) => new { Person = p, Einschreibung = e })
@@ -108,7 +179,7 @@ internal sealed class OtiumAttendanceInformationProvider : IAttendanceInformatio
             .Select(e => new Event
             {
                 EventId = e.Id,
-                Name = e.Bezeichnung,
+                Name = e.OverrideBezeichnung ?? e.Otium.Bezeichnung,
                 Location = e.Ort
             })
             .OrderBy(e => e.Location)
@@ -153,14 +224,68 @@ internal sealed class OtiumAttendanceInformationProvider : IAttendanceInformatio
 
     public async Task MoveStudentNow(Guid studentId, Guid slotId, Guid eventId)
     {
-        var current = await _dbContext.OtiaEinschreibungen
-            .Where(e => e.BetroffenePerson.Id == studentId
-                        && e.Termin.Block.Id == slotId)
+        var block = await _dbContext.Blocks.FindAsync(slotId);
+        if (block is null)
+            throw new KeyNotFoundException("Block not found");
+
+        var now = DateTime.Now;
+        var nowTime = TimeOnly.FromDateTime(now);
+        var blockStatus = _blockHelper.GetBlockStatus(block);
+        if (blockStatus != BlockHelper.BlockStatus.Running)
+            throw new InvalidOperationException("Block is not running");
+
+        var current =
+            await BuildStatusFilteredEnrollmentsQuery(slotId, BlockHelper.BlockStatus.Running, nowTime, nowTime)
+                .Where(e => e.BetroffenePerson.Id == studentId)
             .OrderByDescending(e => e.Interval.Start)
             .Select(e => new { e.Termin.Id })
             .FirstOrDefaultAsync();
         if (current is null && eventId == Guid.Empty) return;
         await _enrollmentService.ForceMoveNow(studentId, current?.Id ?? Guid.Empty, eventId);
+    }
+
+    private IQueryable<OtiumEinschreibung> BuildStatusFilteredEnrollmentsQuery(
+        Guid slotId,
+        BlockHelper.BlockStatus blockStatus,
+        TimeOnly nowTime,
+        TimeOnly schemaEnd)
+    {
+        var baseQuery = _dbContext.OtiaEinschreibungen
+            .Where(e => e.Termin.Block.Id == slotId);
+
+        return blockStatus switch
+        {
+            BlockHelper.BlockStatus.Running => baseQuery
+                .Where(ei => ei.Interval.Start <= nowTime && ei.Interval.Start.Add(ei.Interval.Duration) > nowTime),
+            BlockHelper.BlockStatus.Done => baseQuery
+                .Where(ei => ei.Interval.Start.Add(ei.Interval.Duration) >= schemaEnd),
+            _ => baseQuery
+        };
+    }
+
+    private static IQueryable<OtiumEinschreibung> SelectOneEnrollmentPerStudentByStart(
+        IQueryable<OtiumEinschreibung> candidates,
+        bool pickLatestStart)
+    {
+        var selectedStartPerStudent = candidates
+            .GroupBy(e => e.BetroffenePerson.Id)
+            .Select(g => new
+            {
+                StudentId = g.Key,
+                Start = pickLatestStart
+                    ? g.Max(e => e.Interval.Start)
+                    : g.Min(e => e.Interval.Start)
+            });
+
+        var withSelectedStart = candidates.Join(
+            selectedStartPerStudent,
+            e => new { StudentId = e.BetroffenePerson.Id, e.Interval.Start },
+            s => new { s.StudentId, s.Start },
+            (e, _) => e);
+
+        // Overlapping enrollments are not expected. If they happen with identical starts,
+        // we intentionally do not define tie-breaking here.
+        return withSelectedStart;
     }
 
     public async Task<bool> Authorize(Guid slotId, ClaimsPrincipal user)
@@ -200,7 +325,7 @@ internal sealed class OtiumAttendanceInformationProvider : IAttendanceInformatio
                 {
                     Scope = ScopeValue,
                     SlotId = b.Id,
-                    Bezeichnung = schema.Bezeichnung
+                    Label = schema.Bezeichnung
                 };
             });
     }
@@ -229,7 +354,7 @@ internal sealed class OtiumAttendanceInformationProvider : IAttendanceInformatio
             })
             .Select(e => new AttendanceSlot
             {
-                Bezeichnung = e.Schema.Bezeichnung,
+                Label = e.Schema.Bezeichnung,
                 Scope = ScopeValue,
                 SlotId = e.Block.Id
             })

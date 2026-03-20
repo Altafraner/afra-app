@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Altafraner.AfraApp.Attendance.Domain.Contracts;
 using Altafraner.AfraApp.Attendance.Domain.Models;
 using Altafraner.AfraApp.User.Domain.Models;
@@ -55,13 +56,37 @@ internal sealed class AttendanceService : IAttendanceService
             IEnumerable<(AttendanceScope Scope, Guid SlotId)> slots,
             Guid personId)
     {
+        var parameter = Expression.Parameter(typeof(Domain.Models.Attendance), "e");
+        Expression body = Expression.Constant(false);
+
+        var slotsArray = slots as (AttendanceScope Scope, Guid SlotId)[] ?? slots.ToArray();
+        foreach (var slot in slotsArray)
+        {
+            // e.Scope == slot.Scope
+            var scopeEqual = Expression.Equal(
+                Expression.Property(parameter, nameof(Domain.Models.Attendance.Scope)),
+                Expression.Constant(slot.Scope));
+
+            // e.SlotId == slot.SlotId
+            var slotIdEqual = Expression.Equal(
+                Expression.Property(parameter, nameof(Domain.Models.Attendance.SlotId)),
+                Expression.Constant(slot.SlotId));
+
+            // e.Scope == slot.Scope && e.SlotId == slot.SlotId
+            var andExpression = Expression.AndAlso(scopeEqual, slotIdEqual);
+
+            body = Expression.OrElse(body, andExpression);
+        }
+
+        var compositeFilter = Expression.Lambda<Func<Domain.Models.Attendance, bool>>(body, parameter);
+
         var attendanceEntries = await _dbContext.Attendances
-            .Where(e => slots.Any(s => s.Scope == e.Scope && s.SlotId == e.SlotId)
-                        && e.StudentId == personId)
+            .Where(e => e.StudentId == personId)
+            .Where(compositeFilter)
             .Select(e => new { e.Scope, e.SlotId, e.Status })
             .ToDictionaryAsync(e => (e.Scope, e.SlotId), e => e.Status);
         var keys = attendanceEntries.Keys;
-        var missing = slots.Where(s => !keys.Contains(s)).ToArray();
+        var missing = slotsArray.Where(s => !keys.Contains(s)).ToArray();
         attendanceEntries.EnsureCapacity(attendanceEntries.Count + missing.Length);
         foreach (var slot in missing) attendanceEntries.Add(slot, IAttendanceService.DefaultAttendanceStatus);
 
@@ -99,6 +124,7 @@ internal sealed class AttendanceService : IAttendanceService
         }
 
         attendanceEntry.Status = status;
+        await _simpleAttendanceNotificationService.UpdateSingleAttendance(scope, slotId, studentId, status);
         await _dbContext.SaveChangesAsync();
     }
 

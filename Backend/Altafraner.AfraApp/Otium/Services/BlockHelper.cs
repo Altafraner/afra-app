@@ -66,10 +66,10 @@ public class BlockHelper
         var nowTime = TimeOnly.FromDateTime(now);
         var schema = Get(block.SchemaId)!;
 
-        var dayPast = block.SchultagKey < dateToday;
+        var dayPending = block.SchultagKey > dateToday;
         var today = block.SchultagKey == dateToday;
 
-        if (dayPast || (today && nowTime <= schema.Interval.Start)) return BlockStatus.Pending;
+        if (dayPending || (today && nowTime <= schema.Interval.Start)) return BlockStatus.Pending;
         if (today && nowTime <= schema.Interval.End) return BlockStatus.Running;
         return BlockStatus.Done;
     }
