@@ -9,12 +9,6 @@ import GeneralSupervision from '@/Attendance/components/GeneralSupervision.vue';
 
 const navItems = [
     {
-        label: 'Otium',
-        route: {
-            name: 'Katalog',
-        },
-    },
-    {
         label: 'Aufsicht',
         route: {
             name: 'Aufsicht',
@@ -62,7 +56,7 @@ await setup();
     <div class="flex justify-between items-center">
         <h1>Aufsicht</h1>
         <Button
-            v-if="status && route.query.blockId === undefined"
+            v-if="status && route.query.slotId === undefined"
             icon="pi pi-stop"
             label="Block Wechseln"
             severity="secondary"

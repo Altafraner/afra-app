@@ -93,7 +93,8 @@ async function showAttendance(data) {
                 router.push({
                     name: 'Aufsicht',
                     query: {
-                        blockId: data.data.id,
+                        slotId: data.data.id,
+                        scope: 'otium',
                     },
                 });
         },

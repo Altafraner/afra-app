@@ -41,16 +41,6 @@ const all_items: MenuItemWithCondition[] = [
                 icon: 'pi pi-list',
             },
             {
-                label: 'Aufsicht',
-                route: {
-                    name: 'Aufsicht',
-                },
-                icon: 'pi pi-eye',
-                conditions: {
-                    roles: ['Tutor'],
-                },
-            },
-            {
                 label: 'Verwaltung',
                 route: {
                     name: 'Verwaltung',
@@ -133,6 +123,16 @@ const all_items: MenuItemWithCondition[] = [
                 },
             },
         ],
+    },
+    {
+        label: 'Aufsicht',
+        route: {
+            name: 'Aufsicht',
+        },
+        icon: 'pi pi-eye',
+        conditions: {
+            roles: ['Tutor'],
+        },
     },
     {
         label: 'Admin',
