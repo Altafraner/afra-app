@@ -48,4 +48,11 @@ internal sealed class SimpleAttendanceNotificationService
                 AttendanceHub.SlotGroupName(scope, slotId))
             .UpdateNote(new IAttendanceHubClient.NoteUpdate(studentId, notes.Select(n => new Note(n))));
     }
+
+    public async Task UpdateStatusForEvent(AttendanceScope scope, Guid slotId, Guid eventId, bool status)
+    {
+        await _hubContext.Clients.Groups(AttendanceHub.EventGroupName(scope, slotId, eventId),
+                AttendanceHub.SlotGroupName(scope, slotId))
+            .UpdateEventStatus(new IAttendanceHubClient.TerminStatusUpdate(eventId, status));
+    }
 }

@@ -28,7 +28,7 @@ internal partial class AttendanceHub : Hub<IAttendanceHubClient>
     }
 
     /// <summary>
-    ///     Subscribes a user to get updates for a specific termin.
+    ///     Subscribes a user to get updates for a specific event.
     /// </summary>
     public async Task<IAttendanceHubClient.Capabilities> SubscribeToEvent(AttendanceScope scope,
         Guid slotId,
@@ -94,14 +94,14 @@ internal partial class AttendanceHub : Hub<IAttendanceHubClient>
     }
 
     /// <summary>
-    ///     Updates the checked-status of a specific termin or all missing persons in a block.
+    ///     Updates the checked-status of a specific event or all missing persons in a block.
     /// </summary>
     /// <param name="eventId">
-    ///     The id of the termin the update is for. Use <see cref="Guid.Empty">Guid.Empty</see> for missing
+    ///     The id of the event the update is for. Use <see cref="Guid.Empty">Guid.Empty</see> for missing
     ///     persons.
     /// </param>
     /// <param name="status">The new status</param>
-    public async Task SetTerminStatus(Guid eventId, bool status)
+    public async Task SetEventStatus(Guid eventId, bool status)
     {
         EnsureSubscribed();
         var informationProvider = GetInformationProvider();
@@ -110,7 +110,7 @@ internal partial class AttendanceHub : Hub<IAttendanceHubClient>
     }
 
     /// <summary>
-    /// Retrieves the parallel running termins for a given termin.
+    /// Retrieves the parallel running events for a given event.
     /// </summary>
     /// <returns></returns>
     public async Task<IEnumerable<Event>> GetEventsAvailable()
@@ -122,12 +122,12 @@ internal partial class AttendanceHub : Hub<IAttendanceHubClient>
     }
 
     /// <summary>
-    ///     Moves a student from one termin to another.
+    ///     Moves a student from one event to another.
     /// </summary>
     /// <param name="studentId">The id of the student to move</param>
-    /// <param name="toTerminId">The id of the termin to move the student to</param>
+    /// <param name="toEventId">The id of the event to move the student to</param>
     public async Task MoveStudentNow(Guid studentId,
-        Guid toTerminId)
+        Guid toEventId)
     {
         EnsureSubscribed();
         var informationProvider = GetInformationProvider();
@@ -138,20 +138,20 @@ internal partial class AttendanceHub : Hub<IAttendanceHubClient>
             throw new HubException("Moving students is beginning now is not enabled");
         try
         {
-            await informationProvider.MoveStudentNow(studentId, SlotId, toTerminId);
+            await informationProvider.MoveStudentNow(studentId, SlotId, toEventId);
         }
         catch (KeyNotFoundException)
         {
-            throw new HubException("The student could not be moved since he or the termin does not exist");
+            throw new HubException("The student could not be moved since he or the event does not exist");
         }
     }
 
     /// <summary>
-    ///     Moves a student from one termin to another.
+    ///     Moves a student from one event to another.
     /// </summary>
     /// <param name="studentId">The id of the user</param>
-    /// <param name="toTerminId">The id of the termin to move the user to</param>
-    public async Task MoveStudent(Guid studentId, Guid toTerminId)
+    /// <param name="eventId">The id of the event to move the user to</param>
+    public async Task MoveStudent(Guid studentId, Guid eventId)
     {
         EnsureSubscribed();
         var informationProvider = GetInformationProvider();
@@ -161,11 +161,11 @@ internal partial class AttendanceHub : Hub<IAttendanceHubClient>
             throw new HubException("Moving students is beginning now is not enabled");
         try
         {
-            await informationProvider.MoveStudent(studentId, SlotId, toTerminId);
+            await informationProvider.MoveStudent(studentId, SlotId, eventId);
         }
         catch (KeyNotFoundException)
         {
-            throw new HubException("The student could not be moved since he or the termin does not exist");
+            throw new HubException("The student could not be moved since he or the event does not exist");
         }
     }
 }

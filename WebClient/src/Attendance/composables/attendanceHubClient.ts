@@ -25,7 +25,7 @@ interface AttendanceUpdate {
     status: AttendanceState;
 }
 
-interface TerminStatusUpdate {
+interface EventStatusUpdate {
     eventId: string;
     status: boolean;
 }
@@ -73,7 +73,7 @@ export function useAttendance(
     } else if (toValue(attendanceType) === 'slot') {
         registerMessageHandler('UpdateSlot', updateSlot);
         registerMessageHandler('UpdateAttendance', updateAttendanceInSlot);
-        registerMessageHandler('UpdateTerminStatus', updateTerminStatus);
+        registerMessageHandler('UpdateEventStatus', updateEventStatus);
         registerMessageHandler('UpdateNote', updateNoteInSlot);
     } else {
         throw Error(`Unrecognized scope: ${attendanceType}`);
@@ -97,7 +97,7 @@ export function useAttendance(
         slotAttendances.value = data;
     }
 
-    function updateTerminStatus(data: TerminStatusUpdate) {
+    function updateEventStatus(data: EventStatusUpdate) {
         const index = slotAttendances.value.findIndex((t) => t.eventId === data.eventId);
         if (index !== -1) {
             slotAttendances.value[index].status = data.status;
@@ -136,12 +136,12 @@ export function useAttendance(
     function updateAttendanceInSlot(data: AttendanceUpdate) {
         const index = slotAttendances.value.findIndex((t) => t.eventId === data.eventId);
         if (index !== -1) {
-            const terminAttendances = slotAttendances.value[index].enrollments;
-            const innerIndex = terminAttendances.findIndex(
+            const eventAttendances = slotAttendances.value[index].enrollments;
+            const innerIndex = eventAttendances.findIndex(
                 (a) => a.student.id === data.studentId,
             );
             if (innerIndex !== -1) {
-                terminAttendances[innerIndex].status = data.status;
+                eventAttendances[innerIndex].status = data.status;
             } else {
                 console.warn(
                     `Received status for non-existent student in existing event`,
@@ -182,12 +182,12 @@ export function useAttendance(
     }
 
     /**
-     * Sends a status update for a specific termin or block.
+     * Sends a status update for a specific event or block.
      * @param eventId The id of the event to set the status of.
-     * @param status The new status to set for the termin or block.
+     * @param status The new status to set for the event or block.
      */
     async function sendStatusUpdate(eventId: string, status: boolean): Promise<void> {
-        await sendMessage('SetTerminStatus', eventId, status);
+        await sendMessage('SetEventStatus', eventId, status);
     }
 
     /**
@@ -200,19 +200,19 @@ export function useAttendance(
     /**
      * Moves a student to a different slot
      * @param studentId the id of the student to move
-     * @param terminId the id of the event to move the student to
+     * @param eventId the id of the event to move the student to
      */
-    async function sendMove(studentId: string, terminId: string): Promise<void> {
-        await sendMessage('MoveStudent', studentId, terminId);
+    async function sendMove(studentId: string, eventId: string): Promise<void> {
+        await sendMessage('MoveStudent', studentId, eventId);
     }
 
     /**
      * Moves a student to a different event only from the current time onward
      * @param studentId the id of the student to move
-     * @param terminId the id of the termin the student should be moved to
+     * @param eventId the id of the event the student should be moved to
      */
-    async function sendMoveNow(studentId: string, terminId: string): Promise<void> {
-        await sendMessage('MoveStudentNow', studentId, terminId);
+    async function sendMoveNow(studentId: string, eventId: string): Promise<void> {
+        await sendMessage('MoveStudentNow', studentId, eventId);
     }
 
     /**

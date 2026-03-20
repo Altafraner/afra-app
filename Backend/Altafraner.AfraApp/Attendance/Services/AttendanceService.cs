@@ -142,11 +142,13 @@ internal sealed class AttendanceService : IAttendanceService
                 Status = status
             });
             await _dbContext.SaveChangesAsync();
+            await _simpleAttendanceNotificationService.UpdateStatusForEvent(scope, slotId, eventId, status);
             return;
         }
 
         entity.Status = status;
         await _dbContext.SaveChangesAsync();
+        await _simpleAttendanceNotificationService.UpdateStatusForEvent(scope, slotId, eventId, status);
     }
 
     public async Task<Dictionary<Guid, bool>> GetEventStatusForSlotAsync(AttendanceScope scope, Guid slotId)

@@ -1,5 +1,6 @@
 using Altafraner.AfraApp.Attendance.Domain.Contracts;
 using Altafraner.AfraApp.Attendance.Domain.Dto.Notes;
+using Altafraner.AfraApp.Attendance.Domain.Models;
 using Altafraner.AfraApp.Attendance.Services;
 using Altafraner.AfraApp.Domain.TimeInterval;
 using Altafraner.AfraApp.Otium.Domain.Contracts.Rules;
@@ -29,6 +30,7 @@ internal class EnrollmentService
     private readonly INotificationService _userNotificationService;
     private readonly NotesService _notesService;
     private readonly IAttendanceNotificationService _attendanceNotificationService;
+    private readonly IAttendanceService _attendanceService;
 
     /// <summary>
     ///     Constructs the EnrollmentService. Usually called by the DI container.
@@ -39,7 +41,8 @@ internal class EnrollmentService
         IRulesFactory rulesFactory,
         INotificationService userNotificationService,
         NotesService notesService,
-        IAttendanceNotificationService attendanceNotificationService)
+        IAttendanceNotificationService attendanceNotificationService,
+        IAttendanceService attendanceService)
     {
         _dbContext = dbContext;
         _logger = logger;
@@ -48,6 +51,7 @@ internal class EnrollmentService
         _userNotificationService = userNotificationService;
         _notesService = notesService;
         _attendanceNotificationService = attendanceNotificationService;
+        _attendanceService = attendanceService;
     }
 
     /// <summary>
@@ -238,6 +242,14 @@ internal class EnrollmentService
         if (!success) throw new InvalidOperationException();
         if (!save) return;
         await _dbContext.SaveChangesAsync();
+        await _attendanceService.SetAttendanceAsync(OtiumAttendanceInformationProvider.ScopeValue,
+            blockId,
+            student.Id,
+            AttendanceState.Fehlend);
+        await _attendanceService.SetEventStatusAsync(OtiumAttendanceInformationProvider.ScopeValue,
+            blockId,
+            Guid.Empty,
+            false);
         await _attendanceNotificationService.UpdateSlotAttendances(OtiumAttendanceInformationProvider.ScopeValue,
             blockId,
             true);
@@ -349,6 +361,14 @@ internal class EnrollmentService
         });
 
         await _dbContext.SaveChangesAsync();
+        await _attendanceService.SetAttendanceAsync(OtiumAttendanceInformationProvider.ScopeValue,
+            toTermin.Block.Id,
+            studentId,
+            AttendanceState.Fehlend);
+        await _attendanceService.SetEventStatusAsync(OtiumAttendanceInformationProvider.ScopeValue,
+            toTermin.Block.Id,
+            toTerminId,
+            false);
         await _attendanceNotificationService.UpdateSlotAttendances(OtiumAttendanceInformationProvider.ScopeValue,
             toTermin.Block.Id,
             true);
@@ -411,11 +431,19 @@ internal class EnrollmentService
         if (toTermin == null)
         {
             await _dbContext.SaveChangesAsync();
-            if (fromTerminId != Guid.Empty)
-                await _attendanceNotificationService.UpdateSlotAttendances(
-                    OtiumAttendanceInformationProvider.ScopeValue,
-                    fromEinschreibung!.Termin.Block.Id,
-                    true);
+            if (fromTerminId == Guid.Empty) return;
+            await _attendanceService.SetAttendanceAsync(OtiumAttendanceInformationProvider.ScopeValue,
+                fromEinschreibung!.Termin.Block.Id,
+                studentId,
+                AttendanceState.Fehlend);
+            await _attendanceService.SetEventStatusAsync(OtiumAttendanceInformationProvider.ScopeValue,
+                fromEinschreibung!.Termin.Block.Id,
+                toTerminId,
+                false);
+            await _attendanceNotificationService.UpdateSlotAttendances(
+                OtiumAttendanceInformationProvider.ScopeValue,
+                fromEinschreibung!.Termin.Block.Id,
+                true);
             return;
         }
 
@@ -437,6 +465,15 @@ internal class EnrollmentService
         });
 
         await _dbContext.SaveChangesAsync();
+
+        await _attendanceService.SetAttendanceAsync(OtiumAttendanceInformationProvider.ScopeValue,
+            toTermin.Block.Id,
+            studentId,
+            AttendanceState.Fehlend);
+        await _attendanceService.SetEventStatusAsync(OtiumAttendanceInformationProvider.ScopeValue,
+            toTermin.Block.Id,
+            toTerminId,
+            false);
         await _attendanceNotificationService.UpdateSlotAttendances(OtiumAttendanceInformationProvider.ScopeValue,
             toTermin.Block.Id,
             true);

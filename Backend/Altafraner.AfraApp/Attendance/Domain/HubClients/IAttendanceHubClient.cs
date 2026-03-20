@@ -58,7 +58,7 @@ public interface IAttendanceHubClient
     /// Tells the client to update the status of a specific termin.
     /// </summary>
     /// <param name="update">The status-update to send</param>
-    Task UpdateTerminStatus(TerminStatusUpdate update);
+    Task UpdateEventStatus(TerminStatusUpdate update);
 
     /// <summary>
     /// Sends a notification to the client with the given information.
