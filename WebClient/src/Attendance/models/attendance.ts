@@ -28,3 +28,9 @@ export interface AttendanceEvent {
     name: string;
     location: string;
 }
+
+export interface AttendanceSlot {
+    scope: string;
+    slotId: string;
+    label: string;
+}

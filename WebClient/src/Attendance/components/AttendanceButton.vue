@@ -1,16 +1,20 @@
-<script setup>
+<script lang="ts" setup>
 import { Badge, Button, Message } from 'primevue';
 import InputGroup from 'primevue/inputgroup';
+import type { AttendanceState } from '@/Attendance/models/attendance';
 
-const props = defineProps({
-    mayEdit: Boolean,
-    minimal: Boolean,
-});
-const emit = defineEmits(['valueChanged']);
-const status = defineModel({ default: 'Fehlend' });
+defineProps<{
+    mayEdit: Boolean;
+    minimal?: Boolean;
+    status: AttendanceState;
+}>();
 
-const toggle = (value) => {
-    emit('valueChanged', stati[value]);
+const emit = defineEmits<{
+    update: [value: AttendanceState];
+}>();
+
+const toggle = (value: number) => {
+    emit('update', stati[value]);
 };
 
 const buttonSeverities = {
@@ -30,26 +34,27 @@ const icons = {
     Entschuldigt: 'pi pi-clipboard',
     Anwesend: 'pi pi-check',
 };
-const stati = ['Fehlend', 'Entschuldigt', 'Anwesend'];
+
+const stati: AttendanceState[] = ['Fehlend', 'Entschuldigt', 'Anwesend'];
 </script>
 
 <template>
     <InputGroup v-if="mayEdit">
         <Button
             :label="stati[0]"
-            :severity="status === stati[0] ? 'danger' : 'secondary'"
+            :severity="status === stati[0] ? buttonSeverities[status] : 'secondary'"
             size="small"
             @click="() => toggle(0)"
         />
         <Button
             :label="stati[1]"
-            :severity="status === stati[1] ? 'warn' : 'secondary'"
+            :severity="status === stati[1] ? buttonSeverities[status] : 'secondary'"
             size="small"
             @click="() => toggle(1)"
         />
         <Button
             :label="stati[2]"
-            :severity="status === stati[2] ? 'success' : 'secondary'"
+            :severity="status === stati[2] ? buttonSeverities[status] : 'secondary'"
             size="small"
             @click="() => toggle(2)"
         />

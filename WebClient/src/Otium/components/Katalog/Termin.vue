@@ -11,7 +11,7 @@ import { findPath } from '@/helpers/tree.js';
 import SimpleBreadcrumb from '@/components/SimpleBreadcrumb.vue';
 import MultipleEnrollmentForm from '@/Otium/components/Katalog/Forms/MultipleEnrollmentForm.vue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
-import Notes from '@/Otium/components/Notes/Notes.vue';
+import Notes from '@/Attendance/components/Notes.vue';
 
 const settings = useOtiumStore();
 const user = useUser();
@@ -159,7 +159,8 @@ async function editNotes() {
         data: {
             notes: otium.value.einschreibung.notizen,
             myNote: otium.value.einschreibung.notiz,
-            blockId: otium.value.block.id,
+            slotId: otium.value.block.id,
+            scope: 'otium',
             studentId: user.user.id,
             updateSelf: true,
         },

@@ -10,6 +10,7 @@ export interface Note {
 
 export interface NoteCreationRequest {
     content: string;
+    scope: string;
     slotId: string;
     studentId: string;
 }

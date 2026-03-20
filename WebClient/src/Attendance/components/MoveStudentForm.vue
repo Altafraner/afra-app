@@ -3,7 +3,7 @@ import { computed, inject, ref } from 'vue';
 import Form from '@primevue/forms/form';
 import { formatStudent } from '@/helpers/formatters';
 import FloatLabel from 'primevue/floatlabel';
-import { Button, Message, Select, SplitButton } from 'primevue';
+import { Button, Message, Select } from 'primevue';
 
 const dialogRef = inject('dialogRef');
 
@@ -13,21 +13,14 @@ const form = ref();
 
 const options = computed(() => {
     return dialogRef.value.data.angebote.map((angebot) => ({
-        label: angebot.ort + ' – ' + angebot.otium,
-        value: angebot.terminId ?? angebot.id,
+        label: angebot.location + ' – ' + angebot.name,
+        value: angebot.id ?? angebot.eventId,
     }));
 });
 
 const canMoveNow = computed(() => {
     return dialogRef.value.data.canMoveNow;
 });
-
-const buttonOptions = [
-    {
-        label: 'Ganzen Block verschieben',
-        command: moveAll,
-    },
-];
 
 function resolve({ values }) {
     const errors = {
@@ -105,15 +98,25 @@ function submit({ valid }) {
                 {{ $form.destination.error }}
             </Message>
         </div>
-        <SplitButton
-            v-if="canMoveNow"
-            :model="buttonOptions"
-            class="mt-3"
-            fluid
-            label="Ab jetzt verschieben"
-            @click="save"
-        />
-        <Button v-else class="mt-3" fluid label="Verschieben" @click="moveAll" />
+        <div
+            :class="{
+                'grid-cols-2': canMoveNow,
+                'grid-cols-1': !canMoveNow,
+            }"
+            class="grid gap-3 mt-3"
+        >
+            <Button
+                :severity="canMoveNow ? 'secondary' : 'primary'"
+                label="Ganzen Slot verschieben"
+                @click="moveAll"
+            />
+            <Button
+                v-if="canMoveNow"
+                label="Ab jetzt verschieben"
+                severity="primary"
+                @click="save"
+            />
+        </div>
     </Form>
 </template>
 

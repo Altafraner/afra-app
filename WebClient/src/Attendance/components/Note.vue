@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { Card, Message } from 'primevue';
 import { convertMarkdownToHtml } from '@/composables/markdown';
-import type { Note } from '@/Otium/models/note';
+import type { Note } from '@/Attendance/models/note';
 import { formatDateTime, formatPerson } from '@/helpers/formatters';
 
 defineProps<{

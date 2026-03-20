@@ -1,4 +1,4 @@
-import { ref, shallowRef, toValue } from 'vue';
+import { computed, ref, shallowRef, toValue } from 'vue';
 import { useSignalR } from '@/composables/signalr';
 import type {
     AttendanceEvent,
@@ -7,6 +7,7 @@ import type {
     AttendanceStudentStatus,
 } from '@/Attendance/models/attendance';
 import type { Note } from '@/Attendance/models/note';
+import { isNowInDateTimeInterval } from '@/helpers/time.js';
 
 interface Capabilities {
     enableNotes: boolean;
@@ -52,9 +53,15 @@ export function useAttendance(
         closeConnection,
     } = useSignalR('/api/attendance/hub', true, toastService);
     const slotAttendances = ref<AttendanceEventWithEnrollments[]>([]);
-    const eventAttendances = ref<AttendanceStudentStatus[]>([]);
+    const eventAttendances = ref<AttendanceStudentStatus[] | null>(null);
     const alternatives = shallowRef<AttendanceEvent[]>([]);
     const capabilities = shallowRef<Capabilities>();
+
+    function canMoveNowNow(): boolean {
+        return isNowInDateTimeInterval(capabilities.value?.moveNowInterval);
+    }
+
+    const canMoveNow = computed(() => canMoveNowNow());
 
     registerReconnectHandler(registerScope);
     connectionPromise.then(registerScope);
@@ -187,7 +194,7 @@ export function useAttendance(
      * Fetches alternative events available in the current slot
      */
     async function updateAlternatives(): Promise<void> {
-        alternatives.value = await sendMessage('GetEventsAvailable', slotId);
+        alternatives.value = await sendMessage('GetEventsAvailable');
     }
 
     /**
@@ -202,10 +209,10 @@ export function useAttendance(
     /**
      * Moves a student to a different event only from the current time onward
      * @param studentId the id of the student to move
-     * @param toTerminId the id of the termin the student should be moved to
+     * @param terminId the id of the termin the student should be moved to
      */
-    async function sendMoveNow(studentId: string, toTerminId: string): Promise<void> {
-        await sendMessage('MoveStudentNow', studentId, toTerminId);
+    async function sendMoveNow(studentId: string, terminId: string): Promise<void> {
+        await sendMessage('MoveStudentNow', studentId, terminId);
     }
 
     /**
@@ -222,6 +229,9 @@ export function useAttendance(
         slotAttendance: slotAttendances,
         eventAttendance: eventAttendances,
         alternatives,
+        capabilities,
+        canMoveNow,
+        canMoveNowNow,
         updateAttendance: sendAttendanceUpdate,
         updateStatus: sendStatusUpdate,
         updateAlternatives,

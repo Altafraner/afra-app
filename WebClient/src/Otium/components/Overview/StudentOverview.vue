@@ -17,7 +17,7 @@ import { useOtiumStore } from '@/Otium/stores/otium.js';
 import { findPath } from '@/helpers/tree.js';
 import OtiumKategorieTag from '@/Otium/components/Shared/OtiumKategorieTag.vue';
 import { marked } from 'marked';
-import OtiumAnwesenheit from '@/Otium/components/Shared/OtiumAnwesenheit.vue';
+import AttendanceButton from '@/Attendance/components/AttendanceButton.vue';
 
 const props = defineProps({
     termine: Array,
@@ -83,7 +83,7 @@ const isOs = computed(() => {
 </script>
 
 <template>
-    <Accordion v-if="termine != null">
+    <Accordion v-if="termine != null" lazy>
         <AccordionPanel
             v-for="termin in formatedEnrollments"
             :key="termin.monday"
@@ -172,10 +172,11 @@ const isOs = computed(() => {
                     </Column>
                     <Column>
                         <template #body="{ data }">
-                            <OtiumAnwesenheit
+                            <attendance-button
                                 v-if="data.anwesenheit"
-                                v-model="data.anwesenheit"
-                                minimal
+                                :may-edit="false"
+                                :minimal="true"
+                                :status="data.anwesenheit"
                             />
                         </template>
                     </Column>

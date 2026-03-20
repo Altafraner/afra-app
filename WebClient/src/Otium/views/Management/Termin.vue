@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch } from 'vue';
+import { computed, ref } from 'vue';
 import { useUser } from '@/stores/user';
 import {
     Button,
@@ -8,7 +8,6 @@ import {
     InputText,
     Textarea,
     ToggleSwitch,
-    useDialog,
     useToast,
 } from 'primevue';
 import { mande } from 'mande';
@@ -17,12 +16,8 @@ import { formatDate, formatPerson } from '@/helpers/formatters';
 import Grid from '@/components/Form/Grid.vue';
 import GridEditRow from '@/components/Form/GridEditRow.vue';
 import PersonSelector from '@/components/PersonSelector.vue';
-import OtiumEnrollmentTable from '@/Otium/components/Management/OtiumEnrollmentTable.vue';
-import { useAttendance } from '@/Otium/composables/attendanceHubClient.js';
-import MoveStudentForm from '@/Otium/components/Supervision/MoveStudentForm.vue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
-import { isNowInInterval } from '@/helpers/time.js';
-import SelectStudentToMoveForm from '@/Otium/components/Supervision/SelectStudentToMoveForm.vue';
+import HybridAttendanceTable from '@/Attendance/components/HybridAttendanceTable.vue';
 
 const props = defineProps({
     terminId: String,
@@ -31,16 +26,10 @@ const props = defineProps({
 const loading = ref(true);
 const user = useUser();
 const toast = useToast();
-const dialog = useDialog();
 const { openConfirmDialog } = useConfirmPopover();
 const otium = ref(null);
 
 const aufsichtRunning = ref(false);
-const alternatives = ref([]);
-const moveStudent = ref(() => undefined);
-const moveStudentNow = ref(() => undefined);
-const unenroll = ref(() => undefined);
-const updateAlternatives = ref(() => undefined);
 
 const maxEnrollmentsSetzenSelected = ref(false);
 const maxEnrollmentsSelected = ref(null);
@@ -51,8 +40,6 @@ const bezeichnungSelected = ref();
 const beschreibung = ref('');
 const beschreibungSelected = ref();
 const personSelected = ref(null);
-const updateStatusFunction = ref(() => undefined);
-const stopAufsicht = ref(() => undefined);
 
 const navItems = computed(() => [
     {
@@ -163,41 +150,13 @@ async function simpleUpdate(name, value, errmsg) {
     }
 }
 
-async function startAufsicht() {
+function startAufsicht() {
     if (aufsichtRunning.value) return;
     aufsichtRunning.value = true;
-
-    const aufsicht = useAttendance('termin', props.terminId, toast);
-    const enrollmentWatcher = watch(aufsicht.attendance, (newValue) => {
-        otium.value.einschreibungen = newValue;
-    });
-    const alternativesWatcher = watch(aufsicht.alternatives, (newValue) => {
-        alternatives.value = newValue;
-    });
-    moveStudent.value = aufsicht.moveStudent;
-    moveStudentNow.value = aufsicht.moveStudentNow;
-    unenroll.value = aufsicht.unenroll;
-    updateStatusFunction.value = aufsicht.updateAttendance;
-    updateAlternatives.value = aufsicht.updateAlternatives;
-    stopAufsicht.value = async () => {
-        if (!aufsichtRunning.value) return;
-        aufsichtRunning.value = false;
-        enrollmentWatcher.stop();
-        alternativesWatcher.stop();
-        await aufsicht.updateStatus(otium.value.blockId, true);
-        await aufsicht.stop();
-        await fetchData();
-
-        updateStatusFunction.value = () => undefined;
-        moveStudent.value = () => undefined;
-        moveStudentNow.value = () => undefined;
-        unenroll.value = () => undefined;
-        updateAlternatives.value = () => undefined;
-    };
 }
 
-async function updateAttendanceCallback(student, status) {
-    updateStatusFunction.value(student.id, status);
+function stopAufsicht() {
+    aufsichtRunning.value = false;
 }
 
 const startEditMaxEnrollments = () => {
@@ -224,37 +183,6 @@ const startEditBeschreibung = () => {
     beschreibung.value = otium.value.beschreibung;
 };
 
-const initMove = async (student) => {
-    updateAlternatives.value();
-    dialog.open(MoveStudentForm, {
-        props: {
-            header: 'Schüler:in verschieben',
-            modal: true,
-            class: 'sm:max-w-xl',
-        },
-        data: {
-            student,
-            angebote: alternatives,
-            canMoveNow: isNowInInterval(otium.value.datum, otium.value.uhrzeit),
-        },
-        onClose: move,
-    });
-
-    async function move({ data }) {
-        console.log(data);
-        if (!data) return;
-        if (data.all && data.destination === '00000000-0000-0000-0000-000000000000') {
-            unenroll.value(student.id, otium.value.blockId);
-            return;
-        }
-        if (data.all) {
-            moveStudent.value(student.id, data.destination);
-            return;
-        }
-        await moveStudentNow.value(student.id, otium.value.blockId, data.destination);
-    }
-};
-
 const initRemove = async (evt, student) => {
     openConfirmDialog(evt, remove.bind(this, student), 'Schüler:in ausschreiben?');
 
@@ -264,29 +192,6 @@ const initRemove = async (evt, student) => {
         await fetchData();
     }
 };
-
-function initMoveHere() {
-    dialog.open(SelectStudentToMoveForm, {
-        props: {
-            header: 'Schüler:in verschieben',
-            modal: true,
-            class: 'sm:max-w-xl',
-        },
-        data: {
-            canMoveNow: isNowInInterval(otium.value.datum, otium.value.uhrzeit),
-        },
-        onClose: move,
-    });
-
-    function move({ data }) {
-        if (!data) return;
-        if (data.all) {
-            moveStudent.value(data.student, props.terminId);
-            return;
-        }
-        moveStudentNow.value(data.student, otium.value.blockId, props.terminId);
-    }
-}
 
 await fetchData();
 </script>
@@ -461,18 +366,27 @@ await fetchData();
             />
         </template>
     </div>
-    <OtiumEnrollmentTable
-        :enrollments="otium.einschreibungen"
-        :may-edit-attendance="aufsichtRunning"
-        :update-function="updateAttendanceCallback"
+    <HybridAttendanceTable
+        :enable-supervision="aufsichtRunning"
+        :event-id="props.terminId"
         :show-attendance="otium.isDoneOrRunning"
-        :block-id="otium.blockId"
-        :show-remove="!otium.isDoneOrRunning && !aufsichtRunning"
-        show-transfer
-        @remove="initRemove"
-        @init-move="initMove"
-        @init-move-here="initMoveHere"
-    />
+        :slot-id="otium.blockId"
+        scope="otium"
+        :enrollments="otium.einschreibungen"
+        @update-attendance="(data) => (otium.einschreibungen = data)"
+    >
+        <template v-if="!aufsichtRunning && !otium.isDoneOrRunning" #studentActions="{ data }">
+            <Button
+                v-tooltip="'Ausschreiben'"
+                aria-label="Ausschreiben"
+                icon="pi pi-times"
+                severity="danger"
+                size="small"
+                variant="text"
+                @click="(evt) => initRemove(evt, data.student)"
+            />
+        </template>
+    </HybridAttendanceTable>
 </template>
 
 <style scoped></style>

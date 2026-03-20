@@ -15,3 +15,21 @@ export function isNowInInterval(date, timeInterval) {
 
     return now >= start && now < end;
 }
+
+/**
+ * Check if current time is in a date-time interval.
+ * @param {{ start?: string, end?: string } | undefined | null} interval The interval with ISO-like start/end date-times.
+ * @returns {boolean} True if now is in the interval, false otherwise.
+ */
+export function isNowInDateTimeInterval(interval) {
+    if (!interval?.start || !interval?.end) return false;
+
+    const start = new Date(interval.start);
+    const end = new Date(interval.end);
+
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return false;
+
+    const now = new Date();
+    return now >= start && now < end;
+}
+

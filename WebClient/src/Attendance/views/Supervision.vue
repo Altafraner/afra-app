@@ -1,10 +1,11 @@
-<script setup>
-import { ref, Suspense } from 'vue';
+<script lang="ts" setup>
+import { computed, ref, shallowRef, Suspense } from 'vue';
 import { Button } from 'primevue';
-import OtiumSupervision from '@/Otium/components/Supervision/OtiumSupervision.vue';
 import { useRoute } from 'vue-router';
 import { mande } from 'mande';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
+import type { AttendanceSlot } from '@/Attendance/models/attendance';
+import GeneralSupervision from '@/Attendance/components/GeneralSupervision.vue';
 
 const navItems = [
     {
@@ -22,25 +23,35 @@ const navItems = [
 ];
 
 const route = useRoute();
-const status = ref(route.query.blockId !== undefined);
+const status = ref(route.query.slotId !== undefined);
 
-const blocksAvailable = ref();
-const blockSelected = ref();
+const slotsAvailable = shallowRef<AttendanceSlot[]>([]);
+const slotSelected = shallowRef<AttendanceSlot | null>(null);
 
-function start(block) {
-    blockSelected.value = block;
+const slotActive = computed<AttendanceSlot | null>(() =>
+    route.query.slotId !== undefined
+        ? {
+              slotId: route.query.slotId as string,
+              scope: route.query.scope as string,
+              label: '',
+          }
+        : slotSelected.value,
+);
+
+function start(slot: AttendanceSlot) {
+    slotSelected.value = slot;
     status.value = true;
 }
 
 async function stop() {
     status.value = false;
-    blockSelected.value = null;
+    slotSelected.value = null;
     await setup();
 }
 
 async function setup() {
-    if (route.query.blockId !== undefined) return;
-    blocksAvailable.value = await mande('/api/otium/management/supervision/now').get();
+    if (route.query.slotId !== undefined) return;
+    slotsAvailable.value = await mande('/api/attendance/active').get();
 }
 
 await setup();
@@ -63,27 +74,24 @@ await setup();
         <p>Um ihre Aufsicht zu starten, drücken Sie auf den entsprechenden Slot.</p>
         <div class="flex gap-3">
             <Button
-                v-for="block in blocksAvailable"
-                :key="block.id"
-                :label="block.name"
+                v-for="slot in slotsAvailable"
+                :key="slot.slotId"
+                :label="slot.label"
                 class="min-w-30"
-                @click="() => start(block)"
+                @click="() => start(slot)"
             />
-            <p v-if="blocksAvailable.length === 0">
+            <p v-if="slotsAvailable.length === 0">
                 Es sind keine Slots zur Aufsicht verfügbar.
             </p>
         </div>
         <p>
-            Mit dem Drücken auf den Block bestätigen Sie, dass sie eingeteilte Aufsicht für den
-            Slot sind. Alle Änderungen, die Sie vornehmen, werden protokolliert.
+            Mit dem Drücken auf den Slot bestätigen Sie, dass sie für diesen eine eingeteilte
+            Aufsicht sind. Alle Änderungen, die Sie vornehmen, werden protokolliert.
         </p>
     </div>
     <div v-else>
         <Suspense>
-            <OtiumSupervision
-                :block="blockSelected"
-                :use-query-block="route.query.blockId !== undefined"
-            />
+            <GeneralSupervision :slot="slotActive" />
             <template #fallback>
                 <div class="flex justify-center">
                     <span class="p-3">Lade Aufsicht...</span>

@@ -2,7 +2,7 @@
 import { computed, inject, ref } from 'vue';
 import NoteElement from './Note.vue';
 import { Button, FloatLabel, InputGroup, Message, Textarea, useToast } from 'primevue';
-import type { Note, NoteCreationRequest } from '@/Otium/models/note';
+import type { Note, NoteCreationRequest } from '@/Attendance/models/note';
 import { mande } from 'mande';
 
 const dialogRef = inject<{
@@ -10,7 +10,8 @@ const dialogRef = inject<{
         data: {
             notes: Note[];
             myNote: Note;
-            blockId: string;
+            scope: string;
+            slotId: string;
             studentId: string;
             updateSelf: boolean;
         };
@@ -34,10 +35,11 @@ const notes = computed(() =>
 
 async function save() {
     disabled.value = true;
-    const api = mande('/api/otium/notes');
+    const api = mande('/api/attendance/notes');
     const request: NoteCreationRequest = {
         content: currentNote.value,
-        blockId: dialogRef.value.data.blockId,
+        slotId: dialogRef.value.data.slotId,
+        scope: dialogRef.value.data.scope,
         studentId: dialogRef.value.data.studentId,
     };
     try {

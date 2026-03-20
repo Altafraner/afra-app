@@ -1,7 +1,7 @@
 <script setup>
 import { computed, inject, ref } from 'vue';
 import Form from '@primevue/forms/form';
-import { Button, Message, SplitButton } from 'primevue';
+import { Button, Message } from 'primevue';
 import PersonSelector from '@/components/PersonSelector.vue';
 
 const dialogRef = inject('dialogRef');
@@ -87,15 +87,25 @@ function submit({ valid, values }) {
             </Message>
         </div>
         <p>Durch das Verschieben wird die Anwesenheit auf Abwesend zurückgesetzt.</p>
-        <SplitButton
-            v-if="canMoveNow"
-            :model="buttonOptions"
-            class="mt-3"
-            fluid
-            label="Ab jetzt verschieben"
-            @click="save"
-        />
-        <Button v-else class="mt-3" fluid label="Verschieben" @click="moveAll" />
+        <div
+            :class="{
+                'grid-cols-2': canMoveNow,
+                'grid-cols-1': !canMoveNow,
+            }"
+            class="grid gap-3 mt-3"
+        >
+            <Button
+                :severity="canMoveNow ? 'secondary' : 'primary'"
+                label="Ganzen Slot verschieben"
+                @click="moveAll"
+            />
+            <Button
+                v-if="canMoveNow"
+                label="Ab jetzt verschieben"
+                severity="primary"
+                @click="save"
+            />
+        </div>
     </Form>
 </template>
 
