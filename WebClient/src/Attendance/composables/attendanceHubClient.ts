@@ -98,6 +98,7 @@ export function useAttendance(
     }
 
     function updateEventStatus(data: EventStatusUpdate) {
+        if (!slotAttendances.value) return;
         const index = slotAttendances.value.findIndex((t) => t.eventId === data.eventId);
         if (index !== -1) {
             slotAttendances.value[index].status = data.status;
@@ -107,6 +108,7 @@ export function useAttendance(
     }
 
     function updateAttendanceInEvent(data: AttendanceUpdate) {
+        if (!eventAttendances.value) return;
         const index = eventAttendances.value.findIndex((a) => a.student.id === data.studentId);
         if (index !== -1) {
             eventAttendances.value[index].status = data.status;
@@ -116,6 +118,7 @@ export function useAttendance(
     }
 
     function updateNoteInEvent(data: NoteUpdate) {
+        if (!eventAttendances.value) return;
         const index = eventAttendances.value.findIndex((a) => a.student.id === data.studentId);
         if (index !== -1) {
             eventAttendances.value[index].notes = data.notes;
@@ -123,6 +126,7 @@ export function useAttendance(
     }
 
     function updateNoteInSlot(data: NoteUpdate) {
+        if (!slotAttendances.value) return;
         for (let i = 0; i < slotAttendances.value.length; i++) {
             const index = slotAttendances.value[i].enrollments.findIndex(
                 (a) => a.student.id === data.studentId,
@@ -134,6 +138,7 @@ export function useAttendance(
     }
 
     function updateAttendanceInSlot(data: AttendanceUpdate) {
+        if (!slotAttendances.value) return;
         const index = slotAttendances.value.findIndex((t) => t.eventId === data.eventId);
         if (index !== -1) {
             const eventAttendances = slotAttendances.value[index].enrollments;

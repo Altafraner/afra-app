@@ -38,6 +38,16 @@ internal class AttendanceNotificationService : IAttendanceNotificationService
         await _hubContext.Clients.Groups(attendanceGroups).Notify(notification);
     }
 
+    public async Task SendNotificationToEventInSlot(AttendanceScope scope,
+        Guid slotId,
+        Guid eventId,
+        IAttendanceHubClient.Notification notification)
+    {
+        await _hubContext.Clients
+            .Groups(AttendanceHub.SlotGroupName(scope, slotId), AttendanceHub.EventGroupName(scope, slotId, eventId))
+            .Notify(notification);
+    }
+
     public async Task UpdateSlotAttendances(AttendanceScope scope,
         Guid slotId,
         bool includeEvents,

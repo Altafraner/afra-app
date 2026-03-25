@@ -1,5 +1,6 @@
 using Altafraner.AfraApp.Attendance.Domain.Contracts;
 using Altafraner.AfraApp.Attendance.Domain.Dto.Notes;
+using Altafraner.AfraApp.Attendance.Domain.HubClients;
 using Altafraner.AfraApp.Attendance.Domain.Models;
 using Altafraner.AfraApp.Attendance.Services;
 using Altafraner.AfraApp.Domain.TimeInterval;
@@ -9,6 +10,7 @@ using Altafraner.AfraApp.Otium.Domain.DTO.Katalog;
 using Altafraner.AfraApp.Schuljahr.Domain.Models;
 using Altafraner.AfraApp.User.Domain.DTO;
 using Altafraner.AfraApp.User.Domain.Models;
+using Altafraner.AfraApp.User.Services;
 using Altafraner.Backbone.EmailSchedulingModule;
 using Altafraner.Backbone.Utils;
 using Microsoft.EntityFrameworkCore;
@@ -31,6 +33,7 @@ internal class EnrollmentService
     private readonly NotesService _notesService;
     private readonly IAttendanceNotificationService _attendanceNotificationService;
     private readonly IAttendanceService _attendanceService;
+    private readonly UserService _userService;
 
     /// <summary>
     ///     Constructs the EnrollmentService. Usually called by the DI container.
@@ -42,7 +45,8 @@ internal class EnrollmentService
         INotificationService userNotificationService,
         NotesService notesService,
         IAttendanceNotificationService attendanceNotificationService,
-        IAttendanceService attendanceService)
+        IAttendanceService attendanceService,
+        UserService userService)
     {
         _dbContext = dbContext;
         _logger = logger;
@@ -52,6 +56,7 @@ internal class EnrollmentService
         _notesService = notesService;
         _attendanceNotificationService = attendanceNotificationService;
         _attendanceService = attendanceService;
+        _userService = userService;
     }
 
     /// <summary>
@@ -227,7 +232,8 @@ internal class EnrollmentService
 
             _dbContext.OtiaEinschreibungen.Remove(enrollment);
 
-            var sendNotification = force && !_blockHelper.IsBlockDoneOrRunning(enrollment.Termin.Block);
+            var blockStatus = _blockHelper.GetBlockStatus(enrollment.Termin.Block);
+            var sendNotification = force && blockStatus == BlockHelper.BlockStatus.Pending;
             if (sendNotification)
                 await _userNotificationService.ScheduleNotificationAsync(enrollment.BetroffenePerson,
                     "Abmeldung von Termin",
@@ -253,6 +259,13 @@ internal class EnrollmentService
         await _attendanceNotificationService.UpdateSlotAttendances(OtiumAttendanceInformationProvider.ScopeValue,
             blockId,
             true);
+        await _attendanceNotificationService.SendNotificationToEventInSlot(
+            OtiumAttendanceInformationProvider.ScopeValue,
+            blockId,
+            Guid.Empty,
+            new IAttendanceHubClient.Notification("Umtragung",
+                $"{student.FirstName} {student.LastName} wurde ausgeschrieben.",
+                IAttendanceHubClient.NotificationSeverity.Info));
     }
 
     /// <summary>
@@ -341,6 +354,7 @@ internal class EnrollmentService
     {
         var toTermin = await _dbContext.OtiaTermine
             .Include(t => t.Block)
+            .Include(t => t.Otium)
             .FirstOrDefaultAsync(t => t.Id == toTerminId);
         if (toTermin == null)
             throw new KeyNotFoundException("Der Termin konnte nicht gefunden werden.");
@@ -372,6 +386,14 @@ internal class EnrollmentService
         await _attendanceNotificationService.UpdateSlotAttendances(OtiumAttendanceInformationProvider.ScopeValue,
             toTermin.Block.Id,
             true);
+        var student = await _userService.GetUserByIdAsync(studentId);
+        await _attendanceNotificationService.SendNotificationToEventInSlot(
+            OtiumAttendanceInformationProvider.ScopeValue,
+            toTermin.Block.Id,
+            Guid.Empty,
+            new IAttendanceHubClient.Notification("Umtragung",
+                $"{student.FirstName} {student.LastName} wurde zum Angebot „{toTermin.Bezeichnung}“ verschoben.",
+                IAttendanceHubClient.NotificationSeverity.Info));
         return (GetOldTerminId(),
             toTermin.Block.Id);
 
@@ -400,6 +422,7 @@ internal class EnrollmentService
     /// </exception>
     public async Task ForceMoveNow(Guid studentId, Guid fromTerminId, Guid toTerminId)
     {
+        var student = await _userService.GetUserByIdAsync(studentId);
         var now = DateTime.Now;
         var nowTime = TimeOnly.FromDateTime(now);
         var today = DateOnly.FromDateTime(now);
@@ -426,6 +449,7 @@ internal class EnrollmentService
 
         var toTermin = await _dbContext.OtiaTermine
             .Include(t => t.Block)
+            .Include(t => t.Otium)
             .FirstOrDefaultAsync(t => t.Id == toTerminId);
 
         if (toTermin == null)
@@ -437,13 +461,20 @@ internal class EnrollmentService
                 studentId,
                 AttendanceState.Fehlend);
             await _attendanceService.SetEventStatusAsync(OtiumAttendanceInformationProvider.ScopeValue,
-                fromEinschreibung!.Termin.Block.Id,
+                fromEinschreibung.Termin.Block.Id,
                 toTerminId,
                 false);
             await _attendanceNotificationService.UpdateSlotAttendances(
                 OtiumAttendanceInformationProvider.ScopeValue,
-                fromEinschreibung!.Termin.Block.Id,
+                fromEinschreibung.Termin.Block.Id,
                 true);
+            await _attendanceNotificationService.SendNotificationToEventInSlot(
+                OtiumAttendanceInformationProvider.ScopeValue,
+                fromEinschreibung.Termin.Block.Id,
+                Guid.Empty,
+                new IAttendanceHubClient.Notification("Umtragung",
+                    $"{student.FirstName} {student.LastName} wurde ausgeschrieben.",
+                    IAttendanceHubClient.NotificationSeverity.Info));
             return;
         }
 
@@ -477,6 +508,14 @@ internal class EnrollmentService
         await _attendanceNotificationService.UpdateSlotAttendances(OtiumAttendanceInformationProvider.ScopeValue,
             toTermin.Block.Id,
             true);
+        await _attendanceNotificationService.SendNotificationToEventInSlot(
+            OtiumAttendanceInformationProvider.ScopeValue,
+            toTermin.Block.Id,
+            Guid.Empty,
+            new IAttendanceHubClient.Notification("Umtragung",
+                $"{student.FirstName} {student.LastName} wurde zum Angebot „{toTermin.Bezeichnung}“ verschoben.",
+                IAttendanceHubClient.NotificationSeverity.Info));
+
     }
 
 

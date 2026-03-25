@@ -2,6 +2,7 @@ using Altafraner.AfraApp.Attendance.Domain.Contracts;
 using Altafraner.AfraApp.Attendance.Domain.HubClients;
 using Altafraner.AfraApp.Attendance.Domain.Models;
 using Altafraner.AfraApp.User.Domain.Models;
+using Altafraner.AfraApp.User.Services;
 using Altafraner.Backbone.EmailOutbox;
 using Altafraner.Backbone.Scheduling;
 using Quartz;
@@ -21,18 +22,21 @@ internal sealed class MissingStudentNotificationJob : RetryJob
     private readonly ILogger<MissingStudentNotificationJob> _logger;
     private readonly IEmailOutbox _emailOutbox;
     private readonly IAttendanceNotificationService _attendanceNotificationService;
+    private readonly UserService _userService;
 
     public MissingStudentNotificationJob(ILogger<MissingStudentNotificationJob> logger,
         IServiceProvider serviceProvider,
         IAttendanceService attendanceService,
         IEmailOutbox emailOutbox,
-        IAttendanceNotificationService attendanceNotificationService) : base(logger)
+        IAttendanceNotificationService attendanceNotificationService,
+        UserService userService) : base(logger)
     {
         _logger = logger;
         _serviceProvider = serviceProvider;
         _attendanceService = attendanceService;
         _emailOutbox = emailOutbox;
         _attendanceNotificationService = attendanceNotificationService;
+        _userService = userService;
     }
 
     protected override int MaxRetryCount => 5;
@@ -47,17 +51,11 @@ internal sealed class MissingStudentNotificationJob : RetryJob
         var metadata = await informationProvider.GetMetadataForSlot(slotId);
 
         var attendances = await _attendanceService.GetAttendanceForSlotAsync(scope, slotId);
-        var enrollments = await informationProvider.GetEnrollmentsForSlot(slotId);
-        var enrolledPersons = enrollments.SelectMany(e => e.Enrollments).Distinct().ToHashSet();
+        var allPersons = await _userService.GetUsersWithRoleAsync(Rolle.Mittelstufe);
 
-        var allMissing = attendances
-            .Where(e => enrolledPersons.Contains(e.Key) && e.Key.Rolle == Rolle.Mittelstufe)
-            .Select(e => e.Key)
-            .Distinct()
-            .OrderBy(p => p.LastName)
-            .ThenBy(p => p.FirstName)
+        var allMissing = allPersons
+            .Where(p => !attendances.TryGetValue(p, out var value) || value == AttendanceState.Fehlend)
             .ToList();
-
         if (allMissing.Count == 0) return;
 
         _logger.LogWarning("Sending report for missing students in slot {SlotId}", slotId);

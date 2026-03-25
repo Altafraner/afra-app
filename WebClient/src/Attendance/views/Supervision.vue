@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed, ref, shallowRef, Suspense } from 'vue';
-import { Button } from 'primevue';
-import { useRoute } from 'vue-router';
+import { Button, useToast } from 'primevue';
+import { useRoute, useRouter } from 'vue-router';
 import { mande } from 'mande';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
 import type { AttendanceSlot } from '@/Attendance/models/attendance';
@@ -21,6 +21,20 @@ const status = ref(route.query.slotId !== undefined);
 
 const slotsAvailable = shallowRef<AttendanceSlot[]>([]);
 const slotSelected = shallowRef<AttendanceSlot | null>(null);
+
+if (
+    (route.query.slotId !== undefined && route.query.scope === undefined) ||
+    (route.query.slotId === undefined && route.query.scope !== undefined)
+) {
+    const toast = useToast();
+    const router = useRouter();
+    toast.add({
+        severity: 'error',
+        summary: 'Fehlerhafte Weiterleitung',
+        detail: 'Bei der Weiterleitung auf diese Seite scheint etwas nicht funktioniert zu haben. Sollte der Fehler länger bestehen, wenden Sie sich bitte den/die Administrator:in',
+    });
+    router.replace('/');
+}
 
 const slotActive = computed<AttendanceSlot | null>(() =>
     route.query.slotId !== undefined

@@ -14,6 +14,14 @@ public interface IAttendanceNotificationService
     Task SendNotificationToSlot(AttendanceScope scope, Guid slotId, IAttendanceHubClient.Notification notification);
 
     /// <summary>
+    ///     Sends a simple notification to all users subscribed to an event in a slot as well as the slots general supervisors.
+    /// </summary>
+    Task SendNotificationToEventInSlot(AttendanceScope scope,
+        Guid slotId,
+        Guid eventId,
+        IAttendanceHubClient.Notification notification);
+
+    /// <summary>
     ///     Updates all attendances in a given slot
     /// </summary>
     /// <param name="scope">The scope the slot is in</param>
