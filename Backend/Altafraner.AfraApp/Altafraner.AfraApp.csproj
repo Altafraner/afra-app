@@ -54,6 +54,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" VersionOverride="5.3.0" />
         <AdditionalFiles Include="Typst/**/*.typ"/>
         <UpToDateCheckInput Include="Typst/**/*.typ"/>
     </ItemGroup>
