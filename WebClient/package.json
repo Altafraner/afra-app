@@ -15,7 +15,7 @@
     "dependencies": {
         "@microsoft/signalr": "^10.0.0",
         "@primevue/forms": "^4.5.4",
-        "@primevue/themes": "^4.5.1",
+        "@primeuix/themes": "^2.0.3",
         "@tailwindcss/vite": "^4.2.2",
         "dompurify": "^3.3.3",
         "mande": "^2.0.9",
@@ -26,20 +26,20 @@
         "primevue": "^4.5.4",
         "tailwindcss": "^4.2.2",
         "tailwindcss-primeui": "^0.6.1",
-        "vue": "^3.5.30",
+        "vue": "^3.5.31",
         "vue-router": "^5.0.4"
     },
     "devDependencies": {
         "@eslint/js": "^10.0.1",
         "@vitejs/plugin-vue": "^6.0.5",
-        "@vue/tsconfig": "^0.9.0",
+        "@vue/tsconfig": "^0.9.1",
         "eslint": "^10.1.0",
         "eslint-plugin-vue": "^10.8.0",
         "npm-run-all2": "^8.0.4",
         "prettier": "^3.8.1",
         "vite": "^7.3.1",
         "vite-plugin-pwa": "^1.2.0",
-        "vite-plugin-vue-devtools": "^8.1.0",
+        "vite-plugin-vue-devtools": "^8.1.1",
         "vue-eslint-parser": "^10.4.0",
         "vue-tsc": "^3.2.6"
     }

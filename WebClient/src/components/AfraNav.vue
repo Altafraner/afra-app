@@ -16,6 +16,7 @@ type Role = 'Tutor' | 'Oberstufe' | 'Mittelstufe';
 interface Conditions {
     permissions?: GlobalPermissions[] | undefined;
     roles?: Role[] | undefined;
+    feature?: (() => boolean) | undefined;
 }
 
 interface MenuItemWithCondition extends MenuItem {
@@ -239,12 +240,23 @@ const logo = computed(() => (isDark().value ? wappenDark : wappenLight));
         </template>
         <template #item="{ item, props, hasSubmenu }">
             <router-link v-if="item.route" v-slot="{ href, navigate }" :to="item.route" custom>
-                <a :href="href" v-bind="props.action" @click="navigate">
+                <a
+                    :href="href"
+                    class="transition-colors duration-200 ease delay-0"
+                    v-bind="props.action"
+                    @click="navigate"
+                >
                     <span v-if="item.icon" :class="item.icon" />
                     <span>{{ item.label }}</span>
                 </a>
             </router-link>
-            <a v-else :href="item.url" :target="item.target" v-bind="props.action">
+            <a
+                v-else
+                :href="item.url"
+                :target="item.target"
+                class="transition-colors duration-200 ease delay-0"
+                v-bind="props.action"
+            >
                 <span v-if="item.icon" :class="item.icon" />
                 <span>{{ item.label }}</span>
                 <span v-if="hasSubmenu" class="pi pi-fw pi-angle-down" />
