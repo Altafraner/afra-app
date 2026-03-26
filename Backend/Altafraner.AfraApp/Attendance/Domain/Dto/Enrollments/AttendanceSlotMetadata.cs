@@ -18,6 +18,21 @@ public class AttendanceSlotMetadata
     public required bool EnableMove { get; set; }
 
     /// <summary>
+    ///     Must be true, if the block is done
+    /// </summary>
+    public required bool IsInPast { get; set; }
+
+    /// <summary>
+    ///     The date this slot starts on
+    /// </summary>
+    public required DateOnly StartDate { get; set; }
+
+    /// <summary>
+    ///     The lesson this slot starts in
+    /// </summary>
+    public required int StartLesson { get; set; }
+
+    /// <summary>
     ///     The time intervall in which moving a student beginning now has a valid interpretation and should be enabled.
     ///     Requires <see cref="EnableMove" /> to be <c>true</c>.
     /// </summary>

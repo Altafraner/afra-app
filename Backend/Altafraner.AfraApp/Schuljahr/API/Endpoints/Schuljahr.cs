@@ -81,12 +81,16 @@ public static class Schuljahr
         BlockHelper blockHelper)
     {
         var blocks = await schuljahrService.GetBlocksAsync(date);
-        var blocksMapped = blocks.Select(b => new
+        var blocksMapped = blocks
+            .Select(b => (Block: b, Schema: blockHelper.Get(b.SchemaId)!))
+            .OrderBy(b => b.Schema.Unterrichtsstunde)
+            .ThenBy(b => b.Schema.Id)
+            .Select(b => new
         {
-            schemaId = b.SchemaId,
-            name = blockHelper.Get(b.SchemaId)!.Bezeichnung,
-            id = b.Id
-        }).OrderBy(b => b.schemaId);
+            schemaId = b.Schema.Id,
+            name = b.Schema.Bezeichnung,
+            id = b.Block.Id
+        });
 
         return Results.Ok(blocksMapped);
     }

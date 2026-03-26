@@ -30,6 +30,11 @@ public record BlockMetadata
     public required string Bezeichnung { get; init; }
 
     /// <summary>
+    ///     The lesson number
+    /// </summary>
+    public int Unterrichtsstunde { get; set; }
+
+    /// <summary>
     ///     The schema id of the block
     /// </summary>
     public char Id { get; init; }

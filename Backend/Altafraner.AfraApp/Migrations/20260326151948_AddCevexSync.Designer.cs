@@ -7,6 +7,7 @@ using Altafraner.AfraApp.Schuljahr.Domain.Models;
 using Altafraner.AfraApp.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -15,13 +16,15 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Altafraner.AfraApp.Migrations
 {
     [DbContext(typeof(AfraAppContext))]
-    partial class AfraAppContextModelSnapshot : ModelSnapshot
+    [Migration("20260326151948_AddCevexSync")]
+    partial class AddCevexSync
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.7")
+                .HasAnnotation("ProductVersion", "10.0.5")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "attendance_entry_type", new[] { "automatic", "manual" });
@@ -444,9 +447,9 @@ namespace Altafraner.AfraApp.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("anker_id");
 
-                    b.Property<Guid>("SlotId")
+                    b.Property<Guid>("InstanzId")
                         .HasColumnType("uuid")
-                        .HasColumnName("slot_id");
+                        .HasColumnName("instanz_id");
 
                     b.Property<Guid>("BetroffenePersonId")
                         .HasColumnType("uuid")
@@ -456,11 +459,14 @@ namespace Altafraner.AfraApp.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("grad");
 
-                    b.HasKey("AnkerId", "SlotId", "BetroffenePersonId")
+                    b.HasKey("AnkerId", "InstanzId", "BetroffenePersonId")
                         .HasName("pk_profundum_feedback_entries");
 
-                    b.HasIndex("BetroffenePersonId", "SlotId")
-                        .HasDatabaseName("ix_profundum_feedback_entries_betroffene_person_id_slot_id");
+                    b.HasIndex("BetroffenePersonId")
+                        .HasDatabaseName("ix_profundum_feedback_entries_betroffene_person_id");
+
+                    b.HasIndex("InstanzId")
+                        .HasDatabaseName("ix_profundum_feedback_entries_instanz_id");
 
                     b.ToTable("profundum_feedback_entries");
                 });
@@ -1281,16 +1287,25 @@ namespace Altafraner.AfraApp.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_profundum_feedback_entries_profundum_feedback_anker_anker_id");
 
-                    b.HasOne("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumEinschreibung", "Einschreibung")
+                    b.HasOne("Altafraner.AfraApp.User.Domain.Models.Person", "BetroffenePerson")
                         .WithMany()
-                        .HasForeignKey("BetroffenePersonId", "SlotId")
+                        .HasForeignKey("BetroffenePersonId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_profundum_feedback_entries_profunda_einschreibungen_betroffe~");
+                        .HasConstraintName("fk_profundum_feedback_entries_personen_betroffene_person_id");
+
+                    b.HasOne("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumInstanz", "Instanz")
+                        .WithMany()
+                        .HasForeignKey("InstanzId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_profundum_feedback_entries_profunda_instanzen_instanz_id");
 
                     b.Navigation("Anker");
 
-                    b.Navigation("Einschreibung");
+                    b.Navigation("BetroffenePerson");
+
+                    b.Navigation("Instanz");
                 });
 
             modelBuilder.Entity("Altafraner.AfraApp.Profundum.Domain.Models.ProfundaDefinitionDependency", b =>

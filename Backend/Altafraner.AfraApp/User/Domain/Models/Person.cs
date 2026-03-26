@@ -82,6 +82,22 @@ public class Person : IEmailRecipient
     public DateTime? LdapSyncFailureTime { get; set; }
 
     /// <summary>
+    ///     The users id in cevex
+    /// </summary>
+    [MaxLength(24)]
+    public string? CevexId { get; set; }
+
+    /// <summary>
+    ///     Signifies whether the CevexId was manually assigned
+    /// </summary>
+    public bool CevexIdManuallyEntered { get; set; } = false;
+
+    /// <summary>
+    ///     The date and time the cevex sync failed at
+    /// </summary>
+    public DateTime? CevexSyncFailureTime { get; set; }
+
+    /// <summary>
     ///     A list of all Otia the person is responsible for.
     /// </summary>
     public List<OtiumDefinition> VerwalteteOtia { get; set; } = null!;

@@ -12,11 +12,13 @@ namespace Altafraner.AfraApp.Otium.Services;
 public class RulesValidationService
 {
     private readonly IRulesFactory _rulesFactory;
+    private readonly BlockHelper _blockHelper;
 
     ///
-    public RulesValidationService(IRulesFactory rulesFactory)
+    public RulesValidationService(IRulesFactory rulesFactory, BlockHelper blockHelper)
     {
         _rulesFactory = rulesFactory;
+        _blockHelper = blockHelper;
     }
 
     /// <summary>
@@ -71,7 +73,11 @@ public class RulesValidationService
     {
         List<MessageWithBlock> messages = [];
         var priorityResults = new List<ResultWithBlock>();
-        var orderedBlocks = schultag.Blocks.OrderBy(b => b.SchemaId).ToList();
+        var orderedBlocks = schultag.Blocks.Select(b => (Block: b, Schema: _blockHelper.Get(b.SchemaId)!))
+            .OrderBy(b => b.Schema.Unterrichtsstunde)
+            .ThenBy(b => b.Schema.Id)
+            .Select(b => b.Block)
+            .ToArray();
         var blockRules = _rulesFactory.GetBlockRules();
         foreach (var rule in blockRules)
             foreach (var block in orderedBlocks)
