@@ -13,15 +13,21 @@ internal sealed class AttendanceService : IAttendanceService
 {
     private readonly AfraAppContext _dbContext;
     private readonly SimpleAttendanceNotificationService _simpleAttendanceNotificationService;
+    private readonly IEnumerable<IAttendanceAutomaticEntryProvider> _automaticEntryProviders;
+    private readonly IServiceProvider _serviceProvider;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AttendanceService"/> class.
     /// </summary>
     public AttendanceService(AfraAppContext dbContext,
-        SimpleAttendanceNotificationService simpleAttendanceNotificationService)
+        SimpleAttendanceNotificationService simpleAttendanceNotificationService,
+        IEnumerable<IAttendanceAutomaticEntryProvider> automaticEntryProviders,
+        IServiceProvider serviceProvider)
     {
         _dbContext = dbContext;
         _simpleAttendanceNotificationService = simpleAttendanceNotificationService;
+        _automaticEntryProviders = automaticEntryProviders;
+        _serviceProvider = serviceProvider;
     }
 
     public async Task<AttendanceState> GetAttendanceForStudentInSlotAsync(AttendanceScope scope,
@@ -116,7 +122,8 @@ internal sealed class AttendanceService : IAttendanceService
                 Scope = scope,
                 SlotId = slotId,
                 StudentId = studentId,
-                Status = status
+                Status = status,
+                EntryType = AttendanceEntryType.Manual
             });
             await _simpleAttendanceNotificationService.UpdateSingleAttendance(scope, slotId, studentId, status);
             await _dbContext.SaveChangesAsync();
@@ -124,6 +131,7 @@ internal sealed class AttendanceService : IAttendanceService
         }
 
         attendanceEntry.Status = status;
+        attendanceEntry.EntryType = AttendanceEntryType.Manual;
         await _simpleAttendanceNotificationService.UpdateSingleAttendance(scope, slotId, studentId, status);
         await _dbContext.SaveChangesAsync();
     }
@@ -156,5 +164,83 @@ internal sealed class AttendanceService : IAttendanceService
         return await _dbContext.AttendanceEventStatus
             .Where(e => e.Scope == scope && e.SlotId == slotId)
             .ToDictionaryAsync(e => e.EventId, e => e.Status);
+    }
+
+    public async Task CreateAutomaticEntries(AttendanceScope scope, Guid slotId)
+    {
+        var attendances = await _dbContext.Attendances
+            .Include(e => e.Student)
+            .Where(e => e.Scope == scope && e.SlotId == slotId)
+            .ToDictionaryAsync(e => e.Student.Id, e => e);
+        var allMsStudentIds = await _dbContext.Personen
+            .Where(e => e.Rolle == Rolle.Mittelstufe)
+            .Select(e => e.Id)
+            .ToHashSetAsync();
+        var studentIds = attendances.Where(e => e.Value.EntryType == AttendanceEntryType.Automatic)
+            .Select(e => e.Key)
+            .ToHashSet();
+
+        var attendanceProvider = _serviceProvider.GetRequiredKeyedService<IAttendanceInformationProvider>(scope);
+        var metadata = await attendanceProvider.GetMetadataForSlot(slotId);
+
+        var results = new Dictionary<Guid, AttendanceState>();
+        foreach (var entryProvider in _automaticEntryProviders)
+        {
+            var providerResults = await entryProvider.GetEntriesPerStudent(scope, slotId, metadata);
+            results.EnsureCapacity(results.Count + providerResults.Count);
+            foreach (var entry in providerResults)
+            {
+                if (results.TryAdd(entry.Key, entry.Value)) continue;
+                var theirResult = results[entry.Key];
+                if (theirResult == entry.Value) continue;
+                if (theirResult == AttendanceState.Entschuldigt) continue;
+                if (entry.Value == AttendanceState.Entschuldigt)
+                {
+                    results[entry.Key] = AttendanceState.Entschuldigt;
+                    continue;
+                }
+
+                if (theirResult == AttendanceState.Anwesend) continue;
+
+                // This if is redundant, but I'm gonna leave it for readability
+                if (entry.Value == AttendanceState.Anwesend) results[entry.Key] = AttendanceState.Anwesend;
+            }
+        }
+
+        foreach (var (studentId, attendanceState) in results)
+        {
+            if (!allMsStudentIds.Contains(studentId)) continue;
+            if (attendances.TryGetValue(studentId, out var attendance))
+            {
+                if (attendance.EntryType == AttendanceEntryType.Manual ||
+                    attendance.Status == attendanceState) continue;
+                attendance.Status = attendanceState;
+                await _simpleAttendanceNotificationService.UpdateSingleAttendance(scope,
+                    slotId,
+                    studentId,
+                    attendance.Status);
+            }
+
+            _dbContext.Attendances.Add(new Domain.Models.Attendance
+            {
+                EntryType = AttendanceEntryType.Automatic,
+                Scope = scope,
+                SlotId = slotId,
+                Status = attendanceState,
+                StudentId = studentId
+            });
+        }
+
+        studentIds.ExceptWith(results.Keys);
+        foreach (var studentId in studentIds)
+        {
+            _dbContext.Remove(attendances[studentId]);
+            await _simpleAttendanceNotificationService.UpdateSingleAttendance(scope,
+                slotId,
+                studentId,
+                IAttendanceService.DefaultAttendanceStatus);
+        }
+
+        await _dbContext.SaveChangesAsync();
     }
 }

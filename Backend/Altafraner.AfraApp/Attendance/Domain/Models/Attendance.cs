@@ -35,4 +35,9 @@ public class Attendance
     /// The status of the attendance
     /// </summary>
     public AttendanceState Status { get; set; } = AttendanceState.Fehlend;
+
+    /// <summary>
+    ///     The type of attendance
+    /// </summary>
+    public required AttendanceEntryType EntryType;
 }
