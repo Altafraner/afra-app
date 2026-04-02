@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Buffers.Text;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -25,9 +26,9 @@ internal sealed class WebPushSender<TPerson> where TPerson : class, IWebNotifica
 
     private readonly string _subject = string.Empty;
     private readonly string _publicKeyBase64Url = string.Empty; // original URL-safe base64 (65 bytes)
-    private readonly byte[] _publicKeyX = [];                   // 32-byte X coordinate
-    private readonly byte[] _publicKeyY = [];                   // 32-byte Y coordinate
-    private readonly byte[] _privateKeyD = [];                  // 32-byte private scalar
+
+    private readonly ECDsa _ecdsa = null!;
+    private readonly ECParameters _ecParams;
 
     /// <summary>
     ///     Constructs a new <see cref="WebPushSender{TPerson}" />.
@@ -52,8 +53,8 @@ internal sealed class WebPushSender<TPerson> where TPerson : class, IWebNotifica
         byte[] privKeyBytes;
         try
         {
-            pubKeyBytes = Base64UrlDecode(cfg.PublicKey);
-            privKeyBytes = Base64UrlDecode(cfg.PrivateKey);
+            pubKeyBytes = Base64Url.DecodeFromUtf8(Encoding.UTF8.GetBytes(cfg.PublicKey));
+            privKeyBytes = Base64Url.DecodeFromUtf8(Encoding.UTF8.GetBytes(cfg.PrivateKey));
         }
         catch (FormatException ex)
         {
@@ -69,9 +70,23 @@ internal sealed class WebPushSender<TPerson> where TPerson : class, IWebNotifica
                 "VAPID:PrivateKey must be a 32-byte P-256 private scalar (base64url-encoded).");
 
         _publicKeyBase64Url = cfg.PublicKey;
-        _publicKeyX = pubKeyBytes[1..33];
-        _publicKeyY = pubKeyBytes[33..65];
-        _privateKeyD = privKeyBytes;
+        var publicKeyX = pubKeyBytes[1..33];
+        var publicKeyY = pubKeyBytes[33..65];
+        var privateKeyD = privKeyBytes;
+
+        _ecdsa = ECDsa.Create(new ECParameters
+        {
+            Curve = ECCurve.NamedCurves.nistP256,
+            Q = new ECPoint { X = publicKeyX, Y = publicKeyY },
+            D = privateKeyD,
+        });
+        _ecParams = new ECParameters
+        {
+            Curve = ECCurve.NamedCurves.nistP256,
+            Q = new ECPoint { X = publicKeyX, Y = publicKeyY },
+            D = privateKeyD,
+        };
+
         _subject = cfg.Subject ?? string.Empty;
         IsEnabled = true;
     }
@@ -91,8 +106,8 @@ internal sealed class WebPushSender<TPerson> where TPerson : class, IWebNotifica
         if (!IsEnabled)
             return;
 
-        var uaPublicKey = Base64UrlDecode(p256dhBase64Url);
-        var authSecret = Base64UrlDecode(authBase64Url);
+        var uaPublicKey = Base64Url.DecodeFromUtf8(Encoding.UTF8.GetBytes(p256dhBase64Url));
+        var authSecret = Base64Url.DecodeFromUtf8(Encoding.UTF8.GetBytes(authBase64Url));
 
         var body = EncryptPayload(Encoding.UTF8.GetBytes(jsonPayload), uaPublicKey, authSecret);
 
@@ -130,26 +145,19 @@ internal sealed class WebPushSender<TPerson> where TPerson : class, IWebNotifica
 
     private string CreateVapidJwt(string audience)
     {
-        var header = Base64UrlEncode("""{"typ":"JWT","alg":"ES256"}"""u8.ToArray());
+        var header = Base64Url.EncodeToString("""{"typ":"JWT","alg":"ES256"}"""u8.ToArray());
         var exp = DateTimeOffset.UtcNow.AddHours(12).ToUnixTimeSeconds();
-        var payload = Base64UrlEncode(
+        var payload = Base64Url.EncodeToString(
             Encoding.UTF8.GetBytes(
                 JsonSerializer.Serialize(new { aud = audience, exp, sub = _subject })));
 
-        var signingInput = Encoding.ASCII.GetBytes($"{header}.{payload}");
-        var ecParams = new ECParameters
-        {
-            Curve = ECCurve.NamedCurves.nistP256,
-            Q = new ECPoint { X = _publicKeyX, Y = _publicKeyY },
-            D = _privateKeyD,
-        };
-        using var ecdsa = ECDsa.Create(ecParams);
+        var signingInput = Encoding.UTF8.GetBytes($"{header}.{payload}");
 
-        var signature = ecdsa.SignData(
+        var signature = _ecdsa.SignData(
             signingInput, HashAlgorithmName.SHA256,
             DSASignatureFormat.IeeeP1363FixedFieldConcatenation);
 
-        return $"{header}.{payload}.{Base64UrlEncode(signature)}";
+        return $"{header}.{payload}.{Base64Url.EncodeToString(signature)}";
     }
 
     private static byte[] EncryptPayload(byte[] plaintext, byte[] uaPublicKey, byte[] authSecret)
@@ -228,21 +236,4 @@ internal sealed class WebPushSender<TPerson> where TPerson : class, IWebNotifica
     {
         return $"{uri.Scheme}://{uri.Authority}";
     }
-
-    internal static byte[] Base64UrlDecode(string value)
-    {
-        try
-        {
-            var padding = (4 - value.Length % 4) % 4;
-            var base64 = value.Replace('-', '+').Replace('_', '/') + new string('=', padding);
-            return Convert.FromBase64String(base64);
-        }
-        catch (FormatException ex)
-        {
-            throw new FormatException($"The value '{value}' is not valid URL-safe base64.", ex);
-        }
-    }
-
-    internal static string Base64UrlEncode(byte[] data)
-        => Convert.ToBase64String(data).TrimEnd('=').Replace('+', '-').Replace('/', '_');
 }

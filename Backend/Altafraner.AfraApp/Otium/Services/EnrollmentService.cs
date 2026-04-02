@@ -12,7 +12,6 @@ using Altafraner.AfraApp.Schuljahr.Domain.Models;
 using Altafraner.AfraApp.User.Domain.DTO;
 using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.AfraApp.User.Services;
-using Altafraner.Backbone.EmailSchedulingModule;
 using Altafraner.Backbone.Utils;
 using Microsoft.EntityFrameworkCore;
 using Models_OtiumEinschreibung = Altafraner.AfraApp.Otium.Domain.Models.OtiumEinschreibung;
