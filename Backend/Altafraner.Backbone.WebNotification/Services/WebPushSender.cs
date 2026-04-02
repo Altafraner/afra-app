@@ -28,7 +28,6 @@ internal sealed class WebPushSender<TPerson> where TPerson : class, IWebNotifica
     private readonly string _publicKeyBase64Url = string.Empty; // original URL-safe base64 (65 bytes)
 
     private readonly ECDsa _ecdsa = null!;
-    private readonly ECParameters _ecParams;
 
     /// <summary>
     ///     Constructs a new <see cref="WebPushSender{TPerson}" />.
@@ -80,12 +79,6 @@ internal sealed class WebPushSender<TPerson> where TPerson : class, IWebNotifica
             Q = new ECPoint { X = publicKeyX, Y = publicKeyY },
             D = privateKeyD,
         });
-        _ecParams = new ECParameters
-        {
-            Curve = ECCurve.NamedCurves.nistP256,
-            Q = new ECPoint { X = publicKeyX, Y = publicKeyY },
-            D = privateKeyD,
-        };
 
         _subject = cfg.Subject ?? string.Empty;
         IsEnabled = true;
