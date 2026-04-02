@@ -29,7 +29,7 @@ public class WebNotificationsModule<TPerson> : IModule<VapidConfiguration<TPerso
         services.AddScoped<IWebNotificationContext<TPerson>>(sp =>
         {
             var settings = sp.GetRequiredService<IOptions<VapidConfiguration<TPerson>>>();
-            var contextType = settings.Value.DbContextType ?? throw new InvalidOperationException("Cannot find VaapidConfiguration");
+            var contextType = settings.Value.DbContextType ?? throw new InvalidOperationException("Cannot find VapidConfiguration");
             return sp.GetRequiredService(contextType) as IWebNotificationContext<TPerson> ??
                    throw new InvalidOperationException("Module not configured");
         }

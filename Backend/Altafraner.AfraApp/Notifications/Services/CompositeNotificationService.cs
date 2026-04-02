@@ -33,8 +33,6 @@ internal class CompositeNotificationService : INotificationService
     /// <inheritdoc />
     public async Task ScheduleNotificationAsync(Guid recipientId, string subject, string body, TimeSpan deadline)
     {
-        Console.WriteLine("composite");
-
         await _inApp.SendInAppNotificationAsync(recipientId, subject, body);
 
         var wantsEmail = await _db.Personen

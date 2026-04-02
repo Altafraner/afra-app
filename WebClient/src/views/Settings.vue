@@ -95,7 +95,6 @@ const notifStore = useNotifications();
 const pushHelper = usePushNotifications();
 
 const receiveEmailNotifications = ref(true);
-const notifSettingsLoading = ref(false);
 const pushSubscribed = ref(false);
 const pushLoading = ref(false);
 
@@ -109,7 +108,6 @@ async function loadNotifSettings() {
 }
 
 async function saveNotifSettings() {
-    notifSettingsLoading.value = true;
     try {
         await notifStore.saveSettings({
             receiveEmailNotifications: receiveEmailNotifications.value,
@@ -123,8 +121,6 @@ async function saveNotifSettings() {
     } catch (e) {
         console.error('Failed to save notification settings', e);
         toast.add({ severity: 'error', summary: 'Fehler beim Speichern' });
-    } finally {
-        notifSettingsLoading.value = false;
     }
 }
 
