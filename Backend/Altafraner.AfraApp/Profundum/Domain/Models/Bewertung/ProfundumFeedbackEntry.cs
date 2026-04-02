@@ -1,13 +1,10 @@
 using System.ComponentModel.DataAnnotations;
-using Altafraner.AfraApp.User.Domain.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace Altafraner.AfraApp.Profundum.Domain.Models.Bewertung;
 
 /// <summary>
 ///     A db record representing a Profundum Bewertung.
 /// </summary>
-[PrimaryKey(nameof(AnkerId), nameof(InstanzId), nameof(BetroffenePersonId))]
 public class ProfundumFeedbackEntry
 {
     /// <summary>
@@ -21,24 +18,19 @@ public class ProfundumFeedbackEntry
     public ProfundumFeedbackAnker Anker { get; set; } = null!;
 
     /// <summary>
-    ///     The profundum instanz the Bewertung is for
+    ///     The actual Profundum enrollment.
     /// </summary>
-    public Guid InstanzId { get; set; }
+    public ProfundumEinschreibung Einschreibung { get; set; } = null!;
 
     /// <summary>
-    ///     The actual Profundum Instanz
+    ///     The ID of the slot for the enrollment (part of composite key)
     /// </summary>
-    public ProfundumInstanz Instanz { get; set; } = null!;
+    protected internal Guid SlotId { get; set; }
 
     /// <summary>
-    ///     The person that received the Bewertung
+    ///     The ID of the person affected by the enrollment (part of composite key)
     /// </summary>
-    public Guid BetroffenePersonId { get; set; }
-
-    /// <summary>
-    ///     The actual person that received the Bewertung
-    /// </summary>
-    public Person BetroffenePerson { get; set; } = null!;
+    protected internal Guid BetroffenePersonId { get; set; }
 
     /// <summary>
     ///     The grade given for the Kriterium

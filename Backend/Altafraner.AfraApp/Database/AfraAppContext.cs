@@ -311,6 +311,19 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
                 .WithMany();
         });
 
+        modelBuilder.Entity<ProfundumFeedbackEntry>(e =>
+        {
+            e.HasKey(fe => new
+            {
+                fe.AnkerId, fe.SlotId, fe.BetroffenePersonId
+            });
+
+            e.HasOne(fe => fe.Einschreibung)
+                .WithMany()
+                .HasForeignKey(fe => new { fe.BetroffenePersonId, fe.SlotId })
+                .IsRequired();
+        });
+
         /*
          * This is a bit annoying, but we'll have to do it because of a bug in the Npgsql provider.
          * By default, it'll use '\0' as the default value for char columns, as it is the default value for char in C#.

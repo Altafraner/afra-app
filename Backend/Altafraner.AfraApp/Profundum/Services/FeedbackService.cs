@@ -17,7 +17,7 @@ internal sealed class FeedbackService
         _ankerService = ankerService;
     }
 
-    public async Task UpdateFeedback(Guid studentId, Guid instanzId, Dictionary<Guid, int> content)
+    public async Task UpdateFeedback(Guid studentId, Guid instanzId, Guid slotId, Dictionary<Guid, int> content)
     {
         var anker = await _ankerService.GetAnker(instanzId);
         var ankerCount = 0;
@@ -39,59 +39,67 @@ internal sealed class FeedbackService
                 "Feedback does not contain anchors from at least three categories",
                 nameof(content));
 
+        var enrollment = await _dbContext.ProfundaEinschreibungen.FirstOrDefaultAsync(e =>
+            e.ProfundumInstanzId == instanzId && e.BetroffenePersonId == studentId && e.SlotId == slotId);
+        if (enrollment is null)
+            throw new ArgumentException("Student is not enrolled for this profundum at this time!");
+
         // Clear feedback
         await _dbContext.ProfundumFeedbackEntries
-            .Where(e => e.InstanzId == instanzId && e.BetroffenePersonId == studentId)
+            .Where(e => e.Einschreibung == enrollment)
             .ExecuteDeleteAsync();
 
         await _dbContext.ProfundumFeedbackEntries.AddRangeAsync(content.Select(c => new ProfundumFeedbackEntry
         {
             AnkerId = c.Key,
-            InstanzId = instanzId,
-            BetroffenePersonId = studentId,
+            Einschreibung = enrollment,
             Grad = c.Value
         }));
 
         await _dbContext.SaveChangesAsync();
     }
 
-    public async Task<Dictionary<ProfundumFeedbackAnker, int?>> GetFeedback(Guid studentId, Guid instanzId)
+    public async Task<Dictionary<ProfundumFeedbackAnker, int?>> GetFeedback(Guid studentId, Guid instanzId, Guid slotId)
     {
         var anker = await _ankerService.GetAnker(instanzId);
         var bewertungen = await _dbContext.ProfundumFeedbackEntries
-            .Where(e => e.InstanzId == instanzId && e.BetroffenePersonId == studentId)
+            .Where(e => e.Einschreibung.ProfundumInstanzId == instanzId &&
+                        e.Einschreibung.BetroffenePersonId == studentId && e.Einschreibung.SlotId == slotId)
             .ToArrayAsync();
 
         return anker.ToDictionary(a => a, a => bewertungen.FirstOrDefault(b => b.AnkerId == a.Id)?.Grad ?? null);
     }
 
-    public async Task<bool> MayProvideFeedbackForProfundumAsync(Person user, Guid profundumId)
+    public async Task<bool> MayProvideFeedbackForProfundumAsync(Person user, Guid instanzId)
     {
         if (user.GlobalPermissions.Contains(GlobalPermission.Profundumsverantwortlich)) return true;
 
         return await _dbContext.ProfundaInstanzen.Include(e => e.Verantwortliche)
-            .AnyAsync(e => e.Id == profundumId && e.Verantwortliche.Contains(user));
+            .AnyAsync(e => e.Id == instanzId && e.Verantwortliche.Contains(user));
     }
 
-    public async IAsyncEnumerable<(ProfundumInstanz instanz, FeedbackStatus status)> GetFeedbackStatus()
+    public async IAsyncEnumerable<(ProfundumInstanz instanz, ProfundumSlot slot, FeedbackStatus status)>
+        GetFeedbackStatus()
     {
-        var instances = await _dbContext.ProfundaInstanzen
+        var occurences = await _dbContext.ProfundaInstanzen
             .Include(e => e.Einschreibungen)
             .ThenInclude(e => e.BetroffenePerson)
             .Where(p => p.MaxEinschreibungen != null && p.MaxEinschreibungen != 0)
+            .SelectMany(e => e.Slots.Select(s => new { Instanz = e, Slot = s }))
             .ToListAsync();
 
-        var feedback = await _dbContext.ProfundumFeedbackEntries.Select(e => new { e.BetroffenePersonId, e.InstanzId })
+        var feedback = await _dbContext.ProfundumFeedbackEntries.Select(e => new
+                { e.Einschreibung.BetroffenePersonId, e.Einschreibung.ProfundumInstanzId, e.Einschreibung.SlotId })
             .Distinct()
             .ToArrayAsync();
 
-        foreach (var instance in instances)
+        foreach (var occurence in occurences)
         {
-            var numFeedback = feedback.Count(f => f.InstanzId == instance.Id);
-            var numStudents = instance.Einschreibungen
-                .DistinctBy(e => (e.BetroffenePersonId, e.ProfundumInstanzId))
-                .Count();
-            yield return (instance,
+            var numFeedback = feedback.Count(f =>
+                f.ProfundumInstanzId == occurence.Instanz.Id && f.SlotId == occurence.Slot.Id);
+            var numStudents = occurence.Instanz.Einschreibungen.Count(e => e.SlotId == occurence.Slot.Id);
+            yield return (occurence.Instanz,
+                occurence.Slot,
                 numFeedback == numStudents ? FeedbackStatus.Done :
                 numFeedback != 0 ? FeedbackStatus.Partial : FeedbackStatus.Missing);
         }

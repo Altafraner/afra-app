@@ -50,14 +50,18 @@ internal partial class FeedbackPrintoutService
             .Include(e => e.Anker)
             .ThenInclude(a => a.Kategorie)
             .ThenInclude(e => e.Fachbereiche)
-            .Include(e => e.Instanz)
-            .ThenInclude(e => e.Profundum)
-            .Include(e => e.Instanz)
-            .ThenInclude(e => e.Slots)
-            .Include(e => e.Instanz)
-            .ThenInclude(e => e.Verantwortliche)
-            .Where(e => e.BetroffenePerson == user)
-            .Where(e => e.Instanz.Slots.Any(s => s.Jahr == schuljahr && quartale.Contains(s.Quartal)))
+            .Include(e => e.Einschreibung)
+            .ThenInclude(e => e.ProfundumInstanz)
+            .ThenInclude(e => e!.Profundum)
+            .Include(e => e.Einschreibung)
+            .ThenInclude(e => e.ProfundumInstanz)
+            .ThenInclude(e => e!.Slots)
+            .Include(e => e.Einschreibung)
+            .ThenInclude(e => e.ProfundumInstanz)
+            .ThenInclude(e => e!.Verantwortliche)
+            .Where(e => e.Einschreibung.ProfundumInstanz != null)
+            .Where(e => e.Einschreibung.BetroffenePerson == user)
+            .Where(e => e.Einschreibung.Slot.Jahr == schuljahr && quartale.Contains(e.Einschreibung.Slot.Quartal))
             .ToArrayAsync();
 
         var meta = new ProfundumFeedbackPdfData.MetaData(ausgabedatum.ToString("dd.MM.yyyy"),
@@ -76,9 +80,9 @@ internal partial class FeedbackPrintoutService
         Person? userGm,
         ProfundumFeedbackPdfData.MetaData meta)
     {
-        var profunda = feedback.Select(e => e.Instanz)
-            .DistinctBy(e => e.Profundum)
-            .Select(e => new ProfundumFeedbackPdfData.Profundum(e.Profundum.Bezeichnung,
+        var profunda = feedback.Select(e => e.Einschreibung.ProfundumInstanz)
+            .DistinctBy(e => e!.Profundum)
+            .Select(e => new ProfundumFeedbackPdfData.Profundum(e!.Profundum.Bezeichnung,
                 e.Verantwortliche.Select(v => new PersonInfoMinimal(v))));
 
         var feedbackByKategorie = feedback.GroupBy(e => e.Anker, e => e.Grad)
@@ -159,14 +163,18 @@ internal partial class FeedbackPrintoutService
             .Include(e => e.Anker)
             .ThenInclude(a => a.Kategorie)
             .ThenInclude(e => e.Fachbereiche)
-            .Include(e => e.Instanz)
-            .ThenInclude(e => e.Profundum)
-            .Include(e => e.Instanz)
-            .ThenInclude(e => e.Slots)
-            .Include(e => e.Instanz)
-            .ThenInclude(e => e.Verantwortliche)
-            .Where(e => e.Instanz.Slots.Any(s => s.Jahr == schuljahr && quartale.Contains(s.Quartal)))
-            .GroupBy(e => e.BetroffenePersonId)
+            .Include(e => e.Einschreibung)
+            .ThenInclude(e => e.ProfundumInstanz)
+            .ThenInclude(e => e!.Profundum)
+            .Include(e => e.Einschreibung)
+            .ThenInclude(e => e.ProfundumInstanz)
+            .ThenInclude(e => e!.Slots)
+            .Include(e => e.Einschreibung)
+            .ThenInclude(e => e.ProfundumInstanz)
+            .ThenInclude(e => e!.Verantwortliche)
+            .Where(e => e.Einschreibung.ProfundumInstanz != null && e.Einschreibung.Slot.Jahr == schuljahr &&
+                        quartale.Contains(e.Einschreibung.Slot.Quartal))
+            .GroupBy(e => e.Einschreibung.BetroffenePersonId)
             .ToDictionaryAsync(e => e.Key, e => e.ToArray());
 
         var meta = new ProfundumFeedbackPdfData.MetaData(ausgabedatum.ToString("dd.MM.yyyy"),

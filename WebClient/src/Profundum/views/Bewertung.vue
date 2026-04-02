@@ -46,7 +46,11 @@ const students = computed<UserInfoMinimal[]>(() => {
 
 async function selectStudent() {
     selectedStudent.value = students.value.find((s) => s.id === student.value);
-    currentBewertung.value = await feedback.getBewertung(student.value!, profundum.value!);
+    currentBewertung.value = await feedback.getBewertung(
+        student.value!,
+        profundum.value!,
+        quartal.value!,
+    );
 }
 
 watch(profundum, async (value) => {
@@ -83,6 +87,7 @@ async function save() {
     await feedback.bewertungAbgeben(
         selectedStudent.value.id,
         profundum.value,
+        quartal.value,
         currentBewertung.value,
     );
     toast.add({

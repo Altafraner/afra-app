@@ -15,6 +15,7 @@ export const useManagement = () => {
         } catch (e) {
             const mandeError: MandeError = e;
             toast.add({
+                severity: 'error',
                 summary: 'Es ist ein Fehler aufgetreten',
                 detail: `Die Profunda konnten nicht geladen werden. Code ${mandeError.response.status}, ${mandeError.message}`,
             });
@@ -28,6 +29,7 @@ export const useManagement = () => {
         } catch (e) {
             const mandeError: MandeError = e;
             toast.add({
+                severity: 'error',
                 summary: 'Es ist ein Fehler aufgetreten',
                 detail: `Die verfügbaren Kategorien der Profunda konnten nicht geladen werden. Code ${mandeError.response.status}, ${mandeError.message}`,
             });
@@ -41,6 +43,7 @@ export const useManagement = () => {
         } catch (e) {
             const mandeError: MandeError = e;
             toast.add({
+                severity: 'error',
                 summary: 'Es ist ein Fehler aufgetreten',
                 detail: `Die verfügbaren Slots der Profunda konnten nicht geladen werden. Code ${mandeError.response.status}, ${mandeError.message}`,
             });

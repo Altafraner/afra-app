@@ -36,8 +36,8 @@ public static class Bewertung
         kategorie.MapPut("/{id:guid}", UpdateKategorieAsync);
 
         bewertung.MapGet("/{profundumId:guid}", GetAnkerForProfundum);
-        bewertung.MapGet("/{profundumId:guid}/{studentId:guid}", GetBewertungAsync);
-        bewertung.MapPut("/{profundumId:guid}/{studentId:guid}", UpdateBewertungAsync);
+        bewertung.MapGet("/{instanzId:guid}/{slotId:guid}/{studentId:guid}", GetBewertungAsync);
+        bewertung.MapPut("/{instanzId:guid}/{slotId:guid}/{studentId:guid}", UpdateBewertungAsync);
 
         bewertung.MapGet("/control/status", GetStatusAsync)
             .RequireAuthorization(AuthorizationPolicies.ProfundumsVerantwortlich);
@@ -223,32 +223,35 @@ public static class Bewertung
     }
 
     private static async Task<Results<Ok<Dictionary<Guid, int?>>, ForbidHttpResult>> GetBewertungAsync(Guid studentId,
-        Guid profundumId,
+        Guid instanzId,
+        Guid slotId,
         FeedbackService feedbackService,
         UserAccessor userAccessor)
     {
         var user = await userAccessor.GetUserAsync();
-        if (!await feedbackService.MayProvideFeedbackForProfundumAsync(user, profundumId))
+        if (!await feedbackService.MayProvideFeedbackForProfundumAsync(user, instanzId))
             return TypedResults.Forbid();
 
-        var feedback = await feedbackService.GetFeedback(studentId, profundumId);
+        var feedback = await feedbackService.GetFeedback(studentId, instanzId, slotId);
         return TypedResults.Ok(feedback.ToDictionary(f => f.Key.Id, f => f.Value));
     }
 
     private static async Task<Results<NoContent, ForbidHttpResult, BadRequest<HttpValidationProblemDetails>>>
         UpdateBewertungAsync(Guid studentId,
-        Guid profundumId,
+            Guid instanzId,
+            Guid slotId,
         Dictionary<Guid, int?> bewertungen,
         FeedbackService feedbackService,
         UserAccessor userAccessor)
     {
         var user = await userAccessor.GetUserAsync();
-        if (!await feedbackService.MayProvideFeedbackForProfundumAsync(user, profundumId))
+        if (!await feedbackService.MayProvideFeedbackForProfundumAsync(user, instanzId))
             return TypedResults.Forbid();
         try
         {
             await feedbackService.UpdateFeedback(studentId,
-                profundumId,
+                instanzId,
+                slotId,
                 bewertungen.Where(b => b.Value.HasValue)
                     .ToDictionary(f => f.Key, f => f.Value!.Value));
 
@@ -284,7 +287,7 @@ public static class Bewertung
                 {
                     Instanz = i,
                     Slot = slot,
-                    Status = bewertungsStatus.Single(e => e.instanz.Id == i.Id).status
+                    Status = bewertungsStatus.Single(e => e.instanz.Id == i.Id && e.slot.Id == slot.Id).status
                 });
             dict.Add(slot.Id, data);
         }

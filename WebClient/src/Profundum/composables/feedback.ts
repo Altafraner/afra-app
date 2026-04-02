@@ -45,11 +45,12 @@ export const useFeedback = () => {
 
     async function getBewertung(
         studentId: string,
-        profundumId: string,
+        instanzId: string,
+        slotId: string,
     ): Promise<{ [key: string]: number | null }> {
         try {
             return await api.get<{ [key: string]: number | null }>(
-                `/${profundumId}/${studentId}`,
+                `/${instanzId}/${slotId}/${studentId}`,
             );
         } catch (e) {
             const mandeError: MandeError = e as MandeError;
@@ -169,11 +170,12 @@ export const useFeedback = () => {
 
     async function bewertungAbgeben(
         studentId: string,
-        profundumId: string,
+        instanzId: string,
+        slotId: string,
         bewertungen: { [key: string]: number | null },
     ): Promise<void> {
         try {
-            await api.put(`/${profundumId}/${studentId}`, bewertungen);
+            await api.put(`/${instanzId}/${slotId}/${studentId}`, bewertungen);
         } catch (e) {
             const mandeError: MandeError = e as MandeError;
             toast.add({
