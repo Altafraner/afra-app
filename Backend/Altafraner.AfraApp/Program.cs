@@ -41,6 +41,7 @@ builder.UseAltafranerBackbone(configure: altafranerBuilder => altafranerBuilder
     .AddModule<DefaultsModule>()
     .AddModule<ReverseProxyHandlerModule>()
     .AddModule<SchedulingModule>()
+    .AddModule<TelemetryModule>()
 );
 
 builder.Services.AddControllers();

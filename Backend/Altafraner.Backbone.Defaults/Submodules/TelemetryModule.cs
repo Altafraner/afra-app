@@ -1,4 +1,6 @@
 using Altafraner.Backbone.Abstractions;
+using Altafraner.Backbone.Defaults.Configuration;
+using Altafraner.Backbone.Utils;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,29 +19,27 @@ public class TelemetryModule : IModule
     /// <inheritdoc />
     public void ConfigureServices(IServiceCollection services, IConfiguration config, IHostEnvironment env)
     {
-        var telemetryConfig = config
-            .GetSection("Telemetry")
-            .Get<TelemetryConfiguration>();
-        var traceConfig = telemetryConfig?.Tracing;
-
         var otel = services.AddOpenTelemetry()
             .ConfigureResource(r => r.AddService("afra-app"));
+
+        var traceConfig = ConfigHelper.GetAndRegisterConfig<TelemetryConfiguration>(services, config, "Telemetry")
+            .Tracing;
 
         if (traceConfig is not null)
         {
             var traceEndpoint = traceConfig.TraceEndpoint;
             var traceProto = traceConfig.TraceProtocol;
             otel.WithTracing(tracing => tracing
-                    .AddOtlpExporter(config =>
+                .AddOtlpExporter(exporterOptions =>
                     {
-                        config.Endpoint = traceEndpoint;
-                        config.Protocol = traceProto;
+                        exporterOptions.Endpoint = traceEndpoint;
+                        exporterOptions.Protocol = traceProto;
                     }
                 )
                 .AddEntityFrameworkCoreInstrumentation()
                 .AddQuartzInstrumentation()
                 .AddAspNetCoreInstrumentation()
-                .AddSource("Altafraner.Typst")
+                .AddSource("Altafraner.*")
             );
         }
 
@@ -48,8 +48,7 @@ public class TelemetryModule : IModule
             .AddRuntimeInstrumentation()
             .AddMeter("System.Net.Http")
             .AddMeter("System.Net.NameResolution")
-            .AddMeter("Microsoft.AspNetCore.Hosting")
-            .AddMeter("Microsoft.AspNetCore.Server.Kestrel")
+            .AddMeter("Altafraner.*")
             .AddPrometheusExporter()
         );
     }
@@ -59,21 +58,4 @@ public class TelemetryModule : IModule
     {
         app.MapPrometheusScrapingEndpoint();
     }
-}
-
-/// <summary> General Telemetry configuration </summary>
-public class TelemetryConfiguration
-{
-    /// <summary> tracing configuration </summary>
-    public TraceConfiguration? Tracing { get; set; }
-}
-
-/// <summary> Configuration for tracing </summary>
-public class TraceConfiguration
-{
-    /// <summary> Endpoint for exporting traces </summary>
-    public required Uri TraceEndpoint { get; set; }
-
-    /// <summary> protocol for exporting traces </summary>
-    public required OpenTelemetry.Exporter.OtlpExportProtocol TraceProtocol { get; set; }
 }
