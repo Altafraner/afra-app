@@ -5,6 +5,8 @@ using System.Text.Json;
 using System.Buffers.Text;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Net;
+using System.Net.Sockets;
 
 namespace Altafraner.Backbone.WebNotifications.Services;
 
@@ -84,6 +86,35 @@ internal sealed class WebPushSender<TPerson> where TPerson : class, IWebNotifica
         IsEnabled = true;
     }
 
+    private bool IsPrivateIp(IPAddress ip)
+    {
+        if (IPAddress.IsLoopback(ip)) {
+            return true;
+        }
+
+        if (ip.AddressFamily == AddressFamily.InterNetwork) {
+            var bytes = ip.GetAddressBytes();
+            return bytes[0] switch
+            {
+                10 => true,
+                127 => true,
+                169 when bytes[1] == 254 => true,
+                172 when bytes[1] >= 16 && bytes[1] <= 31 => true,
+                192 when bytes[1] == 168 => true,
+                _ => false
+            };
+        }
+
+        if (ip.AddressFamily == AddressFamily.InterNetworkV6)
+        {
+            return ip.IsIPv6LinkLocal ||
+                   ip.IsIPv6SiteLocal ||
+                   ip.IsIPv6Multicast;
+        }
+
+        return false;
+    }
+
     /// <summary>
     ///     Sends a single Web Push notification.
     /// </summary>
@@ -98,6 +129,11 @@ internal sealed class WebPushSender<TPerson> where TPerson : class, IWebNotifica
     {
         if (!IsEnabled)
             return;
+
+        var addresses = await Dns.GetHostAddressesAsync(endpoint.Host);
+        if (addresses.Any(IsPrivateIp)){
+            throw new ArgumentException("Private/internal IPs are not allowed");
+        }
 
         var uaPublicKey = Base64Url.DecodeFromUtf8(Encoding.UTF8.GetBytes(p256dhBase64Url));
         var authSecret = Base64Url.DecodeFromUtf8(Encoding.UTF8.GetBytes(authBase64Url));

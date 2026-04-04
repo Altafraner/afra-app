@@ -95,8 +95,15 @@ internal class InAppNotificationService<TPerson> : IInAppNotificationService<TPe
     }
 
     /// <inheritdoc />
-    public async Task SavePushSubscriptionAsync(Guid userId, string endpoint, string p256dh, string auth)
+    public async Task SavePushSubscriptionAsync(Guid userId, Uri endpoint, string p256dh, string auth)
     {
+        if (endpoint.Scheme != Uri.UriSchemeHttps){
+            throw new ArgumentException("Only HTTP/HTTPS allowed");
+        }
+        if(endpoint.Port != 443){
+            throw new ArgumentException("Only standard ports allowed");
+        }
+
         var existing = await _dbContext.PushSubscriptions.FirstOrDefaultAsync(s => s.Endpoint == endpoint);
         if (existing is not null)
         {
@@ -123,7 +130,7 @@ internal class InAppNotificationService<TPerson> : IInAppNotificationService<TPe
     }
 
     /// <inheritdoc />
-    public async Task RemovePushSubscriptionAsync(Guid userId, string endpoint)
+    public async Task RemovePushSubscriptionAsync(Guid userId, Uri endpoint)
     {
         var sub = await _dbContext.PushSubscriptions
             .FirstOrDefaultAsync(s => s.PersonId == userId && s.Endpoint == endpoint);
@@ -147,13 +154,13 @@ internal class InAppNotificationService<TPerson> : IInAppNotificationService<TPe
         if (subscriptions.Count == 0) return;
 
         var payload = JsonSerializer.Serialize(new { title = subject, body });
-        var staleEndpoints = new List<string>();
+        var staleEndpoints = new List<Uri>();
 
         foreach (var sub in subscriptions)
         {
             try
             {
-                await _webPushSender.SendAsync(new Uri(sub.Endpoint), sub.P256dh, sub.Auth, payload);
+                await _webPushSender.SendAsync(sub.Endpoint, sub.P256dh, sub.Auth, payload);
             }
             catch (PushSubscriptionGoneException)
             {

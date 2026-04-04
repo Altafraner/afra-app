@@ -22,7 +22,11 @@ public class WebNotificationsModule<TPerson> : IModule<VapidConfiguration<TPerso
         services.AddOptions<VapidConfiguration<TPerson>>()
             .Bind(config.GetSection("VAPID"));
 
-        services.AddHttpClient("WebPush");
+        services.AddHttpClient("WebPush").ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler {
+            ConnectTimeout = TimeSpan.FromSeconds(10),
+            ResponseDrainTimeout = TimeSpan.FromSeconds(10),
+            AllowAutoRedirect = false
+        });
 
         services.AddScoped<WebPushSender<TPerson>>();
 

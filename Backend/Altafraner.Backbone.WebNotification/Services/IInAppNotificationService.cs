@@ -31,10 +31,10 @@ public interface IInAppNotificationService<TPerson> where TPerson : class, IWebN
     /// <summary>
     ///     Saves or updates a Web Push subscription for a user.
     /// </summary>
-    Task SavePushSubscriptionAsync(Guid userId, string endpoint, string p256dh, string auth);
+    Task SavePushSubscriptionAsync(Guid userId, Uri endpoint, string p256dh, string auth);
 
     /// <summary>
     ///     Removes the Web Push subscription with the given endpoint for a user.
     /// </summary>
-    Task RemovePushSubscriptionAsync(Guid userId, string endpoint);
+    Task RemovePushSubscriptionAsync(Guid userId, Uri endpoint);
 }

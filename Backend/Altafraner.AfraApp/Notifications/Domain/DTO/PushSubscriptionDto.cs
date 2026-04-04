@@ -6,7 +6,7 @@ namespace Altafraner.AfraApp.Notifications.Domain.DTO;
 public record PushSubscriptionDto
 {
     /// <summary>The push service endpoint URL.</summary>
-    public required string Endpoint { get; init; }
+    public required Uri Endpoint { get; init; }
 
     /// <summary>The P256DH key.</summary>
     public required string P256dh { get; init; }

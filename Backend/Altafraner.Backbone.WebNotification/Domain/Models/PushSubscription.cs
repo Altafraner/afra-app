@@ -26,7 +26,7 @@ public class PushSubscription<TPerson> where TPerson : class, IWebNotificationRe
     ///     The push service endpoint URL.
     /// </summary>
     [MaxLength(2048)]
-    public required string Endpoint { get; set; }
+    public required Uri Endpoint { get; set; }
 
     /// <summary>
     ///     The P256DH key for encrypting push messages.
