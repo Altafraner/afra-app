@@ -102,8 +102,8 @@ public record struct DateTimeInterval(DateTime Start, TimeSpan Duration) : ITime
 
         DateTimeInterval? before = null;
         DateTimeInterval? after = null;
-        if (other.Start >= Start) before = new DateTimeInterval(Start, other.Start);
-        if (other.End <= End) after = new DateTimeInterval(other.End, End);
+        if (other.Start > Start) before = new DateTimeInterval(Start, other.Start);
+        if (other.End < End) after = new DateTimeInterval(other.End, End);
 
         return (before, after);
     }

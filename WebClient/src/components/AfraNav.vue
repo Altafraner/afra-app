@@ -165,7 +165,6 @@ onMounted(() => {
 });
 
 const logout = async () => {
-    const user = useUser();
     try {
         await user.logout();
         await router.push('/');

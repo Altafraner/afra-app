@@ -244,7 +244,7 @@ await fetchData();
                 <div class="w-full flex flex-col gap-3">
                     <div class="flex justify-between">
                         <label for="betreuerSwitch">Betreuer:in zuweisen</label>
-                        <ToggleSwitch v-model="betreuerZuweisenSelected" if="betreuerSwitch" />
+                        <ToggleSwitch v-model="betreuerZuweisenSelected" id="betreuerSwitch" />
                     </div>
                     <PersonSelector
                         v-model="personSelected"
@@ -272,7 +272,7 @@ await fetchData();
                         >
                         <ToggleSwitch
                             v-model="maxEnrollmentsSetzenSelected"
-                            if="maxEnrollmentSwitch"
+                            id="maxEnrollmentSwitch"
                         />
                     </div>
                     <FloatLabel v-if="maxEnrollmentsSetzenSelected" class="w-full" variant="on">
