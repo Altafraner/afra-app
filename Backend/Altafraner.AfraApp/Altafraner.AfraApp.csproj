@@ -54,6 +54,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
         <AdditionalFiles Include="Typst/**/*.typ"/>
         <UpToDateCheckInput Include="Typst/**/*.typ"/>
     </ItemGroup>
