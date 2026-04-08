@@ -29,6 +29,8 @@
         <PackageReference Include="System.DirectoryServices.Protocols"/>
         <PackageReference Include="Google.OrTools"/>
         <PackageReference Include="Microsoft.CodeAnalysis.Common"/>
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces"/> <!-- Only needed to prevent dependency conflicts -->
+        <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild"/> <!-- Only needed to prevent dependency conflicts -->
     </ItemGroup>
 
     <ItemGroup>
