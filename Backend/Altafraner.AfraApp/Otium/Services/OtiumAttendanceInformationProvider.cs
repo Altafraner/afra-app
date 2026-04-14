@@ -204,7 +204,7 @@ internal sealed class OtiumAttendanceInformationProvider : IAttendanceInformatio
             EnableMove = true,
             MoveNowIntervall = schema.Interval.ToDateTimeInterval(block.SchultagKey),
             MissingStudentsNotificationRecipients = _otiumConfiguration.MissingStudentsReport.Recipients,
-            MissingStudentsNotificationTime = _otiumConfiguration.MissingStudentsReport.Enabled
+            MissingStudentsNotificationTime = _otiumConfiguration.MissingStudentsReport.Enabled && schema.Verpflichtend
                 ? block.SchultagKey.ToDateTime(schema.Interval.Start.AddMinutes(30))
                 : null
         };
