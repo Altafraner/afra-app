@@ -69,14 +69,14 @@ public class ManagementService
     /// <summary>
     ///     Gets the Block associated with a given Termin.
     /// </summary>
-    public async Task<Guid> GetBlockIdOfTerminIdAsync(Guid terminId)
+    public async Task<Guid?> GetBlockIdOfTerminIdAsync(Guid terminId)
     {
         var id = await _dbContext.OtiaTermine.AsNoTracking()
             .Include(t => t.Block)
             .Where(t => t.Id == terminId)
-            .Select(t => t.Block.Id)
+            .Select(t => new { t.Block.Id })
             .FirstOrDefaultAsync();
-        return id;
+        return id?.Id;
     }
 
     /// <summary>

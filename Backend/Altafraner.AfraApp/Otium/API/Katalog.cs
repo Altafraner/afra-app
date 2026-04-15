@@ -72,14 +72,19 @@ public static class Katalog
         }
     }
 
-    private static async Task<IResult> UnenrollAsync(OtiumEndpointService service, EnrollmentService enrollmentService,
-        UserAccessor userAccessor, Guid terminId)
+    private static async Task<IResult> UnenrollAsync(OtiumEndpointService service,
+        EnrollmentService enrollmentService,
+        UserAccessor userAccessor,
+        Guid terminId,
+        ManagementService managementService)
     {
         var user = await userAccessor.GetUserAsync();
 
         try
         {
-            await enrollmentService.UnenrollAsync(terminId, user);
+            var blockId = await managementService.GetBlockIdOfTerminIdAsync(terminId);
+            if (blockId is null) return Results.NotFound();
+            await enrollmentService.UnenrollAsync(blockId.Value, user);
         }
         catch (InvalidOperationException)
         {
