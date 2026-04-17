@@ -149,14 +149,6 @@ await setup();
         </TabList>
         <TabPanels>
             <TabPanel value="0">
-                <Message severity="warn" class="mb-4">
-                    Diese Funktionen sind nicht ausgiebig getestet und insbesondere die Löschung
-                    von bereits genutzen Profunda kann erheblichen Datenverlust beispielsweise
-                    für Matching und Feedback-Funktionen auslösen. Alte Profunda sollten
-                    beispielsweise im neuen Semester einfach keine neue Instanz erhalten, statt
-                    gelöscht zu werden.
-                </Message>
-
                 <DataTable :value="profunda" data-key="id">
                     <Column header="Bezeichnung">
                         <template #body="{ data }">
