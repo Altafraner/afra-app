@@ -11,9 +11,14 @@ const routes = [
         component: Home,
     },
     {
-        path: '/admin',
-        name: 'Admin',
-        component: () => import('@/views/Admin.vue'),
+        path: '/admin/impersonate',
+        name: 'Admin-Impersonate',
+        component: () => import('@/views/Admin/Impersonate.vue'),
+    },
+    {
+        path: '/admin/cevex',
+        name: 'Admin-Cevex',
+        component: () => import('@/views/Admin/Cevex.vue'),
     },
     {
         path: '/settings',
