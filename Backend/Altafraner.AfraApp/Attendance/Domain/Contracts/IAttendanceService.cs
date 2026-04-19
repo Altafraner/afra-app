@@ -75,4 +75,9 @@ public interface IAttendanceService
     /// <param name="scope">The scope the slot is in</param>
     /// <param name="slotId">The slot to get the status for</param>
     Task<Dictionary<Guid, bool>> GetEventStatusForSlotAsync(AttendanceScope scope, Guid slotId);
+
+    /// <summary>
+    ///     Creates attendance entries for all students
+    /// </summary>
+    internal Task CreateAutomaticEntries(AttendanceScope scope, Guid slotId);
 }

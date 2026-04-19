@@ -202,11 +202,14 @@ internal sealed class OtiumAttendanceInformationProvider : IAttendanceInformatio
         {
             EnableNotes = true,
             EnableMove = true,
+            IsInPast = block.SchultagKey.ToDateTime(schema.Interval.End) < DateTime.Now,
             MoveNowIntervall = schema.Interval.ToDateTimeInterval(block.SchultagKey),
             MissingStudentsNotificationRecipients = _otiumConfiguration.MissingStudentsReport.Recipients,
             MissingStudentsNotificationTime = _otiumConfiguration.MissingStudentsReport.Enabled && schema.Verpflichtend
                 ? block.SchultagKey.ToDateTime(schema.Interval.Start.AddMinutes(30))
-                : null
+                : null,
+            StartDate = block.SchultagKey,
+            StartLesson = schema.Unterrichtsstunde
         };
     }
 
@@ -314,18 +317,20 @@ internal sealed class OtiumAttendanceInformationProvider : IAttendanceInformatio
         var blocksToday = await _dbContext.Blocks
             .AsNoTracking()
             .Where(b => b.SchultagKey == today)
-            .OrderBy(b => b.SchemaId)
+            .AsAsyncEnumerable()
+            .Select(b => (Block: b, Schema: _blockHelper.Get(b.SchemaId)!))
+            .OrderBy(b => b.Schema.Unterrichtsstunde)
+            .ThenBy(b => b.Schema.Id)
             .ToListAsync();
 
-        return blocksToday.Where(b => Authorize(b, user))
+        return blocksToday.Where(b => Authorize(b.Block, user))
             .Select(b =>
             {
-                var schema = _blockHelper.Get(b.SchemaId)!;
                 return new AttendanceSlot
                 {
                     Scope = ScopeValue,
-                    SlotId = b.Id,
-                    Label = schema.Bezeichnung
+                    SlotId = b.Block.Id,
+                    Label = b.Schema.Bezeichnung
                 };
             });
     }
@@ -336,7 +341,6 @@ internal sealed class OtiumAttendanceInformationProvider : IAttendanceInformatio
         return await _dbContext.Blocks
             .AsNoTracking()
             .Where(b => b.SchultagKey == today)
-            .OrderBy(b => b.SchemaId)
             .AsAsyncEnumerable()
             .Select(b => new
             {
@@ -352,6 +356,8 @@ internal sealed class OtiumAttendanceInformationProvider : IAttendanceInformatio
                     dateTimeInterval.Duration + TimeSpan.FromHours(2));
                 return supervisionInterval.Contains(now);
             })
+            .OrderBy(b => b.Schema.Unterrichtsstunde)
+            .ThenBy(b => b.Schema.Id)
             .Select(e => new AttendanceSlot
             {
                 Label = e.Schema.Bezeichnung,

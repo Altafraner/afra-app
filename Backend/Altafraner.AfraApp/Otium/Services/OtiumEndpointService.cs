@@ -96,9 +96,6 @@ internal class OtiumEndpointService
             .Include(t => t.Otium)
             .ThenInclude(o => o.Kategorie)
             .Include(t => t.Tutor)
-            .OrderBy(t => t.IstAbgesagt)
-            .ThenBy(t => t.Block.SchemaId)
-            .ThenBy(t => t.OverrideBezeichnung != null ? t.OverrideBezeichnung : t.Otium.Bezeichnung)
             .Select(t => new TerminWithLoad
             {
                 Termin = t,
@@ -107,6 +104,12 @@ internal class OtiumEndpointService
                     : (int)Math.Round((double)t.Enrollments.Count * 100 / t.MaxEinschreibungen.Value),
                 IstEingeschrieben = t.Enrollments.Any(e => e.BetroffenePerson.Id == user.Id)
             })
+            .AsAsyncEnumerable()
+            .GroupBy(t => t.Termin.Block.SchemaId)
+            .Select(e => (Group: e, Schema: _blockHelper.Get(e.Key)!))
+            .OrderBy(e => e.Schema.Unterrichtsstunde)
+            .ThenBy(e => e.Schema.Id)
+            .SelectMany(e => e.Group.OrderBy(t => t.Termin.IstAbgesagt).ThenBy(t => t.Termin.Bezeichnung))
             .ToListAsync();
 
 
@@ -157,10 +160,7 @@ internal class OtiumEndpointService
         // Get all blocks for the given week
         var schultage = await _dbContext.Schultage
             .Where(s => s.Datum >= weekStart && s.Datum < weekEnd)
-            .Include(s => s.Blocks
-                .OrderBy(b => b.SchultagKey)
-                .ThenBy(b => b.SchemaId)
-            )
+            .Include(s => s.Blocks)
             .ToListAsync();
         var blocks = schultage.SelectMany(s => s.Blocks);
 

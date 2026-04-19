@@ -45,6 +45,7 @@ internal partial class AttendanceHub : Hub<IAttendanceHubClient>
         await Authorize(informationProvider);
         var metadata = await informationProvider.GetMetadataForSlot(SlotId);
 
+        if (!metadata.IsInPast) await _attendanceService.CreateAutomaticEntries(scope, slotId);
         await Groups.AddToGroupAsync(Context.ConnectionId, EventGroupName(scope, slotId, eventId));
         await _notificationService.UpdateEventAttendance(scope, slotId, eventId, Context.ConnectionId);
         await ScheduleMissingStudentNotifications(metadata);
@@ -70,6 +71,7 @@ internal partial class AttendanceHub : Hub<IAttendanceHubClient>
 
         var metadata = await informationProvider.GetMetadataForSlot(SlotId);
 
+        if (!metadata.IsInPast) await _attendanceService.CreateAutomaticEntries(scope, slotId);
         await Groups.AddToGroupAsync(Context.ConnectionId, SlotGroupName(scope, slotId));
         await _notificationService.UpdateSlotAttendances(scope, slotId, false, Context.ConnectionId);
         await ScheduleMissingStudentNotifications(metadata);
