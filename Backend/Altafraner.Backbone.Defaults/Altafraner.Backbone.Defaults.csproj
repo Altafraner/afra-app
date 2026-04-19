@@ -8,6 +8,7 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi"/>
         <PackageReference Include="Microsoft.Extensions.Caching.Hybrid"/>
+    <PackageReference Include="Microsoft.Extensions.Options" />
         <PackageReference Include="OpenTelemetry.Exporter.Prometheus.AspNetCore"/>
         <PackageReference Include="OpenTelemetry.Extensions.Hosting"/>
         <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore"/>
