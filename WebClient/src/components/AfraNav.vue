@@ -136,13 +136,27 @@ const all_items: MenuItemWithCondition[] = [
     },
     {
         label: 'Admin',
-        route: {
-            name: 'Admin',
-        },
         icon: 'pi pi-asterisk',
-        conditions: {
-            permissions: ['Admin'],
-        },
+        items: [
+            {
+                label: 'Impersonieren',
+                route: {
+                    name: 'Admin-Impersonate',
+                },
+                conditions: {
+                    permissions: ['Admin'],
+                },
+            },
+            {
+                label: 'Cevex',
+                route: {
+                    name: 'Admin-Cevex',
+                },
+                conditions: {
+                    permissions: ['Admin'],
+                },
+            },
+        ],
     },
     {
         label: 'Einstellungen',
