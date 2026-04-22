@@ -9,6 +9,7 @@ import { useUser } from '@/stores/user';
 import { useProfundumEinwahl } from '@/Profundum/stores/profundumEinwahlStore';
 import { useRouter } from 'vue-router';
 import { isDark } from '@/helpers/isdark';
+import NotificationCenter from '@/components/NotificationCenter.vue';
 
 type GlobalPermissions = 'Otiumsverantwortlich' | 'Profundumsverantwortlich' | 'Admin';
 type Role = 'Tutor' | 'Oberstufe' | 'Mittelstufe';
@@ -262,13 +263,16 @@ const logo = computed(() => (isDark().value ? wappenDark : wappenLight));
             </a>
         </template>
         <template #end>
-            <Button
-                label="Logout"
-                icon="pi pi-power-off"
-                @click="logout"
-                variant="text"
-                severity="secondary"
-            />
+            <div class="flex items-center gap-1">
+                <NotificationCenter />
+                <Button
+                    label="Logout"
+                    icon="pi pi-power-off"
+                    @click="logout"
+                    variant="text"
+                    severity="secondary"
+                />
+            </div>
         </template>
     </Menubar>
 </template>

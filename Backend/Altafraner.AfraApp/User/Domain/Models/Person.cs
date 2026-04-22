@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using Altafraner.AfraApp.Otium.Domain.Models;
 using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.Backbone.EmailSchedulingModule;
+using Altafraner.Backbone.WebNotifications;
 
 namespace Altafraner.AfraApp.User.Domain.Models;
 
@@ -9,7 +10,7 @@ namespace Altafraner.AfraApp.User.Domain.Models;
 ///     A record representing a person using the application.
 /// </summary>
 /// <remarks>Usually provided by an external directory service and cached for performance and convenience.</remarks>
-public class Person : IEmailRecipient
+public class Person : IEmailRecipient, IWebNotificationRecipient
 {
     /// <summary>
     ///     The unique identifier of the person.
@@ -99,6 +100,11 @@ public class Person : IEmailRecipient
 
     ///
     public List<ProfundumInstanz> BetreuteProfunda { get; set; } = null!;
+
+    /// <summary>
+    ///     Whether the user wants to receive notifications via email.
+    /// </summary>
+    public bool ReceiveEmailNotifications { get; set; } = true;
 
     /// <inheritdoc />
     public override string ToString()
