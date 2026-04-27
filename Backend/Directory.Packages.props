@@ -27,9 +27,9 @@
     <PackageVersion Include="OpenTelemetry.Instrumentation.Quartz" Version="1.15.0-beta.1" />
     <PackageVersion Include="OpenTelemetry.Exporter.Console" Version="1.15.3" />
     <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.3" />
-    <PackageVersion Include="Quartz" Version="3.18.0" />
-    <PackageVersion Include="Quartz.AspNetCore" Version="3.18.0" />
-    <PackageVersion Include="Quartz.Serialization.SystemTextJson" Version="3.18.0" />
+    <PackageVersion Include="Quartz" Version="3.18.1" />
+    <PackageVersion Include="Quartz.AspNetCore" Version="3.18.1" />
+    <PackageVersion Include="Quartz.Serialization.SystemTextJson" Version="3.18.1" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.1.7" />
     <PackageVersion Include="System.DirectoryServices.Protocols" Version="10.0.7" />
     <PackageVersion Include="Google.OrTools" Version="9.15.6755" />
