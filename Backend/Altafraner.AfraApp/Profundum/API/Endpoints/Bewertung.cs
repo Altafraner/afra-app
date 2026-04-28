@@ -1,7 +1,9 @@
 using System.Net.Mime;
 using Altafraner.AfraApp.Backbone.Authorization;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
+using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.Profundum.Services;
+using Altafraner.AfraApp.User.Domain.DTO;
 using Altafraner.AfraApp.User.Services;
 using Microsoft.AspNetCore.Http.HttpResults;
 
@@ -19,10 +21,12 @@ public static class Bewertung
     public static void MapBewertungEndpoints(this IEndpointRouteBuilder app)
     {
         var bewertung = app.MapGroup("/bewertung")
-            .RequireAuthorization(AuthorizationPolicies.TutorOnly);
+            .RequireAuthorization();
 
         var anker = bewertung.MapGroup("/anker")
             .RequireAuthorization(AuthorizationPolicies.ProfundumsVerantwortlich);
+
+        var disclose = bewertung.MapGroup("/disclose");
 
         anker.MapGet("/", GetAllAnker);
         anker.MapPost("/", AddAnkerAsync);
@@ -35,9 +39,12 @@ public static class Bewertung
         kategorie.MapDelete("/{id:guid}", DeleteKategorieAsync);
         kategorie.MapPut("/{id:guid}", UpdateKategorieAsync);
 
-        bewertung.MapGet("/{profundumId:guid}", GetAnkerForProfundum);
-        bewertung.MapGet("/{instanzId:guid}/{slotId:guid}/{studentId:guid}", GetBewertungAsync);
-        bewertung.MapPut("/{instanzId:guid}/{slotId:guid}/{studentId:guid}", UpdateBewertungAsync);
+        bewertung.MapGet("/{profundumId:guid}", GetAnkerForProfundum)
+            .RequireAuthorization(AuthorizationPolicies.TutorOnly);
+        bewertung.MapGet("/{instanzId:guid}/{slotId:guid}/{studentId:guid}", GetBewertungAsync)
+            .RequireAuthorization(AuthorizationPolicies.TutorOnly);
+        bewertung.MapPut("/{instanzId:guid}/{slotId:guid}/{studentId:guid}", UpdateBewertungAsync)
+            .RequireAuthorization(AuthorizationPolicies.TutorOnly);
 
         bewertung.MapGet("/control/status", GetStatusAsync)
             .RequireAuthorization(AuthorizationPolicies.ProfundumsVerantwortlich);
@@ -83,6 +90,11 @@ public static class Bewertung
                     return TypedResults.File(fileContents, MediaTypeNames.Application.Zip);
                 })
             .RequireAuthorization(AuthorizationPolicies.ProfundumsVerantwortlich);
+
+        disclose.MapGet("/", DiscloseForCurrentUser)
+            .RequireAuthorization(AuthorizationPolicies.StudentOnly);
+        disclose.MapGet("/{studentId:guid}", DiscloseForMentor)
+            .RequireAuthorization(AuthorizationPolicies.TutorOnly);
     }
 
     private static async Task<Results<Ok<Anker>, NotFound<HttpValidationProblemDetails>>> AddAnkerAsync(
@@ -293,5 +305,87 @@ public static class Bewertung
         }
 
         return TypedResults.Ok(dict);
+    }
+
+    private static async Task<Results<Ok<MenteeFeedback>, ForbidHttpResult>> DiscloseForMentor(
+        Guid studentId,
+        UserService userService,
+        UserAccessor userAccessor,
+        FeedbackService feedbackService,
+        ProfundumManagementService managementService)
+    {
+        var user = await userAccessor.GetUserAsync();
+        var mentees = await userService.GetMenteesAsync(user);
+        var mentee = mentees.FirstOrDefault(e => e.Id == studentId);
+        if (mentee is null) return TypedResults.Forbid();
+
+        var disclosure = await DiscloseForSpecifiedUser(studentId, feedbackService, managementService);
+        return TypedResults.Ok(new MenteeFeedback(new PersonInfoMinimal(mentee), disclosure));
+    }
+
+    private static async Task<Ok<StudentFeedbackHierarchie>> DiscloseForCurrentUser(
+        UserAccessor userAccessor,
+        FeedbackService feedbackService,
+        ProfundumManagementService managementService)
+    {
+        var user = await userAccessor.GetUserAsync();
+        return TypedResults.Ok(await DiscloseForSpecifiedUser(user.Id, feedbackService, managementService));
+    }
+
+    private static async Task<StudentFeedbackHierarchie> DiscloseForSpecifiedUser(
+        Guid userId,
+        FeedbackService feedbackService,
+        ProfundumManagementService managementService)
+    {
+        var allSlots = await managementService.GetSlotsAsync();
+        var domainFeedback = await feedbackService.GetFeedback(userId, allSlots.Select(s => s.Id)).ToArrayAsync();
+        var enrollmentInfos = domainFeedback.Select(f => (
+                f.Slot,
+                f.Instanz.Profundum.Bezeichnung
+            ))
+            .ToDictionary(e => e.Slot.Id, e => new FeedbackEnrollmentInfo(new DTOProfundumSlot(e.Slot), e.Bezeichnung));
+
+        var slotComparer = new ProfundumSlotComparer();
+        var orderedSlots = domainFeedback.Select(f => f.Slot)
+            .Distinct()
+            .OrderBy(s => s, slotComparer)
+            .ToArray();
+
+        var categories = domainFeedback
+            .SelectMany(f => f.Feedback.Keys.Select(a => a.Kategorie))
+            .DistinctBy(c => c.Id)
+            .OrderByDescending(c => c.IsFachlich)
+            .ThenBy(c => c.Label)
+            .ToArray();
+
+        var kategorieGroups = new List<FeedbackKategorieGroup>();
+        foreach (var kat in categories)
+        {
+            var anchorsInKat = domainFeedback
+                .SelectMany(f => f.Feedback.Keys)
+                .Where(a => a.Kategorie.Id == kat.Id)
+                .DistinctBy(a => a.Id)
+                .OrderBy(a => a.Label)
+                .ToArray();
+
+            var anchorGroups = new List<FeedbackAnkerGroup>();
+            foreach (var anchor in anchorsInKat)
+            {
+                var ratings = new Dictionary<Guid, int>();
+                foreach (var slot in orderedSlots)
+                {
+                    var slotFeedback = domainFeedback.FirstOrDefault(f => f.Slot.Id == slot.Id);
+                    var rating = slotFeedback.Feedback.FirstOrDefault(e => e.Key.Id == anchor.Id).Value;
+                    if (rating is not null) ratings[slot.Id] = rating.Value;
+                }
+
+                if (ratings.Count > 0) anchorGroups.Add(new FeedbackAnkerGroup(anchor.Id, anchor.Label, ratings));
+            }
+
+            if (anchorGroups.Count > 0)
+                kategorieGroups.Add(new FeedbackKategorieGroup(kat.Id, kat.Label, kat.IsFachlich, anchorGroups));
+        }
+
+        return new StudentFeedbackHierarchie(enrollmentInfos, kategorieGroups);
     }
 }

@@ -122,6 +122,16 @@ const all_items: MenuItemWithCondition[] = [
                     permissions: ['Profundumsverantwortlich'],
                 },
             },
+            {
+                label: 'Feedback',
+                route: {
+                    name: 'Profundum-Feedback-Einsicht',
+                },
+                icon: 'pi pi-sliders-h',
+                conditions: {
+                    roles: ['Mittelstufe', 'Oberstufe'],
+                },
+            },
         ],
     },
     {

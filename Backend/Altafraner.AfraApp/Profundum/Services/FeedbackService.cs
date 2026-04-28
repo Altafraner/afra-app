@@ -59,6 +59,39 @@ internal sealed class FeedbackService
         await _dbContext.SaveChangesAsync();
     }
 
+    public async
+        IAsyncEnumerable<(ProfundumSlot Slot, ProfundumInstanz Instanz, Dictionary<ProfundumFeedbackAnker, int?>
+            Feedback)> GetFeedback(Guid studentId, IEnumerable<Guid> slotIds)
+    {
+        var requestedSlotIds = slotIds.Distinct().ToArray();
+        if (requestedSlotIds.Length == 0)
+            yield break;
+
+        var enrollments = await _dbContext.ProfundaEinschreibungen
+            .Include(e => e.Slot)
+            .Include(e => e.ProfundumInstanz)
+            .ThenInclude(e => e!.Profundum)
+            .Where(e => e.BetroffenePersonId == studentId &&
+                        ((IEnumerable<Guid>)requestedSlotIds).Contains(e.SlotId) &&
+                        e.ProfundumInstanzId != null)
+            .OrderBy(e => e.Slot.Jahr)
+            .ThenBy(e => e.Slot.Quartal)
+            .ThenBy(e => e.Slot.Wochentag)
+            .ThenBy(e => e.SlotId)
+            .ToListAsync();
+
+        foreach (var enrollment in enrollments)
+        {
+            var feedbackByAnker = await GetFeedback(studentId, enrollment.ProfundumInstanzId!.Value, enrollment.SlotId);
+
+            yield return (
+                enrollment.Slot,
+                enrollment.ProfundumInstanz!,
+                feedbackByAnker
+            );
+        }
+    }
+
     public async Task<Dictionary<ProfundumFeedbackAnker, int?>> GetFeedback(Guid studentId, Guid instanzId, Guid slotId)
     {
         var anker = await _ankerService.GetAnker(instanzId);
