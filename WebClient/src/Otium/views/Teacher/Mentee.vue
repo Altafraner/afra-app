@@ -6,6 +6,7 @@ import { useUser } from '@/stores/user';
 import StudentOverview from '@/Otium/components/Overview/StudentOverview.vue';
 import { formatStudent } from '@/helpers/formatters';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
+import { RouterLink } from 'vue-router';
 
 const props = defineProps({
     studentId: String,
@@ -63,7 +64,7 @@ fetchData();
     <template v-if="!loading">
         <NavBreadcrumb :items="navItems" />
         <h1>{{ formatStudent(mentee) }}</h1>
-        <h2 v-if="!all">Nächste Veranstaltungen</h2>
+        <h2 v-if="!all">Otium</h2>
         <p v-if="!all">Gezeigt werden die Veranstaltungen der nächsten drei Wochen.</p>
         <h2 v-if="all">Alle Veranstaltungen</h2>
         <StudentOverview :student="mentee" :termine="termine" />
@@ -75,6 +76,16 @@ fetchData();
             severity="secondary"
             :loading="loading"
         />
+        <h2>Profundum</h2>
+        <Button
+            :as="RouterLink"
+            :to="{
+                name: 'Profundum-Feedback-Einsicht-Student',
+                props: { studentId: props.studentId },
+            }"
+            label="Feedback Einsehen"
+            severity="secondary"
+        ></Button>
     </template>
     <div class="flex gap-3" v-else>
         <h1>

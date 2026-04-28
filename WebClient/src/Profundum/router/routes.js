@@ -41,4 +41,15 @@ export const routes = [
         name: 'Profundum-Feedback-Download',
         component: () => import('@/Profundum/views/BewertungDownload.vue'),
     },
+    {
+        path: '/profundum/feedback/einsicht',
+        name: 'Profundum-Feedback-Einsicht',
+        component: () => import('@/Profundum/views/Selbsteinsicht.vue'),
+    },
+    {
+        path: '/profundum/feedback/einsicht/:studentId',
+        name: 'Profundum-Feedback-Einsicht-Student',
+        component: () => import('@/Profundum/views/MenteeEinsicht.vue'),
+        props: true,
+    },
 ];

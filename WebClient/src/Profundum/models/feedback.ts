@@ -48,3 +48,35 @@ export interface ProfundumFeedbackStatus {
     slot: ProfundumSlot;
     status: FeedbackStatus;
 }
+
+export interface MenteeFeedback {
+    person: UserInfoMinimal;
+    feedback: StudentFeedbackHierarchie;
+}
+
+export interface StudentFeedbackHierarchie {
+    enrollments: { [key: string]: FeedbackEnrollmentInfo };
+    kategorien: FeedbackKategorieGroup[];
+}
+
+export interface FeedbackEnrollmentInfo {
+    slot: ProfundumSlot;
+    profundum: string;
+}
+
+export interface FeedbackKategorieGroup {
+    id: string;
+    label: string;
+    isFachlich: boolean;
+    anker: FeedbackAnkerGroup[];
+}
+
+export interface FeedbackAnkerGroup {
+    id: string;
+    label: string;
+    ratingsBySlot: ratingBySlot;
+}
+
+export type rating = 1 | 2 | 3 | 4;
+
+export type ratingBySlot = { [key: string]: rating };
