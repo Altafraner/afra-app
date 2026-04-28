@@ -4,7 +4,9 @@ import type {
     AnkerChangeRequest,
     AnkerOverview,
     FeedbackKategorieChangeRequest,
+    MenteeFeedback,
     ProfundumFeedbackStatus,
+    StudentFeedbackHierarchie,
 } from '@/Profundum/models/feedback';
 import { formatMachineDate } from '@/helpers/formatters';
 
@@ -196,6 +198,7 @@ export const useFeedback = () => {
                 summary: 'Es ist ein Fehler aufgetreten',
                 detail: `Die Übersicht konnte nicht abgerufen werden. Code ${mandeError.response.status}, ${mandeError.message}`,
             });
+            throw e;
         }
     }
 
@@ -204,10 +207,10 @@ export const useFeedback = () => {
         schuljahr: number,
         halbjahr: boolean,
         ausgabedatum: Date,
-    ): string | undefined {
+    ): string {
+        ausgabedatum.setHours(12);
+        const url = `/api/profundum/bewertung/${studentId}.pdf?schuljahr=${schuljahr}&halbjahr=${halbjahr}&ausgabedatum=${formatMachineDate(ausgabedatum)}`;
         try {
-            ausgabedatum.setHours(12);
-            const url = `/api/profundum/bewertung/${studentId}.pdf?schuljahr=${schuljahr}&halbjahr=${halbjahr}&ausgabedatum=${formatMachineDate(ausgabedatum)}`;
             const a = document.createElement('a');
             a.href = url;
             a.download = '';
@@ -223,6 +226,7 @@ export const useFeedback = () => {
                 detail: `Das herunterladen ist fehlgeschlagen`,
             });
             console.error(e);
+            return url;
         }
     }
 
@@ -256,6 +260,35 @@ export const useFeedback = () => {
         }
     }
 
+    async function getSelfDisclosure(): Promise<StudentFeedbackHierarchie> {
+        try {
+            const api = mande('/api/profundum/bewertung/disclose');
+            return await api.get<StudentFeedbackHierarchie>('/');
+        } catch (e) {
+            const mandeError: MandeError = e as MandeError;
+            toast.add({
+                severity: 'error',
+                summary: 'Es ist ein Fehler aufgetreten',
+                detail: `Die Übersicht konnte nicht abgerufen werden.\n Code ${mandeError?.response?.status}, ${mandeError?.message}`,
+            });
+            throw e;
+        }
+    }
+    async function getDisclosureFor(id: string): Promise<MenteeFeedback> {
+        try {
+            const api = mande('/api/profundum/bewertung/disclose');
+            return await api.get<MenteeFeedback>(`/${id}`);
+        } catch (e) {
+            const mandeError: MandeError = e as MandeError;
+            toast.add({
+                severity: 'error',
+                summary: 'Es ist ein Fehler aufgetreten',
+                detail: `Die Übersicht konnte nicht abgerufen werden.\n Code ${mandeError?.response?.status}, ${mandeError?.message}`,
+            });
+            throw e;
+        }
+    }
+
     return {
         getAllAnker,
         getAnkerForProfundum,
@@ -270,5 +303,7 @@ export const useFeedback = () => {
         getControl,
         downloadForStudent,
         downloadForAll,
+        getSelfDisclosure,
+        getDisclosureFor,
     };
 };
