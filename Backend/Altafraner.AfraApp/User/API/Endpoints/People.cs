@@ -117,6 +117,7 @@ internal static class People
                 var user = await userService.GetUserByIdAsync(request.UserId);
                 user.CevexId = request.CevexId;
                 user.CevexIdManuallyEntered = true;
+                user.CevexSyncFailureTime = DateTime.UtcNow;
                 dbContext.Update(user);
                 await dbContext.SaveChangesAsync();
                 return Results.NoContent();
@@ -139,6 +140,7 @@ internal static class People
             var user = await userService.GetUserByIdAsync(request.UserId);
             user.CevexId = request.CevexId;
             user.CevexIdManuallyEntered = true;
+            user.CevexSyncFailureTime = null;
             dbContext.Update(user);
             await dbContext.SaveChangesAsync();
             return Results.NoContent();
