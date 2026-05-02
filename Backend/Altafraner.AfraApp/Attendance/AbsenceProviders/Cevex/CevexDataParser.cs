@@ -131,6 +131,7 @@ internal class CevexDataParser
         var notify = new HashSet<Person>();
         foreach (var student in unknown.Where(e => !e.CevexSyncFailureTime.HasValue && !e.CevexIdManuallyEntered))
         {
+            if (student.CevexSyncFailureTime is null) continue;
             student.CevexSyncFailureTime = now;
             notify.Add(student);
         }
@@ -160,6 +161,7 @@ internal class CevexDataParser
             var student = allStudents.FirstOrDefault(s => s.CevexId == cevexId);
             student!.CevexId = null;
             student.CevexIdManuallyEntered = false;
+            if (student.CevexSyncFailureTime.HasValue) continue;
             student.CevexSyncFailureTime = now;
             notify.Add(student);
         }
@@ -183,7 +185,7 @@ internal class CevexDataParser
 
                         die cevex-Synchronisierung ist für neue Nutzer:innen fehlgeschlagen. Bitte weisen sie die Schüler:innen manuell zu.
 
-                        {notify.Aggregate("", (current, next) => current + $"- {next.FirstName} {next.LastName} ({next.Gruppe}){Environment.NewLine}")}
+                        {notify.Where(e => e.CevexSyncFailureTime == now).Aggregate("", (current, next) => current + $"- {next.FirstName} {next.LastName} ({next.Gruppe}){Environment.NewLine}")}
                         """;
             foreach (var recipient in _cevexConfig.SyncNotificationRecipients)
                 await _outbox.SendReportAsync(recipient, "Cevex-Nutersynchronisierung fehlgeschlagen", body);
