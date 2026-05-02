@@ -22,7 +22,7 @@ function match(student: UserInfoMinimal) {
             modal: true,
         },
         data: {
-            options: data.value.available ?? [],
+            options: data.value?.available ?? [],
             student,
         },
         onClose: async (result) => {
@@ -37,11 +37,23 @@ function match(student: UserInfoMinimal) {
         },
     });
 }
+
+async function remove(student: UserInfoMinimal) {
+    await cevex.setMatch(student, {
+        id: '00000-0000000000-AAAAAAA',
+    });
+    toast.add({
+        severity: 'success',
+        summary: 'Zuweisung erfolgreich entfernt',
+        life: 10000,
+    });
+    data.value = await cevex.getInformation();
+}
 </script>
 
 <template>
     <h1>Cevex Nutzersynchronisierung</h1>
-    <DataTable :value="data.matches ?? []">
+    <DataTable :value="data?.matches ?? []">
         <Column header="Nutzer">
             <template #body="{ data }">
                 <UserPeek :person="data.user" showGroup />
@@ -51,6 +63,19 @@ function match(student: UserInfoMinimal) {
             <template #body="{ data }">
                 <template v-if="data.cevex !== null">
                     {{ data.cevex.firstName }} {{ data.cevex.lastName }}
+                </template>
+                <template v-else> </template>
+            </template>
+        </Column>
+        <Column class="afra-col-action text-right">
+            <template #body="{ data }">
+                <template v-if="data.cevex !== null">
+                    <Button
+                        icon="pi pi-times"
+                        label="Lösen"
+                        severity="secondary"
+                        @click="remove(data.user)"
+                    />
                 </template>
                 <template v-else>
                     <Button

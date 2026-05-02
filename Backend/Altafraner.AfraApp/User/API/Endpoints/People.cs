@@ -111,6 +111,21 @@ internal static class People
         UserService userService,
         AfraAppContext dbContext)
     {
+        if (request.CevexId == "00000-0000000000-AAAAAAA")
+            try
+            {
+                var user = await userService.GetUserByIdAsync(request.UserId);
+                user.CevexId = request.CevexId;
+                user.CevexIdManuallyEntered = true;
+                dbContext.Update(user);
+                await dbContext.SaveChangesAsync();
+                return Results.NoContent();
+            }
+            catch (InvalidOperationException)
+            {
+                return Results.NotFound();
+            }
+
         var cevexData = (await cevexParser.ReadFile()).ToArray();
         var cevexDict = cevexData.ToDictionary(data => data.Guid);
         var usedIds = await dbContext.Personen
