@@ -39,5 +39,5 @@ public class Attendance
     /// <summary>
     ///     The type of attendance
     /// </summary>
-    public required AttendanceEntryType EntryType;
+    public required AttendanceEntryType EntryType { get; set; } = AttendanceEntryType.Manual;
 }
