@@ -68,7 +68,7 @@ internal sealed class EnrollmentReminderJob : RetryJob
             await _notificationService.ScheduleNotificationAsync(person.Id, subject, body, TimeSpan.FromMinutes(5));
         }
 
-        context.JobDetail.JobDataMap.Put("last_run", now);
+        context.JobDetail.JobDataMap["last_run"] = now;
         _logger.LogInformation("Enrollment reminder job completed successfully.");
     }
 }

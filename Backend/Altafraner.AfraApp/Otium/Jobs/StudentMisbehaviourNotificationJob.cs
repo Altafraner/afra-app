@@ -71,7 +71,7 @@ internal sealed class StudentMisbehaviourNotificationJob : RetryJob
         _logger.LogInformation("Running student misbehaviour job at {Time}", now);
 
         await DoWork();
-        context.JobDetail.JobDataMap.Put("last_run", now);
+        context.JobDetail.JobDataMap["last_run"] = now;
         _logger.LogInformation("Student misbehaviour job completed successfully.");
     }
 
