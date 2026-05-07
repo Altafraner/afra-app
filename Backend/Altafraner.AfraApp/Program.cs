@@ -5,8 +5,8 @@ using Altafraner.AfraApp.Backbone.EmergencyBackup;
 using Altafraner.AfraApp.Calendar;
 using Altafraner.AfraApp.Domain;
 using Altafraner.AfraApp.Freistellung;
-using Altafraner.AfraApp.Notifications;
 using Altafraner.AfraApp.Otium;
+using Altafraner.Backbone.EmailSchedulingModule;
 using Altafraner.AfraApp.Profundum;
 using Altafraner.AfraApp.Schuljahr;
 using Altafraner.AfraApp.User;
@@ -16,7 +16,6 @@ using Altafraner.Backbone.CookieAuthentication;
 using Altafraner.Backbone.DataProtection;
 using Altafraner.Backbone.Defaults;
 using Altafraner.Backbone.EmailOutbox;
-using Altafraner.Backbone.EmailSchedulingModule;
 using Altafraner.Backbone.Scheduling;
 using Microsoft.AspNetCore.Diagnostics;
 

@@ -1,6 +1,6 @@
 using Altafraner.AfraApp.Freistellung.Domain.DTO;
 using Altafraner.AfraApp.Freistellung.Domain.Models;
-using Altafraner.AfraApp.Notifications.Services;
+using Altafraner.Backbone.EmailSchedulingModule;
 using Altafraner.AfraApp.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 

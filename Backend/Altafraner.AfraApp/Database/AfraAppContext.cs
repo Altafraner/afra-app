@@ -324,23 +324,6 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
 
         modelBuilder.Entity<CalendarSubscription>(s => { s.HasOne(b => b.BetroffenePerson).WithMany(); });
 
-        modelBuilder.Entity<InAppNotification<Person>>(n =>
-        {
-            n.HasOne(e => e.Recipient)
-                .WithMany()
-                .HasForeignKey(e => e.RecipientId)
-                .OnDelete(DeleteBehavior.Cascade);
-        });
-
-        modelBuilder.Entity<PushSubscription<Person>>(p =>
-        {
-            p.HasOne(e => e.Person)
-                .WithMany()
-                .HasForeignKey(e => e.PersonId)
-                .OnDelete(DeleteBehavior.Cascade);
-            p.HasIndex(e => e.Endpoint).IsUnique();
-        });
-
         modelBuilder.Entity<Freistellungsantrag>(a =>
         {
             a.HasOne(e => e.Student)

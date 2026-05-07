@@ -176,7 +176,7 @@ const all_items: MenuItemWithCondition[] = [
         ],
     },
     {
-        label: 'Admin',
+        label: 'Aufsicht',
         route: {
             name: 'Aufsicht',
         },
