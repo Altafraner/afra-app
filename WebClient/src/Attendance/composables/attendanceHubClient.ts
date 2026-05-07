@@ -1,6 +1,7 @@
 import { computed, ref, shallowRef, toValue } from 'vue';
 import { useSignalR } from '@/composables/signalr';
 import type {
+    AttendanceEntryType,
     AttendanceEvent,
     AttendanceEventWithEnrollments,
     AttendanceState,
@@ -23,6 +24,7 @@ interface AttendanceUpdate {
     studentId: string;
     eventId: string;
     status: AttendanceState;
+    type: AttendanceEntryType;
 }
 
 interface EventStatusUpdate {
@@ -111,7 +113,9 @@ export function useAttendance(
         if (!eventAttendances.value) return;
         const index = eventAttendances.value.findIndex((a) => a.student.id === data.studentId);
         if (index !== -1) {
-            eventAttendances.value[index].status = data.status;
+            const elementToUpdate = eventAttendances.value[index];
+            elementToUpdate.status = data.status;
+            elementToUpdate.type = data.type;
         } else {
             console.warn('Received status for non-existent user', data);
         }
@@ -146,7 +150,9 @@ export function useAttendance(
                 (a) => a.student.id === data.studentId,
             );
             if (innerIndex !== -1) {
-                eventAttendances[innerIndex].status = data.status;
+                const elementToUpdate = eventAttendances[innerIndex];
+                elementToUpdate.status = data.status;
+                elementToUpdate.type = data.type;
             } else {
                 console.warn(
                     `Received status for non-existent student in existing event`,

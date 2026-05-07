@@ -31,7 +31,8 @@ public interface IAttendanceService
     /// <param name="slotId">The id of the slot the attendance is for.</param>
     /// <param name="studentIds">The id of the students the attendance is for.</param>
     /// <returns>The <see cref="AttendanceState" /> for the enrollment.</returns>
-    Task<Dictionary<Guid, AttendanceState>> GetAttendanceForStudentsInSlotAsync(AttendanceScope scope,
+    Task<Dictionary<Guid, (AttendanceState state, AttendanceEntryType type)>> GetAttendanceForStudentsInSlotAsync(
+        AttendanceScope scope,
         Guid slotId,
         IEnumerable<Guid> studentIds);
 
@@ -48,7 +49,9 @@ public interface IAttendanceService
     /// <param name="scope">The scope the slot is in</param>
     /// <param name="slotId">The slot to get all attendance states for</param>
     /// <returns>A dictionary connecting persons to attendance states. If a person is missing from the dictionary, he should be considered missing.</returns>
-    Task<Dictionary<Person, AttendanceState>> GetAttendanceForSlotAsync(AttendanceScope scope, Guid slotId);
+    Task<Dictionary<Person, (AttendanceState state, AttendanceEntryType type)>> GetAttendanceForSlotAsync(
+        AttendanceScope scope,
+        Guid slotId);
 
     /// <summary>
     ///     Sets the attendance status for a specific enrollment

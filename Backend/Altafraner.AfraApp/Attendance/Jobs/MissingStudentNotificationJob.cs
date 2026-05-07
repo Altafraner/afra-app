@@ -54,7 +54,7 @@ internal sealed class MissingStudentNotificationJob : RetryJob
         var allPersons = await _userService.GetUsersWithRoleAsync(Rolle.Mittelstufe);
 
         var allMissing = allPersons
-            .Where(p => !attendances.TryGetValue(p, out var value) || value == AttendanceState.Fehlend)
+            .Where(p => !attendances.TryGetValue(p, out var value) || value.state == AttendanceState.Fehlend)
             .ToList();
         if (allMissing.Count == 0) return;
 

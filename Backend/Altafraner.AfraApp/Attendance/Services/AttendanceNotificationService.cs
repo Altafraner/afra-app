@@ -63,9 +63,14 @@ internal class AttendanceNotificationService : IAttendanceNotificationService
         var events = enrollments.Select(e =>
             {
                 var enrollmentsForEvent = e.Enrollments.Select(student =>
-                    new IAttendanceHubClient.StudentStatus(new PersonInfoMinimal(student),
-                        attendances.GetValueOrDefault(student, IAttendanceService.DefaultAttendanceStatus),
-                        notes.GetValueOrDefault(student.Id, []).Select(note => new Note(note))));
+                {
+                    var attendance = attendances.GetValueOrDefault(student,
+                        (state: IAttendanceService.DefaultAttendanceStatus, type: AttendanceEntryType.Manual));
+                    return new IAttendanceHubClient.StudentStatus(new PersonInfoMinimal(student),
+                        attendance.state,
+                        attendance.type,
+                        notes.GetValueOrDefault(student.Id, []).Select(note => new Note(note)));
+                });
                 return new IAttendanceHubClient.EventWithEnrollments(e.EventId,
                     e.Name,
                     e.Location,
@@ -104,7 +109,8 @@ internal class AttendanceNotificationService : IAttendanceNotificationService
 
         await target.UpdateEvent(enrollments.Select(e =>
             new IAttendanceHubClient.StudentStatus(new PersonInfoMinimal(e),
-                attendances[e.Id],
+                attendances[e.Id].state,
+                attendances[e.Id].type,
                 notes.GetValueOrDefault(e.Id, []).Select(note => new Note(note)))));
     }
 

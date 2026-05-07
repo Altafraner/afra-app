@@ -72,7 +72,8 @@ public interface IAttendanceHubClient
     /// <param name="StudentId">The students id</param>
     /// <param name="EventId">The events id</param>
     /// <param name="Status">The students updated status</param>
-    record AttendanceUpdate(Guid StudentId, Guid EventId, AttendanceState Status);
+    /// <param name="Type">The attendance entry type</param>
+    record AttendanceUpdate(Guid StudentId, Guid EventId, AttendanceState Status, AttendanceEntryType Type);
 
     /// <summary>
     ///     A dto for updating the notes of a student in a specific block.
@@ -120,8 +121,13 @@ public interface IAttendanceHubClient
     /// </summary>
     /// <param name="Student">The student</param>
     /// <param name="Status">The enrollment status</param>
+    /// <param name="Type">Specifies whether this enrollment has been generated automatically</param>
     /// <param name="Notes">The notes registered for this student in this block</param>
-    record struct StudentStatus(PersonInfoMinimal Student, AttendanceState Status, IEnumerable<Note> Notes);
+    record struct StudentStatus(
+        PersonInfoMinimal Student,
+        AttendanceState Status,
+        AttendanceEntryType Type,
+        IEnumerable<Note> Notes);
 
     /// <summary>
     ///     The capabilities of this supervision session

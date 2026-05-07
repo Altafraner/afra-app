@@ -487,7 +487,8 @@ internal class OtiumEndpointService
             .ToAsyncEnumerable()
             .Select(e =>
                 new IAttendanceHubClient.StudentStatus(new PersonInfoMinimal(persons[e.Key]),
-                    e.Value,
+                    e.Value.state,
+                    e.Value.type,
                     notes.GetValueOrDefault(e.Key, []).Select(n => new Note(n))))
             .OrderBy(e => e.Student.Nachname)
             .ThenBy(e => e.Student.Vorname)

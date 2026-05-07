@@ -25,13 +25,14 @@ internal sealed class SimpleAttendanceNotificationService
     public async Task UpdateSingleAttendance(AttendanceScope scope,
         Guid slotId,
         Guid studentId,
-        AttendanceState attendanceState)
+        AttendanceState attendanceState,
+        AttendanceEntryType type)
     {
         var informationProvider = _serviceProvider.GetRequiredKeyedService<IAttendanceInformationProvider>(scope);
         var eventId = await informationProvider.GetEventForStudentAndSlot(slotId, studentId);
         await _hubContext.Clients.Groups(AttendanceHub.SlotGroupName(scope, slotId),
                 AttendanceHub.EventGroupName(scope, slotId, eventId))
-            .UpdateAttendance(new IAttendanceHubClient.AttendanceUpdate(studentId, eventId, attendanceState));
+            .UpdateAttendance(new IAttendanceHubClient.AttendanceUpdate(studentId, eventId, attendanceState, type));
     }
 
     /// <summary>

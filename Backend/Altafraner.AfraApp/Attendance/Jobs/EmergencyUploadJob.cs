@@ -2,6 +2,7 @@ using System.Text;
 using System.Web;
 using Altafraner.AfraApp.Attendance.Domain.Contracts;
 using Altafraner.AfraApp.Attendance.Domain.Dto;
+using Altafraner.AfraApp.Attendance.Domain.Models;
 using Altafraner.AfraApp.Backbone.EmergencyBackup.Services.Contracts;
 using Altafraner.AfraApp.User.Domain.Models;
 using Quartz;
@@ -106,7 +107,7 @@ public class EmergencyUploadJob : IJob
         {
             return personen
                        .Select(person =>
-                           $"<tr><td>{HttpUtility.HtmlEncode(person.LastName)}, {HttpUtility.HtmlEncode(person.FirstName)}</td><td>{HttpUtility.HtmlEncode(attendances.GetValueOrDefault(person, IAttendanceService.DefaultAttendanceStatus))}</td></tr>")
+                           $"<tr><td>{HttpUtility.HtmlEncode(person.LastName)}, {HttpUtility.HtmlEncode(person.FirstName)}</td><td>{HttpUtility.HtmlEncode(attendances.GetValueOrDefault(person, (IAttendanceService.DefaultAttendanceStatus, AttendanceEntryType.Manual)).Item1)}</td></tr>")
                        .Aggregate("<table><tr><th>Name</th><th>Status</th></tr>", (current, row) => current + row) +
                    "</table>";
         }

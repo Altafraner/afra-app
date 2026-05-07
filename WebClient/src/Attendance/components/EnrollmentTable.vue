@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Badge, Button, Column, DataTable } from 'primevue';
+import { Badge, Button, Column, DataTable, Tag } from 'primevue';
 import UserPeek from '@/components/UserPeek.vue';
 import AttendanceButton from '@/Attendance/components/AttendanceButton.vue';
 import type { AttendanceState, AttendanceStudentStatus } from '@/Attendance/models/attendance';
@@ -33,7 +33,18 @@ const emit = defineEmits<{
         >
             <template #body="{ data }">
                 <span class="flex justify-end items-center gap-2">
+                    <Tag
+                        v-if="
+                            data.type == 'Automatic' &&
+                            data.student.rolle === 'Mittelstufe' &&
+                            (showAttendance || enableEdit)
+                        "
+                        v-tooltip="'Diese Anwesenheit wurde automatisch übernommen.'"
+                        severity="secondary"
+                        >A</Tag
+                    >
                     <AttendanceButton
+                        class="w-auto"
                         v-if="
                             data.student.rolle === 'Mittelstufe' &&
                             (showAttendance || enableEdit)

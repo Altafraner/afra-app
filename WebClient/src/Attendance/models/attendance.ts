@@ -1,6 +1,7 @@
 import type { UserInfoMinimal } from '@/models/user/userInfoMinimal';
 
 export type AttendanceState = 'Anwesend' | 'Entschuldigt' | 'Fehlend';
+export type AttendanceEntryType = 'Automatic' | 'Manual';
 
 export interface AttendanceNote {
     created: string;
@@ -13,6 +14,7 @@ export interface AttendanceStudentStatus {
     student: UserInfoMinimal;
     status: AttendanceState;
     notes: AttendanceNote[];
+    type: AttendanceEntryType;
 }
 
 export interface AttendanceEventWithEnrollments {
