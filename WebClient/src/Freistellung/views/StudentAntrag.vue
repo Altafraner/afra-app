@@ -180,6 +180,8 @@ async function submit() {
                 hour-format="24"
                 show-icon
                 date-format="dd.mm.yy"
+                :manualInput="true"
+                stepMinute="15"
             />
         </div>
 
@@ -193,6 +195,8 @@ async function submit() {
                 show-icon
                 date-format="dd.mm.yy"
                 :invalid="bisDateTime < vonDateTime"
+                :manualInput="true"
+                stepMinute="15"
             />
         </div>
 
