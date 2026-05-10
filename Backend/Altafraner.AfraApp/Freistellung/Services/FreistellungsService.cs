@@ -125,7 +125,7 @@ public class FreistellungsService
                  Titel: {antrag.Grund}
                  Grund: {dto.Beschreibung}
                  """,
-                TimeSpan.FromMinutes(5)
+                TimeSpan.Zero
             );
 
         return new FreistellungsantragDto(antrag);
@@ -269,7 +269,7 @@ public class FreistellungsService
              Dein Freistellungsantrag „{antrag.Grund}" für {FormatDateRange(antrag.Von, antrag.Bis)} wurde vom Sekretariat bestätigt.
              Die Freistellung wartet noch auf die abschließende Genehmigung des Schulleiters.
              """,
-            TimeSpan.FromMinutes(5)
+            TimeSpan.Zero
         );
 
         // Notify the Schulleiter
@@ -286,7 +286,7 @@ public class FreistellungsService
                  Der Freistellungsantrag „{antrag.Grund}" von {antrag.Student.FirstName} {antrag.Student.LastName} für {FormatDateRange(antrag.Von, antrag.Bis)} wurde vom Sekretariat bestätigt und wartet auf Ihre Genehmigung.
                  Bitte melde dich in der Afra-App an, um den Antrag abschließend zu genehmigen.
                  """,
-                TimeSpan.FromMinutes(5)
+                TimeSpan.Zero
             );
 
         return new FreistellungsantragDto(antrag);
@@ -341,7 +341,7 @@ public class FreistellungsService
              Dein Freistellungsantrag „{antrag.Grund}" für {FormatDateRange(antrag.Von, antrag.Bis)} wurde vom Schulleiter endgültig genehmigt.
              Die Freistellung ist damit gültig. Melde dich in der Afra-App an, um die Details einzusehen.
              """,
-            TimeSpan.FromMinutes(5)
+            TimeSpan.Zero
         );
 
         return new FreistellungsantragDto(antrag);
@@ -376,7 +376,7 @@ public class FreistellungsService
              Kommentar: {dto.Kommentar.Trim()}
              Melde dich in der Afra-App an, um den Antrag einzusehen und ggf. erneut einzureichen.
              """,
-            TimeSpan.FromMinutes(5)
+            TimeSpan.Zero
         );
 
         return new FreistellungsantragDto(antrag);
@@ -411,7 +411,7 @@ public class FreistellungsService
              Kommentar: {dto.Kommentar.Trim()}
              Melde dich in der Afra-App an, um den Antrag einzusehen und ggf. erneut einzureichen.
              """,
-            TimeSpan.FromMinutes(5)
+            TimeSpan.Zero
         );
 
         return new FreistellungsantragDto(antrag);
@@ -487,7 +487,7 @@ public class FreistellungsService
              Dein Freistellungsantrag „{antrag.Grund}" für {FormatDateRange(antrag.Von, antrag.Bis)} wurde von {entscheider.FirstName} {entscheider.LastName} {entscheidungText}.{kommentarZeile}
              Melde dich in der Afra-App an, um den aktuellen Status zu sehen.
              """,
-            TimeSpan.FromMinutes(5)
+            TimeSpan.Zero
         );
     }
 
@@ -508,7 +508,7 @@ public class FreistellungsService
                  Der Freistellungsantrag „{antrag.Grund}" von {antrag.Student.FirstName} {antrag.Student.LastName} für {FormatDateRange(antrag.Von, antrag.Bis)} wurde von allen Lehrkräften und Mentor:innen genehmigt.
                  Bitte melde dich in der Afra-App an, um den Antrag abschließend zu bestätigen.
                  """,
-                TimeSpan.FromMinutes(5)
+                TimeSpan.Zero
             );
     }
 
@@ -527,7 +527,7 @@ public class FreistellungsService
                  Der Freistellungsantrag „{antrag.Grund}" von {antrag.Student.FirstName} {antrag.Student.LastName} für {FormatDateRange(antrag.Von, antrag.Bis)} wurde erneut eingereicht und wartet auf Ihre Genehmigung.
                  Bitte melde dich in der Afra-App an, um den Antrag abschließend zu genehmigen.
                  """,
-                TimeSpan.FromMinutes(5)
+                TimeSpan.Zero
             );
     }
 
