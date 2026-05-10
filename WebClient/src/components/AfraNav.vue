@@ -130,7 +130,6 @@ const all_items: MenuItemWithCondition[] = [
         ],
     },
     {
-        label: 'Aufsicht',
         label: 'Freistellung',
         items: [
             {

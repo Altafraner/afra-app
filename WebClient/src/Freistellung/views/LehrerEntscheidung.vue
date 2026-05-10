@@ -23,27 +23,24 @@ const submitting = ref(false);
 
 await store.updateLehrerAntraege();
 
-// Split client-side: pending = this teacher hasn't decided yet, processed = already decided
+const is_pending = (a) => {
+  if(a.status === 'Abgelehnt') return false;
+  const meineEntscheidung = a.entscheidungen.find(
+      (e) => e.lehrer.id === userStore.user.id,
+  );
+  return meineEntscheidung?.status === 'Ausstehend';
+}
+
 const pendingAntraege = computed(() => {
     if (!userStore.user) return [];
     return (
-        store.lehrerAntraege?.filter((a) => {
-            const meineEntscheidung = a.entscheidungen.find(
-                (e) => e.lehrer.id === userStore.user.id,
-            );
-            return meineEntscheidung?.status === 'Ausstehend';
-        }) ?? []
+        store.lehrerAntraege?.filter((a) => is_pending(a)) ?? []
     );
 });
 const processedAntraege = computed(() => {
     if (!userStore.user) return [];
     return (
-        store.lehrerAntraege?.filter((a) => {
-            const meineEntscheidung = a.entscheidungen.find(
-                (e) => e.lehrer.id === userStore.user.id,
-            );
-            return meineEntscheidung?.status !== 'Ausstehend';
-        }) ?? []
+        store.lehrerAntraege?.filter((a) => !is_pending(a)) ?? []
     );
 });
 
