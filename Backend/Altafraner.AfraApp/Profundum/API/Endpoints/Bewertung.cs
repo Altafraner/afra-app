@@ -17,17 +17,12 @@ public static class Bewertung
     /// <summary>
     ///     Maps the Bewertung endpoints
     /// </summary>
-    /// <param name="app"></param>
     public static void MapBewertungEndpoints(this IEndpointRouteBuilder app)
     {
-        var bewertung = app.MapGroup("/bewertung")
-            .RequireAuthorization();
+        var bewertung = app.MapGroup("/bewertung");
 
         var anker = bewertung.MapGroup("/anker")
             .RequireAuthorization(AuthorizationPolicies.ProfundumsVerantwortlich);
-
-        var disclose = bewertung.MapGroup("/disclose");
-
         anker.MapGet("/", GetAllAnker);
         anker.MapPost("/", AddAnkerAsync);
         anker.MapDelete("/{id:guid}", DeleteAnkerAsync);
@@ -49,48 +44,12 @@ public static class Bewertung
         bewertung.MapGet("/control/status", GetStatusAsync)
             .RequireAuthorization(AuthorizationPolicies.ProfundumsVerantwortlich);
 
-        bewertung.MapGet("/{userId:guid}.pdf",
-                async (FeedbackPrintoutService profundumManagementService,
-                    Guid userId,
-                    UserService userService,
-                    int schuljahr,
-                    bool halbjahr,
-                    DateOnly ausgabedatum) =>
-            {
-                var user = await userService.GetUserByIdAsync(userId);
-                var fileContents =
-                    await profundumManagementService.GenerateFileForPerson(user, schuljahr, halbjahr, ausgabedatum);
-                return TypedResults.File(fileContents, MediaTypeNames.Application.Pdf);
-            })
+        bewertung.MapGet("/{userId:guid}.pdf", CreateFeedbackPdf)
+            .RequireAuthorization(AuthorizationPolicies.ProfundumsVerantwortlich);
+        bewertung.MapGet("/batch.zip", CreateFeedbackPdfBatched)
             .RequireAuthorization(AuthorizationPolicies.ProfundumsVerantwortlich);
 
-        bewertung.MapGet("/batch.zip",
-                async (FeedbackPrintoutService profundumManagementService,
-                    int schuljahr,
-                    bool halbjahr,
-                    DateOnly ausgabedatum,
-                    bool doublesided,
-                    bool byClass = false,
-                    bool byGm = false,
-                    bool single = false) =>
-                {
-                    FeedbackPrintoutService.BatchingModes mode = 0;
-                    if (byClass) mode |= FeedbackPrintoutService.BatchingModes.ByClass;
-                    if (byGm) mode |= FeedbackPrintoutService.BatchingModes.ByGm;
-                    if (single) mode |= FeedbackPrintoutService.BatchingModes.Single;
-                    if (single && (byClass || byGm))
-                        return (Results<FileContentHttpResult, BadRequest<string>>)TypedResults.BadRequest(
-                            "If single is set, no other batching method may be selected.");
-                    var fileContents =
-                        await profundumManagementService.GenerateFileBatched(mode,
-                            schuljahr,
-                            halbjahr,
-                            ausgabedatum,
-                            doublesided);
-                    return TypedResults.File(fileContents, MediaTypeNames.Application.Zip);
-                })
-            .RequireAuthorization(AuthorizationPolicies.ProfundumsVerantwortlich);
-
+        var disclose = bewertung.MapGroup("/disclose");
         disclose.MapGet("/", DiscloseForCurrentUser)
             .RequireAuthorization(AuthorizationPolicies.StudentOnly);
         disclose.MapGet("/{studentId:guid}", DiscloseForMentor)
@@ -305,6 +264,45 @@ public static class Bewertung
         }
 
         return TypedResults.Ok(dict);
+    }
+
+    private static async Task<FileContentHttpResult> CreateFeedbackPdf(
+        FeedbackPrintoutService profundumManagementService,
+        Guid userId,
+        UserService userService,
+        int schuljahr,
+        bool halbjahr,
+        DateOnly ausgabedatum)
+    {
+        var user = await userService.GetUserByIdAsync(userId);
+        var fileContents =
+            await profundumManagementService.GenerateFileForPerson(user, schuljahr, halbjahr, ausgabedatum);
+        return TypedResults.File(fileContents, MediaTypeNames.Application.Pdf);
+    }
+
+    private static async Task<Results<FileContentHttpResult, BadRequest<string>>> CreateFeedbackPdfBatched(
+        FeedbackPrintoutService profundumManagementService,
+        int schuljahr,
+        bool halbjahr,
+        DateOnly ausgabedatum,
+        bool doublesided,
+        bool byClass = false,
+        bool byGm = false,
+        bool single = false)
+    {
+        FeedbackPrintoutService.BatchingModes mode = 0;
+        if (byClass) mode |= FeedbackPrintoutService.BatchingModes.ByClass;
+        if (byGm) mode |= FeedbackPrintoutService.BatchingModes.ByGm;
+        if (single) mode |= FeedbackPrintoutService.BatchingModes.Single;
+        if (single && (byClass || byGm))
+            return TypedResults.BadRequest(
+                "If single is set, no other batching method may be selected.");
+        var fileContents = await profundumManagementService.GenerateFileBatched(mode,
+            schuljahr,
+            halbjahr,
+            ausgabedatum,
+            doublesided);
+        return TypedResults.File(fileContents, MediaTypeNames.Application.Zip);
     }
 
     private static async Task<Results<Ok<MenteeFeedback>, ForbidHttpResult>> DiscloseForMentor(
