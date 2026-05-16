@@ -1,3 +1,4 @@
+using Altafraner.AfraApp.Domain;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.Profundum.Domain.Models.Bewertung;
@@ -136,5 +137,14 @@ internal sealed class FeedbackService
                 numFeedback == numStudents ? FeedbackStatus.Done :
                 numFeedback != 0 ? FeedbackStatus.Partial : FeedbackStatus.Missing);
         }
+    }
+
+    public async Task SetPublishStatus(Guid slotId, bool status)
+    {
+        var slot = await _dbContext.ProfundaSlots.FindAsync(slotId);
+        if (slot is null) throw new NotFoundException("Cannot find slot");
+
+        slot.IsFeedbackPublished = status;
+        await _dbContext.SaveChangesAsync();
     }
 }

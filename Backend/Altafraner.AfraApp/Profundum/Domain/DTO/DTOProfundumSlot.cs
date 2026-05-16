@@ -19,6 +19,7 @@ public record DTOProfundumSlot
         // Sometimes we might not need to load EinwahlZeitraum
         // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
         EinwahlZeitraumId = dbSlot.EinwahlZeitraum?.Id ?? Guid.Empty;
+        IsFeedbackPublished = dbSlot.IsFeedbackPublished;
     }
 
     /// <inheritdoc cref="ProfundumDefinition.Id"/>
@@ -35,4 +36,7 @@ public record DTOProfundumSlot
 
     /// <inheritdoc cref="ProfundumSlot.EinwahlZeitraum"/>
     public required Guid EinwahlZeitraumId { get; set; }
+
+    /// <inheritdoc cref="ProfundumSlot.IsFeedbackPublished" />
+    public required bool IsFeedbackPublished { get; set; }
 }

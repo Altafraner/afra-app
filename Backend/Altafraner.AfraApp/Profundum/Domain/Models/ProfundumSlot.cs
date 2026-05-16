@@ -35,6 +35,11 @@ public record ProfundumSlot
     /// </summary>
     public List<ProfundumTermin> Termine { get; set; } = null!;
 
+    /// <summary>
+    ///     Defines, whether feedback for this slot will be visible to mentors and students.
+    /// </summary>
+    public bool IsFeedbackPublished { get; set; } = false;
+
     ///
     public override string ToString()
     {

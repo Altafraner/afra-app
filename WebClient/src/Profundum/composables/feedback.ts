@@ -202,6 +202,20 @@ export const useFeedback = () => {
         }
     }
 
+    async function publishSlotFeedback(id: string, value: boolean): Promise<void> {
+        try {
+            await api.post('/control/' + id + '/publish', { value });
+        } catch (e) {
+            const mandeError: MandeError = e as MandeError;
+            toast.add({
+                severity: 'error',
+                summary: 'Es ist ein Fehler aufgetreten',
+                detail: `Das Feedback konnte nicht veröffentlicht werden. Code ${mandeError.response.status}, ${mandeError.message}`,
+            });
+            throw e;
+        }
+    }
+
     function downloadForStudent(
         studentId: string,
         schuljahr: number,
@@ -301,6 +315,7 @@ export const useFeedback = () => {
         deleteKategorie,
         bewertungAbgeben,
         getControl,
+        publishSlotFeedback,
         downloadForStudent,
         downloadForAll,
         getSelfDisclosure,

@@ -2,13 +2,14 @@
 import { useFeedback } from '@/Profundum/composables/feedback';
 import { computed, shallowRef } from 'vue';
 import type { ProfundumFeedbackStatus } from '@/Profundum/models/feedback';
-import { Column, DataTable, Tag } from 'primevue';
+import { Button, Column, DataTable, Tag } from 'primevue';
 import Accordion from 'primevue/accordion';
 import AccordionPanel from 'primevue/accordionpanel';
 import AccordionHeader from 'primevue/accordionheader';
 import AccordionContent from 'primevue/accordioncontent';
 import { chooseSeverity, formatSlot, formatStudent } from '@/helpers/formatters';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
+import type { UserInfoMinimal } from '@/models/user/userInfoMinimal';
 
 const navItems = [
     {
@@ -30,8 +31,13 @@ const navItems = [
 
 const feedbackService = useFeedback();
 
-const control = shallowRef<Record<string, ProfundumFeedbackStatus[]>>();
-control.value = await feedbackService.getControl();
+const control = shallowRef<Record<string, ProfundumFeedbackStatus[]>>({});
+
+async function update() {
+    control.value = await feedbackService.getControl();
+}
+await update();
+
 const slots = computed(() =>
     Object.keys(control.value).map((key) => {
         return {
@@ -46,6 +52,12 @@ const slots = computed(() =>
         };
     }),
 );
+
+async function publish(evt: Event, id: string, status: boolean) {
+    evt.stopPropagation();
+    await feedbackService.publishSlotFeedback(id, status);
+    await update();
+}
 </script>
 
 <template>
@@ -58,12 +70,28 @@ const slots = computed(() =>
                     <span>
                         {{ formatSlot(slot.info) }}
                     </span>
-                    <span
-                        ><Tag
+                    <span class="inline-flex gap-2">
+                        <Button
+                            v-if="!slot.info.isFeedbackPublished"
+                            label="Veröffentlichen"
+                            severity="primary"
+                            size="small"
+                            variant="text"
+                            @click="publish($event, slot.info.id, true)"
+                        />
+                        <Button
+                            v-else
+                            label="Veröffentlicht"
+                            severity="secondary"
+                            size="small"
+                            variant="text"
+                            @click="publish($event, slot.info.id, false)"
+                        />
+                        <Tag
                             :severity="chooseSeverity((100 * slot.done) / slot.count, 25, true)"
                             >{{ slot.done }} / {{ slot.count }}</Tag
-                        ></span
-                    >
+                        >
+                    </span>
                 </div>
             </AccordionHeader>
             <AccordionContent>
@@ -77,7 +105,7 @@ const slots = computed(() =>
                         <template #body="{ data }">
                             {{
                                 data.instanz.verantwortlicheInfo
-                                    .map((v) => formatStudent(v, true))
+                                    .map((v: UserInfoMinimal) => formatStudent(v, true))
                                     .join(', ')
                             }}
                         </template>

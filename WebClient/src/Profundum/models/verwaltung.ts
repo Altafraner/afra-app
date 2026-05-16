@@ -45,4 +45,5 @@ export interface ProfundumSlot {
     quartal: ProfundumQuartal;
     wochentag: Wochentag;
     einwahlZeitraumId: string;
+    isFeedbackPublished: boolean;
 }

@@ -1,5 +1,6 @@
 using System.Net.Mime;
 using Altafraner.AfraApp.Backbone.Authorization;
+using Altafraner.AfraApp.Otium.API;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.Profundum.Services;
@@ -41,8 +42,11 @@ public static class Bewertung
         bewertung.MapPut("/{instanzId:guid}/{slotId:guid}/{studentId:guid}", UpdateBewertungAsync)
             .RequireAuthorization(AuthorizationPolicies.TutorOnly);
 
-        bewertung.MapGet("/control/status", GetStatusAsync)
+        var control = bewertung.MapGroup("/control")
             .RequireAuthorization(AuthorizationPolicies.ProfundumsVerantwortlich);
+
+        control.MapGet("/status", GetStatusAsync);
+        control.MapPost("/{slotId:guid}/publish", SetPublishStatus);
 
         bewertung.MapGet("/{userId:guid}.pdf", CreateFeedbackPdf)
             .RequireAuthorization(AuthorizationPolicies.ProfundumsVerantwortlich);
@@ -266,6 +270,15 @@ public static class Bewertung
         return TypedResults.Ok(dict);
     }
 
+    private static async Task<NoContent> SetPublishStatus(FeedbackService service,
+        Guid slotId,
+        ValueWrapper<bool> value)
+    {
+        await service.SetPublishStatus(slotId, value.Value);
+
+        return TypedResults.NoContent();
+    }
+
     private static async Task<FileContentHttpResult> CreateFeedbackPdf(
         FeedbackPrintoutService profundumManagementService,
         Guid userId,
@@ -336,7 +349,9 @@ public static class Bewertung
         ProfundumManagementService managementService)
     {
         var allSlots = await managementService.GetSlotsAsync();
-        var domainFeedback = await feedbackService.GetFeedback(userId, allSlots.Select(s => s.Id)).ToArrayAsync();
+        var domainFeedback = await feedbackService
+            .GetFeedback(userId, allSlots.Where(s => s.IsFeedbackPublished).Select(s => s.Id))
+            .ToArrayAsync();
         var enrollmentInfos = domainFeedback.Select(f => (
                 f.Slot,
                 f.Instanz.Profundum.Bezeichnung
