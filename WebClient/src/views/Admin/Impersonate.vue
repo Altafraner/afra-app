@@ -3,7 +3,7 @@ import { useUser } from '@/stores/user';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
 import { computed } from 'vue';
 import { formatTutor } from '@/helpers/formatters';
-import { Button } from 'primevue';
+import { Button, useToast } from 'primevue';
 import { mande } from 'mande';
 import { useRouter } from 'vue-router';
 import UserPeek from '@/components/UserPeek.vue';
@@ -11,6 +11,7 @@ import UserPeek from '@/components/UserPeek.vue';
 const user = useUser();
 const otium = useOtiumStore();
 const router = useRouter();
+const toast = useToast();
 
 await otium.updatePersonen();
 
@@ -58,8 +59,14 @@ const personen = computed(() => {
 });
 
 const impersonate = async (userToImpersonate) => {
-    console.log(userToImpersonate);
-    await mande(`/api/user/${userToImpersonate.id}/impersonate`).get();
+    try {
+        await mande(`/api/user/${userToImpersonate.id}/impersonate`).get();
+    } catch {
+        toast.add({
+            severity: 'error',
+            summary: 'Impersonieren fehlgeschlagen',
+        });
+    }
     await user.update();
     await router.push('/');
 };
