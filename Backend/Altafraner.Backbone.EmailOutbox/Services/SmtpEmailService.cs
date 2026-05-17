@@ -46,7 +46,7 @@ internal class SmtpEmailService : IEmailService
         await smtp.ConnectAsync(_emailConfiguration.Host, _emailConfiguration.Port,
             _emailConfiguration.SecureSocketOptions);
 
-        if (_emailConfiguration.Username is not null)
+        if (_emailConfiguration.Username is not null && _emailConfiguration.Password is not null)
             await smtp.AuthenticateAsync(_emailConfiguration.Username, _emailConfiguration.Password);
 
         await smtp.SendAsync(email);
