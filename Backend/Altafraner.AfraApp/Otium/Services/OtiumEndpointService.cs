@@ -17,7 +17,6 @@ using Altafraner.AfraApp.User.Services;
 using Altafraner.Backbone.EmailSchedulingModule;
 using Altafraner.Backbone.Utils;
 using Microsoft.EntityFrameworkCore;
-using Katalog_Termin = Altafraner.AfraApp.Otium.Domain.DTO.Katalog.Termin;
 using Models_Person = Altafraner.AfraApp.User.Domain.Models.Person;
 
 namespace Altafraner.AfraApp.Otium.Services;
@@ -65,7 +64,7 @@ internal class OtiumEndpointService
     ///     Gets the Katalog for a given date.
     /// </summary>
     /// <param name="person">The person the generate the messages for</param>
-    /// <param name="date">The date to get the <see cref="TerminPreview" />s for</param>
+    /// <param name="date">The date to get the <see cref="KatalogTerminPreview" />s for</param>
     public async Task<Tag> GetKatalogForDay(Models_Person person, DateOnly date)
     {
         return new Tag(GetTerminPreviewsForDay(date, person),
@@ -78,7 +77,7 @@ internal class OtiumEndpointService
     /// <param name="date">The date for which to retrieve the Otium data.</param>
     /// <param name="user">The user the preview ist for</param>
     /// <returns>A List of all Otia happening at that time.</returns>
-    private async IAsyncEnumerable<TerminPreview> GetTerminPreviewsForDay(DateOnly date, Models_Person user)
+    private async IAsyncEnumerable<KatalogTerminPreview> GetTerminPreviewsForDay(DateOnly date, Models_Person user)
     {
         // Get the schultag for the given date and block
         var blocks = await _dbContext.Blocks
@@ -115,7 +114,7 @@ internal class OtiumEndpointService
 
         // Calculate the load for each termin and cast it to a json object
         foreach (var termin in termine)
-            yield return new TerminPreview(termin.Termin,
+            yield return new KatalogTerminPreview(termin.Termin,
                 termin.Auslasung,
                 termin.IstEingeschrieben,
                 _kategorieService.GetTransitiveKategoriesIdsAsyncEnumerable(termin.Termin.Otium.Kategorie),
@@ -127,7 +126,7 @@ internal class OtiumEndpointService
     /// </summary>
     /// <param name="terminId">The <see cref="Guid" /> of the termin to get details for</param>
     /// <param name="user">The user requesting the termin</param>
-    public async Task<Katalog_Termin?> GetTerminAsync(Guid terminId, Models_Person user)
+    public async Task<KatalogTermin?> GetTerminAsync(Guid terminId, Models_Person user)
     {
         var termin = await _dbContext.OtiaTermine
             .Include(termin => termin.Tutor)
@@ -144,7 +143,7 @@ internal class OtiumEndpointService
 
         var schema = _blockHelper.Get(termin.Block.SchemaId)!;
 
-        return new Katalog_Termin(termin,
+        return new KatalogTermin(termin,
             await _enrollmentService.GetEnrolmentPreview(user, termin),
             termin.Otium.Kategorie.Id,
             schema);

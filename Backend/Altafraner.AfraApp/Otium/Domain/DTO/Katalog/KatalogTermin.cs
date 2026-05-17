@@ -7,7 +7,7 @@ namespace Altafraner.AfraApp.Otium.Domain.DTO.Katalog;
 /// <summary>
 ///     A DTO for the detailed view of a termin
 /// </summary>
-public record Termin : ITermin
+public record KatalogTermin : IKatalogTermin
 {
     /// <summary>
     ///     Constructs a new DTO from a termin entry
@@ -16,7 +16,7 @@ public record Termin : ITermin
     /// <param name="einschreibung">Information on whether and how to enroll</param>
     /// <param name="kategorie">The category the Otium is in</param>
     /// <param name="schema">The schema of the block the termin is in</param>
-    public Termin(OtiumTermin termin,
+    public KatalogTermin(OtiumTermin termin,
         EinschreibungsPreview einschreibung,
         Guid kategorie,
         BlockMetadata schema)
