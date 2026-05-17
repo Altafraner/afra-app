@@ -38,7 +38,7 @@ internal class CevexDataParser
     private async Task<IEnumerable<CevexUser>> ReadFileFromDisk()
     {
         await using var stream = File.OpenRead(_cevexConfig.FilePath);
-        using var reader = new StreamReader(stream, Encoding.Unicode); // uft16le
+        using var reader = new StreamReader(stream, Encoding.Unicode); // utf16le
         var contents = await reader.ReadToEndAsync();
         var data = JsonSerializer.Deserialize<CevexUserOriginal[]>(contents);
         return data?.Select(e => new CevexUser(e)) ?? [];
@@ -188,7 +188,7 @@ internal class CevexDataParser
                         {notify.Where(e => e.CevexSyncFailureTime == now).Aggregate("", (current, next) => current + $"- {next.FirstName} {next.LastName} ({next.Gruppe}){Environment.NewLine}")}
                         """;
             foreach (var recipient in _cevexConfig.SyncNotificationRecipients)
-                await _outbox.SendReportAsync(recipient, "Cevex-Nutersynchronisierung fehlgeschlagen", body);
+                await _outbox.SendReportAsync(recipient, "Cevex-Nutzersynchronisierung fehlgeschlagen", body);
         }
 
         return matchesToSave;
