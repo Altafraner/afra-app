@@ -45,7 +45,7 @@ const navItems = computed(() => [
     {
         label: 'Otium',
         route: {
-            name: 'Katalog',
+            name: 'Otium-Katalog',
         },
     },
     {

@@ -1,18 +1,18 @@
 export const routes = [
     {
-        path: '/katalog',
-        name: 'Katalog',
+        path: '/otium/katalog',
+        name: 'Otium-Katalog',
         component: () => import('@/Otium/views/Katalog/Index.vue'),
     },
     {
-        path: '/katalog/:datum',
-        name: 'Katalog-Datum',
+        path: '/otium/katalog/:datum',
+        name: 'Otium-Katalog-Datum',
         component: () => import('@/Otium/views/Katalog/Index.vue'),
         props: true,
     },
     {
-        path: '/katalog/:datum/:terminId',
-        name: 'Katalog-Datum-Termin',
+        path: '/otium/katalog/:datum/:terminId',
+        name: 'Otium-Katalog-Datum-Termin',
         component: () => import('@/Otium/views/Katalog/Index.vue'),
         props: true,
     },
@@ -23,24 +23,24 @@ export const routes = [
         props: true,
     },
     {
-        path: '/management/termin/:terminId',
+        path: '/otium/management/termin/:terminId',
         name: 'Verwaltung-Termin',
         component: () => import('@/Otium/views/Management/Termin.vue'),
         props: true,
     },
     {
-        path: '/management',
+        path: '/otium/management',
         name: 'Verwaltung',
         component: () => import('@/Otium/views/Management/OtiaOverview.vue'),
     },
     {
-        path: '/management/otium/:otiumId',
+        path: '/otium/management/otium/:otiumId',
         name: 'Verwaltung-Otium',
         component: () => import('@/Otium/views/Management/OtiumEdit.vue'),
         props: true,
     },
     {
-        path: '/management/schuljahr/neu',
+        path: '/otium/management/schuljahr/neu',
         name: 'Verwaltung-Schuljahr-Neu',
         component: () => import('@/Otium/components/Schuljahr/CreateSchoolyear.vue'),
     },

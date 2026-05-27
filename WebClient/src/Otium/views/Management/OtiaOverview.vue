@@ -16,7 +16,7 @@ const navItems = ref([
     {
         label: 'Otium',
         route: {
-            name: 'Katalog',
+            name: 'Otium-Katalog',
         },
     },
     {

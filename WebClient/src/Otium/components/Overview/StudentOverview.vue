@@ -133,7 +133,7 @@ const isOs = computed(() => {
                             <span v-if="data.otium">
                                 <Button
                                     :to="{
-                                        name: 'Katalog-Datum-Termin',
+                                        name: 'Otium-Katalog-Datum-Termin',
                                         params: { datum: data.datum, terminId: data.terminId },
                                     }"
                                     as="RouterLink"
@@ -153,7 +153,10 @@ const isOs = computed(() => {
                             </span>
                             <Button
                                 v-else-if="props.showKatalog"
-                                :to="{ name: 'Katalog-Datum', params: { datum: data.datum } }"
+                                :to="{
+                                    name: 'Otium-Katalog-Datum',
+                                    params: { datum: data.datum },
+                                }"
                                 as="RouterLink"
                                 class="w-full justify-start px-2"
                                 icon="pi pi-list"

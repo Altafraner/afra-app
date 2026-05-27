@@ -45,13 +45,13 @@ const navItems = computed(() => {
         {
             label: 'Otium',
             route: {
-                name: 'Katalog',
+                name: 'Otium-Katalog',
             },
         },
         {
             label: 'Katalog',
             route: {
-                name: 'Katalog',
+                name: 'Otium-Katalog',
             },
         },
     ];
@@ -88,7 +88,7 @@ async function startup() {
                 date.value = datesAvailable.value.find((e) => e.datum === props.datum);
             else {
                 date.value = dateDefault.value;
-                await router.replace('/katalog');
+                await router.replace({ name: 'Otium-Katalog' });
             }
         } else {
             date.value = dateDefault.value;
@@ -144,8 +144,8 @@ async function dateChanged() {
             summary: 'Fehler',
             detail: 'Ein unerwarteter Fehler ist beim Laden der Daten aufgetreten',
         });
-        if (location.fullPath !== '/katalog') {
-            await router.push('/katalog');
+        if (location.name !== 'Otium-Katalog') {
+            await router.replace({ name: 'Otium-Katalog' });
             await dateChanged();
         }
     }
@@ -157,7 +157,13 @@ function selectToday() {
 }
 
 watch([date], () => {
-    if (!loading.value && date.value != null) router.push('/katalog/' + date.value.datum);
+    if (!loading.value && date.value != null)
+        router.push({
+            name: 'Otium-Katalog-Datum',
+            params: {
+                datum: date.value.datum,
+            },
+        });
 });
 
 startup();

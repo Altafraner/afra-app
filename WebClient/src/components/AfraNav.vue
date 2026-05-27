@@ -36,7 +36,7 @@ const all_items: MenuItemWithCondition[] = [
             {
                 label: 'Katalog',
                 route: {
-                    name: 'Katalog',
+                    name: 'Otium-Katalog',
                 },
                 icon: 'pi pi-list',
             },
