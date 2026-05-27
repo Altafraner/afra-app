@@ -1,5 +1,5 @@
 <script setup>
-import { Button, FloatLabel, InputGroup, Select } from 'primevue';
+import { Button, FloatLabel, InputGroup, Select, Tag } from 'primevue';
 import InputGroupAddon from 'primevue/inputgroupaddon';
 import { formatDate } from '@/helpers/formatters';
 
@@ -72,12 +72,25 @@ function date_to_label(data) {
             >
                 <template #value="{ value }">
                     <template v-if="value">
-                        {{ formatDate(date_to_label(value)) }} | {{ value.wochentyp }}
+                        <span class="inline-flex gap-2 justify-between w-full md:justify-start">
+                            <span>
+                                {{ formatDate(date_to_label(value)) }}
+                            </span>
+                            <Tag
+                                :value="value.wochentyp"
+                                class="text-xs"
+                                severity="secondary"
+                            />
+                        </span>
                     </template>
                 </template>
-                <template #option="{ option }"
-                    >{{ formatDate(date_to_label(option)) }} |
-                    {{ option.wochentyp }}
+                <template #option="{ option }">
+                    <span class="inline-flex gap-2 justify-between w-full md:justify-start">
+                        <span>
+                            {{ formatDate(date_to_label(option)) }}
+                        </span>
+                        <Tag :value="option.wochentyp" class="text-xs" severity="secondary" />
+                    </span>
                 </template>
                 <template #empty> Kein Datum verfügbar.</template>
             </Select>
