@@ -4,6 +4,13 @@ using Altafraner.AfraApp.User.Domain.DTO;
 namespace Altafraner.AfraApp.Otium.Domain.DTO.Katalog;
 
 /// <summary>
+///     Contains the termin previews for a single block
+/// </summary>
+/// <param name="Block">Information about the block</param>
+/// <param name="Previews">The previews</param>
+public record struct BlockPreview(BlockInfo Block, IEnumerable<KatalogTerminPreview> Previews);
+
+/// <summary>
 ///     A DTO for sending a preview of a termin to the client.
 /// </summary>
 public record KatalogTerminPreview : IKatalogTermin
@@ -15,24 +22,21 @@ public record KatalogTerminPreview : IKatalogTermin
     /// <param name="auslastung">The load of the termin</param>
     /// <param name="istEingeschrieben">Indicates whether the requesting user is enrolled to the termin the preview ist for</param>
     /// <param name="kategorien">A list of all categories the otium for the termin is in.</param>
-    /// <param name="block">The block the termin is in</param>
     public KatalogTerminPreview(OtiumTermin termin,
         int? auslastung,
         bool istEingeschrieben,
-        IAsyncEnumerable<Guid> kategorien, string block)
+        IAsyncEnumerable<Guid> kategorien)
     {
         Id = termin.Id;
         Otium = termin.Bezeichnung;
         OtiumId = termin.Otium.Id;
         Ort = termin.Ort;
-        BlockSchemaId = termin.Block.SchemaId;
         Kategorien = kategorien;
         IstAbgesagt = termin.IstAbgesagt;
         IstEingeschrieben = istEingeschrieben;
         Tutor = termin.Tutor is null ? null : new PersonInfoMinimal(termin.Tutor);
         Auslastung = auslastung;
         MaxEinschreibungen = termin.MaxEinschreibungen;
-        Block = block;
     }
 
     /// <summary>
@@ -71,12 +75,6 @@ public record KatalogTerminPreview : IKatalogTermin
     ///     The location where the termin takes place
     /// </summary>
     public string Ort { get; set; }
-
-    /// <summary>The blocks schema id</summary>
-    public char BlockSchemaId { get; set; }
-
-    /// <summary>The blocks human-readable name</summary>
-    public string Block { get; set; }
 
     /// <summary>
     ///     The tutor handling the termin (optional)

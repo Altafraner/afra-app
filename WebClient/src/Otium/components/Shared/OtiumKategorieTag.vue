@@ -5,13 +5,14 @@ const props = defineProps({
     value: Object,
     minimal: Boolean,
     hideName: Boolean,
+    hideIcon: Boolean,
 });
 </script>
 
 <template>
     <Tag v-if="!minimal" severity="secondary">
         <span
-            v-if="props.value.icon"
+            v-if="props.value.icon && !hideIcon"
             :class="`ot-angebot-icon ${props.value.cssColor ? 'ot-angebot-white' : ''}`"
             :style="`background-color: ${props.value.cssColor ?? 'unset'}`"
         >
@@ -22,7 +23,11 @@ const props = defineProps({
         </span>
     </Tag>
     <span v-else class="inline-flex items-baseline justify-center gap-1">
-        <i :class="props.value.icon" :style="`color: ${props.value.cssColor ?? 'inherit'}`" />
+        <i
+            v-if="props.value.icon && !hideIcon"
+            :class="props.value.icon"
+            :style="`color: ${props.value.cssColor ?? 'inherit'}`"
+        />
         <span v-if="!hideName">
             {{ props.value.bezeichnung }}
         </span>

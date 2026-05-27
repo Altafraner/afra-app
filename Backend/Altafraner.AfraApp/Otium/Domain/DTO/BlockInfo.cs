@@ -1,4 +1,6 @@
+using System.Diagnostics.CodeAnalysis;
 using Altafraner.AfraApp.Domain.TimeInterval;
+using Altafraner.AfraApp.Schuljahr.Domain.Models;
 
 namespace Altafraner.AfraApp.Otium.Domain.DTO;
 
@@ -7,6 +9,22 @@ namespace Altafraner.AfraApp.Otium.Domain.DTO;
 /// </summary>
 public record BlockInfo
 {
+    ///
+    public BlockInfo()
+    {
+    }
+
+    ///
+    [SetsRequiredMembers]
+    public BlockInfo(Block block, BlockMetadata metadata)
+    {
+        Id = block.Id;
+        SchemaId = block.SchemaId;
+        Name = metadata.Bezeichnung;
+        Uhrzeit = metadata.Interval;
+        Datum = block.SchultagKey;
+    }
+
     /// <summary>
     ///     The unique identifier of the block
     /// </summary>

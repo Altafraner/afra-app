@@ -77,7 +77,7 @@ internal class OtiumEndpointService
     /// <param name="date">The date for which to retrieve the Otium data.</param>
     /// <param name="user">The user the preview ist for</param>
     /// <returns>A List of all Otia happening at that time.</returns>
-    private async IAsyncEnumerable<KatalogTerminPreview> GetTerminPreviewsForDay(DateOnly date, Models_Person user)
+    private async IAsyncEnumerable<BlockPreview> GetTerminPreviewsForDay(DateOnly date, Models_Person user)
     {
         // Get the schultag for the given date and block
         var blocks = await _dbContext.Blocks
@@ -90,7 +90,7 @@ internal class OtiumEndpointService
         // Get all termine for the given schultag and block
         // Note: This needs to be materialized before the foreach loop as EF Core does not support multiple active queries.
         // Note: This needs to be a tracking query as we need to load the related entities at a later point.
-        var termine = await _dbContext.OtiaTermine
+        var blocksWithTermine = await _dbContext.OtiaTermine
             .Where(t => blocks.Contains(t.Block))
             .Include(t => t.Otium)
             .ThenInclude(o => o.Kategorie)
@@ -98,27 +98,35 @@ internal class OtiumEndpointService
             .Select(t => new TerminWithLoad
             {
                 Termin = t,
-                Auslasung = t.MaxEinschreibungen == null
+                Auslastung = t.MaxEinschreibungen == null
                     ? null
                     : (int)Math.Round((double)t.Enrollments.Count * 100 / t.MaxEinschreibungen.Value),
                 IstEingeschrieben = t.Enrollments.Any(e => e.BetroffenePerson.Id == user.Id)
             })
             .AsAsyncEnumerable()
-            .GroupBy(t => t.Termin.Block.SchemaId)
-            .Select(e => (Group: e, Schema: _blockHelper.Get(e.Key)!))
+            .GroupBy(t => t.Termin.Block)
+            .Select(e => (Group: e, Schema: _blockHelper.Get(e.Key.SchemaId)!))
             .OrderBy(e => e.Schema.Unterrichtsstunde)
             .ThenBy(e => e.Schema.Id)
-            .SelectMany(e => e.Group.OrderBy(t => t.Termin.IstAbgesagt).ThenBy(t => t.Termin.Bezeichnung))
+            .Select(e => (Block: e.Group.Key, e.Schema,
+                Termine: e.Group.OrderBy(t => t.Termin.IstAbgesagt).ThenBy(t => t.Termin.Bezeichnung)))
             .ToListAsync();
 
 
-        // Calculate the load for each termin and cast it to a json object
-        foreach (var termin in termine)
-            yield return new KatalogTerminPreview(termin.Termin,
-                termin.Auslasung,
-                termin.IstEingeschrieben,
-                _kategorieService.GetTransitiveKategoriesIdsAsyncEnumerable(termin.Termin.Otium.Kategorie),
-                _blockHelper.Get(termin.Termin.Block.SchemaId)!.Bezeichnung);
+        // Calculate the load for each block and cast it to the expected format
+        foreach (var block in blocksWithTermine)
+            yield return new BlockPreview(new BlockInfo(block.Block, block.Schema),
+                GenerateTerminPreviews(block.Termine));
+        yield break;
+
+        IEnumerable<KatalogTerminPreview> GenerateTerminPreviews(IOrderedEnumerable<TerminWithLoad> termine)
+        {
+            foreach (var termin in termine)
+                yield return new KatalogTerminPreview(termin.Termin,
+                    termin.Auslastung,
+                    termin.IstEingeschrieben,
+                    _kategorieService.GetTransitiveKategoriesIdsAsyncEnumerable(termin.Termin.Otium.Kategorie));
+        }
     }
 
     /// <summary>
@@ -379,7 +387,8 @@ internal class OtiumEndpointService
         foreach (var termin in termine)
             terminPreviews.Add(
                 new LehrerTerminPreview(termin.Id,
-                    termin.OverrideBezeichnung != null ? termin.OverrideBezeichnung : termin.Bezeichnung, termin.Ort,
+                    termin.OverrideBezeichnung ?? termin.Bezeichnung,
+                    termin.Ort,
                     await _enrollmentService.GetLoadPercent(termin), termin.Block.Schultag.Datum,
                     _blockHelper.Get(termin.Block.SchemaId)!.Bezeichnung)
             );
@@ -411,7 +420,7 @@ internal class OtiumEndpointService
                 if (schultageInWeek.Count == 0) return MenteePreviewStatus.NichtVerfuegbar;
 
                 var weeksMessages = await _rulesValidationService.GetMessagesForWeekAsync(mentee,
-                    schultage.Where(s => schultageInWeek.Contains(s)).ToList(),
+                    schultage.Where(schultageInWeek.Contains).ToList(),
                     enrollmentsList.Where(e => schultageInWeek.Contains(e.Termin.Block.Schultag)).ToList());
                 if (weeksMessages.Count > 0) return DecideBetweenOpenAndConspicuous(schultageInWeek);
 
@@ -1131,9 +1140,9 @@ internal class OtiumEndpointService
 
     private class TerminWithLoad
     {
-        public required int? Auslasung { get; init; }
+        public required int? Auslastung { get; init; }
         public required OtiumTermin Termin { get; init; }
-        public bool IstEingeschrieben { get; set; }
+        public bool IstEingeschrieben { get; init; }
     }
 
     /// <summary>

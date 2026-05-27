@@ -1,6 +1,6 @@
 <script setup>
-import { computed, ref, Suspense, watch } from 'vue';
-import { Column, DataTable, Message, Skeleton, useToast } from 'primevue';
+import { computed, shallowRef, watch } from 'vue';
+import { Column, DataTable, Message, Panel, Skeleton, useToast } from 'primevue';
 import OtiumDateSelector from '@/Otium/components/Form/OtiumDateSelector.vue';
 import OtiumKategorySelector from '@/Otium/components/Form/OtiumKategorySelector.vue';
 import OtiumKatalog from '@/Otium/components/Katalog/OtiumKatalog.vue';
@@ -27,18 +27,15 @@ const router = useRouter();
 const location = useRoute();
 const toast = useToast();
 const settings = useOtiumStore();
-
-const loading = ref(true);
 const user = useUser();
-const datesAvailable = ref([]);
-const dateDefault = ref(null);
-const kategorieOptionsTree = ref();
-const otia = ref([]);
-const hinweise = ref([]);
-const date = ref(null);
-const kategorie = ref(null);
-const categoryChanged = () => {};
-const selectedOtia = ref(otia.value);
+
+const loading = shallowRef(true);
+const datesAvailable = shallowRef([]);
+const dateDefault = shallowRef(null);
+const blocks = shallowRef([]);
+const hinweise = shallowRef([]);
+const date = shallowRef(null);
+const kategorie = shallowRef(null);
 
 const navItems = computed(() => {
     const start = [
@@ -65,21 +62,10 @@ const navItems = computed(() => {
           ];
 });
 
-watch(kategorie, filterOtiaByKategorie);
-
-function filterOtiaByKategorie() {
-    if (kategorie.value == null || Object.keys(kategorie.value).length === 0) {
-        selectedOtia.value = otia.value;
-        return;
-    }
-    const kategorieId = Object.keys(kategorie.value)[0];
-    selectedOtia.value = otia.value.filter((e) => e.kategorien.includes(kategorieId));
-}
-
 async function startup() {
     loading.value = true;
     const terminePromise = getTermine();
-    const kategoriesPromise = getKategories();
+    const kategoriesPromise = settings.updateKategorien();
     try {
         await terminePromise;
         if (props.datum && props.datum !== '') {
@@ -93,8 +79,8 @@ async function startup() {
         } else {
             date.value = dateDefault.value;
         }
-        await kategoriesPromise;
         await dateChanged();
+        await kategoriesPromise;
     } catch (error) {
         console.error(error);
         toast.add({
@@ -110,7 +96,6 @@ async function startup() {
 watch(props, async () => {
     if (!props.datum || (props.datum === '' && date.value.datum !== dateDefault.value.datum)) {
         date.value = dateDefault.value;
-        kategorie.value = null;
         await dateChanged();
     }
 });
@@ -125,14 +110,8 @@ async function getTermine() {
 async function getAngebote() {
     const api = mande('/api/otium');
     const result = await api.get(`${date.value.datum}`);
-    otia.value = result.termine;
+    blocks.value = result.blocks;
     hinweise.value = result.hinweise;
-    filterOtiaByKategorie();
-}
-
-async function getKategories() {
-    const kategoriesGetter = mande('/api/otium/kategorie');
-    kategorieOptionsTree.value = await kategoriesGetter.get();
 }
 
 async function dateChanged() {
@@ -166,6 +145,19 @@ watch([date], () => {
         });
 });
 
+const blocksFiltered = computed(() => {
+    if (kategorie.value == null || Object.keys(kategorie.value).length === 0) {
+        return blocks.value;
+    }
+    const kategorieId = Object.keys(kategorie.value)[0];
+    return blocks.value.map((b) => {
+        return {
+            block: b.block,
+            previews: b.previews.filter((p) => p.kategorien.includes(kategorieId)),
+        };
+    });
+});
+
 startup();
 </script>
 
@@ -175,19 +167,13 @@ startup();
 
     <div class="flex gap-3 flex-col">
         <template v-if="!loading">
-            <div class="flex gap-3">
-                <OtiumDateSelector
-                    v-model="date"
-                    :options="datesAvailable"
-                    @dateChanged="dateChanged"
-                    @today="selectToday"
-                />
-            </div>
-            <OtiumKategorySelector
-                v-model="kategorie"
-                :options="kategorieOptionsTree"
-                @change="categoryChanged"
+            <OtiumDateSelector
+                v-model="date"
+                :options="datesAvailable"
+                @dateChanged="dateChanged"
+                @today="selectToday"
             />
+            <OtiumKategorySelector v-model="kategorie" :options="settings.kategorien" />
 
             <template v-if="user.isStudent && user.user.rolle !== 'Oberstufe'">
                 <Message v-if="hinweise.length === 0" severity="success">
@@ -204,13 +190,23 @@ startup();
                     </div>
                 </Message>
             </template>
-            <Suspense>
+
+            <panel
+                v-for="block in blocksFiltered"
+                :key="block.block.id"
+                :header="block.block.name"
+                class="w-auto flex-1"
+                toggleable
+            >
                 <OtiumKatalog
-                    :otia="selectedOtia"
+                    :otia="block.previews"
                     :termin-id="terminId"
                     @reload="getAngebote"
                 />
-            </Suspense>
+            </panel>
+            <div v-if="blocks.length === 0" class="flex justify-center mt-4">
+                Keine Angebote verfügbar.
+            </div>
         </template>
         <div v-else class="flex gap-5 flex-col">
             <div class="flex gap-3 justify-between">
