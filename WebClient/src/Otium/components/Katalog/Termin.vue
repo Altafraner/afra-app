@@ -12,6 +12,7 @@ import SimpleBreadcrumb from '@/components/SimpleBreadcrumb.vue';
 import MultipleEnrollmentForm from '@/Otium/components/Katalog/Forms/MultipleEnrollmentForm.vue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
 import Notes from '@/Attendance/components/Notes.vue';
+import { convertMarkdownToHtml } from '../../../composables/markdown.ts';
 
 const settings = useOtiumStore();
 const user = useUser();
@@ -31,7 +32,13 @@ const connection = ref(null);
 async function loadTermin() {
     buttonLoading.value = true;
     try {
-        otium.value = await connection.value.get();
+        const tmpValue = await connection.value.get();
+        otium.value = Object.assign(
+            {
+                beschreibungHtml: convertMarkdownToHtml(tmpValue.beschreibung),
+            },
+            tmpValue,
+        );
         buttonLoading.value = false;
     } catch (error) {
         toast.add({
@@ -327,12 +334,7 @@ await setup();
     </div>
 
     <h3 class="font-bold mt-4 text-lg">Beschreibung</h3>
-    <p
-        v-for="beschreibung in otium.beschreibung.split('\n').filter((desc) => desc)"
-        v-if="!props.minimal && otium.beschreibung"
-    >
-        {{ beschreibung }}
-    </p>
+    <div v-if="!props.minimal && otium.beschreibungHtml" v-html="otium.beschreibungHtml" />
 
     <Message v-if="user.isStudent && otium.einschreibung.grund" class="mt-4" severity="warn"
         >{{ otium.einschreibung.grund }}

@@ -18,6 +18,7 @@ import GridEditRow from '@/components/Form/GridEditRow.vue';
 import PersonSelector from '@/components/PersonSelector.vue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
 import HybridAttendanceTable from '@/Attendance/components/HybridAttendanceTable.vue';
+import { convertMarkdownToHtml } from '@/composables/markdown.ts';
 
 const props = defineProps({
     terminId: String,
@@ -317,13 +318,7 @@ await fetchData();
             @update="updateBeschreibung"
         >
             <template v-if="otium.beschreibung" #body>
-                <p
-                    v-for="line in otium.beschreibung.split('\n')"
-                    :key="line"
-                    class="first:mt-0"
-                >
-                    {{ line }}
-                </p>
+                <div v-html="convertMarkdownToHtml(otium.beschreibung)" />
             </template>
             <template #body v-else> Unverändert </template>
             <template #edit>

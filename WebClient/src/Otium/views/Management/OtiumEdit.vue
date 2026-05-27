@@ -22,6 +22,7 @@ import OtiumRegTable from '@/Otium/components/Management/OtiumRegTable.vue';
 import OtiumDateTable from '@/Otium/components/Management/OtiumDateTable.vue';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
 import KlassenrangeSelector from '@/components/KlassenRangeSelector.vue';
+import { convertMarkdownToHtml } from '@/composables/markdown.ts';
 
 const props = defineProps({
     otiumId: String,
@@ -124,7 +125,7 @@ async function updateKategorie() {
 }
 
 async function updateBeschreibung() {
-    if (beschreibung.value.replaceAll('\n\n', '\n') === otium.value.beschreibung) return;
+    if (beschreibung.value === otium.value.beschreibung) return;
     try {
         await simpleUpdate('beschreibung', beschreibung.value);
     } finally {
@@ -389,13 +390,7 @@ setup();
                 @update="updateBeschreibung"
             >
                 <template #body>
-                    <p
-                        v-for="line in otium.beschreibung.split('\n')"
-                        :key="line"
-                        class="first:mt-0"
-                    >
-                        {{ line }}
-                    </p>
+                    <div v-html="convertMarkdownToHtml(otium.beschreibung)" />
                 </template>
                 <template #edit>
                     <Textarea
