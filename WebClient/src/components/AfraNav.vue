@@ -10,7 +10,12 @@ import { useProfundumEinwahl } from '@/Profundum/stores/profundumEinwahlStore';
 import { useRouter } from 'vue-router';
 import { isDark } from '@/helpers/isdark';
 
-type GlobalPermissions = 'Otiumsverantwortlich' | 'Profundumsverantwortlich' | 'Admin';
+type GlobalPermissions =
+    | 'Otiumsverantwortlich'
+    | 'Profundumsverantwortlich'
+    | 'Admin'
+    | 'Sekretariat'
+    | 'Schulleiter';
 type Role = 'Tutor' | 'Oberstufe' | 'Mittelstufe';
 
 interface Conditions {
@@ -130,6 +135,51 @@ const all_items: MenuItemWithCondition[] = [
                 icon: 'pi pi-sliders-h',
                 conditions: {
                     roles: ['Mittelstufe', 'Oberstufe'],
+                },
+            },
+        ],
+    },
+    {
+        label: 'Freistellung',
+        items: [
+            {
+                label: 'Neuer Antrag',
+                route: { name: 'Freistellung-Neu' },
+                icon: 'pi pi-file-plus',
+                conditions: {
+                    roles: ['Oberstufe', 'Mittelstufe'],
+                },
+            },
+            {
+                label: 'Meine Anträge',
+                route: { name: 'Freistellung-Meine' },
+                icon: 'pi pi-list',
+                conditions: {
+                    roles: ['Oberstufe', 'Mittelstufe'],
+                },
+            },
+            {
+                label: 'Anträge bearbeiten',
+                route: { name: 'Freistellung-Lehrer' },
+                icon: 'pi pi-inbox',
+                conditions: {
+                    roles: ['Tutor'],
+                },
+            },
+            {
+                label: 'Sekretariat',
+                route: { name: 'Freistellung-Sekretariat' },
+                icon: 'pi pi-check-square',
+                conditions: {
+                    permissions: ['Sekretariat'],
+                },
+            },
+            {
+                label: 'Schulleiter',
+                route: { name: 'Freistellung-Schulleiter' },
+                icon: 'pi pi-verified',
+                conditions: {
+                    permissions: ['Schulleiter'],
                 },
             },
         ],
