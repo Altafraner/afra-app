@@ -1,4 +1,6 @@
-namespace Altafraner.Backbone.EmailSchedulingModule;
+using Altafraner.Backbone.EmailSchedulingModule;
+
+namespace Altafraner.AfraApp.Notifications.Services;
 
 /// <summary>
 ///     A service for sending notifications to a user
