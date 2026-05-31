@@ -29,7 +29,12 @@ const open = ref(false);
                         hide-name
                         minimal
                     />
-                    {{ termin.otium }}
+                    <span
+                        :class="{
+                            'text-green-700 dark:text-green-300': termin.istEingeschrieben,
+                        }"
+                        >{{ termin.otium }}</span
+                    >
                 </span>
                 <span class="min-w-16 shrink-0">
                     <AuslastungsTag
