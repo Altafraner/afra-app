@@ -31,17 +31,17 @@ public class MustEnrollRule : IBlockRule
 
         var intervals = timeline.GetIntervals();
 
-        switch (intervals.Count)
-        {
-            case 0:
-                return new ValueTask<RuleStatus>(
-                    RuleStatus.Invalid($"Fehlende Einschreibung für den Block „{schema.Bezeichnung}“"));
-            case 1 when !intervals[0].Contains(schema.Interval):
-            case > 1:
-                return new ValueTask<RuleStatus>(
-                    RuleStatus.Invalid($"Für den Block „{schema.Bezeichnung}“ nicht durchgehend eingeschrieben."));
-            default:
-                return new ValueTask<RuleStatus>(RuleStatus.Valid);
-        }
+        if (intervals.Count == 0)
+            return new ValueTask<RuleStatus>(
+                RuleStatus.Invalid($"Fehlende Einschreibung für den Block „{schema.Bezeichnung}“"));
+
+        var sum = intervals.Aggregate(TimeSpan.Zero,
+            (current, interval) => current + interval.Intersection(schema.Interval)?.Duration ?? TimeSpan.Zero);
+        var missing = schema.Interval.Duration - sum;
+        if (missing > schema.Interval.Duration * 0.05)
+            return new ValueTask<RuleStatus>(
+                RuleStatus.Invalid($"Für den Block „{schema.Bezeichnung}“ nicht durchgehend eingeschrieben."));
+
+        return new ValueTask<RuleStatus>(RuleStatus.Valid);
     }
 }
