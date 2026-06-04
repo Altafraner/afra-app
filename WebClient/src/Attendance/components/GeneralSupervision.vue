@@ -34,7 +34,7 @@ const dialog = useDialog();
 const userStore = useUser();
 
 const filterPerson = shallowRef();
-const accordionValue = shallowRef(null);
+const accordionValue = shallowRef<string | null>(null);
 
 const attendanceService = useAttendance('slot', props.slot.scope, props.slot.slotId, toast);
 const attendance = attendanceService.slotAttendance;
@@ -140,7 +140,7 @@ watch(filteredAttendance, (newAttendance) => {
     <InputGroup class="mb-6">
         <PersonSelector
             v-model="filterPerson"
-            :filter="(s) => s.rolle === 'Mittelstufe'"
+            :filter="(s: UserInfoMinimal) => s.rolle === 'Mittelstufe'"
             hide-rolle
         >
             <template #label>Schüler:in suchen</template>
@@ -191,8 +191,8 @@ watch(filteredAttendance, (newAttendance) => {
             <accordion-content>
                 <EnrollmentTable
                     :enableEdit="true"
-                    :enableMove="attendanceService.capabilities.value.enableMove"
-                    :enableNotes="attendanceService.capabilities.value.enableNotes"
+                    :enableMove="attendanceService.capabilities.value?.enableMove ?? false"
+                    :enableNotes="attendanceService.capabilities.value?.enableNotes ?? false"
                     :enrollments="event.enrollments"
                     :showAttendance="true"
                     @move="move"
