@@ -79,7 +79,7 @@ const emit = defineEmits<{
                         aria-label="Notizen"
                         icon="pi pi-clipboard"
                         size="small"
-                        variant="text"
+                        :variant="data.notes.length !== 0 ? undefined : 'text'"
                         @click="() => emit('openNotes', data)"
                     />
                     <slot
