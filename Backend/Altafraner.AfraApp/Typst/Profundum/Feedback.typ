@@ -72,7 +72,7 @@
   titlecase([#person.Vorname #person.Nachname])
 }
 
-#let dot-plot(notes) = {
+#let dot-plot(notes, maxNr) = {
   let x(i) = { 0.05 + 0.9 * ((i - 1) / 3) }
   layout(ly => {
     cetz.canvas(length: ly.width, {
@@ -96,7 +96,7 @@
       for i in range(1, 5) {
         let count = counts.at(i)
         if count > 0 {
-          let r = 0.016 + (count - 1) * 0.007
+          let r = 0.013 + (count - 1) * 0.025 / maxNr
           d.circle((x(i), 0.1), radius: r, fill: accent-color, stroke: none)
         }
       }
@@ -111,7 +111,7 @@
       columns: (50% + 2em, 1fr, 1fr, 1fr, 1fr),
       align(left, text(size: size-normal)[
         #text(size-extralarge, font: accent-font, weight: 500, fill: accent-color, content) \
-        #text(size: size-small, style: "italic", fill: gray-color, subheading)
+        #text(size: size-small, fill: gray-color, subheading)
       ]),
       [nicht ausgeprägt],
       align(center, [wenig ausgeprägt]),
@@ -130,7 +130,7 @@
   }
 }
 
-#let category-block(title, items) = {
+#let category-block(title, items, maxNr) = {
   block(
     breakable: false,
     {
@@ -144,7 +144,7 @@
         ..for (anker, notes) in items {
           (
             box(inset: (y: 2pt), text(size: size-normal, anker)),
-            box(height: 1.2em, width: 90%, dot-plot(notes)),
+            box(height: 1.2em, width: 90%, dot-plot(notes, maxNr)),
           )
         }
       )
@@ -153,7 +153,7 @@
   v(4pt)
 }
 
-#let nice(index, content) = {
+#let nice(index, content, footer) = {
   counter(page).update(1)
   let end-label = label("end-" + str(index))
   set page(
@@ -164,12 +164,19 @@
       right: 11.2mm,
       bottom: 15mm,
     ),
-    footer: context align(
-      right,
-      text(size: size-small)[
-        Seite #counter(page).display("1", both: false) von #counter(page).at(query(end-label).first().location()).first()
-      ],
-    ),
+    footer: context {
+      place(
+        right,
+        text(size: size-small)[
+          Seite #counter(page).display("1", both: false) von #counter(page).at(query(end-label).first().location()).first()
+        ],
+      )
+      let page-num = counter(page).get().first()
+      if (page-num != 1) {place(
+        left,
+        text(size: size-small, footer),
+      )}
+    },
     header: {
       place(right + top, dy: 11.2mm, image("SMK_009_P_4C_FLUSH.svg", width: 76.8mm))
       place(left + top, dy: 11.2mm, image("SANKT AFRA_SCHLEIFENQUADRAT_BREIT_BLAU_KORREKTUR.svg", height: 11.5mm))
@@ -179,17 +186,17 @@
   [#metadata(none) #end-label]
 }
 
-#let render(element) = [
-  #let schueler = element.Person
-  #let meta = element.Meta
-  #let profunda = element.Profunda
-  #let daten_allgemein = element.FeedbackAllgemein
-  #let daten_fachlich = element.FeedbackFachlich
-  #let gm = element.GM
-  #let schulleiter = element.Schulleiter
+#let render(element) = {
+  let schueler = element.Person
+  let meta = element.Meta
+  let profunda = element.Profunda
+  let daten_allgemein = element.FeedbackAllgemein
+  let daten_fachlich = element.FeedbackFachlich
+  let gm = element.GM
+  let schulleiter = element.Schulleiter
 
-  #set text(size: size-normal, fill: text-color, font: primary-font)
-  #columns(2)[
+  set text(size: size-normal, fill: text-color, font: primary-font)
+  columns(2)[
     #align(left)[
       #text(29pt, font: primary-font, weight: 500, fill: accent-color)[PROFUNDUM]\
       #text(size-large, weight: "light")[Feedback-Bogen]
@@ -210,60 +217,71 @@
     ]
   ]
 
-  #v(0.5cm)
-  #bigheading("Allgemeine Kompetenzen", "Allgemeine Bewertungen aus allen Profunda")
-  #for (cat, items) in daten_allgemein {
-    category-block(cat, items)
+  v(0.5cm)
+  bigheading("Allgemeine Kompetenzen", "Allgemeine Bewertungen aus allen Profunda")
+  let maxFeedbackCount = calc.max(
+    ..(daten_allgemein + daten_fachlich)
+      .values()
+      .map(
+        kategorie => kategorie.values().map(anker => anker.len())
+      )
+      .flatten()
+  )
+
+  for (cat, items) in daten_allgemein {
+    category-block(cat, items, maxFeedbackCount)
   }
 
-  #block(breakable: false, inset: 0%, outset: 0%, spacing: 0%)[
-    #if daten_fachlich != none and daten_fachlich.len() > 0 {
-      v(1.7em)
-      bigheading("Fachspezifische Kompetenzen", "Spezifische Bewertungen der Fachbereiche")
+  block(breakable: false, inset: 0%, outset: 0%, spacing: 0%,
+    {
+      if daten_fachlich != none and daten_fachlich.len() > 0 {
+        v(1.7em)
+        bigheading("Fachspezifische Kompetenzen", "Spezifische Bewertungen der Fachbereiche")
 
-      for (cat, items) in daten_fachlich {
-        category-block(cat, items)
+        for (cat, items) in daten_fachlich {
+          category-block(cat, items, maxFeedbackCount)
+        }
       }
-    }
-    #block(
-      breakable: false,
-      fill: accent-color.lighten(95%),
-      inset: 1em,
-      radius: 4pt,
-      width: 100%,
-      [
-        #text(weight: 700, size: size-small, font: accent-font)[Grundlage dieses Feedbacks sind folgende Profunda:]\
-        #text(size: size-small, profunda.map(p => profundumToText(p)).join(", "))
-      ],
-    )
+      block(
+        breakable: false,
+        fill: accent-color.lighten(95%),
+        inset: 1em,
+        radius: 4pt,
+        width: 100%,
+        [
+          #text(weight: 700, size: size-small, font: accent-font)[Grundlage dieses Feedbacks sind folgende Profunda:]\
+          #text(size: size-small, profunda.map(p => profundumToText(p)).join(", "))
+        ],
+      )
 
-    #align(center)[
-      #block(breakable: false, width: 80%)[
-        #v(5em)
-        #grid(
-          columns: (1fr, 1fr),
-          gutter: 3em,
-          [
-            #line(length: 100%)
-            #v(-8pt)
-            #text(size: size-small)[ #if gm != none [#name-of(gm)]\ Gymnasiale(r) Mentor(in)]
-          ],
-          [
-            #line(length: 100%)
-            #v(-8pt)
-            #text(size: size-small)[#if schulleiter != none [#name-of(schulleiter)]\ Schulleiter(in)]
-          ],
-        )
+      align(center)[
+        #block(breakable: false, width: 80%)[
+          #v(5em)
+          #grid(
+            columns: (1fr, 1fr),
+            gutter: 3em,
+            [
+              #line(length: 100%)
+              #v(-8pt)
+              #text(size: size-small)[ #if gm != none [#name-of(gm)]\ Gymnasiale(r) Mentor(in)]
+            ],
+            [
+              #line(length: 100%)
+              #v(-8pt)
+              #text(size: size-small)[#if schulleiter != none [#name-of(schulleiter)]\ Schulleiter(in)]
+            ],
+          )
+        ]
       ]
-    ]
-  ]
-]
+    }
+  )
+}
 
 #let i = 0
 #for element in input {
   (i = i + 1)
 
-  nice(i, render(element))
+  nice(i, render(element), [Profundum Feedback-Bogen – #element.Person.Vorname #element.Person.Nachname])
 
   if (i != input.len()) {
     if input.at(0).Meta.Doublesided {
