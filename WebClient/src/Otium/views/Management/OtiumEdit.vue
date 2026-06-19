@@ -129,7 +129,7 @@ async function updateBeschreibung() {
     try {
         await simpleUpdate('beschreibung', beschreibung.value);
     } finally {
-        beschreibung.value = otium.value.beschreibung.replaceAll('\n', '\n\n').trim();
+        beschreibung.value = otium.value.beschreibung;
     }
 }
 
