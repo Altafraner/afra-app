@@ -17,7 +17,7 @@
         "@primevue/forms": "^4.5.5",
         "@primeuix/themes": "^2.0.3",
         "@tailwindcss/vite": "^4.3.1",
-        "dompurify": "^3.4.10",
+        "dompurify": "^3.4.11",
         "mande": "^2.0.9",
         "marked": "^18.0.5",
         "pinia": "^3.0.4",
