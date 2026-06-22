@@ -30,7 +30,7 @@
     <PackageVersion Include="Quartz" Version="3.18.1" />
     <PackageVersion Include="Quartz.AspNetCore" Version="3.18.1" />
     <PackageVersion Include="Quartz.Serialization.SystemTextJson" Version="3.18.1" />
-    <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.2.1" />
+    <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.2.2" />
     <PackageVersion Include="System.DirectoryServices.Protocols" Version="10.0.9" />
     <PackageVersion Include="Google.OrTools" Version="9.15.6755" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2" />
