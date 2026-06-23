@@ -8,6 +8,7 @@ using Altafraner.AfraApp.Schuljahr.Domain.Models;
 using Altafraner.AfraApp.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -16,9 +17,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Altafraner.AfraApp.Migrations
 {
     [DbContext(typeof(AfraAppContext))]
-    partial class AfraAppContextModelSnapshot : ModelSnapshot
+    [Migration("20260507124146_Freistellung")]
+    partial class Freistellung
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -50,10 +53,6 @@ namespace Altafraner.AfraApp.Migrations
                     b.Property<Guid>("StudentId")
                         .HasColumnType("uuid")
                         .HasColumnName("student_id");
-
-                    b.Property<AttendanceEntryType>("EntryType")
-                        .HasColumnType("attendance_entry_type")
-                        .HasColumnName("entry_type");
 
                     b.Property<AttendanceState>("Status")
                         .HasColumnType("attendance_state")
@@ -924,10 +923,6 @@ namespace Altafraner.AfraApp.Migrations
                     b.Property<Guid>("EinwahlZeitraumId")
                         .HasColumnType("uuid")
                         .HasColumnName("einwahl_zeitraum_id");
-
-                    b.Property<bool>("IsFeedbackPublished")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_feedback_published");
 
                     b.Property<int>("Jahr")
                         .HasColumnType("integer")
