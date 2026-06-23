@@ -156,7 +156,7 @@ public class SchuljahrService
     /// </summary>
     /// <param name="datum">A date of a day in the week</param>
     /// <returns>The last day of the week that has any scheduled blocks. Null iff there are no scheduled blocks for the week</returns>
-    public async Task<DateOnly?> GetLastDayWithBlocksAsync(DateOnly datum)
+    public async Task<DateOnly?> GetLastDayWithBlocksInWeekWithDayAsync(DateOnly datum)
     {
         var monday = datum.GetStartOfWeek();
         var endOfWeek = monday.AddDays(7);

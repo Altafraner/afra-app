@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text;
 using Altafraner.AfraApp.Attendance.Domain.Contracts;
+using Altafraner.AfraApp.Attendance.Domain.Dto;
 using Altafraner.AfraApp.Attendance.Domain.Dto.Notes;
 using Altafraner.AfraApp.Attendance.Domain.HubClients;
 using Altafraner.AfraApp.Attendance.Services;
@@ -291,38 +292,67 @@ internal class OtiumEndpointService
         var blocksDoneOrRunning = user.Rolle == Rolle.Mittelstufe
             ? allBlocks.Where(e =>
                     _blockHelper.GetBlockStatus(e) is BlockHelper.BlockStatus.Running or BlockHelper.BlockStatus.Done)
-                .Select(b => (OtiumAttendanceInformationProvider.ScopeValue, b.Id))
+                .Select(b => b.Id)
                 .ToHashSet()
             : [];
         var attendances = user.Rolle == Rolle.Mittelstufe
-            ? await _attendanceService.GetAttendanceForStudentInSlotsAsync(blocksDoneOrRunning, user.Id)
+            ? await _attendanceService.GetAttendances(blocksDoneOrRunning.Select(e => new AttendanceEntryId
+            {
+                Scope = OtiumAttendanceInformationProvider.ScopeValue,
+                SlotId = e,
+                StudentId = user.Id
+            }))
             : [];
 
-        var additionalEnrollments = blocksUnenrolled.Select(b => (b.SchemaId, new Einschreibung
+        var additionalEnrollments = blocksUnenrolled.Select(b =>
         {
-            Datum = b.SchultagKey,
-            Block = _blockHelper.Get(b.SchemaId)!.Bezeichnung,
-            Anwesenheit = blocksDoneOrRunning.Contains((OtiumAttendanceInformationProvider.ScopeValue, b.Id))
-                ? attendances[(OtiumAttendanceInformationProvider.ScopeValue, b.Id)]
-                : null
-        }));
+            var schema = _blockHelper.Get(b.SchemaId)!;
+            var attendanceId = new AttendanceEntryId
+            {
+                Scope = OtiumAttendanceInformationProvider.ScopeValue,
+                SlotId = b.Id,
+                StudentId = user.Id
+            };
+            return (schema, new Einschreibung
+            {
+                Datum = b.SchultagKey,
+                Block = schema.Bezeichnung,
+                Anwesenheit = !schema.Verpflichtend
+                    ? null
+                    : blocksDoneOrRunning.Contains(b.Id)
+                        ? attendances[attendanceId].state
+                        : null
+            });
+        });
 
-        return enrollments.Select(e => (e.Termin.Block.SchemaId, new Einschreibung
-        {
-            Block = _blockHelper.Get(e.Termin.Block.SchemaId)!.Bezeichnung,
-            Datum = e.Termin.Block.SchultagKey,
-            KategorieId = e.Termin.Otium.Kategorie.Id,
-            Ort = e.Termin.Ort,
-            Otium = e.Termin.Bezeichnung,
-            TerminId = e.Termin.Id,
-            Anwesenheit =
-                blocksDoneOrRunning.Contains((OtiumAttendanceInformationProvider.ScopeValue, e.Termin.Block.Id))
-                    ? attendances[(OtiumAttendanceInformationProvider.ScopeValue, e.Termin.Block.Id)]
-                    : null
-        }))
+        return enrollments.Select(e =>
+            {
+                var schema = _blockHelper.Get(e.Termin.Block.SchemaId)!;
+
+                var attendanceId = new AttendanceEntryId
+                {
+                    Scope = OtiumAttendanceInformationProvider.ScopeValue,
+                    SlotId = e.Termin.Block.Id,
+                    StudentId = user.Id
+                };
+                return (schema, new Einschreibung
+                {
+                    Block = _blockHelper.Get(e.Termin.Block.SchemaId)!.Bezeichnung,
+                    Datum = e.Termin.Block.SchultagKey,
+                    KategorieId = e.Termin.Otium.Kategorie.Id,
+                    Ort = e.Termin.Ort,
+                    Otium = e.Termin.Bezeichnung,
+                    TerminId = e.Termin.Id,
+                    Anwesenheit =
+                        blocksDoneOrRunning.Contains(e.Termin.Block.Id)
+                            ? attendances[attendanceId].state
+                            : null
+                });
+            })
             .Concat(additionalEnrollments)
             .OrderBy(e => e.Item2.Datum)
-            .ThenBy(e => e.SchemaId)
+            .ThenBy(e => e.schema.Unterrichtsstunde)
+            .ThenBy(e => e.schema.Id)
             .Select(e => e.Item2);
     }
 
@@ -488,16 +518,18 @@ internal class OtiumEndpointService
             termin.Block.Id);
 
         var anwesenheiten =
-            await (await _attendanceService.GetAttendanceForStudentsInSlotAsync(
-                    OtiumAttendanceInformationProvider.ScopeValue,
-                    termin.Block.Id,
-                    persons.Keys))
+            await (await _attendanceService.GetAttendances(persons.Keys.Select(e => new AttendanceEntryId
+                {
+                    Scope = OtiumAttendanceInformationProvider.ScopeValue,
+                    SlotId = termin.Block.Id,
+                    StudentId = e
+                })))
             .ToAsyncEnumerable()
             .Select(e =>
-                new IAttendanceHubClient.StudentStatus(new PersonInfoMinimal(persons[e.Key]),
+                    new IAttendanceHubClient.StudentStatus(new PersonInfoMinimal(persons[e.Key.StudentId]),
                     e.Value.state,
                     e.Value.type,
-                    notes.GetValueOrDefault(e.Key, []).Select(n => new Note(n))))
+                    notes.GetValueOrDefault(e.Key.StudentId, []).Select(n => new Note(n))))
             .OrderBy(e => e.Student.Nachname)
             .ThenBy(e => e.Student.Vorname)
             .ToArrayAsync();
