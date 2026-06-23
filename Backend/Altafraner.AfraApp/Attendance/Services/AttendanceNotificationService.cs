@@ -1,5 +1,6 @@
 using Altafraner.AfraApp.Attendance.API.Hubs;
 using Altafraner.AfraApp.Attendance.Domain.Contracts;
+using Altafraner.AfraApp.Attendance.Domain.Dto;
 using Altafraner.AfraApp.Attendance.Domain.Dto.Notes;
 using Altafraner.AfraApp.Attendance.Domain.HubClients;
 using Altafraner.AfraApp.Attendance.Domain.Models;
@@ -101,17 +102,31 @@ internal class AttendanceNotificationService : IAttendanceNotificationService
         var enrollments = (await provider.GetEnrollmentsForEvent(slotId, eventId)).ToArray();
         var notes = await _notesService.GetNotesBySlotAsync(scope, slotId);
         var attendances =
-            await _attendanceService.GetAttendanceForStudentsInSlotAsync(scope, slotId, enrollments.Select(e => e.Id));
+            await _attendanceService.GetAttendances(enrollments.Select(e => new AttendanceEntryId
+            {
+                Scope = scope,
+                SlotId = slotId,
+                StudentId = e.Id
+            }));
 
         var target = callerOnlyId is null
             ? _hubContext.Clients.Group(AttendanceHub.EventGroupName(scope, slotId, eventId))
             : _hubContext.Clients.Client(callerOnlyId);
 
         await target.UpdateEvent(enrollments.Select(e =>
-            new IAttendanceHubClient.StudentStatus(new PersonInfoMinimal(e),
-                attendances[e.Id].state,
-                attendances[e.Id].type,
-                notes.GetValueOrDefault(e.Id, []).Select(note => new Note(note)))));
+        {
+            var id = new AttendanceEntryId
+            {
+                Scope = scope,
+                SlotId = slotId,
+                StudentId = e.Id
+            };
+            var attendance = attendances[id];
+            return new IAttendanceHubClient.StudentStatus(new PersonInfoMinimal(e),
+                attendance.state,
+                attendance.type,
+                notes.GetValueOrDefault(e.Id, []).Select(note => new Note(note)));
+        }));
     }
 
     private IAttendanceInformationProvider GetProvider(AttendanceScope scope)

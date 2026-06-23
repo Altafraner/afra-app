@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Altafraner.AfraApp.Attendance.Domain.Contracts;
+using Altafraner.AfraApp.Attendance.Domain.Dto;
 using Altafraner.AfraApp.Attendance.Domain.Models;
 using Altafraner.AfraApp.Otium.Domain.Contracts.Rules;
 using Altafraner.AfraApp.Otium.Domain.Models;
@@ -32,11 +33,15 @@ public class AlwaysAttendedRule : IBlockRule
             (!blockSchema.Verpflichtend && !einschreibungen.Any()))
             return RuleStatus.Valid;
 
-        var attendance =
-            await _attendanceService.GetAttendanceForStudentInSlotAsync(OtiumAttendanceInformationProvider.ScopeValue,
-                block.Id,
-                person.Id);
-        return attendance switch
+        var attendanceId = new AttendanceEntryId
+        {
+            Scope = OtiumAttendanceInformationProvider.ScopeValue,
+            SlotId = block.Id,
+            StudentId = person.Id
+        };
+
+        var attendance = await _attendanceService.GetAttendance(attendanceId);
+        return attendance.state switch
         {
             AttendanceState.Anwesend => RuleStatus.Valid,
             AttendanceState.Entschuldigt => RuleStatus.Valid with { IgnoreOtherRules = true },

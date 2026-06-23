@@ -1,4 +1,5 @@
 using Altafraner.AfraApp.Attendance.Domain.Contracts;
+using Altafraner.AfraApp.Attendance.Domain.Dto;
 using Altafraner.AfraApp.Attendance.Domain.Dto.Notes;
 using Altafraner.AfraApp.Attendance.Domain.HubClients;
 using Altafraner.AfraApp.Attendance.Domain.Models;
@@ -248,10 +249,13 @@ internal class EnrollmentService
         if (!success) throw new InvalidOperationException();
         if (!save) return;
         await _dbContext.SaveChangesAsync();
-        await _attendanceService.SetAttendanceAsync(OtiumAttendanceInformationProvider.ScopeValue,
-            blockId,
-            student.Id,
-            AttendanceState.Fehlend);
+        var attendanceId = new AttendanceEntryId
+        {
+            Scope = OtiumAttendanceInformationProvider.ScopeValue,
+            SlotId = blockId,
+            StudentId = student.Id
+        };
+        await _attendanceService.SetAttendanceAsync(attendanceId, AttendanceState.Fehlend);
         await _attendanceService.SetEventStatusAsync(OtiumAttendanceInformationProvider.ScopeValue,
             blockId,
             Guid.Empty,
@@ -375,10 +379,13 @@ internal class EnrollmentService
         });
 
         await _dbContext.SaveChangesAsync();
-        await _attendanceService.SetAttendanceAsync(OtiumAttendanceInformationProvider.ScopeValue,
-            toTermin.Block.Id,
-            studentId,
-            AttendanceState.Fehlend);
+        var attendanceId = new AttendanceEntryId
+        {
+            Scope = OtiumAttendanceInformationProvider.ScopeValue,
+            SlotId = toTermin.Block.Id,
+            StudentId = studentId
+        };
+        await _attendanceService.SetAttendanceAsync(attendanceId, AttendanceState.Fehlend);
         await _attendanceService.SetEventStatusAsync(OtiumAttendanceInformationProvider.ScopeValue,
             toTermin.Block.Id,
             toTerminId,
@@ -456,10 +463,13 @@ internal class EnrollmentService
         {
             await _dbContext.SaveChangesAsync();
             if (fromTerminId == Guid.Empty) return;
-            await _attendanceService.SetAttendanceAsync(OtiumAttendanceInformationProvider.ScopeValue,
-                fromEinschreibung!.Termin.Block.Id,
-                studentId,
-                AttendanceState.Fehlend);
+            var attendanceIdLocal = new AttendanceEntryId
+            {
+                Scope = OtiumAttendanceInformationProvider.ScopeValue,
+                SlotId = fromEinschreibung!.Termin.Block.Id,
+                StudentId = studentId
+            };
+            await _attendanceService.SetAttendanceAsync(attendanceIdLocal, AttendanceState.Fehlend);
             await _attendanceService.SetEventStatusAsync(OtiumAttendanceInformationProvider.ScopeValue,
                 fromEinschreibung.Termin.Block.Id,
                 toTerminId,
@@ -497,9 +507,14 @@ internal class EnrollmentService
 
         await _dbContext.SaveChangesAsync();
 
-        await _attendanceService.SetAttendanceAsync(OtiumAttendanceInformationProvider.ScopeValue,
-            toTermin.Block.Id,
-            studentId,
+
+        var attendanceId = new AttendanceEntryId
+        {
+            Scope = OtiumAttendanceInformationProvider.ScopeValue,
+            SlotId = toTermin.Block.Id,
+            StudentId = studentId
+        };
+        await _attendanceService.SetAttendanceAsync(attendanceId,
             AttendanceState.Fehlend);
         await _attendanceService.SetEventStatusAsync(OtiumAttendanceInformationProvider.ScopeValue,
             toTermin.Block.Id,
