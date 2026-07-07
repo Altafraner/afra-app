@@ -24,4 +24,9 @@ public record ManagementOtiumPreview
     ///     The number of Termine for the Otium
     /// </summary>
     public required int Termine { get; set; }
+
+    /// <summary>
+    ///     Signifies whether this Otium is hidden in management interfaces
+    /// </summary>
+    public required bool Hidden { get; init; }
 }

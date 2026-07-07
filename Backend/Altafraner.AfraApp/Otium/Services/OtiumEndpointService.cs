@@ -530,10 +530,12 @@ internal class OtiumEndpointService
     /// <summary>
     ///     Gets all Otia
     /// </summary>
-    public IEnumerable<ManagementOtiumPreview> GetOtia()
+    /// <param name="includeHidden"></param>
+    public IEnumerable<ManagementOtiumPreview> GetOtia(bool includeHidden)
     {
         return _dbContext.Otia
             .AsSplitQuery()
+            .Where(e => includeHidden || e.Hidden == false)
             .Include(o => o.Termine)
             .Include(o => o.Kategorie)
             .OrderBy(o => o.Bezeichnung)
@@ -543,7 +545,8 @@ internal class OtiumEndpointService
                 Id = otium.Id,
                 Bezeichnung = otium.Bezeichnung,
                 Kategorie = otium.Kategorie.Id,
-                Termine = otium.Termine.Count
+                Termine = otium.Termine.Count,
+                Hidden = otium.Hidden
             });
     }
 

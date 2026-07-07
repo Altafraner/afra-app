@@ -61,4 +61,9 @@ public class OtiumDefinition : IHasTimestamps
     ///     The oldest grade allowed enrollment to this Otium. Null for no upper limit
     /// </summary>
     public int? MaxKlasse { get; set; } = null;
+
+    /// <summary>
+    ///     If true, hides the Otium from management interfaces
+    /// </summary>
+    public bool Hidden { get; set; }
 }

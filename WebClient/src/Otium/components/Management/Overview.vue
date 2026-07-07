@@ -2,7 +2,7 @@
 import { useUser } from '@/stores/user';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
 import { Button, Column, DataTable, Dialog, Skeleton, useToast } from 'primevue';
-import { ref } from 'vue';
+import { ref, shallowRef, watch } from 'vue';
 import { mande } from 'mande';
 import { findPath } from '@/helpers/tree.js';
 import SimpleBreadcrumb from '@/components/SimpleBreadcrumb.vue';
@@ -17,12 +17,13 @@ const toast = useToast();
 const { openConfirmDialog } = useConfirmPopover();
 const loading = ref(true);
 const createDialogOpen = ref(false);
+const showHidden = shallowRef(false);
 
-const otia = ref([]);
+const otia = shallowRef([]);
 
 async function getOtia() {
     const getter = mande('/api/otium/management/otium');
-    otia.value = await getter.get();
+    otia.value = await getter.get({ query: { includeHidden: showHidden.value } });
 }
 
 async function deleteOtium(id) {
@@ -80,7 +81,24 @@ async function setup() {
     }
 }
 
+async function hide(data, value) {
+    try {
+        const api = mande(`/api/otium/management/otium/${data.id}/hidden`);
+        await api.put(null, { query: { value: value } });
+    } catch {
+        toast.add({
+            severity: 'error',
+            summary: 'Fehler',
+            detail: 'Ein unerwarteter Fehler ist beim Verstecken aufgetreten',
+        });
+    } finally {
+        await getOtia();
+    }
+}
+
 setup();
+
+watch(showHidden, getOtia);
 </script>
 
 <template>
@@ -122,34 +140,75 @@ setup();
                         icon="pi pi-plus"
                         aria-label="Neues Otium"
                         @click="openCreateDialog"
+                        size="small"
                     />
                 </template>
                 <template #body="{ data }">
-                    <Button
-                        v-if="!data.termine || data.termine.length === 0"
-                        v-tooltip.left="'Löschen'"
-                        icon="pi pi-times"
-                        severity="danger"
-                        variant="text"
-                        aria-label="Löschen"
-                        @click="(event) => confirmDelete(event, data.id)"
-                    />
-                    <Button
-                        v-else
-                        v-tooltip.left="'Nur Otia ohne Termine können gelöscht werden'"
-                        disabled
-                        icon="pi pi-times"
-                        severity="secondary"
-                        variant="text"
-                        aria-disabled
-                        aria-label="Löschen"
-                    />
+                    <div class="inline-flex gap-1">
+                        <Button
+                            v-if="!data.termine || data.termine.length === 0"
+                            v-tooltip.left="'Löschen'"
+                            aria-label="Löschen"
+                            icon="pi pi-times"
+                            severity="danger"
+                            size="small"
+                            variant="text"
+                            @click="(event) => confirmDelete(event, data.id)"
+                        />
+                        <Button
+                            v-else
+                            v-tooltip.left="'Nur Otia ohne Termine können gelöscht werden'"
+                            aria-disabled
+                            aria-label="Löschen"
+                            disabled
+                            icon="pi pi-times"
+                            severity="danger"
+                            size="small"
+                            variant="text"
+                        />
+                        <Button
+                            v-if="!data.hidden"
+                            v-tooltip.left="'Verstecken'"
+                            aria-label="Verstecken"
+                            icon="pi pi-eye"
+                            severity="secondary"
+                            size="small"
+                            variant="text"
+                            @click="() => hide(data, true)"
+                        />
+                        <Button
+                            v-else
+                            v-tooltip.left="'Verstecken'"
+                            aria-label="Verstecken"
+                            icon="pi pi-eye-slash"
+                            severity="warn"
+                            size="small"
+                            variant="text"
+                            @click="() => hide(data, false)"
+                        />
+                    </div>
                 </template>
             </Column>
             <template #empty>
                 <div class="flex justify-center">Es sind keine Otia angelegt.</div>
             </template>
         </DataTable>
+        <div class="flex justify-end mt-4">
+            <Button
+                v-if="!showHidden"
+                icon="pi pi-eye"
+                label="Ausgeblendete anzeigen"
+                severity="secondary"
+                @click="showHidden = true"
+            />
+            <Button
+                v-else
+                icon="pi pi-eye-slash"
+                label="Ausgeblendete verbergen"
+                severity="secondary"
+                @click="showHidden = false"
+            />
+        </div>
         <Dialog
             v-model:visible="createDialogOpen"
             :style="{ width: '35rem' }"

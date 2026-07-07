@@ -5,6 +5,7 @@ using Altafraner.AfraApp.Otium.Domain.Models;
 using Altafraner.AfraApp.Otium.Services;
 using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.AfraApp.User.Services;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
 namespace Altafraner.AfraApp.Otium.API;
@@ -29,6 +30,7 @@ public static class Management
             .RequireAuthorization(AuthorizationPolicies.Otiumsverantwortlich);
         group.MapDelete("/otium/{otiumId:guid}", DeleteOtium)
             .RequireAuthorization(AuthorizationPolicies.Otiumsverantwortlich);
+        group.MapPut("/otium/{otiumId:guid}/hidden", OtiumSetHidden);
         group.MapPatch("/otium/{otiumId:guid}/bezeichnung", OtiumSetBezeichnung);
         group.MapPatch("/otium/{otiumId:guid}/beschreibung", OtiumSetBeschreibung);
         group.MapPatch("/otium/{otiumId:guid}/kategorie", OtiumSetKategorie);
@@ -69,9 +71,9 @@ public static class Management
         return terminForTeacher is null ? Results.BadRequest() : Results.Ok(terminForTeacher);
     }
 
-    private static IResult GetOtia(OtiumEndpointService service)
+    private static IResult GetOtia(OtiumEndpointService service, bool includeHidden = false)
     {
-        var otia = service.GetOtia();
+        var otia = service.GetOtia(includeHidden);
         return Results.Ok(otia);
     }
 
@@ -105,6 +107,15 @@ public static class Management
         {
             return Results.Conflict(e.Message);
         }
+    }
+
+    private static async Task<Results<Ok, NotFound>> OtiumSetHidden(AfraAppContext dbContext, Guid otiumId, bool value)
+    {
+        var otium = await dbContext.Otia.FindAsync(otiumId);
+        if (otium is null) return TypedResults.NotFound();
+        otium.Hidden = value;
+        await dbContext.SaveChangesAsync();
+        return TypedResults.Ok();
     }
 
     private static async Task<IResult> CreateOtiumTermin(ManagementService managementService,
