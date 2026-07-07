@@ -105,7 +105,7 @@ watch(showHidden, getOtia);
     <template v-if="!loading">
         <h2>Alle Otia</h2>
         <p>Klicken sie auf ein Otium, um Details zu sehen oder es zu Bearbeiten.</p>
-        <DataTable :value="otia" data-key="id">
+        <DataTable :value="otia" data-key="id" size="small">
             <Column header="Bezeichnung">
                 <template #body="{ data }">
                     <Button
