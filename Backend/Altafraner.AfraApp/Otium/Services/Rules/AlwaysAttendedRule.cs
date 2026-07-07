@@ -25,28 +25,23 @@ public class AlwaysAttendedRule : IBlockRule
     }
 
     /// <inheritdoc />
-    public async ValueTask<RuleStatus> IsValidAsync(Person person, Block block,
-        IEnumerable<OtiumEinschreibung> einschreibungen)
+    public ValueTask<RuleStatus> IsValidAsync(Person person,
+        Block block,
+        IEnumerable<OtiumEinschreibung> einschreibungen,
+        AttendanceInformation attendance)
     {
         var blockSchema = _blockHelper.Get(block.SchemaId)!;
         if (_blockHelper.GetBlockStatus(block) is BlockHelper.BlockStatus.Running or BlockHelper.BlockStatus.Pending ||
             (!blockSchema.Verpflichtend && !einschreibungen.Any()))
-            return RuleStatus.Valid;
+            return new ValueTask<RuleStatus>(RuleStatus.Valid);
 
-        var attendanceId = new AttendanceEntryId
+        return attendance.State switch
         {
-            Scope = OtiumAttendanceInformationProvider.ScopeValue,
-            SlotId = block.Id,
-            StudentId = person.Id
-        };
-
-        var attendance = await _attendanceService.GetAttendance(attendanceId);
-        return attendance.state switch
-        {
-            AttendanceState.Anwesend => RuleStatus.Valid,
-            AttendanceState.Entschuldigt => RuleStatus.Valid with { IgnoreOtherRules = true },
-            AttendanceState.Fehlend => RuleStatus.Invalid(
-                $"Unentschuldigtes Fehlen im Block „{blockSchema.Bezeichnung}“"),
+            AttendanceState.Anwesend => new ValueTask<RuleStatus>(RuleStatus.Valid),
+            AttendanceState.Entschuldigt =>
+                new ValueTask<RuleStatus>(RuleStatus.Valid with { IgnoreOtherRules = true }),
+            AttendanceState.Fehlend => new ValueTask<RuleStatus>(RuleStatus.Invalid(
+                $"Unentschuldigtes Fehlen im Block „{blockSchema.Bezeichnung}“")),
             _ => throw new InvalidEnumArgumentException("Unrecognized attendance status")
         };
     }

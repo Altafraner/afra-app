@@ -1,3 +1,5 @@
+using Altafraner.AfraApp.Attendance.Domain.Dto;
+using Altafraner.AfraApp.Attendance.Domain.Models;
 using Altafraner.AfraApp.Domain.TimeInterval;
 using Altafraner.AfraApp.Otium.Domain.Contracts.Rules;
 using Altafraner.AfraApp.Otium.Domain.Models;
@@ -21,8 +23,11 @@ public class MustEnrollRule : IBlockRule
 
     /// <inheritdoc />
     public ValueTask<RuleStatus> IsValidAsync(Person person, Block block,
-        IEnumerable<OtiumEinschreibung> einschreibungen)
+        IEnumerable<OtiumEinschreibung> einschreibungen,
+        AttendanceInformation attendance)
     {
+        if (attendance.State == AttendanceState.Entschuldigt) return new ValueTask<RuleStatus>(RuleStatus.Valid);
+
         var schema = _blockHelper.Get(block.SchemaId)!;
         if (!schema.Verpflichtend) return new ValueTask<RuleStatus>(RuleStatus.Valid);
 
