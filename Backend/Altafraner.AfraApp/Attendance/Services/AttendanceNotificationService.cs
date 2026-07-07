@@ -66,10 +66,14 @@ internal class AttendanceNotificationService : IAttendanceNotificationService
                 var enrollmentsForEvent = e.Enrollments.Select(student =>
                 {
                     var attendance = attendances.GetValueOrDefault(student,
-                        (state: IAttendanceService.DefaultAttendanceStatus, type: AttendanceEntryType.Manual));
+                        new AttendanceInformation
+                        {
+                            State = IAttendanceService.DefaultAttendanceStatus,
+                            Type = AttendanceEntryType.Manual
+                        });
                     return new IAttendanceHubClient.StudentStatus(new PersonInfoMinimal(student),
-                        attendance.state,
-                        attendance.type,
+                        attendance.State,
+                        attendance.Type,
                         notes.GetValueOrDefault(student.Id, []).Select(note => new Note(note)));
                 });
                 return new IAttendanceHubClient.EventWithEnrollments(e.EventId,
@@ -123,8 +127,8 @@ internal class AttendanceNotificationService : IAttendanceNotificationService
             };
             var attendance = attendances[id];
             return new IAttendanceHubClient.StudentStatus(new PersonInfoMinimal(e),
-                attendance.state,
-                attendance.type,
+                attendance.State,
+                attendance.Type,
                 notes.GetValueOrDefault(e.Id, []).Select(note => new Note(note)));
         }));
     }

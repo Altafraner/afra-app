@@ -1,4 +1,6 @@
 using System.Text;
+using Altafraner.AfraApp.Attendance.Domain.Contracts;
+using Altafraner.AfraApp.Attendance.Domain.Dto;
 using Altafraner.AfraApp.Otium.Configuration;
 using Altafraner.AfraApp.Otium.Domain.Models;
 using Altafraner.AfraApp.Otium.Services;
@@ -27,6 +29,7 @@ internal sealed class StudentMisbehaviourNotificationJob : RetryJob
     private readonly RulesValidationService _rulesValidationService;
     private readonly SchuljahrService _schuljahrService;
     private readonly UserService _userService;
+    private readonly IAttendanceService _attendanceService;
 
     /// <summary>
     ///     Called from DI
@@ -34,7 +37,8 @@ internal sealed class StudentMisbehaviourNotificationJob : RetryJob
     public StudentMisbehaviourNotificationJob(ILogger<StudentMisbehaviourNotificationJob> logger,
         SchuljahrService schuljahrService, UserService userService, IOptions<OtiumConfiguration> otiumConfiguration,
         AfraAppContext dbContext, RulesValidationService rulesValidationService,
-        INotificationService notificationService) : base(logger)
+        INotificationService notificationService,
+        IAttendanceService attendanceService) : base(logger)
     {
         _logger = logger;
         _schuljahrService = schuljahrService;
@@ -43,6 +47,7 @@ internal sealed class StudentMisbehaviourNotificationJob : RetryJob
         _dbContext = dbContext;
         _rulesValidationService = rulesValidationService;
         _notificationService = notificationService;
+        _attendanceService = attendanceService;
     }
 
     protected override int MaxRetryCount => 3;
@@ -79,7 +84,7 @@ internal sealed class StudentMisbehaviourNotificationJob : RetryJob
     {
         var today = DateOnly.FromDateTime(DateTime.Now);
         var schultag = await _schuljahrService.GetSchultagAsync(today);
-        var lastDayWithBlocks = await _schuljahrService.GetLastDayWithBlocksAsync(today) == today;
+        var isLastDayWithBlocksInWeek = await _schuljahrService.GetLastDayWithBlocksInWeekWithDayAsync(today) == today;
 
         if (schultag is null || schultag.Blocks.Count == 0)
         {
@@ -101,8 +106,9 @@ internal sealed class StudentMisbehaviourNotificationJob : RetryJob
 
         List<Schultag> schultageInWeek = [];
         Dictionary<Guid, List<OtiumEinschreibung>> weeksEnrollments = [];
+        List<OtiumTermin> termineInWeek = [];
 
-        if (lastDayWithBlocks)
+        if (isLastDayWithBlocksInWeek)
         {
             var startOfWeek = today.GetStartOfWeek();
             var endOfWeek = startOfWeek.AddDays(7);
@@ -119,22 +125,58 @@ internal sealed class StudentMisbehaviourNotificationJob : RetryJob
                 .ThenInclude(o => o.Kategorie)
                 .GroupBy(e => e.BetroffenePerson.Id)
                 .ToDictionaryAsync(e => e.Key, e => e.ToList());
+            var blocksInWeek = schultageInWeek.SelectMany(s => s.Blocks);
+            termineInWeek = await _dbContext.OtiaTermine
+                .Include(e => e.Otium)
+                .ThenInclude(e => e.Kategorie)
+                .Where(t => blocksInWeek.Contains(t.Block))
+                .ToListAsync();
         }
+
+        var attendanceIds = from block in schultag.Blocks.Union(schultageInWeek.SelectMany(e => e.Blocks))
+            from student in students
+            select new AttendanceEntryId
+            {
+                Scope = OtiumAttendanceInformationProvider.ScopeValue,
+                SlotId = block.Id,
+                StudentId = student.Id
+            };
+
+        // This can be a huge request returning a few thousand elements
+        var attendances = await _attendanceService.GetAttendances(attendanceIds);
 
         foreach (var student in students)
         {
+            var klassenstufe = _userService.GetKlassenstufe(student);
+            var studentsTermineInWeek = termineInWeek
+                .Where(t =>
+                    (t.Otium.MinKlasse is null || t.Otium.MinKlasse <= klassenstufe) &&
+                    (t.Otium.MaxKlasse is null || t.Otium.MaxKlasse >= klassenstufe))
+                .ToList();
             var studentsEnrollments = todaysEnrollments.GetValueOrDefault(student.Id, []);
+            var studentAttendances = attendances.Where(s => s.Key.StudentId == student.Id)
+                .ToDictionary(e => e.Key.SlotId, e => e.Value);
             List<string> messages = [];
 
+            var todaysAttendances = schultag.Blocks
+                .ToDictionary(e => e.Id, e => studentAttendances[e.Id]);
+
             messages.AddRange(
-                await _rulesValidationService.GetMessagesForEnrollmentsAsync(student, studentsEnrollments));
+                await _rulesValidationService.GetMessagesForEnrollmentsAsync(student,
+                    studentsEnrollments));
             messages.AddRange(
-                await _rulesValidationService.GetMessagesForDayAsync(student, schultag, studentsEnrollments));
-            if (lastDayWithBlocks)
+                await _rulesValidationService.GetMessagesForDayAsync(student,
+                    schultag,
+                    studentsEnrollments,
+                    todaysAttendances));
+            if (isLastDayWithBlocksInWeek)
             {
                 var studentsEnrollmentsInWeek = weeksEnrollments.GetValueOrDefault(student.Id, []);
-                messages.AddRange(await _rulesValidationService.GetMessagesForWeekAsync(student, schultageInWeek,
-                    studentsEnrollmentsInWeek));
+                messages.AddRange(await _rulesValidationService.GetMessagesForWeekAsync(student,
+                    schultageInWeek,
+                    studentsTermineInWeek,
+                    studentsEnrollmentsInWeek,
+                    studentAttendances));
             }
 
             if (messages.Count == 0) continue;

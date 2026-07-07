@@ -19,14 +19,14 @@ public interface IAttendanceService
     /// </summary>
     /// <param name="requests">All student-slot-combinations the attendances need to be fetched for</param>
     /// <returns>A dictionary that assigns each element in requests an AttendanceState</returns>
-    Task<Dictionary<AttendanceEntryId, (AttendanceState state, AttendanceEntryType type)>> GetAttendances(
+    Task<Dictionary<AttendanceEntryId, AttendanceInformation>> GetAttendances(
         IEnumerable<AttendanceEntryId> requests);
 
     /// <summary>
     ///     Gets the attendance status for a student in a specific slot
     /// </summary>
     /// <returns>The <see cref="AttendanceState" /> for the enrollment.</returns>
-    Task<(AttendanceState state, AttendanceEntryType type)> GetAttendance(AttendanceEntryId request);
+    Task<AttendanceInformation> GetAttendance(AttendanceEntryId request);
 
     /// <summary>
     ///     Gets the attendance status for all students in a specific slot
@@ -34,7 +34,7 @@ public interface IAttendanceService
     /// <param name="scope">The scope the slot is in</param>
     /// <param name="slotId">The slot to get all attendance states for</param>
     /// <returns>A dictionary connecting persons to attendance states. If a person is missing from the dictionary, he should be considered missing.</returns>
-    Task<Dictionary<Person, (AttendanceState state, AttendanceEntryType type)>> GetAttendanceForSlotAsync(
+    Task<Dictionary<Person, AttendanceInformation>> GetAttendanceForSlotAsync(
         AttendanceScope scope,
         Guid slotId);
 

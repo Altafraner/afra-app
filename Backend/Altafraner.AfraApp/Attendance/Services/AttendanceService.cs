@@ -31,15 +31,18 @@ internal sealed class AttendanceService : IAttendanceService
         _serviceProvider = serviceProvider;
     }
 
-    public async Task<(AttendanceState state, AttendanceEntryType type)> GetAttendance(AttendanceEntryId request)
+    public async Task<AttendanceInformation> GetAttendance(AttendanceEntryId request)
     {
         var attendanceEntry = await _dbContext.Attendances
             .Where(e =>
                 e.Scope == request.Scope && e.SlotId == request.SlotId && e.StudentId == request.StudentId)
             .Select(e => new { e.Status, e.EntryType })
             .FirstOrDefaultAsync();
-        return (attendanceEntry?.Status ?? IAttendanceService.DefaultAttendanceStatus,
-            attendanceEntry?.EntryType ?? AttendanceEntryType.Manual);
+        return new AttendanceInformation
+        {
+            State = attendanceEntry?.Status ?? IAttendanceService.DefaultAttendanceStatus,
+            Type = attendanceEntry?.EntryType ?? AttendanceEntryType.Manual
+        };
     }
 
     public async Task<Dictionary<Guid, (AttendanceState state, AttendanceEntryType type)>>
@@ -59,7 +62,7 @@ internal sealed class AttendanceService : IAttendanceService
         return attendanceEntry;
     }
 
-    public async Task<Dictionary<AttendanceEntryId, (AttendanceState state, AttendanceEntryType type)>> GetAttendances(
+    public async Task<Dictionary<AttendanceEntryId, AttendanceInformation>> GetAttendances(
         IEnumerable<AttendanceEntryId> requests)
     {
         var parameter = Expression.Parameter(typeof(Domain.Models.Attendance), "e");
@@ -96,18 +99,27 @@ internal sealed class AttendanceService : IAttendanceService
             .Select(e => new { e.Scope, e.SlotId, e.StudentId, e.Status, e.EntryType })
             .ToDictionaryAsync(e => new AttendanceEntryId
                     { Scope = e.Scope, SlotId = e.SlotId, StudentId = e.StudentId },
-                e => (e.Status, e.EntryType));
+                e => new AttendanceInformation
+                {
+                    State = e.Status,
+                    Type = e.EntryType
+                });
         var keys = attendanceEntries.Keys;
         var missingAttendanceIds = requestsArray.Where(s => !keys.Contains(s)).ToArray();
         attendanceEntries.EnsureCapacity(attendanceEntries.Count + missingAttendanceIds.Length);
         foreach (var missingAttendanceId in missingAttendanceIds)
             attendanceEntries.Add(missingAttendanceId,
-                (IAttendanceService.DefaultAttendanceStatus, AttendanceEntryType.Manual));
+                new AttendanceInformation
+                {
+                    State = IAttendanceService.DefaultAttendanceStatus,
+                    Type = AttendanceEntryType.Manual
+                }
+            );
 
         return attendanceEntries;
     }
 
-    public async Task<Dictionary<Person, (AttendanceState state, AttendanceEntryType type)>> GetAttendanceForSlotAsync(
+    public async Task<Dictionary<Person, AttendanceInformation>> GetAttendanceForSlotAsync(
         AttendanceScope scope,
         Guid slotId)
     {
@@ -119,8 +131,11 @@ internal sealed class AttendanceService : IAttendanceService
                 a => a.StudentId,
                 (p, a) => new { Person = p, Attendance = a })
             .ToDictionaryAsync(x => x.Person,
-                x => (x.Attendance?.Status ?? IAttendanceService.DefaultAttendanceStatus,
-                    x.Attendance?.EntryType ?? AttendanceEntryType.Manual));
+                x => new AttendanceInformation
+                {
+                    State = x.Attendance?.Status ?? IAttendanceService.DefaultAttendanceStatus,
+                    Type = x.Attendance?.EntryType ?? AttendanceEntryType.Manual
+                });
     }
 
     public async Task SetAttendanceAsync(AttendanceEntryId entryId, AttendanceState status)

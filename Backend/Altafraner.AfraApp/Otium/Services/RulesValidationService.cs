@@ -1,3 +1,4 @@
+using Altafraner.AfraApp.Attendance.Domain.Dto;
 using Altafraner.AfraApp.Otium.Domain.Contracts.Rules;
 using Altafraner.AfraApp.Otium.Domain.Contracts.Services;
 using Altafraner.AfraApp.Otium.Domain.Models;
@@ -47,14 +48,17 @@ public class RulesValidationService
     ///     Validates all week rules for the given user, school days and enrollments and returns a list of messages for any
     ///     violations.
     /// </summary>
-    public async Task<List<string>> GetMessagesForWeekAsync(Person user, List<Schultag> schultage,
-        List<OtiumEinschreibung> einschreibungen)
+    public async Task<List<string>> GetMessagesForWeekAsync(Person user,
+        List<Schultag> schultage,
+        List<OtiumTermin> termine,
+        List<OtiumEinschreibung> einschreibungen,
+        Dictionary<Guid, AttendanceInformation> attendances)
     {
         List<string> messages = [];
         var weekRules = _rulesFactory.GetWeekRules();
         foreach (var rule in weekRules)
         {
-            var result = await rule.IsValidAsync(user, schultage, einschreibungen);
+            var result = await rule.IsValidAsync(user, schultage, termine, einschreibungen, attendances);
             if (result.IgnoreOtherRules)
                 return result.IsValid ? [] : result.Messages.ToList();
             if (!result.IsValid)
@@ -68,8 +72,10 @@ public class RulesValidationService
     ///     Validates all block rules for the given user, school day and enrollments and returns a list of messages for any
     ///     violations.
     /// </summary>
-    public async Task<List<string>> GetMessagesForDayAsync(Person user, Schultag schultag,
-        List<OtiumEinschreibung> einschreibungen)
+    public async Task<List<string>> GetMessagesForDayAsync(Person user,
+        Schultag schultag,
+        List<OtiumEinschreibung> einschreibungen,
+        Dictionary<Guid, AttendanceInformation> attendances)
     {
         List<MessageWithBlock> messages = [];
         var priorityResults = new List<ResultWithBlock>();
@@ -82,7 +88,10 @@ public class RulesValidationService
         foreach (var rule in blockRules)
             foreach (var block in orderedBlocks)
             {
-                var result = await rule.IsValidAsync(user, block, einschreibungen.Where(e => e.Termin.Block == block));
+                var result = await rule.IsValidAsync(user,
+                    block,
+                    einschreibungen.Where(e => e.Termin.Block == block),
+                    attendances[block.Id]);
                 if (!result.IsValid)
                     messages.AddRange(result.Messages.Select(m => new MessageWithBlock(m, block.Id)));
                 if (result.IgnoreOtherRules)

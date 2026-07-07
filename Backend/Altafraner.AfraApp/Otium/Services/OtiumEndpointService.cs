@@ -174,6 +174,18 @@ internal class OtiumEndpointService
             .Include(s => s.Blocks)
             .ToListAsync();
         var blocks = schultage.SelectMany(s => s.Blocks);
+        var today = schultage.First(s => s.Datum == date);
+
+        // Get all termine in the given week
+        var klassenstufe = _userService.GetKlassenstufe(user);
+        var termine = await _dbContext.OtiaTermine
+            .Include(t => t.Otium)
+            .ThenInclude(e => e.Kategorie)
+            .Where(e => blocks.Contains(e.Block))
+            .Where(e =>
+                (e.Otium.MinKlasse == null || e.Otium.MinKlasse <= klassenstufe) &&
+                (e.Otium.MaxKlasse == null || e.Otium.MaxKlasse >= klassenstufe))
+            .ToListAsync();
 
         // Get all enrollments for the given week
         var weeksEnrollments = await _dbContext.OtiaEinschreibungen
@@ -187,11 +199,24 @@ internal class OtiumEndpointService
             .ToListAsync();
         var datesEnrollments = weeksEnrollments.Where(e => e.Termin.Block.SchultagKey == date).ToList();
 
+        // Get attendances
+        var weeksAttendances = (await _attendanceService.GetAttendances(blocks.Select(e => new AttendanceEntryId
+        {
+            Scope = OtiumAttendanceInformationProvider.ScopeValue,
+            SlotId = e.Id,
+            StudentId = user.Id
+        }))).ToDictionary(e => e.Key.SlotId, e => e.Value);
+        var todaysAttendances = today.Blocks.ToDictionary(e => e.Id, e => weeksAttendances[e.Id]);
+
         messages.AddRange(await _rulesValidationService.GetMessagesForEnrollmentsAsync(user, datesEnrollments));
-        messages.AddRange(await _rulesValidationService.GetMessagesForDayAsync(user,
-            schultage.First(s => s.Datum == date),
-            datesEnrollments));
-        messages.AddRange(await _rulesValidationService.GetMessagesForWeekAsync(user, schultage, weeksEnrollments));
+        messages.AddRange(
+            await _rulesValidationService.GetMessagesForDayAsync(user, today, datesEnrollments, todaysAttendances));
+        messages.AddRange(
+            await _rulesValidationService.GetMessagesForWeekAsync(user,
+                schultage,
+                termine,
+                weeksEnrollments,
+                weeksAttendances));
 
         return messages;
     }
@@ -216,6 +241,16 @@ internal class OtiumEndpointService
         if (!all) schultageQuery = schultageQuery.Where(s => s.Datum >= startDate && s.Datum < endDate);
 
         var schultage = await schultageQuery.ToListAsync();
+        var blocks = schultage.SelectMany(s => s.Blocks);
+        var klassenstufe = _userService.GetKlassenstufe(user);
+        var termine = await _dbContext.OtiaTermine
+            .Include(t => t.Otium)
+            .ThenInclude(e => e.Kategorie)
+            .Where(e => blocks.Contains(e.Block))
+            .Where(e =>
+                (e.Otium.MinKlasse == null || e.Otium.MinKlasse <= klassenstufe) &&
+                (e.Otium.MaxKlasse == null || e.Otium.MaxKlasse >= klassenstufe))
+            .ToListAsync();
 
         var einschreibungen = await _dbContext.OtiaEinschreibungen
             .Where(e => e.BetroffenePerson.Id == user.Id)
@@ -234,9 +269,20 @@ internal class OtiumEndpointService
 
         var weeks = schultage.GroupBy(s => s.Datum.GetStartOfWeek());
 
+        var attendanceIds = schultage.SelectMany(s => s.Blocks)
+            .Select(e => new AttendanceEntryId
+            {
+                Scope = OtiumAttendanceInformationProvider.ScopeValue,
+                SlotId = e.Id,
+                StudentId = user.Id
+            });
+        var attendancesByBlock =
+            (await _attendanceService.GetAttendances(attendanceIds)).ToDictionary(e => e.Key.SlotId, e => e.Value);
+
         var messageBuilder = new StringBuilder();
         foreach (var week in weeks)
         {
+            var blocksInWeek = week.SelectMany(e => e.Blocks);
             messageBuilder.Clear();
             // Increase performance by taking from the already sorted list of enrollments, then removing them from the list before the next iteration.
             var weekEnd = week.Key.AddDays(7);
@@ -245,10 +291,17 @@ internal class OtiumEndpointService
                 .ToList();
             einschreibungen.RemoveRange(0, einschreibungenForWeek.Count);
 
+            var attendancesInWeek =
+                week.SelectMany(e => e.Blocks).ToDictionary(e => e.Id, e => attendancesByBlock[e.Id]);
+
             foreach (var schultag in week)
             {
+                var attendancesOnDay = schultag.Blocks.ToDictionary(e => e.Id, e => attendancesByBlock[e.Id]);
                 var messagesForBlocksOnDay =
-                    await _rulesValidationService.GetMessagesForDayAsync(user, schultag, einschreibungenForWeek);
+                    await _rulesValidationService.GetMessagesForDayAsync(user,
+                        schultag,
+                        einschreibungenForWeek,
+                        attendancesOnDay);
                 if (messagesForBlocksOnDay.Count == 0) continue;
                 messageBuilder.AppendLine();
                 messageBuilder.AppendLine($"**{schultag.Datum:dddd, dd.MM.yyyy}**");
@@ -256,8 +309,14 @@ internal class OtiumEndpointService
                     messageBuilder.AppendLine($"- {message}");
             }
 
+            var termineInWeek = termine.Where(e => blocksInWeek.Contains(e.Block)).ToList();
+
             var messagesForWeek =
-                await _rulesValidationService.GetMessagesForWeekAsync(user, week.ToList(), einschreibungenForWeek);
+                await _rulesValidationService.GetMessagesForWeekAsync(user,
+                    week.ToList(),
+                    termineInWeek,
+                    einschreibungenForWeek,
+                    attendancesInWeek);
             if (messagesForWeek.Count > 0)
             {
                 if (messageBuilder.Length > 0) messageBuilder.AppendLine();
@@ -269,7 +328,7 @@ internal class OtiumEndpointService
             yield return new Week(
                 week.Key,
                 messageBuilder.ToString(),
-                await GenerateDtosWithPlaceholders(einschreibungenForWeek, week.ToList(), user)
+                await GenerateDtosWithPlaceholders(einschreibungenForWeek, week.ToList(), user, attendancesByBlock)
             );
         }
     }
@@ -280,12 +339,15 @@ internal class OtiumEndpointService
     /// <param name="enrollments">The enrollments in the week</param>
     /// <param name="schooldays">All schooldays with block in the week</param>
     /// <param name="user">The user whose enrollments are given</param>
+    /// <param name="attendancesByBlock">A dictionary containing at least the relevant attendances</param>
     /// <returns>
     ///     An enumerable containing DTOs for all enrollments and all unenrolled blocks. DTOs for unenrolled blocks only
     ///     include date and block information. The sorting is stable.
     /// </returns>
-    private async Task<IEnumerable<Einschreibung>> GenerateDtosWithPlaceholders(
-        List<OtiumEinschreibung> enrollments, List<Schultag> schooldays, Models_Person user)
+    private async Task<IEnumerable<Einschreibung>> GenerateDtosWithPlaceholders(List<OtiumEinschreibung> enrollments,
+        List<Schultag> schooldays,
+        Models_Person user,
+        Dictionary<Guid, AttendanceInformation> attendancesByBlock)
     {
         var allBlocks = schooldays.SelectMany(s => s.Blocks).ToList();
 
@@ -298,24 +360,10 @@ internal class OtiumEndpointService
                 .Select(b => b.Id)
                 .ToHashSet()
             : [];
-        var attendances = user.Rolle == Rolle.Mittelstufe
-            ? await _attendanceService.GetAttendances(blocksDoneOrRunning.Select(e => new AttendanceEntryId
-            {
-                Scope = OtiumAttendanceInformationProvider.ScopeValue,
-                SlotId = e,
-                StudentId = user.Id
-            }))
-            : [];
 
         var additionalEnrollments = blocksUnenrolled.Select(b =>
         {
             var schema = _blockHelper.Get(b.SchemaId)!;
-            var attendanceId = new AttendanceEntryId
-            {
-                Scope = OtiumAttendanceInformationProvider.ScopeValue,
-                SlotId = b.Id,
-                StudentId = user.Id
-            };
             return (schema, new Einschreibung
             {
                 Datum = b.SchultagKey,
@@ -323,7 +371,7 @@ internal class OtiumEndpointService
                 Anwesenheit = !schema.Verpflichtend
                     ? null
                     : blocksDoneOrRunning.Contains(b.Id)
-                        ? attendances[attendanceId].state
+                        ? attendancesByBlock[b.Id].State
                         : null
             });
         });
@@ -332,12 +380,6 @@ internal class OtiumEndpointService
             {
                 var schema = _blockHelper.Get(e.Termin.Block.SchemaId)!;
 
-                var attendanceId = new AttendanceEntryId
-                {
-                    Scope = OtiumAttendanceInformationProvider.ScopeValue,
-                    SlotId = e.Termin.Block.Id,
-                    StudentId = user.Id
-                };
                 return (schema, new Einschreibung
                 {
                     Block = _blockHelper.Get(e.Termin.Block.SchemaId)!.Bezeichnung,
@@ -348,7 +390,7 @@ internal class OtiumEndpointService
                     TerminId = e.Termin.Id,
                     Anwesenheit =
                         blocksDoneOrRunning.Contains(e.Termin.Block.Id)
-                            ? attendances[attendanceId].state
+                            ? attendancesByBlock[e.Termin.Block.Id].State
                             : null
                 });
             })
@@ -362,6 +404,7 @@ internal class OtiumEndpointService
     /// <summary>
     ///     Returns an overview of termine and mentees for a teacher.
     /// </summary>
+    /// <remarks>This is hideous</remarks>
     public async Task<LehrerUebersicht> GetTeacherDashboardAsync(Models_Person user)
     {
         var startDate = DateOnly.FromDateTime(DateTime.Today).GetStartOfWeek().AddDays(-7);
@@ -393,6 +436,23 @@ internal class OtiumEndpointService
             .Include(s => s.Blocks)
             .Where(s => s.Datum >= startDate && s.Datum < endDate)
             .ToListAsync();
+
+        var blocks = schultage.SelectMany(e => e.Blocks);
+        var allMenteeTermine = await _dbContext.OtiaTermine
+            .Include(t => t.Otium)
+            .ThenInclude(e => e.Kategorie)
+            .Where(e => blocks.Contains(e.Block))
+            .ToListAsync();
+
+        var attendanceIds = from block in schultage.SelectMany(e => e.Blocks)
+            from student in mentees
+            select new AttendanceEntryId
+            {
+                Scope = OtiumAttendanceInformationProvider.ScopeValue,
+                SlotId = block.Id,
+                StudentId = student.Id
+            };
+        var attendances = await _attendanceService.GetAttendances(attendanceIds);
 
         List<MenteePreview> menteePreviews = [];
 
@@ -438,6 +498,14 @@ internal class OtiumEndpointService
                     MenteePreviewStatus.NichtVerfuegbar,
                     MenteePreviewStatus.NichtVerfuegbar);
 
+
+            var klassenstufe = _userService.GetKlassenstufe(mentee);
+            var menteesTermine = allMenteeTermine
+                .Where(e =>
+                    (e.Otium.MinKlasse == null || e.Otium.MinKlasse <= klassenstufe) &&
+                    (e.Otium.MaxKlasse == null || e.Otium.MaxKlasse >= klassenstufe))
+                .ToList();
+
             var enrollmentsList = enrollments as OtiumEinschreibung[] ?? enrollments.ToArray();
 
             return new MenteePreview(new PersonInfoMinimal(mentee),
@@ -450,17 +518,40 @@ internal class OtiumEndpointService
             {
                 var schultageInWeek = schultage.Where(s =>
                     week.Contains(s.Datum.ToDateTime(new TimeOnly(0, 0)))).ToList();
+                var blocksInWeek = schultageInWeek.SelectMany(e => e.Blocks);
+                var menteesTermineInWeek = menteesTermine.Where(e => blocksInWeek.Contains(e.Block)).ToList();
                 if (schultageInWeek.Count == 0) return MenteePreviewStatus.NichtVerfuegbar;
 
+                var studentsAttendancesInWeek = schultageInWeek.SelectMany(e => e.Blocks)
+                    .ToDictionary(e => e.Id,
+                        e => attendances[new AttendanceEntryId
+                        {
+                            Scope = OtiumAttendanceInformationProvider.ScopeValue,
+                            SlotId = e.Id,
+                            StudentId = mentee.Id
+                        }]
+                    );
+
                 var weeksMessages = await _rulesValidationService.GetMessagesForWeekAsync(mentee,
-                    schultage.Where(schultageInWeek.Contains).ToList(),
-                    enrollmentsList.Where(e => schultageInWeek.Contains(e.Termin.Block.Schultag)).ToList());
+                    schultageInWeek,
+                    menteesTermineInWeek,
+                    enrollmentsList.Where(e => schultageInWeek.Contains(e.Termin.Block.Schultag)).ToList(),
+                    studentsAttendancesInWeek);
                 if (weeksMessages.Count > 0) return DecideBetweenOpenAndConspicuous(schultageInWeek);
 
                 foreach (var schultag in schultageInWeek)
                 {
+                    var studentsAttendancesOnDay = schultag.Blocks
+                        .ToDictionary(e => e.Id,
+                            e => attendances[new AttendanceEntryId
+                            {
+                                Scope = OtiumAttendanceInformationProvider.ScopeValue,
+                                SlotId = e.Id,
+                                StudentId = mentee.Id
+                            }]);
                     var daysMessages = await _rulesValidationService.GetMessagesForDayAsync(mentee, schultag,
-                        enrollmentsList.Where(e => e.Termin.Block.Schultag == schultag).ToList());
+                        enrollmentsList.Where(e => e.Termin.Block.Schultag == schultag).ToList(),
+                        studentsAttendancesOnDay);
                     if (daysMessages.Count > 0) return DecideBetweenOpenAndConspicuous(schultageInWeek);
                 }
 
@@ -530,8 +621,8 @@ internal class OtiumEndpointService
             .ToAsyncEnumerable()
             .Select(e =>
                     new IAttendanceHubClient.StudentStatus(new PersonInfoMinimal(persons[e.Key.StudentId]),
-                    e.Value.state,
-                    e.Value.type,
+                        e.Value.State,
+                        e.Value.Type,
                     notes.GetValueOrDefault(e.Key.StudentId, []).Select(n => new Note(n))))
             .OrderBy(e => e.Student.Nachname)
             .ThenBy(e => e.Student.Vorname)
