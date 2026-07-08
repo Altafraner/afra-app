@@ -339,6 +339,11 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
             .Property(w => w.Block)
             .HasDefaultValueSql("''");
 
+        modelBuilder.Entity<Block>()
+            .HasMany(e => e.Supervisors)
+            .WithMany()
+            .UsingEntity(e => e.ToTable("otium_block_supervisor"));
+
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
             var tableName = entityType.GetTableName();

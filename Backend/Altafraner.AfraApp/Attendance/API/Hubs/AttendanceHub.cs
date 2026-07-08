@@ -2,6 +2,7 @@ using Altafraner.AfraApp.Attendance.Domain.Contracts;
 using Altafraner.AfraApp.Attendance.Domain.Dto.Enrollments;
 using Altafraner.AfraApp.Attendance.Domain.HubClients;
 using Altafraner.AfraApp.Attendance.Domain.Models;
+using Altafraner.AfraApp.User.Domain.DTO;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Altafraner.AfraApp.Attendance.API.Hubs;
@@ -30,7 +31,7 @@ internal partial class AttendanceHub : Hub<IAttendanceHubClient>
     /// <summary>
     ///     Subscribes a user to get updates for a specific event.
     /// </summary>
-    public async Task<IAttendanceHubClient.Capabilities> SubscribeToEvent(AttendanceScope scope,
+    public async Task<IAttendanceHubClient.Metadata> SubscribeToEvent(AttendanceScope scope,
         Guid slotId,
         Guid eventId)
     {
@@ -50,15 +51,16 @@ internal partial class AttendanceHub : Hub<IAttendanceHubClient>
         await _notificationService.UpdateEventAttendance(scope, slotId, eventId, Context.ConnectionId);
         await ScheduleMissingStudentNotifications(metadata);
 
-        return new IAttendanceHubClient.Capabilities(metadata.EnableNotes,
+        return new IAttendanceHubClient.Metadata(metadata.EnableNotes,
             metadata.EnableMove,
-            metadata.MoveNowIntervall);
+            metadata.MoveNowIntervall,
+            metadata.Supervisors?.Select(e => new PersonInfoMinimal(e)));
     }
 
     /// <summary>
     ///     Subscribes a user to get updates for a specific block.
     /// </summary>
-    public async Task<IAttendanceHubClient.Capabilities> SubscribeToSlot(AttendanceScope scope, Guid slotId)
+    public async Task<IAttendanceHubClient.Metadata> SubscribeToSlot(AttendanceScope scope, Guid slotId)
     {
         if (Scope is not null) throw new HubException("AttendanceHub already subscribed");
 
@@ -76,9 +78,10 @@ internal partial class AttendanceHub : Hub<IAttendanceHubClient>
         await _notificationService.UpdateSlotAttendances(scope, slotId, false, Context.ConnectionId);
         await ScheduleMissingStudentNotifications(metadata);
 
-        return new IAttendanceHubClient.Capabilities(metadata.EnableNotes,
+        return new IAttendanceHubClient.Metadata(metadata.EnableNotes,
             metadata.EnableMove,
-            metadata.MoveNowIntervall);
+            metadata.MoveNowIntervall,
+            metadata.Supervisors?.Select(e => new PersonInfoMinimal(e)));
     }
 
     /// <summary>

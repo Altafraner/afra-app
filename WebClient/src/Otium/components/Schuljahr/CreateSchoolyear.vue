@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import Stepper from 'primevue/stepper';
 import StepItem from 'primevue/stepitem';
 import Step from 'primevue/step';
@@ -12,6 +12,7 @@ import { formatDate, formatMachineDate } from '@/helpers/formatters';
 import { mande } from 'mande';
 import { useRouter } from 'vue-router';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
+import PersonSelector from '@/components/PersonSelector.vue';
 
 const toast = useToast();
 const router = useRouter();
@@ -27,6 +28,8 @@ const ferien = ref([]);
 const newFerien = ref(null);
 
 const weeks = ref([]);
+
+const aufsichten = ref([]);
 
 const angeboteProWochentag = ref([
     {
@@ -87,6 +90,31 @@ const datesDisabled = computed(() => {
     return dates;
 });
 const blocksAvailable = otium.blocks;
+
+watch(stepperStatus, (newValue) => {
+    if (newValue !== '5') return;
+    const newAufsichten = [];
+    for (const day of angeboteProWochentag.value) {
+        for (const blockH of day.blocksH) {
+            newAufsichten.push({
+                day: day.tag,
+                typ: 'H-Woche',
+                block: blockH,
+                supervisors: [],
+            });
+        }
+        for (const blockN of day.blocksN) {
+            newAufsichten.push({
+                day: day.tag,
+                typ: 'N-Woche',
+                block: blockN,
+                supervisors: [],
+            });
+        }
+    }
+    console.log(newAufsichten);
+    aufsichten.value = newAufsichten;
+});
 
 function resolveStep1({ values }) {
     const errors = {};
@@ -208,22 +236,46 @@ async function submit() {
         // Find the day of the week
         const dayOfWeek = current.getDay();
 
+        const niceWochentage = [
+            'Sonntag',
+            'Montag',
+            'Dienstag',
+            'Mittwoch',
+            'Donnerstag',
+            'Freitag',
+            'Samstag',
+        ];
+
         // Find the blocks for the day of the week
         const angeboteAmWochentag = angeboteProWochentag.value.find(
-            (d) =>
-                d.tag ===
-                [
-                    'Sonntag',
-                    'Montag',
-                    'Dienstag',
-                    'Mittwoch',
-                    'Donnerstag',
-                    'Freitag',
-                    'Samstag',
-                ][dayOfWeek],
+            (d) => d.tag === niceWochentage[dayOfWeek],
         );
         const blocks =
-            week.type === 'H' ? angeboteAmWochentag.blocksH : angeboteAmWochentag.blocksN;
+            week.type === 'H'
+                ? angeboteAmWochentag.blocksH.map((w) => {
+                      const aufsichtenSlot = aufsichten.value.find(
+                          (a) =>
+                              a.day === niceWochentage[dayOfWeek] &&
+                              a.typ === 'H-Woche' &&
+                              a.block === w,
+                      );
+                      return {
+                          schemaId: w,
+                          supervisors: aufsichtenSlot.supervisors,
+                      };
+                  })
+                : angeboteAmWochentag.blocksN.map((w) => {
+                      const aufsichtenSlot = aufsichten.value.find(
+                          (a) =>
+                              a.day === niceWochentage[dayOfWeek] &&
+                              a.typ === 'N-Woche' &&
+                              a.block === w,
+                      );
+                      return {
+                          schemaId: w,
+                          supervisors: aufsichtenSlot.supervisors,
+                      };
+                  });
 
         data.push({
             datum: formatMachineDate(current),
@@ -243,7 +295,7 @@ async function submit() {
             detail: 'Die Termine wurden erfolgreich gespeichert.',
             life: 15000,
         });
-        router.push({ name: 'Verwaltung' });
+        await router.push({ name: 'Verwaltung' });
     } catch (error) {
         toast.add({
             severity: 'error',
@@ -473,6 +525,40 @@ async function submit() {
                                 option-label="bezeichnung"
                                 option-value="schemaId"
                                 placeholder="Keine Blöcke gewählt"
+                            />
+                        </template>
+                    </Column>
+                </DataTable>
+                <Button
+                    class="mt-4"
+                    fluid
+                    label="Weiter"
+                    @click="() => (stepperStatus = '5')"
+                />
+            </StepPanel>
+        </StepItem>
+        <StepItem value="5">
+            <Step>Aufsichten</Step>
+            <StepPanel>
+                <DataTable v-model:value="aufsichten">
+                    <Column field="day" header="Wochentag" />
+                    <Column field="typ" header="Typ" />
+                    <Column header="Block">
+                        <template #body="{ data }">
+                            {{
+                                blocksAvailable.find((b) => b.schemaId === data.block)
+                                    .bezeichnung
+                            }}
+                        </template>
+                    </Column>
+                    <Column header="Aufsichten">
+                        <template #body="{ data }">
+                            <PersonSelector
+                                v-model="data.supervisors"
+                                :filter="(p) => p.rolle === 'Tutor'"
+                                fluid
+                                hide-group
+                                multi
                             />
                         </template>
                     </Column>

@@ -17,7 +17,12 @@ public record Schultag(DateOnly Datum, Wochentyp Wochentyp, IEnumerable<BlockSch
 /// <summary>
 ///     A DTO for creating a new school day.
 /// </summary>
-public record SchultagCreation(DateOnly Datum, Wochentyp Wochentyp, IEnumerable<char> Blocks);
+public record SchultagCreation(DateOnly Datum, Wochentyp Wochentyp, IEnumerable<BlockCreation> Blocks);
+
+/// <summary>
+///     A DTO for creating a new block
+/// </summary>
+public record BlockCreation(char SchemaId, IEnumerable<Guid> Supervisors);
 
 /// <summary>
 ///     A DTO for sending the schema of a block to the client.

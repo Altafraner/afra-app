@@ -1,3 +1,5 @@
+using Altafraner.AfraApp.User.Domain.Models;
+
 namespace Altafraner.AfraApp.Schuljahr.Domain.Models;
 
 /// <summary>
@@ -25,4 +27,9 @@ public class Block
     ///     The number of the Block
     /// </summary>
     public required char SchemaId { get; set; } = '\0';
+
+    /// <summary>
+    ///     The blocks supervisors
+    /// </summary>
+    public List<Person> Supervisors = [];
 }

@@ -2,6 +2,8 @@ using Altafraner.AfraApp.Otium.Configuration;
 using Altafraner.AfraApp.Otium.Services;
 using Altafraner.AfraApp.Schuljahr.Domain.DTO;
 using Altafraner.AfraApp.Schuljahr.Domain.Models;
+using Altafraner.AfraApp.User.Domain.Models;
+using Altafraner.AfraApp.User.Services;
 using Altafraner.Backbone.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -18,16 +20,19 @@ public class SchuljahrService
     private readonly BlockHelper _blockHelper;
     private readonly IOptions<OtiumConfiguration> _configuration;
     private readonly AfraAppContext _dbContext;
+    private readonly UserService _userService;
 
     /// <summary>
     ///     Called from DI
     /// </summary>
     public SchuljahrService(AfraAppContext dbContext, IOptions<OtiumConfiguration> configuration,
-        BlockHelper blockHelper)
+        BlockHelper blockHelper,
+        UserService userService)
     {
         _dbContext = dbContext;
         _configuration = configuration;
         _blockHelper = blockHelper;
+        _userService = userService;
     }
 
     /// <summary>
@@ -36,11 +41,20 @@ public class SchuljahrService
     /// <returns></returns>
     public async Task<Domain.DTO.Schuljahr> GetSchuljahrAsync()
     {
+        var blocks = _blockHelper.GetAll().ToDictionary(b => b.Id);
         var schultage = await _dbContext.Schultage
             .Include(s => s.Blocks)
             .OrderBy(s => s.Datum)
+            .AsAsyncEnumerable()
             .Select(s => new DTO_Schultag(s.Datum, s.Wochentyp,
-                s.Blocks.Select(b => new BlockSchema(b.SchemaId, _blockHelper.Get(b.SchemaId)!.Bezeichnung))))
+                s.Blocks.Select(b => new
+                    {
+                        Block = b,
+                        Schema = blocks[b.SchemaId]
+                    })
+                    .OrderBy(b => b.Schema.Unterrichtsstunde)
+                    .ThenBy(b => b.Block.SchemaId)
+                    .Select(b => new BlockSchema(b.Block.SchemaId, b.Schema.Bezeichnung))))
             .ToListAsync();
 
         var next = schultage.FirstOrDefault(s => s.Datum >= DateOnly.FromDateTime(DateTime.Now)) ??
@@ -94,13 +108,17 @@ public class SchuljahrService
     public async Task<List<Models_Schultag>> AddRangeAsync(IEnumerable<SchultagCreation> schultageIn)
     {
         var blockKeys = _configuration.Value.Blocks.Select(e => e.Id).Distinct();
-        var schultage = schultageIn.Select(s => new Models_Schultag
+        var schultagCreationRequests = schultageIn as SchultagCreation[] ?? schultageIn.ToArray();
+        var supervisorIds = schultagCreationRequests.SelectMany(e => e.Blocks.SelectMany(e2 => e2.Supervisors));
+        var supervisors = (await _userService.GetUsersByIdsAsync(supervisorIds)).ToDictionary(e => e.Id);
+        var schultage = schultagCreationRequests.Select(s => new Models_Schultag
         {
             Datum = s.Datum,
             Wochentyp = s.Wochentyp,
             Blocks = s.Blocks.Select(b => new Block
             {
-                SchemaId = b
+                SchemaId = b.SchemaId,
+                Supervisors = b.Supervisors.Select(id => supervisors[id]).ToList()
             }).ToList()
         }).ToList();
 
@@ -116,13 +134,23 @@ public class SchuljahrService
             conflict.Wochentyp = schultag.Wochentyp;
             schultage.Remove(schultag);
 
-            if (conflict.Blocks.All(b1 => schultag.Blocks.Any(b2 => b1.SchemaId == b2.SchemaId)) &&
-                schultag.Blocks.All(b1 => conflict.Blocks.Any(b2 => b1.SchemaId == b2.SchemaId)))
-                continue;
+            var oldBlocks = conflict.Blocks.ToList();
+            var newBlocks = schultag.Blocks.ToList();
 
-            conflict.Blocks.AddRange(schultag.Blocks.Where(block =>
-                conflict.Blocks.All(b => b.SchemaId != block.SchemaId)));
-            conflict.Blocks.RemoveAll(block => schultag.Blocks.All(b => b.SchemaId != block.SchemaId));
+            foreach (var oldBlock in oldBlocks)
+            {
+                var correspondingBlock = newBlocks.FirstOrDefault(nb => nb.SchemaId == oldBlock.SchemaId);
+                if (correspondingBlock is null)
+                {
+                    conflict.Blocks.Remove(oldBlock);
+                    continue;
+                }
+
+                oldBlock.Supervisors = correspondingBlock.Supervisors;
+                newBlocks.Remove(correspondingBlock);
+            }
+
+            conflict.Blocks.AddRange(newBlocks);
         }
 
         await _dbContext.Schultage.AddRangeAsync(schultage);
@@ -136,7 +164,10 @@ public class SchuljahrService
     /// </summary>
     public async Task<List<Block>> GetBlocksAsync(DateOnly datum)
     {
-        var blocks = await _dbContext.Blocks.Where(b => b.SchultagKey == datum).ToListAsync();
+        var blocks = await _dbContext.Blocks
+            .Include(b => b.Supervisors)
+            .Where(b => b.SchultagKey == datum)
+            .ToListAsync();
         return blocks;
     }
 
@@ -149,6 +180,42 @@ public class SchuljahrService
             .Include(s => s.Blocks)
             .FirstOrDefaultAsync(s => s.Datum == datum);
         return schultag;
+    }
+
+    /// <summary>
+    ///     Adds a supervisor to a block
+    /// </summary>
+    /// <exception cref="KeyNotFoundException">Either the supervisor or user was not found</exception>
+    /// <exception cref="InvalidOperationException">The user is a student and cannot be named supervisor</exception>
+    public async Task AddSupervisor(Guid blockId, Guid supervisorId)
+    {
+        var block = await _dbContext.Blocks
+            .Include(e => e.Supervisors)
+            .FirstOrDefaultAsync(e => e.Id == blockId);
+        if (block is null) throw new KeyNotFoundException();
+        var supervisor = await _userService.GetUserByIdAsync(supervisorId);
+        if (supervisor.Rolle is Rolle.Mittelstufe or Rolle.Oberstufe) throw new InvalidOperationException();
+
+        if (block.Supervisors.Contains(supervisor)) return;
+        block.Supervisors.Add(supervisor);
+        await _dbContext.SaveChangesAsync();
+    }
+
+    /// <summary>
+    ///     Removes a supervisor from a block
+    /// </summary>
+    /// <exception cref="KeyNotFoundException">Either the supervisor or user was not found</exception>
+    public async Task DeleteSupervisor(Guid blockId, Guid supervisorId)
+    {
+        var block = await _dbContext.Blocks
+            .Include(e => e.Supervisors)
+            .FirstOrDefaultAsync(e => e.Id == blockId);
+        if (block is null) throw new KeyNotFoundException();
+        var supervisor = await _userService.GetUserByIdAsync(supervisorId);
+
+        if (!block.Supervisors.Contains(supervisor)) return;
+        block.Supervisors.Remove(supervisor);
+        await _dbContext.SaveChangesAsync();
     }
 
     /// <summary>
@@ -183,5 +250,27 @@ public class SchuljahrService
             .Where(metadata => metadata.Interval.Contains(now))
             .Select(metadata => metadata.Id)
             .ToList();
+    }
+
+    /// <summary>
+    ///     Adds a block to a schoolday
+    /// </summary>
+    /// <exception cref="KeyNotFoundException">Either the schoolday or schema do not exist</exception>
+    public async Task AddBlockAsync(DateOnly datum, char schemaId)
+    {
+        var day = await _dbContext.Schultage
+            .Include(s => s.Blocks)
+            .FirstOrDefaultAsync(s => s.Datum == datum);
+        var schema = _blockHelper.Get(schemaId);
+
+        if (day is null || schema is null) throw new KeyNotFoundException();
+
+        if (day.Blocks.Any(b => b.SchemaId == schemaId)) return;
+
+        day.Blocks.Add(new Block
+        {
+            SchemaId = schemaId
+        });
+        await _dbContext.SaveChangesAsync();
     }
 }

@@ -40,6 +40,17 @@ public class UserService
     }
 
     /// <summary>
+    ///     Gets users by their ID
+    /// </summary>
+    /// <exception cref="KeyNotFoundException">Not all provided IDs correspond to users</exception>
+    public async Task<List<Person>> GetUsersByIdsAsync(IEnumerable<Guid> userIds)
+    {
+        var distinctUserIds = userIds.Distinct().ToArray();
+        var users = await _dbContext.Personen.Where(p => distinctUserIds.Contains(p.Id)).ToListAsync();
+        return users.Count == distinctUserIds.Length ? users : throw new KeyNotFoundException();
+    }
+
+    /// <summary>
     ///     Fetches all users by their role.
     /// </summary>
     public async Task<IEnumerable<Person>> GetUsersWithRoleAsync(Rolle role)

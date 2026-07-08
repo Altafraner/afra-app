@@ -196,7 +196,9 @@ internal sealed class OtiumAttendanceInformationProvider : IAttendanceInformatio
 
     public async Task<AttendanceSlotMetadata> GetMetadataForSlot(Guid slotId)
     {
-        var block = await _dbContext.Blocks.FindAsync(slotId);
+        var block = await _dbContext.Blocks
+            .Include(b => b.Supervisors)
+            .FirstOrDefaultAsync(e => e.Id == slotId);
         var schema = _blockHelper.Get(block!.SchemaId)!;
         return new AttendanceSlotMetadata
         {
@@ -209,7 +211,8 @@ internal sealed class OtiumAttendanceInformationProvider : IAttendanceInformatio
                 ? block.SchultagKey.ToDateTime(schema.Interval.Start.AddMinutes(30))
                 : null,
             StartDate = block.SchultagKey,
-            StartLesson = schema.Unterrichtsstunde
+            StartLesson = schema.Unterrichtsstunde,
+            Supervisors = block.Supervisors
         };
     }
 
@@ -315,6 +318,7 @@ internal sealed class OtiumAttendanceInformationProvider : IAttendanceInformatio
     {
         var today = DateOnly.FromDateTime(DateTime.Now);
         var blocksToday = await _dbContext.Blocks
+            .Include(b => b.Supervisors)
             .AsNoTracking()
             .Where(b => b.SchultagKey == today)
             .AsAsyncEnumerable()

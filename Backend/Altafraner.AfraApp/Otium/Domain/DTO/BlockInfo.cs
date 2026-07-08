@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Altafraner.AfraApp.Domain.TimeInterval;
 using Altafraner.AfraApp.Schuljahr.Domain.Models;
+using Altafraner.AfraApp.User.Domain.DTO;
 
 namespace Altafraner.AfraApp.Otium.Domain.DTO;
 
@@ -23,6 +24,7 @@ public record BlockInfo
         Name = metadata.Bezeichnung;
         Uhrzeit = metadata.Interval;
         Datum = block.SchultagKey;
+        Supervisors = block.Supervisors.Select(e => new PersonInfoMinimal(e));
     }
 
     /// <summary>
@@ -49,4 +51,9 @@ public record BlockInfo
     ///     The date of the block
     /// </summary>
     public required DateOnly Datum { get; set; }
+
+    /// <summary>
+    ///     The blocks supervisors
+    /// </summary>
+    public required IEnumerable<PersonInfoMinimal> Supervisors { get; set; }
 }

@@ -5,12 +5,13 @@ import type {
     AttendanceEvent,
     AttendanceEventWithEnrollments,
     AttendanceState,
-    AttendanceStudentStatus,
+    AttendanceStudentStatus
 } from '@/Attendance/models/attendance';
 import type { Note } from '@/Attendance/models/note';
 import { isNowInDateTimeInterval } from '@/helpers/time.js';
+import type { UserInfoMinimal } from '../../models/user/userInfoMinimal';
 
-interface Capabilities {
+interface Metadata {
     enableNotes: boolean;
     enableMove: boolean;
     moveNowInterval?: {
@@ -18,6 +19,7 @@ interface Capabilities {
         end: string;
         duration: string;
     };
+    supervisors?: UserInfoMinimal[];
 }
 
 interface AttendanceUpdate {
@@ -57,10 +59,10 @@ export function useAttendance(
     const slotAttendances = ref<AttendanceEventWithEnrollments[]>([]);
     const eventAttendances = ref<AttendanceStudentStatus[] | null>(null);
     const alternatives = shallowRef<AttendanceEvent[]>([]);
-    const capabilities = shallowRef<Capabilities>();
+    const metadata = shallowRef<Metadata>();
 
     function canMoveNowNow(): boolean {
-        return isNowInDateTimeInterval(capabilities.value?.moveNowInterval);
+        return isNowInDateTimeInterval(metadata.value?.moveNowInterval);
     }
 
     const canMoveNow = computed(() => canMoveNowNow());
@@ -85,10 +87,10 @@ export function useAttendance(
     async function registerScope() {
         if (toValue(attendanceType) === 'event') {
             if (!eventId) throw Error(`No event id supplied`);
-            capabilities.value = await sendMessage('SubscribeToEvent', scope, slotId, eventId!);
+            metadata.value = await sendMessage('SubscribeToEvent', scope, slotId, eventId!);
             return;
         }
-        capabilities.value = await sendMessage('SubscribeToSlot', scope, slotId);
+        metadata.value = await sendMessage('SubscribeToSlot', scope, slotId);
     }
 
     function updateEvent(data: AttendanceStudentStatus[]) {
@@ -240,7 +242,7 @@ export function useAttendance(
         slotAttendance: slotAttendances,
         eventAttendance: eventAttendances,
         alternatives,
-        capabilities,
+        metadata,
         canMoveNow,
         canMoveNowNow,
         updateAttendance: sendAttendanceUpdate,

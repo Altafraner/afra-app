@@ -24,6 +24,7 @@ import Notes from '@/Attendance/components/Notes.vue';
 import { useUser } from '@/stores/user';
 import EnrollmentTable from '@/Attendance/components/EnrollmentTable.vue';
 import type { UserInfoMinimal } from '@/models/user/userInfoMinimal';
+import { formatStudent } from '@/helpers/formatters';
 
 const props = defineProps<{
     slot: AttendanceSlot;
@@ -137,6 +138,16 @@ watch(filteredAttendance, (newAttendance) => {
 </script>
 
 <template>
+    <div v-if="attendanceService.metadata.value?.supervisors" class="mb-8">
+        Angekündigte Aufsichten:
+        {{
+            attendanceService.metadata.value.supervisors.length > 0
+                ? attendanceService.metadata.value.supervisors
+                      .map((e) => formatStudent(e))
+                      .join(', ')
+                : 'keine'
+        }}
+    </div>
     <InputGroup class="mb-6">
         <PersonSelector
             v-model="filterPerson"
@@ -191,8 +202,8 @@ watch(filteredAttendance, (newAttendance) => {
             <accordion-content>
                 <EnrollmentTable
                     :enableEdit="true"
-                    :enableMove="attendanceService.capabilities.value?.enableMove ?? false"
-                    :enableNotes="attendanceService.capabilities.value?.enableNotes ?? false"
+                    :enableMove="attendanceService.metadata.value?.enableMove ?? false"
+                    :enableNotes="attendanceService.metadata.value?.enableNotes ?? false"
                     :enrollments="event.enrollments"
                     :showAttendance="true"
                     @move="move"

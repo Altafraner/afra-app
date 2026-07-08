@@ -3,15 +3,14 @@ import { useOtiumStore } from '@/Otium/stores/otium.js';
 import { Button, Column, DataTable, useDialog, useToast } from 'primevue';
 import { mande } from 'mande';
 import CreateSchoolday from '@/Otium/components/Schuljahr/CreateSchoolday.vue';
-import { useRouter } from 'vue-router';
-import BlockSelectorDialog from '@/Otium/components/Management/BlockSelectorDialog.vue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
+import { computed, shallowRef } from 'vue';
+import EditSchoolday from '@/Otium/components/Schuljahr/EditSchoolday.vue';
 
 const settings = useOtiumStore();
 const dialog = useDialog();
 const { openConfirmDialog } = useConfirmPopover();
 const toast = useToast();
-const router = useRouter();
 
 async function setup() {
     await settings.updateSchuljahr(true);
@@ -23,24 +22,6 @@ function addDay() {
         props: {
             modal: true,
             header: 'Tag hinzufügen',
-        },
-        emits: {
-            onUpdate: () => {
-                console.log('Received update event');
-                settings.updateSchuljahr(true);
-            },
-        },
-    });
-}
-
-function updateDay(data) {
-    dialog.open(CreateSchoolday, {
-        data: {
-            initialValues: data,
-        },
-        props: {
-            modal: true,
-            header: 'Tag bearbeiten',
         },
         emits: {
             onUpdate: () => {
@@ -70,38 +51,29 @@ function deleteDay(event, data) {
     openConfirmDialog(event, callback, 'Tag Löschen', 'Möchten Sie den Tag wirklich löschen');
 }
 
-async function showAttendance(data) {
-    const result = await mande('/api/schuljahr/' + data.datum).get();
-
-    const blocks = result.map((item) => {
-        return {
-            id: item.id,
-            label: item.name,
-        };
-    });
-
-    dialog.open(BlockSelectorDialog, {
-        props: {
-            modal: true,
-            header: 'Block auswählen',
-        },
-        data: {
-            items: blocks,
-        },
-        onClose: (data) => {
-            if (data.data && data.data.id)
-                router.push({
-                    name: 'Aufsicht',
-                    query: {
-                        slotId: data.data.id,
-                        scope: 'otium',
-                    },
-                });
-        },
-    });
-}
-
 setup();
+
+const displayData = computed(
+    () =>
+        settings.schuljahr?.map((day) => {
+            const convertedDate = new Date(day.datum);
+            return {
+                datum: day.datum,
+                displayDate: `${convertedDate.toLocaleDateString('de-DE', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                })} (${convertedDate.toLocaleDateString('de-DE', {
+                    weekday: 'short',
+                })})`,
+                displayBlocks: day.blocks.map((b) => b.bezeichnung).join(', '),
+                original: day,
+                wochentyp: day.wochentyp,
+            };
+        }) ?? [],
+);
+
+const expandedRows = shallowRef([]);
 </script>
 
 <template>
@@ -117,27 +89,34 @@ setup();
             mehrere Termine anlegen.
         </Button>
     </p>
-    <DataTable :value="settings.schuljahr" data-key="datum">
+    <DataTable
+        v-model:expanded-rows="expandedRows"
+        :value="displayData"
+        data-key="datum"
+        dataKey="datum"
+        size="small"
+    >
         <Column header="Datum">
-            <template #body="{ data }"
-                >{{
-                    new Date(data.datum).toLocaleDateString('de-DE', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric',
-                    })
-                }}
-                ({{
-                    new Date(data.datum).toLocaleDateString('de-DE', {
-                        weekday: 'short',
-                    })
-                }})
+            <template #body="{ data, rowTogglerCallback }">
+                <Button
+                    :icon="
+                        expandedRows && expandedRows[data.datum]
+                            ? 'pi pi-chevron-down'
+                            : 'pi pi-chevron-right'
+                    "
+                    :label="data.displayDate"
+                    class="text-nowrap"
+                    severity="info"
+                    size="small"
+                    variant="text"
+                    @click="rowTogglerCallback"
+                />
             </template>
         </Column>
         <Column field="wochentyp" header="Wochentyp" />
         <Column header="Blöcke">
             <template #body="{ data }">
-                {{ data.blocks.map((b) => b.bezeichnung).join(', ') }}
+                {{ data.displayBlocks }}
             </template>
         </Column>
         <Column class="afra-col-action text-right">
@@ -151,35 +130,20 @@ setup();
                 />
             </template>
             <template #body="{ data }">
-                <Button
-                    v-tooltip="'Aufsicht'"
-                    icon="pi pi-eye"
-                    severity="secondary"
-                    size="small"
-                    variant="text"
-                    aria-label="Aufsicht"
-                    @click="() => showAttendance(data)"
-                />
-                <Button
-                    v-tooltip="'Bearbeiten'"
-                    icon="pi pi-pencil"
-                    severity="secondary"
-                    size="small"
-                    variant="text"
-                    aria-label="Bearbeiten"
-                    @click="() => updateDay(data)"
-                />
-                <Button
-                    v-tooltip="'Löschen'"
-                    icon="pi pi-times"
-                    severity="danger"
-                    size="small"
-                    variant="text"
-                    aria-label="Löschen"
-                    @click="(evt) => deleteDay(evt, data)"
-                />
+                <div class="inline-flex">
+                    <Button
+                        v-tooltip="'Löschen'"
+                        aria-label="Löschen"
+                        icon="pi pi-times"
+                        severity="danger"
+                        size="small"
+                        variant="text"
+                        @click="(evt) => deleteDay(evt, data.original)"
+                    />
+                </div>
             </template>
         </Column>
+        <template #expansion="{ data }"> <EditSchoolday :date="data.datum" /> </template>
         <template #empty> Keine Schultage angelegt.</template>
     </DataTable>
 </template>

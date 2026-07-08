@@ -130,7 +130,7 @@ public interface IAttendanceHubClient
         IEnumerable<Note> Notes);
 
     /// <summary>
-    ///     The capabilities of this supervision session
+    ///     The metadata of this supervision session
     /// </summary>
     /// <param name="EnableNotes">Whether notes are enabled</param>
     /// <param name="EnableMove">Whether moving students is allowed</param>
@@ -138,5 +138,10 @@ public interface IAttendanceHubClient
     ///     The timeInterval for which a valid interpretation of moving a student for only the time
     ///     after the current time exists
     /// </param>
-    record Capabilities(bool EnableNotes, bool EnableMove, DateTimeInterval? MoveNowInterval);
+    /// <param name="Supervisors">The registered supervisors for this slot. When null, registering supervisors is disabled for this slot</param>
+    record Metadata(
+        bool EnableNotes,
+        bool EnableMove,
+        DateTimeInterval? MoveNowInterval,
+        IEnumerable<PersonInfoMinimal>? Supervisors);
 }

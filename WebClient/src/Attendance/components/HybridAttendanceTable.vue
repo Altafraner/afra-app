@@ -13,6 +13,7 @@ import EnrollmentTable from '@/Attendance/components/EnrollmentTable.vue';
 import Notes from '@/Attendance/components/Notes.vue';
 import MoveStudentForm from '@/Attendance/components/MoveStudentForm.vue';
 import SelectStudentToMoveForm from '@/Attendance/components/SelectStudentToMoveForm.vue';
+import { formatStudent } from '../../helpers/formatters';
 
 const props = defineProps<{
     enableSupervision: boolean;
@@ -34,6 +35,7 @@ const userStore = useUser();
 
 const showMove = shallowRef<boolean>(false);
 const showNotes = shallowRef<boolean>(false);
+const supervisors = shallowRef<UserInfoMinimal[] | null>(null);
 const stopEventSync = shallowRef<(() => void) | null>(null);
 const stopServiceWatchers = shallowRef<Array<() => void>>([]);
 
@@ -94,10 +96,11 @@ async function startSupervision() {
 
     stopServiceWatchers.value.push(
         watch(
-            attendanceService.capabilities,
+            attendanceService.metadata,
             (newValue) => {
                 showMove.value = Boolean(newValue?.enableMove);
                 showNotes.value = Boolean(newValue?.enableNotes);
+                supervisors.value = newValue?.supervisors ?? null;
             },
             { immediate: true },
         ),
@@ -229,6 +232,14 @@ function openMoveHere() {
             <slot :data="data" name="studentActions"></slot>
         </template>
     </EnrollmentTable>
+    <div v-if="supervisors" class="mt-4">
+        Angekündigte allgemeine Aufsichten:
+        {{
+            supervisors.length > 0
+                ? supervisors.map((e) => formatStudent(e)).join(', ')
+                : 'keine'
+        }}
+    </div>
 </template>
 
 <style scoped></style>

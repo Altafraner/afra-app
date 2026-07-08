@@ -36,14 +36,7 @@ public record KatalogTermin : IKatalogTermin
             .Distinct()
             .Order()
             .SkipWhile(d => d <= termin.Block.SchultagKey) ?? [];
-        Block = new BlockInfo
-        {
-            Datum = termin.Block.Schultag.Datum,
-            Id = termin.Block.Id,
-            Name = schema.Bezeichnung,
-            SchemaId = schema.Id,
-            Uhrzeit = schema.Interval
-        };
+        Block = new BlockInfo(termin.Block, schema);
     }
 
     /// <summary>

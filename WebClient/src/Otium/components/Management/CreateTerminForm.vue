@@ -135,10 +135,10 @@ setup();
         />
         <Select v-model="blockSelected" :options="dateSelected.blocks" name="block">
             <template #value="{ value }">
-                {{ value.bezeichnung }}
+                {{ value?.bezeichnung ?? 'Keine Blöcke verfügbar' }}
             </template>
             <template #option="{ option }">
-                {{ option.bezeichnung }}
+                {{ option?.bezeichnung }}
             </template>
         </Select>
         <div class="font-bold mt-4">Details</div>

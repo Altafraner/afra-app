@@ -1,4 +1,5 @@
 using Altafraner.AfraApp.Domain.TimeInterval;
+using Altafraner.AfraApp.User.Domain.Models;
 
 namespace Altafraner.AfraApp.Attendance.Domain.Dto.Enrollments;
 
@@ -41,10 +42,15 @@ public class AttendanceSlotMetadata
     /// <summary>
     ///     A list of E-Mail-Addresses that should be notified about missing students
     /// </summary>
-    public required string[] MissingStudentsNotificationRecipients;
+    public required string[] MissingStudentsNotificationRecipients { get; set; }
 
     /// <summary>
     ///     The time at which to send the notification about missing students. If null, no notification will be sent.
     /// </summary>
-    public required DateTime? MissingStudentsNotificationTime;
+    public required DateTime? MissingStudentsNotificationTime { get; set; }
+
+    /// <summary>
+    ///     A list of registered supervisors. Will only be displayed
+    /// </summary>
+    public IEnumerable<Person>? Supervisors { get; set; }
 }

@@ -1,6 +1,15 @@
 <script setup>
 import { computed, shallowRef, watch } from 'vue';
-import { Column, DataTable, Message, Panel, Skeleton, useToast } from 'primevue';
+import {
+    Button,
+    Column,
+    DataTable,
+    Message,
+    Panel,
+    Skeleton,
+    useDialog,
+    useToast,
+} from 'primevue';
 import OtiumDateSelector from '@/Otium/components/Form/OtiumDateSelector.vue';
 import OtiumKategorySelector from '@/Otium/components/Form/OtiumKategorySelector.vue';
 import OtiumKatalog from '@/Otium/components/Katalog/OtiumKatalog.vue';
@@ -8,8 +17,9 @@ import { mande } from 'mande';
 import { useUser } from '@/stores/user';
 import { useRoute, useRouter } from 'vue-router';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
-import { formatDate } from '@/helpers/formatters';
+import { formatDate, formatStudent } from '@/helpers/formatters';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
+import EditSupervisorsForm from '@/Otium/components/Schuljahr/EditSupervisorsForm.vue';
 
 const props = defineProps({
     datum: {
@@ -28,6 +38,7 @@ const location = useRoute();
 const toast = useToast();
 const settings = useOtiumStore();
 const user = useUser();
+const dialog = useDialog();
 
 const loading = shallowRef(true);
 const datesAvailable = shallowRef([]);
@@ -158,6 +169,21 @@ const blocksFiltered = computed(() => {
     });
 });
 
+function editSupervisor(blockId) {
+    dialog.open(EditSupervisorsForm, {
+        props: {
+            header: 'Aufsichten Bearbeiten',
+            modal: true,
+            class: 'sm:max-w-xl',
+        },
+        data: {
+            date: date.value.datum,
+            blockId: blockId,
+        },
+        onClose: getAngebote,
+    });
+}
+
 startup();
 </script>
 
@@ -198,6 +224,30 @@ startup();
                 class="w-auto flex-1"
                 toggleable
             >
+                <div class="mb-4 grid grid-cols-[1fr_auto] gap-2">
+                    <span>
+                        Aufsicht:
+                        {{
+                            block.block.supervisors.length > 0
+                                ? block.block.supervisors
+                                      .map((s) => formatStudent(s))
+                                      .join(', ')
+                                : 'keine'
+                        }}
+                    </span>
+                    <span v-if="user.isOtiumsverantwortlich">
+                        <Button
+                            aria-label="Aufsichten bearbeiten"
+                            class="mr-1"
+                            icon="pi pi-pencil"
+                            severity="secondary"
+                            size="small"
+                            variant="text"
+                            @click="() => editSupervisor(block.block.id)"
+                        />
+                    </span>
+                    <span v-else />
+                </div>
                 <OtiumKatalog
                     :otia="block.previews"
                     :termin-id="terminId"

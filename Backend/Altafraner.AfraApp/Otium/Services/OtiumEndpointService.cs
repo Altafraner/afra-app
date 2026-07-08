@@ -81,6 +81,7 @@ internal class OtiumEndpointService
     {
         // Get the schultag for the given date and block
         var blocks = await _dbContext.Blocks
+            .Include(e => e.Supervisors)
             .Where(b => b.Schultag.Datum == date)
             .ToListAsync();
 
@@ -142,6 +143,8 @@ internal class OtiumEndpointService
             .ThenInclude(otium => otium.Kategorie)
             .Include(termin => termin.Block)
             .ThenInclude(block => block.Schultag)
+            .Include(termin => termin.Block)
+            .ThenInclude(block => block.Supervisors)
             .Include(termin => termin.Wiederholung)
             .ThenInclude(wdh => wdh!.Termine)
             .ThenInclude(wdhTermin => wdhTermin.Block)
