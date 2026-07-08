@@ -42,7 +42,7 @@
         @apply m-[1rem];
 
         &::after {
-            content: "";
+            content: '';
             position: fixed;
             top: 0;
             left: 0;

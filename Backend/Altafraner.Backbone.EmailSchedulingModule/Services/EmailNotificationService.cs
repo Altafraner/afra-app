@@ -5,7 +5,7 @@ using Quartz;
 
 namespace Altafraner.Backbone.EmailSchedulingModule.Services;
 
-internal class EmailNotificationService<TPerson> : INotificationService where TPerson : class, IEmailRecipient
+internal class EmailNotificationService<TPerson> : IEmailNotificationService where TPerson : class, IEmailRecipient
 {
     private readonly IScheduledEmailContext<TPerson> _dbContext;
     private readonly ISchedulerFactory _schedulerFactory;

@@ -1,7 +1,7 @@
+using Altafraner.AfraApp.Notifications.Services;
 using Altafraner.AfraApp.Otium.Configuration;
 using Altafraner.AfraApp.Otium.Services;
 using Altafraner.AfraApp.User.Domain.Models;
-using Altafraner.Backbone.EmailSchedulingModule;
 using Altafraner.Backbone.Scheduling;
 using Microsoft.Extensions.Options;
 using Quartz;

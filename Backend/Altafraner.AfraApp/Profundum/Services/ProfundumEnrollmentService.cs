@@ -1,11 +1,11 @@
 using System.Text;
 using System.Text.Json;
+using Altafraner.AfraApp.Notifications.Services;
 using Altafraner.AfraApp.Profundum.Configuration;
 using Altafraner.AfraApp.Profundum.Domain.Contracts.Services;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.User.Services;
-using Altafraner.Backbone.EmailSchedulingModule;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Models_Person = Altafraner.AfraApp.User.Domain.Models.Person;
