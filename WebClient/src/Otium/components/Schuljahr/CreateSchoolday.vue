@@ -2,16 +2,14 @@
 import { inject, ref } from 'vue';
 import FloatLabel from 'primevue/floatlabel';
 import DatePicker from 'primevue/datepicker';
-import { Button, Message, Select, useToast } from 'primevue';
+import { Button, Message, Select } from 'primevue';
 import Form from '@primevue/forms/form';
 import { formatMachineDate } from '@/helpers/formatters';
 import { mande } from 'mande';
-import { useOtiumStore } from '@/Otium/stores/otium.js';
 
 const dialogRef = inject('dialogRef');
 const emit = defineEmits(['update']);
 const toast = useToast();
-const otiumStore = useOtiumStore();
 
 const date = ref(null);
 const wochentyp = ref(null);
@@ -28,10 +26,10 @@ function resolve({ values }) {
     return { values, errors };
 }
 
-async function trySubmit({ valid, originalEvent }) {
+async function trySubmit({ valid }) {
     if (!valid) return;
     if (!dialogRef.value.data || !('initialValues' in dialogRef.value.data)) {
-        submit();
+        await submit();
         return;
     }
     loading.value = true;
@@ -54,19 +52,18 @@ async function submit() {
     try {
         await api.post(data);
         toast.add({
-            severity: 'success',
-            summary: 'Erfolg',
-            detail: 'Der Termin wurde erfolgreich gespeichert.',
-            life: 15000,
+            color: 'success',
+            title: 'Erfolg',
+            description: 'Der Termin wurde erfolgreich gespeichert.',
         });
         emit('update');
         dialogRef.value.close();
     } catch (error) {
         console.error(error);
         toast.add({
-            severity: 'error',
-            summary: 'Fehler',
-            detail: 'Die Termine konnten nicht gespeichert werden.',
+            color: 'error',
+            title: 'Fehler',
+            description: 'Die Termine konnten nicht gespeichert werden.',
         });
     } finally {
         loading.value = false;

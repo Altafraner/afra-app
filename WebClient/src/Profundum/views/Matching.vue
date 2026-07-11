@@ -9,7 +9,6 @@ import {
     Popover,
     Select,
     Tag,
-    useToast,
 } from 'primevue';
 import { mande } from 'mande';
 import { computed, nextTick, ref } from 'vue';
@@ -118,23 +117,24 @@ async function autoMatching() {
     try {
         const r = await mande('/api/profundum/management/matching').post();
         toast.add({
-            severity: 'success',
-            summary: 'Erfolg',
-            detail: r.result,
+            color: 'success',
+            title: 'Erfolg',
+            description: r.result,
         });
         console.log(r);
     } catch (e) {
         if (e?.response?.status === 429) {
             toast.add({
-                severity: 'warn',
-                summary: 'Matching läuft bereits',
-                detail: 'Das Matching wird gerade von einer anderen Sitzung ausgeführt. Bitte warten.',
+                color: 'warn',
+                title: 'Matching läuft bereits',
+                description:
+                    'Das Matching wird gerade von einer anderen Sitzung ausgeführt. Bitte warten.',
             });
         } else {
             toast.add({
-                severity: 'error',
-                summary: 'Fehler',
-                detail: 'Es ist ein Fehler beim Matching aufgetreten. ' + e,
+                color: 'error',
+                title: 'Fehler',
+                description: 'Es ist ein Fehler beim Matching aufgetreten. ' + e,
             });
         }
         console.error(e);
@@ -176,19 +176,19 @@ async function updateEnrollment(row) {
     try {
         await updater.put(payload);
         toast.add({
-            severity: 'success',
-            summary: 'Gespeichert',
-            detail: 'Änderung gespeichert.',
-            life: 1500,
+            color: 'success',
+            title: 'Gespeichert',
+            description: 'Änderung gespeichert.',
         });
         return true;
     } catch (err) {
         console.error(err);
         if (err?.response?.status === 429) {
             toast.add({
-                severity: 'error',
-                summary: 'Matching läuft.',
-                detail: 'Das Matching wird gerade von einer anderen Sitzung ausgeführt. Bitte warten und erneut eintragen..',
+                color: 'error',
+                title: 'Matching läuft.',
+                description:
+                    'Das Matching wird gerade von einer anderen Sitzung ausgeführt. Bitte warten und erneut eintragen..',
             });
         } else {
             let message = 'Speichern fehlgeschlagen.';
@@ -196,9 +196,9 @@ async function updateEnrollment(row) {
                 message += ' ' + err.response.data;
             }
             toast.add({
-                severity: 'error',
-                summary: 'Fehler',
-                detail: message,
+                color: 'error',
+                title: 'Fehler',
+                description: message,
             });
         }
         return false;

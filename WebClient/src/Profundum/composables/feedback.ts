@@ -1,4 +1,3 @@
-import { useToast } from 'primevue';
 import { mande, type MandeError } from 'mande';
 import type {
     AnkerChangeRequest,
@@ -20,9 +19,9 @@ export const useFeedback = () => {
         } catch (e) {
             const mandeError: MandeError = e as MandeError;
             toast.add({
-                severity: 'error',
-                summary: 'Es ist ein Fehler aufgetreten',
-                detail: `Die Anker konnten nicht geladen werden. Code ${mandeError.response.status}, ${mandeError.message}`,
+                color: 'error',
+                title: 'Es ist ein Fehler aufgetreten',
+                description: `Die Anker konnten nicht geladen werden. Code ${mandeError.response.status}, ${mandeError.message}`,
             });
             return null;
         }
@@ -34,9 +33,9 @@ export const useFeedback = () => {
         } catch (e) {
             const mandeError: MandeError = e as MandeError;
             toast.add({
-                severity: 'error',
-                summary: 'Es ist ein Fehler aufgetreten',
-                detail: `Die Anker konnten nicht geladen werden. Code ${mandeError.response.status}, ${mandeError.message}`,
+                color: 'error',
+                title: 'Es ist ein Fehler aufgetreten',
+                description: `Die Anker konnten nicht geladen werden. Code ${mandeError.response.status}, ${mandeError.message}`,
             });
             return {
                 kategorien: [],
@@ -57,9 +56,9 @@ export const useFeedback = () => {
         } catch (e) {
             const mandeError: MandeError = e as MandeError;
             toast.add({
-                severity: 'error',
-                summary: 'Es ist ein Fehler aufgetreten',
-                detail: `Die Bewertung konnte nicht geladen werden. Code ${mandeError.response.status}, ${mandeError.message}`,
+                color: 'error',
+                title: 'Es ist ein Fehler aufgetreten',
+                description: `Die Bewertung konnte nicht geladen werden. Code ${mandeError.response.status}, ${mandeError.message}`,
             });
             return {};
         }
@@ -75,9 +74,9 @@ export const useFeedback = () => {
         } catch (e) {
             const mandeError: MandeError = e as MandeError;
             toast.add({
-                severity: 'error',
-                summary: 'Es ist ein Fehler aufgetreten',
-                detail: `Der Anker konnte nicht erstellt werden. Code ${mandeError.response.status}, ${mandeError.message}`,
+                color: 'error',
+                title: 'Es ist ein Fehler aufgetreten',
+                description: `Der Anker konnte nicht erstellt werden. Code ${mandeError.response.status}, ${mandeError.message}`,
             });
         }
     }
@@ -92,9 +91,9 @@ export const useFeedback = () => {
         } catch (e) {
             const mandeError: MandeError = e as MandeError;
             toast.add({
-                severity: 'error',
-                summary: 'Es ist ein Fehler aufgetreten',
-                detail: `Der Anker konnte nicht geändert werden. Code ${mandeError.response.status}, ${mandeError.message}`,
+                color: 'error',
+                title: 'Es ist ein Fehler aufgetreten',
+                description: `Der Anker konnte nicht geändert werden. Code ${mandeError.response.status}, ${mandeError.message}`,
             });
         }
     }
@@ -105,9 +104,9 @@ export const useFeedback = () => {
         } catch (e) {
             const mandeError: MandeError = e as MandeError;
             toast.add({
-                severity: 'error',
-                summary: 'Es ist ein Fehler aufgetreten',
-                detail: `Der Anker konnte nicht gelöscht werden. Code ${mandeError.response.status}, ${mandeError.message}`,
+                color: 'error',
+                title: 'Es ist ein Fehler aufgetreten',
+                description: `Der Anker konnte nicht gelöscht werden. Code ${mandeError.response.status}, ${mandeError.message}`,
             });
         }
     }
@@ -127,9 +126,9 @@ export const useFeedback = () => {
         } catch (e) {
             const mandeError: MandeError = e as MandeError;
             toast.add({
-                severity: 'error',
-                summary: 'Es ist ein Fehler aufgetreten',
-                detail: `Die Kategorie konnte nicht erstellt werden. Code ${mandeError.response.status}, ${mandeError.message}`,
+                color: 'error',
+                title: 'Es ist ein Fehler aufgetreten',
+                description: `Die Kategorie konnte nicht erstellt werden. Code ${mandeError.response.status}, ${mandeError.message}`,
             });
         }
     }
@@ -150,9 +149,9 @@ export const useFeedback = () => {
         } catch (e) {
             const mandeError: MandeError = e as MandeError;
             toast.add({
-                severity: 'error',
-                summary: 'Es ist ein Fehler aufgetreten',
-                detail: `Die Kategorie konnte nicht geändert werden. Code ${mandeError.response.status}, ${mandeError.message}`,
+                color: 'error',
+                title: 'Es ist ein Fehler aufgetreten',
+                description: `Die Kategorie konnte nicht geändert werden. Code ${mandeError.response.status}, ${mandeError.message}`,
             });
         }
     }
@@ -163,9 +162,9 @@ export const useFeedback = () => {
         } catch (e) {
             const mandeError: MandeError = e as MandeError;
             toast.add({
-                severity: 'error',
-                summary: 'Es ist ein Fehler aufgetreten',
-                detail: `Die Kategorie konnte nicht gelöscht werden. Code ${mandeError.response.status}, ${mandeError.message}`,
+                color: 'error',
+                title: 'Es ist ein Fehler aufgetreten',
+                description: `Die Kategorie konnte nicht gelöscht werden. Code ${mandeError.response.status}, ${mandeError.message}`,
             });
         }
     }
@@ -181,9 +180,9 @@ export const useFeedback = () => {
         } catch (e) {
             const mandeError: MandeError = e as MandeError;
             toast.add({
-                severity: 'error',
-                summary: 'Es ist ein Fehler aufgetreten',
-                detail: `Das Feedback konnte nicht eingereicht werden. Code ${mandeError.response.status}, ${mandeError.message}`,
+                color: 'error',
+                title: 'Es ist ein Fehler aufgetreten',
+                description: `Das Feedback konnte nicht eingereicht werden. Code ${mandeError.response.status}, ${mandeError.message}`,
             });
         }
     }
@@ -194,9 +193,9 @@ export const useFeedback = () => {
         } catch (e) {
             const mandeError: MandeError = e as MandeError;
             toast.add({
-                severity: 'error',
-                summary: 'Es ist ein Fehler aufgetreten',
-                detail: `Die Übersicht konnte nicht abgerufen werden. Code ${mandeError.response.status}, ${mandeError.message}`,
+                color: 'error',
+                title: 'Es ist ein Fehler aufgetreten',
+                description: `Die Übersicht konnte nicht abgerufen werden. Code ${mandeError.response.status}, ${mandeError.message}`,
             });
             throw e;
         }
@@ -208,9 +207,9 @@ export const useFeedback = () => {
         } catch (e) {
             const mandeError: MandeError = e as MandeError;
             toast.add({
-                severity: 'error',
-                summary: 'Es ist ein Fehler aufgetreten',
-                detail: `Das Feedback konnte nicht veröffentlicht werden. Code ${mandeError.response.status}, ${mandeError.message}`,
+                color: 'error',
+                title: 'Es ist ein Fehler aufgetreten',
+                description: `Das Feedback konnte nicht veröffentlicht werden. Code ${mandeError.response.status}, ${mandeError.message}`,
             });
             throw e;
         }
@@ -235,9 +234,9 @@ export const useFeedback = () => {
             return url;
         } catch (e) {
             toast.add({
-                severity: 'error',
-                summary: 'Es ist ein Fehler aufgetreten',
-                detail: `Das herunterladen ist fehlgeschlagen`,
+                color: 'error',
+                title: 'Es ist ein Fehler aufgetreten',
+                description: `Das herunterladen ist fehlgeschlagen`,
             });
             console.error(e);
             return url;
@@ -266,9 +265,9 @@ export const useFeedback = () => {
             return url;
         } catch (e) {
             toast.add({
-                severity: 'error',
-                summary: 'Es ist ein Fehler aufgetreten',
-                detail: `Das herunterladen ist fehlgeschlagen`,
+                color: 'error',
+                title: 'Es ist ein Fehler aufgetreten',
+                description: `Das Herunterladen ist fehlgeschlagen`,
             });
             console.error(e);
         }
@@ -281,9 +280,9 @@ export const useFeedback = () => {
         } catch (e) {
             const mandeError: MandeError = e as MandeError;
             toast.add({
-                severity: 'error',
-                summary: 'Es ist ein Fehler aufgetreten',
-                detail: `Die Übersicht konnte nicht abgerufen werden.\n Code ${mandeError?.response?.status}, ${mandeError?.message}`,
+                color: 'error',
+                title: 'Es ist ein Fehler aufgetreten',
+                description: `Die Übersicht konnte nicht abgerufen werden.\n Code ${mandeError?.response?.status}, ${mandeError?.message}`,
             });
             throw e;
         }
@@ -295,9 +294,9 @@ export const useFeedback = () => {
         } catch (e) {
             const mandeError: MandeError = e as MandeError;
             toast.add({
-                severity: 'error',
-                summary: 'Es ist ein Fehler aufgetreten',
-                detail: `Die Übersicht konnte nicht abgerufen werden.\n Code ${mandeError?.response?.status}, ${mandeError?.message}`,
+                color: 'error',
+                title: 'Es ist ein Fehler aufgetreten',
+                description: `Die Übersicht konnte nicht abgerufen werden.\n Code ${mandeError?.response?.status}, ${mandeError?.message}`,
             });
             throw e;
         }

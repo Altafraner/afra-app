@@ -1,7 +1,7 @@
 <script setup>
 import { useUser } from '@/stores/user';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
-import { Button, Column, DataTable, Skeleton, useToast } from 'primevue';
+import { Button, Column, DataTable, Skeleton } from 'primevue';
 import { ref, shallowRef, watch } from 'vue';
 import { mande } from 'mande';
 import { findPath } from '@/helpers/tree.js';
@@ -32,9 +32,9 @@ async function deleteOtium(id) {
         await api.delete();
     } catch {
         toast.add({
-            severity: 'error',
-            summary: 'Fehler',
-            detail: 'Ein unerwarteter Fehler ist beim Löschen des Otiums aufgetreten',
+            color: 'error',
+            title: 'Fehler',
+            description: 'Ein unerwarteter Fehler ist beim Löschen des Otiums aufgetreten',
         });
     } finally {
         await getOtia();
@@ -47,9 +47,9 @@ async function createOtium(data) {
         await api.post(data);
     } catch {
         toast.add({
-            severity: 'error',
-            summary: 'Fehler',
-            detail: 'Ein unerwarteter Fehler ist beim Erstellen des Otiums aufgetreten',
+            color: 'error',
+            title: 'Fehler',
+            description: 'Ein unerwarteter Fehler ist beim Erstellen des Otiums aufgetreten',
         });
     } finally {
         await getOtia();
@@ -76,9 +76,9 @@ async function setup() {
         loading.value = false;
     } catch {
         toast.add({
-            severity: 'error',
-            summary: 'Fehler',
-            detail: 'Ein unerwarteter Fehler ist beim Laden der Daten aufgetreten',
+            color: 'error',
+            title: 'Fehler',
+            description: 'Ein unerwarteter Fehler ist beim Laden der Daten aufgetreten',
         });
         await user.update();
     }
@@ -90,9 +90,9 @@ async function hide(data, value) {
         await api.put(null, { query: { value: value } });
     } catch {
         toast.add({
-            severity: 'error',
-            summary: 'Fehler',
-            detail: 'Ein unerwarteter Fehler ist beim Verstecken aufgetreten',
+            color: 'error',
+            title: 'Fehler',
+            description: 'Ein unerwarteter Fehler ist beim Verstecken aufgetreten',
         });
     } finally {
         await getOtia();

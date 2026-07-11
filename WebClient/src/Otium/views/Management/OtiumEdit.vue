@@ -1,13 +1,5 @@
 <script setup>
-import {
-    Accordion,
-    AccordionContent,
-    AccordionHeader,
-    AccordionPanel,
-    InputText,
-    Textarea,
-    useToast,
-} from 'primevue';
+import { Accordion, AccordionContent, AccordionHeader, AccordionPanel, InputText, Textarea } from 'primevue';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
 import { useUser } from '@/stores/user';
 import { mande } from 'mande';
@@ -90,9 +82,9 @@ async function setup() {
         loading.value = false;
     } catch {
         toast.add({
-            severity: 'error',
-            summary: 'Fehler',
-            detail: 'Ein unerwarteter Fehler ist beim Laden der Daten aufgetreten',
+            color: 'error',
+            title: 'Fehler',
+            description: 'Ein unerwarteter Fehler ist beim Laden der Daten aufgetreten',
         });
     }
 }
@@ -148,9 +140,9 @@ async function updateKlassenLimits() {
             await api.patch({ minKlasse: minVal, maxKlasse: maxVal });
         } catch (e) {
             toast.add({
-                severity: 'error',
-                summary: 'Fehler',
-                detail:
+                color: 'error',
+                title: 'Fehler',
+                description:
                     'Ein unerwarteter Fehler ist beim Speichern der Daten aufgetreten: ' +
                     e.body,
             });
@@ -167,9 +159,9 @@ async function simpleUpdate(type, value) {
         await getOtium(false);
     } catch {
         toast.add({
-            severity: 'error',
-            summary: 'Fehler',
-            detail: 'Ein unerwarteter Fehler ist beim Speichern der Daten aufgetreten',
+            color: 'error',
+            title: 'Fehler',
+            description: 'Ein unerwarteter Fehler ist beim Speichern der Daten aufgetreten',
         });
     }
 }
@@ -181,9 +173,9 @@ async function cancelTermin(id) {
         await getOtium(false);
     } catch {
         toast.add({
-            severity: 'error',
-            summary: 'Fehler',
-            detail: 'Der Termin konnte nicht abgesagt werden.',
+            color: 'error',
+            title: 'Fehler',
+            description: 'Der Termin konnte nicht abgesagt werden.',
         });
     }
 }
@@ -195,9 +187,9 @@ async function continueTermin(id) {
         await getOtium(false);
     } catch {
         toast.add({
-            severity: 'error',
-            summary: 'Fehler',
-            detail: 'Der Termin konnte nicht abgesagt werden.',
+            color: 'error',
+            title: 'Fehler',
+            description: 'Der Termin konnte nicht abgesagt werden.',
         });
     }
 }
@@ -209,9 +201,9 @@ async function deleteTermin(id) {
         await getOtium(false);
     } catch (e) {
         toast.add({
-            severity: 'error',
-            summary: 'Fehler',
-            detail: 'Der Termin konnte nicht gelöscht werden.',
+            color: 'error',
+            title: 'Fehler',
+            description: 'Der Termin konnte nicht gelöscht werden.',
         });
     }
 }
@@ -223,9 +215,9 @@ async function deleteReg(id) {
         await getOtium(false);
     } catch (e) {
         toast.add({
-            severity: 'error',
-            summary: 'Fehler',
-            detail: 'Die Wiederholung konnte nicht gelöscht werden.',
+            color: 'error',
+            title: 'Fehler',
+            description: 'Die Wiederholung konnte nicht gelöscht werden.',
         });
     }
 }
@@ -237,9 +229,9 @@ async function cancelReg(id, date) {
         await getOtium(false);
     } catch (e) {
         toast.add({
-            severity: 'error',
-            summary: 'Fehler',
-            detail: 'Die Wiederholung konnte nicht gekürzt werden.',
+            color: 'error',
+            title: 'Fehler',
+            description: 'Die Wiederholung konnte nicht gekürzt werden.',
         });
     }
 }
@@ -260,9 +252,9 @@ async function createTermin(data) {
     } catch (e) {
         console.log(e.response);
         toast.add({
-            severity: 'error',
-            summary: 'Fehler',
-            detail:
+            color: 'error',
+            title: 'Fehler',
+            description:
                 'Der Termin konnte nicht erstellt werden. \n' + (await e.body.split('(')[0]),
         });
     } finally {
@@ -287,9 +279,9 @@ async function createReg(data) {
     } catch (e) {
         console.log(e.response);
         toast.add({
-            severity: 'error',
-            summary: 'Fehler',
-            detail:
+            color: 'error',
+            title: 'Fehler',
+            description:
                 'Die Regelmäßigkeit konnte nicht erstellt werden. \n' +
                 (e.body ? e.body.split('(')[0] : ''),
         });
@@ -308,9 +300,9 @@ async function editReg(data) {
     } catch (e) {
         console.log(e.response);
         toast.add({
-            severity: 'error',
-            summary: 'Fehler',
-            detail:
+            color: 'error',
+            title: 'Fehler',
+            description:
                 'Die Regelmäßigkeit konnte nicht bearbeitet werden. \n' +
                 (e.body ? e.body.split('(')[0] : ''),
         });

@@ -2,7 +2,7 @@
 import { useCevex } from '@/composables/cevex';
 import { ref } from 'vue';
 import type { CevexInformation } from '@/models/admin/cevex';
-import { Button, Column, DataTable, useDialog, useToast } from 'primevue';
+import { Button, Column, DataTable, useDialog } from 'primevue';
 import UserPeek from '@/components/UserPeek.vue';
 import type { UserInfoMinimal } from '@/models/user/userInfoMinimal';
 import CevexAttachDialog from '@/components/Admin/CevexAttachDialog.vue';
@@ -29,9 +29,8 @@ function match(student: UserInfoMinimal) {
             if (!result?.data) return;
             await cevex.setMatch(student, result.data.result);
             toast.add({
-                severity: 'success',
-                summary: 'Zuweisung erfolgreich',
-                life: 10000,
+                color: 'success',
+                title: 'Zuweisung erfolgreich',
             });
             data.value = await cevex.getInformation();
         },
@@ -43,9 +42,8 @@ async function remove(student: UserInfoMinimal) {
         id: '00000-0000000000-AAAAAAA',
     });
     toast.add({
-        severity: 'success',
-        summary: 'Zuweisung erfolgreich entfernt',
-        life: 10000,
+        color: 'success',
+        title: 'Zuweisung erfolgreich entfernt',
     });
     data.value = await cevex.getInformation();
 }

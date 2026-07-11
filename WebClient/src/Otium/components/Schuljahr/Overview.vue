@@ -1,6 +1,6 @@
 <script setup>
 import { useOtiumStore } from '@/Otium/stores/otium.js';
-import { Button, Column, DataTable, useDialog, useToast } from 'primevue';
+import { Button, Column, DataTable, useDialog } from 'primevue';
 import { mande } from 'mande';
 import CreateSchoolday from '@/Otium/components/Schuljahr/CreateSchoolday.vue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
@@ -25,7 +25,6 @@ function addDay() {
         },
         emits: {
             onUpdate: () => {
-                console.log('Received update event');
                 settings.updateSchuljahr(true);
             },
         },
@@ -40,9 +39,9 @@ function deleteDay(event, data) {
         } catch (error) {
             console.error(error);
             toast.add({
-                severity: 'error',
-                summary: 'Fehler',
-                detail: 'Der Tag konnte nicht gelöscht werden.',
+                color: 'error',
+                title: 'Fehler',
+                description: 'Der Tag konnte nicht gelöscht werden.',
             });
         } finally {
             await settings.updateSchuljahr(true);

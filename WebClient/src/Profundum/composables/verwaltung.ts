@@ -1,4 +1,3 @@
-import { useToast } from 'primevue';
 import { mande, type MandeError } from 'mande';
 import type { QuartalEnrollmentOverview } from '@/Profundum/models/feedback';
 import type { ProfundumFachbereich, ProfundumSlot } from '@/Profundum/models/verwaltung';
@@ -13,39 +12,39 @@ export const useManagement = () => {
         try {
             return await api.get('/feedback/belegung');
         } catch (e) {
-            const mandeError: MandeError = e;
+            const mandeError: MandeError = e as MandeError;
             toast.add({
-                severity: 'error',
-                summary: 'Es ist ein Fehler aufgetreten',
-                detail: `Die Profunda konnten nicht geladen werden. Code ${mandeError.response.status}, ${mandeError.message}`,
+                color: 'error',
+                title: 'Es ist ein Fehler aufgetreten',
+                description: `Die Profunda konnten nicht geladen werden. Code ${mandeError.response.status}, ${mandeError.message}`,
             });
             return null;
         }
     }
 
-    async function getFachbereiche(): Promise<ProfundumFachbereich[]> {
+    async function getFachbereiche(): Promise<ProfundumFachbereich[] | null> {
         try {
             return await api.get('/fachbereich');
         } catch (e) {
-            const mandeError: MandeError = e;
+            const mandeError: MandeError = e as MandeError;
             toast.add({
-                severity: 'error',
-                summary: 'Es ist ein Fehler aufgetreten',
-                detail: `Die verfügbaren Kategorien der Profunda konnten nicht geladen werden. Code ${mandeError.response.status}, ${mandeError.message}`,
+                color: 'error',
+                title: 'Es ist ein Fehler aufgetreten',
+                description: `Die verfügbaren Kategorien der Profunda konnten nicht geladen werden. Code ${mandeError.response.status}, ${mandeError.message}`,
             });
             return null;
         }
     }
 
-    async function getSlots(): Promise<ProfundumSlot[]> {
+    async function getSlots(): Promise<ProfundumSlot[] | null> {
         try {
             return await api.get('/slot');
         } catch (e) {
-            const mandeError: MandeError = e;
+            const mandeError: MandeError = e as MandeError;
             toast.add({
-                severity: 'error',
-                summary: 'Es ist ein Fehler aufgetreten',
-                detail: `Die verfügbaren Slots der Profunda konnten nicht geladen werden. Code ${mandeError.response.status}, ${mandeError.message}`,
+                color: 'error',
+                title: 'Es ist ein Fehler aufgetreten',
+                description: `Die verfügbaren Slots der Profunda konnten nicht geladen werden. Code ${mandeError.response.status}, ${mandeError.message}`,
             });
             return null;
         }

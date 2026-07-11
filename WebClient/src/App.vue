@@ -8,7 +8,7 @@ import { useUser } from '@/stores/user';
 import { computed } from 'vue';
 import wappenLight from '/vdaa/favicon.svg?url';
 import wappenDark from '/vdaa/favicon-dark.svg?url';
-import { ConfirmPopup, Image, Toast, useToast } from 'primevue';
+import { ConfirmPopup } from 'primevue';
 import Login from '@/components/Login.vue';
 import { isDark } from '@/helpers/isdark';
 import ReloadPrompt from '@/components/ReloadPrompt.vue';
@@ -18,9 +18,9 @@ const user = useUser();
 const toast = useToast();
 user.update().catch(() => {
     toast.add({
-        severity: 'error',
-        summary: 'Fehler',
-        detail: 'Ein unerwarteter Fehler ist beim Laden der Nutzerdaten aufgetreten',
+        color: 'error',
+        title: 'Fehler',
+        description: 'Ein unerwarteter Fehler ist beim Laden der Nutzerdaten aufgetreten',
     });
 });
 
@@ -34,7 +34,6 @@ const toastProps: ToasterProps = {
 </script>
 
 <template>
-    <Toast />
     <ConfirmPopup />
     <DynamicDialog />
     <ReloadPrompt />
@@ -61,11 +60,11 @@ const toastProps: ToasterProps = {
                 </UContainer>
                 <div v-else class="min-container">
                     <div class="flex justify-center">
-                        <Image
+                        <img
                             :src="logo"
                             alt="Logo des Verein der Altafraner"
                             height="200"
-                        ></Image>
+                        ></img>
                     </div>
                     <h1>Willkommen bei der Afra-App</h1>
                     <p>Bitte logge dich ein, um die Afra-App zu nutzen.</p>

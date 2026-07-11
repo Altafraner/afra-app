@@ -1,5 +1,5 @@
 <script setup>
-import { InputText, MultiSelect, Select, Textarea, useToast } from 'primevue';
+import { InputText, MultiSelect, Select, Textarea } from 'primevue';
 import { mande } from 'mande';
 import { computed, onMounted, ref } from 'vue';
 import Grid from '@/components/Form/Grid.vue';
@@ -63,9 +63,9 @@ async function loadProfundum() {
 
     if (!profundum.value) {
         toast.add({
-            severity: 'error',
-            summary: 'Nicht gefunden',
-            detail: 'Profundum existiert nicht',
+            color: 'error',
+            title: 'Nicht gefunden',
+            description: 'Profundum existiert nicht',
         });
     }
 }
@@ -85,9 +85,9 @@ async function setup() {
         ]);
     } catch (e) {
         toast.add({
-            severity: 'error',
-            summary: 'Fehler',
-            detail: 'Konnte Daten nicht laden.',
+            color: 'error',
+            title: 'Fehler',
+            description: 'Konnte Daten nicht laden.',
         });
     } finally {
         loading.value = false;
@@ -103,12 +103,12 @@ async function savePatch(patch) {
             ...patch,
         });
         Object.assign(profundum.value, patch);
-        toast.add({ severity: 'success', summary: 'Gespeichert' });
+        toast.add({ color: 'success', title: 'Gespeichert' });
     } catch (e) {
         toast.add({
-            severity: 'error',
-            summary: 'Fehler',
-            detail: e?.body ?? 'Konnte nicht speichern',
+            color: 'error',
+            title: 'Fehler',
+            description: e?.body ?? 'Konnte nicht speichern',
         });
     } finally {
         await loadProfundum();

@@ -1,7 +1,7 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, h, ref } from 'vue';
 import EinwahlSelectorGroup from '@/Profundum/components/EinwahlSelectorGroup.vue';
-import { Button, Select, Toast, useToast } from 'primevue';
+import { Button, Select } from 'primevue';
 import { mande } from 'mande';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
 
@@ -46,21 +46,24 @@ async function send() {
                   .filter(Boolean);
 
         toast.add({
-            group: 'bc',
-            severity: 'error',
-            summary: 'Fehler',
-            detail: 'Deine Belegwünsche sind fehlerhaft.',
-            data: { errors },
-            life: 8000,
+            color: 'error',
+            title: 'Fehler',
+            description: h('span', {}, [
+                'Deine Belegwünsche sind fehlerhaft: ',
+                h(
+                    'ul',
+                    { class: 'ml-2' },
+                    errors.map((e) => h('li', {}, e)),
+                ),
+            ]),
         });
         return;
     }
 
     toast.add({
-        severity: 'success',
-        summary: 'Wünsche erfolgreich abgegeben',
-        detail: 'Deine Wünsche wurden erfolgreich gespeichert.',
-        life: 3000,
+        color: 'success',
+        title: 'Wünsche erfolgreich abgegeben',
+        description: 'Deine Wünsche wurden erfolgreich gespeichert.',
     });
 }
 
@@ -237,26 +240,6 @@ startup();
         label="Überprüfen und abgeben"
         @click="send"
     />
-
-    <Toast group="bc">
-        <template #message="slotProps">
-            <div class="flex flex-col gap-2">
-                <div class="font-bold">{{ slotProps.message.summary }}</div>
-                <ul
-                    v-if="Array.isArray(slotProps.message.data?.errors)"
-                    class="list-disc pl-5 m-0"
-                >
-                    <li v-for="(err, i) in slotProps.message.data.errors" :key="i">
-                        {{ err }}
-                    </li>
-                </ul>
-
-                <div v-else class="whitespace-pre-line">
-                    {{ slotProps.message.detail }}
-                </div>
-            </div>
-        </template>
-    </Toast>
 </template>
 
 <style scoped></style>

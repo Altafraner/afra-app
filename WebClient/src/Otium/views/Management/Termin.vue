@@ -1,15 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { useUser } from '@/stores/user';
-import {
-    Button,
-    FloatLabel,
-    InputNumber,
-    InputText,
-    Textarea,
-    ToggleSwitch,
-    useToast,
-} from 'primevue';
+import { Button, FloatLabel, InputNumber, InputText, Textarea, ToggleSwitch } from 'primevue';
 import { mande } from 'mande';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
 import { formatDate, formatPerson } from '@/helpers/formatters';
@@ -85,9 +77,9 @@ async function fetchData() {
     } catch (e) {
         await user.update();
         toast.add({
-            severity: 'error',
-            summary: 'Fehler',
-            detail: 'Es ist ein Fehler beim Laden der Daten aufgetreten.',
+            color: 'error',
+            title: 'Fehler',
+            description: 'Es ist ein Fehler beim Laden der Daten aufgetreten.',
         });
         console.error(e);
     } finally {
@@ -141,9 +133,9 @@ async function simpleUpdate(name, value, errmsg) {
         await api.patch({ value });
     } catch (e) {
         toast.add({
-            severity: 'error',
-            summary: 'Fehler',
-            detail: errmsg,
+            color: 'error',
+            title: 'Fehler',
+            description: errmsg,
         });
         console.error(e);
     } finally {

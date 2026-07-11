@@ -6,7 +6,7 @@ import Step from 'primevue/step';
 import StepPanel from 'primevue/steppanel';
 import FloatLabel from 'primevue/floatlabel';
 import DatePicker from 'primevue/datepicker';
-import { Button, Column, DataTable, Message, MultiSelect, Select, useToast } from 'primevue';
+import { Button, Column, DataTable, Message, MultiSelect, Select } from 'primevue';
 import Form from '@primevue/forms/form';
 import { formatDate, formatMachineDate } from '@/helpers/formatters';
 import { mande } from 'mande';
@@ -290,17 +290,16 @@ async function submit() {
     try {
         await api.post(data);
         toast.add({
-            severity: 'success',
-            summary: 'Erfolg',
-            detail: 'Die Termine wurden erfolgreich gespeichert.',
-            life: 15000,
+            color: 'success',
+            title: 'Erfolg',
+            description: 'Die Termine wurden erfolgreich gespeichert.',
         });
         await router.push({ name: 'Verwaltung' });
     } catch (error) {
         toast.add({
-            severity: 'error',
-            summary: 'Fehler',
-            detail: 'Die Termine konnten nicht gespeichert werden.',
+            color: 'error',
+            title: 'Fehler',
+            description: 'Die Termine konnten nicht gespeichert werden.',
         });
     }
 }
