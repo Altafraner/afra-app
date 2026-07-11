@@ -1,7 +1,7 @@
 import { mande, type MandeError } from 'mande';
 import type { CevexChangeRequest, CevexEntity, CevexInformation } from '../models/admin/cevex';
-import { useToast } from 'primevue';
 import type { UserInfoMinimal } from '../models/user/userInfoMinimal';
+import { h } from 'vue';
 
 export function useCevex() {
     const toast = useToast();
@@ -13,9 +13,9 @@ export function useCevex() {
         } catch (e) {
             const mandeError = e as MandeError;
             toast.add({
-                severity: 'error',
-                summary: 'Fehler beim Laden der Cevex-Informationen',
-                detail: `Entweder ist das Cevex-Modul deaktiviert oder es ist ein unerwarteter Fehler aufgetreten. \n Fehlercode: ${mandeError?.response?.status ?? 'unbekannt'}`,
+                color: 'error',
+                title: 'Fehler beim Laden der Cevex-Informationen',
+                description: `Entweder ist das Cevex-Modul deaktiviert oder es ist ein unerwarteter Fehler aufgetreten. \n Fehlercode: ${mandeError?.response?.status ?? 'unbekannt'}`,
             });
             throw e;
         }
@@ -31,9 +31,13 @@ export function useCevex() {
         } catch (e) {
             const mandeError = e as MandeError;
             toast.add({
-                severity: 'error',
-                summary: 'Fehler beim Aktualisieren der Cevex-Informationen',
-                detail: `Entweder ist das Cevex-Modul deaktiviert oder es ist ein unerwarteter Fehler aufgetreten. \n Fehlercode: ${mandeError?.response?.status ?? 'unbekannt'}`,
+                color: 'error',
+                title: 'Fehler beim Aktualisieren der Cevex-Informationen',
+                description: h('span', {}, [
+                    'Entweder ist das Cevex-Modul deaktiviert oder es ist ein unerwarteter Fehler aufgetreten.',
+                    h('br'),
+                    `Fehlercode: ${mandeError?.response?.status ?? 'unbekannt'}`,
+                ]),
             });
             throw e;
         }

@@ -2,7 +2,7 @@
 import { useFeedback } from '@/Profundum/composables/feedback';
 import { useManagement } from '@/Profundum/composables/verwaltung';
 import { computed, ref, watch } from 'vue';
-import { Button, Card, FloatLabel, Message, Select, useToast } from 'primevue';
+import { Button, Card, FloatLabel, Message, Select } from 'primevue';
 import { formatSlot, formatStudent } from '@/helpers/formatters';
 import type { UserInfoMinimal } from '@/models/user/userInfoMinimal';
 import type { AnkerOverview } from '../models/feedback';
@@ -91,10 +91,9 @@ async function save() {
         currentBewertung.value,
     );
     toast.add({
-        summary: 'Gespeichert',
-        detail: 'Das Feedback wurde erfolgreich gespeichert.',
-        life: 1000 * 3,
-        severity: 'success',
+        title: 'Gespeichert',
+        description: 'Das Feedback wurde erfolgreich gespeichert.',
+        color: 'success',
     });
     selectedStudent.value = undefined;
     currentBewertung.value = undefined;

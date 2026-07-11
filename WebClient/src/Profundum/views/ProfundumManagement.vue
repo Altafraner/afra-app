@@ -15,7 +15,6 @@ import {
     TabPanels,
     Tabs,
     Textarea,
-    useToast,
 } from 'primevue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
 
@@ -78,9 +77,9 @@ async function createProfundum() {
         };
     } catch (e) {
         toast.add({
-            severity: 'error',
-            summary: 'Fehler',
-            detail: e?.body ?? 'Konnte Profundum nicht erstellen',
+            color: 'error',
+            title: 'Fehler',
+            description: e?.body ?? 'Konnte Profundum nicht erstellen',
         });
     }
 }
@@ -99,17 +98,17 @@ function deleteProfundum(event, data) {
         try {
             await api.delete(`/${data.id}`);
             toast.add({
-                severity: 'success',
-                summary: 'Gelöscht',
-                detail: 'Profundum wurde entfernt',
+                color: 'success',
+                title: 'Gelöscht',
+                description: 'Profundum wurde entfernt',
             });
 
             await getProfunda();
         } catch (e) {
             toast.add({
-                severity: 'error',
-                summary: 'Fehler',
-                detail: e?.body ?? 'Konnte Profundum nicht löschen',
+                color: 'error',
+                title: 'Fehler',
+                description: e?.body ?? 'Konnte Profundum nicht löschen',
             });
         }
     }

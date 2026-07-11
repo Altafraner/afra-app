@@ -1,5 +1,5 @@
 <script setup>
-import { Button, Column, DataTable, Skeleton, Tag, useToast } from 'primevue';
+import { Button, Column, DataTable, Skeleton, Tag } from 'primevue';
 import { formatDate, formatStudent } from '@/helpers/formatters';
 import { ref } from 'vue';
 import { mande } from 'mande';
@@ -40,9 +40,9 @@ async function update() {
         mentees.value = result.mentees;
     } catch (error) {
         toast.add({
-            severity: 'error',
-            summary: 'Fehler',
-            detail: 'Ein unerwarteter Fehler ist beim Laden der Daten aufgetreten',
+            color: 'error',
+            title: 'Fehler',
+            description: 'Ein unerwarteter Fehler ist beim Laden der Daten aufgetreten',
         });
         await user.update();
     } finally {

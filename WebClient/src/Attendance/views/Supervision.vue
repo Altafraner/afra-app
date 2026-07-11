@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { computed, ref, shallowRef, Suspense } from 'vue';
-import { Button, useToast } from 'primevue';
+import { Button } from 'primevue';
 import { useRoute, useRouter } from 'vue-router';
 import { mande } from 'mande';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
@@ -29,9 +29,10 @@ if (
     const toast = useToast();
     const router = useRouter();
     toast.add({
-        severity: 'error',
-        summary: 'Fehlerhafte Weiterleitung',
-        detail: 'Bei der Weiterleitung auf diese Seite scheint etwas nicht funktioniert zu haben. Sollte der Fehler länger bestehen, wenden Sie sich bitte den/die Administrator:in',
+        color: 'error',
+        title: 'Fehlerhafte Weiterleitung',
+        description:
+            'Bei der Weiterleitung auf diese Seite scheint etwas nicht funktioniert zu haben. Sollte der Fehler länger bestehen, wenden Sie sich bitte den/die Administrator:in',
     });
     router.replace('/');
 }

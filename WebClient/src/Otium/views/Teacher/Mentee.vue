@@ -1,5 +1,5 @@
 <script setup>
-import { Button, Skeleton, useToast } from 'primevue';
+import { Button, Skeleton } from 'primevue';
 import { computed, ref } from 'vue';
 import { mande } from 'mande';
 import { useUser } from '@/stores/user';
@@ -47,9 +47,9 @@ async function fetchData(getAll = false) {
     } catch (e) {
         await user.update();
         toast.add({
-            severity: 'error',
-            summary: 'Fehler',
-            detail: 'Es ist ein Fehler beim Laden der Daten aufgetreten.',
+            color: 'error',
+            title: 'Fehler',
+            description: 'Es ist ein Fehler beim Laden der Daten aufgetreten.',
         });
         console.error(e);
     } finally {

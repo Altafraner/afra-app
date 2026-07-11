@@ -1,7 +1,7 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 import { mande } from 'mande';
-import { Button, Calendar, Dialog, useToast } from 'primevue';
+import { Button, Calendar, Dialog } from 'primevue';
 
 import Grid from '@/components/Form/Grid.vue';
 import GridEditRow from '@/components/Form/GridEditRow.vue';
@@ -46,16 +46,16 @@ async function createEinwahlzeitraum() {
                 : null,
         });
 
-        toast.add({ severity: 'success', summary: 'Einwahlzeitraum angelegt' });
+        toast.add({ color: 'success', title: 'Einwahlzeitraum angelegt' });
 
         dialogOpen.value = false;
         createModel.value = { einwahlStart: null, einwahlStop: null };
         await load();
     } catch (e) {
         toast.add({
-            severity: 'error',
-            summary: 'Fehler',
-            detail: e?.body ?? 'Konnte Einwahlzeitraum nicht speichern',
+            color: 'error',
+            title: 'Fehler',
+            description: e?.body ?? 'Konnte Einwahlzeitraum nicht speichern',
         });
     }
 }
@@ -68,13 +68,13 @@ async function updateEinwahlzeitraum(z) {
             einwahlStop: z.einwahlStopDate ? z.einwahlStopDate.toISOString() : null,
         });
 
-        toast.add({ severity: 'success', summary: 'Einwahlzeitraum gespeichert' });
+        toast.add({ color: 'success', title: 'Einwahlzeitraum gespeichert' });
         await load();
     } catch (e) {
         toast.add({
-            severity: 'error',
-            summary: 'Fehler',
-            detail: e?.body ?? 'Konnte Einwahlzeitraum nicht speichern',
+            color: 'error',
+            title: 'Fehler',
+            description: e?.body ?? 'Konnte Einwahlzeitraum nicht speichern',
         });
     }
 }
@@ -85,16 +85,16 @@ async function deleteEinwahlzeitraum(z) {
     try {
         await api.delete(`/${z.id}`);
         toast.add({
-            severity: 'success',
-            summary: 'Gelöscht',
-            detail: 'Einwahlzeitraum wurde entfernt',
+            color: 'success',
+            title: 'Gelöscht',
+            description: 'Einwahlzeitraum wurde entfernt',
         });
         await load();
     } catch (e) {
         toast.add({
-            severity: 'error',
-            summary: 'Fehler',
-            detail: e?.body ?? 'Konnte Einwahlzeitraum nicht löschen',
+            color: 'error',
+            title: 'Fehler',
+            description: e?.body ?? 'Konnte Einwahlzeitraum nicht löschen',
         });
     }
 }

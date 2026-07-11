@@ -1,15 +1,7 @@
 <script setup>
 import { mande } from 'mande';
 import { onMounted, ref } from 'vue';
-import {
-    Button,
-    FloatLabel,
-    InputNumber,
-    InputText,
-    MultiSelect,
-    Tag,
-    useToast,
-} from 'primevue';
+import { Button, FloatLabel, InputNumber, InputText, MultiSelect, Tag } from 'primevue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
 import Dialog from 'primevue/dialog';
 import { formatSlot, formatStudent } from '@/helpers/formatters.ts';
@@ -51,7 +43,7 @@ async function load() {
 async function createInstanz() {
     try {
         const id = await apiInstanz.post(newInstanz.value);
-        toast.add({ severity: 'success', summary: 'Instanz erstellt' });
+        toast.add({ color: 'success', title: 'Instanz erstellt' });
         newInstanz.value = {
             profundumId: props.profundumId,
             maxEinschreibungen: 15,
@@ -60,7 +52,7 @@ async function createInstanz() {
         };
         await load();
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Fehler', detail: e.body });
+        toast.add({ color: 'error', title: 'Fehler', description: e.body });
     } finally {
         createDialogVisible.value = false;
     }
@@ -69,7 +61,7 @@ async function createInstanz() {
 async function updateInstanz(inst) {
     dialogVisible.value = true;
     await apiInstanz.put(`/${inst.id}`, inst);
-    toast.add({ severity: 'success', summary: 'Gespeichert', life: 10000 });
+    toast.add({ color: 'success', title: 'Gespeichert' });
     await load();
 }
 
@@ -83,7 +75,7 @@ function deleteInstanz(event, id) {
     );
     async function doDelete() {
         await apiInstanz.delete(`/${id}`);
-        toast.add({ severity: 'success', summary: 'Instanz gelöscht' });
+        toast.add({ color: 'success', title: 'Instanz gelöscht' });
         await load();
     }
 }

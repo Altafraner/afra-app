@@ -1,7 +1,7 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { onMounted, ref } from 'vue';
 import { mande } from 'mande';
-import { Button, Dropdown, InputNumber, Dialog, useToast } from 'primevue';
+import { Button, Dialog, Dropdown, InputNumber } from 'primevue';
 
 import Grid from '@/components/Form/Grid.vue';
 import GridEditRow from '@/components/Form/GridEditRow.vue';
@@ -49,7 +49,7 @@ async function createSlot() {
             einwahlZeitraumId: createModel.value.einwahlZeitraumId,
         });
 
-        toast.add({ severity: 'success', summary: 'Slot angelegt' });
+        toast.add({ color: 'success', title: 'Slot angelegt' });
         dialogOpen.value = false;
 
         createModel.value = {
@@ -62,9 +62,9 @@ async function createSlot() {
         await load();
     } catch (e) {
         toast.add({
-            severity: 'error',
-            summary: 'Fehler',
-            detail: e?.body ?? 'Konnte Slot nicht speichern',
+            color: 'error',
+            title: 'Fehler',
+            description: e?.body ?? 'Konnte Slot nicht speichern',
         });
     }
 }
@@ -79,13 +79,13 @@ async function updateSlot(slot) {
             einwahlZeitraumId: slot.einwahlZeitraumId,
         });
 
-        toast.add({ severity: 'success', summary: 'Slot gespeichert' });
+        toast.add({ color: 'success', title: 'Slot gespeichert' });
         await load();
     } catch (e) {
         toast.add({
-            severity: 'error',
-            summary: 'Fehler',
-            detail: e?.body ?? 'Konnte Slot nicht speichern',
+            color: 'error',
+            title: 'Fehler',
+            description: e?.body ?? 'Konnte Slot nicht speichern',
         });
     }
 }
@@ -95,13 +95,13 @@ async function deleteSlot(slot) {
 
     try {
         await apiSlots.delete(`/${slot.id}`);
-        toast.add({ severity: 'success', summary: 'Slot gelöscht' });
+        toast.add({ color: 'success', title: 'Slot gelöscht' });
         await load();
     } catch (e) {
         toast.add({
-            severity: 'error',
-            summary: 'Fehler',
-            detail: e?.body ?? 'Konnte Slot nicht löschen',
+            color: 'error',
+            title: 'Fehler',
+            description: e?.body ?? 'Konnte Slot nicht löschen',
         });
     }
 }
