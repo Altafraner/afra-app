@@ -29,7 +29,7 @@ const navItems = computed<NavBreadcrumbElement[]>(() => [
         },
     },
     {
-        to: 'Feedback',
+        label: 'Feedback',
     },
 ]);
 </script>

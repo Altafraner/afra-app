@@ -1,12 +1,12 @@
-<script setup>
+<script lang="ts" setup>
 import { useFeedback } from '@/Profundum/composables/feedback';
-import { Button, Card, useDialog } from 'primevue';
 import { ref } from 'vue';
 import SimpleTextDialog from '@/components/Form/SimpleTextDialog.vue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
 import KriteriumCreationForm from '@/Profundum/components/Forms/KriteriumCreationForm.vue';
 import { convertMarkdownToHtml } from '@/composables/markdown.ts';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
+import { Anker, FeedbackKategorie } from '@/Profundum/models/feedback.ts';
 
 const navItems = [
     {
@@ -27,7 +27,7 @@ const navItems = [
 ];
 
 const feedback = useFeedback();
-const dialog = useDialog();
+const overlay = useOverlay();
 const confirmPopover = useConfirmPopover();
 
 const ankerByKategorie = ref();
@@ -35,52 +35,45 @@ const kategorien = ref();
 
 async function setup() {
     const tmp = await feedback.getAllAnker();
+    if (tmp == null) return;
     ankerByKategorie.value = tmp.ankerByKategorie;
     kategorien.value = tmp.kategorien;
 }
 
 await setup();
 
-function startCreateAnker(kategorieId) {
-    dialog.open(SimpleTextDialog, {
-        props: {
-            header: 'Anker hinzufügen',
-            modal: true,
-        },
-        data: {
-            maxLength: 200,
-            minLength: 1,
-            label: 'Bezeichnung',
-            buttonLabel: 'Hinzufügen',
-        },
-        onClose: async ({ data }) => {
-            await feedback.createAnker(data.result, kategorieId);
-            await setup();
-        },
+async function startCreateAnker(kategorieId: string) {
+    const modal = overlay.create(SimpleTextDialog);
+    const data = await modal.open({
+        title: 'Anker hinzufügen',
+        label: 'Bezeichnung',
+        placeholder: 'Bezeichnung eingeben',
+        buttonText: 'Hinzufügen',
+        minLength: 1,
+        maxLength: 200,
     });
+    if (!data) return;
+    await feedback.createAnker(data, kategorieId);
+    await setup();
 }
 
-function startChangeAnker(anker) {
-    dialog.open(SimpleTextDialog, {
-        props: {
-            header: 'Anker ändern',
-            modal: true,
-        },
-        data: {
-            maxLength: 200,
-            minLength: 1,
-            label: 'Bezeichnung',
-            buttonLabel: 'Ändern',
-            default: anker.label,
-        },
-        onClose: async ({ data }) => {
-            await feedback.updateAnker(anker.id, data.result, anker.kategorieId);
-            await setup();
-        },
+async function startChangeAnker(anker: Anker) {
+    const modal = overlay.create(SimpleTextDialog);
+    const data = await modal.open({
+        title: 'Anker ändern',
+        label: 'Bezeichnung',
+        placeholder: 'Bezeichnung eingeben',
+        buttonText: 'Ändern',
+        minLength: 1,
+        maxLength: 200,
+        default: anker.label,
     });
+    if (!data) return;
+    await feedback.updateAnker(anker.id, data, anker.kategorieId);
+    await setup();
 }
 
-function startDeleteAnker(evt, anker) {
+function startDeleteAnker(evt: MouseEvent, anker: Anker) {
     confirmPopover.openConfirmDialog(
         evt,
         deleteThis,
@@ -94,47 +87,36 @@ function startDeleteAnker(evt, anker) {
     }
 }
 
-function startAddKategorie() {
-    dialog.open(KriteriumCreationForm, {
-        props: {
-            header: 'Kriterium hinzufügen',
-            modal: true,
-        },
-        data: {
-            variant: 'create',
-        },
-        onClose: async ({ data }) => {
-            await feedback.createKategorie(data.label, data.fachbereiche);
-            await setup();
-        },
+async function startAddKategorie() {
+    const modal = overlay.create(KriteriumCreationForm);
+    const data = await modal.open({
+        fachbereiche: undefined,
+        isFachlich: undefined,
+        label: undefined,
+        variant: 'create',
     });
+    await feedback.createKategorie(data.label, data.fachbereiche, data.isFachlich);
+    await setup();
 }
 
-function startEditKategorie(kategorie) {
-    dialog.open(KriteriumCreationForm, {
-        props: {
-            header: 'Kriterium bearbeiten',
-            modal: true,
-        },
-        data: {
-            variant: 'update',
-            label: kategorie.label,
-            fachbereiche: kategorie.fachbereiche.map((k) => k.id),
-            isFachlich: kategorie.isFachlich,
-        },
-        onClose: async ({ data }) => {
-            await feedback.updateKategorie(
-                kategorie.id,
-                data.label,
-                data.fachbereiche,
-                data.isFachlich,
-            );
-            await setup();
-        },
+async function startEditKategorie(kategorie: FeedbackKategorie) {
+    const modal = overlay.create(KriteriumCreationForm);
+    const data = await modal.open({
+        fachbereiche: kategorie.fachbereiche.map((k) => k.id),
+        isFachlich: kategorie.isFachlich,
+        label: kategorie.label,
+        variant: 'update',
     });
+    await feedback.updateKategorie(
+        kategorie.id,
+        data.label,
+        data.fachbereiche,
+        data.isFachlich,
+    );
+    await setup();
 }
 
-function startDeleteKategorie(evt, kategorieId) {
+function startDeleteKategorie(evt: MouseEvent, kategorieId: string) {
     confirmPopover.openConfirmDialog(
         evt,
         deleteThis,
@@ -153,80 +135,76 @@ function startDeleteKategorie(evt, kategorieId) {
     <nav-breadcrumb :items="navItems" />
     <div class="flex justify-between items-baseline">
         <h1 class="mb-4">Kriterium-Verwaltung</h1>
-        <Button
+        <UButton
             class="mr-2"
-            icon="pi pi-plus"
-            label="Kategorie hinzufügen"
-            severity="primary"
-            variant="text"
+            icon="i-lucide-plus"
+            label="Neue Kategorie"
+            variant="subtle"
             @click="startAddKategorie"
         />
     </div>
     <div class="flex gap-4 flex-col">
-        <Card v-for="kategorie in kategorien">
+        <UCard v-for="kategorie in kategorien">
             <template #title>
-                <h3 class="mt-0 mb-0">
-                    <template v-if="kategorie.isFachlich">Fachliche Kompetenz – </template
-                    >{{ kategorie.label }}
-                </h3>
+                <template v-if="kategorie.isFachlich">Fachliche Kompetenz – </template
+                >{{ kategorie.label }}
             </template>
-            <template #content>
-                <div class="grid grid-cols-[1fr_auto] items-baseline">
+            <template #default>
+                <div class="grid grid-cols-[1fr_auto] items-baseline gap-1">
                     <template v-for="anker in ankerByKategorie[kategorie.id]">
                         <span v-html="convertMarkdownToHtml(anker.label, true)" />
-                        <span class="flex gap-2 items-baseline justify-end">
-                            <Button
-                                v-tooltip="'Bearbeiten'"
-                                aria-label="Bearbeiten"
-                                icon="pi pi-pencil"
-                                severity="secondary"
-                                size="small"
-                                variant="text"
-                                @click="startChangeAnker(anker)"
-                            />
-                            <Button
-                                v-tooltip="'Löschen'"
-                                aria-label="Löschen"
-                                icon="pi pi-times"
-                                severity="danger"
-                                size="small"
-                                variant="text"
-                                @click="startDeleteAnker($event, anker)"
-                            />
+                        <span class="flex gap-1 items-baseline justify-end">
+                            <UTooltip text="Bearbeiten">
+                                <UButton
+                                    aria-label="Bearbeiten"
+                                    color="secondary"
+                                    icon="i-lucide-pencil"
+                                    size="sm"
+                                    variant="ghost"
+                                    @click="startChangeAnker(anker)"
+                                />
+                            </UTooltip>
+                            <UTooltip text="Löschen">
+                                <UButton
+                                    aria-label="Löschen"
+                                    color="error"
+                                    icon="i-lucide-x"
+                                    size="sm"
+                                    variant="ghost"
+                                    @click="startDeleteAnker($event, anker)"
+                                />
+                            </UTooltip>
                         </span>
                     </template>
                 </div>
             </template>
             <template #footer>
-                <div class="flex justify-between items-baseline mt-4">
+                <div class="flex justify-between items-baseline">
                     <span class="flex gap-4 items-baseline">
-                        <Button
-                            icon="pi pi-pencil"
+                        <UButton
+                            color="secondary"
                             label="Bearbeiten"
-                            severity="secondary"
-                            size="small"
-                            variant="text"
+                            icon="i-lucide-pencil"
+                            variant="subtle"
                             @click="startEditKategorie(kategorie)"
                         />
-                        <Button
-                            icon="pi pi-times"
+                        <UButton
+                            color="error"
                             label="Löschen"
-                            severity="danger"
-                            size="small"
-                            variant="text"
+                            icon="i-lucide-x"
+                            variant="subtle"
                             @click="startDeleteKategorie($event, kategorie.id)"
                         />
                     </span>
-                    <Button
-                        class="mr-2"
-                        icon="pi pi-plus"
-                        label="Anker hinzufügen"
-                        severity="primary"
-                        size="small"
+                    <UButton
+                        color="primary"
+                        icon="i-lucide-plus"
+                        label="Neuer Anker"
+                        variant="subtle"
                         @click="startCreateAnker(kategorie.id)"
                     />
                 </div>
             </template>
-        </Card>
+        </UCard>
     </div>
 </template>

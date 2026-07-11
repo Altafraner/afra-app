@@ -1,13 +1,11 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { useUser } from '@/stores/user';
-import { Button, FloatLabel, InputNumber, InputText, Textarea, ToggleSwitch } from 'primevue';
 import { mande } from 'mande';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
 import { formatDate, formatPerson } from '@/helpers/formatters';
 import Grid from '@/components/Form/Grid.vue';
 import GridEditRow from '@/components/Form/GridEditRow.vue';
-import PersonSelector from '@/components/PersonSelector.vue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
 import HybridAttendanceTable from '@/Attendance/components/HybridAttendanceTable.vue';
 import { convertMarkdownToHtml } from '@/composables/markdown.ts';
@@ -215,10 +213,9 @@ await fetchData();
                 {{ otium.ort }}
             </template>
             <template #edit>
-                <FloatLabel class="w-full" variant="on">
-                    <InputText id="ort" v-model="ort" fluid maxlength="20" name="ort" />
-                    <label for="ort">Ort</label>
-                </FloatLabel>
+                <UFormField label="Ort" required>
+                    <UInput v-model="ort" :maxlength="20" class="w-full" />
+                </UFormField>
             </template>
         </GridEditRow>
         <GridEditRow
@@ -235,11 +232,8 @@ await fetchData();
             </template>
             <template #edit>
                 <div class="w-full flex flex-col gap-3">
-                    <div class="flex justify-between">
-                        <label for="betreuerSwitch">Betreuer:in zuweisen</label>
-                        <ToggleSwitch v-model="betreuerZuweisenSelected" id="betreuerSwitch" />
-                    </div>
-                    <PersonSelector
+                    <USwitch v-model="betreuerZuweisenSelected" label="Betreuer:in zuweisen" />
+                    <PersonSelectorNuxt
                         v-model="personSelected"
                         :disabled="!betreuerZuweisenSelected"
                         name="tutor"
@@ -249,7 +243,7 @@ await fetchData();
             </template>
         </GridEditRow>
         <GridEditRow
-            header="max. Teilnehner:innen"
+            header="max. Teilnehmer:innen"
             :hide-edit="!mayEdit"
             @edit="startEditMaxEnrollments"
             @update="updateMaxEnrollments"
@@ -259,25 +253,21 @@ await fetchData();
             </template>
             <template #edit>
                 <div class="w-full flex flex-col gap-3">
-                    <div class="flex justify-between">
-                        <label for="maxEnrollmentSwitch"
-                            >Teilnehmer:innen-Zahl beschränken</label
-                        >
-                        <ToggleSwitch
-                            v-model="maxEnrollmentsSetzenSelected"
-                            id="maxEnrollmentSwitch"
-                        />
-                    </div>
-                    <FloatLabel v-if="maxEnrollmentsSetzenSelected" class="w-full" variant="on">
-                        <InputNumber
-                            id="maxEnrollmentInput"
+                    <USwitch
+                        v-model="maxEnrollmentsSetzenSelected"
+                        label="Teilnehmer:innen-Zahl beschränken"
+                    />
+                    <UFormField
+                        v-if="maxEnrollmentsSetzenSelected"
+                        label="Max. Teilnehmer:innen"
+                    >
+                        <UInputNumber
                             v-model="maxEnrollmentsSelected"
-                            :disabled="!maxEnrollmentsSetzenSelected"
-                            fluid
-                            name="maxEnrollments"
+                            :min="1"
+                            class="w-full"
+                            placeholder="Max. Teilnehmer:innen-Zahl eingeben"
                         />
-                        <label for="maxEnrollmentInput">max. Teilnehmer:innen</label>
-                    </FloatLabel>
+                    </UFormField>
                 </div>
             </template>
         </GridEditRow>
@@ -292,14 +282,15 @@ await fetchData();
             </template>
             <template #edit>
                 <div class="w-full flex flex-col gap-3">
-                    <div class="flex justify-between">
-                        <label for="bezeichnungSwitch">Bezeichnung überschreiben</label>
-                        <ToggleSwitch v-model="bezeichnungSelected" id="bezeichnungSwitch" />
-                    </div>
-                    <FloatLabel v-if="bezeichnungSelected" class="w-full" variant="on">
-                        <InputText id="bezeichnung" v-model="bezeichnung" fluid />
-                        <label for="bezeichnung">Bezeichnung</label>
-                    </FloatLabel>
+                    <USwitch v-model="bezeichnungSelected" label="Bezeichnung überschreiben" />
+                    <UFormField v-if="bezeichnungSelected" label="Bezeichnung">
+                        <UInput
+                            v-model="bezeichnung"
+                            class="w-full"
+                            maxlength="70"
+                            placeholder="Bezeichnung eingeben"
+                        />
+                    </UFormField>
                 </div>
             </template>
         </GridEditRow>
@@ -315,21 +306,24 @@ await fetchData();
             <template #body v-else> Unverändert </template>
             <template #edit>
                 <div class="w-full flex flex-col gap-3">
-                    <div class="flex justify-between">
-                        <label for="beschreibungSwitch">Beschreibung überschreiben</label>
-                        <ToggleSwitch v-model="beschreibungSelected" id="beschreibungSwitch" />
-                    </div>
-                    <FloatLabel v-if="beschreibungSelected" class="w-full" variant="on">
-                        <Textarea
-                            id="beschreibung"
+                    <USwitch
+                        v-model="beschreibungSelected"
+                        label="Beschreibung überschreiben"
+                    />
+                    <UFormField
+                        v-if="beschreibungSelected"
+                        label="Beschreibung"
+                        name="beschreibung"
+                    >
+                        <UTextarea
                             v-model="beschreibung"
-                            auto-resize
-                            fluid
-                            maxlength="500"
-                            rows="2"
+                            :maxlength="500"
+                            :rows="2"
+                            autoresize
+                            class="w-full"
+                            placeholder="Beschreibung eingeben"
                         />
-                        <label for="beschreibung">Beschreibung</label>
-                    </FloatLabel>
+                    </UFormField>
                 </div>
             </template>
         </GridEditRow>
@@ -337,18 +331,18 @@ await fetchData();
     <div class="flex justify-between items-baseline gap-3 flex-wrap mt-3 mb-1">
         <h2>Einschreibungen</h2>
         <template v-if="otium.isSupervisionEnabled || user.isOtiumsverantwortlich">
-            <Button
+            <UButton
                 v-if="!aufsichtRunning"
-                icon="pi pi-eye"
+                color="primary"
                 label="Anwesenheitskontrolle"
-                severity="secondary"
+                icon="i-lucide-eye"
                 @click="startAufsicht"
             />
-            <Button
+            <UButton
                 v-else
-                icon="pi pi-stop"
+                color="success"
                 label="Anwesenheitskontrolle abschließen"
-                severity="success"
+                icon="i-lucide-square"
                 @click="stopAufsicht"
             />
         </template>
@@ -363,15 +357,15 @@ await fetchData();
         @update-attendance="(data) => (otium.einschreibungen = data)"
     >
         <template v-if="!aufsichtRunning && !otium.isDoneOrRunning" #studentActions="{ data }">
-            <Button
-                v-tooltip="'Ausschreiben'"
-                aria-label="Ausschreiben"
-                icon="pi pi-times"
-                severity="danger"
-                size="small"
-                variant="text"
-                @click="(evt) => initRemove(evt, data.student)"
-            />
+            <UTooltip text="Ausschreiben">
+                <UButton
+                    aria-label="Ausschreiben"
+                    color="error"
+                    icon="i-lucide-x"
+                    variant="ghost"
+                    @click="(evt) => initRemove(evt, data.student)"
+                />
+            </UTooltip>
         </template>
     </HybridAttendanceTable>
 </template>

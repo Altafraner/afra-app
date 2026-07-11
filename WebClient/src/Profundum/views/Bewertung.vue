@@ -2,7 +2,6 @@
 import { useFeedback } from '@/Profundum/composables/feedback';
 import { useManagement } from '@/Profundum/composables/verwaltung';
 import { computed, ref, watch } from 'vue';
-import { Button, Card, FloatLabel, Message, Select } from 'primevue';
 import { formatSlot, formatStudent } from '@/helpers/formatters';
 import type { UserInfoMinimal } from '@/models/user/user';
 import type { AnkerOverview } from '../models/feedback';
@@ -39,13 +38,21 @@ const profunda = computed(() => {
     if (!quartale || !quartal.value) return [];
     return quartale.find((q) => q.slot.id == quartal.value)?.profunda ?? [];
 });
-const students = computed<UserInfoMinimal[]>(() => {
+const students = computed(() => {
     if (!quartale || !quartal.value || !profundum.value) return [];
-    return profunda.value.find((p) => p.id == profundum.value)?.students ?? [];
+    return (
+        profunda.value
+            .find((p) => p.id == profundum.value)
+            ?.students.map((s) => ({
+                label: formatStudent(s),
+                original: s,
+                value: s.id,
+            })) ?? []
+    );
 });
 
 async function selectStudent() {
-    selectedStudent.value = students.value.find((s) => s.id === student.value);
+    selectedStudent.value = students.value.find((s) => s.value === student.value)?.original;
     currentBewertung.value = await feedback.getBewertung(
         student.value!,
         profundum.value!,
@@ -64,8 +71,15 @@ function cleanup() {
 }
 
 watch(student, cleanup);
-watch(profundum, cleanup);
-watch(quartal, cleanup);
+watch(profundum, () => {
+    student.value = undefined;
+    cleanup();
+});
+watch(quartal, () => {
+    profundum.value = undefined;
+    student.value = undefined;
+    cleanup();
+});
 
 const warn = computed<boolean>(() => {
     const usedAnker: string[] = [];
@@ -73,8 +87,8 @@ const warn = computed<boolean>(() => {
         if (currentBewertung.value[ankerId] != null) usedAnker.push(ankerId);
     }
     const categories = new Set();
-    for (const catId in anker.value.ankerByKategorie) {
-        if (anker.value.ankerByKategorie[catId].some((a) => usedAnker.includes(a.id))) {
+    for (const catId in anker.value?.ankerByKategorie ?? []) {
+        if (anker.value?.ankerByKategorie[catId].some((a) => usedAnker.includes(a.id))) {
             categories.add(catId);
         }
     }
@@ -82,7 +96,13 @@ const warn = computed<boolean>(() => {
 });
 
 async function save() {
-    if (!currentBewertung.value || !anker.value || !selectedStudent.value || !profundum.value)
+    if (
+        !currentBewertung.value ||
+        !anker.value ||
+        !selectedStudent.value ||
+        !profundum.value ||
+        !quartal.value
+    )
         return;
     await feedback.bewertungAbgeben(
         selectedStudent.value.id,
@@ -98,62 +118,67 @@ async function save() {
     selectedStudent.value = undefined;
     currentBewertung.value = undefined;
 }
+
+const quartaleSelect = computed(() => {
+    if (quartale == null) return [];
+    return quartale.map((q) => ({
+        label: formatSlot(q.slot),
+        value: q.slot.id,
+    }));
+});
 </script>
 
 <template>
     <nav-breadcrumb :items="navItems" />
     <h1>Profundums-Feedback</h1>
     <div class="flex flex-col gap-4">
-        <FloatLabel variant="on">
-            <Select
-                id="quartal"
+        <UFormField label="Quartal" required>
+            <USelect
+                :items="quartaleSelect"
                 v-model="quartal"
-                :options="quartale ?? undefined"
-                fluid
-                option-value="slot.id"
-            >
-                <template #option="{ option }">
-                    {{ formatSlot(option.slot) }}
-                </template>
-                <template #value="{ value }"
-                    ><template v-if="value">{{
-                        formatSlot(quartale.find((slot) => slot.slot.id == value).slot)
-                    }}</template></template
-                >
-            </Select>
-            <label for="quartal">Quartal</label>
-        </FloatLabel>
-        <FloatLabel variant="on">
-            <Select
-                id="profundum"
+                class="w-full"
+                label-key="label"
+                placeholder="Quartal wählen"
+                value-key="value"
+            />
+        </UFormField>
+        <UFormField label="Profundum" required>
+            <USelect
+                :items="profunda"
                 v-model="profundum"
-                :options="profunda"
-                fluid
-                option-label="label"
-                option-value="id"
+                class="w-full"
+                label-key="label"
+                placeholder="Profundum auswählen"
+                value-key="id"
             />
-            <label for="profundum">Profundum</label>
-        </FloatLabel>
-        <FloatLabel variant="on">
-            <Select
-                id="student"
+        </UFormField>
+        <UFormField label="Schüler:in" required>
+            <USelect
+                :items="students"
                 v-model="student"
-                :option-label="formatStudent"
-                :options="students"
-                fluid
-                option-value="id"
+                class="w-full"
+                label-key="label"
+                placeholder="Schüler:in wählen"
+                value-key="value"
             />
-            <label for="student">Student</label>
-        </FloatLabel>
-        <Button fluid label="Laden" @click="selectStudent" />
+        </UFormField>
+        <UButton
+            :ui="{
+                base: 'justify-center',
+            }"
+            class="mt-3"
+            label="Laden"
+            size="lg"
+            @click="selectStudent"
+        />
     </div>
     <template v-if="currentBewertung && anker && selectedStudent">
         <h2 class="mt-8">{{ formatStudent(selectedStudent) }}</h2>
         <div class="flex gap-4 flex-col">
-            <Card v-for="kategorie in anker.kategorien">
-                <template #title>
+            <UCard v-for="kategorie in anker.kategorien" variant="subtle">
+                <template #header>
                     <div class="grid grid-cols-[1fr_repeat(5,4rem)] align-baseline gap-x-1">
-                        <span
+                        <span class="text-highlighted font-semibold"
                             ><template v-if="kategorie.isFachlich"
                                 >Fachliche Kompetenz – </template
                             >{{ kategorie.label }}</span
@@ -166,46 +191,62 @@ async function save() {
                         >
                     </div>
                 </template>
-                <template #content>
-                    <div
-                        class="grid grid-cols-[1fr_repeat(5,4rem)] align-baseline gap-y-2 gap-x-1"
-                    >
+                <template #default>
+                    <div class="grid grid-cols-[1fr_repeat(5,4rem)] gap-y-2 gap-x-1">
                         <template v-for="currentAnker in anker.ankerByKategorie[kategorie.id]">
-                            <span v-html="convertMarkdownToHtml(currentAnker.label, true)" />
-                            <Button
+                            <span class="flex items-center">
+                                <span
+                                    class=""
+                                    v-html="convertMarkdownToHtml(currentAnker.label, true)"
+                                />
+                            </span>
+                            <UButton
                                 v-for="i in [1, 2, 3, 4]"
                                 :variant="
-                                    currentBewertung[currentAnker.id] == i
-                                        ? undefined
-                                        : 'outlined'
+                                    currentBewertung[currentAnker.id] == i ? 'solid' : 'outline'
                                 "
-                                severity="success"
-                                @click="() => (currentBewertung[currentAnker.id] = i)"
+                                class="min-h-10"
+                                color="success"
+                                @click="
+                                    () => {
+                                        currentBewertung[currentAnker.id] = i;
+                                    }
+                                "
                             />
-                            <Button
+                            <UButton
                                 :variant="
                                     currentBewertung[currentAnker.id] == null
-                                        ? undefined
-                                        : 'outlined'
+                                        ? 'soft'
+                                        : 'outline'
                                 "
                                 label="N/A"
-                                severity="secondary"
-                                @click="() => (currentBewertung[currentAnker.id] = null)"
+                                color="neutral"
+                                @click="
+                                    () => {
+                                        currentBewertung[currentAnker.id] = null;
+                                    }
+                                "
                             />
                         </template>
                     </div>
                 </template>
-            </Card>
+            </UCard>
         </div>
-        <Message v-if="warn" class="mt-8" severity="warn"
-            >Bitte nutzen Sie Anker aus mindestens <strong>drei Kategorien.</strong></Message
-        >
-        <Button
+        <UAlert v-if="warn" class="mt-8" color="warning" title="Nicht genügend Kategorien!">
+            <template #description
+                >Bitte nutzen Sie Anker aus mindestens
+                <span class="font-medium">drei Kategorien.</span></template
+            >
+        </UAlert>
+        <UButton
             :disabled="warn"
-            class="mt-8"
-            fluid
+            :active="!warn"
+            active-variant="solid"
             label="Feedback speichern"
-            variant="success"
+            class="mt-8 w-full"
+            color="primary"
+            size="xl"
+            variant="subtle"
             @click="save"
         />
     </template>

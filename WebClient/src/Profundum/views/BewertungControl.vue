@@ -79,19 +79,22 @@ async function publish(evt: Event, id: string, status: boolean) {
                         v-if="!item.info.isFeedbackPublished"
                         color="primary"
                         label="Veröffentlichen"
-                        variant="ghost"
+                        class="min-w-30 justify-center"
+                        variant="subtle"
                         @click="publish($event, item.info.id, true)"
                     />
                     <UButton
                         v-else
                         color="neutral"
                         label="Veröffentlicht"
-                        variant="ghost"
+                        class="min-w-30 justify-center"
+                        variant="subtle"
                         @click="publish($event, item.info.id, false)"
                     />
                     <UBadge
                         :color="chooseColorNuxtUi((100 * item.done) / item.count, 25, true)"
                         variant="soft"
+                        class="min-w-12 justify-center"
                         >{{ item.done }} / {{ item.count }}</UBadge
                     >
                     <UIcon v-if="open" class="size-5" name="i-lucide-chevron-up" />

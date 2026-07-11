@@ -4,15 +4,16 @@ import 'primeicons/primeicons.css';
 
 import DynamicDialog from 'primevue/dynamicdialog';
 import AfraNav from '@/components/AfraNav.vue';
-import { useUser } from '@/stores/user';
-import { computed } from 'vue';
+import {useUser} from '@/stores/user';
+import {computed} from 'vue';
 import wappenLight from '/vdaa/favicon.svg?url';
 import wappenDark from '/vdaa/favicon-dark.svg?url';
-import { ConfirmPopup } from 'primevue';
+import {ConfirmPopup} from 'primevue';
 import Login from '@/components/Login.vue';
-import { isDark } from '@/helpers/isdark';
+import {isDark} from '@/helpers/isdark';
 import ReloadPrompt from '@/components/ReloadPrompt.vue';
-import type { ToasterProps } from '@nuxt/ui/components/Toaster.d.vue.ts';
+import type {ToasterProps} from '@nuxt/ui/components/Toaster.d.vue.ts';
+import {de} from '@nuxt/ui/locale'
 
 const user = useUser();
 const toast = useToast();
@@ -36,9 +37,9 @@ const toastProps: ToasterProps = {
 <template>
     <ConfirmPopup />
     <DynamicDialog />
-    <ReloadPrompt />
     <div v-if="user.isImpersonating" aria-hidden="true" class="impersonation-tag hidden"></div>
-    <UApp :toaster="toastProps">
+    <UApp :locale="de" :toaster="toastProps">
+        <ReloadPrompt />
         <template v-if="!user.loading">
             <afra-nav v-if="user.loggedIn" />
             <main class="flex justify-center min-h-[90vh] mt-4">
