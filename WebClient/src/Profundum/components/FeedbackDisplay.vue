@@ -8,7 +8,6 @@ import type {
     StudentFeedbackHierarchie,
 } from '@/Profundum/models/feedback';
 import { convertMarkdownToHtml } from '@/composables/markdown';
-import { Card, FloatLabel, MultiSelect } from 'primevue';
 import FeedbackRatingDisplay from '@/Profundum/components/FeedbackRatingDisplay.vue';
 
 const props = defineProps<{
@@ -29,7 +28,10 @@ const enrollmentsAvailable = computed(() => {
         if (s2.profundum < s1.profundum) return 1;
         return 0;
     });
-    return result;
+    return result.map((r) => ({
+        label: generateEnrollmentLabel(r),
+        value: r.slot.id,
+    }));
 });
 
 const selectedElements = ref<string[]>([]);
@@ -69,60 +71,65 @@ function generateEnrollmentLabel(enrollment: FeedbackEnrollmentInfo): string {
 </script>
 
 <template>
-    <FloatLabel class="w-full mb-8 mt-6" variant="on">
-        <MultiSelect
-            id="filter"
-            v-model="selectedElements"
-            :option-label="generateEnrollmentLabel"
-            :options="enrollmentsAvailable"
-            class="w-full"
-            display="chip"
-            filter
-            option-value="slot.id"
-            show-clear
-        />
-        <label for="filter">Filter</label>
-    </FloatLabel>
+    <UFormField class="mb-8" label="Filter" size="lg">
+        <UFieldGroup class="w-full">
+            <USelectMenu
+                v-model="selectedElements"
+                :items="enrollmentsAvailable"
+                class="w-full"
+                label-key="label"
+                multiple
+                placeholder="Profunda wählen"
+                value-key="value"
+            />
+            <UTooltip text="Zurücksetzen">
+                <UButton
+                    :disabled="!selectedElements || selectedElements.length == 0"
+                    aria-label="Zurücksetzen"
+                    color="neutral"
+                    icon="i-lucide-x"
+                    variant="outline"
+                    @click="selectedElements = []"
+                />
+            </UTooltip>
+        </UFieldGroup>
+    </UFormField>
 
     <div class="flex flex-col gap-8">
-        <Card v-for="kategorie in dataSelected" :key="kategorie.id">
+        <UCard v-for="kategorie in dataSelected" :key="kategorie.id">
             <template #title>
                 <template v-if="kategorie.isFachlich">Fachliche Kompetenzen – </template
                 >{{ kategorie.label }}
             </template>
-            <template #content>
+            <template #default>
                 <div class="flex flex-col gap-4">
-                    <Card
+                    <UCard
                         v-for="anker in kategorie.anker"
                         :key="anker.id"
-                        :dt="{
-                            body: {
-                                padding: '1rem',
-                            },
+                        :ui="{
+                            body: 'p-2 sm:p-4',
+                            header: 'p-2 sm:p-4',
                         }"
-                        class="bg-surface-100 dark:bg-surface-800"
+                        variant="subtle"
                     >
-                        <template #content>
-                            <div
-                                class="text-lg mt-0 mb-2 font-medium"
-                                v-html="convertMarkdownToHtml(anker.label, true)"
-                            />
-                            <div class="grid grid-cols-[1fr_auto] gap-y-2 gap-x-4 items-center">
-                                <template v-for="(rating, slot) in anker.ratingsBySlot">
-                                    <span>
-                                        {{ value.enrollments[slot].profundum }}
-                                        <span class="inline-block">
-                                            {{ generateSlotLabel(slot.toString()) }}
-                                        </span>
-                                    </span>
-                                    <FeedbackRatingDisplay :value="rating" />
-                                </template>
-                            </div>
+                        <template #title>
+                            <span v-html="convertMarkdownToHtml(anker.label, true)" />
                         </template>
-                    </Card>
+                        <div class="grid grid-cols-[1fr_auto] gap-y-2 gap-x-4 items-center">
+                            <template v-for="(rating, slot) in anker.ratingsBySlot">
+                                <span>
+                                    {{ value.enrollments[slot].profundum }}
+                                    <span class="inline-block">
+                                        {{ generateSlotLabel(slot.toString()) }}
+                                    </span>
+                                </span>
+                                <FeedbackRatingDisplay :value="rating" />
+                            </template>
+                        </div>
+                    </UCard>
                 </div>
             </template>
-        </Card>
+        </UCard>
         <div v-if="value.kategorien.length == 0" class="text-center w-full">
             Kein Feedback gefunden.
         </div>

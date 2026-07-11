@@ -1,5 +1,4 @@
 <script setup>
-import { Button } from 'primevue';
 import { ref } from 'vue';
 import { mande } from 'mande';
 import { useUser } from '@/stores/user';
@@ -40,12 +39,14 @@ fetchData();
     <p v-if="!all">Gezeigt werden die Veranstaltungen der nächsten drei Wochen.</p>
     <h2 v-if="all">Alle Veranstaltungen</h2>
     <StudentOverview :termine="termine" show-katalog />
-    <Button
+    <UButton
         v-if="!all"
         class="mt-4"
         @click="fetchData(true)"
         label="Alle anzeigen"
-        severity="secondary"
+        color="secondary"
+        size="lg"
+        variant="subtle"
         :loading="loading"
     />
 </template>

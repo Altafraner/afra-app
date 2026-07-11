@@ -1,5 +1,4 @@
 <script setup>
-import { Button } from 'primevue';
 import { ref } from 'vue';
 
 const emit = defineEmits(['update', 'edit', 'delete']);
@@ -46,29 +45,29 @@ function remove() {
         <span v-else><slot name="edit" /></span>
 
         <span class="self-start flex gap-1">
-            <Button
+            <UButton
                 v-if="!editMode"
-                icon="pi pi-pencil"
-                severity="secondary"
-                size="small"
+                color="neutral"
+                icon="i-lucide-pencil"
                 aria-label="Bearbeiten"
+                variant="ghost"
                 @click="edit"
             />
-            <Button
+            <UButton
                 v-else
-                icon="pi pi-check"
-                severity="success"
-                size="small"
+                color="success"
+                icon="i-lucide-check"
                 aria-label="Bestätigen"
+                variant="subtle"
                 @click="confirm"
             />
 
-            <Button
+            <UButton
                 v-if="canDelete && editMode"
-                icon="pi pi-trash"
-                severity="danger"
-                size="small"
+                color="error"
+                icon="i-lucide-trash"
                 aria-label="Löschen"
+                variant="subtle"
                 @click="remove"
             />
         </span>

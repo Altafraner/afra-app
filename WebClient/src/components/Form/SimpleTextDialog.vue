@@ -1,69 +1,97 @@
 <script lang="ts" setup>
-import { inject, type Ref } from 'vue';
-import type { DynamicDialogInstance } from 'primevue/dynamicdialogoptions';
-import type { SimpleTextDialogModel } from '@/components/Form/simpleTextDialogModel';
-import { Form, type FormResolverOptions, type FormSubmitEvent } from '@primevue/forms';
-import { Button, FloatLabel, InputText, Message } from 'primevue';
+import { reactive } from 'vue';
+import { FormError, FormSubmitEvent } from '@nuxt/ui';
 
-const dialogRef = inject<Ref<DynamicDialogInstance, DynamicDialogInstance>>('dialogRef');
-const data: SimpleTextDialogModel = dialogRef.value.data;
+const props = defineProps<{
+    title: string;
+    description?: string;
+    default?: string;
+    maxLength?: number;
+    minLength?: number;
+    placeholder: string;
+    label: string;
+    buttonText?: string;
+    buttonColor?: string;
+    disclaimer?: string;
+}>();
 
-const initialValue = {
-    input: data.default ?? '',
-};
+const emit = defineEmits<{
+    close: [value: string | undefined];
+}>();
 
-const resolver = (e: FormResolverOptions): Record<string, any> => {
-    const errors: Record<string, string[]> = {
-        input: [],
-    };
+interface FormSchema {
+    value: string | undefined;
+}
+
+const state = reactive<FormSchema>({
+    value: props.default,
+});
+
+function validate(state: Partial<FormSchema>): FormError[] {
+    const errors: FormError[] = [];
 
     if (
-        data.minLength !== 0 &&
-        data.minLength !== undefined &&
-        e.values['input'].length < data.minLength
-    ) {
-        errors['input'].push(`Es werden mindestens ${data.minLength} Zeichen benötigt.`);
-    }
-
+        props.minLength !== undefined &&
+        props.minLength > 0 &&
+        (state.value === undefined || state.value === '')
+    )
+        errors.push({ name: 'value', message: `Geben Sie einen Wert ein` });
     if (
-        data.maxLength !== 0 &&
-        data.maxLength !== undefined &&
-        e.values['input'].length > data.maxLength
-    ) {
-        errors['input'].push(`Es sind maximal ${data.maxLength} Zeichen erlaubt.`);
-    }
+        props.minLength !== undefined &&
+        props.minLength > 0 &&
+        state.value !== undefined &&
+        state.value.length < props.minLength
+    )
+        errors.push({
+            name: 'value',
+            message: `Geben Sie mindestens ${props.minLength} Zeichen ein`,
+        });
+    if (
+        props.maxLength !== undefined &&
+        props.maxLength > 0 &&
+        state.value !== undefined &&
+        state.value.length > props.maxLength
+    )
+        errors.push({
+            name: 'value',
+            message: `Geben Sie maximal ${props.maxLength} Zeichen ein`,
+        });
 
-    return { values: e.values, errors };
-};
+    return errors;
+}
 
-const submit = (evt: FormSubmitEvent) => {
-    if (!evt.valid) return;
-    dialogRef.value.close({ result: evt.values['input'] });
-};
+function submit(event: FormSubmitEvent<FormSchema>) {
+    emit('close', event.data.value);
+}
 </script>
 
 <template>
-    <Form
-        v-slot="$form"
-        :initial-values="initialValue"
-        :resolver="resolver"
-        class="flex flex-col gap-2"
-        @submit="submit"
-    >
-        <FloatLabel variant="on">
-            <label for="input">{{ data.label ?? 'Eingabe' }}</label>
-            <InputText id="input" autofocus fluid name="input" />
-        </FloatLabel>
-        <Message v-if="$form.input?.invalid" severity="error" size="small" variant="simple">
-            {{ $form.input.error }}
-        </Message>
-        <Button
-            :label="data.buttonLabel ?? 'Absenden'"
-            :severity="data.buttonSeverity ?? 'primary'"
-            fluid
-            type="submit"
-        />
-    </Form>
+    <UModal :description="description" :title="title">
+        <template #body>
+            <UForm
+                :state="state"
+                :validate="validate"
+                class="flex flex-col gap-4"
+                @submit="submit"
+            >
+                <UFormField
+                    :label="label"
+                    :required="minLength !== undefined && minLength > 0"
+                    name="value"
+                >
+                    <UInput v-model="state.value" :placeholder="placeholder" class="w-full" />
+                </UFormField>
+                <UButton
+                    :color="buttonColor"
+                    :label="buttonText ?? 'Bestätigen'"
+                    type="submit"
+                />
+            </UForm>
+        </template>
+        <template v-if="disclaimer" #footer>
+            <span class="text-sm text-muted">{{ disclaimer }}</span>
+        </template>
+    </UModal>
 </template>
 
 <style scoped></style>

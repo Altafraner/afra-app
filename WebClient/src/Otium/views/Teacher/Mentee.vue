@@ -1,12 +1,10 @@
 <script setup>
-import { Button, Skeleton } from 'primevue';
 import { computed, ref } from 'vue';
 import { mande } from 'mande';
 import { useUser } from '@/stores/user';
 import StudentOverview from '@/Otium/components/Overview/StudentOverview.vue';
 import { formatStudent } from '@/helpers/formatters';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
-import { RouterLink } from 'vue-router';
 
 const props = defineProps({
     studentId: String,
@@ -68,34 +66,35 @@ fetchData();
         <p v-if="!all">Gezeigt werden die Veranstaltungen der nächsten drei Wochen.</p>
         <h2 v-if="all">Alle Veranstaltungen</h2>
         <StudentOverview :student="mentee" :termine="termine" />
-        <Button
+        <UButton
             v-if="!all"
             class="mt-4"
             @click="fetchData(true)"
             label="Alle anzeigen"
-            severity="secondary"
+            color="secondary"
             :loading="loading"
+            variant="subtle"
         />
         <h2>Profundum</h2>
-        <Button
-            :as="RouterLink"
+        <UButton
             :to="{
                 name: 'Profundum-Feedback-Einsicht-Student',
                 props: { studentId: props.studentId },
             }"
             label="Feedback Einsehen"
-            severity="secondary"
-        ></Button>
+            color="secondary"
+            variant="subtle"
+        ></UButton>
     </template>
     <div class="flex gap-3" v-else>
         <h1>
-            <Skeleton />
+            <USkeleton class="h-[1em] w-full" />
         </h1>
         <h2>
-            <Skeleton />
+            <USkeleton class="h-[1em] w-full" />
         </h2>
         <p>
-            <Skeleton />
+            <USkeleton class="h-[1em] w-full" />
         </p>
     </div>
 </template>
