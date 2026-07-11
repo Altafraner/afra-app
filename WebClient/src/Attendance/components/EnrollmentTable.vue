@@ -2,7 +2,7 @@
 import UserPeek from '@/components/UserPeek.vue';
 import AttendanceButton from '@/Attendance/components/AttendanceButton.vue';
 import type { AttendanceState, AttendanceStudentStatus } from '@/Attendance/models/attendance';
-import type { UserInfoMinimal } from '@/models/user/userInfoMinimal';
+import type { UserInfoMinimal } from '@/models/user/user';
 import type { TableColumn } from '@nuxt/ui/components/Table.d.vue.ts';
 import { computed, h, useSlots } from 'vue';
 
@@ -53,7 +53,7 @@ const actionColumn: TableColumn<AttendanceStudentStatus> = {
     },
 };
 
-const columns = computed<TableColumn<AttendanceStudentStatus>[]>((oldValue) => {
+const columns = computed<TableColumn<AttendanceStudentStatus>[]>(() => {
     const array = [studentColumn];
     if (props.showAttendance) array.push(attendanceColumn);
     if (props.enableMove || props.enableNotes || slots.studentActions) array.push(actionColumn);

@@ -1,16 +1,5 @@
 <script lang="ts" setup>
-import {
-    Accordion,
-    AccordionContent,
-    AccordionHeader,
-    AccordionPanel,
-    Button,
-    InputGroup,
-    InputGroupAddon,
-    useDialog,
-} from 'primevue';
-import { computed, onUnmounted, shallowRef, watch } from 'vue';
-import PersonSelector from '@/components/PersonSelector.vue';
+import { computed, onUnmounted, shallowRef, toValue, watch } from 'vue';
 import { useAttendance } from '../composables/attendanceHubClient';
 import type {
     AttendanceSlot,
@@ -22,7 +11,7 @@ import SelectStudentToMoveForm from '@/Attendance/components/SelectStudentToMove
 import Notes from '@/Attendance/components/Notes.vue';
 import { useUser } from '@/stores/user';
 import EnrollmentTable from '@/Attendance/components/EnrollmentTable.vue';
-import type { UserInfoMinimal } from '@/models/user/userInfoMinimal';
+import type { UserInfoMinimal } from '@/models/user/user';
 import { formatStudent } from '@/helpers/formatters';
 
 const props = defineProps<{
@@ -30,12 +19,11 @@ const props = defineProps<{
 }>();
 
 const toast = useToast();
-const dialog = useDialog();
 const overlay = useOverlay();
 const userStore = useUser();
 
 const filterPerson = shallowRef();
-const accordionValue = shallowRef<string | null>(null);
+const accordionValue = shallowRef<string | undefined>(undefined);
 
 const attendanceService = useAttendance('slot', props.slot.scope, props.slot.slotId, toast);
 const attendance = attendanceService.slotAttendance;
@@ -46,56 +34,30 @@ function updateAttendanceCallback(student: UserInfoMinimal, status: AttendanceSt
     attendanceService.updateAttendance(student.id, status);
 }
 
-function updateStatusCallback(evt: Event, terminId: string, status: boolean) {
-    evt.stopPropagation();
-    attendanceService.updateStatus(terminId, status);
-}
-
 async function move(enrollment: AttendanceStudentStatus) {
-    dialog.open(MoveStudentForm, {
-        props: {
-            header: 'Schüler:in verschieben',
-            modal: true,
-            class: 'sm:max-w-xl',
-        },
-        data: {
-            student: enrollment.student,
-            angebote: attendance,
-            canMoveNow: attendanceService.canMoveNowNow(),
-        },
-        onClose: onCloseMove,
+    const modal = overlay.create(MoveStudentForm);
+    const data: { all: boolean; destination: string | undefined } = await modal.open({
+        student: enrollment.student,
+        angebote: toValue(attendance),
+        canMoveNow: attendanceService.canMoveNowNow(),
     });
-
-    async function onCloseMove({ data }: { data?: { destination: string; all: boolean } }) {
-        if (!data) return;
-        if (data.all) {
-            await attendanceService.moveStudent(enrollment.student.id, data.destination);
-        } else {
-            await attendanceService.moveStudentNow(enrollment.student.id, data.destination);
-        }
+    if (data == undefined || data.destination == undefined) return;
+    if (data.all) {
+        await attendanceService.moveStudent(enrollment.student.id, data.destination);
+    } else {
+        await attendanceService.moveStudentNow(enrollment.student.id, data.destination);
     }
 }
 
-function initMoveHere(eventId: string) {
-    dialog.open(SelectStudentToMoveForm, {
-        props: {
-            header: 'Schüler:in verschieben',
-            modal: true,
-            class: 'sm:max-w-xl',
-        },
-        data: {
-            canMoveNow: attendanceService.canMoveNowNow(),
-        },
-        onClose: onCloseMove,
-    });
+async function initMoveHere(eventId: string) {
+    const modal = overlay.create(SelectStudentToMoveForm);
+    const data = await modal.open({ canMoveNow: attendanceService.canMoveNowNow() });
 
-    async function onCloseMove({ data }: { data?: { student: string; all: boolean } }) {
-        if (!data) return;
-        if (data.all) {
-            await attendanceService.moveStudent(data.student, eventId);
-        } else {
-            await attendanceService.moveStudentNow(data.student, eventId);
-        }
+    if (!data || !data.student || data.all === undefined) return;
+    if (data.all) {
+        await attendanceService.moveStudent(data.student, eventId);
+    } else {
+        await attendanceService.moveStudentNow(data.student, eventId);
     }
 }
 
@@ -105,7 +67,7 @@ function openNotes(data: AttendanceStudentStatus) {
     modal.open({
         notes: computed(() => data.notes),
         myNote: computed(
-            () => data.notes.find((n) => n.creator.id === userStore.user.id) ?? null,
+            () => data.notes.find((n) => n.creator.id === userStore.user!.id) ?? null,
         ),
         scope: props.slot.scope,
         slotId: props.slot.slotId,
@@ -144,81 +106,79 @@ watch(filteredAttendance, (newAttendance) => {
                 : 'keine'
         }}
     </div>
-    <InputGroup class="mb-6">
-        <PersonSelector
+    <UFieldGroup class="mb-6 w-full" size="lg">
+        <PersonSelectorNuxt
+            class="w-full"
             v-model="filterPerson"
             :filter="(s: UserInfoMinimal) => s.rolle === 'Mittelstufe'"
             hide-rolle
-        >
-            <template #label>Schüler:in suchen</template>
-        </PersonSelector>
-        <InputGroupAddon>
-            <Button
-                :disabled="filterPerson == undefined"
-                aria-label="Filter entfernen"
-                icon="pi pi-times"
-                severity="secondary"
-                variant="text"
-                @click="filterPerson = undefined"
-            />
-        </InputGroupAddon>
-    </InputGroup>
-    <accordion v-model:value="accordionValue" lazy>
-        <accordion-panel
-            v-for="event of filteredAttendance"
-            :key="event.eventId"
-            :value="event.eventId"
-        >
-            <accordion-header>
-                <div
-                    class="flex justify-between w-full items-center"
-                    style="margin-right: 1rem"
-                >
-                    <span class="flex-1"> {{ event.location }} - {{ event.name }} </span>
-                    <span v-if="!filterActive" class="inline-flex gap-3 items-baseline">
-                        {{ event.enrollments.length }} Schüler:innen
-                        <Button
-                            :label="event.status ? 'Fertig' : 'Ausstehend'"
-                            :severity="
-                                event.status
-                                    ? event.enrollments.some((e) => e.status === 'Fehlend')
-                                        ? 'warn'
-                                        : 'success'
-                                    : 'danger'
-                            "
-                            class="w-28"
-                            size="small"
-                            @click="
-                                (evt) => updateStatusCallback(evt, event.eventId, !event.status)
-                            "
-                        />
-                    </span>
-                </div>
-            </accordion-header>
-            <accordion-content>
-                <EnrollmentTable
-                    :enableEdit="true"
-                    :enableMove="attendanceService.metadata.value?.enableMove ?? false"
-                    :enableNotes="attendanceService.metadata.value?.enableNotes ?? false"
-                    :enrollments="event.enrollments"
-                    :showAttendance="true"
-                    @move="move"
-                    @openNotes="openNotes"
-                    @update="updateAttendanceCallback"
-                >
-                    <template #actions>
-                        <Button
-                            icon="pi pi-plus"
-                            label="Schüler:in hinzufügen"
-                            severity="secondary"
-                            size="small"
-                            @click="() => initMoveHere(event.eventId)"
-                        />
-                    </template>
-                </EnrollmentTable>
-            </accordion-content>
-        </accordion-panel>
-    </accordion>
+            placeholder="Schüler:in suchen"
+        />
+        <UButton
+            :disabled="filterPerson == undefined"
+            aria-label="Filter entfernen"
+            color="neutral"
+            icon="i-lucide-x"
+            variant="outline"
+            @click="filterPerson = undefined"
+        />
+    </UFieldGroup>
+    <UAccordion
+        v-model="accordionValue"
+        :items="filteredAttendance"
+        :ui="{
+            label: 'flex justify-between w-full items-center mr-1',
+        }"
+        value-key="eventId"
+        value-label="name"
+    >
+        <template #content="{ item }">
+            <EnrollmentTable
+                :enableEdit="true"
+                :enableMove="attendanceService.metadata.value?.enableMove ?? false"
+                :enableNotes="attendanceService.metadata.value?.enableNotes ?? false"
+                :enrollments="item.enrollments"
+                :showAttendance="true"
+                @move="move"
+                @openNotes="openNotes"
+                @update="updateAttendanceCallback"
+            >
+                <template #actions>
+                    <UButton
+                        color="neutral"
+                        icon="i-lucide-plus"
+                        label="Schüler:in hinzufügen"
+                        variant="subtle"
+                        @click="() => initMoveHere(item.eventId)"
+                    />
+                </template>
+            </EnrollmentTable>
+        </template>
+        <template #default="{ item }">
+            <span class="flex-1"> {{ item.location }} - {{ item.name }} </span>
+            <span v-if="!filterActive" class="inline-flex gap-3 items-baseline">
+                {{ item.enrollments.length }} Schüler:innen
+                <UButton
+                    :color="
+                        item.status
+                            ? item.enrollments.some((e) => e.status === 'Fehlend')
+                                ? 'warning'
+                                : 'success'
+                            : 'error'
+                    "
+                    :label="item.status ? 'Fertig' : 'Ausstehend'"
+                    :ui="{
+                        base: 'justify-center',
+                    }"
+                    class="w-28"
+                    size="md"
+                    @click.stop="
+                        () => attendanceService.updateStatus(item.eventId, !item.status)
+                    "
+                />
+            </span>
+        </template>
+    </UAccordion>
 </template>
 
 <style scoped></style>

@@ -14,6 +14,11 @@ const nuxtUiOptions: NuxtUIOptions = {
             secondary: 'neutral',
             neutral: 'neutral',
         },
+        accordion: {
+            slots: {
+                trigger: 'transition-color duration-100 hover:text-highlighted',
+            },
+        },
     },
 };
 

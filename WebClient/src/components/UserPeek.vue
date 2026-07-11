@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 import { mande } from 'mande';
 import { formatStudent, formatTutor } from '@/helpers/formatters';
-import type { UserInfoMinimal } from '@/models/user/userInfoMinimal';
+import type { UserInfoMinimal } from '@/models/user/user';
 
 defineOptions({ name: 'UserPeek' });
 

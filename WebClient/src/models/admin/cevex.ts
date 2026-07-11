@@ -1,4 +1,4 @@
-import type { UserInfoMinimal } from '../user/userInfoMinimal';
+import type { UserInfoMinimal } from '../user/user';
 
 export interface CevexInformation {
     available: CevexEntity[];

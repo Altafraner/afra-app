@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { inject, ref } from 'vue';
 import type { CevexEntity } from '@/models/admin/cevex';
-import type { UserInfoMinimal } from '@/models/user/userInfoMinimal';
+import type { UserInfoMinimal } from '@/models/user/user';
 import { formatStudent } from '@/helpers/formatters';
 import { Button, FloatLabel, Select } from 'primevue';
 

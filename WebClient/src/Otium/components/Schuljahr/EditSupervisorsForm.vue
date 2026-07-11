@@ -2,9 +2,9 @@
 import { mande } from 'mande';
 import { computed, h, resolveComponent, shallowRef } from 'vue';
 import { usePeople } from '@/stores/people';
-import { UserInfoMinimal } from '@/models/user/userInfoMinimal.ts';
+import { UserInfoMinimal } from '@/models/user/user';
 import type { TableColumn } from '@nuxt/ui/components/Table.d.vue.ts';
-import { formatStudent } from '@/helpers/formatters.ts';
+import { formatStudent } from '@/helpers/formatters';
 import PersonSelectorNuxt from '@/components/PersonSelectorNuxt.vue';
 
 const UButton = resolveComponent('UButton');
@@ -19,7 +19,7 @@ const store = usePeople();
 const result = shallowRef([]);
 const loading = shallowRef(true);
 
-const selectedPerson = shallowRef(null);
+const selectedPerson = shallowRef<string | undefined>(undefined);
 
 const requestApi = mande('/api/schuljahr/' + props.date);
 const block = computed<any>(() => result.value.find((r: any) => r.id === props.blockId));
@@ -45,7 +45,7 @@ async function add() {
         value: selectedPerson.value,
     });
     result.value = await requestApi.get();
-    selectedPerson.value = null;
+    selectedPerson.value = undefined;
 }
 
 setup();

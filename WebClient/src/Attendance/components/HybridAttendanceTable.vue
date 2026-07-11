@@ -5,15 +5,14 @@ import type {
     AttendanceState,
     AttendanceStudentStatus,
 } from '@/Attendance/models/attendance';
-import type { UserInfoMinimal } from '@/models/user/userInfoMinimal';
-import { useDialog } from 'primevue';
+import type { UserInfoMinimal } from '@/models/user/user';
 import { useUser } from '@/stores/user';
 import { useAttendance } from '@/Attendance/composables/attendanceHubClient';
 import EnrollmentTable from '@/Attendance/components/EnrollmentTable.vue';
 import Notes from '@/Attendance/components/Notes.vue';
 import MoveStudentForm from '@/Attendance/components/MoveStudentForm.vue';
 import SelectStudentToMoveForm from '@/Attendance/components/SelectStudentToMoveForm.vue';
-import { formatStudent } from '@/helpers/formatters.ts';
+import { formatStudent } from '@/helpers/formatters';
 
 const props = defineProps<{
     enableSupervision: boolean;
@@ -30,7 +29,6 @@ const emit = defineEmits<{
 }>();
 
 const toast = useToast();
-const dialog = useDialog();
 const overlay = useOverlay();
 const userStore = useUser();
 
@@ -155,50 +153,32 @@ async function openNotes(data: AttendanceStudentStatus) {
 async function move(enrollment: AttendanceStudentStatus) {
     await attendanceFunctions.updateAlternatives?.();
 
-    dialog.open(MoveStudentForm, {
-        props: {
-            header: 'Schüler:in verschieben',
-            modal: true,
-            class: 'sm:max-w-xl',
-        },
-        data: {
-            student: enrollment.student,
-            angebote: alternatives.value,
-            canMoveNow: attendanceFunctions.canMoveNowNow?.() ?? false,
-        },
-        onClose: onCloseMove,
+    const modal = overlay.create(MoveStudentForm);
+    const data: { all: boolean; destination: string | undefined } = await modal.open({
+        student: enrollment.student,
+        angebote: alternatives.value,
+        canMoveNow: attendanceFunctions.canMoveNowNow?.() ?? false,
     });
 
-    async function onCloseMove({ data }: { data?: { destination: string; all: boolean } }) {
-        if (!data) return;
-        if (data.all) {
-            await attendanceFunctions.moveStudent(enrollment.student.id, data.destination);
-        } else {
-            await attendanceFunctions.moveStudentNow(enrollment.student.id, data.destination);
-        }
+    if (!data || data.destination === undefined || data.all === undefined) return;
+    if (data.all) {
+        await attendanceFunctions.moveStudent?.(enrollment.student.id, data.destination);
+    } else {
+        await attendanceFunctions.moveStudentNow?.(enrollment.student.id, data.destination);
     }
 }
 
-function openMoveHere() {
-    dialog.open(SelectStudentToMoveForm, {
-        props: {
-            header: 'Schüler:in verschieben',
-            modal: true,
-            class: 'sm:max-w-xl',
-        },
-        data: {
-            canMoveNow: attendanceFunctions.canMoveNowNow?.() ?? false,
-        },
-        onClose: onCloseMove,
+async function openMoveHere() {
+    const modal = overlay.create(SelectStudentToMoveForm);
+    const data = await modal.open({
+        canMoveNow: attendanceFunctions.canMoveNowNow?.() ?? false,
     });
 
-    async function onCloseMove({ data }: { data?: { student: string; all: boolean } }) {
-        if (!data) return;
-        if (data.all) {
-            await attendanceFunctions.moveStudent(data.student, props.eventId);
-        } else {
-            await attendanceFunctions.moveStudentNow(data.student, props.eventId);
-        }
+    if (!data || !data.student || data.all === undefined) return;
+    if (data.all) {
+        await attendanceFunctions.moveStudent?.(data.student, props.eventId);
+    } else {
+        await attendanceFunctions.moveStudentNow?.(data.student, props.eventId);
     }
 }
 </script>

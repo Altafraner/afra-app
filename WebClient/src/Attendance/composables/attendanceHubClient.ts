@@ -9,7 +9,7 @@ import type {
 } from '@/Attendance/models/attendance';
 import type { Note } from '@/Attendance/models/note';
 import { isNowInDateTimeInterval } from '@/helpers/time.js';
-import type { UserInfoMinimal } from '../../models/user/userInfoMinimal';
+import type { UserInfoMinimal } from '@/models/user/user';
 
 interface Metadata {
     enableNotes: boolean;
