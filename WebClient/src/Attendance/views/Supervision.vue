@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { computed, ref, shallowRef, Suspense } from 'vue';
-import { Button } from 'primevue';
 import { useRoute, useRouter } from 'vue-router';
 import { mande } from 'mande';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
@@ -70,11 +69,12 @@ await setup();
     <nav-breadcrumb :items="navItems" />
     <div class="flex justify-between items-center">
         <h1>Aufsicht</h1>
-        <Button
+        <UButton
             v-if="status && route.query.slotId === undefined"
-            icon="pi pi-stop"
+            color="neutral"
             label="Block Wechseln"
-            severity="secondary"
+            icon="i-lucide-square"
+            variant="subtle"
             @click="stop"
         />
     </div>
@@ -82,7 +82,7 @@ await setup();
     <div v-if="!status || !slotActive">
         <p>Um ihre Aufsicht zu starten, drücken Sie auf den entsprechenden Slot.</p>
         <div class="flex gap-3">
-            <Button
+            <UButton
                 v-for="slot in slotsAvailable"
                 :key="slot.slotId"
                 :label="slot.label"

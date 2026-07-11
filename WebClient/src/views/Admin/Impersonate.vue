@@ -5,7 +5,7 @@ import { formatTutor } from '@/helpers/formatters';
 import { mande } from 'mande';
 import { useRouter } from 'vue-router';
 import UserPeek from '@/components/UserPeek.vue';
-import { UserInfoMinimal } from '@/models/user/userInfoMinimal';
+import { UserInfoMinimal } from '@/models/user/user';
 import { usePeople } from '@/stores/people';
 
 const user = useUser();

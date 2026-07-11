@@ -4,7 +4,7 @@ import { useManagement } from '@/Profundum/composables/verwaltung';
 import { computed, ref, watch } from 'vue';
 import { Button, Card, FloatLabel, Message, Select } from 'primevue';
 import { formatSlot, formatStudent } from '@/helpers/formatters';
-import type { UserInfoMinimal } from '@/models/user/userInfoMinimal';
+import type { UserInfoMinimal } from '@/models/user/user';
 import type { AnkerOverview } from '../models/feedback';
 import { convertMarkdownToHtml } from '@/composables/markdown';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';

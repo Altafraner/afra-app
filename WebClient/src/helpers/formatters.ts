@@ -1,4 +1,4 @@
-import type { UserInfoMinimal } from '@/models/user/userInfoMinimal';
+import type { UserInfoMinimal } from '@/models/user/user';
 import type { ProfundumSlot } from '@/Profundum/models/verwaltung';
 
 const wochentage = [

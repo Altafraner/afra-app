@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { mande } from 'mande';
-import { UserInfoMinimal } from '@/models/user/userInfoMinimal.ts';
+import { UserInfoMinimal } from '@/models/user/user';
 
 export const usePeople = defineStore('people', {
     state: (): {

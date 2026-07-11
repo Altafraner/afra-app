@@ -1,112 +1,89 @@
-<script setup>
-import { computed, inject, ref } from 'vue';
-import Form from '@primevue/forms/form';
-import { Button, Message } from 'primevue';
-import PersonSelector from '@/components/PersonSelector.vue';
+<script lang="ts" setup>
+import { reactive } from 'vue';
+import { FormError, FormSubmitEvent } from '@nuxt/ui';
 
-const dialogRef = inject('dialogRef');
+interface FormSchema {
+    student: string | undefined;
+    all: boolean | undefined;
+}
 
-const all = ref(undefined);
-const form = ref();
+const props = defineProps<{
+    canMoveNow: boolean;
+}>();
 
-const canMoveNow = computed(() => {
-    return dialogRef.value.data.canMoveNow;
-});
+const emit = defineEmits<{
+    close: [FormSchema];
+}>();
 
-const buttonOptions = [
-    {
-        label: 'Ganzen Block verschieben',
-        command: moveAll,
-    },
-];
+function validate(state: Partial<FormSchema>): FormError[] {
+    const errors: FormError[] = [];
 
-function resolve({ values }) {
-    const errors = {
-        student: [],
-    };
-
-    if (!values.student) {
-        errors.student.push('Bitte wählen Sie eine Person aus.');
+    if (!state.student) {
+        errors.push({ name: 'student', message: 'Bitte wählen Sie eine Person aus.' });
     }
 
-    return { values, errors };
+    return errors;
 }
 
-function save() {
-    all.value = false;
-    triggerSubmit();
-}
-
-function moveAll() {
-    all.value = true;
-    triggerSubmit();
-}
-
-function triggerSubmit() {
-    form.value.$el.dispatchEvent(
-        new Event('submit', {
-            bubbles: true,
-            cancelable: true,
-        }),
-    );
-}
-
-function submit({ valid, values }) {
-    if (!valid) return;
-    console.log(values);
-    dialogRef.value.close({
-        student: values.person,
-        all: all.value,
+function submit(event: FormSubmitEvent<FormSchema>) {
+    if (event.data.student === undefined || event.data.all === undefined) return;
+    emit('close', {
+        student: event.data.student,
+        all: event.data.all,
     });
 }
+
+const state = reactive<FormSchema>({ all: undefined, student: undefined });
 </script>
 
 <template>
-    <Form
-        ref="form"
-        v-slot="$form"
-        :resolver="resolve"
-        class="flex flex-col gap-3"
-        @submit="submit"
+    <UModal
+        description="Hier können Sie eine Schüler:in in das aktuelle Angebot verschieben."
+        title="Schüler:in hierhin verschieben"
     >
-        <div class="w-full">
-            <PersonSelector
-                :filter="(student) => student.rolle === 'Mittelstufe'"
-                hideRolle
-                name="person"
+        <template #body>
+            <UForm
+                :state="state"
+                :validate="validate"
+                class="flex flex-col gap-4"
+                @submit="submit"
             >
-                <template #label>Schüler:in</template>
-            </PersonSelector>
-            <Message
-                v-if="$form.person?.invalid"
-                severity="error"
-                size="small"
-                variant="simple"
-            >
-                {{ $form.person.error }}
-            </Message>
-        </div>
-        <p>Durch das Verschieben wird die Anwesenheit auf Abwesend zurückgesetzt.</p>
-        <div
-            :class="{
-                'grid-cols-2': canMoveNow,
-                'grid-cols-1': !canMoveNow,
-            }"
-            class="grid gap-3 mt-3"
-        >
-            <Button
-                :severity="canMoveNow ? 'secondary' : 'primary'"
-                label="Ganzen Slot verschieben"
-                @click="moveAll"
-            />
-            <Button
-                v-if="canMoveNow"
-                label="Ab jetzt verschieben"
-                severity="primary"
-                @click="save"
-            />
-        </div>
-    </Form>
+                <UFormField class="w-full" label="Schüler:in" name="student" required>
+                    <PersonSelectorNuxt
+                        v-model="state.student"
+                        :filter="(student) => student.rolle === 'Mittelstufe'"
+                        class="w-full"
+                        hideRolle
+                        placeholder="Schüler:in auswählen"
+                    />
+                </UFormField>
+                <UButton
+                    :color="canMoveNow ? 'secondary' : 'primary'"
+                    label="Ganzen Slot verschieben"
+                    type="submit"
+                    @click="state.all = true"
+                />
+                <UButton
+                    v-if="canMoveNow"
+                    color="primary"
+                    label="Ab jetzt verschieben"
+                    type="submit"
+                    @click="state.all = false"
+                />
+            </UForm>
+        </template>
+        <template #footer>
+            <div class="text-muted text-sm">
+                <p>Durch das Verschieben wird die Anwesenheit auf Abwesend zurückgesetzt.</p>
+                <p class="mt-2">
+                    Verschieben Sie die Schüler:in ab jetzt und nicht für den gesamten Slot,
+                    wird die Belegung beider Slots dokumentiert. Sollten sie die Schüler:in
+                    dabei zwischen Angeboten verschiedener Kategorien verschieben, wird keine
+                    der Kategorien als belegt gewertet.
+                </p>
+            </div>
+        </template>
+    </UModal>
 </template>
 
 <style scoped></style>

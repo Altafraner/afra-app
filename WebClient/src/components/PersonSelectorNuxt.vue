@@ -1,22 +1,26 @@
-<script setup>
+<script lang="ts" setup>
 import { formatTutor } from '@/helpers/formatters';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
 import { computed, ref } from 'vue';
+import { UserInfoMinimal } from '@/models/user/user';
 
-const model = defineModel();
+const model = defineModel<string | undefined>();
 
 const settings = useOtiumStore();
 const loading = ref(true);
 
-const props = defineProps({
-    multi: Boolean,
-    hideRolle: Boolean,
-    filter: {
-        type: Function,
-        default: () => true,
-        required: false,
+const props = withDefaults(
+    defineProps<{
+        multi?: boolean;
+        hideRolle?: boolean;
+        filter?: (student: UserInfoMinimal) => boolean;
+    }>(),
+    {
+        multi: false,
+        hideRolle: false,
+        filter: () => true,
     },
-});
+);
 
 async function getPersonen() {
     await settings.updatePersonen();
@@ -25,7 +29,7 @@ async function getPersonen() {
 
 getPersonen();
 
-const personenMapper = (person) => {
+const personenMapper = (person: UserInfoMinimal) => {
     return {
         id: person.id,
         label: props.hideRolle
@@ -35,7 +39,11 @@ const personenMapper = (person) => {
 };
 
 const personenMapped = computed(() => {
-    return settings.personen?.filter(props.filter).map(personenMapper) ?? [];
+    return (
+        (settings.personen as UserInfoMinimal[] | null)
+            ?.filter(props.filter)
+            .map(personenMapper) ?? []
+    );
 });
 </script>
 

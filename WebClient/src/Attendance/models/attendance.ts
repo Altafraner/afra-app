@@ -1,4 +1,4 @@
-import type { UserInfoMinimal } from '@/models/user/userInfoMinimal';
+import type { UserInfoMinimal } from '@/models/user/user';
 import type { Note } from '@/Attendance/models/note.ts';
 
 export type AttendanceState = 'Anwesend' | 'Entschuldigt' | 'Fehlend';

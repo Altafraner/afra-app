@@ -4,7 +4,7 @@ import { ref } from 'vue';
 import type { CevexInformation } from '@/models/admin/cevex';
 import { Button, Column, DataTable, useDialog } from 'primevue';
 import UserPeek from '@/components/UserPeek.vue';
-import type { UserInfoMinimal } from '@/models/user/userInfoMinimal';
+import type { UserInfoMinimal } from '@/models/user/user';
 import CevexAttachDialog from '@/components/Admin/CevexAttachDialog.vue';
 
 const cevex = useCevex();

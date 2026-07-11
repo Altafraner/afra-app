@@ -1,6 +1,6 @@
 import { mande, type MandeError } from 'mande';
-import type { CevexChangeRequest, CevexEntity, CevexInformation } from '../models/admin/cevex';
-import type { UserInfoMinimal } from '../models/user/userInfoMinimal';
+import type { CevexChangeRequest, CevexEntity, CevexInformation } from '@/models/admin/cevex';
+import type { UserInfoMinimal } from '@/models/user/user';
 import { h } from 'vue';
 
 export function useCevex() {
