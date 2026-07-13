@@ -1,8 +1,9 @@
 <script setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { findPath } from '@/helpers/tree.js';
 import OtiumKategorieTag from '@/Otium/components/Shared/OtiumKategorieTag.vue';
 import SimpleBreadcrumb from '@/components/SimpleBreadcrumb.vue';
+import { useFormField } from '@nuxt/ui/composables';
 
 const props = defineProps({
     options: Array,
@@ -14,9 +15,15 @@ const props = defineProps({
         type: String,
         default: 'Kategorie',
     },
+    color: {
+        type: String,
+        default: 'secondary',
+    },
 });
 
 const emit = defineEmits(['change']);
+
+const formField = useFormField();
 
 const kategorie = defineModel();
 const optionsTree = ref(convertToTreeSelectOptions(props.options));
@@ -37,10 +44,15 @@ function treeMappingFunction(element) {
 }
 
 const conditionalClose = (event, closePopover) => {
+    formField.emitFormChange();
+    formField.emitFormInput();
+    formField.emitFormFocus();
     if (!event.detail.value.children || event.detail.value.children.length === 0) {
         closePopover();
     }
 };
+
+const color = computed(() => formField.color.value ?? props.color);
 </script>
 
 <template>
@@ -50,12 +62,13 @@ const conditionalClose = (event, closePopover) => {
                 :ui="{
                     base: 'flex justify-between w-full',
                 }"
-                color="neutral"
-                size="lg"
                 trailing-icon="i-lucide-chevron-down"
                 variant="outline"
+                :color="color"
+                v-bind="$attrs"
+                @click="formField.emitFormInput"
             >
-                <template v-if="kategorie == null">Kategorie</template>
+                <span v-if="kategorie == null" class="text-dimmed">{{ placeholder }}</span>
                 <SimpleBreadcrumb v-else :model="findPath(options, kategorie.id)">
                     <template #item="{ item }">
                         <OtiumKategorieTag :value="item" minimal />
@@ -64,16 +77,16 @@ const conditionalClose = (event, closePopover) => {
             </UButton>
             <UButton
                 v-if="!hideClear && kategorie != null"
-                color="neutral"
                 icon="i-lucide-x"
                 label-key="id"
-                size="lg"
                 variant="outline"
                 @click.stop="
                     () => {
                         kategorie = null;
                     }
                 "
+                :color="color"
+                @click="formField.emitFormChange"
             />
         </UFieldGroup>
         <template #content="{ close }">
@@ -82,7 +95,13 @@ const conditionalClose = (event, closePopover) => {
                     v-model="kategorie"
                     :items="optionsTree"
                     color="neutral"
+                    :id="formField.id"
+                    :name="formField.name"
                     @select="(evt) => conditionalClose(evt, close)"
+                    @blur="formField.emitFormBlur"
+                    @change="formField.emitFormChange"
+                    @focus="formField.emitFormFocus"
+                    @input="formField.emitFormInput"
                 >
                     <template #item-leading="{ item }">
                         <UIcon

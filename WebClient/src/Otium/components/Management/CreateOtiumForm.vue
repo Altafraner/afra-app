@@ -1,45 +1,21 @@
-<script setup>
-import { ref } from 'vue';
-import { Form } from '@primevue/forms';
-import { Button, FloatLabel, InputText, Message, Textarea } from 'primevue';
+<script lang="ts" setup>
+import { reactive, ref } from 'vue';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
 import OtiumKategorySelector from '@/Otium/components/Form/OtiumKategorySelector.vue';
+import { FormError, FormSubmitEvent } from '@nuxt/ui';
 
-const emits = defineEmits(['close']);
+const emits = defineEmits<{
+    close: [{ bezeichnung: string; beschreibung: string; kategorie: string }];
+}>();
 
 const settings = useOtiumStore();
-
 const loading = ref(false);
-const bezeichnung = ref(null);
-const beschreibung = ref(null);
-const kategorie = ref(null);
 
-function resolver({ values }) {
-    const errors = {};
-
-    if (!values.bezeichnung || values.bezeichnung.length < 1)
-        errors.bezeichnung = [{ message: 'Es muss eine Bezeichnung gesetzt sein' }];
-    if (values.bezeichnung && values.bezeichnung.length > 70)
-        errors.bezeichnung = [{ message: 'Die Bezeichnung darf maximal 70 Zeichen lang sein' }];
-    if (!values.beschreibung || values.beschreibung.length < 1)
-        errors.beschreibung = [{ message: 'Es muss eine Beschreibung gesetzt sein' }];
-    if (values.beschreibung && values.beschreibung.length > 500)
-        errors.beschreibung = [
-            { message: 'Die Beschreibung darf maximal 500 Zeichen lang sein' },
-        ];
-    if (!kategorie.value)
-        errors.kategorie = [{ message: 'Es muss eine Kategorie ausgewählt sein' }];
-
-    return { values, errors };
-}
-
-function submit({ valid }) {
-    if (!valid) return;
-
+function submit(event: FormSubmitEvent<FormState>) {
     emits('close', {
-        bezeichnung: bezeichnung.value,
-        beschreibung: beschreibung.value,
-        kategorie: kategorie.value.id,
+        bezeichnung: event.data.label!,
+        beschreibung: event.data.description!,
+        kategorie: event.data.category!.id,
     });
 }
 
@@ -50,79 +26,80 @@ async function setup() {
 }
 
 setup();
+
+interface FormState {
+    label: string | undefined;
+    description: string | undefined;
+    category: { id: string } | undefined;
+}
+
+const state = reactive<FormState>({
+    category: undefined,
+    description: undefined,
+    label: undefined,
+});
+
+function validate(state: Partial<FormState>): FormError[] {
+    const errors: FormError[] = [];
+
+    if (!state.label || state.label.length < 1)
+        errors.push({ name: 'label', message: 'Es muss eine Bezeichnung gesetzt sein' });
+    if (state.label && state.label.length > 70)
+        errors.push({
+            name: 'label',
+            message: 'Die Bezeichnung darf maximal 70 Zeichen lang sein',
+        });
+    if (!state.description || state.description.length < 1)
+        errors.push({ name: 'description', message: 'Es muss eine Beschreibung gesetzt sein' });
+    if (state.description && state.description.length > 500)
+        errors.push({
+            name: 'description',
+            message: 'Die Beschreibung darf maximal 500 Zeichen lang sein',
+        });
+    if (!state.category)
+        errors.push({ name: 'category', message: 'Es muss eine Kategorie ausgewählt sein' });
+
+    return errors;
+}
 </script>
 
 <template>
-    <UModal dismisable title="Neues Otium erstellen">
+    <UModal title="Neues Otium erstellen">
         <template #body>
-            <Form
-                v-if="!loading"
-                v-slot="$form"
-                :resolver="resolver"
-                class="flex flex-col gap-3"
+            <UForm
+                :state="state"
+                :validate="validate"
+                class="flex flex-col gap-4"
                 @submit="submit"
             >
-                <div class="w-full">
-                    <FloatLabel class="w-full" variant="on">
-                        <InputText
-                            id="bezeichnung"
-                            v-model="bezeichnung"
-                            fluid
-                            name="bezeichnung"
-                        />
-                        <label for="bezeichnung">Bezeichnung</label>
-                    </FloatLabel>
-                    <Message
-                        v-if="$form.bezeichnung?.invalid"
-                        severity="error"
-                        size="small"
-                        variant="simple"
-                    >
-                        {{ $form.bezeichnung.error.message }}
-                    </Message>
-                </div>
-                <div class="w-full">
-                    <FloatLabel class="w-full" variant="on">
-                        <Textarea
-                            id="beschreibung"
-                            v-model="beschreibung"
-                            auto-resize
-                            fluid
-                            name="beschreibung"
-                            rows="2"
-                        />
-                        <label for="beschreibung">Beschreibung</label>
-                    </FloatLabel>
-                    <Message
-                        v-if="$form.beschreibung?.invalid"
-                        severity="error"
-                        size="small"
-                        variant="simple"
-                    >
-                        {{ $form.beschreibung.error.message }}
-                    </Message>
-                </div>
-                <div class="w-full">
+                <UFormField label="Bezeichnung" name="label" required>
+                    <UInput
+                        v-model="state.label"
+                        class="w-full"
+                        placeholder="Bezeichnung eingeben"
+                    />
+                </UFormField>
+                <UFormField label="Beschreibung" name="description" required>
+                    <UTextarea
+                        v-model="state.description"
+                        :rows="3"
+                        autoresize
+                        class="w-full"
+                        placeholder="Beschreibung eingeben"
+                    />
+                </UFormField>
+                <UFormField label="Kategorie" name="category" required>
                     <OtiumKategorySelector
-                        id="kategorie"
-                        v-model="kategorie"
-                        :options="settings.kategorien"
+                        v-model="state.category"
                         fullSize
                         hide-clear
-                        name="kategorie"
-                        placeholder=""
+                        :options="settings.kategorien as any"
+                        color="secondary"
+                        placeholder="Kategorie wählen"
                     />
-                    <Message
-                        v-if="$form.kategorie?.invalid"
-                        severity="error"
-                        size="small"
-                        variant="simple"
-                    >
-                        {{ $form.kategorie.error.message }}
-                    </Message>
-                </div>
-                <Button class="mt-4" label="Erstellen" severity="primary" type="submit" />
-            </Form>
+                </UFormField>
+                <UButton icon="i-lucide-plus" label="Erstellen" type="submit" />
+            </UForm>
         </template>
     </UModal>
 </template>
