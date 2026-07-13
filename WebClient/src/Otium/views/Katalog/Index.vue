@@ -178,6 +178,7 @@ startup();
     <div class="flex gap-3 flex-col">
         <template v-if="!loading">
             <OtiumDateSelector
+                size="lg"
                 v-model="date"
                 :options="datesAvailable"
                 @dateChanged="dateChanged"
