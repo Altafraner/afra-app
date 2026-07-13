@@ -27,12 +27,12 @@ const props = defineProps({
             {{ value.bezeichnung }}
         </span>
     </UBadge>
-    <span v-else class="inline-flex items-baseline justify-center gap-1">
+    <span v-else class="inline-flex items-baseline gap-1">
         <UIcon
             v-if="value.icon && !hideIcon"
             :name="value.icon"
             :style="`color: ${value.cssColor ?? 'inherit'}`"
-            class="size-4"
+            class="size-4 translate-y-0.5"
         />
         <span v-if="!hideName">
             {{ value.bezeichnung }}

@@ -1,15 +1,16 @@
 <script setup>
 import { useUser } from '@/stores/user';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
-import { Button, Column, DataTable, Skeleton } from 'primevue';
-import { ref, shallowRef, watch } from 'vue';
+import { h, ref, shallowRef, watch } from 'vue';
 import { mande } from 'mande';
 import { findPath } from '@/helpers/tree.js';
 import SimpleBreadcrumb from '@/components/SimpleBreadcrumb.vue';
-import { RouterLink } from 'vue-router';
 import OtiumKategorieTag from '@/Otium/components/Shared/OtiumKategorieTag.vue';
 import CreateOtiumForm from '@/Otium/components/Management/CreateOtiumForm.vue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
+import UButton from '@nuxt/ui/components/Button.vue';
+import UTooltip from '@nuxt/ui/components/Tooltip.vue';
+import ASkeletonTable from '@/components/Layout/ASkeletonTable.vue';
 
 const user = useUser();
 const settings = useOtiumStore();
@@ -102,130 +103,141 @@ async function hide(data, value) {
 setup();
 
 watch(showHidden, getOtia);
+
+const columns = [
+    {
+        header: 'Bezeichnung',
+        accessorKey: 'bezeichnung',
+        cell: ({ row }) =>
+            h(UButton, {
+                label: row.getValue('bezeichnung'),
+                variant: 'ghost',
+                to: { name: 'Verwaltung-Otium', params: { otiumId: row.original.id } },
+                ui: { label: 'whitespace-normal' },
+            }),
+    },
+    {
+        header: 'Kategorie',
+        cell: ({ row }) =>
+            h(
+                SimpleBreadcrumb,
+                {
+                    wrap: true,
+                    model: findPath(settings.kategorien, row.original.kategorie),
+                },
+                {
+                    item: ({ item }) => h(OtiumKategorieTag, { minimal: true, value: item }),
+                },
+            ),
+    },
+    {
+        header: 'Termine',
+        accessorKey: 'termine',
+        meta: {
+            class: {
+                td: 'text-right',
+                th: 'text-right',
+            },
+        },
+    },
+    {
+        id: 'action',
+        meta: {
+            class: {
+                td: 'text-right',
+                th: 'text-right',
+            },
+        },
+        header: () =>
+            h(
+                UTooltip,
+                {
+                    text: 'Neues Otium',
+                },
+                () => [
+                    h(UButton, {
+                        onClick: openCreateDialog,
+                        icon: 'i-lucide-plus',
+                    }),
+                ],
+            ),
+        cell: ({ row }) =>
+            h('span', { class: 'flex gap-1 justify-end' }, [
+                !row.original.termine || row.original.termine.length === 0
+                    ? h(UTooltip, { text: 'Löschen' }, () => [
+                          h(UButton, {
+                              variant: 'ghost',
+                              icon: 'i-lucide-x',
+                              color: 'error',
+                              onClick: (event) => confirmDelete(event, row.original.id),
+                          }),
+                      ])
+                    : h(
+                          UTooltip,
+                          { text: 'Nur Otia ohne Termine können gelöscht werden.' },
+                          () => [
+                              h(UButton, {
+                                  variant: 'ghost',
+                                  icon: 'i-lucide-x',
+                                  color: 'neutral',
+                                  disabled: true,
+                              }),
+                          ],
+                      ),
+                !row.original.hidden
+                    ? h(UTooltip, { text: 'Verstecken' }, () => [
+                          h(UButton, {
+                              variant: 'ghost',
+                              icon: 'i-lucide-eye',
+                              color: 'primary',
+                              onClick: () => hide(row.original, true),
+                          }),
+                      ])
+                    : h(UButton, {
+                          variant: 'ghost',
+                          icon: 'i-lucide-eye-off',
+                          color: 'warning',
+                          onClick: () => hide(row.original, false),
+                      }),
+            ]),
+    },
+];
 </script>
 
 <template>
     <template v-if="!loading">
         <h2>Alle Otia</h2>
         <p>Klicken sie auf ein Otium, um Details zu sehen oder es zu Bearbeiten.</p>
-        <DataTable :value="otia" data-key="id" size="small">
-            <Column header="Bezeichnung">
-                <template #body="{ data }">
-                    <Button
-                        :as="RouterLink"
-                        :label="data.bezeichnung"
-                        :to="{ name: 'Verwaltung-Otium', params: { otiumId: data.id } }"
-                        variant="text"
-                    />
-                </template>
-            </Column>
-            <Column header="Kategorie">
-                <template #body="{ data }">
-                    <SimpleBreadcrumb
-                        :model="findPath(settings.kategorien, data.kategorie)"
-                        wrap
-                    >
-                        <template #item="{ item }">
-                            <OtiumKategorieTag :value="item" minimal />
-                        </template>
-                    </SimpleBreadcrumb>
-                </template>
-            </Column>
-            <Column class="text-right" header="Termine">
-                <template #body="{ data }">
-                    {{ data.termine }}
-                </template>
-            </Column>
-            <Column class="text-right afra-col-action">
-                <template #header>
-                    <Button
-                        v-tooltip="'Neues Otium'"
-                        icon="pi pi-plus"
-                        aria-label="Neues Otium"
-                        @click="openCreateDialog"
-                        size="small"
-                    />
-                </template>
-                <template #body="{ data }">
-                    <div class="inline-flex gap-1">
-                        <Button
-                            v-if="!data.termine || data.termine.length === 0"
-                            v-tooltip.left="'Löschen'"
-                            aria-label="Löschen"
-                            icon="pi pi-times"
-                            severity="danger"
-                            size="small"
-                            variant="text"
-                            @click="(event) => confirmDelete(event, data.id)"
-                        />
-                        <Button
-                            v-else
-                            v-tooltip.left="'Nur Otia ohne Termine können gelöscht werden'"
-                            aria-disabled
-                            aria-label="Löschen"
-                            disabled
-                            icon="pi pi-times"
-                            severity="danger"
-                            size="small"
-                            variant="text"
-                        />
-                        <Button
-                            v-if="!data.hidden"
-                            v-tooltip.left="'Verstecken'"
-                            aria-label="Verstecken"
-                            icon="pi pi-eye"
-                            severity="secondary"
-                            size="small"
-                            variant="text"
-                            @click="() => hide(data, true)"
-                        />
-                        <Button
-                            v-else
-                            v-tooltip.left="'Verstecken'"
-                            aria-label="Verstecken"
-                            icon="pi pi-eye-slash"
-                            severity="warn"
-                            size="small"
-                            variant="text"
-                            @click="() => hide(data, false)"
-                        />
-                    </div>
-                </template>
-            </Column>
-            <template #empty>
-                <div class="flex justify-center">Es sind keine Otia angelegt.</div>
-            </template>
-        </DataTable>
-        <div class="flex justify-end mt-4">
-            <Button
+        <UTable
+            :columns="columns"
+            :data="otia"
+            :ui="{
+                td: 'whitespace-normal text-default px-2 py-1.5',
+                th: 'px-2 py-1.5',
+                root: 'overflow-x-visible',
+            }"
+        />
+        <div class="flex mt-4">
+            <UButton
                 v-if="!showHidden"
-                icon="pi pi-eye"
+                color="neutral"
                 label="Ausgeblendete anzeigen"
-                severity="secondary"
+                icon="i-lucide-eye"
                 @click="showHidden = true"
             />
-            <Button
+            <UButton
                 v-else
-                icon="pi pi-eye-slash"
+                color="neutral"
                 label="Ausgeblendete verbergen"
-                severity="secondary"
+                icon="i-lucide-eye-off"
                 @click="showHidden = false"
             />
         </div>
     </template>
     <template v-else>
-        <Skeleton class="mb-6" height="3rem" />
-        <Skeleton class="mb-4" />
-        <DataTable :value="new Array(10)">
-            <Column v-for="_ in new Array(3)">
-                <template #body>
-                    <Skeleton />
-                </template>
-                <template #header>
-                    <Skeleton height="1.5em" />
-                </template>
-            </Column>
-        </DataTable>
+        <p><USkeleton class="mb-6 w-full h-12" /></p>
+        <p><USkeleton class="mb-4 w-full h-4" /></p>
+        <ASkeletonTable />
     </template>
 </template>
 
