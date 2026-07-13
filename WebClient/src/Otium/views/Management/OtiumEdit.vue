@@ -1,5 +1,4 @@
 <script setup>
-import { Accordion, AccordionContent, AccordionHeader, AccordionPanel, InputText, Textarea } from 'primevue';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
 import { useUser } from '@/stores/user';
 import { mande } from 'mande';
@@ -245,17 +244,17 @@ async function createTermin(data) {
             ort: data.ort,
             datum: data.date,
             block: data.block,
-            tutor: data.person,
-            maxEinschreibungen: data.maxEnrollments,
-            overrideBezeichnung: data.overrideBezeichnung,
+            tutor: data.person ?? null,
+            maxEinschreibungen: data.maxEnrollments ?? null,
+            overrideBezeichnung: data.overrideBezeichnung ?? null,
+            overrideBeschreibung: data.overrideBeschreibung ?? null,
         });
     } catch (e) {
         console.log(e.response);
         toast.add({
             color: 'error',
             title: 'Fehler',
-            description:
-                'Der Termin konnte nicht erstellt werden. \n' + (await e.body.split('(')[0]),
+            description: 'Der Termin konnte nicht erstellt werden.',
         });
     } finally {
         await getOtium(false);
@@ -312,6 +311,17 @@ async function editReg(data) {
 }
 
 setup();
+
+const accordionItems = [
+    {
+        label: 'Termine',
+        slot: 'termine',
+    },
+    {
+        label: 'Regelmäßigkeiten',
+        slot: 'reg',
+    },
+];
 </script>
 
 <template>
@@ -328,7 +338,7 @@ setup();
                     <span>{{ otium.bezeichnung }}</span>
                 </template>
                 <template #edit>
-                    <InputText v-model="bezeichnung" fluid maxlength="70" type="text" />
+                    <UInput v-model="bezeichnung" :maxlength="70" class="w-full" />
                 </template>
             </GridEditRow>
             <GridEditRow header="Kategorie" @update="updateKategorie">
@@ -346,8 +356,9 @@ setup();
                         fullSize
                         hide-clear
                     />
-                </template> </GridEditRow
-            ><GridEditRow
+                </template>
+            </GridEditRow>
+            <GridEditRow
                 header="Klassenstufen"
                 header-class="self-start"
                 @update="updateKlassenLimits"
@@ -383,52 +394,53 @@ setup();
                     <div v-html="convertMarkdownToHtml(otium.beschreibung)" />
                 </template>
                 <template #edit>
-                    <Textarea
+                    <UTextarea
                         v-model="beschreibung"
-                        auto-resize
-                        fluid
+                        :rows="2"
                         maxlength="500"
-                        rows="2"
+                        autoresize
+                        class="w-full"
                     />
                 </template>
             </GridEditRow>
         </Grid>
-        <Accordion multiple value="">
-            <AccordionPanel value="0">
-                <AccordionHeader>Termine</AccordionHeader>
-                <AccordionContent>
-                    <OtiumDateTable
-                        :dates="otium.termine"
-                        allowEdit
-                        @cancel="cancelTermin"
-                        @continue="continueTermin"
-                        @create="createTermin"
-                        @delete="deleteTermin"
-                    />
-                </AccordionContent>
-            </AccordionPanel>
-            <AccordionPanel value="1">
-                <AccordionHeader>Regelmäßigkeiten</AccordionHeader>
-                <AccordionContent>
-                    <OtiumRegTable
-                        :regs="otium.wiederholungen"
-                        allowEdit
-                        @cancel="cancelReg"
-                        @create="createReg"
-                        @delete="deleteReg"
-                        @edit="editReg"
-                    />
-                </AccordionContent>
-            </AccordionPanel>
-            <!--AccordionPanel value="2">
-        <AccordionHeader>Verwaltende</AccordionHeader>
-        <AccordionContent>
-          <afra-otium-manager-table v-if="!props.hideRegularities" :managers="otium.verwaltende"/>
-        </AccordionContent>
-      </AccordionPanel-->
-        </Accordion>
+        <UAccordion :items="accordionItems">
+            <template #termine
+                ><OtiumDateTable
+                    :dates="otium.termine"
+                    allowEdit
+                    @cancel="cancelTermin"
+                    @continue="continueTermin"
+                    @create="createTermin"
+                    @delete="deleteTermin"
+            /></template>
+            <template #reg
+                ><OtiumRegTable
+                    :regs="otium.wiederholungen"
+                    allowEdit
+                    @cancel="cancelReg"
+                    @create="createReg"
+                    @delete="deleteReg"
+                    @edit="editReg"
+            /></template>
+        </UAccordion>
     </template>
-    <template v-else>Lade...</template>
+    <template v-else>
+        <USkeleton class="h-12 w-[60%] mb-8 mt-6" />
+        <USkeleton class="h-8 w-[30%] mb-6" />
+        <div class="grid grid-cols-[15rem_1fr] auto-rows-4 gap-4">
+            <USkeleton class="w-full h-4" />
+            <USkeleton class="w-full h-4" />
+            <USkeleton class="w-full h-4" />
+            <USkeleton class="w-full h-4" />
+            <USkeleton class="w-full h-4" />
+            <USkeleton class="w-full h-4" />
+            <USkeleton class="w-full h-4" />
+            <USkeleton class="w-full h-4" />
+        </div>
+        <USkeleton class="w-full h-6 mt-8" />
+        <USkeleton class="w-full h-6 mt-6" />
+    </template>
 </template>
 
 <style scoped></style>

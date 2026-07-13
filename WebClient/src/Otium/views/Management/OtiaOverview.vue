@@ -2,11 +2,6 @@
 import { useUser } from '@/stores/user';
 import OtiumOverview from '@/Otium/components/Management/Overview.vue';
 import SchuljahrOverview from '@/Otium/components/Schuljahr/Overview.vue';
-import Tabs from 'primevue/tabs';
-import TabList from 'primevue/tablist';
-import Tab from 'primevue/tab';
-import TabPanels from 'primevue/tabpanels';
-import TabPanel from 'primevue/tabpanel';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
 import { ref } from 'vue';
 
@@ -26,6 +21,17 @@ const navItems = ref([
         },
     },
 ]);
+
+const tabItems = [
+    {
+        label: 'Otium',
+        slot: 'otium',
+    },
+    {
+        label: 'Tage + Blöcke',
+        slot: 'schuljahr',
+    },
+];
 </script>
 
 <template>
@@ -36,20 +42,14 @@ const navItems = ref([
         <NavBreadcrumb :items="navItems" />
         <h1>Otia-Verwaltung</h1>
 
-        <Tabs lazy value="0">
-            <TabList>
-                <Tab value="0">Otium</Tab>
-                <Tab value="1">Schultage</Tab>
-            </TabList>
-            <TabPanels>
-                <TabPanel value="0">
-                    <OtiumOverview />
-                </TabPanel>
-                <TabPanel value="1">
-                    <SchuljahrOverview />
-                </TabPanel>
-            </TabPanels>
-        </Tabs>
+        <UTabs :items="tabItems">
+            <template #otium>
+                <OtiumOverview />
+            </template>
+            <template #schuljahr>
+                <SchuljahrOverview />
+            </template>
+        </UTabs>
     </template>
 </template>
 

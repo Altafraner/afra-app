@@ -63,7 +63,6 @@ function date_to_label(data) {
             aria-label="Vorheriger Tag"
             color="neutral"
             icon="i-lucide-chevron-left"
-            size="lg"
             variant="outline"
             @click="decrement_date"
         />
@@ -110,7 +109,6 @@ function date_to_label(data) {
             aria-label="Heute auswählen"
             color="neutral"
             icon="i-lucide-calendar-x"
-            size="lg"
             variant="outline"
             @click="emitToday"
         />
@@ -118,7 +116,6 @@ function date_to_label(data) {
             aria-label="Nächster Tag"
             color="neutral"
             icon="i-lucide-chevron-right"
-            size="lg"
             variant="outline"
             @click="increment_date"
         />
