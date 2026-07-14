@@ -745,17 +745,20 @@ internal class OtiumEndpointService
             Tutor = tutor,
             MaxEinschreibungen = otiumWiederholung.MaxEinschreibungen
         };
-        _dbContext.OtiaWiederholungen.Add(dbOtiumWiederholung);
 
-        var blocks = _dbContext.Blocks
+        var blocks = await _dbContext.Blocks
             .Where(b => b.SchemaId == otiumWiederholung.Block &&
                         b.Schultag.Datum.DayOfWeek == otiumWiederholung.Wochentag &&
                         b.Schultag.Wochentyp == otiumWiederholung.Wochentyp &&
                         b.Schultag.Datum <= otiumWiederholung.EndDate &&
                         b.Schultag.Datum >= otiumWiederholung.StartDate)
-            .AsAsyncEnumerable();
+            .ToArrayAsync();
 
-        await foreach (var block in blocks)
+        if (blocks.Length == 0)
+            throw new ArgumentException("Keine passenden Blöcke gefunden.");
+
+        _dbContext.OtiaWiederholungen.Add(dbOtiumWiederholung);
+        foreach (var block in blocks)
         {
             var dbOtiumTermin = new OtiumTermin
             {
