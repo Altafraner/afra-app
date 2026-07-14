@@ -18,11 +18,12 @@ await peopleStore.updatePersonen();
 const isAdmin = computed(() => user.loggedIn && user.isAdmin);
 
 const personen = computed<[string, UserInfoMinimal[]][]>(() => {
-    const sorted: UserInfoMinimal[] = [...peopleStore.personen].sort((a, b) => {
-        const A = (formatTutor(a) || '').toLowerCase();
-        const B = (formatTutor(b) || '').toLowerCase();
-        return A < B ? -1 : A > B ? 1 : 0;
-    });
+    const sorted: UserInfoMinimal[] =
+        peopleStore.personen?.sort((a, b) => {
+            const A = (formatTutor(a) || '').toLowerCase();
+            const B = (formatTutor(b) || '').toLowerCase();
+            return A < B ? -1 : A > B ? 1 : 0;
+        }) ?? [];
 
     const grouped = sorted.reduce<Record<string, UserInfoMinimal[]>>((acc, p) => {
         const key = p.gruppe && p.gruppe.trim() !== '' ? p.gruppe : p.rolle;
@@ -78,8 +79,8 @@ const impersonate = async (userToImpersonate: UserInfoMinimal) => {
         <h2>Impersonieren</h2>
         <ul>
             <li v-for="[gruppe, users] in personen" :key="gruppe" class="mb-4">
+                <h3 class="font-bold mb-2">{{ gruppe }}</h3>
                 <ul>
-                    <h3 class="font-bold mb-2">{{ gruppe }}</h3>
                     <li class="flex flex-col gap-2">
                         <div v-for="u in users" :key="u.id" class="flex flex-row items-center">
                             <UButton
