@@ -5,10 +5,10 @@
     "type": "module",
     "scripts": {
         "dev": "vite --host",
-        "build": "run-p type-check \"build-only {@}\" --",
+        "build": "run-p build-only type-check",
         "build-only": "vite build",
         "preview": "vite preview",
-        "type-check": "vue-tsc --build",
+        "type-check": "vue-tsc --noEmit",
         "lint": "eslint . --fix",
         "format": "prettier --write src/"
     },
@@ -33,6 +33,7 @@
     },
     "devDependencies": {
         "@eslint/js": "^10.0.1",
+        "@types/node": "^26.1.1",
         "@vitejs/plugin-vue": "^6.0.7",
         "@vue/tsconfig": "^0.9.1",
         "eslint": "^10.5.0",

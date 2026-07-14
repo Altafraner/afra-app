@@ -8,6 +8,9 @@
         "verbatimModuleSyntax": false,
         "allowJs": true
     },
+    "vueCompilerOptions": {
+        "strictTemplates": false
+    },
     "exclude": ["node_modules", "dist"],
     "include": [
         "env.d.ts",
