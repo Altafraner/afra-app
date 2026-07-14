@@ -34,13 +34,6 @@ function findKategorie(otium: any) {
     return katsAsAny?.find((k) => otium.kategorien.includes(k.id)) ?? null;
 }
 
-function expand(id: string) {
-    let isOpen = rowsExpanded.value[id] ?? false;
-    let temp: Record<string, boolean> = {};
-    if (!isOpen) temp[id] = true;
-    rowsExpanded.value = temp;
-}
-
 const processedOtia = computed(() => {
     return (
         props.otia?.map((ot: any) => {
