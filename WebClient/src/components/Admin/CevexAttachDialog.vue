@@ -1,47 +1,57 @@
 <script lang="ts" setup>
-import { inject, ref } from 'vue';
+import { ref } from 'vue';
 import type { CevexEntity } from '@/models/admin/cevex';
 import type { UserInfoMinimal } from '@/models/user/user';
 import { formatStudent } from '@/helpers/formatters';
-import { Button, FloatLabel, Select } from 'primevue';
 
-const dialogRef = inject<{
-    data: { options: CevexEntity[]; student: UserInfoMinimal };
-    close: (data?: any) => void;
-}>('dialogRef');
-const selected = ref<CevexEntity | null>(null);
+const props = defineProps<{ options: CevexEntity[]; student: UserInfoMinimal }>();
+defineEmits<{ close: [CevexEntity | undefined] }>();
+const selectedId = ref<string | undefined>();
+const mappedOptions = props.options.map((option) => ({
+    value: option.id,
+    label: `${option.firstName} ${option.lastName}`,
+}));
 </script>
 
 <template>
-    <p>
-        Bitte wählen Sie die Cevex-Schüler:in aus, die der Nutzer:in
-        <strong class="inline-block">{{ formatStudent(dialogRef.data.student) }}</strong>
-        entspricht.
-    </p>
-
-    <div class="flex flex-col gap-4">
-        <FloatLabel variant="on">
-            <Select
-                id="cevex-user"
-                v-model="selected"
-                :option-label="(data) => `${data.firstName} ${data.lastName}`"
-                :options="dialogRef.data.options"
-                fluid
-            />
-            <label for="cevex-user">Cevex Schüler:in</label>
-        </FloatLabel>
-
-        <div class="flex flex-row gap-4">
-            <Button label="Abbrechen" severity="secondary" @click="dialogRef.close()" />
-            <Button
-                :disabled="!selected"
-                fluid
-                label="Zuweisen"
-                severity="primary"
-                @click="dialogRef.close({ result: selected })"
-            />
-        </div>
-    </div>
+    <UModal title="Cevex-Schüler:in zuweisen">
+        <template #description>
+            Bitte wählen Sie die Cevex-Schüler:in aus, die der Nutzer:in
+            <strong class="inline-block">{{ formatStudent(student) }}</strong>
+            entspricht.
+        </template>
+        <template #body>
+            <UFormField label="Cevex-Schüler:in">
+                <USelectMenu
+                    v-model="selectedId"
+                    :items="mappedOptions"
+                    class="w-full"
+                    placeholder="Cevex Schüler:in auswählen"
+                    value-key="value"
+                />
+            </UFormField>
+        </template>
+        <template #footer>
+            <div class="flex flex-row gap-4 w-full">
+                <UButton
+                    color="neutral"
+                    label="Abbrechen"
+                    variant="soft"
+                    @click="$emit('close', undefined)"
+                />
+                <UButton
+                    :disabled="!selectedId"
+                    class="w-full"
+                    color="primary"
+                    icon="i-lucide-arrow-right"
+                    label="Zuweisen"
+                    @click="
+                        $emit('close', options.find((o) => o.id == selectedId) ?? undefined)
+                    "
+                />
+            </div>
+        </template>
+    </UModal>
 </template>
 
 <style scoped></style>

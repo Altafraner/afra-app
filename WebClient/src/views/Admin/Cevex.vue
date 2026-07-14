@@ -1,40 +1,35 @@
 <script lang="ts" setup>
 import { useCevex } from '@/composables/cevex';
-import { ref } from 'vue';
-import type { CevexInformation } from '@/models/admin/cevex';
-import { Button, Column, DataTable, useDialog } from 'primevue';
-import UserPeek from '@/components/UserPeek.vue';
+import { h, ref, resolveComponent } from 'vue';
 import type { UserInfoMinimal } from '@/models/user/user';
+import type { CevexInformation, CevexMatch } from '@/models/admin/cevex';
+import type { TableColumn } from '@nuxt/ui/components/Table.d.vue.ts';
+import UserPeek from '@/components/UserPeek.vue';
 import CevexAttachDialog from '@/components/Admin/CevexAttachDialog.vue';
 
+const UButton = resolveComponent('UButton');
+const UBadge = resolveComponent('UBadge');
+
 const cevex = useCevex();
-const dialog = useDialog();
+const overlay = useOverlay();
 const toast = useToast();
 const data = ref<CevexInformation | null>(null);
 
 data.value = await cevex.getInformation();
 
-function match(student: UserInfoMinimal) {
-    dialog.open(CevexAttachDialog, {
-        props: {
-            header: 'Regelmäßigkeit bearbeiten',
-            style: { width: '35rem' },
-            modal: true,
-        },
-        data: {
-            options: data.value?.available ?? [],
-            student,
-        },
-        onClose: async (result) => {
-            if (!result?.data) return;
-            await cevex.setMatch(student, result.data.result);
-            toast.add({
-                color: 'success',
-                title: 'Zuweisung erfolgreich',
-            });
-            data.value = await cevex.getInformation();
-        },
+async function match(student: UserInfoMinimal) {
+    const modal = overlay.create(CevexAttachDialog);
+    const result = await modal.open({
+        options: data.value?.available ?? [],
+        student,
     });
+    if (!result) return;
+    await cevex.setMatch(student, result);
+    toast.add({
+        color: 'success',
+        title: 'Zuweisung erfolgreich',
+    });
+    data.value = await cevex.getInformation();
 }
 
 async function remove(student: UserInfoMinimal) {
@@ -47,45 +42,49 @@ async function remove(student: UserInfoMinimal) {
     });
     data.value = await cevex.getInformation();
 }
+
+const columns: TableColumn<CevexMatch>[] = [
+    {
+        header: 'Nutzer',
+        cell: ({ row }) => h(UserPeek, { person: row.original.user, showGroup: true }),
+    },
+    {
+        header: 'Cevex-Schüler:in',
+        cell: ({ row }) =>
+            row.original.cevex == null
+                ? h(UBadge, { color: 'warning', label: 'Nicht zugewiesen', variant: 'subtle' })
+                : row.original.cevex.firstName + ' ' + row.original.cevex.lastName,
+    },
+    {
+        id: 'action',
+        cell: ({ row }) =>
+            row.original.cevex == null
+                ? h(UButton, {
+                      label: 'Zuweisen',
+                      size: 'sm',
+                      icon: 'i-lucide-arrow-right',
+                      onClick: () => match(row.original.user),
+                  })
+                : h(UButton, {
+                      label: 'Lösen',
+                      icon: 'i-lucide-x',
+                      variant: 'subtle',
+                      color: 'neutral',
+                      size: 'sm',
+                      onClick: () => remove(row.original.user),
+                  }),
+        meta: {
+            class: {
+                td: 'text-right',
+            },
+        },
+    },
+];
 </script>
 
 <template>
     <h1>Cevex Nutzersynchronisierung</h1>
-    <DataTable :value="data?.matches ?? []">
-        <Column header="Nutzer">
-            <template #body="{ data }">
-                <UserPeek :person="data.user" showGroup />
-            </template>
-        </Column>
-        <Column header="Cevex">
-            <template #body="{ data }">
-                <template v-if="data.cevex !== null">
-                    {{ data.cevex.firstName }} {{ data.cevex.lastName }}
-                </template>
-                <template v-else> </template>
-            </template>
-        </Column>
-        <Column class="afra-col-action text-right">
-            <template #body="{ data }">
-                <template v-if="data.cevex !== null">
-                    <Button
-                        icon="pi pi-times"
-                        label="Lösen"
-                        severity="secondary"
-                        @click="remove(data.user)"
-                    />
-                </template>
-                <template v-else>
-                    <Button
-                        icon="pi pi-arrow-right"
-                        label="Zuweisen"
-                        severity="primary"
-                        @click="match(data.user)"
-                    />
-                </template>
-            </template>
-        </Column>
-    </DataTable>
+    <UTable :columns="columns" :data="data?.matches ?? []" />
 </template>
 
 <style scoped></style>
