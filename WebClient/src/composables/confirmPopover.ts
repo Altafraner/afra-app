@@ -22,7 +22,7 @@ export function useConfirmPopover() {
     ) => {
         confirm.require({
             target: event.currentTarget,
-            header: message === null ? null : header,
+            header: message === null ? undefined : header,
             message: message === null ? header : message,
             icon: 'pi pi-exclamation-triangle',
             acceptProps: {

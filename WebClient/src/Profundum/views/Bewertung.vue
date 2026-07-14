@@ -209,7 +209,8 @@ const quartaleSelect = computed(() => {
                                 color="success"
                                 @click="
                                     () => {
-                                        currentBewertung[currentAnker.id] = i;
+                                        if (currentBewertung)
+                                            currentBewertung[currentAnker.id] = i;
                                     }
                                 "
                             />
@@ -223,7 +224,8 @@ const quartaleSelect = computed(() => {
                                 color="neutral"
                                 @click="
                                     () => {
-                                        currentBewertung[currentAnker.id] = null;
+                                        if (currentBewertung)
+                                            currentBewertung[currentAnker.id] = null;
                                     }
                                 "
                             />
