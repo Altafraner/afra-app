@@ -1,5 +1,4 @@
 <script setup>
-import { useDialog } from 'primevue';
 import { computed, ref } from 'vue';
 import { formatDate, formatTutor } from '@/helpers/formatters';
 import { mande } from 'mande';
@@ -20,7 +19,6 @@ const user = useUser();
 const { openConfirmDialog } = useConfirmPopover();
 const toast = useToast();
 const router = useRouter();
-const dialog = useDialog();
 const overlay = useOverlay();
 const props = defineProps({
     terminId: String,
@@ -79,53 +77,49 @@ async function enroll() {
     }
 }
 
-function multiEnroll() {
+async function multiEnroll() {
     buttonLoading.value = true;
-    dialog.open(MultipleEnrollmentForm, {
-        props: {
-            header: 'Mehrfach einschreiben',
-            modal: true,
-            class: 'sm:max-w-xl',
-        },
-        data: {
-            options: otium.value.wiederholungen,
-        },
-        onClose: multiEnrollCallback,
-    });
+    const modal = overlay.create(MultipleEnrollmentForm);
+    const options = await modal.open({ options: otium.value.wiederholungen });
 
-    async function multiEnrollCallback(options) {
-        try {
-            if (options.data === undefined || options.data === null) return;
-            if (options.data.selected.length === 0) return enroll();
-            const response = await mande('/api/otium/' + props.terminId + '/multi-enroll').put(
-                options.data.selected,
-            );
-            if (response.denied.length > 0) {
-                toast.add({
-                    color: 'warn',
-                    title: 'Einschreibung teilweise fehlgeschlagen',
-                    description: `Die Einschreibung in die folgenden Termine ist fehlgeschlagen: ${response.denied.map((d) => formatDate(new Date(d))).join(', ')}`,
-                });
-            }
-        } catch (err) {
-            if (err.response)
-                toast.add({
-                    color: 'error',
-                    title: 'Fehler',
-                    description: `Es ist ein Fehler beim Einschreiben aufgetreten. Code: ${err.response.status} (${err.response.statusText})`,
-                });
-            else {
-                toast.add({
-                    color: 'error',
-                    title: 'Fehler',
-                    description: 'Es ist ein Fehler beim Einschreiben aufgetreten.',
-                });
-                console.error(err);
-            }
-        } finally {
-            await loadTermin();
-            buttonLoading.value = false;
+    if (!options) {
+        buttonLoading.value = false;
+        return;
+    }
+    try {
+        if (options === 0) {
+            await enroll();
+            return;
         }
+        const response = await mande('/api/otium/' + props.terminId + '/multi-enroll').put(
+            options,
+        );
+        if (response.denied.length > 0) {
+            toast.add({
+                color: 'warn',
+                title: 'Einschreibung teilweise fehlgeschlagen',
+                description: `Die Einschreibung in die folgenden Termine ist fehlgeschlagen: ${response.denied.map((d) => formatDate(new Date(d))).join(', ')}`,
+            });
+        }
+    } catch (err) {
+        if (err.response)
+            toast.add({
+                color: 'error',
+                title: 'Fehler',
+                description: `Es ist ein Fehler beim Einschreiben aufgetreten. Code: ${err.response.status} (${err.response.statusText})`,
+            });
+        else {
+            toast.add({
+                color: 'error',
+                title: 'Fehler',
+                description: 'Es ist ein Fehler beim Einschreiben aufgetreten.',
+            });
+            console.error(err);
+        }
+    } finally {
+        await loadTermin();
+        buttonLoading.value = false;
+        emit('update');
     }
 }
 
@@ -181,7 +175,7 @@ const description = computed(() => {
 <template>
     <MobileSwitch>
         <template #large>
-            <div class="grid auto-rows-[1fr] grid-cols-[1fr_auto] items-center">
+            <div class="grid auto-rows-[1fr] grid-cols-[1fr_auto] items-center gap-1">
                 <!-- Row 1 Column 1 -->
                 <div class="flex flex-row gap-4 flex-wrap min-h-8">
                     <UBadge
@@ -238,7 +232,7 @@ const description = computed(() => {
                         <UButton
                             :disabled="!otium.einschreibung.kannBearbeiten"
                             :loading="buttonLoading"
-                            class="justify-end w-full"
+                            class="w-full"
                             icon="i-lucide-plus"
                             label="Einschreiben"
                             size="lg"
