@@ -821,17 +821,21 @@ internal class OtiumEndpointService
             .Include(x => x.Otium)
             .Include(x => x.Termine)
             .ThenInclude(t => t.Enrollments)
-            .Include(x => x.Termine.Where(t => t.Block.Schultag.Datum > firstDayAfter))
+            .Include(x => x.Termine)
+            .ThenInclude(otiumTermin => otiumTermin.Block)
+            .ThenInclude(block => block.Schultag)
             .FirstOrDefaultAsync(o => o.Id == otiumWiederholungId);
         if (otiumWiederholung is null)
             throw new NotFoundException("Keine Wiederholung mit dieser Id");
 
-        var termine = otiumWiederholung.Termine.ToList();
+        var termine = otiumWiederholung.Termine.Where(t => t.Block.Schultag.Datum > firstDayAfter).ToList();
 
         foreach (var t in termine.Where(t => !t.IstAbgesagt))
             await OtiumTerminAbsagenAsync(t.Id);
 
+
         _dbContext.OtiaTermine.RemoveRange(termine);
+        if (termine.Count == otiumWiederholung.Termine.Count) _dbContext.OtiaWiederholungen.Remove(otiumWiederholung);
         await _dbContext.SaveChangesAsync();
     }
 
