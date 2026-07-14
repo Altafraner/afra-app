@@ -4,16 +4,16 @@ import 'primeicons/primeicons.css';
 
 import DynamicDialog from 'primevue/dynamicdialog';
 import AfraNav from '@/components/AfraNav.vue';
-import {useUser} from '@/stores/user';
-import {computed} from 'vue';
+import { useUser } from '@/stores/user';
+import { computed } from 'vue';
 import wappenLight from '/vdaa/favicon.svg?url';
 import wappenDark from '/vdaa/favicon-dark.svg?url';
-import {ConfirmPopup} from 'primevue';
+import { ConfirmPopup } from 'primevue';
 import Login from '@/components/Login.vue';
-import {isDark} from '@/helpers/isdark';
+import { isDark } from '@/helpers/isdark';
 import ReloadPrompt from '@/components/ReloadPrompt.vue';
-import type {ToasterProps} from '@nuxt/ui/components/Toaster.d.vue.ts';
-import {de} from '@nuxt/ui/locale'
+import type { ToasterProps } from '@nuxt/ui/components/Toaster.d.vue.ts';
+import { de } from '@nuxt/ui/locale';
 
 const user = useUser();
 const toast = useToast();
@@ -50,9 +50,19 @@ const toastProps: ToasterProps = {
                                 <component :is="Component" />
                                 <template #fallback>
                                     <div>
-                                        <USkeleton class="h-12 w-[5rem]" />
-                                        <USkeleton class="h-4 w-full" />
-                                        <USkeleton class="h-4 w-full" />
+                                        <USkeleton class="h-12 w-[60%]" />
+                                        <USkeleton class="h-4 w-full my-2" />
+                                        <USkeleton class="h-4 w-full my-2" />
+                                        <USkeleton class="h-4 w-full my-2" />
+                                        <USkeleton class="h-4 w-[80%] my-2" />
+                                        <USkeleton class="h-8 w-[65%] mb-4 mt-12" />
+                                        <USkeleton class="h-4 w-full my-2" />
+                                        <USkeleton class="h-4 w-full my-2" />
+                                        <USkeleton class="h-4 w-full my-2" />
+                                        <USkeleton class="h-4 w-[30%] my-2" />
+                                        <USkeleton class="h-4 w-full mb-2 mt-4" />
+                                        <USkeleton class="h-4 w-full my-2" />
+                                        <USkeleton class="h-4 w-[40%] my-2" />
                                     </div>
                                 </template>
                             </Suspense>
