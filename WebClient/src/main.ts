@@ -3,13 +3,13 @@ import App from './App.vue';
 import router from './router';
 import ui from '@nuxt/ui/vue-plugin';
 import PrimeVue from 'primevue/config';
-import ToastService from 'primevue/toastservice';
 import Aura from '@primeuix/themes/aura';
 import { de as locale } from 'primelocale/de.json';
 import { definePreset } from '@primeuix/themes';
 import { createPinia } from 'pinia';
 import Tooltip from 'primevue/tooltip';
 import DialogService from 'primevue/dialogservice';
+// @ts-ignore
 import { registerSW } from 'virtual:pwa-register';
 
 const AfraAppPreset = definePreset(Aura, {
@@ -31,33 +31,23 @@ const AfraAppPreset = definePreset(Aura, {
                             hoverBackground:
                                 'color-mix(in srgb, {primary.700}, transparent 80%)',
                             color: '{primary.200}',
-                            hoverColor: '{surface.200}',
-                            activeColor: '{surface.100}',
                         },
                         danger: {
                             hoverBackground: 'color-mix(in srgb, {red.700}, transparent 80%)',
                             color: '{red.200}',
-                            hoverColor: '{surface.200}',
-                            activeColor: '{surface.100}',
                         },
                         warn: {
                             hoverBackground:
                                 'color-mix(in srgb, {orange.700}, transparent 80%)',
                             color: '{orange.200}',
-                            hoverColor: '{surface.200}',
-                            activeColor: '{surface.100}',
                         },
                         success: {
                             hoverBackground: 'color-mix(in srgb, {green.700}, transparent 80%)',
                             color: '{green.300}',
-                            hoverColor: '{surface.200}',
-                            activeColor: '{surface.100}',
                         },
                         info: {
                             hoverBackground: 'color-mix(in srgb, {blue.700}, transparent 80%)',
                             color: '{blue.200}',
-                            hoverColor: '{surface.200}',
-                            activeColor: '{surface.100}',
                         },
                     },
                     root: {
@@ -181,7 +171,6 @@ app.use(PrimeVue, {
     },
     locale,
 });
-app.use(ToastService);
 app.use(DialogService);
 app.use(ui);
 
@@ -191,10 +180,10 @@ app.mount('#app');
 
 const intervalMS = 30 * 60 * 1000;
 registerSW({
-    onRegistered(r) {
-        r &&
+    onRegisteredSW: (_: string, registration: ServiceWorkerRegistration | undefined) => {
+        registration &&
             setInterval(() => {
-                r.update();
+                registration.update();
             }, intervalMS);
     },
 });
