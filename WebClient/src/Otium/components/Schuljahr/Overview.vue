@@ -1,14 +1,15 @@
 <script setup>
 import { useOtiumStore } from '@/Otium/stores/otium.js';
-import { Button, Column, DataTable, useDialog } from 'primevue';
 import { mande } from 'mande';
 import CreateSchoolday from '@/Otium/components/Schuljahr/CreateSchoolday.vue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
-import { computed, shallowRef } from 'vue';
+import { computed, h } from 'vue';
 import EditSchoolday from '@/Otium/components/Schuljahr/EditSchoolday.vue';
+import UButton from '@nuxt/ui/components/Button.vue';
+import UTooltip from '@nuxt/ui/components/Tooltip.vue';
 
 const settings = useOtiumStore();
-const dialog = useDialog();
+const overlay = useOverlay();
 const { requireConfirm } = useConfirmPopover();
 const toast = useToast();
 
@@ -17,18 +18,28 @@ async function setup() {
     await settings.updateBlocks();
 }
 
-function addDay() {
-    dialog.open(CreateSchoolday, {
-        props: {
-            modal: true,
-            header: 'Tag hinzufügen',
-        },
-        emits: {
-            onUpdate: () => {
-                settings.updateSchuljahr(true);
-            },
-        },
-    });
+const createModal = overlay.create(CreateSchoolday);
+
+async function addDay() {
+    const data = await createModal.open();
+    if (!data) return;
+    const api = mande('/api/management/schuljahr');
+    try {
+        await api.post(data);
+        toast.add({
+            color: 'success',
+            title: 'Erfolg',
+            description: 'Der Termin wurde erfolgreich gespeichert.',
+        });
+    } catch (error) {
+        console.error(error);
+        toast.add({
+            color: 'error',
+            title: 'Fehler',
+            description: 'Die Termine konnten nicht gespeichert werden.',
+        });
+    }
+    await settings.updateSchuljahr(true);
 }
 
 async function deleteDay(data) {
@@ -71,79 +82,70 @@ const displayData = computed(
         }) ?? [],
 );
 
-const expandedRows = shallowRef([]);
+const columns = [
+    {
+        header: 'Datum',
+        cell: ({ row }) =>
+            h(UButton, {
+                label: row.original.displayDate,
+                variant: 'ghost',
+                icon: row.getIsExpanded() ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right',
+                onClick: () => row.toggleExpanded(),
+            }),
+    },
+    {
+        header: 'Wochentyp',
+        accessorKey: 'wochentyp',
+    },
+    {
+        header: 'Blöcke',
+        accessorKey: 'displayBlocks',
+    },
+    {
+        id: 'actions',
+        header: () =>
+            h(UTooltip, { text: 'Tag hinzufügen' }, () =>
+                h(UButton, {
+                    icon: 'i-lucide-plus',
+                    size: 'sm',
+                    onClick: addDay,
+                }),
+            ),
+        cell: ({ row }) =>
+            h(UTooltip, { text: 'Tag löschen' }, () =>
+                h(UButton, {
+                    icon: 'i-lucide-x',
+                    size: 'sm',
+                    color: 'error',
+                    variant: 'ghost',
+                    onClick: () => deleteDay(row.original.original),
+                }),
+            ),
+    },
+];
 </script>
 
 <template>
     <h2>Schultage</h2>
     <p>
         Hier können Sie die Schultage in diesem Schuljahr verwalten. Sie können auch
-        <Button
-            :to="{ name: 'Verwaltung-Schuljahr-Neu' }"
-            as="RouterLink"
-            class="p-0 hover:underline"
-            variant="link"
-        >
+        <ULink :to="{ name: 'Verwaltung-Schuljahr-Neu' }" class="text-primary hover:underline">
             mehrere Termine anlegen.
-        </Button>
+        </ULink>
     </p>
-    <DataTable
-        v-model:expanded-rows="expandedRows"
-        :value="displayData"
-        data-key="datum"
-        dataKey="datum"
-        size="small"
+    <UTable
+        :columns="columns"
+        :data="displayData"
+        :ui="{
+            td: 'whitespace-normal text-default px-2 py-1.5',
+            th: 'px-2 py-1.5',
+            root: 'overflow-x-visible',
+        }"
     >
-        <Column header="Datum">
-            <template #body="{ data, rowTogglerCallback }">
-                <Button
-                    :icon="
-                        expandedRows && expandedRows[data.datum]
-                            ? 'pi pi-chevron-down'
-                            : 'pi pi-chevron-right'
-                    "
-                    :label="data.displayDate"
-                    class="text-nowrap"
-                    severity="info"
-                    size="small"
-                    variant="text"
-                    @click="rowTogglerCallback"
-                />
-            </template>
-        </Column>
-        <Column field="wochentyp" header="Wochentyp" />
-        <Column header="Blöcke">
-            <template #body="{ data }">
-                {{ data.displayBlocks }}
-            </template>
-        </Column>
-        <Column class="afra-col-action text-right">
-            <template #header>
-                <Button
-                    v-tooltip="'Tag hinzufügen'"
-                    icon="pi pi-plus"
-                    size="small"
-                    aria-label="Tag hinzufügen"
-                    @click="addDay"
-                />
-            </template>
-            <template #body="{ data }">
-                <div class="inline-flex">
-                    <Button
-                        v-tooltip="'Löschen'"
-                        aria-label="Löschen"
-                        icon="pi pi-times"
-                        severity="danger"
-                        size="small"
-                        variant="text"
-                        @click="() => deleteDay(data.original)"
-                    />
-                </div>
-            </template>
-        </Column>
-        <template #expansion="{ data }"> <EditSchoolday :date="data.datum" /> </template>
-        <template #empty> Keine Schultage angelegt.</template>
-    </DataTable>
+        <template #expanded="{ row }">
+            <EditSchoolday :date="row.original.datum" />
+        </template>
+    </UTable>
 </template>
 
 <style scoped></style>

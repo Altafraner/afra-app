@@ -1,12 +1,13 @@
 <script setup>
 import { mande } from 'mande';
-import { shallowRef } from 'vue';
-import { Button, FloatLabel, Select, Skeleton } from 'primevue';
+import { computed, h, shallowRef } from 'vue';
 import { formatStudent } from '@/helpers/formatters.ts';
 import EditSupervisorsForm from '@/Otium/components/Schuljahr/EditSupervisorsForm.vue';
 import { useRouter } from 'vue-router';
 import { useConfirmPopover } from '@/composables/confirmPopover.ts';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
+import UTooltip from '@nuxt/ui/components/Tooltip.vue';
+import UButton from '@nuxt/ui/components/Button.vue';
 
 const props = defineProps({
     date: {
@@ -66,75 +67,104 @@ async function add() {
 }
 
 setup();
+
+const mappedResult = computed(() => {
+    return result.value.map((data) => ({
+        original: data,
+        name: data.name,
+        supervisors:
+            data.supervisors.length === 0
+                ? 'Keine Aufsichten'
+                : data.supervisors.map((s) => formatStudent(s)).join(', '),
+    }));
+});
+
+const columns = [
+    {
+        header: 'Block',
+        accessorKey: 'name',
+    },
+    { header: 'Aufsichten', accessorKey: 'supervisors' },
+    {
+        id: 'actions',
+        header: 'Aktionen',
+        meta: { class: { td: 'text-right' } },
+        cell: ({ row }) =>
+            h('div', { class: 'flex justify-end gap-1' }, [
+                h(UTooltip, { text: 'Aufsicht' }, () =>
+                    h(UButton, {
+                        icon: 'i-lucide-eye',
+                        variant: 'ghost',
+                        size: 'sm',
+                        onClick: () => supervise(row.original.original),
+                    }),
+                ),
+                h(UTooltip, { text: 'Aufsichten Bearbeiten' }, () =>
+                    h(UButton, {
+                        icon: 'i-lucide-pencil',
+                        variant: 'ghost',
+                        size: 'sm',
+                        color: 'neutral',
+                        onClick: () => editSupervisors(row.original.original),
+                    }),
+                ),
+                h(UTooltip, { text: 'Löschen' }, () =>
+                    h(UButton, {
+                        icon: 'i-lucide-x',
+                        variant: 'ghost',
+                        size: 'sm',
+                        color: 'error',
+                        onClick: () => remove(row.original.original),
+                    }),
+                ),
+            ]),
+    },
+];
 </script>
 
 <template>
     <template v-if="loading">
-        <Skeleton class="w-full h-4" />
-        <Skeleton class="w-full h-4" />
-        <Skeleton class="w-full h-4" />
-        <Skeleton class="w-full h-4" />
-        <Skeleton class="w-full h-4" />
-        <Skeleton class="w-full h-4" />
-    </template>
-    <template v-else>
-        <div class="grid grid-cols-[auto_1fr_auto] w-full gap-2 items-center mb-4 mx-2">
-            <span class="font-bold">Name</span>
-            <span class="font-bold">Aufsicht</span>
-            <span></span>
-            <template v-for="data in result">
-                <span>{{ data.name }}</span>
-                <span v-if="data.supervisors.length === 0">Keine Aufsichten</span>
-                <span v-else>{{
-                    data.supervisors.map((s) => formatStudent(s)).join(', ')
-                }}</span>
-                <span class="inline-flex justify-end">
-                    <Button
-                        aria-label="Aufsicht"
-                        icon="pi pi-eye"
-                        size="small"
-                        variant="text"
-                        @click="() => supervise(data)"
-                    />
-                    <Button
-                        aria-label="Bearbeiten"
-                        icon="pi pi-pencil"
-                        severity="secondary"
-                        size="small"
-                        variant="text"
-                        @click="() => editSupervisors(data)"
-                    />
-                    <Button
-                        aria-label="Löschen"
-                        icon="pi pi-times"
-                        severity="danger"
-                        size="small"
-                        variant="text"
-                        @click="() => remove(data)"
-                    />
-                </span>
-            </template>
-        </div>
-        <div class="grid grid-cols-[1fr_auto] gap-2">
-            <FloatLabel variant="on">
-                <Select
-                    id="newBlock"
-                    v-model="newBlock"
-                    :options="
-                        otiumStore.blocks.filter(
-                            (b) => !result.some((r) => r.schemaId === b.schemaId),
-                        )
-                    "
-                    fluid
-                    option-label="bezeichnung"
-                    option-value="schemaId"
-                    size="small"
-                ></Select>
-                <label for="newBlock">Block hinzufügen</label>
-            </FloatLabel>
-            <Button aria-label="Hinzufügen" icon="pi pi-plus" size="small" @click="add" />
+        <div class="flex flex-col gap-2">
+            <USkeleton class="w-full h-30 mx-2" />
         </div>
     </template>
+    <UCard
+        v-else
+        :ui="{
+            body: 'p-2 sm:p-2',
+            footer: 'p-2 sm:p-2',
+        }"
+        variant="soft"
+    >
+        <UTable
+            :columns="columns"
+            :data="mappedResult"
+            :ui="{
+                td: 'whitespace-normal px-2 py-1.5',
+                th: 'px-2 py-1.5',
+                root: 'overflow-x-visible',
+            }"
+        />
+        <template #footer>
+            <UFormField :ui="{ label: 'text-default', root: 'mx-2' }" label="Block hinzufügen">
+                <UFieldGroup class="w-full">
+                    <USelect
+                        v-model="newBlock"
+                        :items="
+                            otiumStore.blocks.filter(
+                                (b) => !result.some((r) => r.schemaId === b.schemaId),
+                            )
+                        "
+                        class="w-full"
+                        label-key="bezeichnung"
+                        placeholder="Neuen Block wählen"
+                        value-key="schemaId"
+                    />
+                    <UButton icon="i-lucide-plus" @click="add" />
+                </UFieldGroup>
+            </UFormField>
+        </template>
+    </UCard>
 </template>
 
 <style scoped></style>

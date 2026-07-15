@@ -1,289 +1,201 @@
-<script setup>
-import { computed, ref, watch } from 'vue';
-import Stepper from 'primevue/stepper';
-import StepItem from 'primevue/stepitem';
-import Step from 'primevue/step';
-import StepPanel from 'primevue/steppanel';
-import FloatLabel from 'primevue/floatlabel';
-import DatePicker from 'primevue/datepicker';
-import { Button, Column, DataTable, Message, MultiSelect, Select } from 'primevue';
-import Form from '@primevue/forms/form';
-import { formatDate, formatMachineDate } from '@/helpers/formatters';
+<script lang="ts" setup>
+import { getDayOfWeek, isEqualDay } from '@internationalized/date';
+import { computed, h, reactive, ref, resolveComponent, watch } from 'vue';
 import { mande } from 'mande';
 import { useRouter } from 'vue-router';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
-import PersonSelector from '@/components/PersonSelector.vue';
+import PersonSelectorNuxt from '@/components/PersonSelectorNuxt.vue';
+import { ChipProps, FormError } from '@nuxt/ui';
+import ADateRangePicker from '@/components/Form/ADateRangePicker.vue';
+import { UserInfoMinimal } from '@/models/user/user.ts';
+
+const UButton = resolveComponent('UButton');
+const UBadge = resolveComponent('UBadge');
+const USelect = resolveComponent('USelect');
+const UChip = resolveComponent('UChip');
 
 const toast = useToast();
 const router = useRouter();
 const otium = useOtiumStore();
 await otium.updateBlocks();
 
-const stepperStatus = ref('0');
+const stepperStatus = ref(0);
 
-const schoolyearStart = ref(null);
-const schoolyearEnd = ref(null);
+const weeks = ref<WeekWithType[]>([]);
 
-const ferien = ref([]);
-const newFerien = ref(null);
-
-const weeks = ref([]);
-
-const aufsichten = ref([]);
+const aufsichten = ref<SlotAndDayWithSupervisors[]>([]);
 
 const angeboteProWochentag = ref([
     {
         tag: 'Montag',
-        blocksH: [],
-        blocksN: [],
+        slotsH: [],
+        slotsN: [],
     },
     {
         tag: 'Dienstag',
-        blocksH: [],
-        blocksN: [],
+        slotsH: [],
+        slotsN: [],
     },
     {
         tag: 'Mittwoch',
-        blocksH: [],
-        blocksN: [],
+        slotsH: [],
+        slotsN: [],
     },
     {
         tag: 'Donnerstag',
-        blocksH: [],
-        blocksN: [],
+        slotsH: [],
+        slotsN: [],
     },
     {
         tag: 'Freitag',
-        blocksH: [],
-        blocksN: [],
+        slotsH: [],
+        slotsN: [],
     },
     {
         tag: 'Samstag',
-        blocksH: [],
-        blocksN: [],
+        slotsH: [],
+        slotsN: [],
     },
 ]);
 
-const ferienSorted = computed(() => {
-    return ferien.value.sort((a, b) => {
-        if (a.start < b.start) return -1;
-        if (a.start > b.start) return 1;
-        return 0;
-    });
-});
-const datesDisabled = computed(() => {
-    if (!schoolyearStart.value || !schoolyearEnd.value) {
-        return [];
-    }
-
-    const dates = [];
-    let current = schoolyearStart.value;
-    while (current < schoolyearEnd.value) {
-        // Check if current is in ferien
-        if (ferien.value.some((e) => e.start <= current && e.end >= current))
-            dates.push(current);
-
-        current = new Date(current);
-        current.setDate(current.getDate() + 1);
-    }
-
-    return dates;
-});
 const blocksAvailable = otium.blocks;
 
 watch(stepperStatus, (newValue) => {
-    if (newValue !== '5') return;
-    const newAufsichten = [];
+    if (newValue !== 5) return;
+    const newAufsichten = [] as SlotAndDayWithSupervisors[];
     for (const day of angeboteProWochentag.value) {
-        for (const blockH of day.blocksH) {
+        for (const slotH of day.slotsH) {
             newAufsichten.push({
                 day: day.tag,
                 typ: 'H-Woche',
-                block: blockH,
+                block: slotH,
                 supervisors: [],
             });
         }
-        for (const blockN of day.blocksN) {
+        for (const slotN of day.slotsN) {
             newAufsichten.push({
                 day: day.tag,
                 typ: 'N-Woche',
-                block: blockN,
+                block: slotN,
                 supervisors: [],
             });
         }
     }
-    console.log(newAufsichten);
     aufsichten.value = newAufsichten;
 });
 
-function resolveStep1({ values }) {
-    const errors = {};
+function validateTimeframe(state: Partial<TimeframeFormSchema>): FormError[] {
+    const errors: FormError[] = [];
 
-    if (!values.schoolyearStart)
-        errors.schoolyearStart = [
-            { message: 'Bitte geben Sie das Anreisedatum nach den Sommerferien an.' },
-        ];
-
-    if (!values.schoolyearEnd)
-        errors.schoolyearEnd = [
-            { message: 'Bitte geben Sie das Abreisedatum in die Sommerferien an.' },
-        ];
-
-    if (
-        values.schoolyearStart &&
-        values.schoolyearEnd &&
-        values.schoolyearEnd <= values.schoolyearStart
-    )
-        errors.schoolyearEnd = [
-            { message: 'Das Abreisedatum muss nach dem Anreisedatum liegen.' },
-        ];
-
-    return { values, errors };
-}
-
-function form1Submit({ valid }) {
-    if (!valid) return;
-
-    stepperStatus.value = '2';
-}
-
-function addFerien() {
-    if (!newFerien.value) return;
-
-    const start = newFerien.value[0];
-    const end = newFerien.value[1] ?? new Date(start);
-
-    if (!start || start > end) {
-        return;
-    }
-
-    // Weird workaround for timezone issues
-    end.setHours(12);
-    ferien.value.push({ start, end });
-    newFerien.value = null;
-}
-
-function form2Submit() {
-    const tempWeeks = [];
-
-    let current = new Date(schoolyearStart.value);
-    current.setDate(current.getDate() - current.getDay() + 1); // Set to Monday
-
-    while (current < schoolyearEnd.value) {
-        const weekStart = new Date(current);
-        const weekEnd = new Date(current);
-        weekEnd.setDate(weekEnd.getDate() + 6);
-
-        const hasHoliday = ferien.value.some((e) => {
-            const startsInWeek = e.start >= weekStart && e.start <= weekEnd;
-            const endsInWeek = e.end >= weekStart && e.end <= weekEnd;
-            return (startsInWeek || endsInWeek) && !(startsInWeek && endsInWeek); // XOR to ignore one-day holidays
+    if (!state.start)
+        errors.push({
+            name: 'start',
+            message: 'Bitte geben Sie das Startdatum an!',
         });
 
-        const isInHoliday = ferien.value.some((e) => {
-            return e.start <= weekStart && e.end >= weekEnd;
+    if (!state.end)
+        errors.push({
+            name: 'end',
+            message: 'Bitte geben Sie das Enddatum an.',
         });
 
-        tempWeeks.push({
-            start: weekStart,
-            end: weekEnd,
-            type: isInHoliday ? 'F' : hasHoliday ? 'H' : 'N',
+    if (state.start && state.end && state.start.compare(state.end) >= 0)
+        errors.push({
+            name: 'end',
+            message: 'Das Enddatum muss nach dem Startdatum liegen.',
         });
 
-        current.setDate(current.getDate() + 7); // add 7 days to get the next week
-    }
+    return errors;
+}
 
-    weeks.value = tempWeeks;
-    stepperStatus.value = '3';
+function submitTimeframe() {
+    stepperStatus.value = 2;
 }
 
 async function submit() {
     const wochentypen = { H: 'H-Woche', N: 'N-Woche' };
     const data = [];
 
-    // This is weird a workaround for the fact that js handles dates in the local timezone but upon ISO string conversion transforms them to UTC.
-    const start = new Date(schoolyearStart.value).setHours(12);
-    const end = new Date(schoolyearEnd.value).setHours(12);
-
-    const current = new Date(start);
-    while (current < end) {
-        if (current.getDay() === 0) {
-            current.setDate(current.getDate() + 1);
+    let current = timeFrameState.start! as CalendarDate;
+    while (current.compare(timeFrameState.end!) <= 0) {
+        const dayOfWeek = getDayOfWeek(current, 'de-DE', 'mon');
+        // skip sunndays
+        if (dayOfWeek === 6) {
+            current = current.add({ days: 1 });
             continue;
         }
 
         // Check if the current date is in a holiday
-        const isInHoliday = ferien.value.some((e) => {
-            return e.start <= current && e.end >= current;
+        const isInHoliday = vacationDays.value.some((e) => {
+            return isEqualDay(current, e);
         });
 
         if (isInHoliday) {
-            current.setDate(current.getDate() + 1);
+            current = current.add({ days: 1 });
             continue;
         }
 
         // Find the week for the current date
+        const monday = current.add({ days: -dayOfWeek });
         const week = weeks.value.find((w) => {
-            return current >= w.start && current <= w.end;
+            return isEqualDay(monday, w.start as DateValue);
         });
 
         if (!week) {
-            current.setDate(current.getDate() + 1);
+            current = current.add({ days: 1 });
             console.error('Could not find Week', current);
             continue;
         }
 
-        // Find the day of the week
-        const dayOfWeek = current.getDay();
-
         const niceWochentage = [
-            'Sonntag',
             'Montag',
             'Dienstag',
             'Mittwoch',
             'Donnerstag',
             'Freitag',
             'Samstag',
+            'Sonntag',
         ];
 
         // Find the blocks for the day of the week
         const angeboteAmWochentag = angeboteProWochentag.value.find(
             (d) => d.tag === niceWochentage[dayOfWeek],
-        );
+        )!;
         const blocks =
             week.type === 'H'
-                ? angeboteAmWochentag.blocksH.map((w) => {
+                ? angeboteAmWochentag.slotsH.map((w) => {
                       const aufsichtenSlot = aufsichten.value.find(
                           (a) =>
                               a.day === niceWochentage[dayOfWeek] &&
                               a.typ === 'H-Woche' &&
                               a.block === w,
-                      );
+                      )!;
                       return {
                           schemaId: w,
                           supervisors: aufsichtenSlot.supervisors,
                       };
                   })
-                : angeboteAmWochentag.blocksN.map((w) => {
+                : angeboteAmWochentag.slotsN.map((w) => {
                       const aufsichtenSlot = aufsichten.value.find(
                           (a) =>
                               a.day === niceWochentage[dayOfWeek] &&
                               a.typ === 'N-Woche' &&
                               a.block === w,
-                      );
+                      )!;
                       return {
                           schemaId: w,
                           supervisors: aufsichtenSlot.supervisors,
                       };
                   });
 
-        data.push({
-            datum: formatMachineDate(current),
-            wochentyp: wochentypen[week.type],
-            blocks: blocks,
-        });
+        if (blocks.length > 0)
+            data.push({
+                datum: current.toString(),
+                wochentyp: wochentypen[week.type as WeekType],
+                blocks: blocks,
+            });
 
-        current.setDate(current.getDate() + 1);
+        current = current.add({ days: 1 });
     }
 
     const api = mande('/api/management/schuljahr');
@@ -303,269 +215,439 @@ async function submit() {
         });
     }
 }
+
+const timeFrameState = reactive<TimeframeFormSchema>({
+    start: undefined,
+    end: undefined,
+});
+
+const vacationState = ref<VacationFormSchema>({
+    start: undefined,
+    end: undefined,
+});
+
+const vacations = ref<Vacation[]>([]);
+const vacationDays = computed(() => {
+    const days = [] as DateValue[];
+
+    for (const vacation of vacations.value) {
+        if (!vacation.end) {
+            days.push(vacation.start as CalendarDate);
+            continue;
+        }
+
+        let currentDate = vacation.start;
+        while (currentDate.compare(vacation.end as CalendarDate) <= 0) {
+            days.push(currentDate as DateValue);
+            currentDate = currentDate.add({ days: 1 });
+        }
+    }
+    return days;
+});
+const sortedVacations = computed(() => {
+    return vacations.value.sort((a, b) => a.start.compare(b.start as DateValue));
+});
+
+function addVacation() {
+    if (!vacationState.value?.start) return;
+
+    if (
+        vacationState.value.end &&
+        isEqualDay(vacationState.value.start as DateValue, vacationState.value.end as DateValue)
+    )
+        vacationState.value.end = undefined;
+    vacations.value.push(Object.assign({}, vacationState.value) as Vacation);
+    vacationState.value = {
+        start: undefined,
+        end: undefined,
+    };
+}
+
+function isDateDisabled(date: DateValue) {
+    return vacationDays.value.some((v) => isEqualDay(v, date));
+}
+
+const vacationColumns: TableColumn<Vacation>[] = [
+    {
+        id: 'start',
+        header: 'Beginn',
+        accessorFn: (data) => `${data.start.day}.${data.start.month}.${data.start.year}`,
+    },
+    {
+        id: 'end',
+        header: 'Ende',
+        accessorFn: (data) => {
+            if (!data.end) return '';
+            return `${data.end.day}.${data.end.month}.${data.end.year}`;
+        },
+    },
+    {
+        id: 'actions',
+        cell: ({ row }) =>
+            h(UButton, {
+                icon: 'i-lucide-x',
+                color: 'error',
+                variant: 'ghost',
+                size: 'sm',
+                onClick: () => {
+                    const index = vacations.value.indexOf(row.original);
+                    if (index > -1) {
+                        vacations.value.splice(index, 1);
+                    }
+                },
+            }),
+        meta: {
+            class: {
+                td: 'text-right',
+            },
+        },
+    },
+];
+
+function submitVacations() {
+    const tempWeeks = [] as WeekWithType[];
+
+    let current = timeFrameState.start!;
+    current = current.add({
+        days: -getDayOfWeek(current as DateValue, 'de-DE', 'mon'),
+    }); // Set to Monday
+
+    while (current.compare(timeFrameState.end!) <= 0) {
+        const weekStart = current;
+        const weekEnd = current.add({ days: 6 });
+
+        const hasHoliday = vacations.value.some((e) => {
+            if (!e.end) return false; // Ignore one-day holidays in weektype calculation
+            const startsInWeek =
+                e.start.compare(weekStart as DateValue) >= 0 &&
+                e.start.compare(weekEnd as DateValue) <= 0;
+            if (startsInWeek) return true;
+            return (
+                e.end.compare(weekStart as DateValue) >= 0 &&
+                e.end.compare(weekEnd as DateValue) <= 0
+            ); // ends in week
+        });
+
+        const isInHoliday = vacations.value.some((e) => {
+            if (!e.end) return false;
+            return (
+                e.start.compare(weekStart as DateValue) <= 0 &&
+                e.end.compare(weekEnd as DateValue) >= 0
+            );
+        });
+
+        tempWeeks.push({
+            start: weekStart as CalendarDate,
+            end: weekEnd as CalendarDate,
+            type: isInHoliday ? 'F' : hasHoliday ? 'H' : 'N',
+        });
+
+        current = current.add({ days: 7 }); // add 7 days to get the next week
+    }
+
+    weeks.value = tempWeeks;
+    stepperStatus.value = 3;
+}
+
+const weekColumns: TableColumn<WeekWithType>[] = [
+    {
+        id: 'start',
+        header: 'Montag',
+        accessorFn: (data) => `${data.start.day}.${data.start.month}.${data.start.year}`,
+    },
+    {
+        id: 'end',
+        header: 'Sonntag',
+        accessorFn: (data) => `${data.end.day}.${data.end.month}.${data.end.year}`,
+    },
+    {
+        id: 'type',
+        header: 'Typ',
+        cell: ({ row }) =>
+            row.original.type == 'F'
+                ? h(UBadge, { label: 'Ferien', color: 'neutral' })
+                : h(
+                      USelect,
+                      {
+                          items: weekTypeOptions,
+                          modelValue: row.original.type,
+                          'onUpdate:modelValue': (value: WeekType) => {
+                              row.original.type = value;
+                          },
+                      },
+                      {
+                          leading: ({
+                              modelValue,
+                              ui,
+                          }: {
+                              modelValue: WeekType | undefined;
+                              ui: any;
+                          }) => {
+                              if (!modelValue) return null;
+                              return h(UChip, {
+                                  size: ui.itemLeadingChipSize() as ChipProps['size'],
+                                  class: ui.itemLeadingChip(),
+                                  standalone: true,
+                                  inset: true,
+                                  ...getChip(modelValue),
+                              });
+                          },
+                      },
+                  ),
+    },
+];
+
+const slotColumns: TableColumn<DayWithBlocks>[] = [
+    {
+        id: 'day',
+        header: 'Tag',
+        accessorKey: 'tag',
+    },
+    {
+        id: 'h',
+        header: 'H-Woche',
+        cell: ({ row }) => {
+            return h(USelect, {
+                class: 'w-full min-w-40',
+                items: blocksAvailable,
+                labelKey: 'bezeichnung',
+                valueKey: 'schemaId',
+                multiple: true,
+                placeholder: 'Keine Slots ausgewählt',
+                modelValue: row.original.slotsH,
+                'onUpdate:modelValue': (newValue: string[]) => {
+                    row.original.slotsH = newValue;
+                },
+            });
+        },
+    },
+    {
+        id: 'n',
+        header: 'N-Woche',
+        cell: ({ row }) => {
+            return h(USelect, {
+                class: 'w-full min-w-40',
+                items: blocksAvailable,
+                labelKey: 'bezeichnung',
+                valueKey: 'schemaId',
+                multiple: true,
+                placeholder: 'Keine Slots ausgewählt',
+                modelValue: row.original.slotsN,
+                'onUpdate:modelValue': (newValue: string[]) => {
+                    row.original.slotsN = newValue;
+                },
+            });
+        },
+    },
+];
+
+const supervisorColumns: TableColumn<SlotAndDayWithSupervisors>[] = [
+    {
+        header: 'Tag',
+        accessorKey: 'day',
+    },
+    {
+        header: 'Typ',
+        accessorKey: 'typ',
+    },
+    {
+        header: 'Block',
+        accessorFn: (data) =>
+            (blocksAvailable! as any[]).find((b) => b.schemaId === data.block)?.bezeichnung,
+    },
+    {
+        header: 'Aufsichten',
+        cell: ({ row }) => {
+            return h(PersonSelectorNuxt, {
+                class: 'w-full min-w-40',
+                multiple: true,
+                filter: (p: UserInfoMinimal) => p.rolle == 'Tutor',
+                modelValue: row.original.supervisors,
+                'onUpdate:modelValue': (data) => {
+                    row.original.supervisors = data as string[];
+                },
+                placeholder: 'Aufsicht wählen',
+            });
+        },
+    },
+];
+</script>
+
+<script lang="ts">
+import { CalendarDate, DateValue } from '@internationalized/date';
+import { TableColumn } from '@nuxt/ui';
+
+const stepperItems = [
+    {
+        title: 'Start',
+        slot: 'start',
+    },
+    {
+        title: 'Zeitrahmen',
+        slot: 'timeframe',
+    },
+    {
+        title: 'Ferien',
+        slot: 'holidays',
+    },
+    {
+        title: 'H/N-Wochen',
+        slot: 'weektypes',
+    },
+    {
+        title: 'Slots',
+        slot: 'slots',
+    },
+    {
+        title: 'Aufsichten',
+        slot: 'supervisors',
+    },
+];
+
+const weekTypeOptions = [
+    {
+        value: 'H',
+        label: 'H-Woche',
+        chip: {
+            color: 'success',
+        },
+    },
+    {
+        value: 'N',
+        label: 'N-Woche',
+        chip: {
+            color: 'error',
+        },
+    },
+];
+
+function getChip(value: string) {
+    return weekTypeOptions.find((v) => v.value === value)?.chip;
+}
+
+interface TimeframeFormSchema {
+    start: CalendarDate | undefined;
+    end: CalendarDate | undefined;
+}
+
+type VacationFormSchema = TimeframeFormSchema;
+
+interface Vacation {
+    start: DateValue;
+    end: DateValue | undefined;
+}
+
+type WeekType = 'H' | 'N';
+type WeekTypeOrVacation = WeekType | 'F';
+
+interface WeekWithType {
+    start: DateValue;
+    end: DateValue;
+    type: WeekTypeOrVacation;
+}
+
+interface DayWithBlocks {
+    tag: string;
+    slotsN: string[];
+    slotsH: string[];
+}
+
+interface SlotAndDayWithSupervisors {
+    day: string;
+    typ: string;
+    block: string;
+    supervisors: string[];
+}
 </script>
 
 <template>
-    <h1>Schuljahr planen</h1>
-    <Stepper v-model:value="stepperStatus" linear>
-        <StepItem value="0">
-            <Step>Start</Step>
-            <StepPanel v-slot="{ activateCallback }">
-                <p>Dieses Programm hilf ihnen, ihr Schuljahr vorauszuplanen.</p>
-                <Button fluid label="Start" @click="() => activateCallback('1')" />
-            </StepPanel>
-        </StepItem>
-        <StepItem value="1">
-            <Step>Aufbau des Schuljahrs</Step>
-            <StepPanel>
-                <!--
-        Enter schoolyear timeframe
-        -->
-                <p>Bitte geben sie Start und Ende des Schuljahres an.</p>
-                <Form
-                    v-slot="$form"
-                    :resolver="resolveStep1"
-                    class="flex flex-col gap-4"
-                    @submit="form1Submit"
-                >
-                    <div class="w-full">
-                        <FloatLabel variant="on">
-                            <DatePicker
-                                id="schoolyearStart"
-                                v-model="schoolyearStart"
-                                date-format="dd.mm.yy"
-                                fluid
-                                name="schoolyearStart"
-                                select-other-months
-                                show-icon
-                            />
-                            <label for="schoolyearStart">Anreise nach den Sommerferien</label>
-                        </FloatLabel>
-                        <Message
-                            v-if="$form.schoolyearStart?.invalid"
-                            severity="error"
-                            size="small"
-                            variant="simple"
-                        >
-                            {{ $form.schoolyearStart.error.message }}
-                        </Message>
-                    </div>
-                    <div class="w-full">
-                        <FloatLabel variant="on">
-                            <DatePicker
-                                id="schoolyearEnd"
-                                v-model="schoolyearEnd"
-                                date-format="dd.mm.yy"
-                                fluid
-                                name="schoolyearEnd"
-                                select-other-months
-                                show-icon
-                            />
-                            <label for="schoolyearEnd">Abreise in die Sommerferien</label>
-                        </FloatLabel>
-                        <Message
-                            v-if="$form.schoolyearEnd?.invalid"
-                            severity="error"
-                            size="small"
-                            variant="simple"
-                        >
-                            {{ $form.schoolyearEnd.error.message }}
-                        </Message>
-                    </div>
-                    <Button label="Weiter" type="submit" />
-                </Form>
-            </StepPanel>
-        </StepItem>
-        <StepItem value="2">
-            <Step>Ferien</Step>
-            <StepPanel>
-                <div class="flex flex-col gap-4">
-                    <p>Bitte geben sie alle Schulferien und Feiertage an.</p>
-                    <div class="flex w-full gap-4 justify-stretch">
-                        <FloatLabel class="w-full" variant="on">
-                            <DatePicker
-                                v-model="newFerien"
-                                :disabled-dates="datesDisabled"
-                                :max-date="schoolyearEnd"
-                                :min-date="schoolyearStart"
-                                class="w-full"
-                                date-format="dd.mm.yy"
-                                select-other-months
-                                selection-mode="range"
-                                show-button-bar
-                                show-icon
-                            />
-                            <label>Schulferien (Abreise - Anreise oder Feiertag)</label>
-                        </FloatLabel>
-                        <Button label="Hinzufügen" @click="addFerien" />
-                    </div>
-                    <DataTable :value="ferienSorted">
-                        <Column header="Start">
-                            <template #body="{ data }">
-                                {{ formatDate(data.start) }}
-                            </template>
-                        </Column>
-                        <Column header="Ende">
-                            <template #body="{ data }">
-                                {{ formatDate(data.end) }}
-                            </template>
-                        </Column>
-                        <Column class="afra-col-action text-right">
-                            <template #body="{ data }">
-                                <Button
-                                    icon="pi pi-trash"
-                                    severity="danger"
-                                    variant="text"
-                                    @click="
-                                        () => {
-                                            const index = ferien.indexOf(data);
-                                            if (index > -1) {
-                                                ferien.splice(index, 1);
-                                            } else alert('Shit');
-                                        }
-                                    "
-                                />
-                            </template>
-                        </Column>
-                        <template #empty>
-                            <div class="flex justify-center">
-                                Sie können oben Ferientermine angeben.
-                            </div>
-                        </template>
-                    </DataTable>
-                    <div class="grid grid-cols-[1fr_4fr] gap-4">
-                        <Button
-                            label="Zurück"
-                            severity="secondary"
-                            @click="() => (stepperStatus.value = '1')"
-                        />
-                        <Button fluid label="Weiter" @click="() => form2Submit()" />
-                    </div>
+    <h1>Schultage anlegen</h1>
+    <UStepper v-model="stepperStatus" :items="stepperItems" disabled>
+        <template #start>
+            <p>Dieses Programm hilf Ihnen dabei, ihr Schuljahr vorauszuplanen.</p>
+            <UButton
+                class="w-full"
+                label="Start"
+                @click="
+                    () => {
+                        stepperStatus = 1;
+                    }
+                "
+            />
+        </template>
+        <template #timeframe>
+            <p>
+                Bitte geben sie Start und Ende des Zeitraumes an, für den Sie Schultage anlegen
+                möchten.
+            </p>
+            <UForm
+                :state="timeFrameState"
+                :validate="validateTimeframe"
+                class="flex flex-col gap-4"
+                @submit="submitTimeframe"
+            >
+                <UFormField label="Beginn des Zeitraums" name="start">
+                    <ADatePicker
+                        v-model="timeFrameState.start as CalendarDate"
+                        class="w-full"
+                    />
+                </UFormField>
+                <UFormField label="Ende des Zeitraums" name="end">
+                    <ADatePicker v-model="timeFrameState.end as CalendarDate" class="w-full" />
+                </UFormField>
+                <UButton label="Weiter" type="submit" />
+            </UForm>
+        </template>
+        <template #holidays>
+            <div class="flex flex-col gap-4">
+                <p>Bitte geben sie alle Schulferien und Feiertage an.</p>
+                <div class="flex w-full gap-4 justify-stretch">
+                    <ADateRangePicker
+                        v-model="vacationState as any"
+                        :isDateDisabled="isDateDisabled"
+                        :maxValue="timeFrameState.end"
+                        :minValue="timeFrameState.start"
+                        :numberOfMonths="3"
+                        class="w-full"
+                    />
+                    <UButton label="Hinzufügen" @click="addVacation" />
                 </div>
-            </StepPanel>
-        </StepItem>
-        <StepItem value="3">
-            <Step>H-/ N-Wochen</Step>
-            <StepPanel>
-                <p>
-                    Wir haben automatisch versucht die H-/ N-Wochen vorherzusagen. Bitte
-                    kontrollieren Sie die Vorhersagen und passen Sie ggf. den Typ an.
-                </p>
-                <DataTable :value="weeks">
-                    <Column header="Start">
-                        <template #body="{ data }">
-                            {{ formatDate(data.start) }}
-                        </template>
-                    </Column>
-                    <Column header="Ende">
-                        <template #body="{ data }">
-                            {{ formatDate(data.end) }}
-                        </template>
-                    </Column>
-                    <Column header="Typ">
-                        <template #body="{ data }">
-                            <Select
-                                v-if="data.type === 'F'"
-                                v-model="data.type"
-                                :options="[{ label: 'Ferien', value: 'F' }]"
-                                disabled
-                                fluid
-                                option-label="label"
-                                option-value="value"
-                            />
-                            <Select
-                                v-else
-                                v-model="data.type"
-                                :options="[
-                                    { label: 'H-Woche', value: 'H' },
-                                    { label: 'N-Woche', value: 'N' },
-                                ]"
-                                fluid
-                                option-label="label"
-                                option-value="value"
-                            />
-                        </template>
-                    </Column>
-                </DataTable>
-                <Button
-                    class="mt-4"
-                    fluid
-                    label="Weiter"
-                    @click="() => (stepperStatus = '4')"
-                />
-            </StepPanel>
-        </StepItem>
-        <StepItem value="4">
-            <Step>Blöcke</Step>
-            <StepPanel>
-                <p>Bitte ordnen Sie den Wochentagen die stattfindenden Blöcke zu.</p>
-                <DataTable :value="angeboteProWochentag">
-                    <Column field="tag" header="Wochentag" />
-                    <Column header="H-Woche">
-                        <template #body="{ data }">
-                            <MultiSelect
-                                v-model="data.blocksH"
-                                :options="blocksAvailable"
-                                :showToggleAll="false"
-                                fluid
-                                option-label="bezeichnung"
-                                option-value="schemaId"
-                                placeholder="Keine Blöcke gewählt"
-                            />
-                        </template>
-                    </Column>
-                    <Column header="N-Woche">
-                        <template #body="{ data }">
-                            <MultiSelect
-                                v-model="data.blocksN"
-                                :options="blocksAvailable"
-                                :showToggleAll="false"
-                                fluid
-                                option-label="bezeichnung"
-                                option-value="schemaId"
-                                placeholder="Keine Blöcke gewählt"
-                            />
-                        </template>
-                    </Column>
-                </DataTable>
-                <Button
-                    class="mt-4"
-                    fluid
-                    label="Weiter"
-                    @click="() => (stepperStatus = '5')"
-                />
-            </StepPanel>
-        </StepItem>
-        <StepItem value="5">
-            <Step>Aufsichten</Step>
-            <StepPanel>
-                <DataTable v-model:value="aufsichten">
-                    <Column field="day" header="Wochentag" />
-                    <Column field="typ" header="Typ" />
-                    <Column header="Block">
-                        <template #body="{ data }">
-                            {{
-                                blocksAvailable.find((b) => b.schemaId === data.block)
-                                    .bezeichnung
-                            }}
-                        </template>
-                    </Column>
-                    <Column header="Aufsichten">
-                        <template #body="{ data }">
-                            <PersonSelector
-                                v-model="data.supervisors"
-                                :filter="(p) => p.rolle === 'Tutor'"
-                                fluid
-                                hide-group
-                                multi
-                            />
-                        </template>
-                    </Column>
-                </DataTable>
-                <Button class="mt-4" fluid label="Abschließen" @click="submit" />
-            </StepPanel>
-        </StepItem>
-    </Stepper>
+                <UTable :columns="vacationColumns" :data="vacations as any[]" />
+                <div class="flex gap-4">
+                    <UButton
+                        class="flex-1"
+                        color="neutral"
+                        label="Zurück"
+                        variant="soft"
+                        @click="
+                            () => {
+                                stepperStatus = 1;
+                            }
+                        "
+                    />
+                    <UButton class="flex-4" label="Weiter" @click="() => submitVacations()" />
+                </div>
+            </div>
+        </template>
+        <template #weektypes>
+            <p>
+                Wir haben automatisch versucht die H-/ N-Wochen vorherzusagen. Bitte
+                kontrollieren Sie die Vorhersagen und passen Sie ggf. den Typ an.
+            </p>
+            <UTable :columns="weekColumns" :data="weeks as any[]" />
+            <UButton class="mt-4 w-full" label="Weiter" @click="() => (stepperStatus = 4)" />
+        </template>
+        <template #slots>
+            <p>Bitte ordnen Sie den Wochentagen die stattfindenden Blöcke zu.</p>
+            <UTable :columns="slotColumns" :data="angeboteProWochentag" />
+            <UButton class="mt-4 w-full" label="Weiter" @click="() => (stepperStatus = 5)" />
+        </template>
+        <template #supervisors>
+            <p>Bitte geben Sie Aufsichten für die Slots an.</p>
+            <UTable :columns="supervisorColumns" :data="aufsichten" />
+            <UButton class="mt-4 w-full" label="Abschließen" @click="submit" />
+        </template>
+    </UStepper>
 </template>
 
 <style scoped></style>

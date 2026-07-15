@@ -1,117 +1,80 @@
-<script setup>
-import { inject, ref } from 'vue';
-import FloatLabel from 'primevue/floatlabel';
-import DatePicker from 'primevue/datepicker';
-import { Button, Message, Select } from 'primevue';
-import Form from '@primevue/forms/form';
-import { formatMachineDate } from '@/helpers/formatters';
-import { mande } from 'mande';
+<script lang="ts" setup>
+import { reactive } from 'vue';
+import { CalendarDate } from '@internationalized/date';
+import { FormError, FormSubmitEvent } from '@nuxt/ui';
+import ADatePicker from '@/components/Form/ADatePicker.vue';
 
-const dialogRef = inject('dialogRef');
-const emit = defineEmits(['update']);
-const toast = useToast();
+const emit = defineEmits<{
+    close: [
+        {
+            datum: string;
+            wochentyp: string;
+            blocks: string[];
+        }[],
+    ];
+}>();
 
-const date = ref(null);
-const wochentyp = ref(null);
-const loading = ref(false);
+function validate(state: Partial<FormSchema>): FormError[] {
+    const errors: FormError[] = [];
 
-function resolve({ values }) {
-    const errors = {};
-
-    if (!values.date) errors.date = [{ message: 'Bitte geben Sie ein Datum an.' }];
-
-    if (!values.wochentyp)
-        errors.wochentyp = [{ message: 'Bitte geben Sie den Wochentyp an.' }];
-
-    return { values, errors };
-}
-
-async function trySubmit({ valid }) {
-    if (!valid) return;
-    if (!dialogRef.value.data || !('initialValues' in dialogRef.value.data)) {
-        await submit();
-        return;
+    if (!state.date) {
+        errors.push({ name: 'date', message: 'Bitte geben Sie ein Datum an.' });
     }
-    loading.value = true;
-    await submit();
+
+    if (!state.type) {
+        errors.push({ name: 'type', message: 'Bitte wählen Sie einen Wochentyp.' });
+    }
+
+    return errors;
 }
 
-async function submit() {
-    loading.value = true;
+async function submit(event: FormSubmitEvent<FormSchema>) {
     const data = [];
 
-    date.value.setHours(12);
-
     data.push({
-        datum: formatMachineDate(date.value),
-        wochentyp: wochentyp.value,
-        blocks: [],
+        datum: event.data.date!.toString(),
+        wochentyp: event.data.type!,
+        blocks: [] as string[],
     });
 
-    const api = mande('/api/management/schuljahr');
-    try {
-        await api.post(data);
-        toast.add({
-            color: 'success',
-            title: 'Erfolg',
-            description: 'Der Termin wurde erfolgreich gespeichert.',
-        });
-        emit('update');
-        dialogRef.value.close();
-    } catch (error) {
-        console.error(error);
-        toast.add({
-            color: 'error',
-            title: 'Fehler',
-            description: 'Die Termine konnten nicht gespeichert werden.',
-        });
-    } finally {
-        loading.value = false;
-    }
+    emit('close', data);
 }
+
+interface FormSchema {
+    date: CalendarDate | undefined;
+    type: string | undefined;
+}
+
+const state = reactive<FormSchema>({ date: undefined, type: undefined });
 </script>
 
 <template>
-    <Form v-slot="$form" :resolver="resolve" class="flex flex-col gap-4" @submit="trySubmit">
-        <div class="w-full">
-            <FloatLabel variant="on">
-                <DatePicker
-                    id="date"
-                    v-model="date"
-                    date-format="dd.mm.yy"
-                    fluid
-                    name="date"
-                    select-other-months
-                    show-icon
-                />
-                <label for="date">Datum</label>
-            </FloatLabel>
-            <Message v-if="$form.date?.invalid" severity="error" size="small" variant="simple">
-                {{ $form.date.error.message }}
-            </Message>
-        </div>
-        <div class="w-full">
-            <FloatLabel variant="on">
-                <Select
-                    id="wochentyp"
-                    v-model="wochentyp"
-                    :options="['H-Woche', 'N-Woche']"
-                    fluid
-                    name="wochentyp"
-                />
-                <label for="wochentyp">Wochentyp</label>
-            </FloatLabel>
-            <Message
-                v-if="$form.wochentyp?.invalid"
-                severity="error"
-                size="small"
-                variant="simple"
+    <UModal title="Schultag hinzufügen">
+        <template #body>
+            <UForm
+                :state="state"
+                :validate="validate"
+                class="flex flex-col gap-4"
+                @submit="submit"
             >
-                {{ $form.wochentyp.error.message }}
-            </Message>
-        </div>
-        <Button :loading="loading" class="mt-4" fluid label="Abschließen" type="submit" />
-    </Form>
+                <UFormField label="Datum" name="date" required>
+                    <ADatePicker
+                        v-model="state.date as CalendarDate | undefined"
+                        class="w-full"
+                    />
+                </UFormField>
+                <UFormField label="Wochentyp" name="type" required>
+                    <USelect
+                        v-model="state.type"
+                        :items="['H-Woche', 'N-Woche']"
+                        class="w-full"
+                        placeholder="Wochentyp wählen"
+                    />
+                </UFormField>
+                <UButton icon="i-lucide-plus" label="Erstellen" type="submit" />
+            </UForm>
+        </template>
+    </UModal>
 </template>
 
 <style scoped></style>
