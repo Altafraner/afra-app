@@ -9,7 +9,7 @@ import EditSchoolday from '@/Otium/components/Schuljahr/EditSchoolday.vue';
 
 const settings = useOtiumStore();
 const dialog = useDialog();
-const { openConfirmDialog } = useConfirmPopover();
+const { requireConfirm } = useConfirmPopover();
 const toast = useToast();
 
 async function setup() {
@@ -31,23 +31,22 @@ function addDay() {
     });
 }
 
-function deleteDay(event, data) {
-    const callback = async () => {
-        const api = mande('/api/management/schuljahr/' + data.datum);
-        try {
-            await api.delete();
-        } catch (error) {
-            console.error(error);
-            toast.add({
-                color: 'error',
-                title: 'Fehler',
-                description: 'Der Tag konnte nicht gelöscht werden.',
-            });
-        } finally {
-            await settings.updateSchuljahr(true);
-        }
-    };
-    openConfirmDialog(event, callback, 'Tag Löschen', 'Möchten Sie den Tag wirklich löschen');
+async function deleteDay(data) {
+    if (!(await requireConfirm('Möchten Sie den Tag wirklich löschen?', 'Tag löschen'))) return;
+
+    const api = mande('/api/management/schuljahr/' + data.datum);
+    try {
+        await api.delete();
+    } catch (error) {
+        console.error(error);
+        toast.add({
+            color: 'error',
+            title: 'Fehler',
+            description: 'Der Tag konnte nicht gelöscht werden.',
+        });
+    } finally {
+        await settings.updateSchuljahr(true);
+    }
 }
 
 setup();
@@ -137,7 +136,7 @@ const expandedRows = shallowRef([]);
                         severity="danger"
                         size="small"
                         variant="text"
-                        @click="(evt) => deleteDay(evt, data.original)"
+                        @click="() => deleteDay(data.original)"
                     />
                 </div>
             </template>

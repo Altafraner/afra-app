@@ -22,7 +22,7 @@ const router = useRouter();
 const overlay = useOverlay();
 const otiumStore = useOtiumStore();
 
-const { openConfirmDialog } = useConfirmPopover();
+const { requireConfirm } = useConfirmPopover();
 
 async function setup() {
     result.value = await api.get();
@@ -49,13 +49,11 @@ async function supervise(block) {
     });
 }
 
-function remove(evt, block) {
-    openConfirmDialog(evt, callback, 'Wirklich löschen?');
-    async function callback() {
-        const api = mande('/api/management/schuljahr/block/' + block.id);
-        await api.delete();
-        await setup();
-    }
+async function remove(block) {
+    if (!(await requireConfirm('Wollen Sie den Schultag wirklich löschen?'))) return;
+    const api = mande('/api/management/schuljahr/block/' + block.id);
+    await api.delete();
+    await setup();
 }
 
 async function add() {
@@ -112,7 +110,7 @@ setup();
                         severity="danger"
                         size="small"
                         variant="text"
-                        @click="(evt) => remove(evt, data)"
+                        @click="() => remove(data)"
                     />
                 </span>
             </template>

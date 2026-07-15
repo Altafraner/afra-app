@@ -16,7 +16,7 @@ import MobileSwitch from '@/components/MobileSwitch.vue';
 
 const settings = useOtiumStore();
 const user = useUser();
-const { openConfirmDialog } = useConfirmPopover();
+const { requireConfirm } = useConfirmPopover();
 const toast = useToast();
 const router = useRouter();
 const overlay = useOverlay();
@@ -130,21 +130,20 @@ async function edit(termin) {
     });
 }
 
-async function cancel(evt, termin) {
-    const callback = async () => {
-        const api = mande(`/api/otium/management/termin/${termin.id}/cancel`);
-        try {
-            await api.put();
-            emit('update');
-        } catch {
-            toast.add({
-                color: 'error',
-                title: 'Fehler',
-                description: 'Der Termin konnte nicht abgesagt werden.',
-            });
-        }
-    };
-    openConfirmDialog(evt, callback, 'Termin absagen?');
+async function cancel(termin) {
+    const confirmed = await requireConfirm('Wollen Sie den Termin wirklich absagen?');
+    if (!confirmed) return;
+    const api = mande(`/api/otium/management/termin/${termin.id}/cancel`);
+    try {
+        await api.put();
+        emit('update');
+    } catch {
+        toast.add({
+            color: 'error',
+            title: 'Fehler',
+            description: 'Der Termin konnte nicht abgesagt werden.',
+        });
+    }
 }
 
 async function editNotes() {
@@ -304,7 +303,7 @@ const description = computed(() => {
                                 icon="i-lucide-square"
                                 size="lg"
                                 variant="ghost"
-                                @click="(evt) => cancel(evt, otium)"
+                                @click="() => cancel(otium)"
                             />
                         </UTooltip>
                     </UFieldGroup>
@@ -362,7 +361,7 @@ const description = computed(() => {
                         color="error"
                         label="Absagen"
                         icon="i-lucide-square"
-                        @click="(evt) => cancel(evt, otium)"
+                        @click="() => cancel(otium)"
                     />
                 </template>
                 <template v-if="user.isStudent">

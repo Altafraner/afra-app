@@ -161,7 +161,9 @@ watch(filteredAttendance, (newAttendance) => {
                 <UButton
                     :color="
                         item.status
-                            ? item.enrollments.some((e) => e.status === 'Fehlend')
+                            ? item.enrollments.some(
+                                  (e: AttendanceStudentStatus) => e.status === 'Fehlend',
+                              )
                                 ? 'warning'
                                 : 'success'
                             : 'error'

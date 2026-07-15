@@ -15,7 +15,7 @@ import ASkeletonTable from '@/components/Layout/ASkeletonTable.vue';
 const user = useUser();
 const settings = useOtiumStore();
 const toast = useToast();
-const { openConfirmDialog } = useConfirmPopover();
+const { requireConfirm } = useConfirmPopover();
 const loading = ref(true);
 const showHidden = shallowRef(false);
 const overlay = useOverlay();
@@ -65,9 +65,8 @@ async function openCreateDialog() {
     await createOtium(data);
 }
 
-const confirmDelete = (event, id) => {
-    const onConfirm = () => deleteOtium(id);
-    openConfirmDialog(event, onConfirm, 'Otium löschen?');
+const confirmDelete = async (id) => {
+    if (await requireConfirm('Wollen Sie das Otium wirklich löschen?')) await deleteOtium(id);
 };
 
 async function setup() {
@@ -169,7 +168,7 @@ const columns = [
                               variant: 'ghost',
                               icon: 'i-lucide-x',
                               color: 'error',
-                              onClick: (event) => confirmDelete(event, row.original.id),
+                              onClick: () => confirmDelete(row.original.id),
                           }),
                       ])
                     : h(

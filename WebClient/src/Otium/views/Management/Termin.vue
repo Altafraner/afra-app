@@ -17,7 +17,7 @@ const props = defineProps({
 const loading = ref(true);
 const user = useUser();
 const toast = useToast();
-const { openConfirmDialog } = useConfirmPopover();
+const { requireConfirm } = useConfirmPopover();
 const otium = ref(null);
 
 const aufsichtRunning = ref(false);
@@ -174,14 +174,18 @@ const startEditBeschreibung = () => {
     beschreibung.value = otium.value.beschreibung;
 };
 
-const initRemove = async (evt, student) => {
-    openConfirmDialog(evt, remove.bind(this, student), 'Schüler:in ausschreiben?');
+const initRemove = async (student) => {
+    if (
+        !(await requireConfirm(
+            'Möchten Sie die Schüler:in wirklich ausschreiben?',
+            'Schüler:in ausschreiben?',
+        ))
+    )
+        return;
 
-    async function remove(student) {
-        const api = mande(`/api/otium/management/termin/${props.terminId}/student`);
-        await api.post({ value: student.id });
-        await fetchData();
-    }
+    const api = mande(`/api/otium/management/termin/${props.terminId}/student`);
+    await api.post({ value: student.id });
+    await fetchData();
 };
 
 await fetchData();
@@ -363,7 +367,7 @@ await fetchData();
                     color="error"
                     icon="i-lucide-x"
                     variant="ghost"
-                    @click="(evt) => initRemove(evt, data.student)"
+                    @click="() => initRemove(data.student)"
                 />
             </UTooltip>
         </template>

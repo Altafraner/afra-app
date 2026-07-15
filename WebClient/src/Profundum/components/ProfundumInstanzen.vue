@@ -65,19 +65,17 @@ async function updateInstanz(inst) {
     await load();
 }
 
-function deleteInstanz(event, id) {
-    confirm.openConfirmDialog(
-        event,
-        doDelete,
-        'Angebot Löschen',
-        'Wollen Sie das Angebot wirklich löschen? Das Löschen von Angeboten mit Einschreibungen kann für Probleme bei der nächsten Einwahl sorgen.',
-        'danger',
-    );
-    async function doDelete() {
-        await apiInstanz.delete(`/${id}`);
-        toast.add({ color: 'success', title: 'Instanz gelöscht' });
-        await load();
-    }
+async function deleteInstanz(event, id) {
+    if (
+        !(await confirm.requireConfirm(
+            'Wollen Sie das Angebot wirklich löschen? Das Löschen von Angeboten mit Einschreibungen kann für Probleme bei der nächsten Einwahl sorgen.',
+            'Angebot Löschen',
+        ))
+    )
+        return;
+    await apiInstanz.delete(`/${id}`);
+    toast.add({ color: 'success', title: 'Instanz gelöscht' });
+    await load();
 }
 
 onMounted(load);

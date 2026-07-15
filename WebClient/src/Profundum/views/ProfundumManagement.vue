@@ -84,33 +84,30 @@ async function createProfundum() {
     }
 }
 
-function deleteProfundum(event, data) {
-    confirm.openConfirmDialog(
-        event,
-        doDelete,
-        'Profundum Löschen',
-        'Das Löschen kann nicht rückgängig gemacht werden. Das Löschen von Profunda mit bereits hinterlegten Belegungen kann zu Problemen bei der nächsten Einwahl führen!',
-        'danger',
-    );
+async function deleteProfundum(data) {
+    if (
+        !(await confirm.requireConfirm(
+            'Das Löschen kann nicht rückgängig gemacht werden. Das Löschen von Profunda mit bereits hinterlegten Belegungen kann zu Problemen bei der nächsten Einwahl führen!',
+            'Profundum Löschen',
+        ))
+    )
+        return;
+    const api = mande('/api/profundum/management/profundum');
+    try {
+        await api.delete(`/${data.id}`);
+        toast.add({
+            color: 'success',
+            title: 'Gelöscht',
+            description: 'Profundum wurde entfernt',
+        });
 
-    async function doDelete() {
-        const api = mande('/api/profundum/management/profundum');
-        try {
-            await api.delete(`/${data.id}`);
-            toast.add({
-                color: 'success',
-                title: 'Gelöscht',
-                description: 'Profundum wurde entfernt',
-            });
-
-            await getProfunda();
-        } catch (e) {
-            toast.add({
-                color: 'error',
-                title: 'Fehler',
-                description: e?.body ?? 'Konnte Profundum nicht löschen',
-            });
-        }
+        await getProfunda();
+    } catch (e) {
+        toast.add({
+            color: 'error',
+            title: 'Fehler',
+            description: e?.body ?? 'Konnte Profundum nicht löschen',
+        });
     }
 }
 
@@ -179,7 +176,7 @@ await setup();
                                 severity="danger"
                                 variant="text"
                                 aria-label="Löschen"
-                                @click="deleteProfundum($event, data)"
+                                @click="deleteProfundum(data)"
                             />
                         </template>
                     </Column>
