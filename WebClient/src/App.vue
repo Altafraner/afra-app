@@ -8,7 +8,6 @@ import { useUser } from '@/stores/user';
 import { computed } from 'vue';
 import wappenLight from '/vdaa/favicon.svg?url';
 import wappenDark from '/vdaa/favicon-dark.svg?url';
-import { ConfirmPopup } from 'primevue';
 import Login from '@/components/Login.vue';
 import { isDark } from '@/helpers/isdark';
 import ReloadPrompt from '@/components/ReloadPrompt.vue';
@@ -35,7 +34,6 @@ const toastProps: ToasterProps = {
 </script>
 
 <template>
-    <ConfirmPopup />
     <DynamicDialog />
     <div v-if="user.isImpersonating" aria-hidden="true" class="impersonation-tag hidden"></div>
     <UApp :locale="de" :toaster="toastProps">

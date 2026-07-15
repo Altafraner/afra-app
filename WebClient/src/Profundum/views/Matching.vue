@@ -147,16 +147,15 @@ async function autoMatching() {
 }
 
 async function finalize() {
-    confirm.openConfirmDialog(
-        event,
-        async () => {
-            await mande('/api/profundum/management/finalize').post();
-            enrollments.value = await mande('/api/profundum/management/enrollments').get();
-        },
-        'Matching finalisieren',
-        'Alle Einschreibungen werden fixiert. Automatisches Matching ist hiernach nichtmehr sinnvoll.',
-        'danger',
-    );
+    if (
+        !(await confirm.requireConfirm(
+            'Alle Einschreibungen werden fixiert. Automatisches Matching ist hiernach nichtmehr sinnvoll.',
+            'Matching finalisieren',
+        ))
+    )
+        return;
+    await mande('/api/profundum/management/finalize').post();
+    enrollments.value = await mande('/api/profundum/management/enrollments').get();
 }
 
 const enrollmentForSlot = (row, slotId) =>

@@ -9,7 +9,6 @@ import { de as locale } from 'primelocale/de.json';
 import { definePreset } from '@primeuix/themes';
 import { createPinia } from 'pinia';
 import Tooltip from 'primevue/tooltip';
-import ConfirmationService from 'primevue/confirmationservice';
 import DialogService from 'primevue/dialogservice';
 import { registerSW } from 'virtual:pwa-register';
 
@@ -183,7 +182,6 @@ app.use(PrimeVue, {
     locale,
 });
 app.use(ToastService);
-app.use(ConfirmationService);
 app.use(DialogService);
 app.use(ui);
 

@@ -28,7 +28,7 @@ const navItems = [
 
 const feedback = useFeedback();
 const overlay = useOverlay();
-const confirmPopover = useConfirmPopover();
+const { requireConfirm } = useConfirmPopover();
 
 const ankerByKategorie = ref();
 const kategorien = ref();
@@ -73,18 +73,10 @@ async function startChangeAnker(anker: Anker) {
     await setup();
 }
 
-function startDeleteAnker(evt: MouseEvent, anker: Anker) {
-    confirmPopover.openConfirmDialog(
-        evt,
-        deleteThis,
-        'Löschen?',
-        'Wollen Sie den Anker wirklich löschen?',
-        'danger',
-    );
-    async function deleteThis() {
-        await feedback.deleteAnker(anker.id);
-        await setup();
-    }
+async function startDeleteAnker(anker: Anker) {
+    if (!(await requireConfirm('Wollen Sie den Anker wirklich löschen?'))) return;
+    await feedback.deleteAnker(anker.id);
+    await setup();
 }
 
 async function startAddKategorie() {
@@ -116,18 +108,10 @@ async function startEditKategorie(kategorie: FeedbackKategorie) {
     await setup();
 }
 
-function startDeleteKategorie(evt: MouseEvent, kategorieId: string) {
-    confirmPopover.openConfirmDialog(
-        evt,
-        deleteThis,
-        'Löschen?',
-        'Wollen Sie die Kategorie wirklich löschen?',
-        'danger',
-    );
-    async function deleteThis() {
-        await feedback.deleteKategorie(kategorieId);
-        await setup();
-    }
+async function startDeleteKategorie(kategorieId: string) {
+    if (!(await requireConfirm('Wollen Sie die Kategorie wirklich löschen?'))) return;
+    await feedback.deleteKategorie(kategorieId);
+    await setup();
 }
 </script>
 
@@ -171,7 +155,7 @@ function startDeleteKategorie(evt: MouseEvent, kategorieId: string) {
                                     icon="i-lucide-x"
                                     size="sm"
                                     variant="ghost"
-                                    @click="startDeleteAnker($event, anker)"
+                                    @click="startDeleteAnker(anker)"
                                 />
                             </UTooltip>
                         </span>
@@ -193,7 +177,7 @@ function startDeleteKategorie(evt: MouseEvent, kategorieId: string) {
                             label="Löschen"
                             icon="i-lucide-x"
                             variant="subtle"
-                            @click="startDeleteKategorie($event, kategorie.id)"
+                            @click="startDeleteKategorie(kategorie.id)"
                         />
                     </span>
                     <UButton

@@ -9,7 +9,7 @@ const CreateTerminForm = defineAsyncComponent(
     () => import('@/Otium/components/Management/CreateTerminForm.vue'),
 );
 
-const { openConfirmDialog } = useConfirmPopover();
+const { requireConfirm } = useConfirmPopover();
 const overlay = useOverlay();
 
 const props = defineProps({
@@ -19,19 +19,27 @@ const props = defineProps({
 
 const emit = defineEmits(['delete', 'cancel', 'create', 'continue']);
 
-const confirmCancel = (event, id) => {
-    const onConfirm = () => emit('cancel', id);
-    openConfirmDialog(event, onConfirm, 'Termin absagen und Schüler:innen benachrichtigen?');
+const confirmCancel = async (id) => {
+    if (await requireConfirm('Termin absagen und Schüler:innen benachrichtigen?'))
+        emit('cancel', id);
 };
 
-const confirmDelete = (event, id) => {
-    const onConfirm = () => emit('delete', id);
-    openConfirmDialog(event, onConfirm, 'Termin löschen?');
+const confirmDelete = async (id) => {
+    if (await requireConfirm('Wollen Sie den Termin wirklich löschen?')) {
+        emit('delete', id);
+    }
 };
 
-const confirmContinue = (event, id) => {
-    const onConfirm = () => emit('continue', id);
-    openConfirmDialog(event, onConfirm, 'Termin nicht mehr abbrechen?', null, 'success');
+const confirmContinue = async (id) => {
+    if (
+        await requireConfirm(
+            'Wollen Sie den Termin wirklich wieder verfügbar machen?',
+            'Nicht mehr abbrechen',
+            'success',
+        )
+    ) {
+        emit('continue', id);
+    }
 };
 
 const triggerCreateDialog = async () => {
@@ -97,7 +105,7 @@ const columns = [
                           color: 'error',
                           variant: 'ghost',
                           size: 'sm',
-                          onClick: (evt) => confirmCancel(evt, row.original.id),
+                          onClick: (evt) => confirmCancel(row.original.id),
                       }),
                   )
                 : h('span', { class: 'flex gap-1 justify-end' }, [
@@ -108,7 +116,7 @@ const columns = [
                               color: 'success',
                               variant: 'ghost',
                               size: 'sm',
-                              onClick: (event) => confirmContinue(event, row.original.id),
+                              onClick: () => confirmContinue(row.original.id),
                           }),
                       ),
                       row.original.wiederholungId === null
@@ -119,7 +127,7 @@ const columns = [
                                     color: 'error',
                                     variant: 'ghost',
                                     size: 'sm',
-                                    onClick: (evt) => confirmDelete(evt, row.original.id),
+                                    onClick: () => confirmDelete(row.original.id),
                                 }),
                             )
                           : h(

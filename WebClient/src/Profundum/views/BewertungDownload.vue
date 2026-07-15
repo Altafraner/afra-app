@@ -5,6 +5,7 @@ import { useFeedback } from '@/Profundum/composables/feedback';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
 import { CalendarDate } from '@internationalized/date';
 import { FormError, FormSubmitEvent } from '@nuxt/ui';
+import { UserInfoMinimal } from '@/models/user/user';
 
 interface Option<T> {
     label: string;
@@ -283,7 +284,7 @@ function submit(event: FormSubmitEvent<FormSchema>) {
                 <PersonSelectorNuxt
                     v-model="state.person"
                     :filter="
-                        (student) =>
+                        (student: UserInfoMinimal) =>
                             student.rolle == 'Mittelstufe' || student.rolle == 'Oberstufe'
                     "
                     class="w-full"
