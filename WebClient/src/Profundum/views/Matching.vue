@@ -25,7 +25,7 @@ const navItems = [
     },
     {
         label: 'Verwaltung',
-        route: {
+        to: {
             name: 'Profundum-Verwaltung',
         },
     },

@@ -72,8 +72,8 @@ function resolve({ values }) {
 async function getTermine() {
     await settings.updateSchuljahr();
     dates.value = settings.schuljahr;
-    von.value = settings.defaultDay;
-    bis.value = settings.schuljahr[settings.schuljahr.length - 1];
+    von.value = settings.defaultDay.datum;
+    bis.value = settings.schuljahr[settings.schuljahr.length - 1].datum;
 }
 
 async function getPersonen() {
@@ -118,11 +118,11 @@ function blockOrWochentagChanged() {
             (wochentyp.value == null || date.wochentyp === wochentyp.value)
         );
     });
-    if (!datesAvailable.value.includes(von.value)) {
-        von.value = datesAvailable.value[0];
+    if (!datesAvailable.value.some((d) => d.datum === von.value)) {
+        von.value = datesAvailable.value[0].datum;
     }
-    if (!datesAvailable.value.includes(bis.value)) {
-        bis.value = datesAvailable.value[datesAvailable.value.length - 1];
+    if (!datesAvailable.value.some((d) => d.datum === bis.value)) {
+        bis.value = datesAvailable.value[datesAvailable.value.length - 1].datum;
     }
 }
 
@@ -134,8 +134,8 @@ function submit({ valid }) {
     const result = {
         wochentyp: wochentyp.value,
         wochentag: wochentag.value,
-        von: von.value?.datum ?? null,
-        bis: bis.value?.datum ?? null,
+        von: von.value ?? null,
+        bis: bis.value ?? null,
         block: block.value?.schemaId ?? null,
         ort: ort.value,
         person: personSelected.value,
@@ -252,24 +252,30 @@ setup();
                 </Message>
             </div>
             <div class="font-bold">Zeitraum</div>
-            <OtiumDateSelector
-                v-if="!loading"
-                v-model="von"
-                :options="datesAvailable"
-                hide-today
-                label="Von"
-                name="von"
-                show-label
-            />
-            <OtiumDateSelector
-                v-if="!loading"
-                v-model="bis"
-                :options="datesAvailable"
-                hide-today
-                label="Bis"
-                name="bis"
-                show-label
-            />
+            <UFormField class="w-full" label="Start" required>
+                <OtiumDateSelector
+                    v-if="!loading"
+                    v-model="von"
+                    :options="datesAvailable"
+                    full-size
+                    hide-today
+                    label="Von"
+                    name="von"
+                    show-label
+                />
+            </UFormField>
+            <UFormField class="w-full" label="Ende" required>
+                <OtiumDateSelector
+                    v-if="!loading"
+                    v-model="bis"
+                    :options="datesAvailable"
+                    full-size
+                    hide-today
+                    label="Bis"
+                    name="bis"
+                    show-label
+                />
+            </UFormField>
 
             <div class="font-bold mt-4">Details</div>
         </template>

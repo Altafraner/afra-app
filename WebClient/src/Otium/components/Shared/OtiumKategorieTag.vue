@@ -1,6 +1,4 @@
 <script setup>
-import { Tag } from 'primevue';
-
 const props = defineProps({
     value: Object,
     minimal: Boolean,
@@ -10,26 +8,34 @@ const props = defineProps({
 </script>
 
 <template>
-    <Tag v-if="!minimal" severity="secondary">
+    <UBadge
+        v-if="!minimal"
+        :ui="{
+            base: 'inline-flex justify-center',
+        }"
+        color="secondary"
+        variant="soft"
+    >
         <span
-            v-if="props.value.icon && !hideIcon"
-            :class="`ot-angebot-icon ${props.value.cssColor ? 'ot-angebot-white' : ''}`"
-            :style="`background-color: ${props.value.cssColor ?? 'unset'}`"
+            v-if="value.icon && !hideIcon"
+            :class="`ot-angebot-icon ${value.cssColor ? 'ot-angebot-white' : ''}`"
+            :style="`background-color: ${value.cssColor ?? 'unset'}`"
         >
-            <i :class="props.value.icon" />
+            <UIcon :name="value.icon" class="size-3" />
         </span>
         <span v-if="!hideName">
-            {{ props.value.bezeichnung }}
+            {{ value.bezeichnung }}
         </span>
-    </Tag>
+    </UBadge>
     <span v-else class="inline-flex items-baseline justify-center gap-1">
-        <i
-            v-if="props.value.icon && !hideIcon"
-            :class="props.value.icon"
-            :style="`color: ${props.value.cssColor ?? 'inherit'}`"
+        <UIcon
+            v-if="value.icon && !hideIcon"
+            :name="value.icon"
+            :style="`color: ${value.cssColor ?? 'inherit'}`"
+            class="size-4"
         />
         <span v-if="!hideName">
-            {{ props.value.bezeichnung }}
+            {{ value.bezeichnung }}
         </span>
     </span>
 </template>

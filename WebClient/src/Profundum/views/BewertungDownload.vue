@@ -19,13 +19,13 @@ const navItems = [
     },
     {
         label: 'Feedback',
-        route: {
+        to: {
             name: 'Profundum-Feedback-Abgeben',
         },
     },
     {
         label: 'Drucken',
-        route: {
+        to: {
             name: 'Profundum-Feedback-Download',
         },
     },

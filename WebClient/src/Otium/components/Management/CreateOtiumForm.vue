@@ -5,7 +5,7 @@ import { Button, FloatLabel, InputText, Message, Textarea } from 'primevue';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
 import OtiumKategorySelector from '@/Otium/components/Form/OtiumKategorySelector.vue';
 
-const emits = defineEmits(['submit']);
+const emits = defineEmits(['close']);
 
 const settings = useOtiumStore();
 
@@ -27,7 +27,7 @@ function resolver({ values }) {
         errors.beschreibung = [
             { message: 'Die Beschreibung darf maximal 500 Zeichen lang sein' },
         ];
-    if (!values.kategorie)
+    if (!kategorie.value)
         errors.kategorie = [{ message: 'Es muss eine Kategorie ausgewählt sein' }];
 
     return { values, errors };
@@ -36,11 +36,10 @@ function resolver({ values }) {
 function submit({ valid }) {
     if (!valid) return;
 
-    const kategorieId = Object.keys(kategorie.value)[0];
-    emits('submit', {
+    emits('close', {
         bezeichnung: bezeichnung.value,
         beschreibung: beschreibung.value,
-        kategorie: kategorieId,
+        kategorie: kategorie.value.id,
     });
 }
 
@@ -54,72 +53,78 @@ setup();
 </script>
 
 <template>
-    <Form
-        v-if="!loading"
-        v-slot="$form"
-        :resolver="resolver"
-        class="flex flex-col gap-3"
-        @submit="submit"
-    >
-        <div class="w-full">
-            <FloatLabel class="w-full" variant="on">
-                <InputText id="bezeichnung" v-model="bezeichnung" fluid name="bezeichnung" />
-                <label for="bezeichnung">Bezeichnung</label>
-            </FloatLabel>
-            <Message
-                v-if="$form.bezeichnung?.invalid"
-                severity="error"
-                size="small"
-                variant="simple"
+    <UModal dismisable title="Neues Otium erstellen">
+        <template #body>
+            <Form
+                v-if="!loading"
+                v-slot="$form"
+                :resolver="resolver"
+                class="flex flex-col gap-3"
+                @submit="submit"
             >
-                {{ $form.bezeichnung.error.message }}
-            </Message>
-        </div>
-        <div class="w-full">
-            <FloatLabel class="w-full" variant="on">
-                <Textarea
-                    id="beschreibung"
-                    v-model="beschreibung"
-                    auto-resize
-                    fluid
-                    name="beschreibung"
-                    rows="2"
-                />
-                <label for="beschreibung">Beschreibung</label>
-            </FloatLabel>
-            <Message
-                v-if="$form.beschreibung?.invalid"
-                severity="error"
-                size="small"
-                variant="simple"
-            >
-                {{ $form.beschreibung.error.message }}
-            </Message>
-        </div>
-        <div class="w-full">
-            <FloatLabel class="w-full" variant="on">
-                <OtiumKategorySelector
-                    id="kategorie"
-                    v-model="kategorie"
-                    :options="settings.kategorien"
-                    fluid
-                    hide-clear
-                    name="kategorie"
-                    placeholder=""
-                />
-                <label for="kategorie">Kategorie</label>
-            </FloatLabel>
-            <Message
-                v-if="$form.kategorie?.invalid"
-                severity="error"
-                size="small"
-                variant="simple"
-            >
-                {{ $form.kategorie.error.message }}
-            </Message>
-        </div>
-        <Button class="mt-4" label="Erstellen" severity="primary" type="submit" />
-    </Form>
+                <div class="w-full">
+                    <FloatLabel class="w-full" variant="on">
+                        <InputText
+                            id="bezeichnung"
+                            v-model="bezeichnung"
+                            fluid
+                            name="bezeichnung"
+                        />
+                        <label for="bezeichnung">Bezeichnung</label>
+                    </FloatLabel>
+                    <Message
+                        v-if="$form.bezeichnung?.invalid"
+                        severity="error"
+                        size="small"
+                        variant="simple"
+                    >
+                        {{ $form.bezeichnung.error.message }}
+                    </Message>
+                </div>
+                <div class="w-full">
+                    <FloatLabel class="w-full" variant="on">
+                        <Textarea
+                            id="beschreibung"
+                            v-model="beschreibung"
+                            auto-resize
+                            fluid
+                            name="beschreibung"
+                            rows="2"
+                        />
+                        <label for="beschreibung">Beschreibung</label>
+                    </FloatLabel>
+                    <Message
+                        v-if="$form.beschreibung?.invalid"
+                        severity="error"
+                        size="small"
+                        variant="simple"
+                    >
+                        {{ $form.beschreibung.error.message }}
+                    </Message>
+                </div>
+                <div class="w-full">
+                    <OtiumKategorySelector
+                        id="kategorie"
+                        v-model="kategorie"
+                        :options="settings.kategorien"
+                        fullSize
+                        hide-clear
+                        name="kategorie"
+                        placeholder=""
+                    />
+                    <Message
+                        v-if="$form.kategorie?.invalid"
+                        severity="error"
+                        size="small"
+                        variant="simple"
+                    >
+                        {{ $form.kategorie.error.message }}
+                    </Message>
+                </div>
+                <Button class="mt-4" label="Erstellen" severity="primary" type="submit" />
+            </Form>
+        </template>
+    </UModal>
 </template>
 
 <style scoped></style>

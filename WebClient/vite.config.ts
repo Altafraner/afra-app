@@ -4,9 +4,20 @@ import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import vueDevTools from 'vite-plugin-vue-devtools';
 import tailwindcss from '@tailwindcss/vite';
-import { VitePWA } from 'vite-plugin-pwa';
+import { VitePWA, VitePWAOptions } from 'vite-plugin-pwa';
+import ui, { NuxtUIOptions } from '@nuxt/ui/vite';
 
-const pwaOptions = {
+const nuxtUiOptions: NuxtUIOptions = {
+    ui: {
+        colors: {
+            primary: 'blue',
+            secondary: 'neutral',
+            neutral: 'neutral',
+        },
+    },
+};
+
+const pwaOptions: Partial<VitePWAOptions> = {
     base: '/',
     registerType: 'prompt',
     manifest: {
@@ -45,7 +56,7 @@ const pwaOptions = {
 // https://vite.dev/config/
 export default defineConfig({
     base: '/',
-    plugins: [vue(), vueDevTools(), tailwindcss(), VitePWA(pwaOptions)],
+    plugins: [vue(), vueDevTools(), tailwindcss(), ui(nuxtUiOptions), VitePWA(pwaOptions)],
     resolve: {
         alias: {
             '@': fileURLToPath(new URL('./src', import.meta.url)),

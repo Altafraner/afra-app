@@ -61,6 +61,16 @@ export const chooseSeverity = (
     return !invert ? 'danger' : 'success';
 };
 
+export const chooseColorNuxtUi = (
+    now: number,
+    warnThreshold: number = 70,
+    invert: boolean = false,
+) => {
+    if (now <= warnThreshold) return !invert ? 'success' : 'error';
+    if (now < 100) return 'warning';
+    return !invert ? 'error' : 'success';
+};
+
 export const formatDayOfWeek = (number: number) => wochentage[number % 7];
 
 export const formatDayOfWeekFromEnum = (

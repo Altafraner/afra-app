@@ -7,7 +7,6 @@ import {
     DataTable,
     Dialog,
     InputText,
-    Message,
     MultiSelect,
     Select,
     Tab,
@@ -31,7 +30,7 @@ const navItems = [
     },
     {
         label: 'Verwaltung',
-        route: {
+        to: {
             name: 'Profundum-Verwaltung',
         },
     },

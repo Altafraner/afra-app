@@ -1,5 +1,4 @@
 <script setup>
-import { Button, Image } from 'primevue';
 import { computed } from 'vue';
 import wappenLight from '/vdaa/favicon.svg?url';
 import wappenDark from '/vdaa/favicon-dark.svg?url';
@@ -10,12 +9,12 @@ const logo = computed(() => (isDark().value ? wappenDark : wappenLight));
 
 <template>
     <div class="flex justify-center">
-        <Image :src="logo" height="200"></Image>
+        <img :src="logo" alt="" height="200" />
     </div>
     <h1>Seite nicht gefunden</h1>
     <p>Die Seite, die sie angefordert haben, konnte nicht gefunden werden.</p>
     <p>Möglicherweise ist die Funktion, die Sie suchen, noch nicht fertiggestellt.</p>
-    <Button as="RouterLink" to="/" label="Zurück zur Startseite" class="mt-2" />
+    <UButton class="mt-2" label="Zurück zur Startseite" to="/" />
 </template>
 
 <style scoped></style>

@@ -5,7 +5,7 @@ import type {
     AttendanceEvent,
     AttendanceEventWithEnrollments,
     AttendanceState,
-    AttendanceStudentStatus
+    AttendanceStudentStatus,
 } from '@/Attendance/models/attendance';
 import type { Note } from '@/Attendance/models/note';
 import { isNowInDateTimeInterval } from '@/helpers/time.js';
@@ -166,7 +166,7 @@ export function useAttendance(
 
     const severityMap = {
         Error: 'error',
-        Warning: 'warn',
+        Warning: 'warning',
         Info: 'info',
     };
 
@@ -176,9 +176,9 @@ export function useAttendance(
         severity: 'Error' | 'Warning' | 'Info';
     }) {
         toastService.add({
-            summary: data.subject,
-            detail: data.body,
-            severity: severityMap[data.severity],
+            title: data.subject,
+            description: data.body,
+            color: severityMap[data.severity],
         });
     }
 

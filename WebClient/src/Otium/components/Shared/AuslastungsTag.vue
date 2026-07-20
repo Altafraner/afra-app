@@ -1,19 +1,27 @@
 <script setup>
-import { chooseSeverity } from '@/helpers/formatters';
-import { Tag } from 'primevue';
+import { chooseColorNuxtUi } from '@/helpers/formatters';
 
 const props = defineProps({
     istAbgesagt: Boolean,
     auslastung: Number,
 });
+
+const ui = {
+    base: 'flex justify-center',
+};
 </script>
 
 <template>
-    <Tag class="w-full" v-if="istAbgesagt" severity="danger">Abgesagt</Tag>
-    <Tag class="w-full" v-else-if="auslastung != null" :severity="chooseSeverity(auslastung)">
+    <UBadge v-if="istAbgesagt" :ui="ui" color="error" variant="soft">Abgesagt</UBadge>
+    <UBadge
+        v-else-if="auslastung != null"
+        :color="chooseColorNuxtUi(auslastung)"
+        :ui="ui"
+        variant="soft"
+    >
         {{ auslastung }} %
-    </Tag>
-    <Tag class="w-full" v-else severity="success">&mdash;</Tag>
+    </UBadge>
+    <UBadge v-else :ui="ui" color="success" variant="soft">&mdash;</UBadge>
 </template>
 
 <style scoped></style>

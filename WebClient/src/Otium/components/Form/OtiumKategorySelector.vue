@@ -1,6 +1,5 @@
 <script setup>
 import { ref } from 'vue';
-import { TreeSelect } from 'primevue';
 import { findPath } from '@/helpers/tree.js';
 import OtiumKategorieTag from '@/Otium/components/Shared/OtiumKategorieTag.vue';
 import SimpleBreadcrumb from '@/components/SimpleBreadcrumb.vue';
@@ -9,7 +8,7 @@ const props = defineProps({
     options: Array,
     name: String,
     hideClear: Boolean,
-    fluid: Boolean,
+    fullSize: Boolean,
     id: String,
     placeholder: {
         type: String,
@@ -28,70 +27,74 @@ function convertToTreeSelectOptions(options) {
 
 function treeMappingFunction(element) {
     return {
-        key: element.id,
+        id: element.id,
+        bezeichnung: element.bezeichnung,
         label: element.bezeichnung,
-        afra_icon: element.icon ?? null,
-        color: element.cssColor ?? null,
-        children: element.children ? convertToTreeSelectOptions(element.children) : null,
+        icon: element.icon ?? undefined,
+        color: element.cssColor ?? undefined,
+        children: element.children ? convertToTreeSelectOptions(element.children) : undefined,
     };
 }
+
+const conditionalClose = (event, closePopover) => {
+    if (!event.detail.value.children || event.detail.value.children.length === 0) {
+        closePopover();
+    }
+};
 </script>
 
 <template>
-    <TreeSelect
-        :id="id"
-        v-model="kategorie"
-        :fluid="fluid"
-        :name="props.name"
-        :options="optionsTree"
-        :placeholder="placeholder"
-        :show-clear="!props.hideClear"
-        @change="() => emit('change')"
-    >
-        <template #option="slotProps">
-            <div class="flex gap-1 items-center">
-                <span
-                    v-if="slotProps.node.afra_icon"
-                    :class="`ot-angebot-icon p-tree-node-icon ${slotProps.node.color ? 'ot-angebot-white' : ''}`"
-                    :style="`background-color: ${slotProps.node.color ?? 'unset'}`"
+    <UPopover>
+        <UFieldGroup :class="{ 'w-full': fullSize }">
+            <UButton
+                :ui="{
+                    base: 'flex justify-between w-full',
+                }"
+                color="neutral"
+                size="lg"
+                trailing-icon="i-lucide-chevron-down"
+                variant="outline"
+            >
+                <template v-if="kategorie == null">Kategorie</template>
+                <SimpleBreadcrumb v-else :model="findPath(options, kategorie.id)">
+                    <template #item="{ item }">
+                        <OtiumKategorieTag :value="item" minimal />
+                    </template>
+                </SimpleBreadcrumb>
+            </UButton>
+            <UButton
+                v-if="!hideClear && kategorie != null"
+                color="neutral"
+                icon="i-lucide-x"
+                label-key="id"
+                size="lg"
+                variant="outline"
+                @click.stop="
+                    () => {
+                        kategorie = null;
+                    }
+                "
+            />
+        </UFieldGroup>
+        <template #content="{ close }">
+            <div class="p-2 min-w-64 max-h-60 overflow-y-auto">
+                <UTree
+                    v-model="kategorie"
+                    :items="optionsTree"
+                    color="neutral"
+                    @select="(evt) => conditionalClose(evt, close)"
                 >
-                    <i :class="slotProps.node.afra_icon" />
-                </span>
-                <span>
-                    {{ slotProps.node.label }}
-                </span>
+                    <template #item-leading="{ item }">
+                        <UIcon
+                            v-if="item.icon"
+                            :name="item.icon"
+                            :style="{ color: item.color ?? 'inherit' }"
+                        />
+                    </template>
+                </UTree>
             </div>
         </template>
-        <template #value="{ value }">
-            <SimpleBreadcrumb
-                v-if="value.length === 1"
-                :model="findPath(options, value[0].key)"
-            >
-                <template #item="{ item }">
-                    <OtiumKategorieTag :value="item" minimal />
-                </template>
-            </SimpleBreadcrumb>
-        </template>
-    </TreeSelect>
+    </UPopover>
 </template>
 
-<style scoped>
-.ot-angebot-icon {
-    font-size: 0.8em;
-    width: 2em;
-    height: 2em;
-    border-radius: 1em;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-}
-
-.ot-angebot-icon i {
-    font-size: 1.1em;
-}
-
-.ot-angebot-white {
-    color: #fff;
-}
-</style>
+<style scoped></style>

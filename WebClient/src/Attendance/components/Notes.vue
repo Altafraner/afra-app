@@ -1,36 +1,31 @@
 <script lang="ts" setup>
-import { computed, inject, ref } from 'vue';
+import { computed, ComputedRef, isRef, Ref, ref, toRef, unref } from 'vue';
 import NoteElement from './Note.vue';
-import { Button, FloatLabel, InputGroup, Message, Textarea, useToast } from 'primevue';
 import type { Note, NoteCreationRequest } from '@/Attendance/models/note';
-import { mande } from 'mande';
+import { mande, MandeError } from 'mande';
 
-const dialogRef = inject<{
-    value: {
-        data: {
-            notes: Note[];
-            myNote: Note;
-            scope: string;
-            slotId: string;
-            studentId: string;
-            updateSelf: boolean;
-        };
-    };
-}>('dialogRef');
-
-const emit = defineEmits<{
-    update: any;
+const props = defineProps<{
+    notes: Note[] | ComputedRef<Note[]>;
+    myNote?: Note | ComputedRef<Note | null>;
+    scope: string;
+    slotId: string;
+    studentId: string;
+    updateSelf?: boolean;
 }>();
 
 const toast = useToast();
 
-const currentNote = ref<string>(dialogRef.value.data.myNote?.content ?? '');
+const currentNote = ref<string>(
+    isRef(props.myNote)
+        ? ((props.myNote as ComputedRef<Note | null>).value?.content ?? '')
+        : (props.myNote?.content ?? ''),
+);
 const disabled = ref<boolean>(false);
-const currentNotes = ref<Note[]>(dialogRef.value.data.notes);
-const notes = computed(() =>
-    (dialogRef.value.data.updateSelf ?? false)
-        ? currentNotes.value
-        : dialogRef.value.data.notes,
+const currentNotes: Ref<Note[]> = isRef(props.notes)
+    ? toRef(props.notes)
+    : ref<Note[]>(props.notes as Note[]);
+const effectiveNotes = computed(() =>
+    (props.updateSelf ?? false) ? currentNotes.value : unref(props.notes),
 );
 
 async function save() {
@@ -38,54 +33,72 @@ async function save() {
     const api = mande('/api/attendance/notes');
     const request: NoteCreationRequest = {
         content: currentNote.value,
-        slotId: dialogRef.value.data.slotId,
-        scope: dialogRef.value.data.scope,
-        studentId: dialogRef.value.data.studentId,
+        slotId: props.slotId,
+        scope: props.scope,
+        studentId: props.studentId,
     };
     try {
         const result = await api.put<Note[]>(request);
         toast.add({
-            severity: 'success',
-            summary: 'Notiz gespeichert',
-            life: 10000,
+            color: 'success',
+            title: 'Notiz gespeichert',
+            duration: 10000,
         });
         currentNotes.value = result;
     } catch (error) {
+        const mandeError = error as MandeError;
         toast.add({
-            severity: 'error',
-            summary: 'Fehler',
-            detail:
+            color: 'error',
+            title: 'Fehler',
+            description:
                 'Die Notiz konnte nicht gespeichert werden\nFehlercode: ' +
-                error.response?.status,
+                mandeError.response?.status,
         });
     } finally {
         disabled.value = false;
-        emit('update');
     }
 }
 </script>
 
 <template>
-    <div class="flex flex-col gap-4">
-        <NoteElement v-for="note in notes" :key="note.id" :note="note" />
-        <span v-if="notes.length === 0" class="text-center">Bisher gibt es keine Notizen.</span>
-    </div>
-    <div class="flex flex-col gap-4 mt-6">
-        <InputGroup>
-            <FloatLabel variant="on">
-                <Textarea id="note" v-model="currentNote" autoResize fluid rows="2" />
-                <label for="note">Deine Notiz</label>
-            </FloatLabel>
-            <Button
-                :disabled="disabled"
-                aria-label="Notiz Hinzufügen"
-                icon="pi pi-angle-right"
-                @click="save"
-            />
-        </InputGroup>
-        <Message class="mx-1 -mt-2" severity="secondary" variant="simple">
-            Notizen sind jeweils für die betroffenen Schüler:innen sowie die aufsichtsführenden
-            Lehrer:innen sichtbar.
-        </Message>
-    </div>
+    <UModal title="Notizen">
+        <template #footer>
+            <span class="text-muted text-sm">
+                Notizen sind jeweils für die betroffenen Schüler:innen sowie die
+                aufsichtsführenden Lehrer:innen sichtbar.
+            </span>
+        </template>
+        <template #body>
+            <div class="flex flex-col gap-4">
+                <NoteElement v-for="note in effectiveNotes" :key="note.id" :note="note" />
+                <span v-if="effectiveNotes.length === 0" class="text-center"
+                    >Bisher gibt es keine Notizen.</span
+                >
+            </div>
+            <div class="flex flex-col gap-4 mt-6">
+                <UFormField class="w-full" label="Deine Notiz">
+                    <UFieldGroup class="w-full">
+                        <UTextarea
+                            v-model="currentNote"
+                            :rows="2"
+                            :ui="{
+                                root: 'w-full',
+                                base: 'rounded-r-none',
+                            }"
+                            autoresize
+                            highlight
+                            placeholder="Notiz eingeben"
+                            variant="subtle"
+                        />
+                        <UButton
+                            :disabled="disabled"
+                            aria-label="Notiz Hinzufügen"
+                            icon="i-lucide-chevron-right"
+                            @click="save"
+                        />
+                    </UFieldGroup>
+                </UFormField>
+            </div>
+        </template>
+    </UModal>
 </template>

@@ -2,14 +2,11 @@
 import { useFeedback } from '@/Profundum/composables/feedback';
 import { computed, shallowRef } from 'vue';
 import type { ProfundumFeedbackStatus } from '@/Profundum/models/feedback';
-import { Button, Column, DataTable, Tag } from 'primevue';
-import Accordion from 'primevue/accordion';
-import AccordionPanel from 'primevue/accordionpanel';
-import AccordionHeader from 'primevue/accordionheader';
-import AccordionContent from 'primevue/accordioncontent';
-import { chooseSeverity, formatSlot, formatStudent } from '@/helpers/formatters';
+import { chooseColorNuxtUi, formatSlot } from '@/helpers/formatters';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
-import type { UserInfoMinimal } from '@/models/user/userInfoMinimal';
+import type { AccordionItem } from '@nuxt/ui/components/Accordion.d.vue.ts';
+import { ProfundumSlot } from '@/Profundum/models/verwaltung.ts';
+import BewertungControlTable from '@/Profundum/components/BewertungControl/BewertungControlTable.vue';
 
 const navItems = [
     {
@@ -17,13 +14,13 @@ const navItems = [
     },
     {
         label: 'Feedback',
-        route: {
+        to: {
             name: 'Profundum-Feedback-Abgeben',
         },
     },
     {
         label: 'Überwachung',
-        route: {
+        to: {
             name: 'Profundum-Feedback-Control',
         },
     },
@@ -38,12 +35,20 @@ async function update() {
 }
 await update();
 
+interface ControlAccordionItem extends AccordionItem {
+    info: ProfundumSlot;
+    id: string;
+    detail: ProfundumFeedbackStatus[];
+    done: number;
+    count: number;
+}
+
 const slots = computed(() =>
-    Object.keys(control.value).map((key) => {
+    Object.keys(control.value).map<ControlAccordionItem>((key: string) => {
         return {
             id: key,
             info: control.value[key][0].slot,
-            content: control.value[key],
+            detail: control.value[key],
             done: control.value[key].reduce(
                 (total, x) => (x.status == 'Done' ? total + 1 : total),
                 0,
@@ -63,68 +68,41 @@ async function publish(evt: Event, id: string, status: boolean) {
 <template>
     <nav-breadcrumb :items="navItems" />
     <h1>Feedback Überwachung</h1>
-    <Accordion lazy>
-        <AccordionPanel v-for="slot in slots" :key="slot.id" :value="slot.id">
-            <AccordionHeader>
-                <div class="flex justify-between w-full mr-4">
-                    <span>
-                        {{ formatSlot(slot.info) }}
-                    </span>
-                    <span class="inline-flex gap-2">
-                        <Button
-                            v-if="!slot.info.isFeedbackPublished"
-                            label="Veröffentlichen"
-                            severity="primary"
-                            size="small"
-                            variant="text"
-                            @click="publish($event, slot.info.id, true)"
-                        />
-                        <Button
-                            v-else
-                            label="Veröffentlicht"
-                            severity="secondary"
-                            size="small"
-                            variant="text"
-                            @click="publish($event, slot.info.id, false)"
-                        />
-                        <Tag
-                            :severity="chooseSeverity((100 * slot.done) / slot.count, 25, true)"
-                            >{{ slot.done }} / {{ slot.count }}</Tag
-                        >
-                    </span>
-                </div>
-            </AccordionHeader>
-            <AccordionContent>
-                <DataTable :value="slot.content">
-                    <Column header="Profundum">
-                        <template #body="{ data }">
-                            {{ data.instanz.profundumInfo.bezeichnung }}
-                        </template>
-                    </Column>
-                    <Column header="Verantwortliche">
-                        <template #body="{ data }">
-                            {{
-                                data.instanz.verantwortlicheInfo
-                                    .map((v: UserInfoMinimal) => formatStudent(v, true))
-                                    .join(', ')
-                            }}
-                        </template>
-                    </Column>
-                    <Column header="Status">
-                        <template #body="{ data }">
-                            <Tag v-if="data.status === 'Done'" severity="success"
-                                >Abgeschlossen</Tag
-                            >
-                            <Tag v-else-if="data.status === 'Partial'" severity="warn"
-                                >Teilweise</Tag
-                            >
-                            <Tag v-else severity="danger">Ausstehend</Tag>
-                        </template>
-                    </Column>
-                </DataTable>
-            </AccordionContent>
-        </AccordionPanel>
-    </Accordion>
+    <UAccordion :items="slots">
+        <template #trailing="{ item, open }">
+            <div class="flex justify-between w-full mr-4 items-center">
+                <span>
+                    {{ formatSlot(item.info) }}
+                </span>
+                <span class="inline-flex gap-2 items-center">
+                    <UButton
+                        v-if="!item.info.isFeedbackPublished"
+                        color="primary"
+                        label="Veröffentlichen"
+                        variant="ghost"
+                        @click="publish($event, item.info.id, true)"
+                    />
+                    <UButton
+                        v-else
+                        color="neutral"
+                        label="Veröffentlicht"
+                        variant="ghost"
+                        @click="publish($event, item.info.id, false)"
+                    />
+                    <UBadge
+                        :color="chooseColorNuxtUi((100 * item.done) / item.count, 25, true)"
+                        variant="soft"
+                        >{{ item.done }} / {{ item.count }}</UBadge
+                    >
+                    <UIcon v-if="open" class="size-5" name="i-lucide-chevron-up" />
+                    <UIcon v-else class="size-5" name="i-lucide-chevron-down" />
+                </span>
+            </div>
+        </template>
+        <template #content="{ item }">
+            <BewertungControlTable :value="item.detail" />
+        </template>
+    </UAccordion>
 </template>
 
 <style scoped></style>

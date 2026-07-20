@@ -15,7 +15,7 @@ const navItems = [
     },
     {
         label: 'Feedback',
-        route: {
+        to: {
             name: 'Profundum-Feedback-Abgeben',
         },
     },

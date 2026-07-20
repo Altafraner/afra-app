@@ -14,13 +14,13 @@ const navItems = [
     },
     {
         label: 'Feedback',
-        route: {
+        to: {
             name: 'Profundum-Feedback-Abgeben',
         },
     },
     {
         label: 'Kriterien',
-        route: {
+        to: {
             name: 'Profundum-Feedback-Kriterien',
         },
     },

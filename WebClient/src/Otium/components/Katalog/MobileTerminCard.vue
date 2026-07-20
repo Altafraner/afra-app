@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { Button, Card, Message, Skeleton } from 'primevue';
 import Termin from '@/Otium/components/Katalog/Termin.vue';
 import OtiumKategorieTag from '@/Otium/components/Shared/OtiumKategorieTag.vue';
 import AuslastungsTag from '@/Otium/components/Shared/AuslastungsTag.vue';
@@ -19,12 +18,20 @@ const open = ref(false);
 </script>
 
 <template>
-    <Card :pt="{ body: { class: 'p-0' } }" class="shadow-none py-2 last:pb-0">
+    <UCard
+        :ui="{
+            header: 'p-2 sm:px-4',
+            body: 'p-2 sm:px-4',
+            footer: 'p-2 sm:px-4',
+        }"
+        class="shadow-none py-2 last:pb-0"
+        variant="soft"
+    >
         <template #title>
-            <div class="flex justify-between gap-2">
+            <span class="flex justify-between gap-2">
                 <span class="inline-flex gap-3 items-center flex-auto shrink wrap-anywhere">
                     <otium-kategorie-tag
-                        v-if="termin.kategorieFound"
+                        v-if="termin.kategorieFound?.icon ?? false"
                         :value="termin.kategorieFound"
                         hide-name
                         minimal
@@ -42,62 +49,80 @@ const open = ref(false);
                         :ist-abgesagt="termin.istAbgesagt"
                     />
                 </span>
-            </div>
+            </span>
         </template>
-        <template #subtitle>
+        <template #description>
             {{ termin.ort
             }}<template v-if="termin.tutor">
                 &CenterDot; {{ formatPerson(termin.tutor) }}</template
             >
         </template>
-        <template v-if="open" #content>
+        <template v-if="open" #default>
             <Suspense>
                 <Termin :termin-id="termin.id" @update="() => emit('reload')" />
                 <template #fallback>
                     <div>
                         <h1>
-                            <Skeleton height="3rem" width="60%" />
+                            <USkeleton class="h-12 w-[60%]" />
                         </h1>
                         <p>
-                            <Skeleton width="40%" />
+                            <USkeleton class="h-[1em] w-[40%]" />
                         </p>
-                        <h3 class="mt-12">
-                            <Skeleton height="2rem" width="55%" />
-                        </h3>
+                        <p class="mt-12">
+                            <USkeleton class="h-8 w-[55%]" />
+                        </p>
                     </div>
                 </template>
             </Suspense>
         </template>
         <template #footer>
-            <Message
+            <UButton
                 v-if="termin.istAbgesagt"
-                :pt="{ content: { class: 'justify-center' } }"
-                class="outline-none"
+                :ui="{
+                    base: 'flex justify-center',
+                }"
+                class="w-full"
                 disabled
-                fluid
-                severity="error"
-                size="small"
-                >Abgesagt</Message
-            >
-            <Button
+                color="error"
+                label="Abgesagt"
+                size="lg"
+                variant="soft"
+            />
+            <UButton
                 v-else-if="!open"
-                fluid
                 label="Mehr anzeigen"
-                severity="secondary"
-                size="small"
-                @click="() => (open = true)"
-            ></Button>
-            <Button
+                :ui="{
+                    base: 'flex justify-center',
+                }"
+                class="w-full"
+                color="neutral"
+                size="lg"
+                variant="soft"
+                @click="
+                    () => {
+                        open = true;
+                    }
+                "
+            />
+            <UButton
                 v-else
-                fluid
-                icon="pi pi-minus"
+                :ui="{
+                    base: 'flex justify-center',
+                }"
                 label="Verbergen"
-                severity="secondary"
-                size="small"
-                @click="() => (open = false)"
-            ></Button>
+                class="w-full"
+                color="neutral"
+                icon="i-lucide-minus"
+                size="lg"
+                variant="soft"
+                @click="
+                    () => {
+                        open = false;
+                    }
+                "
+            ></UButton>
         </template>
-    </Card>
+    </UCard>
 </template>
 
 <style scoped></style>

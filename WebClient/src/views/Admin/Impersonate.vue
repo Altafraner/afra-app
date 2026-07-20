@@ -1,36 +1,36 @@
-<script setup>
+<script lang="ts" setup>
 import { useUser } from '@/stores/user';
-import { useOtiumStore } from '@/Otium/stores/otium.js';
 import { computed } from 'vue';
 import { formatTutor } from '@/helpers/formatters';
-import { Button, useToast } from 'primevue';
 import { mande } from 'mande';
 import { useRouter } from 'vue-router';
 import UserPeek from '@/components/UserPeek.vue';
+import { UserInfoMinimal } from '@/models/user/userInfoMinimal';
+import { usePeople } from '@/stores/people';
 
 const user = useUser();
-const otium = useOtiumStore();
 const router = useRouter();
 const toast = useToast();
+const peopleStore = usePeople();
 
-await otium.updatePersonen();
+await peopleStore.updatePersonen();
 
 const isAdmin = computed(() => user.loggedIn && user.isAdmin);
 
-const personen = computed(() => {
-    const sorted = [...otium.personen].sort((a, b) => {
+const personen = computed<[string, UserInfoMinimal[]][]>(() => {
+    const sorted: UserInfoMinimal[] = [...peopleStore.personen].sort((a, b) => {
         const A = (formatTutor(a) || '').toLowerCase();
         const B = (formatTutor(b) || '').toLowerCase();
         return A < B ? -1 : A > B ? 1 : 0;
     });
 
-    const grouped = sorted.reduce((acc, p) => {
+    const grouped = sorted.reduce<Record<string, UserInfoMinimal[]>>((acc, p) => {
         const key = p.gruppe && p.gruppe.trim() !== '' ? p.gruppe : p.rolle;
         (acc[key] ??= []).push(p);
         return acc;
     }, {});
 
-    const parseGroup = (str) => {
+    const parseGroup = (str: string) => {
         const match = /^(\d+)(.*)$/i.exec(str);
         if (match) {
             return {
@@ -53,18 +53,18 @@ const personen = computed(() => {
             return pa.suffix.localeCompare(pb.suffix, 'de', { sensitivity: 'base' });
         }
 
-        if (pa.num !== pb.num) return pa.num - pb.num;
+        if (pa.num !== pb.num) return (pa.num ?? 0) - (pb.num ?? 0);
         return pa.suffix.localeCompare(pb.suffix, 'de', { sensitivity: 'base' });
     });
 });
 
-const impersonate = async (userToImpersonate) => {
+const impersonate = async (userToImpersonate: UserInfoMinimal) => {
     try {
         await mande(`/api/user/${userToImpersonate.id}/impersonate`).get();
     } catch {
         toast.add({
-            severity: 'error',
-            summary: 'Impersonieren fehlgeschlagen',
+            color: 'error',
+            title: 'Impersonieren fehlgeschlagen',
         });
     }
     await user.update();
@@ -81,8 +81,12 @@ const impersonate = async (userToImpersonate) => {
                 <ul>
                     <h3 class="font-bold mb-2">{{ gruppe }}</h3>
                     <li class="flex flex-col gap-2">
-                        <div v-for="u in users" :key="u.id">
-                            <Button icon="pi pi-users" size="small" @click="impersonate(u)" />
+                        <div v-for="u in users" :key="u.id" class="flex flex-row items-center">
+                            <UButton
+                                icon="i-lucide-users"
+                                variant="subtle"
+                                @click="impersonate(u)"
+                            />
                             <UserPeek :person="u" />
                         </div>
                     </li>

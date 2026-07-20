@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import {
     Button,
     FloatLabel,
@@ -21,7 +21,7 @@ const settings = useOtiumStore();
 
 const dates = ref([]);
 const ortSelected = ref(null);
-const dateSelected = ref(null);
+const datumSelected = ref(null);
 const blockSelected = ref(null);
 const personSelected = ref(null);
 const bezeichnungSelected = ref(null);
@@ -31,6 +31,11 @@ const maxEnrollmentsSetzenSelected = ref(false);
 const betreuerZuweisenSelected = ref(false);
 const loading = ref(true);
 const personen = ref(null);
+
+const dateSelected = computed(() => {
+    if (!datumSelected.value) return undefined;
+    return dates.value.find((d) => d.datum === datumSelected.value);
+});
 
 function resolve({ values }) {
     const errors = {};
@@ -46,7 +51,7 @@ function resolve({ values }) {
 async function getTermine() {
     await settings.updateSchuljahr();
     dates.value = settings.schuljahr;
-    dateSelected.value = settings.defaultDay;
+    datumSelected.value = settings.defaultDay.datum;
     dateChanged();
 }
 
@@ -63,7 +68,7 @@ async function getPersonen() {
 }
 
 function dateChanged() {
-    if (dateSelected.value.blocks.includes(blockSelected.value)) return;
+    if (dateSelected.value?.blocks.includes(blockSelected.value) ?? true) return;
     blockSelected.value = dateSelected.value.blocks[0];
 }
 
@@ -71,7 +76,7 @@ async function setup() {
     loading.value = true;
     personSelected.value = null;
     blockSelected.value = null;
-    dateSelected.value = null;
+    datumSelected.value = null;
     ortSelected.value = null;
     maxEnrollmentsSelected.value = null;
     maxEnrollmentsSetzenSelected.value = false;
@@ -88,7 +93,7 @@ async function setup() {
 function submit({ valid }) {
     if (!valid) return;
     emit('submit', {
-        date: dateSelected.value.datum,
+        date: datumSelected.value,
         block: blockSelected.value.schemaId,
         ort: ortSelected.value,
         person: personSelected.value,
@@ -97,7 +102,6 @@ function submit({ valid }) {
     });
 }
 
-watch(dateSelected, dateChanged);
 watch(betreuerZuweisenSelected, () => {
     if (!betreuerZuweisenSelected.value) {
         personSelected.value = null;
@@ -115,6 +119,8 @@ watch(bezeichnungSetzenSelected, () => {
 });
 
 setup();
+
+watch(dateSelected, dateChanged);
 </script>
 
 <template>
@@ -128,12 +134,12 @@ setup();
         <div class="font-bold">Zeitpunkt</div>
         <OtiumDateSelector
             v-if="!loading"
-            v-model="dateSelected"
+            v-model="datumSelected"
             :options="dates"
             hide-today
             name="date"
         />
-        <Select v-model="blockSelected" :options="dateSelected.blocks" name="block">
+        <Select v-model="blockSelected" :options="dateSelected?.blocks ?? []" name="block">
             <template #value="{ value }">
                 {{ value?.bezeichnung ?? 'Keine Blöcke verfügbar' }}
             </template>

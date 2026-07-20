@@ -1,5 +1,28 @@
 @import 'tailwindcss';
 @import 'tailwindcss-primeui';
+@import "@nuxt/ui";
+
+@theme{
+    --font-sans: 'Inter', 'Noto Sans', 'Lato', 'Segoe UI', 'Helvetica', 'Arial', sans-serif;
+    --font-serif: 'Noto Serif', serif;
+
+    --color-blue-50: #f2f7fb;
+    --color-blue-100: #c2dbed;
+    --color-blue-200: #91bedf;
+    --color-blue-300: #61a1d1;
+    --color-blue-400: #3085c2;
+    --color-blue-500: #0068b4;
+    --color-blue-600: #005899;
+    --color-blue-700: #00497e;
+    --color-blue-800: #003963;
+    --color-blue-900: #002a48;
+    --color-blue-950: #001a2d;
+}
+
+:root {
+    --ui-container: 60rem;
+}
+
 
 @layer base {
     h1 {
@@ -14,7 +37,7 @@
         @apply text-lg font-semibold mt-2 mb-1;
     }
 
-    p {
+    main p {
         @apply my-2;
     }
 
@@ -24,10 +47,6 @@
 
     footer i {
         font-size: 0.8rem;
-    }
-
-    .p-menubar-start img {
-        @apply h-[3rem];
     }
 
     .m-trim *:first-child {
@@ -54,10 +73,6 @@
     }
 }
 
-:root {
-    font-family: 'Inter', 'Segoe UI', 'Helvetica', 'Arial', sans-serif;
-}
-
 @layer theme {
     th.afra-col-action .p-datatable-column-header-content,
     td.afra-col-action .p-inputgroup {
@@ -72,3 +87,4 @@
         color: var(--p-button-text-danger-color);
     }
 }
+

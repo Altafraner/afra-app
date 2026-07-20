@@ -1,6 +1,4 @@
 <script lang="ts" setup>
-import { Button, Image, Menubar, useToast } from 'primevue';
-import type { MenuItem } from 'primevue/menuitem';
 import { computed, onMounted } from 'vue';
 
 import wappenLight from '/vdaa/favicon.svg?url';
@@ -9,6 +7,7 @@ import { useUser } from '@/stores/user';
 import { useProfundumEinwahl } from '@/Profundum/stores/profundumEinwahlStore';
 import { useRouter } from 'vue-router';
 import { isDark } from '@/helpers/isdark';
+import type { NavigationMenuItem } from '@nuxt/ui/components/NavigationMenu.d.vue.ts';
 
 type GlobalPermissions = 'Otiumsverantwortlich' | 'Profundumsverantwortlich' | 'Admin';
 type Role = 'Tutor' | 'Oberstufe' | 'Mittelstufe';
@@ -19,33 +18,33 @@ interface Conditions {
     feature?: (() => boolean) | undefined;
 }
 
-interface MenuItemWithCondition extends MenuItem {
+interface MenuItemWithCondition extends NavigationMenuItem {
     conditions?: Conditions | undefined;
-    items?: MenuItemWithCondition[] | undefined;
+    children?: MenuItemWithCondition[] | undefined;
 }
 
 const all_items: MenuItemWithCondition[] = [
     {
         label: 'Übersicht',
-        route: '/',
-        icon: 'pi pi-home',
+        to: '/',
+        icon: 'i-lucide-house',
     },
     {
         label: 'Otium',
-        items: [
+        children: [
             {
                 label: 'Katalog',
-                route: {
+                to: {
                     name: 'Otium-Katalog',
                 },
-                icon: 'pi pi-list',
+                icon: 'i-lucide-list',
             },
             {
                 label: 'Verwaltung',
-                route: {
+                to: {
                     name: 'Verwaltung',
                 },
-                icon: 'pi pi-wrench',
+                icon: 'i-lucide-wrench',
                 conditions: {
                     permissions: ['Otiumsverantwortlich'],
                 },
@@ -54,13 +53,13 @@ const all_items: MenuItemWithCondition[] = [
     },
     {
         label: 'Profundum',
-        items: [
+        children: [
             {
                 label: 'Einwahl',
-                route: {
+                to: {
                     name: 'Profundum-Einwahl',
                 },
-                icon: 'pi pi-check-square',
+                icon: 'i-lucide-square-check-big',
                 conditions: {
                     roles: ['Mittelstufe'],
                     feature: () => profundumEinwahl.isEinwahlActive,
@@ -68,66 +67,66 @@ const all_items: MenuItemWithCondition[] = [
             },
             {
                 label: 'Feedback',
-                route: {
+                to: {
                     name: 'Profundum-Feedback-Abgeben',
                 },
-                icon: 'pi pi-sliders-h',
+                icon: 'i-lucide-sliders-horizontal',
                 conditions: {
                     roles: ['Tutor'],
                 },
             },
             {
                 label: 'Verwaltung',
-                route: { name: 'Profundum-Verwaltung' },
-                icon: 'pi pi-wrench',
+                to: { name: 'Profundum-Verwaltung' },
+                icon: 'i-lucide-wrench',
                 conditions: {
                     permissions: ['Profundumsverantwortlich'],
                 },
             },
             {
                 label: 'Matching',
-                route: { name: 'Profundum-Matching' },
-                icon: 'pi pi-map',
+                to: { name: 'Profundum-Matching' },
+                icon: 'i-lucide-grid-2x2-plus',
                 conditions: {
                     permissions: ['Profundumsverantwortlich'],
                 },
             },
             {
                 label: 'Feedback Kriterien',
-                route: {
+                to: {
                     name: 'Profundum-Feedback-Kriterien',
                 },
-                icon: 'pi pi-wrench',
+                icon: 'i-lucide-wrench',
                 conditions: {
                     permissions: ['Profundumsverantwortlich'],
                 },
             },
             {
                 label: 'Feedback Überwachung',
-                route: {
+                to: {
                     name: 'Profundum-Feedback-Control',
                 },
-                icon: 'pi pi-eye',
+                icon: 'i-lucide-eye',
                 conditions: {
                     permissions: ['Profundumsverantwortlich'],
                 },
             },
             {
                 label: 'Feedback Drucken',
-                route: {
+                to: {
                     name: 'Profundum-Feedback-Download',
                 },
-                icon: 'pi pi-print',
+                icon: 'i-lucide-printer',
                 conditions: {
                     permissions: ['Profundumsverantwortlich'],
                 },
             },
             {
                 label: 'Feedback',
-                route: {
+                to: {
                     name: 'Profundum-Feedback-Einsicht',
                 },
-                icon: 'pi pi-sliders-h',
+                icon: 'i-lucide-sliders-horizontal',
                 conditions: {
                     roles: ['Mittelstufe', 'Oberstufe'],
                 },
@@ -136,21 +135,21 @@ const all_items: MenuItemWithCondition[] = [
     },
     {
         label: 'Aufsicht',
-        route: {
+        to: {
             name: 'Aufsicht',
         },
-        icon: 'pi pi-eye',
+        icon: 'i-lucide-eye',
         conditions: {
             roles: ['Tutor'],
         },
     },
     {
         label: 'Admin',
-        icon: 'pi pi-asterisk',
-        items: [
+        icon: 'i-lucide-asterisk',
+        children: [
             {
                 label: 'Impersonieren',
-                route: {
+                to: {
                     name: 'Admin-Impersonate',
                 },
                 conditions: {
@@ -159,7 +158,7 @@ const all_items: MenuItemWithCondition[] = [
             },
             {
                 label: 'Cevex',
-                route: {
+                to: {
                     name: 'Admin-Cevex',
                 },
                 conditions: {
@@ -170,10 +169,10 @@ const all_items: MenuItemWithCondition[] = [
     },
     {
         label: 'Einstellungen',
-        route: {
+        to: {
             name: 'Settings',
         },
-        icon: 'pi pi-cog',
+        icon: 'i-lucide-settings',
     },
 ];
 
@@ -193,21 +192,22 @@ const logout = async () => {
         await user.logout();
         await router.push('/');
         toast.add({
-            severity: 'success',
-            summary: 'Abgemeldet!',
-            detail: 'Sie wurden erfolgreich abgemeldet.',
-            life: 3000,
+            color: 'success',
+            title: 'Abgemeldet!',
+            description: 'Sie wurden erfolgreich abgemeldet.',
+            duration: 3000,
         });
     } catch (error) {
         toast.add({
-            severity: 'error',
-            summary: 'Fehler!',
-            detail: 'Sie konnten nicht abgemeldet werden.',
+            color: 'error',
+            title: 'Fehler!',
+            description: 'Sie konnten nicht abgemeldet werden.',
         });
     }
 };
 
 function evaluateCondition(item: MenuItemWithCondition): boolean {
+    if (!user.user) return false;
     if (item.conditions === undefined) return true;
 
     if (item.conditions.permissions !== undefined && item.conditions.permissions.length > 0) {
@@ -231,21 +231,19 @@ function evaluateCondition(item: MenuItemWithCondition): boolean {
     return true;
 }
 
-function evaluateItems(items: MenuItemWithCondition[]): MenuItem[] {
-    const selectedItems: MenuItem[] = [];
+function evaluateItems(items: MenuItemWithCondition[]): NavigationMenuItem[] {
+    const selectedItems: NavigationMenuItem[] = [];
 
     for (const item of items) {
         if (!evaluateCondition(item)) continue;
         let workingCopy = item;
-        if (item.items && item.items.length > 0) {
-            const children = evaluateItems(item.items);
-            workingCopy = Object.assign({}, workingCopy, { items: children });
+        if (item.children && item.children.length > 0) {
+            const children = evaluateItems(item.children);
+            workingCopy = Object.assign({}, workingCopy, { children: children });
         }
         if (
-            workingCopy.url ||
-            workingCopy.target ||
-            workingCopy.route ||
-            (workingCopy.items && workingCopy.items.length > 0)
+            workingCopy.to ||
+            (workingCopy.children && workingCopy.children.length > 0)
         )
             selectedItems.push(workingCopy);
     }
@@ -257,44 +255,16 @@ const logo = computed(() => (isDark().value ? wappenDark : wappenLight));
 </script>
 
 <template>
-    <Menubar :model="items">
-        <template #start>
-            <Image :src="logo" alt="Verein der Altafraner" height="50"></Image>
+    <UHeader>
+        <template #title>
+            <img :src="logo" alt="Verein der Altafraner" class="h-10 w-auto inline-block"></img>
         </template>
-        <template #item="{ item, props, hasSubmenu }">
-            <router-link v-if="item.route" v-slot="{ href, navigate }" :to="item.route" custom>
-                <a
-                    :href="href"
-                    class="transition-colors duration-200 ease delay-0"
-                    v-bind="props.action"
-                    @click="navigate"
-                >
-                    <span v-if="item.icon" :class="item.icon" />
-                    <span>{{ item.label }}</span>
-                </a>
-            </router-link>
-            <a
-                v-else
-                :href="item.url"
-                :target="item.target"
-                class="transition-colors duration-200 ease delay-0"
-                v-bind="props.action"
-            >
-                <span v-if="item.icon" :class="item.icon" />
-                <span>{{ item.label }}</span>
-                <span v-if="hasSubmenu" class="pi pi-fw pi-angle-down" />
-            </a>
+        <UNavigationMenu :items="items" color="neutral" />
+        <template #right><UButton class="text-muted hover:text-highlighted" color="neutral" icon="i-lucide-power" variant="ghost" @click="logout">Logout</UButton></template>
+        <template #body>
+                <UNavigationMenu :items="items" color="neutral" orientation="vertical" />
         </template>
-        <template #end>
-            <Button
-                label="Logout"
-                icon="pi pi-power-off"
-                @click="logout"
-                variant="text"
-                severity="secondary"
-            />
-        </template>
-    </Menubar>
+    </UHeader>
 </template>
 
 <style scoped></style>

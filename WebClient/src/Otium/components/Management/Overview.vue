@@ -1,7 +1,7 @@
 <script setup>
 import { useUser } from '@/stores/user';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
-import { Button, Column, DataTable, Dialog, Skeleton, useToast } from 'primevue';
+import { Button, Column, DataTable, Skeleton, useToast } from 'primevue';
 import { ref, shallowRef, watch } from 'vue';
 import { mande } from 'mande';
 import { findPath } from '@/helpers/tree.js';
@@ -16,8 +16,8 @@ const settings = useOtiumStore();
 const toast = useToast();
 const { openConfirmDialog } = useConfirmPopover();
 const loading = ref(true);
-const createDialogOpen = ref(false);
 const showHidden = shallowRef(false);
+const overlay = useOverlay();
 
 const otia = shallowRef([]);
 
@@ -52,13 +52,16 @@ async function createOtium(data) {
             detail: 'Ein unerwarteter Fehler ist beim Erstellen des Otiums aufgetreten',
         });
     } finally {
-        createDialogOpen.value = false;
         await getOtia();
     }
 }
 
-function openCreateDialog() {
-    createDialogOpen.value = true;
+const createDialog = overlay.create(CreateOtiumForm);
+
+async function openCreateDialog() {
+    const data = await createDialog.open();
+    if (!data) return;
+    await createOtium(data);
 }
 
 const confirmDelete = (event, id) => {
@@ -209,14 +212,6 @@ watch(showHidden, getOtia);
                 @click="showHidden = false"
             />
         </div>
-        <Dialog
-            v-model:visible="createDialogOpen"
-            :style="{ width: '35rem' }"
-            header="Otium hinzufügen"
-            modal
-        >
-            <CreateOtiumForm @submit="createOtium" />
-        </Dialog>
     </template>
     <template v-else>
         <Skeleton class="mb-6" height="3rem" />

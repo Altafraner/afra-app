@@ -21,7 +21,7 @@ const navItems = computed<NavBreadcrumbElement[]>(() => [
     },
     {
         label: formatStudent(data.value.person),
-        route: {
+        to: {
             name: 'Mentee',
             props: {
                 studentId: props.studentId,
@@ -29,7 +29,7 @@ const navItems = computed<NavBreadcrumbElement[]>(() => [
         },
     },
     {
-        label: 'Feedback',
+        to: 'Feedback',
     },
 ]);
 </script>

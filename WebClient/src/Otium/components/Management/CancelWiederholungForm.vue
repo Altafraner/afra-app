@@ -36,13 +36,13 @@ const datesAvailable = computed(() => {
 const canBeShortened = computed(() => datesAvailable.value.length > 0);
 
 function onSubmit() {
-    console.log('Submitting', end.value);
     emit('submit', end.value);
 }
 
 async function setup() {
     await settings.updateSchuljahr();
-    if (canBeShortened.value) end.value = datesAvailable.value[datesAvailable.value.length - 1];
+    if (canBeShortened.value)
+        end.value = datesAvailable.value[datesAvailable.value.length - 1].datum;
     loading.value = false;
 }
 

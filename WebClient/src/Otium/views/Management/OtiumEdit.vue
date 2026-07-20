@@ -49,13 +49,13 @@ const klassenStufenSelects = computed(() => [
 const navItems = computed(() => [
     {
         label: 'Otium',
-        route: {
+        to: {
             name: 'Otium-Katalog',
         },
     },
     {
         label: 'Verwaltung',
-        route: {
+        to: {
             name: 'Verwaltung',
         },
     },
@@ -69,8 +69,7 @@ async function getOtium(setInternal = true) {
     otium.value = await getter.get();
     if (setInternal) {
         bezeichnung.value = otium.value.bezeichnung;
-        const kategorieId = findChildren(settings.kategorien, otium.value.kategorie).id;
-        kategorie.value = { [kategorieId]: true };
+        kategorie.value = findChildren(settings.kategorien, otium.value.kategorie);
         beschreibung.value = otium.value.beschreibung.replaceAll('\n', '\n\n').trim();
         minKlasse.value = otium.value.minKlasse ?? null;
         maxKlasse.value = otium.value.maxKlasse ?? null;
@@ -110,7 +109,7 @@ async function updateBezeichnung() {
 async function updateKategorie() {
     let kategorieId;
     try {
-        kategorieId = Object.keys(kategorie.value)[0];
+        kategorieId = kategorie.value.id;
     } catch {
         return;
     }
@@ -119,8 +118,7 @@ async function updateKategorie() {
     try {
         await simpleUpdate('kategorie', kategorieId);
     } finally {
-        const kategorieId = findChildren(settings.kategorien, otium.value.kategorie).id;
-        kategorie.value = { [kategorieId]: true };
+        kategorie.value = findChildren(settings.kategorien, otium.value.kategorie);
     }
 }
 
@@ -235,7 +233,7 @@ async function deleteReg(id) {
 async function cancelReg(id, date) {
     const api = mande(`/api/otium/management/wiederholung/${id}/discontinue`);
     try {
-        await api.patch({ value: date.datum });
+        await api.patch({ value: date });
         await getOtium(false);
     } catch (e) {
         toast.add({
@@ -353,7 +351,7 @@ setup();
                     <OtiumKategorySelector
                         v-model="kategorie"
                         :options="settings.kategorien"
-                        fluid
+                        fullSize
                         hide-clear
                     />
                 </template> </GridEditRow
