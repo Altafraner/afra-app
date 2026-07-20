@@ -23,15 +23,15 @@ public class OtiumKategorie
     public required string Bezeichnung { get; set; }
 
     /// <summary>
-    ///     A html-class applied to an i-tag in the frontend in an order of showing an icon.
+    ///     An iconify icon displayed in the frontend along with this category.
     /// </summary>
-    [MaxLength(20)]
+    [MaxLength(50)]
     public string? Icon { get; set; }
 
     /// <summary>
     ///     A css-color applied to a box around the <see cref="Icon" /> in the frontend.
     /// </summary>
-    [MaxLength(20)]
+    [MaxLength(50)]
     public string? CssColor { get; set; }
 
     /// <summary>
