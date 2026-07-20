@@ -1,8 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import Home from '@/views/Home.vue';
-import { routes as otium } from '@/Otium/router/routes.js';
-import { routes as profundum } from '@/Profundum/router/routes.js';
-import { routes as attendance } from '@/Attendance/router/routes.ts';
+import { routes as otium } from '@/Otium/router/routes';
+import { routes as profundum } from '@/Profundum/router/routes';
+import { routes as attendance } from '@/Attendance/router/routes';
 
 const routes = [
     {
