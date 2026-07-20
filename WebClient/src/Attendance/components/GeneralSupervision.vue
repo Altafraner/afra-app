@@ -143,7 +143,7 @@ watch(filteredAttendance, (newAttendance) => {
                 @openNotes="openNotes"
                 @update="updateAttendanceCallback"
             >
-                <template #actions>
+                <template v-if="attendanceService.metadata.value?.enableMove ?? false" #actions>
                     <UButton
                         color="neutral"
                         icon="i-lucide-plus"
