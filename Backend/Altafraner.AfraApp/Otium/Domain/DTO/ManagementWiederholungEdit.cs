@@ -14,4 +14,9 @@ public record ManagementWiederholungEdit
     ///     The location for the Otium.
     /// </summary>
     public required string Ort { get; set; }
+
+    /// <summary>
+    ///     The tutors ID
+    /// </summary>
+    public Guid? Person { get; set; }
 }

@@ -855,15 +855,23 @@ internal class OtiumEndpointService
         if (otiumWiederholung is null)
             throw new NotFoundException("Keine Wiederholung mit dieser Id");
 
+        Models_Person? tutor;
+        if (!wiederholungEdit.Person.HasValue) tutor = null;
+        else
+            tutor = await _userService.GetUserByIdAsync(wiederholungEdit.Person.Value);
+
         var termine = otiumWiederholung.Termine.ToList();
 
         foreach (var t in termine)
+        {
             await OtiumTerminSetOrtAsync(t.Id, wiederholungEdit.Ort, commit: false);
+            await OtiumTerminSetMaxEinschreibungenAsync(t.Id, wiederholungEdit.MaxEinschreibungen, false);
+            t.Tutor = tutor;
+        }
         otiumWiederholung.Ort = wiederholungEdit.Ort;
-
-        foreach (var t in termine)
-            await OtiumTerminSetMaxEinschreibungenAsync(t.Id, wiederholungEdit.MaxEinschreibungen, commit: false);
+        otiumWiederholung.Tutor = tutor;
         otiumWiederholung.MaxEinschreibungen = wiederholungEdit.MaxEinschreibungen;
+
         await _dbContext.SaveChangesAsync();
     }
 
