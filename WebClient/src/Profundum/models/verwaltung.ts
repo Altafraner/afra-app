@@ -23,7 +23,7 @@ export interface ProfundumInstanz {
     maxEinschreibungen: null | number;
     numEinschreibungen: number;
     verantwortlicheIds: string[];
-    verantwortliche: UserInfoMinimal[];
+    verantwortlicheInfo: UserInfoMinimal[];
     ort: string;
 }
 

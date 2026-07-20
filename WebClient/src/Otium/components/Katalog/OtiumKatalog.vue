@@ -1,13 +1,16 @@
-<script setup>
-import { Button, Column, DataTable, Divider, Skeleton } from 'primevue';
+<script lang="ts" setup>
 import { formatPerson } from '@/helpers/formatters';
 import AuslastungsTag from '@/Otium/components/Shared/AuslastungsTag.vue';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
 import OtiumKategorieTag from '@/Otium/components/Shared/OtiumKategorieTag.vue';
 import Termin from '@/Otium/components/Katalog/Termin.vue';
-import { computed, ref } from 'vue';
+import { computed, h, ref, resolveComponent } from 'vue';
 import MobileSwitch from '@/components/MobileSwitch.vue';
 import MobileTerminCard from '@/Otium/components/Katalog/MobileTerminCard.vue';
+import type { TableColumn } from '@nuxt/ui/components/Table.d.vue.ts';
+
+const UButton = resolveComponent('UButton');
+const UIcon = resolveComponent('UIcon');
 
 const props = defineProps({
     otia: Array,
@@ -21,109 +24,125 @@ const props = defineProps({
 const emit = defineEmits(['reload']);
 
 const settings = useOtiumStore();
-const rowsExpanded = ref({});
+const rowsExpanded = ref<Record<string, boolean>>({});
 if (props.terminId) {
     rowsExpanded.value[props.terminId] = true;
 }
 
-function findKategorie(otium) {
-    return settings.kategorien.find((k) => otium.kategorien.includes(k.id));
+function findKategorie(otium: any) {
+    const katsAsAny = settings.kategorien as any[] | null;
+    return katsAsAny?.find((k) => otium.kategorien.includes(k.id)) ?? null;
 }
 
-function expand(id) {
+function expand(id: string) {
     let isOpen = rowsExpanded.value[id] ?? false;
-    let temp = {};
+    let temp: Record<string, boolean> = {};
     if (!isOpen) temp[id] = true;
     rowsExpanded.value = temp;
 }
 
 const processedOtia = computed(() => {
-    return props.otia.map((ot) => {
-        return Object.assign(
-            {
-                kategorieFound: findKategorie(ot),
-            },
-            ot,
-        );
-    });
+    return (
+        props.otia?.map((ot: any) => {
+            return Object.assign(
+                {
+                    kategorieFound: findKategorie(ot),
+                    tutorName: ot.tutor ? formatPerson(ot.tutor) : '',
+                    terminId: ot.id,
+                },
+                ot,
+            );
+        }) ?? []
+    );
 });
+
+const columns: TableColumn<any>[] = [
+    {
+        accessorKey: 'otium',
+        header: 'Angebot',
+        cell: ({ row }) => {
+            return h(
+                UButton,
+                {
+                    label: row.getValue('otium'),
+                    disabled: row.original.istAbgesagt,
+                    color: !row.original.istEingeschrieben ? 'primary' : 'success',
+                    size: 'lg',
+                    variant: 'ghost',
+                    onClick: () => row.toggleExpanded(),
+                },
+                () => [
+                    !row.original.istAbgesagt
+                        ? h(UIcon, {
+                              name: row.getIsExpanded()
+                                  ? 'i-lucide-chevron-down'
+                                  : 'i-lucide-chevron-right',
+                              class: 'size-5',
+                          })
+                        : null,
+                    (row.original.kategorieFound?.icon ?? false)
+                        ? h(OtiumKategorieTag, {
+                              value: row.original.kategorieFound,
+                              class: 'w-4',
+                              hideName: true,
+                              minimal: true,
+                          })
+                        : null,
+                    h('span', { class: 'text-left' }, row.getValue('otium')),
+                ],
+            );
+        },
+    },
+    {
+        accessorKey: 'ort',
+        header: 'Raum',
+        cell: ({ row }) => row.getValue('ort'),
+    },
+    {
+        accessorKey: 'tutorName',
+        header: 'Betreuer:in',
+        cell: ({ row }) => row.getValue('tutorName'),
+    },
+    {
+        header: 'Auslastung',
+        cell: ({ row }) =>
+            h(AuslastungsTag, {
+                auslastung: row.original.auslastung,
+                istAbgesagt: row.original.istAbgesagt,
+            }),
+    },
+];
 </script>
 
 <template>
     <MobileSwitch>
         <template #large>
-            <DataTable
-                v-model:expanded-rows="rowsExpanded"
-                :value="processedOtia"
-                data-key="id"
+            <UTable
+                :columns="columns"
+                :data="processedOtia"
+                :ui="{
+                    td: 'whitespace-normal text-default px-2 py-1.5',
+                    th: 'px-2 py-1.5',
+                    root: 'overflow-x-visible',
+                }"
             >
-                <Column header="Bezeichnung">
-                    <template #body="{ data }">
-                        <Button v-if="data.istAbgesagt" disabled variant="text">
-                            <otium-kategorie-tag
-                                v-if="data.kategorieFound"
-                                :value="data.kategorieFound"
-                                hide-name
-                                minimal
-                            />
-                            <span class="font-semibold text-left">{{ data.otium }}</span>
-                        </Button>
-                        <Button
-                            v-else
-                            :disabled="data.istAbgesagt"
-                            :label="data.otium"
-                            :severity="data.istEingeschrieben ? 'success' : 'primary'"
-                            variant="text"
-                            @click="() => expand(data.id)"
-                        >
-                            <i
-                                :class="{
-                                    'pi-angle-down': rowsExpanded[data.id] ?? false,
-                                    'pi-angle-right': !(rowsExpanded[data.id] ?? false),
-                                }"
-                                class="pi text-lg w-4"
-                            />
-                            <otium-kategorie-tag
-                                v-if="data.kategorieFound?.icon ?? false"
-                                :value="data.kategorieFound"
-                                class="w-4"
-                                hide-name
-                                minimal
-                            />
-                            <span class="font-semibold text-left">{{ data.otium }}</span>
-                        </Button>
-                    </template>
-                </Column>
-                <Column field="ort" header="Raum" />
-                <Column header="Betreuer:in">
-                    <template #body="{ data }">
-                        {{ data.tutor ? formatPerson(data.tutor) : '' }}
-                    </template>
-                </Column>
-                <Column header="Auslastung">
-                    <template #body="{ data }">
-                        <div class="w-24">
-                            <AuslastungsTag
-                                :auslastung="data.auslastung"
-                                :ist-abgesagt="data.istAbgesagt"
-                            />
-                        </div>
-                    </template>
-                </Column>
-                <template #expansion="{ data }">
-                    <div class="w-full px-4">
+                <template #expanded="{ row }">
+                    <div class="w-full pl-4 text-default">
                         <Suspense>
-                            <Termin :termin-id="data.id" @update="() => emit('reload')" />
+                            <Termin
+                                :termin-id="row.original.id"
+                                @update="() => emit('reload')"
+                            />
                             <template #fallback>
                                 <div>
                                     <h1>
-                                        <Skeleton height="3rem" width="60%" />
+                                        <USkeleton class="h-12 w-[60%]" />
                                     </h1>
                                     <p>
-                                        <Skeleton width="40%" />
+                                        <USkeleton class="h-[1em] w-[40%]" />
                                     </p>
                                     <h3 class="mt-12">
-                                        <Skeleton height="2rem" width="55%" />
+                                        <USkeleton class="h-8 w-[55%]" />
                                     </h3>
                                 </div>
                             </template>
@@ -133,12 +152,12 @@ const processedOtia = computed(() => {
                 <template #empty>
                     <div class="flex justify-center">Keine Angebote verfügbar.</div>
                 </template>
-            </DataTable>
+            </UTable>
         </template>
         <template #small>
             <template v-for="(termin, i) in processedOtia" :key="termin.id">
                 <MobileTerminCard :termin="termin" @reload="() => emit('reload')" />
-                <Divider v-if="i !== processedOtia.length - 1" />
+                <USeparator v-if="i !== processedOtia.length - 1" class="my-2" size="md" />
             </template>
         </template>
     </MobileSwitch>

@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
-import { Button, Divider, Popover, Tag, useToast } from 'primevue';
 import { mande } from 'mande';
 import { formatStudent, formatTutor } from '@/helpers/formatters';
 import type { UserInfoMinimal } from '@/models/user/userInfoMinimal';
@@ -14,19 +13,18 @@ const props = defineProps({
 });
 
 const toast = useToast();
-const pop = ref();
 
 const copy = async (text: string) => {
     try {
         await navigator.clipboard.writeText(text);
         toast.add({
-            severity: 'success',
-            summary: 'Kopiert',
-            detail: 'Die E-Mail-Adresse wurde in die Zwischenablage kopiert.',
-            life: 2000,
+            color: 'success',
+            title: 'Kopiert',
+            description: 'Die E-Mail-Adresse wurde in die Zwischenablage kopiert.',
+            duration: 2000,
         });
     } catch {
-        toast.add({ severity: 'error', summary: 'Fehler beim Kopieren', life: 2000 });
+        toast.add({ color: 'error', title: 'Fehler beim Kopieren', duration: 2000 });
     }
 };
 
@@ -51,8 +49,7 @@ const fetchMentors = async (id: string) => {
     }
 };
 
-const toggle = async (event: Event) => {
-    pop.value?.toggle(event);
+const onOpen = async () => {
     if (!mentorsLoaded.value && props.person?.id) {
         await fetchMentors(props.person.id);
     }
@@ -60,71 +57,67 @@ const toggle = async (event: Event) => {
 </script>
 
 <template>
-    <Button class="py-1 font-semibold" v-bind="$attrs" variant="text" @click="toggle($event)">
-        <template #default>
+    <UPopover
+        :aria-label="displayFunction(person)"
+        dismissable
+        showCloseIcon
+        @update:open="onOpen"
+    >
+        <UButton class="py-1 font-semibold h-8" size="lg" v-bind="$attrs" variant="ghost">
             <span class="inline-flex justify-between items-center gap-2 w-full">
                 <span class="w-full inline-block text-center">
                     {{ displayFunction(person) }}
                 </span>
-                <Tag
-                    v-if="person && showGroup"
-                    :value="person.gruppe ?? person.rolle"
-                    rounded
-                    severity="info"
-                />
+                <UBadge v-if="person && showGroup" color="info" variant="soft">{{
+                    person.gruppe ?? person.rolle
+                }}</UBadge>
             </span>
-        </template>
-    </Button>
-
-    <Popover
-        ref="pop"
-        :aria-label="displayFunction(person)"
-        dismissable
-        showCloseIcon
-        style="min-width: 15rem"
-    >
-        <div class="p-3">
-            <div class="flex items-center gap-3 mb-3">
-                <div class="font-bold">{{ displayFunction(person) }}</div>
-                <Tag
-                    v-if="!person?.gruppe && person?.rolle"
-                    :value="person.rolle"
-                    rounded
-                    severity="info"
-                />
-                <Tag v-if="person?.gruppe" :value="person.gruppe" rounded severity="info" />
-            </div>
-
-            <Divider />
-
-            <Button
-                v-if="person?.email"
-                :label="person.email"
-                class="-ml-2"
-                icon="pi pi-envelope"
-                size="small"
-                variant="text"
-                @click.prevent="copy(person.email)"
-            />
-
-            <template v-if="mentorsLoaded && mentors.length">
-                <Divider />
-                <div class="mt-2 flex flex-col gap-2">
-                    <div class="text-700 text-sm mb-2 font-medium">Mentor:innen</div>
-                    <div v-for="mentor in mentors" :key="mentor.id">
-                        <div>{{ formatTutor(mentor) }}</div>
-                        <Button
-                            v-if="mentor.email"
-                            :label="mentor.email"
-                            class="-ml-2"
-                            icon="pi pi-envelope"
-                            size="small"
-                            variant="text"
-                            @click.prevent="copy(mentor.email)"
-                        />
-                    </div>
+        </UButton>
+        <template #content>
+            <div class="p-3">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="font-bold">{{ displayFunction(person) }}</div>
+                    <UBadge
+                        v-if="!person?.gruppe && person?.rolle"
+                        :label="person.rolle"
+                        color="info"
+                        variant="soft"
+                    />
+                    <UBadge
+                        v-else-if="person?.gruppe"
+                        :label="person.gruppe"
+                        color="info"
+                        variant="soft"
+                    />
                 </div>
-            </template>
-        </div>
-    </Popover>
+
+                <USeparator class="my-2" size="sm" />
+
+                <UButton
+                    v-if="person?.email"
+                    icon="i-lucide-mail"
+                    variant="ghost"
+                    @click.prevent="copy(person.email)"
+                    >{{ person.email }}</UButton
+                >
+
+                <template v-if="mentorsLoaded && mentors.length">
+                    <USeparator class="my-2" size="sm" />
+                    <div class="mt-4 flex flex-col gap-2">
+                        <div class="text-700 text-sm mb-2 font-medium">Mentor:innen</div>
+                        <div v-for="mentor in mentors" :key="mentor.id">
+                            <div>{{ formatTutor(mentor) }}</div>
+                            <UButton
+                                v-if="mentor.email"
+                                icon="i-lucide-mail"
+                                variant="ghost"
+                                @click.prevent="copy(mentor.email)"
+                                >{{ mentor.email }}</UButton
+                            >
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </template>
+    </UPopover>
 </template>

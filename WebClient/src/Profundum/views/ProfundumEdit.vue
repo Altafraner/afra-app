@@ -45,7 +45,7 @@ const navItems = computed(() => [
     },
     {
         label: 'Verwaltung',
-        route: {
+        to: {
             name: 'Profundum-Verwaltung',
         },
     },

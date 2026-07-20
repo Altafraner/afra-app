@@ -32,6 +32,7 @@ const props = defineProps<{
 
 const toast = useToast();
 const dialog = useDialog();
+const overlay = useOverlay();
 const userStore = useUser();
 
 const filterPerson = shallowRef();
@@ -100,20 +101,16 @@ function initMoveHere(eventId: string) {
 }
 
 function openNotes(data: AttendanceStudentStatus) {
-    dialog.open(Notes, {
-        props: {
-            modal: true,
-            header: 'Notizen',
-        },
-        data: {
-            notes: computed(() => data.notes),
-            myNote: computed(
-                () => data.notes.find((n) => n.creator.id === userStore.user.id) ?? null,
-            ),
-            scope: props.slot.scope,
-            slotId: props.slot.slotId,
-            studentId: data.student.id,
-        },
+    const modal = overlay.create(Notes);
+
+    modal.open({
+        notes: computed(() => data.notes),
+        myNote: computed(
+            () => data.notes.find((n) => n.creator.id === userStore.user.id) ?? null,
+        ),
+        scope: props.slot.scope,
+        slotId: props.slot.slotId,
+        studentId: data.student.id,
     });
 }
 

@@ -45,19 +45,19 @@ const personSelected = ref(null);
 const navItems = computed(() => [
     {
         label: 'Otium',
-        route: {
+        to: {
             name: 'Otium-Katalog',
         },
     },
     {
         label: 'Verwaltung',
-        route: {
+        to: {
             name: 'Verwaltung',
         },
     },
     {
         label: otium.value != null ? otium.value.otium : '',
-        route:
+        to:
             otium.value != null
                 ? {
                       name: 'Verwaltung-Otium',

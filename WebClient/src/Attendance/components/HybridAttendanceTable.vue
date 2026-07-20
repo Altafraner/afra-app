@@ -6,14 +6,14 @@ import type {
     AttendanceStudentStatus,
 } from '@/Attendance/models/attendance';
 import type { UserInfoMinimal } from '@/models/user/userInfoMinimal';
-import { Button, useDialog, useToast } from 'primevue';
+import { useDialog } from 'primevue';
 import { useUser } from '@/stores/user';
 import { useAttendance } from '@/Attendance/composables/attendanceHubClient';
 import EnrollmentTable from '@/Attendance/components/EnrollmentTable.vue';
 import Notes from '@/Attendance/components/Notes.vue';
 import MoveStudentForm from '@/Attendance/components/MoveStudentForm.vue';
 import SelectStudentToMoveForm from '@/Attendance/components/SelectStudentToMoveForm.vue';
-import { formatStudent } from '../../helpers/formatters';
+import { formatStudent } from '@/helpers/formatters.ts';
 
 const props = defineProps<{
     enableSupervision: boolean;
@@ -31,6 +31,7 @@ const emit = defineEmits<{
 
 const toast = useToast();
 const dialog = useDialog();
+const overlay = useOverlay();
 const userStore = useUser();
 
 const showMove = shallowRef<boolean>(false);
@@ -137,21 +138,17 @@ async function attendanceUpdate(student: UserInfoMinimal, value: AttendanceState
     await attendanceFunctions.updateAttendance?.(student.id, value);
 }
 
-function openNotes(data: AttendanceStudentStatus) {
-    dialog.open(Notes, {
-        props: {
-            modal: true,
-            header: 'Notizen',
-        },
-        data: {
-            notes: computed(() => data.notes),
-            myNote: computed(
-                () => data.notes.find((n) => n.creator.id === userStore.user.id) ?? null,
-            ),
-            scope: props.scope,
-            slotId: props.slotId,
-            studentId: data.student.id,
-        },
+async function openNotes(data: AttendanceStudentStatus) {
+    const modal = overlay.create(Notes);
+
+    modal.open({
+        notes: computed(() => data.notes),
+        myNote: computed(
+            () => data.notes.find((n) => n.creator.id === userStore.user!.id) ?? null,
+        ),
+        scope: props.scope,
+        slotId: props.slotId,
+        studentId: data.student.id,
     });
 }
 
@@ -218,12 +215,12 @@ function openMoveHere() {
         @update="attendanceUpdate"
     >
         <template v-if="showMove || $slots.actions" #actions>
-            <Button
+            <UButton
                 v-if="showMove"
-                icon="pi pi-plus"
+                color="secondary"
                 label="Schüler:in hinzufügen"
-                severity="secondary"
-                size="small"
+                icon="i-lucide-fast-forward"
+                variant="soft"
                 @click="openMoveHere"
             />
             <slot v-if="$slots.actions" name="actions"></slot>

@@ -1,15 +1,5 @@
 <script setup>
-import { computed, shallowRef, watch } from 'vue';
-import {
-    Button,
-    Column,
-    DataTable,
-    Message,
-    Panel,
-    Skeleton,
-    useDialog,
-    useToast,
-} from 'primevue';
+import { computed, h, shallowRef, watch } from 'vue';
 import OtiumDateSelector from '@/Otium/components/Form/OtiumDateSelector.vue';
 import OtiumKategorySelector from '@/Otium/components/Form/OtiumKategorySelector.vue';
 import OtiumKatalog from '@/Otium/components/Katalog/OtiumKatalog.vue';
@@ -20,6 +10,7 @@ import { useOtiumStore } from '@/Otium/stores/otium.js';
 import { formatDate, formatStudent } from '@/helpers/formatters';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
 import EditSupervisorsForm from '@/Otium/components/Schuljahr/EditSupervisorsForm.vue';
+import USkeleton from '@nuxt/ui/components/Skeleton.vue';
 
 const props = defineProps({
     datum: {
@@ -38,7 +29,7 @@ const location = useRoute();
 const toast = useToast();
 const settings = useOtiumStore();
 const user = useUser();
-const dialog = useDialog();
+const overlay = useOverlay();
 
 const loading = shallowRef(true);
 const datesAvailable = shallowRef([]);
@@ -52,13 +43,13 @@ const navItems = computed(() => {
     const start = [
         {
             label: 'Otium',
-            route: {
+            to: {
                 name: 'Otium-Katalog',
             },
         },
         {
             label: 'Katalog',
-            route: {
+            to: {
                 name: 'Otium-Katalog',
             },
         },
@@ -68,7 +59,7 @@ const navItems = computed(() => {
         : [
               ...start,
               {
-                  label: formatDate(new Date(date.value.datum)),
+                  label: formatDate(new Date(date.value)),
               },
           ];
 });
@@ -81,23 +72,22 @@ async function startup() {
         await terminePromise;
         if (props.datum && props.datum !== '') {
             const propDate = datesAvailable.value.find((e) => e.datum === props.datum);
-            if (propDate !== undefined)
-                date.value = datesAvailable.value.find((e) => e.datum === props.datum);
+            if (propDate !== undefined) date.value = props.datum;
             else {
-                date.value = dateDefault.value;
+                date.value = dateDefault.value.datum;
                 await router.replace({ name: 'Otium-Katalog' });
             }
         } else {
-            date.value = dateDefault.value;
+            date.value = dateDefault.value.datum;
         }
         await dateChanged();
         await kategoriesPromise;
     } catch (error) {
         console.error(error);
         toast.add({
-            severity: 'error',
-            summary: 'Fehler',
-            detail: 'Ein unerwarteter Fehler ist beim Laden der Daten aufgetreten',
+            color: 'error',
+            title: 'Fehler',
+            description: 'Ein unerwarteter Fehler ist beim Laden der Daten aufgetreten',
         });
         await user.update();
     }
@@ -105,8 +95,8 @@ async function startup() {
 }
 
 watch(props, async () => {
-    if (!props.datum || (props.datum === '' && date.value.datum !== dateDefault.value.datum)) {
-        date.value = dateDefault.value;
+    if (!props.datum || (props.datum === '' && date.value !== dateDefault.value.datum)) {
+        date.value = dateDefault.value.datum;
         await dateChanged();
     }
 });
@@ -115,12 +105,12 @@ async function getTermine() {
     await settings.updateSchuljahr();
     datesAvailable.value = settings.schuljahr;
     dateDefault.value = settings.defaultDay;
-    date.value = settings.defaultDay;
+    date.value = settings.defaultDay.datum;
 }
 
 async function getAngebote() {
     const api = mande('/api/otium');
-    const result = await api.get(`${date.value.datum}`);
+    const result = await api.get(`${date.value}`);
     blocks.value = result.blocks;
     hinweise.value = result.hinweise;
 }
@@ -130,9 +120,9 @@ async function dateChanged() {
         await getAngebote();
     } catch (error) {
         toast.add({
-            severity: 'error',
-            summary: 'Fehler',
-            detail: 'Ein unerwarteter Fehler ist beim Laden der Daten aufgetreten',
+            color: 'error',
+            title: 'Fehler',
+            description: 'Ein unerwarteter Fehler ist beim Laden der Daten aufgetreten',
         });
         if (location.name !== 'Otium-Katalog') {
             await router.replace({ name: 'Otium-Katalog' });
@@ -142,7 +132,7 @@ async function dateChanged() {
 }
 
 function selectToday() {
-    date.value = dateDefault.value;
+    date.value = dateDefault.value.datum;
     dateChanged();
 }
 
@@ -151,16 +141,16 @@ watch([date], () => {
         router.push({
             name: 'Otium-Katalog-Datum',
             params: {
-                datum: date.value.datum,
+                datum: date.value,
             },
         });
 });
 
 const blocksFiltered = computed(() => {
-    if (kategorie.value == null || Object.keys(kategorie.value).length === 0) {
+    if (kategorie.value == null) {
         return blocks.value;
     }
-    const kategorieId = Object.keys(kategorie.value)[0];
+    const kategorieId = kategorie.value.id;
     return blocks.value.map((b) => {
         return {
             block: b.block,
@@ -169,19 +159,13 @@ const blocksFiltered = computed(() => {
     });
 });
 
-function editSupervisor(blockId) {
-    dialog.open(EditSupervisorsForm, {
-        props: {
-            header: 'Aufsichten Bearbeiten',
-            modal: true,
-            class: 'sm:max-w-xl',
-        },
-        data: {
-            date: date.value.datum,
-            blockId: blockId,
-        },
-        onClose: getAngebote,
+async function editSupervisor(blockId) {
+    const form = overlay.create(EditSupervisorsForm);
+    await form.open({
+        date: date.value,
+        blockId: blockId,
     });
+    await getAngebote();
 }
 
 startup();
@@ -202,27 +186,33 @@ startup();
             <OtiumKategorySelector v-model="kategorie" :options="settings.kategorien" />
 
             <template v-if="user.isStudent && user.user.rolle !== 'Oberstufe'">
-                <Message v-if="hinweise.length === 0" severity="success">
-                    Deine Belegung entspricht den Vorgaben.
-                </Message>
-                <Message v-else severity="warn">
-                    <div class="flex flex-col">
-                        <div class="font-bold">
-                            Deine Belegung entspricht noch nicht den Vorgaben.
-                        </div>
+                <UAlert
+                    v-if="hinweise.length === 0"
+                    color="success"
+                    description="Deine Belegung entspricht den Vorgaben."
+                    title="Geschafft!"
+                    variant="subtle"
+                />
+                <UAlert
+                    v-else
+                    color="warning"
+                    title="Deine Belegung entspricht noch nicht den Vorgaben."
+                    variant="subtle"
+                >
+                    <template #description>
                         <ul>
                             <li v-for="(item, index) in hinweise" :key="index">{{ item }}</li>
                         </ul>
-                    </div>
-                </Message>
+                    </template>
+                </UAlert>
             </template>
 
-            <panel
+            <APanel
                 v-for="block in blocksFiltered"
                 :key="block.block.id"
-                :header="block.block.name"
+                :label="block.block.name"
                 class="w-auto flex-1"
-                toggleable
+                default-open
             >
                 <div class="mb-4 grid grid-cols-[1fr_auto] gap-2">
                     <span>
@@ -236,13 +226,12 @@ startup();
                         }}
                     </span>
                     <span v-if="user.isOtiumsverantwortlich">
-                        <Button
+                        <UButton
                             aria-label="Aufsichten bearbeiten"
                             class="mr-1"
-                            icon="pi pi-pencil"
-                            severity="secondary"
-                            size="small"
-                            variant="text"
+                            color="secondary"
+                            icon="i-lucide-pencil"
+                            variant="ghost"
                             @click="() => editSupervisor(block.block.id)"
                         />
                     </span>
@@ -253,43 +242,37 @@ startup();
                     :termin-id="terminId"
                     @reload="getAngebote"
                 />
-            </panel>
+            </APanel>
             <div v-if="blocks.length === 0" class="flex justify-center mt-4">
                 Keine Angebote verfügbar.
             </div>
         </template>
         <div v-else class="flex gap-5 flex-col">
             <div class="flex gap-3 justify-between">
-                <Skeleton width="65%" height="3rem" />
-                <Skeleton width="33%" height="3rem" />
+                <USkeleton class="h-12 w-[65%]" />
+                <USkeleton class="h-12 w-[33&]" />
             </div>
-            <Skeleton width="100%" height="3rem" />
-            <DataTable :value="new Array(4)">
-                <Column>
-                    <template #header>
-                        <Skeleton />
-                    </template>
-                    <template #body>
-                        <Skeleton />
-                    </template>
-                </Column>
-                <Column>
-                    <template #header>
-                        <Skeleton />
-                    </template>
-                    <template #body>
-                        <Skeleton />
-                    </template>
-                </Column>
-                <Column>
-                    <template #header>
-                        <Skeleton />
-                    </template>
-                    <template #body>
-                        <Skeleton />
-                    </template>
-                </Column>
-            </DataTable>
+            <USkeleton class="h-12 w-full" />
+            <UTable
+                :columns="[
+                    {
+                        id: 'a',
+                        header: h(USkeleton, { class: 'h-4 w-full' }),
+                        cell: () => h(USkeleton, { class: 'h-4 w-full' }),
+                    },
+                    {
+                        id: 'b',
+                        header: h(USkeleton, { class: 'h-4 w-full' }),
+                        cell: () => h(USkeleton, { class: 'h-4 w-full' }),
+                    },
+                    {
+                        id: 'b',
+                        header: h(USkeleton, { class: 'h-4 w-full' }),
+                        cell: () => h(USkeleton, { class: 'h-4 w-full' }),
+                    },
+                ]"
+                :data="new Array(4)"
+            />
         </div>
     </div>
 </template>

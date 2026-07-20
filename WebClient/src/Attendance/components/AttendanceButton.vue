@@ -1,6 +1,4 @@
 <script lang="ts" setup>
-import { Badge, Button, Message } from 'primevue';
-import InputGroup from 'primevue/inputgroup';
 import type { AttendanceState } from '@/Attendance/models/attendance';
 
 defineProps<{
@@ -17,56 +15,46 @@ const toggle = (value: number) => {
     emit('update', stati[value]);
 };
 
-const buttonSeverities = {
-    Fehlend: 'danger',
-    Entschuldigt: 'warn',
-    Anwesend: 'success',
-};
-
-const messageSeverities = {
+const buttonColors = {
     Fehlend: 'error',
-    Entschuldigt: 'warn',
+    Entschuldigt: 'warning',
     Anwesend: 'success',
 };
 
 const icons = {
-    Fehlend: 'pi pi-times',
-    Entschuldigt: 'pi pi-clipboard',
-    Anwesend: 'pi pi-check',
+    Fehlend: 'i-lucide-x',
+    Entschuldigt: 'i-lucide-clipboard',
+    Anwesend: 'i-lucide-check',
 };
 
 const stati: AttendanceState[] = ['Fehlend', 'Entschuldigt', 'Anwesend'];
 </script>
 
 <template>
-    <InputGroup v-if="mayEdit">
-        <Button
+    <UFieldGroup v-if="mayEdit">
+        <UButton
             :label="stati[0]"
-            :severity="status === stati[0] ? buttonSeverities[status] : 'secondary'"
-            size="small"
+            :color="status === stati[0] ? 'error' : 'neutral'"
             @click="() => toggle(0)"
+            :variant="status === stati[0] ? 'solid' : 'soft'"
         />
-        <Button
+        <UButton
             :label="stati[1]"
-            :severity="status === stati[1] ? buttonSeverities[status] : 'secondary'"
-            size="small"
+            :color="status === stati[1] ? 'warning' : 'neutral'"
             @click="() => toggle(1)"
+            :variant="status === stati[1] ? 'solid' : 'soft'"
         />
-        <Button
+        <UButton
             :label="stati[2]"
-            :severity="status === stati[2] ? buttonSeverities[status] : 'secondary'"
-            size="small"
+            :color="status === stati[2] ? 'success' : 'neutral'"
             @click="() => toggle(2)"
+            :variant="status === stati[2] ? 'solid' : 'soft'"
         />
-    </InputGroup>
-    <Badge v-else-if="!minimal" :severity="buttonSeverities[status]">{{ status }}</Badge>
-    <Message
-        v-else
-        v-tooltip="status"
-        :icon="icons[status]"
-        :severity="messageSeverities[status]"
-        variant="simple"
-    />
+    </UFieldGroup>
+    <UBadge v-else-if="!minimal" :color="buttonColors[status]">{{ status }}</UBadge>
+    <UTooltip v-else :text="status">
+        <UIcon :class="'text-' + buttonColors[status]" :name="icons[status]" class="size-5" />
+    </UTooltip>
 </template>
 
 <style scoped></style>

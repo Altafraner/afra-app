@@ -15,13 +15,13 @@ const user = useUser();
 const navItems = ref([
     {
         label: 'Otium',
-        route: {
+        to: {
             name: 'Otium-Katalog',
         },
     },
     {
         label: 'Verwaltung',
-        route: {
+        to: {
             name: 'Verwaltung',
         },
     },

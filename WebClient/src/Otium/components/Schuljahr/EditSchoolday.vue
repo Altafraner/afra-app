@@ -1,7 +1,7 @@
 <script setup>
 import { mande } from 'mande';
 import { shallowRef } from 'vue';
-import { Button, FloatLabel, Select, Skeleton, useDialog } from 'primevue';
+import { Button, FloatLabel, Select, Skeleton } from 'primevue';
 import { formatStudent } from '@/helpers/formatters.ts';
 import EditSupervisorsForm from '@/Otium/components/Schuljahr/EditSupervisorsForm.vue';
 import { useRouter } from 'vue-router';
@@ -18,8 +18,8 @@ const api = mande('/api/schuljahr/' + props.date);
 const loading = shallowRef(true);
 const result = shallowRef(null);
 const newBlock = shallowRef(null);
-const dialog = useDialog();
 const router = useRouter();
+const overlay = useOverlay();
 const otiumStore = useOtiumStore();
 
 const { openConfirmDialog } = useConfirmPopover();
@@ -31,18 +31,12 @@ async function setup() {
 }
 
 async function editSupervisors(block) {
-    dialog.open(EditSupervisorsForm, {
-        props: {
-            header: 'Aufsichten Bearbeiten',
-            modal: true,
-            class: 'sm:max-w-xl',
-        },
-        data: {
-            date: props.date,
-            blockId: block.id,
-        },
-        onClose: setup,
+    const form = overlay.create(EditSupervisorsForm);
+    await form.open({
+        date: props.date,
+        blockId: block.id,
     });
+    await setup();
 }
 
 async function supervise(block) {

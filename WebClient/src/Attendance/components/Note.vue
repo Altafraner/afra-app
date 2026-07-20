@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { Card, Message } from 'primevue';
 import { convertMarkdownToHtml } from '@/composables/markdown';
 import type { Note } from '@/Attendance/models/note';
 import { formatDateTime, formatPerson } from '@/helpers/formatters';
@@ -10,34 +9,30 @@ defineProps<{
 </script>
 
 <template>
-    <Card
-        :pt="{
-            body: {
-                class: ['p-4'],
-            },
-            content: {
-                class: ['mb-2'],
-            },
+    <UCard
+        :ui="{
+            body: 'sm:px-4 sm:py-3 px-2 py-2',
+            footer: 'sm:px-4 px-2 py-3',
+            header: 'sm:px-4 px-2 py-3',
         }"
-        class="dark:bg-surface-800 bg-surface-100 p-0"
+        variant="subtle"
     >
-        <template #content>
+        <template #default>
             <div class="m-trim" v-html="convertMarkdownToHtml(note.content)" />
         </template>
         <template #footer>
-            <div class="flex justify-between flex-wrap">
-                <Message severity="info" size="small" variant="simple">{{
-                    formatPerson(note.creator)
-                }}</Message>
-                <Message severity="secondary" size="small" variant="simple"
-                    >Erstellt am {{ formatDateTime(new Date(note.created))
-                    }}<template v-if="note.created !== note.changed"
-                        >, Geändert {{ formatDateTime(new Date(note.changed)) }}</template
-                    >.</Message
-                >
+            <div class="flex flex-col justify-between flex-wrap text-sm gap-1">
+                <div class="text-primary font-medium">{{ formatPerson(note.creator) }}</div>
+                <div class="text-muted">
+                    Erstellt: {{ formatDateTime(new Date(note.created)) }}
+                    <template v-if="note.created !== note.changed">
+                        <br />
+                        Geändert: {{ formatDateTime(new Date(note.changed)) }}
+                    </template>
+                </div>
             </div>
         </template>
-    </Card>
+    </UCard>
 </template>
 
 <style scoped></style>

@@ -10,7 +10,7 @@ import GeneralSupervision from '@/Attendance/components/GeneralSupervision.vue';
 const navItems = [
     {
         label: 'Aufsicht',
-        route: {
+        to: {
             name: 'Aufsicht',
         },
     },
@@ -78,7 +78,7 @@ await setup();
         />
     </div>
 
-    <div v-if="!status">
+    <div v-if="!status || !slotActive">
         <p>Um ihre Aufsicht zu starten, drücken Sie auf den entsprechenden Slot.</p>
         <div class="flex gap-3">
             <Button

@@ -11,7 +11,7 @@ const navItems = [
     },
     {
         label: 'Einwahl',
-        route: {
+        to: {
             name: 'Profundum-Einwahl',
         },
     },

@@ -1,52 +1,51 @@
-<script setup>
-import { Form } from '@primevue/forms';
-import { Button, Checkbox, FloatLabel, InputText, Password, useToast } from 'primevue';
-import { ref } from 'vue';
-import { mande } from 'mande';
+<script lang="ts" setup>
+import { ref, shallowRef } from 'vue';
+import { mande, MandeError } from 'mande';
 import { useUser } from '@/stores/user';
 
 const loading = ref(false);
 const user = useUser();
 const toast = useToast();
+const username = shallowRef<string>();
+const password = shallowRef<string>();
+const remember = shallowRef<boolean>(false);
 
-const submit = async (evt) => {
+const submit = async () => {
     if (loading.value) return;
-    const username = evt.states['username'].value;
-    const password = evt.states['password'].value;
-    const remember = !!evt.states['remember'].value;
-    if (!(username && password)) return;
+    if (!(username.value && password.value)) return;
     loading.value = true;
     try {
         const loginRequest = await mande('/api/user/login').post(
             {
-                username: username,
-                password: password,
-                rememberMe: remember,
+                username: username.value,
+                password: password.value,
+                rememberMe: remember.value,
             },
             { responseAs: 'response' },
         );
         await user.update();
     } catch (error) {
-        if (error.response.status === 401) {
+        const mandeError = error as MandeError;
+        if (mandeError.response.status === 401) {
             toast.add({
-                severity: 'error',
-                summary: 'Fehler',
-                detail: 'Fehlerhafte Anmeldedaten',
-                life: 5000,
+                color: 'error',
+                title: 'Fehler',
+                description: 'Fehlerhafte Anmeldedaten',
+                duration: 5000,
             });
-        } else if (error.response.status === 429) {
+        } else if (mandeError.response.status === 429) {
             toast.add({
-                severity: 'error',
-                summary: 'Zu viele Anmeldeversuche',
-                detail: 'Bitte warten Sie 5 Minuten, bevor Sie es erneut versuchen.',
-                life: 5000,
+                color: 'error',
+                title: 'Zu viele Anmeldeversuche',
+                description: 'Bitte warten Sie 5 Minuten, bevor Sie es erneut versuchen.',
+                duration: 5000,
             });
         } else {
             toast.add({
-                severity: 'error',
-                summary: 'Fehler',
-                detail: 'Ein unbekannter Fehler ist aufgetreten',
-                life: 5000,
+                color: 'error',
+                title: 'Fehler',
+                description: 'Ein unbekannter Fehler ist aufgetreten',
+                duration: 5000,
             });
         }
     } finally {
@@ -56,23 +55,29 @@ const submit = async (evt) => {
 </script>
 
 <template>
-    <Form @submit="submit" class="flex flex-col gap-6 mt-8">
-        <FloatLabel variant="on">
-            <InputText id="username" fluid name="username" type="text" />
-            <label for="username">Nutzername</label>
-        </FloatLabel>
-        <FloatLabel variant="on">
-            <Password name="password" :feedback="false" fluid toggle-mask input-id="password" />
-            <label for="password">Passwort</label>
-        </FloatLabel>
-        <div class="flex items-center gap-2">
-            <Checkbox name="remember" input-id="remember" binary />
-            <label for="remember" class="cursor-pointer font-medium text-surface-500"
-                >Angemeldet bleiben</label
-            >
-        </div>
-        <Button :loading="loading" fluid label="Einloggen" severity="secondary" type="submit" />
-    </Form>
+    <UForm class="flex flex-col gap-6 mt-8" @submit="submit">
+        <UFormField class="w-full" label="Nutzername" name="username" required>
+            <UInput v-model="username" class="w-full" type="text" />
+        </UFormField>
+        <UFormField class="w-full" label="Passwort" name="password" required>
+            <UInput v-model="password" class="w-full" type="password" />
+        </UFormField>
+        <UCheckbox
+            v-model="remember"
+            color="neutral"
+            label="Angemeldet bleiben"
+            name="remember"
+        />
+        <UButton
+            :loading="loading"
+            color="neutral"
+            severity="secondary"
+            size="xl"
+            type="submit"
+            variant="soft"
+            >Anmelden</UButton
+        >
+    </UForm>
 </template>
 
 <style scoped></style>

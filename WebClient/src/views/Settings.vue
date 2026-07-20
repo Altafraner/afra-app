@@ -1,5 +1,4 @@
-<script setup>
-import { Button, useToast } from 'primevue';
+<script lang="ts" setup>
 import { ref } from 'vue';
 import { mande } from 'mande';
 import { useUser } from '@/stores/user';
@@ -20,9 +19,9 @@ async function fetchNum() {
     } catch (e) {
         await user.update();
         toast.add({
-            severity: 'error',
-            summary: 'Fehler',
-            detail: 'Es ist ein Fehler beim Laden der Anzahl aktiver Links aufgetreten.',
+            color: 'error',
+            title: 'Fehler',
+            description: 'Es ist ein Fehler beim Laden der Anzahl aktiver Links aufgetreten.',
         });
         console.error(e);
     } finally {
@@ -38,9 +37,9 @@ async function fetchKey() {
     } catch (e) {
         await user.update();
         toast.add({
-            severity: 'error',
-            summary: 'Fehler',
-            detail: 'Es ist ein Fehler beim Laden des Kalender-Links aufgetreten.',
+            color: 'error',
+            title: 'Fehler',
+            description: 'Es ist ein Fehler beim Laden des Kalender-Links aufgetreten.',
         });
         console.error(e);
     } finally {
@@ -56,17 +55,17 @@ async function deleteKeys() {
         await endpoint.delete();
         calLink.value = null;
         toast.add({
-            severity: 'success',
-            summary: 'Löschung erfolgreich',
-            detail: 'Alle deine Kalender-Links wurden erfolgreich gelöscht.',
-            life: 2000,
+            color: 'success',
+            title: 'Löschung erfolgreich',
+            description: 'Alle deine Kalender-Links wurden erfolgreich gelöscht.',
+            duration: 2000,
         });
     } catch (e) {
         await user.update();
         toast.add({
-            severity: 'error',
-            summary: 'Fehler',
-            detail: 'Es ist ein Fehler beim Löschen der Kalender-Links aufgetreten.',
+            color: 'error',
+            title: 'Fehler',
+            description: 'Es ist ein Fehler beim Löschen der Kalender-Links aufgetreten.',
         });
         console.error(e);
     } finally {
@@ -75,17 +74,17 @@ async function deleteKeys() {
     }
 }
 
-const copy = async (text) => {
+const copy = async (text: string) => {
     try {
         await navigator.clipboard.writeText(text);
         toast.add({
-            severity: 'success',
-            summary: 'Kopiert',
-            detail: 'Der Link wurde in die Zwischenablage kopiert.',
-            life: 2000,
+            color: 'success',
+            title: 'Kopiert',
+            description: 'Der Link wurde in die Zwischenablage kopiert.',
+            duration: 2000,
         });
     } catch {
-        toast.add({ severity: 'error', summary: 'Fehler beim Kopieren', life: 2000 });
+        toast.add({ color: 'error', title: 'Fehler beim Kopieren' });
     }
 };
 
@@ -120,34 +119,33 @@ const navItems = [
     </p>
 
     <span class="inline-flex gap-1 justify-between w-full">
-        <Button
-            label="Kalender-Link erstellen"
-            :loading="loading"
-            @click="fetchKey"
-            class="p-button-primary"
-        />
+        <UButton :loading="loading" label="Kalender-Link erstellen" @click="fetchKey" />
 
-        <Button
+        <UButton
             v-if="numSubs > 0"
             :label="`Alle erstellten Kalender-Links (${numSubs}) löschen`"
-            severity="danger"
+            color="error"
             @click="deleteKeys"
-            class="p-button-primary"
         />
     </span>
 
-    <div v-if="calLink" class="mt-4 p-4 rounded-[6px] bg-gray-200 dark:bg-gray-800">
-        <h3>Dein persönlicher Link</h3>
-
-        <p>Dieser Link ist wie ein Passwort. Teile ihn nicht mit Dritten.</p>
-
-        <Button
-            icon="pi pi-clipboard"
-            :label="calLink"
-            variant="text"
-            @click.prevent="copy(calLink)"
-        />
-    </div>
+    <UCard
+        v-if="calLink"
+        class="mt-4"
+        description="Dieser Link ist wie ein Passwort. Teile ihn nicht mit Dritten."
+        title="Dein persönlicher Link"
+    >
+        <UFieldGroup>
+            <UBadge :label="calLink" color="neutral" size="xl" variant="subtle" />
+            <UButton
+                icon="i-lucide-clipboard"
+                label="Kopieren"
+                size="xl"
+                variant="subtle"
+                @click.prevent="copy(calLink)"
+            />
+        </UFieldGroup>
+    </UCard>
 </template>
 
 <style scoped></style>

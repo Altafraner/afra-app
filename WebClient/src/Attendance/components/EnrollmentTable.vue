@@ -1,11 +1,12 @@
 <script lang="ts" setup>
-import { Badge, Button, Column, DataTable, Tag } from 'primevue';
 import UserPeek from '@/components/UserPeek.vue';
 import AttendanceButton from '@/Attendance/components/AttendanceButton.vue';
 import type { AttendanceState, AttendanceStudentStatus } from '@/Attendance/models/attendance';
 import type { UserInfoMinimal } from '@/models/user/userInfoMinimal';
+import type { TableColumn } from '@nuxt/ui/components/Table.d.vue.ts';
+import { computed, h, useSlots } from 'vue';
 
-defineProps<{
+const props = defineProps<{
     showAttendance: boolean;
     enableEdit: boolean;
     enableMove: boolean;
@@ -18,85 +19,120 @@ const emit = defineEmits<{
     move: [student: AttendanceStudentStatus];
     openNotes: [student: AttendanceStudentStatus];
 }>();
+
+const slots = useSlots();
+
+const studentColumn: TableColumn<AttendanceStudentStatus> = {
+    id: 'student',
+    header: 'Schüler:in',
+    cell: ({ row }) => h(UserPeek, { person: row.original.student, showGroup: true }),
+    meta: {
+        class: {
+            td: 'w-full',
+        },
+    },
+};
+
+const attendanceColumn: TableColumn<AttendanceStudentStatus> = {
+    id: 'attendance',
+    header: 'Anwesenheit',
+    meta: {
+        class: {
+            th: 'text-right',
+        },
+    },
+};
+
+const actionColumn: TableColumn<AttendanceStudentStatus> = {
+    id: 'action',
+    header: 'Aktionen',
+    meta: {
+        class: {
+            th: 'text-right',
+        },
+    },
+};
+
+const columns = computed<TableColumn<AttendanceStudentStatus>[]>((oldValue) => {
+    const array = [studentColumn];
+    if (props.showAttendance) array.push(attendanceColumn);
+    if (props.enableMove || props.enableNotes || slots.studentActions) array.push(actionColumn);
+
+    return array;
+});
 </script>
 
 <template>
-    <DataTable :data-key="(value) => value.student.id" :value="enrollments">
-        <Column header="Schüler:in">
-            <template #body="{ data }">
-                <UserPeek :person="data.student" :showGroup="true" />
-            </template>
-        </Column>
-        <Column
-            v-if="showAttendance || enableEdit || $slots.studentActions"
-            class="text-right afra-col-action"
-        >
-            <template #body="{ data }">
-                <span class="flex justify-end items-center gap-2">
-                    <Tag
-                        v-if="
-                            data.type == 'Automatic' &&
-                            data.student.rolle === 'Mittelstufe' &&
-                            (showAttendance || enableEdit)
-                        "
-                        v-tooltip="'Diese Anwesenheit wurde automatisch übernommen.'"
-                        severity="secondary"
-                        >A</Tag
-                    >
+    <div>
+        <UTable :columns="columns" :data="enrollments">
+            <template #empty>Keine Einschreibungen</template>
+            <template #attendance-cell="{ row }">
+                <div class="flex gap-2 items-center justify-end">
+                    <UTooltip text="Diese Anwesenheit wurde automatisch festgestellt">
+                        <UBadge
+                            v-if="
+                                row.original.type == 'Automatic' &&
+                                row.original.student.rolle === 'Mittelstufe' &&
+                                (showAttendance || enableEdit)
+                            "
+                            color="secondary"
+                            label="A"
+                        />
+                    </UTooltip>
                     <AttendanceButton
                         class="w-auto"
                         v-if="
-                            data.student.rolle === 'Mittelstufe' &&
+                            row.original.student.rolle === 'Mittelstufe' &&
                             (showAttendance || enableEdit)
                         "
                         :mayEdit="enableEdit"
-                        :status="data.status"
-                        @update="(value) => emit('update', data.student, value)"
+                        :status="row.original.status"
+                        @update="(value) => emit('update', row.original.student, value)"
                     />
-                    <badge
+                    <UBadge
                         v-else-if="showAttendance || enableEdit"
-                        v-tooltip="
-                            'Für Schüler:innen außerhalb der Mittelstufe werden keine Anwesenheiten erfasst'
-                        "
-                        severity="secondary"
-                    >
-                        N/A
-                    </badge>
-                    <Button
-                        v-if="enableMove"
-                        v-tooltip="'In anderes Otium verschieben'"
-                        aria-label="Verschieben"
-                        icon="pi pi-forward"
-                        severity="secondary"
-                        size="small"
-                        variant="text"
-                        @click="() => emit('move', data)"
+                        color="secondary"
+                        label="N/A"
                     />
-                    <Button
-                        v-if="enableNotes"
-                        v-tooltip="'Notizen'"
-                        :severity="data.notes.length !== 0 ? 'warn' : 'secondary'"
-                        aria-label="Notizen"
-                        icon="pi pi-clipboard"
-                        size="small"
-                        :variant="data.notes.length !== 0 ? undefined : 'text'"
-                        @click="() => emit('openNotes', data)"
-                    />
+                </div>
+            </template>
+            <template #action-cell="{ row }">
+                <div class="flex gap-2 items-end justify-end">
+                    <UTooltip text="In ein anderes Otium verschieben">
+                        <UButton
+                            v-if="enableMove"
+                            aria-label="Verschieben"
+                            color="secondary"
+                            icon="i-lucide-fast-forward"
+                            variant="ghost"
+                            @click="() => emit('move', row.original)"
+                        />
+                    </UTooltip>
+                    <UTooltip text="Notizen">
+                        <UButton
+                            v-if="enableNotes"
+                            :color="row.original.notes.length !== 0 ? 'warning' : 'secondary'"
+                            :variant="row.original.notes.length !== 0 ? 'solid' : 'ghost'"
+                            aria-label="Notizen"
+                            icon="i-lucide-clipboard"
+                            @click="() => emit('openNotes', row.original)"
+                        />
+                    </UTooltip>
                     <slot
                         v-if="$slots.studentActions"
-                        :data="data"
+                        :data="row.original"
                         name="studentActions"
                     ></slot>
-                </span>
+                </div>
             </template>
-        </Column>
-        <template v-if="$slots.actions" #footer>
-            <slot v-if="$slots.actions" name="actions"></slot>
+        </UTable>
+        <template v-if="$slots.actions">
+            <USeparator />
+            <div class="p-4">
+                <slot name="actions"></slot>
+            </div>
         </template>
-        <template #empty>
-            <div class="flex justify-center">Keine Einschreibungen</div>
-        </template>
-    </DataTable>
+    </div>
 </template>
 
 <style scoped></style>

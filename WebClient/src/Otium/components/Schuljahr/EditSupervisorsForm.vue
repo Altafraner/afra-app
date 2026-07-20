@@ -1,24 +1,28 @@
-<script setup>
+<script lang="ts" setup>
 import { mande } from 'mande';
-import { computed, inject, shallowRef } from 'vue';
-import { Button, Skeleton } from 'primevue';
-import UserPeek from '@/components/UserPeek.vue';
-import { usePeople } from '@/stores/people.js';
-import PersonSelector from '@/components/PersonSelector.vue';
+import { computed, h, resolveComponent, shallowRef } from 'vue';
+import { usePeople } from '@/stores/people';
+import { UserInfoMinimal } from '@/models/user/userInfoMinimal.ts';
+import type { TableColumn } from '@nuxt/ui/components/Table.d.vue.ts';
+import { formatStudent } from '@/helpers/formatters.ts';
+import PersonSelectorNuxt from '@/components/PersonSelectorNuxt.vue';
 
-const dialogRef = inject('dialogRef');
+const UButton = resolveComponent('UButton');
+
+const props = defineProps<{
+    date: string;
+    blockId: string;
+}>();
 
 const store = usePeople();
 
-const date = dialogRef.value.data.date;
-const blockId = dialogRef.value.data.blockId;
 const result = shallowRef([]);
 const loading = shallowRef(true);
 
 const selectedPerson = shallowRef(null);
 
-const requestApi = mande('/api/schuljahr/' + date);
-const block = computed(() => result.value.find((r) => r.id === blockId));
+const requestApi = mande('/api/schuljahr/' + props.date);
+const block = computed<any>(() => result.value.find((r: any) => r.id === props.blockId));
 
 async function setup() {
     result.value = await requestApi.get();
@@ -26,9 +30,9 @@ async function setup() {
     loading.value = false;
 }
 
-async function remove(supervisor) {
+async function remove(supervisor: any) {
     const api = mande(
-        '/api/management/schuljahr/block/' + blockId + '/supervisors/' + supervisor.id,
+        '/api/management/schuljahr/block/' + props.blockId + '/supervisors/' + supervisor.id,
     );
     await api.delete();
     result.value = await requestApi.get();
@@ -36,49 +40,89 @@ async function remove(supervisor) {
 
 async function add() {
     if (selectedPerson.value == null) return;
-    const api = mande('/api/management/schuljahr/block/' + blockId + '/supervisors');
+    const api = mande('/api/management/schuljahr/block/' + props.blockId + '/supervisors');
     await api.post({
         value: selectedPerson.value,
     });
     result.value = await requestApi.get();
+    selectedPerson.value = null;
 }
 
 setup();
+
+const columns: TableColumn<any>[] = [
+    {
+        header: 'Name',
+        cell: ({ row }) => formatStudent(row.original),
+    },
+    {
+        header: 'Löschen',
+        cell: ({ row }) =>
+            h(UButton, {
+                variant: 'ghost',
+                icon: 'i-lucide-x',
+                color: 'error',
+                onClick: () => remove(row.original),
+            }),
+        meta: {
+            class: {
+                td: 'text-right',
+                th: 'text-right',
+            },
+        },
+    },
+];
 </script>
 
 <template>
-    <div v-if="loading" class="w-full">
-        <Skeleton />
-        <Skeleton />
-        <Skeleton />
-    </div>
-    <div v-else class="flex flex-col gap-2">
-        <div class="grid grid-cols-[1fr_auto] gap-2">
-            <template v-for="supervisor in block.supervisors">
-                <UserPeek :person="supervisor" />
-                <span>
-                    <Button
-                        icon="pi pi-times"
-                        severity="danger"
-                        size="small"
-                        variant="text"
-                        @click="() => remove(supervisor)"
+    <UModal title="Aufsichten bearbeiten">
+        <template #body>
+            <div v-if="loading" class="w-full flex flex-col gap-2">
+                <USkeleton class="h-4 w-full" />
+                <USkeleton class="h-4 w-full" />
+                <USkeleton class="h-4 w-[60%]" />
+            </div>
+            <UTable
+                v-else
+                :columns="columns"
+                :data="block.supervisors"
+                :ui="{
+                    td: 'px-2 py-1',
+                    th: 'px-2 py-1',
+                }"
+            >
+                <template #empty>Keine Aufsichten eingeteilt</template>
+            </UTable>
+        </template>
+        <template #footer="{ close }">
+            <div class="flex flex-col gap-2 w-full">
+                <UFormField v-if="!loading" label="Neue Aufsicht">
+                    <PersonSelectorNuxt
+                        v-model="selectedPerson"
+                        :filter="(p: UserInfoMinimal) => p.rolle === 'Tutor'"
+                        class="w-full"
+                        hide-rolle
+                        placeholder="Person auswählen"
                     />
-                </span>
-            </template>
-        </div>
-        <div v-if="block.supervisors.length === 0" class="text-center">Keine Aufsichten</div>
-        <PersonSelector
-            v-model="selectedPerson"
-            :filter="(p) => p.rolle === 'Tutor'"
-            class="mt-2"
-            fluid
-            hide-rolle
-        >
-            <template #label> Neue Aufsicht </template>
-        </PersonSelector>
-        <Button fluid label="Hinzufügen" severity="primary" @click="add" />
-    </div>
+                </UFormField>
+                <UButton
+                    v-if="!loading"
+                    color="primary"
+                    icon="i-lucide-plus"
+                    label="Hinzufügen"
+                    @click="add"
+                />
+                <UButton
+                    class="mt-2"
+                    color="secondary"
+                    icon="i-lucide-x"
+                    label="Schließen"
+                    variant="subtle"
+                    @click="close"
+                />
+            </div>
+        </template>
+    </UModal>
 </template>
 
 <style scoped></style>
