@@ -22,9 +22,9 @@ export const formatPerson = (person: UserInfoMinimal) =>
         ? formatStudent(person)
         : formatTutor(person);
 
-export const formatDate = (date: Date) =>
+export const formatDate = (date: Date, hideWeekday: boolean = false) =>
     date.toLocaleDateString('de-DE', {
-        weekday: 'short',
+        weekday: hideWeekday ? undefined : 'short',
         day: '2-digit',
         month: 'short',
         year: 'numeric',

@@ -295,6 +295,7 @@ async function editReg(data) {
         await api.put({
             ort: data.ort,
             maxEinschreibungen: data.maxEnrollments,
+            person: data.person,
         });
     } catch (e) {
         console.log(e.response);
