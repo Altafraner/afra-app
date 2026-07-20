@@ -6,6 +6,11 @@ namespace Altafraner.AfraApp.Profundum.Domain.Models;
 public class ProfundumTermin
 {
     /// <summary>
+    ///     The unique identifier of the profundum termin
+    /// </summary>
+    public Guid Id { get; set; }
+
+    /// <summary>
     ///     the slot this day is for
     /// </summary>
     public required ProfundumSlot Slot { get; set; }
@@ -24,4 +29,9 @@ public class ProfundumTermin
     ///     the end time on the day
     /// </summary>
     public required TimeOnly EndTime { get; set; }
+
+    /// <summary>
+    ///     The lesson number. Mainly used for cevex sync.
+    /// </summary>
+    public int Lesson { get; set; }
 }
