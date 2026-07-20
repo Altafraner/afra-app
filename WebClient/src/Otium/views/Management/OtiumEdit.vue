@@ -368,11 +368,15 @@ const accordionItems = [
                     <template v-if="!otium.maxKlasse && !otium.minKlasse"> alle </template>
                     <template v-else>
                         <template v-if="otium.maxKlasse === otium.minKlasse">
-                            nur Klasse {{ otium.minKlasse }}
+                            nur Klassenstufe {{ otium.minKlasse }}
                         </template>
                         <template v-else>
-                            <div v-if="otium.minKlasse">ab Klasse {{ otium.minKlasse }}</div>
-                            <div v-if="otium.maxKlasse">bis Klasse {{ otium.maxKlasse }}</div>
+                            <div v-if="otium.minKlasse">
+                                ab Klassenstufe {{ otium.minKlasse }}
+                            </div>
+                            <div v-if="otium.maxKlasse">
+                                bis Klassenstufe {{ otium.maxKlasse }}
+                            </div>
                         </template>
                     </template>
                 </template>

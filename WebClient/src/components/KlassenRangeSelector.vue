@@ -1,35 +1,28 @@
-<script setup>
-import { Select } from 'primevue';
+<script lang="ts" setup>
+import type { SelectItem } from '@nuxt/ui/components/Select.d.vue.ts';
 
-const props = defineProps({
-    min: Number,
-    max: Number,
-    options: Array,
+defineProps({
+    options: Array<SelectItem>,
 });
 
-const emit = defineEmits(['update:min', 'update:max']);
+const min = defineModel<string | undefined>('min');
+const max = defineModel<string | undefined>('max');
 </script>
 
 <template>
-    <span class="flex gap-2 items-center">
-        <Select
-            :modelValue="min"
-            @update:modelValue="(value) => emit('update:min', value)"
-            :options="options"
-            placeholder="min"
-            optionLabel="label"
-            optionValue="value"
-            fluid
+    <UFieldGroup class="flex">
+        <USelect
+            v-model="min"
+            :items="options"
+            class="flex-1"
+            placeholder="Niedrigste Klassenstufe wählen"
         />
-        –
-        <Select
-            :modelValue="max"
-            @update:modelValue="(value) => emit('update:max', value)"
-            :options="options"
-            placeholder="max"
-            optionLabel="label"
-            optionValue="value"
-            fluid
+        <UBadge color="neutral" label="—" variant="outline" />
+        <USelect
+            v-model="max"
+            :items="options"
+            class="flex-1"
+            placeholder="Höchste Klassenstufe wählen"
         />
-    </span>
+    </UFieldGroup>
 </template>
