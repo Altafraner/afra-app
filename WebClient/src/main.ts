@@ -1,6 +1,6 @@
 import { createApp } from 'vue';
 import App from './App.vue';
-import router from './router';
+import router from './router/index';
 import ui from '@nuxt/ui/vue-plugin';
 import PrimeVue from 'primevue/config';
 import Aura from '@primeuix/themes/aura';
