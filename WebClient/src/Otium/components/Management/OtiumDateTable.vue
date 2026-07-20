@@ -154,7 +154,15 @@ const columnVisibility = computed(() => ({
 </script>
 
 <template>
-    <UTable :column-visibility="columnVisibility" :columns="columns" :data="dates">
+    <UTable
+        :column-visibility="columnVisibility"
+        :columns="columns"
+        :data="dates"
+        :ui="{
+            td: 'p-2 first:pl-4 last:pr-4',
+            th: 'p-2 first:pl-4 last:pr-4',
+        }"
+    >
         <template #empty>Keine Termine angelegt.</template>
     </UTable>
 </template>

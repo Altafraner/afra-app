@@ -1,340 +1,326 @@
-<script setup>
-import { computed, inject, ref, watch } from 'vue';
-import {
-    Button,
-    FloatLabel,
-    InputNumber,
-    InputText,
-    Message,
-    Select,
-    ToggleSwitch,
-} from 'primevue';
-import { Form } from '@primevue/forms';
-import { useOtiumStore } from '@/Otium/stores/otium.js';
-import { formatDayOfWeek, formatTutor } from '@/helpers/formatters';
-import OtiumDateSelector from '@/Otium/components/Form/OtiumDateSelector.vue';
+<script lang="ts" setup>
+import { computed, reactive, ref, watch } from 'vue';
 
-const emit = defineEmits(['submit']);
+import { useOtiumStore } from '@/Otium/stores/otium.js';
+import OtiumDateSelector from '@/Otium/components/Form/OtiumDateSelector.vue';
+import { UserInfoMinimal } from '@/models/user/user.ts';
+import { usePeople } from '@/stores/people.ts';
+import { FormError, FormSubmitEvent } from '@nuxt/ui';
+
+const emit = defineEmits(['close']);
 
 const settings = useOtiumStore();
-const dialogRef = inject('dialogRef');
-
-const hasInitialData = computed(() =>
-    dialogRef.value ? dialogRef.value.data.initialValues !== undefined : false,
-);
-const initialData = computed(() => {
-    return {
-        ort: hasInitialData.value ? dialogRef.value.data.initialValues.ort : '',
-        maxEnrollmentSwitch: hasInitialData.value
-            ? dialogRef.value.data.initialValues.maxEinschreibungen !== null
-            : false,
-        maxEnrollments: hasInitialData.value
-            ? dialogRef.value.data.initialValues.maxEinschreibungen
-            : null,
+const people = usePeople();
+const props = defineProps<{
+    initialValues?: {
+        ort: string;
+        maxEinschreibungen: number | null;
+        tutor: UserInfoMinimal | null;
     };
+}>();
+
+const hasInitialData = computed(() => {
+    return props.initialValues !== undefined;
 });
 
-const dates = ref([]);
-const datesAvailable = ref([]);
-const ort = ref(null);
-const von = ref(null);
-const bis = ref(null);
-const wochentyp = ref(null);
-const wochentag = ref(null);
-const block = ref(null);
-const personSelected = ref(null);
-const maxEnrollmentsSelected = ref(null);
-const maxEnrollmentsSetzenSelected = ref(false);
-const betreuerZuweisenSelected = ref(false);
-const loading = ref(true);
-const personen = ref(null);
+const state = reactive<FormSchema>({
+    block: undefined,
+    end: undefined,
+    hasMaxTn: props.initialValues?.maxEinschreibungen != null,
+    hasTutor: props.initialValues?.tutor != null,
+    maxTn: props.initialValues?.maxEinschreibungen ?? undefined,
+    start: undefined,
+    tutor: props.initialValues?.tutor?.id ?? undefined,
+    wochentag: undefined,
+    wochentyp: undefined,
+    location: props.initialValues?.ort ?? undefined,
+});
 
-function resolve({ values }) {
-    const errors = {};
+const dates = ref<any[]>([]);
+const loading = ref<boolean>(true);
 
-    if (!values.wochentyp && !hasInitialData.value)
-        errors.wochentyp = [{ message: 'Es muss ein Wochentyp gesetzt sein' }];
+function validate(state: Partial<FormSchema>): FormError[] {
+    const errors = [] as FormError[];
 
-    if (!values.wochentag && !hasInitialData.value)
-        errors.wochentag = [{ message: 'Es muss ein Wochentag gesetzt sein' }];
+    if (!hasInitialData.value) {
+        if (!state.wochentyp)
+            errors.push({ name: 'wochentyp', message: 'Bitte wählen Sie einen Wochentyp!' });
+        if (!state.wochentag)
+            errors.push({ name: 'wochentag', message: 'Bitte wählen Sie einen Wochentag!' });
+        if (!state.block)
+            errors.push({ name: 'block', message: 'Bitte wählen Sie einen Block!' });
+        if (!state.start)
+            errors.push({ name: 'start', message: 'Bitte wählen Sie einen Startzeitpunkt!' });
+        if (!state.end)
+            errors.push({ name: 'end', message: 'Bitte wählen Sie einen Endzeitpunkt!' });
+    }
 
-    if (!values.block && values.block !== 0 && !hasInitialData.value)
-        errors.block = [{ message: 'Es muss ein Block gesetzt sein' }];
+    if (!state.location || state.location.length < 1)
+        errors.push({ name: 'location', message: 'Bitte geben Sie einen Ort an.' });
+    if (state.location && state.location.length > 20)
+        errors.push({ name: 'location', message: 'Der Ort darf maximal 20 Zeichen lang sein' });
+    if (state.hasMaxTn && !state.maxTn)
+        errors.push({
+            name: 'maxTn',
+            message: 'Bitte geben Sie eine maximale Anzahl an Teilnehmenden an!',
+        });
+    if (state.hasTutor && !state.tutor)
+        errors.push({
+            name: 'tutor',
+            message: 'Bitte wählen Sie einen Tutor aus!',
+        });
 
-    if (!values.ort || values.ort.length < 1)
-        errors.ort = [{ message: 'Es muss ein Ort gesetzt sein' }];
-    if (values.ort && values.ort.length > 20)
-        errors.ort = [{ message: 'Der Ort darf maximal 20 Zeichen lang sein' }];
-
-    return { values, errors };
+    return errors;
 }
 
 async function getTermine() {
     await settings.updateSchuljahr();
-    dates.value = settings.schuljahr;
-    von.value = settings.defaultDay.datum;
-    bis.value = settings.schuljahr[settings.schuljahr.length - 1].datum;
-}
-
-async function getPersonen() {
-    const personenMapper = (person) => {
-        return {
-            id: person.id,
-            name: `${formatTutor(person)} (${person.rolle})`,
-        };
-    };
-
-    await settings.updatePersonen();
-    personen.value = settings.personen.map(personenMapper);
+    if (!settings.schuljahr) return;
+    dates.value = settings.schuljahr as any[];
 }
 
 async function setup() {
-    if (hasInitialData.value && dialogRef.value.data) {
-        if (dialogRef.value.data.initialValues.maxEinschreibungen !== null) {
-            maxEnrollmentsSetzenSelected.value = true;
-            maxEnrollmentsSelected.value =
-                dialogRef.value.data.initialValues.maxEinschreibungen;
-        }
-        ort.value = dialogRef.value.data.initialValues.ort;
-    }
-    const personPromise = getPersonen();
+    const personPromise = people.updatePersonen();
     const terminePromise = getTermine();
     const blocksPromise = settings.updateBlocks();
 
     await Promise.all([personPromise, terminePromise, blocksPromise]);
-    blockOrWochentagChanged();
     loading.value = false;
 }
 
-function blockOrWochentagChanged() {
+const datesAvailable = computed(() => {
+    if (!state.wochentyp || !state.wochentag || !state.block) return [];
+
     const now = new Date(new Date().toDateString());
-    datesAvailable.value = dates.value.filter((date) => {
+    const result = dates.value.filter((date) => {
         const datum = new Date(date.datum);
         return (
-            (block.value == null ||
-                date.blocks.some((b) => b.schemaId === block.value.schemaId)) &&
+            date.blocks.some((b: any) => b.schemaId === (state.block ?? '')) &&
             datum >= now &&
-            (wochentag.value == null || datum.getDay() === wochentag.value) &&
-            (wochentyp.value == null || date.wochentyp === wochentyp.value)
+            datum.getDay() === state.wochentag &&
+            date.wochentyp === state.wochentyp
         );
     });
-    if (!datesAvailable.value.some((d) => d.datum === von.value)) {
-        von.value = datesAvailable.value[0].datum;
-    }
-    if (!datesAvailable.value.some((d) => d.datum === bis.value)) {
-        bis.value = datesAvailable.value[datesAvailable.value.length - 1].datum;
-    }
-}
+    console.log(result);
+    return result;
+});
 
-function submit({ valid }) {
-    if (!valid) {
-        console.log('Invalid state');
+watch(datesAvailable, (newValue) => {
+    console.log(newValue);
+    if (newValue.length == 0) {
+        state.start = undefined;
+        state.end = undefined;
         return;
     }
+    if (!newValue.some((d) => d.datum === state.start)) {
+        state.start = newValue[0].datum;
+    }
+    if (!newValue.some((d) => d.datum === state.end)) {
+        state.end = newValue[newValue.length - 1].datum;
+    }
+});
+
+function submit(event: FormSubmitEvent<FormSchema>) {
     const result = {
-        wochentyp: wochentyp.value,
-        wochentag: wochentag.value,
-        von: von.value ?? null,
-        bis: bis.value ?? null,
-        block: block.value?.schemaId ?? null,
-        ort: ort.value,
-        person: personSelected.value,
-        maxEnrollments: maxEnrollmentsSelected.value,
+        wochentyp: event.data.wochentyp ?? null,
+        wochentag: event.data.wochentag ?? null,
+        von: event.data.start ?? null,
+        bis: event.data.end ?? null,
+        block: event.data.block ?? null,
+        ort: event.data.location,
+        person: event.data.tutor ?? null,
+        maxEnrollments: event.data.maxTn ?? null,
     };
-    emit('submit', result);
-    if (dialogRef.value) dialogRef.value.close(result);
+    emit('close', result);
 }
 
-watch(betreuerZuweisenSelected, () => {
-    if (!betreuerZuweisenSelected.value) {
-        personSelected.value = null;
-    }
-});
-watch(maxEnrollmentsSetzenSelected, () => {
-    if (!maxEnrollmentsSetzenSelected.value) {
-        maxEnrollmentsSelected.value = null;
-    }
-});
+watch(
+    () => state.hasMaxTn,
+    (newValue) => {
+        if (!newValue) {
+            state.maxTn = undefined;
+        }
+    },
+);
+watch(
+    () => state.hasTutor,
+    (newValue) => {
+        if (!newValue) {
+            state.tutor = undefined;
+        }
+    },
+);
 
 setup();
 </script>
 
+<script lang="ts">
+interface FormSchema {
+    wochentyp: string | undefined;
+    wochentag: number | undefined;
+    block: string | undefined;
+    start: string | undefined;
+    end: string | undefined;
+    hasTutor: boolean;
+    hasMaxTn: boolean;
+    tutor: string | undefined;
+    maxTn: number | undefined;
+    location: string | undefined;
+}
+
+const wochentagOptions = [
+    {
+        label: 'Montag',
+        value: 1,
+    },
+    {
+        label: 'Dienstag',
+        value: 2,
+    },
+    {
+        label: 'Mittwoch',
+        value: 3,
+    },
+    {
+        label: 'Donnerstag',
+        value: 4,
+    },
+    {
+        label: 'Freitag',
+        value: 5,
+    },
+    {
+        label: 'Samstag',
+        value: 6,
+    },
+];
+</script>
+
 <template>
-    <Form
-        v-if="!loading"
-        v-slot="$form"
-        :initial-values="initialData"
-        :resolver="resolve"
-        class="flex flex-col gap-3"
-        @submit="submit"
+    <UModal
+        :description="
+            hasInitialData
+                ? 'Ändern Sie mehrere Termine gleichzeitig.'
+                : 'Fügen Sie mehrere Termine gleichzeitig hinzu.'
+        "
+        :title="hasInitialData ? 'Regelmäßigkeit bearbeiten' : 'Regelmäßigkeit erstellen'"
     >
-        <template v-if="!hasInitialData">
-            <div class="font-bold">Zeitpunkt</div>
-            <div class="w-full">
-                <FloatLabel class="w-full" variant="on">
-                    <Select
-                        id="wochentyp"
-                        v-model="wochentyp"
-                        :options="['H-Woche', 'N-Woche']"
-                        fluid
-                        name="wochentyp"
-                        @change="blockOrWochentagChanged"
+        <template #body>
+            <UForm
+                :state="state"
+                :validate="validate"
+                class="flex flex-col gap-4"
+                @submit="submit"
+            >
+                <template v-if="!hasInitialData">
+                    <UFormField label="Wochentyp" name="wochentyp" required>
+                        <USelect
+                            v-model="state.wochentyp"
+                            :items="['H-Woche', 'N-Woche']"
+                            class="w-full"
+                            placeholder="Wochentyp auswählen"
+                        />
+                    </UFormField>
+                    <UFormField label="Wochentag" name="wochentag" required>
+                        <USelect
+                            v-model="state.wochentag"
+                            :items="wochentagOptions"
+                            class="w-full"
+                            placeholder="Wochentag auswählen"
+                        />
+                    </UFormField>
+                    <UFormField label="Block" name="block" required>
+                        <USelect
+                            v-model="state.block"
+                            :items="(settings.blocks ?? []) as any[]"
+                            class="w-full"
+                            label-key="bezeichnung"
+                            placeholder="Block auswählen"
+                            value-key="schemaId"
+                        />
+                    </UFormField>
+                    <USeparator label="Zeitraum" />
+                    <UAlert
+                        v-if="!(state.wochentyp && state.wochentag && state.block)"
+                        color="info"
+                        description="Bitte wählen Sie zunächst Wochentyp, -tag und Block aus."
+                        icon="i-lucide-info"
+                        title="Keine Slots verfügbar!"
+                        variant="subtle"
                     />
-                    <label for="wochentyp">Wochentyp</label>
-                </FloatLabel>
-                <Message
-                    v-if="$form.wochentyp?.invalid"
-                    severity="error"
-                    size="small"
-                    variant="simple"
-                >
-                    {{ $form.wochentyp.error.message }}
-                </Message>
-            </div>
-            <div class="w-full">
-                <FloatLabel class="w-full" variant="on">
-                    <Select
-                        id="wochentag"
-                        v-model="wochentag"
-                        :options="[1, 2, 3, 4, 5, 6]"
-                        fluid
-                        name="wochentag"
-                        @change="blockOrWochentagChanged"
-                    >
-                        <template #value="{ value }">
-                            <template v-if="value != null">
-                                {{ formatDayOfWeek(value) }}
-                            </template>
-                        </template>
-                        <template #option="{ option }">
-                            {{ formatDayOfWeek(option) }}
-                        </template>
-                    </Select>
-                    <label for="wochentag">Wochentag</label>
-                </FloatLabel>
-                <Message
-                    v-if="$form.wochentag?.invalid"
-                    severity="error"
-                    size="small"
-                    variant="simple"
-                >
-                    {{ $form.wochentag.error.message }}
-                </Message>
-            </div>
-            <div class="w-full">
-                <FloatLabel class="w-full" variant="on">
-                    <Select
-                        id="block"
-                        v-model="block"
-                        :options="settings.blocks"
-                        fluid
-                        name="block"
-                        @change="blockOrWochentagChanged"
-                    >
-                        <template #value="{ value }">
-                            <template v-if="value || value === 0">
-                                {{ value.bezeichnung }}
-                            </template>
-                        </template>
-                        <template #option="{ option }">
-                            {{ option.bezeichnung }}
-                        </template>
-                    </Select>
-                    <label for="block">Block</label>
-                </FloatLabel>
-                <Message
-                    v-if="$form.block?.invalid"
-                    severity="error"
-                    size="small"
-                    variant="simple"
-                >
-                    {{ $form.block.error.message }}
-                </Message>
-            </div>
-            <div class="font-bold">Zeitraum</div>
-            <UFormField class="w-full" label="Start" required>
-                <OtiumDateSelector
-                    v-if="!loading"
-                    v-model="von"
-                    :options="datesAvailable"
-                    full-size
-                    hide-today
-                    label="Von"
-                    name="von"
-                    show-label
-                />
-            </UFormField>
-            <UFormField class="w-full" label="Ende" required>
-                <OtiumDateSelector
-                    v-if="!loading"
-                    v-model="bis"
-                    :options="datesAvailable"
-                    full-size
-                    hide-today
-                    label="Bis"
-                    name="bis"
-                    show-label
-                />
-            </UFormField>
-
-            <div class="font-bold mt-4">Details</div>
-        </template>
-
-        <div class="w-full">
-            <FloatLabel class="w-full" variant="on">
-                <InputText id="ort" v-model="ort" fluid name="ort" />
-                <label for="ort">Ort</label>
-            </FloatLabel>
-            <Message v-if="$form.ort?.invalid" severity="error" size="small" variant="simple">
-                {{ $form.ort.error.message }}
-            </Message>
-        </div>
-        <template v-if="!hasInitialData">
-            <div class="flex justify-between mt-4">
-                <label for="betreuerSwitch">Betreuer:in zuweisen</label>
-                <ToggleSwitch v-model="betreuerZuweisenSelected" if="betreuerSwitch" />
-            </div>
-            <FloatLabel class="w-full" variant="on">
-                <Select
-                    id="betreuerSelect"
-                    v-model="personSelected"
-                    :disabled="!betreuerZuweisenSelected"
-                    :options="personen"
-                    filter
-                    fluid
-                    name="tutor"
-                    option-label="name"
-                    option-value="id"
+                    <UAlert
+                        v-else-if="datesAvailable.length == 0"
+                        color="error"
+                        description="Keine verfügbaren Daten für diese Kombination an Wochentyp, -tag und
+                        Block."
+                        icon="i-lucide-triangle-alert"
+                        title="Keine Slots verfügbar!"
+                    />
+                    <UFormField class="w-full" label="Start" name="start" required>
+                        <OtiumDateSelector
+                            v-if="!loading"
+                            v-model="state.start"
+                            :options="datesAvailable"
+                            full-size
+                            hide-today
+                        />
+                    </UFormField>
+                    <UFormField class="w-full" label="Ende" name="end" required>
+                        <OtiumDateSelector
+                            v-if="!loading"
+                            v-model="state.end"
+                            :options="datesAvailable"
+                            full-size
+                            hide-today
+                        />
+                    </UFormField>
+                    <USeparator label="Details" />
+                </template>
+                <UFormField label="Ort" name="location" required>
+                    <UInput
+                        v-model="state.location"
+                        class="w-full"
+                        placeholder="Ort eingeben"
+                    />
+                </UFormField>
+                <USwitch v-model="state.hasTutor" label="Betreuer:in zuweisen" />
+                <USwitch v-model="state.hasMaxTn" label="Teilnehmer:innen begrenzen" />
+                <UFormField v-if="state.hasTutor" label="Betreuer:in" name="tutor" required>
+                    <PersonSelectorNuxt
+                        v-model="state.tutor"
+                        class="w-full"
+                        placeholder="Betreuer:in auswählen"
+                    />
+                </UFormField>
+                <UFormField
+                    v-if="state.hasMaxTn"
                     required
+                    label="Maximale Teilnehmer:innen"
+                    name="maxTn"
+                >
+                    <UInputNumber
+                        v-model="state.maxTn"
+                        :min="1"
+                        class="w-full"
+                        color="neutral"
+                        placeholder="Maximale Teilnehmer:innen-Zahl eingeben"
+                    />
+                </UFormField>
+                <UButton
+                    :icon="hasInitialData ? 'i-lucide-check' : 'i-lucide-plus'"
+                    :label="hasInitialData ? 'Ändern' : 'Erstellen'"
+                    class="mt-4"
+                    size="lg"
+                    type="submit"
                 />
-                <label for="betreuerSelect">Betreuer:in</label>
-            </FloatLabel>
+            </UForm>
         </template>
-        <div class="flex justify-between mt-4">
-            <label for="maxEnrollmentSwitch">Teilnehmer:innen-Zahl beschränken</label>
-            <ToggleSwitch
-                v-model="maxEnrollmentsSetzenSelected"
-                if="maxEnrollmentSwitch"
-                name="maxEnrollmentSwitch"
-            />
-        </div>
-        <FloatLabel class="w-full" variant="on">
-            <InputNumber
-                id="maxEnrollmentInput"
-                v-model="maxEnrollmentsSelected"
-                :disabled="!maxEnrollmentsSetzenSelected"
-                fluid
-                name="maxEnrollments"
-            />
-            <label for="maxEnrollmentInput">max. Teilnehmer:innen</label>
-        </FloatLabel>
-        <Button
-            :label="hasInitialData ? 'Speichern' : 'Erstellen'"
-            class="mt-4"
-            severity="primary"
-            type="submit"
-        />
-    </Form>
+        <template v-if="hasInitialData" #footer>
+            <span class="text-muted text-sm">
+                Änderungen betreffen nur zukünftige Termine dieser Wiederholung.
+            </span>
+        </template>
+    </UModal>
 </template>
 
 <style scoped></style>

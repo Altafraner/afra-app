@@ -1,9 +1,10 @@
 <script setup>
-import { ref } from 'vue';
-import { Button, Column, DataTable, Dialog, useDialog } from 'primevue';
+import { h } from 'vue';
 import { formatDate, formatDayOfWeek, formatTutor } from '@/helpers/formatters';
 import CreateWiederholungForm from '@/Otium/components/Management/CreateWiederholungForm.vue';
 import CancelWiederholungForm from '@/Otium/components/Management/CancelWiederholungForm.vue';
+import UButton from '@nuxt/ui/components/Button.vue';
+import UTooltip from '@nuxt/ui/components/Tooltip.vue';
 
 const emits = defineEmits(['create', 'delete', 'cancel', 'edit']);
 const props = defineProps({
@@ -11,143 +12,113 @@ const props = defineProps({
     allowEnrollment: Boolean,
     allowEdit: Boolean,
 });
-const dialog = useDialog();
+const overlay = useOverlay();
 
-const createDialogVisible = ref(false);
-const cancelDialogVisible = ref(false);
-const wiederholungToCancel = ref(null);
-
-function createRepeating(data) {
-    createDialogVisible.value = false;
-    emits('create', data);
+async function showCreateDialog() {
+    const modal = overlay.create(CreateWiederholungForm);
+    const returnedData = await modal.open();
+    if (returnedData) emits('create', returnedData);
 }
 
-function cancelRepeating(data) {
-    cancelDialogVisible.value = false;
-    emits('cancel', wiederholungToCancel.value.id, data);
-}
-
-function showCreateDialog() {
-    createDialogVisible.value = true;
-}
-
-function showCancelDialog(data) {
-    wiederholungToCancel.value = data;
-    cancelDialogVisible.value = true;
-}
-
-function edit(data) {
-    dialog.open(CreateWiederholungForm, {
-        props: {
-            header: 'Regelmäßigkeit bearbeiten',
-            style: { width: '35rem' },
-            modal: true,
-            closable: true,
-        },
-        data: {
-            initialValues: data,
-        },
-        onClose: (result) => {
-            if (result === null) return;
-            emits('edit', Object.assign(result.data, { id: data.id }));
-        },
+async function showCancelDialog(data) {
+    const modal = overlay.create(CancelWiederholungForm);
+    const returnedData = await modal.open({
+        wiederholung: data,
     });
+    if (returnedData) emits('cancel', data.id, returnedData);
 }
+
+async function edit(data) {
+    const modal = overlay.create(CreateWiederholungForm);
+    const returnedData = await modal.open({ initialValues: data });
+    if (!returnedData) return;
+    emits('edit', Object.assign(returnedData, { id: data.id }));
+}
+
+const columns = [
+    {
+        header: 'Woche',
+        accessorKey: 'wochentyp',
+    },
+    {
+        header: 'Tag',
+        accessorKey: 'wochentag',
+        cell: ({ row }) => formatDayOfWeek(row.getValue('wochentag')),
+    },
+    {
+        header: 'Slot',
+        accessorKey: 'block',
+    },
+    {
+        header: 'Betreuer:in',
+        accessorFn: (row) => (row.tutor ? formatTutor(row.tutor) : ''),
+    },
+    {
+        header: 'Ort',
+        accessorKey: 'ort',
+    },
+    {
+        header: 'Start',
+        accessorKey: 'startDate',
+        cell: ({ row }) => formatDate(new Date(row.getValue('startDate')), true),
+    },
+    {
+        header: 'Ende',
+        accessorKey: 'endDate',
+        cell: ({ row }) => formatDate(new Date(row.getValue('endDate')), true),
+    },
+    {
+        id: 'actions',
+        header: () => h(UButton, { icon: 'i-lucide-plus', onClick: showCreateDialog }),
+        cell: ({ row }) =>
+            h('span', { class: 'flex gap-1 justify-end' }, [
+                h(UTooltip, { text: 'Bearbeiten' }, () =>
+                    h(UButton, {
+                        icon: 'i-lucide-pencil',
+                        variant: 'ghost',
+                        color: 'primary',
+                        size: 'sm',
+                        onClick: () => edit(row.original),
+                    }),
+                ),
+                h(UTooltip, { text: 'Einkürzen' }, () =>
+                    h(UButton, {
+                        icon: 'i-lucide-square',
+                        variant: 'ghost',
+                        color: 'warning',
+                        size: 'sm',
+                        onClick: () => showCancelDialog(row.original),
+                    }),
+                ),
+                h(UTooltip, { text: 'Löschen' }, () =>
+                    h(UButton, {
+                        icon: 'i-lucide-x',
+                        variant: 'ghost',
+                        color: 'error',
+                        size: 'sm',
+                        onClick: () => emits('delete', row.original.id),
+                    }),
+                ),
+            ]),
+        meta: {
+            class: {
+                td: 'text-right',
+                th: 'text-right',
+            },
+        },
+    },
+];
 </script>
 
 <template>
-    <DataTable :value="regs" size="medium">
-        <Column field="wochentyp" header="Woche" />
-        <Column header="Tag">
-            <template #body="{ data }">
-                {{ formatDayOfWeek(data.wochentag) }}
-            </template>
-        </Column>
-        <Column header="Block">
-            <template #body="{ data }">
-                {{ data.block }}
-            </template>
-        </Column>
-        <Column field="tutor" header="Tutor">
-            <template #body="slotProps">
-                {{ formatTutor(slotProps.data.tutor) }}
-            </template>
-        </Column>
-        <Column field="ort" header="Ort" />
-        <Column field="startDate" header="Von">
-            <template #body="slotProps">
-                {{ formatDate(new Date(slotProps.data.startDate)) }}
-            </template>
-        </Column>
-        <Column field="endDate" header="Bis">
-            <template #body="slotProps">
-                {{ formatDate(new Date(slotProps.data.endDate)) }}
-            </template>
-        </Column>
-        <Column v-if="allowEdit" class="text-right afra-col-action">
-            <template #header>
-                <Button
-                    aria-label="Neue Regelmäßigkeit"
-                    icon="pi pi-plus"
-                    size="small"
-                    @click="showCreateDialog"
-                />
-            </template>
-            <template #body="{ data }">
-                <span class="inline-flex gap-0.5">
-                    <Button
-                        v-tooltip="'Bearbeiten'"
-                        aria-label="Bearbeiten"
-                        icon="pi pi-pencil"
-                        severity="primary"
-                        size="small"
-                        variant="text"
-                        @click="() => edit(data)"
-                    />
-                    <Button
-                        v-tooltip="'Einkürzen'"
-                        aria-label="Einkürzen"
-                        icon="pi pi-stop"
-                        severity="warn"
-                        size="small"
-                        variant="text"
-                        @click="() => showCancelDialog(data)"
-                    />
-                    <Button
-                        v-tooltip="'Löschen'"
-                        aria-label="Löschen"
-                        icon="pi pi-times"
-                        severity="danger"
-                        size="small"
-                        variant="text"
-                        @click="() => emits('delete', data.id)"
-                    />
-                </span>
-            </template>
-        </Column>
-        <template #empty>
-            <div class="flex justify-center">Keine Regelmäßigkeiten gefunden.</div>
-        </template>
-    </DataTable>
-    <Dialog
-        v-model:visible="createDialogVisible"
-        :style="{ width: '35rem' }"
-        header="Regelmäßigkeit hinzufügen"
-        modal
-    >
-        <CreateWiederholungForm @submit="createRepeating" />
-    </Dialog>
-    <Dialog
-        v-model:visible="cancelDialogVisible"
-        :style="{ width: '35rem' }"
-        header="Regelmäßigkeit verkürzen"
-        modal
-    >
-        <CancelWiederholungForm
-            :wiederholung="wiederholungToCancel"
-            @submit="cancelRepeating"
-        />
-    </Dialog>
+    <UTable
+        :columns="columns"
+        :data="regs"
+        :ui="{
+            td: 'p-2 first:pl-4 last:pr-4',
+            th: 'p-2 first:pl-4 last:pr-4',
+        }"
+    />
 </template>
 
 <style scoped></style>
