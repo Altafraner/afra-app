@@ -1,5 +1,6 @@
 using Altafraner.AfraApp.Attendance.Domain.Contracts;
 using Altafraner.AfraApp.Calendar;
+using Altafraner.AfraApp.Dashboard.Contracts;
 using Altafraner.AfraApp.Profundum.API.Endpoints;
 using Altafraner.AfraApp.Profundum.Configuration;
 using Altafraner.AfraApp.Profundum.Extensions;
@@ -34,6 +35,7 @@ internal class ProfundumModule : IModule
         services.AddScoped<FeedbackService>();
 
         services.AddScoped<ICalendarProvider, ProfundumCalendarProvider>();
+        services.AddScoped<IDashboardProvider, ProfundumDashboardProvider>();
         services.AddKeyedScoped<IAttendanceInformationProvider, ProfundumAttendanceInformationProvider>(
             ProfundumAttendanceInformationProvider.ScopeValue);
 
