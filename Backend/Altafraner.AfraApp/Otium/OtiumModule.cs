@@ -1,8 +1,8 @@
 using Altafraner.AfraApp.Attendance;
 using Altafraner.AfraApp.Attendance.Domain.Contracts;
-using Altafraner.AfraApp.Otium.API;
-using Altafraner.AfraApp.Backbone.Authorization;
 using Altafraner.AfraApp.Calendar;
+using Altafraner.AfraApp.Dashboard.Contracts;
+using Altafraner.AfraApp.Otium.API;
 using Altafraner.AfraApp.Otium.Configuration;
 using Altafraner.AfraApp.Otium.Domain.Contracts.Rules;
 using Altafraner.AfraApp.Otium.Domain.Contracts.Services;
@@ -36,6 +36,7 @@ public class OtiumModule : IModule
         services.AddScoped<ManagementService>();
 
         services.AddScoped<ICalendarProvider, OtiumCalendarProvider>();
+        services.AddScoped<IDashboardProvider, OtiumDashboardProvider>();
 
         services.AddKeyedScoped<IAttendanceInformationProvider, OtiumAttendanceInformationProvider>(
             OtiumAttendanceInformationProvider.ScopeValue);
