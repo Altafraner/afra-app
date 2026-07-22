@@ -52,4 +52,10 @@ export const routes = [
         component: () => import('@/Profundum/views/MenteeEinsicht.vue'),
         props: true,
     },
+    {
+        path: '/profundum/attendance/:instanceId/:terminId',
+        name: 'Profundum-Attendance',
+        component: () => import('@/Profundum/views/Attendance.vue'),
+        props: true,
+    },
 ];

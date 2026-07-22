@@ -1,6 +1,10 @@
 import { mande, type MandeError } from 'mande';
 import type { QuartalEnrollmentOverview } from '@/Profundum/models/feedback';
-import type { ProfundumFachbereich, ProfundumSlot } from '@/Profundum/models/verwaltung';
+import type {
+    ProfundumFachbereich,
+    ProfundumSlot,
+    ProfundumTerminInstanceInfo,
+} from '@/Profundum/models/verwaltung';
 
 export const useManagement = () => {
     const toast = useToast();
@@ -50,5 +54,23 @@ export const useManagement = () => {
         }
     }
 
-    return { getAllQuartaleWithEnrollments, getFachbereiche, getSlots };
+    async function getTerminInstanceInfo(
+        terminId: string,
+        instanceId: string,
+    ): Promise<ProfundumTerminInstanceInfo | null> {
+        const api = mande('/api/profundum/attendance/');
+        try {
+            return await api.get<ProfundumTerminInstanceInfo>(`${instanceId}/${terminId}`);
+        } catch (e) {
+            const mandeError: MandeError = e as MandeError;
+            toast.add({
+                color: 'error',
+                title: 'Es ist ein Fehler aufgetreten',
+                description: `Der Termin konnte nicht geladen werden. Code ${mandeError.response.status}, ${mandeError.message}`,
+            });
+            return null;
+        }
+    }
+
+    return { getAllQuartaleWithEnrollments, getFachbereiche, getSlots, getTerminInstanceInfo };
 };

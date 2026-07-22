@@ -43,6 +43,15 @@ const titleRenderFunctions: Record<
                 params: { terminId: row.payload?.terminId },
             },
         }),
+    Profundum: (row) =>
+        h(UButton, {
+            label: row.label,
+            variant: 'subtle',
+            to: {
+                name: 'Profundum-Attendance',
+                params: { terminId: row.payload?.slotId, instanceId: row.payload?.eventId },
+            },
+        }),
 };
 
 const eventColumns: TableColumn<ScopedDashboardTutorEventDescriptor>[] = [

@@ -39,7 +39,8 @@ internal class ProfundumDashboardProvider : IDashboardProvider
             SlotLabel = "Profundum",
             Payload = new
             {
-                EventId = e.Id
+                SlotId = e.Id,
+                EventId = a.Id
             },
             Occupancy = null,
             Location = a.Ort
