@@ -1,6 +1,7 @@
 using Altafraner.AfraApp.Backbone.Authorization;
 using Altafraner.AfraApp.Dashboard.Contracts.DTO;
 using Altafraner.AfraApp.Dashboard.Services;
+using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.AfraApp.User.Services;
 using Altafraner.Backbone.Utils;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -39,5 +40,35 @@ internal static class Dashboard
                     return TypedResults.Ok(new StudentDashboard { Weeks = weeks });
                 })
             .RequireAuthorization(AuthorizationPolicies.StudentOnly);
+
+        group.MapGet("/student/{id:guid}",
+                async (
+                    Guid id,
+                    UserService userService,
+                    DashboardService dashboardService,
+                    UserAuthorizationHelper authHelper,
+                    DateOnly start,
+                    int numWeeks) =>
+                {
+                    Person student;
+                    try
+                    {
+                        student = await userService.GetUserByIdAsync(id);
+                    }
+                    catch (KeyNotFoundException)
+                    {
+                        return (Results<NotFound, Ok<StudentDashboard>, UnauthorizedHttpResult>)TypedResults.NotFound();
+                    }
+
+                    var isMentor = await authHelper.CurrentUserIsMentorOf(student);
+                    var hasBypass = await authHelper.CurrentUserHasGlobalPermission(GlobalPermission.Admin);
+
+                    if (!isMentor && !hasBypass) return TypedResults.Unauthorized();
+
+                    var monday = start.GetStartOfWeek();
+                    var weeks = await dashboardService.GetStudentWeeks(student, monday, numWeeks);
+                    return TypedResults.Ok(new StudentDashboard { Weeks = weeks });
+                })
+            .RequireAuthorization(AuthorizationPolicies.TutorOnly);
     }
 }
