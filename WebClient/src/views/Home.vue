@@ -3,9 +3,11 @@ import { useUser } from '@/stores/user';
 import { defineAsyncComponent } from 'vue';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
 
-const Student = defineAsyncComponent(() => import('@/Otium/views/Dashboard/Student.vue'));
 const TutorDashboard = defineAsyncComponent(
     () => import('@/components/Dashboard/TutorDashboard.vue'),
+);
+const StudentDashboard = defineAsyncComponent(
+    () => import('@/components/Dashboard/StudentDashboard.vue'),
 );
 
 const user = useUser();
@@ -14,7 +16,7 @@ await otiumStore.updateKategorien();
 </script>
 
 <template>
-    <Student v-if="user.isStudent" />
+    <StudentDashboard v-if="user.isStudent" />
     <TutorDashboard v-if="user.isTeacher" />
 </template>
 

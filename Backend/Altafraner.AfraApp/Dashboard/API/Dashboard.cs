@@ -2,6 +2,8 @@ using Altafraner.AfraApp.Backbone.Authorization;
 using Altafraner.AfraApp.Dashboard.Contracts.DTO;
 using Altafraner.AfraApp.Dashboard.Services;
 using Altafraner.AfraApp.User.Services;
+using Altafraner.Backbone.Utils;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace Altafraner.AfraApp.Dashboard.API;
 
@@ -22,5 +24,20 @@ internal static class Dashboard
                     };
                 })
             .RequireAuthorization(AuthorizationPolicies.TutorOnly);
+
+        group.MapGet("/student",
+                async (UserAccessor userAccessor,
+                    DashboardService dashboardService,
+                    DateOnly start,
+                    int numWeeks) =>
+                {
+                    var user = await userAccessor.GetUserAsync();
+                    var monday = start.GetStartOfWeek();
+                    if (numWeeks <= 0) return (Results<BadRequest, Ok<StudentDashboard>>)TypedResults.BadRequest();
+
+                    var weeks = await dashboardService.GetStudentWeeks(user, monday, numWeeks);
+                    return TypedResults.Ok(new StudentDashboard { Weeks = weeks });
+                })
+            .RequireAuthorization(AuthorizationPolicies.StudentOnly);
     }
 }

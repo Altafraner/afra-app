@@ -1,6 +1,6 @@
 import type { UserInfoMinimal } from '@/models/user/user';
 import type { ProfundumSlot } from '@/Profundum/models/verwaltung';
-import { CalendarDateTime, getDayOfWeek } from '@internationalized/date';
+import { AnyTime, CalendarDateTime, DateValue, getDayOfWeek } from '@internationalized/date';
 
 const wochentage = [
     'Sonntag',
@@ -45,6 +45,15 @@ const shortWochentage = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 export function formatCalendarDateTime(date: CalendarDateTime) {
     const dayOfWeek = getDayOfWeek(date, 'de-DE', 'mon');
     return `${shortWochentage[dayOfWeek]}., ${padNumber(date.day, 2)}.${padNumber(date.month, 2)}.${date.year} ${padNumber(date.hour, 2)}:${padNumber(date.minute, 2)} Uhr`;
+}
+
+export function formatCalendarDate(date: DateValue, showWeekday: boolean = true) {
+    const dayOfWeek = getDayOfWeek(date, 'de-DE', 'mon');
+    const weekday = showWeekday ? `${shortWochentage[dayOfWeek]}., ` : '';
+    return `${weekday}${padNumber(date.day, 2)}.${padNumber(date.month, 2)}.${date.year}`;
+}
+export function formatCalendarTime(time: AnyTime) {
+    return `${padNumber(time.hour, 2)}:${padNumber(time.minute, 2)}`;
 }
 
 export function padNumber(number: number, length: number): string {

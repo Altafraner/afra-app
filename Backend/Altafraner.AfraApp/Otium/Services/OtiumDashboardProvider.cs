@@ -6,6 +6,7 @@ using Altafraner.AfraApp.Otium.Domain.Models;
 using Altafraner.AfraApp.Schuljahr.Domain.Models;
 using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.AfraApp.User.Services;
+using Altafraner.Backbone.Utils;
 using Microsoft.EntityFrameworkCore;
 
 namespace Altafraner.AfraApp.Otium.Services;
@@ -56,10 +57,14 @@ internal class OtiumDashboardProvider : IDashboardProvider
                 Label = e.original.Bezeichnung,
                 Start = e.original.Block.SchultagKey.ToDateTime(schema!.Interval.Start),
                 SlotLabel = schema.Bezeichnung,
-                Payload = new { TerminId = e.original.Id },
+                Payload = new
+                {
+                    TerminId = e.original.Id
+                },
                 Occupancy = e.original.MaxEinschreibungen is null
                     ? null
-                    : (float)e.enrollmentCount / e.original.MaxEinschreibungen.Value
+                    : (float)e.enrollmentCount / e.original.MaxEinschreibungen.Value,
+                Location = e.original.Ort
             };
         });
     }
@@ -187,6 +192,157 @@ internal class OtiumDashboardProvider : IDashboardProvider
             if (lastDayWithBlocks is null) return DashboardMenteeStatus.NotApplicable;
             if (lastDayWithBlocks >= today) return DashboardMenteeStatus.Uncertain;
             return DashboardMenteeStatus.Invalid;
+        }
+    }
+
+    public async Task<DashboardStudentOverview> GetStudentOverview(Person student, DateOnly start, int weeks)
+    {
+        var dailyMessages = new Dictionary<DateOnly, List<string>>();
+        var weeklyMessages = new Dictionary<DateOnly, List<string>>();
+        var end = start.AddDays((weeks + 1) * 7);
+
+        var schultage = await _dbContext.Schultage
+            .Include(s => s.Blocks)
+            .Where(s => s.Datum >= start && s.Datum < end)
+            .OrderBy(s => s.Datum)
+            .ToListAsync();
+
+        var blocks = schultage.SelectMany(s => s.Blocks);
+        var klassenstufe = _userService.GetKlassenstufe(student);
+        var termine = await _dbContext.OtiaTermine
+            .Include(t => t.Otium)
+            .ThenInclude(e => e.Kategorie)
+            .Where(e => blocks.Contains(e.Block))
+            .Where(e =>
+                (e.Otium.MinKlasse == null || e.Otium.MinKlasse <= klassenstufe) &&
+                (e.Otium.MaxKlasse == null || e.Otium.MaxKlasse >= klassenstufe))
+            .ToListAsync();
+
+        var einschreibungen = await _dbContext.OtiaEinschreibungen
+            .Where(e => e.BetroffenePerson.Id == student.Id)
+            .Include(e => e.Termin)
+            .ThenInclude(e => e.Block)
+            .ThenInclude(e => e.Schultag)
+            .Include(e => e.Termin)
+            .ThenInclude(e => e.Tutor)
+            .Include(e => e.Termin)
+            .ThenInclude(e => e.Otium)
+            .ThenInclude(e => e.Kategorie)
+            .OrderBy(s => s.Termin.Block.SchultagKey)
+            .ThenBy(s => s.Termin.Block.SchemaId)
+            .Where(e => schultage.Contains(e.Termin.Block.Schultag))
+            .ToListAsync();
+
+        var schultageByWeek = schultage.GroupBy(s => s.Datum.GetStartOfWeek());
+        var attendanceIds = schultage.SelectMany(s => s.Blocks)
+            .Select(e => new AttendanceEntryId
+            {
+                Scope = OtiumAttendanceInformationProvider.ScopeValue,
+                SlotId = e.Id,
+                StudentId = student.Id
+            });
+        var attendancesByBlock =
+            (await _attendanceService.GetAttendances(attendanceIds)).ToDictionary(e => e.Key.SlotId, e => e.Value);
+
+        await PopulateMessages();
+
+        List<DashboardStudentEventDescriptor> studentEvents = [];
+
+        foreach (var schultag in schultage)
+        {
+            var einschreibungenForDay =
+                einschreibungen.TakeWhile(e => e.Termin.Block.SchultagKey == schultag.Datum).ToArray();
+            einschreibungen.RemoveRange(0, einschreibungenForDay.Length);
+            foreach (var block in schultag.Blocks)
+            {
+                var isBlockDoneOrRunning =
+                    _blockHelper.GetBlockStatus(block) is BlockHelper.BlockStatus.Done
+                        or BlockHelper.BlockStatus.Running;
+                var einschreibungenForBlock = einschreibungenForDay.Where(e => e.Termin.Block.Id == block.Id).ToArray();
+                var schema = _blockHelper.Get(block.SchemaId)!;
+                if (einschreibungenForBlock.Length == 0)
+                {
+                    studentEvents.Add(new DashboardStudentEventDescriptor
+                    {
+                        Label = null,
+                        Start = schultag.Datum.ToDateTime(schema.Interval.Start),
+                        SlotLabel = schema.Bezeichnung,
+                        Payload = new
+                        {
+                            Started = isBlockDoneOrRunning
+                        },
+                        Attendance = isBlockDoneOrRunning && schema.Verpflichtend
+                            ? attendancesByBlock[block.Id].State
+                            : null,
+                        Location = null
+                    });
+                    continue;
+                }
+
+                foreach (var einschreibung in einschreibungenForBlock)
+                    studentEvents.Add(new DashboardStudentEventDescriptor
+                    {
+                        Label = einschreibung.Termin.Bezeichnung,
+                        Start = schultag.Datum.ToDateTime(einschreibung.Interval.Start),
+                        SlotLabel = schema.Bezeichnung,
+                        Payload = new
+                        {
+                            CategoryId = einschreibung.Termin.Otium.Kategorie.Id,
+                            TerminId = einschreibung.Termin.Id,
+                            Started = isBlockDoneOrRunning
+                        },
+                        Attendance = isBlockDoneOrRunning ? attendancesByBlock[block.Id].State : null,
+                        Location = einschreibung.Termin.Ort
+                    });
+            }
+        }
+
+        return new DashboardStudentOverview
+        {
+            DailyWarnings = dailyMessages,
+            WeeklyWarnings = weeklyMessages,
+            Events = studentEvents
+        };
+
+        async Task PopulateMessages()
+        {
+            var localEinschreibungen = einschreibungen.ToList();
+            foreach (var week in schultageByWeek)
+            {
+                var blocksInWeek = week.SelectMany(e => e.Blocks);
+                var weekEnd = week.Key.AddDays(7);
+
+                // Increase performance by taking from the already sorted list of enrollments, then removing them from the list before the next iteration.
+                var einschreibungenForWeek = localEinschreibungen
+                    .TakeWhile(e => e.Termin.Block.SchultagKey < weekEnd)
+                    .ToList();
+                localEinschreibungen.RemoveRange(0, einschreibungenForWeek.Count);
+
+                var attendancesInWeek =
+                    week.SelectMany(e => e.Blocks).ToDictionary(e => e.Id, e => attendancesByBlock[e.Id]);
+
+                foreach (var schultag in week)
+                {
+                    var attendancesOnDay = schultag.Blocks.ToDictionary(e => e.Id, e => attendancesByBlock[e.Id]);
+                    var messagesForBlocksOnDay =
+                        await _rulesValidationService.GetMessagesForDayAsync(student,
+                            schultag,
+                            einschreibungenForWeek,
+                            attendancesOnDay);
+                    if (messagesForBlocksOnDay.Count == 0) continue;
+                    dailyMessages[schultag.Datum] = messagesForBlocksOnDay;
+                }
+
+                var termineInWeek = termine.Where(e => blocksInWeek.Contains(e.Block)).ToList();
+
+                var messagesForWeek =
+                    await _rulesValidationService.GetMessagesForWeekAsync(student,
+                        week.ToList(),
+                        termineInWeek,
+                        einschreibungenForWeek,
+                        attendancesInWeek);
+                weeklyMessages[week.Key] = messagesForWeek;
+            }
         }
     }
 }
