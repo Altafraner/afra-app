@@ -1,4 +1,5 @@
 import type { UserInfoMinimal } from '@/models/user/user';
+import { AttendanceStudentStatus } from '@/Attendance/models/attendance.ts';
 
 type ProfundumQuartal = 'Q1' | 'Q2' | 'Q3' | 'Q4';
 type Wochentag =
@@ -46,4 +47,13 @@ export interface ProfundumSlot {
     wochentag: Wochentag;
     einwahlZeitraumId: string;
     isFeedbackPublished: boolean;
+}
+
+export interface ProfundumTerminInstanceInfo {
+    slot: ProfundumSlot;
+    label: string;
+    isDoneOrStarted: boolean;
+    isAttendanceEditable: boolean;
+    enrollments: AttendanceStudentStatus[];
+    start: string;
 }

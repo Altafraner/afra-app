@@ -48,5 +48,6 @@ internal class ProfundumModule : IModule
         group.MapEnrollmentEndpoints();
         group.MapManagementEndpoints();
         group.MapBewertungEndpoints();
+        group.MapAttendanceEndpoints();
     }
 }

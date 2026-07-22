@@ -37,7 +37,7 @@ internal class ProfundumAttendanceInformationProvider : IAttendanceInformationPr
             .GroupBy(e => e.ProfundumInstanz)
             .Select(e => new EventWithEnrollments
             {
-                Enrollments = e.Select(e2 => e2.BetroffenePerson),
+                Enrollments = e.Select(e2 => e2.BetroffenePerson).OrderBy(p => p.FirstName).ThenBy(p => p.LastName),
                 EventId = e.First().ProfundumInstanzId!.Value,
                 Name = e.First().ProfundumInstanz!.Profundum.Bezeichnung,
                 Location = e.First().ProfundumInstanz!.Ort
@@ -69,6 +69,8 @@ internal class ProfundumAttendanceInformationProvider : IAttendanceInformationPr
             .Where(e => e.Id == eventId)
             .SelectMany(e => e.Einschreibungen)
             .Select(e => e.BetroffenePerson)
+            .OrderBy(e => e.FirstName)
+            .ThenBy(e => e.LastName)
             .ToArrayAsync();
         return personen;
     }
