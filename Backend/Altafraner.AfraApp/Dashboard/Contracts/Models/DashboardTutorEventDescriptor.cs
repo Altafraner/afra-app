@@ -32,6 +32,11 @@ public class DashboardTutorEventDescriptor
     /// </summary>
     [Range(0, 1)]
     public required float? Occupancy { get; init; }
+
+    /// <summary>
+    ///     The events location
+    /// </summary>
+    public required string Location { get; init; }
 }
 
 /// <summary>
@@ -44,7 +49,6 @@ public class ScopedDashboardTutorEventDescriptor : DashboardTutorEventDescriptor
     /// </summary>
     public required string Scope { get; init; }
 
-
     internal static ScopedDashboardTutorEventDescriptor FromDashboardTutorEvent(
         DashboardTutorEventDescriptor descriptor,
         string scope)
@@ -56,7 +60,8 @@ public class ScopedDashboardTutorEventDescriptor : DashboardTutorEventDescriptor
             Start = descriptor.Start,
             SlotLabel = descriptor.SlotLabel,
             Payload = descriptor.Payload,
-            Occupancy = descriptor.Occupancy
+            Occupancy = descriptor.Occupancy,
+            Location = descriptor.Location
         };
     }
 }

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Altafraner.AfraApp.Dashboard.Contracts;
 using Altafraner.AfraApp.Dashboard.Contracts.DTO;
 using Altafraner.AfraApp.Dashboard.Contracts.Models;
@@ -86,5 +87,66 @@ internal class DashboardService
             })
             .ThenBy(s => s.Mentee.Vorname)
             .ThenBy(s => s.Mentee.Nachname);
+    }
+
+    public async Task<List<StudentWeek>> GetStudentWeeks(Person user, DateOnly start, int numWeeks)
+    {
+        Debug.Assert(start.GetStartOfWeek() == start, "Must be monday!");
+
+        Dictionary<DateOnly, List<string>> dailyWarnings = [];
+        Dictionary<DateOnly, List<string>> weeklyWarnings = [];
+        List<ScopedDashboardStudentEventDescriptor> events = [];
+
+        foreach (var provider in _providers)
+        {
+            var providerData = await provider.GetStudentOverview(user, start, numWeeks);
+            foreach (var (date, warnings) in providerData.DailyWarnings)
+            {
+                if (!dailyWarnings.ContainsKey(date))
+                    dailyWarnings[date] = [];
+                dailyWarnings[date].AddRange(warnings);
+            }
+
+            foreach (var (date, warnings) in providerData.WeeklyWarnings)
+            {
+                if (!weeklyWarnings.ContainsKey(date))
+                    weeklyWarnings[date] = [];
+                weeklyWarnings[date].AddRange(warnings);
+            }
+
+            events.AddRange(
+                providerData.Events.Select(e => new ScopedDashboardStudentEventDescriptor(e, provider.Scope)));
+        }
+
+        List<StudentWeek> weeks = [];
+        for (var i = 0; i < numWeeks; i++)
+        {
+            var currWeek = start.AddDays(i * 7);
+            var currWeekEnd = currWeek.AddDays(7);
+
+            var weekWarnings = weeklyWarnings.GetValueOrDefault(currWeek, []);
+            var dayWarningsInWeek = dailyWarnings
+                .Where(e => e.Key >= currWeek && e.Key < currWeekEnd)
+                .ToDictionary(e => e.Key, e => e.Value);
+
+            var weekEvents = events.Where(e =>
+                {
+                    var date = DateOnly.FromDateTime(e.Start);
+                    return date >= currWeek && date < currWeekEnd;
+                })
+                .OrderBy(e => e.Start)
+                .ToArray();
+
+            if (weekWarnings.Count > 0 || dayWarningsInWeek.Count > 0 || weekEvents.Length > 0)
+                weeks.Add(new StudentWeek
+                {
+                    Monday = currWeek,
+                    Warnings = weekWarnings,
+                    DailyWarnings = dayWarningsInWeek,
+                    Events = weekEvents
+                });
+        }
+
+        return weeks;
     }
 }

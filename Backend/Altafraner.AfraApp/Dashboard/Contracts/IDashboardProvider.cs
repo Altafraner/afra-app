@@ -29,4 +29,13 @@ public interface IDashboardProvider
     /// <param name="weeks">The mondays of weeks to get the status for</param>
     Task<Dictionary<Guid, Dictionary<DateOnly, DashboardMenteeStatus>>> GetMenteeStatus(Person[] mentees,
         DateOnly[] weeks);
+
+    /// <summary>
+    ///     Gets information for a students dashboard
+    /// </summary>
+    /// <param name="student">The student to get the dashboard for</param>
+    /// <param name="start">The first week to get the dashboard for. This will be a monday.</param>
+    /// <param name="weeks">The number of weeks to get the dashboard for</param>
+    /// <returns></returns>
+    Task<DashboardStudentOverview> GetStudentOverview(Person student, DateOnly start, int weeks);
 }

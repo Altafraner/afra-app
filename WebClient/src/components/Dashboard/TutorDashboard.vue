@@ -165,7 +165,9 @@ const menteeColumns: TableColumn<DashboardMenteeOverview>[] = [
             title="Mentees"
         >
             <ASkeletonTable v-if="loading" :n="3" />
-            <UTable v-else :columns="menteeColumns" :data="data?.mentees ?? []" />
+            <UTable v-else :columns="menteeColumns" :data="data?.mentees ?? []">
+                <template #empty>Keine Mentees gefunden</template>
+            </UTable>
             <template #footer>
                 <span class="text-muted text-sm">
                     <strong>Legende</strong><br />
