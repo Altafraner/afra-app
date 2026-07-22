@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import Home from '@/views/Home.vue';
+import Home from '@/views/Dashboard/Home.vue';
 import { routes as otium } from '@/Otium/router/routes';
 import { routes as profundum } from '@/Profundum/router/routes';
 import { routes as attendance } from '@/Attendance/router/routes';
@@ -24,6 +24,12 @@ const routes = [
         path: '/settings',
         name: 'Settings',
         component: () => import('@/views/Settings.vue'),
+    },
+    {
+        path: '/student/:studentId',
+        name: 'Mentee',
+        component: () => import('@/views/Dashboard/Mentee.vue'),
+        props: true,
     },
     ...otium,
     ...profundum,
