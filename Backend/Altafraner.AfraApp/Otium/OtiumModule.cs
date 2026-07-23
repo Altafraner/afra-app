@@ -54,7 +54,6 @@ public class OtiumModule : IModule
             .RequireAuthorization();
         group.MapKategorienEndpoints();
         group.MapKatalogEndpoints();
-        group.MapDashboardEndpoints();
         group.MapManagementEndpoints();
     }
 
