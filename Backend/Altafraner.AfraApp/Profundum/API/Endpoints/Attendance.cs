@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Altafraner.AfraApp.Attendance.Domain.Contracts;
 using Altafraner.AfraApp.Attendance.Domain.Dto;
 using Altafraner.AfraApp.Attendance.Domain.HubClients;
+using Altafraner.AfraApp.Backbone.Authorization;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Services;
 using Altafraner.AfraApp.User.Domain.DTO;
@@ -83,6 +84,7 @@ internal static class Attendance
                     IsAttendanceEditable = mayEditAttendance,
                     Start = termin.Day.ToDateTime(termin.StartTime)
                 });
-            });
+            })
+            .RequireAuthorization(AuthorizationPolicies.TutorOnly);
     }
 }
