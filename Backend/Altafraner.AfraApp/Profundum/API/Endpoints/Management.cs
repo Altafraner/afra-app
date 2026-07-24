@@ -40,6 +40,24 @@ public static class Management
         gp.MapPut("/slot/{id:guid}", (Mgmt svc, Guid id, DTOProfundumSlotCreation dto) => svc.UpdateSlotAsync(id, dto));
         gp.MapDelete("/slot/{id:guid}", (Mgmt svc, Guid id) => svc.DeleteSlotAsync(id));
 
+        var termin = gp.MapGroup("slot/{slotId:guid}/termin");
+        termin.MapGet("/", (Mgmt svc, Guid slotId) => svc.GetTermineAsync(slotId));
+        termin.MapPost("/", async (Mgmt svc, Guid slotId, DTOProfundumTerminCreation dto) =>
+        {
+            await svc.CreateTerminAsync(slotId, dto);
+            return TypedResults.NoContent();
+        });
+        termin.MapPut("/{day}", async (Mgmt svc, Guid slotId, DateOnly day, DTOProfundumTerminCreation dto) =>
+        {
+            await svc.UpdateTerminAsync(slotId, day, dto);
+            return TypedResults.NoContent();
+        });
+        termin.MapDelete("/{day}", async (Mgmt svc, Guid slotId, DateOnly day) =>
+        {
+            await svc.DeleteTerminAsync(slotId, day);
+            return TypedResults.NoContent();
+        });
+
         var kat = gp.MapGroup("kategorie");
         kat.MapGet("/", (Mgmt svc) => svc.GetKategorienAsync());
         kat.MapPost("/", async (Mgmt svc, DTOProfundumKategorieCreation kategorie) => (await svc.CreateKategorieAsync(kategorie)).Id);
@@ -106,6 +124,14 @@ public static class Management
                 await fbs.DeleteFachbereichAsync(id);
                 return TypedResults.NoContent();
             });
+
+        var partner = gp.MapGroup("partner");
+        partner.MapGet("/", (ProfundumPartnerService svc) => svc.GetAllWuenscheAsync());
+        partner.MapDelete("/{id:guid}", async (ProfundumPartnerService svc, Guid id) =>
+        {
+            await svc.DissolveWunschAsync(id);
+            return TypedResults.NoContent();
+        });
 
         gp.MapPost("/matching", PerformMatchingSynchronized);
         gp.MapPost("/finalize", (Match svc) => svc.FinalizeMatching());

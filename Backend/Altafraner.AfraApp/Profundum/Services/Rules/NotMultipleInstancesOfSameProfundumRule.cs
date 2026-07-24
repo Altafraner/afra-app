@@ -15,11 +15,23 @@ public class NotMultipleInstancesOfSameProfundumRule : IProfundumIndividualRule
         IEnumerable<ProfundumEinschreibung> enrollments,
         IEnumerable<ProfundumBelegWunsch> wuensche)
     {
-        var emsgs = wuensche.Where(w => enrollments.Any(e => e.ProfundumInstanz?.Profundum == w.ProfundumInstanz.Profundum))
-            .Select(w => $"{w.ProfundumInstanz.Profundum.Bezeichnung} bereits belegt.")
+        var emsgs = wuensche.Where(w => IsAlreadyEnrolled(w.ProfundumDefinition, enrollments))
+            .Select(w => $"{w.ProfundumDefinition.Bezeichnung} bereits belegt.")
             .ToArray();
         return emsgs.Length != 0 ? RuleStatus.Invalid(emsgs) : RuleStatus.Valid;
     }
+
+    /// <inheritdoc/>
+    public RuleStatus CheckDefinitionEligibility(Person student,
+        ProfundumDefinition definition,
+        IEnumerable<ProfundumSlot> slots,
+        IEnumerable<ProfundumEinschreibung> enrollments)
+        => IsAlreadyEnrolled(definition, enrollments)
+            ? RuleStatus.Invalid($"{definition.Bezeichnung} bereits belegt.")
+            : RuleStatus.Valid;
+
+    private static bool IsAlreadyEnrolled(ProfundumDefinition definition, IEnumerable<ProfundumEinschreibung> enrollments)
+        => enrollments.Any(e => e.ProfundumInstanz?.Profundum == definition);
 
     /// <inheritdoc/>
     public void AddConstraints(Person student,

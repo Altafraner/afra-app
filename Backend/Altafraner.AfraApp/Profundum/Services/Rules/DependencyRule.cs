@@ -20,14 +20,27 @@ public class DependencyRule : IProfundumIndividualRule
     {
         foreach (var w in wuensche)
         {
-            var depViol = w.ProfundumInstanz.Profundum.Dependencies
-                .Where(d => enrollments.All(e => e.ProfundumInstanz?.Profundum != d))
-                .ToArray();
-            if (depViol.Length == 0) continue;
-            return RuleStatus.Invalid(
-                $"{w.ProfundumInstanz.Profundum.Bezeichnung} setzt {depViol.First().Bezeichnung} voraus.");
+            var status = CheckDependencies(w.ProfundumDefinition, enrollments);
+            if (!status.IsValid) return status;
         }
         return RuleStatus.Valid;
+    }
+
+    /// <inheritdoc/>
+    public RuleStatus CheckDefinitionEligibility(Person student,
+        ProfundumDefinition definition,
+        IEnumerable<ProfundumSlot> slots,
+        IEnumerable<ProfundumEinschreibung> enrollments)
+        => CheckDependencies(definition, enrollments);
+
+    private static RuleStatus CheckDependencies(ProfundumDefinition definition, IEnumerable<ProfundumEinschreibung> enrollments)
+    {
+        var depViol = definition.Dependencies
+            .Where(d => enrollments.All(e => e.ProfundumInstanz?.Profundum != d))
+            .ToArray();
+        return depViol.Length == 0
+            ? RuleStatus.Valid
+            : RuleStatus.Invalid($"{definition.Bezeichnung} setzt {depViol.First().Bezeichnung} voraus.");
     }
 
     /// <inheritdoc/>
