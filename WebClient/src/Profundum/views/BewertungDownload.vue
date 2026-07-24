@@ -281,7 +281,7 @@ function submit(event: FormSubmitEvent<FormSchema>) {
                 name="student"
                 required
             >
-                <PersonSelectorNuxt
+                <PersonSelector
                     v-model="state.person"
                     :filter="
                         (student: UserInfoMinimal) =>

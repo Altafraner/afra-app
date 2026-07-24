@@ -1,15 +1,14 @@
 <script setup>
 import { mande } from 'mande';
 import { onMounted, ref } from 'vue';
-import { Button, FloatLabel, InputNumber, InputText, MultiSelect, Tag } from 'primevue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
-import Dialog from 'primevue/dialog';
 import { formatSlot, formatStudent } from '@/helpers/formatters.ts';
-import PersonSelector from '@/components/PersonSelector.vue';
+import InstanzForm from '@/Profundum/components/Forms/InstanzForm.vue';
 
 const props = defineProps({ profundumId: String });
 const toast = useToast();
-const confirm = useConfirmPopover();
+const { requireConfirm } = useConfirmPopover();
+const overlay = useOverlay();
 
 const apiInstanz = mande('/api/profundum/management/instanz');
 const apiSlots = mande('/api/profundum/management/slot');
@@ -17,17 +16,6 @@ const apiSlots = mande('/api/profundum/management/slot');
 const instanzen = ref([]);
 const slots = ref([]);
 const loading = ref(true);
-
-const newInstanz = ref({
-    profundumId: props.profundumId,
-    maxEinschreibungen: 15,
-    slots: [],
-    verantwortliche: [],
-    ort: '',
-});
-
-const dialogVisible = ref(null);
-const createDialogVisible = ref(false);
 
 async function load() {
     slots.value = (await apiSlots.get()).map((slot) => ({
@@ -40,34 +28,56 @@ async function load() {
     loading.value = false;
 }
 
-async function createInstanz() {
+async function createInstanz(data) {
     try {
-        const id = await apiInstanz.post(newInstanz.value);
+        await apiInstanz.post({ ...data, profundumId: props.profundumId });
         toast.add({ color: 'success', title: 'Instanz erstellt' });
-        newInstanz.value = {
-            profundumId: props.profundumId,
-            maxEinschreibungen: 15,
-            slots: [],
-            ort: '',
-        };
         await load();
     } catch (e) {
         toast.add({ color: 'error', title: 'Fehler', description: e.body });
-    } finally {
-        createDialogVisible.value = false;
     }
 }
 
-async function updateInstanz(inst) {
-    dialogVisible.value = true;
-    await apiInstanz.put(`/${inst.id}`, inst);
-    toast.add({ color: 'success', title: 'Gespeichert' });
-    await load();
+const createDialog = overlay.create(InstanzForm);
+
+async function openCreateDialog() {
+    const data = await createDialog.open({ slots: slots.value, variant: 'create' });
+    if (!data) return;
+    await createInstanz(data);
 }
 
-async function deleteInstanz(event, id) {
+async function updateInstanz(inst, data) {
+    try {
+        await apiInstanz.put(`/${inst.id}`, { ...inst, ...data });
+        toast.add({ color: 'success', title: 'Gespeichert' });
+        await load();
+    } catch (e) {
+        toast.add({
+            color: 'error',
+            title: 'Fehler',
+            description: e?.body ?? 'Konnte Angebot nicht speichern',
+        });
+    }
+}
+
+const editDialog = overlay.create(InstanzForm);
+
+async function openEditDialog(angebot) {
+    const data = await editDialog.open({
+        slots: slots.value,
+        variant: 'edit',
+        maxEinschreibungen: angebot.maxEinschreibungen,
+        slotIds: angebot.slots,
+        ort: angebot.ort,
+        verantwortlicheIds: angebot.verantwortlicheIds ?? [],
+    });
+    if (!data) return;
+    await updateInstanz(angebot, data);
+}
+
+async function deleteInstanz(id) {
     if (
-        !(await confirm.requireConfirm(
+        !(await requireConfirm(
             'Wollen Sie das Angebot wirklich löschen? Das Löschen von Angeboten mit Einschreibungen kann für Probleme bei der nächsten Einwahl sorgen.',
             'Angebot Löschen',
         ))
@@ -84,76 +94,21 @@ onMounted(load);
 <template>
     <div class="flex justify-between mt-8 items-baseline">
         <h2>Angebote</h2>
-        <Button icon="pi pi-plus" label="Neues Angebot" @click="createDialogVisible = true" />
+        <UButton icon="i-lucide-plus" label="Neues Angebot" @click="openCreateDialog" />
     </div>
-    <Dialog v-model:visible="createDialogVisible" header="Neues Angebot erstellen" modal>
-        <div class="flex gap-2 flex-col mt-2">
-            <FloatLabel variant="on">
-                <InputNumber
-                    v-model="newInstanz.maxEinschreibungen"
-                    placeholder="max. Schüler"
-                    class="multiselect-wrap"
-                    showButtons
-                    buttonLayout="horizontal"
-                    fluid
-                    id="newSpace"
-                >
-                    <template #incrementbuttonicon>
-                        <i class="pi pi-plus" />
-                    </template>
-                    <template #decrementbuttonicon>
-                        <i class="pi pi-minus" />
-                    </template>
-                </InputNumber>
-                <label for="newSpace">Plätze</label>
-            </FloatLabel>
-
-            <FloatLabel variant="on">
-                <MultiSelect
-                    id="newSlots"
-                    v-model="newInstanz.slots"
-                    :options="slots"
-                    optionLabel="label"
-                    optionValue="id"
-                    placeholder="Slots auswählen"
-                    display="chip"
-                    class="multiselect-wrap"
-                    fluid
-                />
-                <label for="newSlots">Slots</label>
-            </FloatLabel>
-
-            <FloatLabel variant="on">
-                <InputText id="newOrt" v-model="newInstanz.ort" maxlength="20" fluid />
-                <label for="newOrt">Ort</label>
-            </FloatLabel>
-
-            <PersonSelector
-                v-model="newInstanz.verantwortlicheIds"
-                multi
-                name="tutor"
-                class="multiselect-wrap"
-                fluid
-                id="newVerantwortliche"
-            >
-                <template #label>Verantwortliche</template>
-            </PersonSelector>
-
-            <Button label="Anlegen" icon="pi pi-plus" @click="createInstanz" fluid />
-        </div>
-    </Dialog>
 
     <div class="grid grid-cols-[auto_auto_auto_1fr_auto] gap-4 items-baseline mt-4 text-sm">
-        <template v-for="angebot in instanzen">
+        <template v-for="angebot in instanzen" :key="angebot.id">
             <span class="grid grid-cols-2 gap-1">
-                <Tag
-                    severity="secondary"
+                <UBadge
                     v-for="slotId in angebot.slots"
                     :key="slotId"
+                    color="neutral"
+                    variant="subtle"
                     class="text-sm px-1.5"
                 >
                     {{ slots.find((s) => s.id === slotId)?.label }}
-                </Tag>
+                </UBadge>
             </span>
             <span> {{ angebot.maxEinschreibungen }} Plätze </span>
             <span> Raum: {{ angebot.ort ? angebot.ort : '–' }} </span>
@@ -166,108 +121,40 @@ onMounted(load);
                 </template>
             </span>
             <span class="inline-flex gap-2 items-baseline">
-                <Button
-                    as="a"
-                    :href="`/api/profundum/management/instanz/${angebot.id}.pdf`"
-                    icon="pi pi-file-pdf"
-                    variant="text"
-                    size="small"
-                    download
-                    severity="info"
-                    v-tooltip.left="'PDF (experimentell)'"
-                    aria-label="PDF (experimentell)'"
-                />
-                <Button
-                    icon="pi pi-pencil"
-                    variant="text"
-                    size="small"
-                    severity="secondary"
-                    v-tooltip.left="'Angebot bearbeiten'"
-                    aria-label="Angebot bearbeiten"
-                    @click="dialogVisible = angebot.id"
-                />
-                <Button
-                    icon="pi pi-trash"
-                    variant="text"
-                    size="small"
-                    severity="danger"
-                    v-tooltip.left="'Angebot löschen'"
-                    aria-label="Angebot löschen"
-                    @click="deleteInstanz($event, angebot.id)"
-                />
-                <Dialog
-                    :visible="dialogVisible === angebot.id"
-                    header="Angebot bearbeiten"
-                    modal
-                >
-                    <div class="flex flex-col gap-2 mt-2">
-                        <FloatLabel variant="on">
-                            <InputText
-                                :id="`max-${angebot.id}`"
-                                type="number"
-                                v-model="angebot.maxEinschreibungen"
-                                placeholder="max. Schüler"
-                            />
-                            <label :id="`max-${angebot.id}`">Plätze</label>
-                        </FloatLabel>
-
-                        <FloatLabel variant="on">
-                            <MultiSelect
-                                :id="`slots-${angebot.id}`"
-                                v-model="angebot.slots"
-                                :options="slots"
-                                optionLabel="label"
-                                optionValue="id"
-                                filter
-                                placeholder="Slots auswählen"
-                                class="multiselect-wrap"
-                            />
-                            <label :id="`slots-${angebot.id}`">Slots</label>
-                        </FloatLabel>
-
-                        <FloatLabel variant="on">
-                            <InputText
-                                :id="`ort-${angebot.id}`"
-                                v-model="angebot.ort"
-                                maxlength="20"
-                                fluid
-                            />
-                            <label :for="`ort-${angebot.id}`">Ort</label>
-                        </FloatLabel>
-
-                        <PersonSelector
-                            v-model="angebot.verantwortlicheIds"
-                            multi
-                            name="tutor"
-                            class="multiselect-wrap"
-                            fluid
-                            :id="`verantwortliche-${angebot.id}`"
-                        >
-                            <template #label>Verantwortliche</template>
-                        </PersonSelector>
-
-                        <Button label="Speichern" @click="updateInstanz(angebot)" />
-                    </div>
-                </Dialog>
+                <UTooltip text="PDF (experimentell)">
+                    <UButton
+                        :href="`/api/profundum/management/instanz/${angebot.id}.pdf`"
+                        aria-label="PDF (experimentell)"
+                        color="info"
+                        download
+                        icon="i-lucide-file-text"
+                        size="sm"
+                        variant="ghost"
+                    />
+                </UTooltip>
+                <UTooltip text="Angebot bearbeiten">
+                    <UButton
+                        aria-label="Angebot bearbeiten"
+                        color="neutral"
+                        icon="i-lucide-pencil"
+                        size="sm"
+                        variant="ghost"
+                        @click="openEditDialog(angebot)"
+                    />
+                </UTooltip>
+                <UTooltip text="Angebot löschen">
+                    <UButton
+                        aria-label="Angebot löschen"
+                        color="error"
+                        icon="i-lucide-trash"
+                        size="sm"
+                        variant="ghost"
+                        @click="deleteInstanz(angebot.id)"
+                    />
+                </UTooltip>
             </span>
         </template>
     </div>
 </template>
-<style scoped>
-.multiselect-wrap :deep(.p-multiselect-label-container) {
-    height: auto;
-}
 
-.multiselect-wrap :deep(.p-multiselect-label) {
-    display: flex;
-    flex-wrap: wrap;
-    white-space: normal;
-    gap: 0.25rem;
-    padding-top: 0.25rem;
-    padding-bottom: 0.25rem;
-}
-
-.multiselect-wrap :deep(.p-multiselect-token) {
-    margin-bottom: 0.25rem;
-}
-</style>
+<style scoped></style>

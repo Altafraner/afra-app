@@ -50,7 +50,7 @@ const state = reactive<FormSchema>({ all: undefined, student: undefined });
                 @submit="submit"
             >
                 <UFormField class="w-full" label="Schüler:in" name="student" required>
-                    <PersonSelectorNuxt
+                    <PersonSelector
                         v-model="state.student"
                         :filter="(student: UserInfoMinimal) => student.rolle === 'Mittelstufe'"
                         class="w-full"

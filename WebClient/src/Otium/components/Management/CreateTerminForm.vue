@@ -243,7 +243,7 @@ watch(
                     name="hasOverwriteDescription"
                 />
                 <UFormField v-if="state.hasTutor" label="Betreuer:in" name="tutor">
-                    <PersonSelectorNuxt
+                    <PersonSelector
                         v-model="state.person"
                         class="w-full"
                         placeholder="Betreuer:in wählen"

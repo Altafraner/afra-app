@@ -1,21 +1,9 @@
 <script setup>
-import {
-    Button,
-    Checkbox,
-    Column,
-    DataTable,
-    InputText,
-    MultiSelect,
-    Popover,
-    Select,
-    Tag,
-} from 'primevue';
 import { mande } from 'mande';
-import { computed, nextTick, ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
 import UserPeek from '@/components/UserPeek.vue';
-import { FilterMatchMode, FilterService } from '@primevue/core/api';
-import { formatSlot } from '@/helpers/formatters.ts';
+import { formatSlot, formatStudent } from '@/helpers/formatters.ts';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
 
 const navItems = [
@@ -33,25 +21,6 @@ const navItems = [
     },
 ];
 
-const instanzenFilters = ref({
-    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-
-    'profundumInfo.bezeichnung': {
-        value: null,
-        matchMode: FilterMatchMode.CONTAINS,
-    },
-    slots: {
-        value: null,
-        matchMode: 'slotsAny',
-    },
-});
-
-FilterService.register('slotsAny', (rowSlots, selectedSlots) => {
-    if (!selectedSlots || selectedSlots.length === 0) return true;
-    if (!Array.isArray(rowSlots)) return false;
-    return selectedSlots.some((s) => rowSlots.includes(s));
-});
-
 const slots = ref([]);
 const enrollments = ref([]);
 const instanzen = ref([]);
@@ -60,12 +29,9 @@ const matchingRunning = ref(false);
 const toast = useToast();
 const confirm = useConfirmPopover();
 
-const selectedItem = ref();
-const warningsRef = ref();
-const wuenschePopoverRef = ref();
-
 async function getSlots() {
     slots.value = await mande('/api/profundum/management/slot').get();
+    visibleSlotIds.value = slots.value.map((s) => s.id);
 }
 
 async function getEnrollments() {
@@ -121,11 +87,10 @@ async function autoMatching() {
             title: 'Erfolg',
             description: r.result,
         });
-        console.log(r);
     } catch (e) {
         if (e?.response?.status === 429) {
             toast.add({
-                color: 'warn',
+                color: 'warning',
                 title: 'Matching läuft bereits',
                 description:
                     'Das Matching wird gerade von einer anderen Sitzung ausgeführt. Bitte warten.',
@@ -230,51 +195,15 @@ const wishForSelectedEnrollment = (row, slotId) => {
     return wishForOption(row, instanz);
 };
 
-const wishMovedForSelectedEnrollment = (row, slotId) => {
-    const enrollment = enrollmentForSlot(row, slotId);
-    if (!enrollment?.profundumInstanzId) return null;
-
-    const instanz = instanzen.value.find((i) => i.id === enrollment.profundumInstanzId);
-
-    if (!instanz) return null;
-
-    return wishMovedForOption(row, instanz);
-};
-
 getSlots();
 getEnrollments();
 getInstanzen();
 getProfunda();
 
+// Wishes are Profundum-scoped, not Instanz-scoped: any Instanz of the wished Profundum is a
+// direct match for the wish, there is no separate "moved to a different Instanz" case anymore.
 const wishForOption = (row, option) => {
-    return row.wuensche?.find((w) => w.id === option.id) ?? null;
-};
-
-const wishMovedForOption = (row, option) => {
-    if (!option?.profundumId) return null;
-
-    const matches =
-        row.wuensche
-            ?.map((w) => {
-                const wishedInstanz = instanzen.value.find((i) => i.id === w.id);
-                if (!wishedInstanz) return null;
-
-                const isSameProfundum = wishedInstanz.profundumId === option.profundumId;
-                const isDifferentInstanz = wishedInstanz.id !== option.id;
-
-                return isSameProfundum && isDifferentInstanz ? w : null;
-            })
-            .filter(Boolean) ?? [];
-
-    if (matches.length === 0) return null;
-
-    return matches.reduce((best, w) => (w.rang < best.rang ? w : best), matches[0]);
-};
-
-const wishInfoForSlot = (row, slotId) => {
-    const normal = wishForSelectedEnrollment(row, slotId);
-    const moved = wishMovedForSelectedEnrollment(row, slotId);
-    return { normal, moved };
+    return row.wuensche?.find((w) => w.id === option.profundumId) ?? null;
 };
 
 const sortedInstanzenForSlot = (slotId, row) => {
@@ -336,17 +265,57 @@ const slotLabel = (slotId) => {
     return s ? formatSlot(s) : 'Unbekannter Slot';
 };
 
-function showWarnings(evt, data) {
-    warningsRef.value.hide();
-    selectedItem.value = data;
-    nextTick(() => warningsRef.value.show(evt));
-}
+// A Partnerschaft is stored unordered (personA/personB) - resolve which side is "the other person"
+// relative to the row it's being shown for.
+const partnerFor = (row, partnerschaft) =>
+    partnerschaft.personA.id === row.person.id ? partnerschaft.personB : partnerschaft.personA;
 
-function showWishes(evt, data) {
-    wuenschePopoverRef.value.hide();
-    selectedItem.value = data;
-    nextTick(() => wuenschePopoverRef.value.show(evt));
-}
+// Which slot columns are currently shown in the enrollments table - lets admins collapse slots
+// they aren't working with right now so the (potentially very wide) table takes up less space.
+const visibleSlotIds = ref([]);
+const slotSelectItems = computed(() =>
+    slots.value.map((s) => ({ id: s.id, label: formatSlot(s) })),
+);
+const visibleSlots = computed(() =>
+    slots.value.filter((s) => visibleSlotIds.value.includes(s.id)),
+);
+
+const enrollmentColumns = computed(() => [
+    { id: 'person' },
+    ...visibleSlots.value.map((slot) => ({ id: slot.id, header: formatSlot(slot) })),
+]);
+
+// Instanzen table filtering - Nuxt UI's UTable has no built-in filter-row feature, so the filter
+// state and matching logic are hand-rolled here instead.
+const bezeichnungFilter = ref('');
+const slotsFilter = ref([]);
+
+const filteredInstanzen = computed(() =>
+    instanzen.value.filter((row) => {
+        const matchesBezeichnung =
+            !bezeichnungFilter.value ||
+            row.profundumInfo.bezeichnung
+                .toLowerCase()
+                .includes(bezeichnungFilter.value.toLowerCase());
+        const matchesSlots =
+            slotsFilter.value.length === 0 ||
+            slotsFilter.value.some((s) => row.slots?.includes(s));
+        return matchesBezeichnung && matchesSlots;
+    }),
+);
+
+const instanzenColumns = [
+    { id: 'bezeichnung', header: 'Bezeichnung' },
+    { id: 'pdf', header: 'pdf' },
+    { id: 'slots', header: 'Slots' },
+    { id: 'warnung', header: 'Überbelegung' },
+    { id: 'numEinschreibungen', accessorKey: 'numEinschreibungen', header: 'Einschreibungen' },
+    {
+        id: 'maxEinschreibungen',
+        accessorKey: 'maxEinschreibungen',
+        header: 'MaxEinschreibungen',
+    },
+];
 </script>
 <template>
     <nav-breadcrumb :items="navItems" />
@@ -354,7 +323,7 @@ function showWishes(evt, data) {
 
     <span class="flex flex-col gap-6">
         <span class="flex gap-1">
-            <Button :disabled="matchingRunning" class="match-btn" @click="autoMatching">
+            <UButton :disabled="matchingRunning" class="match-btn" @click="autoMatching">
                 <span class="match-btn__bg" :style="{ width: fillPct + '%' }" />
                 <span class="match-btn__content">
                     <span>
@@ -368,320 +337,280 @@ function showWishes(evt, data) {
                         < {{ remaining }}s</span
                     >
                 </span>
-            </Button>
+            </UButton>
 
-            <Button label="Matching finalisieren" severity="warn" @click="finalize" />
+            <UButton label="Matching finalisieren" color="warning" @click="finalize" />
 
-            <Button
-                as="a"
+            <UButton
                 :href="`/api/profundum/management/matching.csv`"
-                icon="pi pi-table"
+                icon="i-lucide-table"
                 download
                 label="CSV-Export"
             />
         </span>
-        <DataTable
-            :value="enrollments"
+
+        <USelect
+            v-model="visibleSlotIds"
+            :items="slotSelectItems"
+            label-key="label"
             value-key="id"
-            size="small"
-            class="datatable-compact"
-            scrollable
+            multiple
+            class="w-80"
+            placeholder="Slots anzeigen…"
+        />
+
+        <UTable
+            :data="enrollments"
+            :columns="enrollmentColumns"
+            size="sm"
             :loading="matchingRunning"
+            :ui="{ root: 'overflow-x-auto' }"
         >
-            <Column frozen class="z-0 border-r">
-                <template #header>
-                    <span class="inline-flex justify-between w-full font-semibold">
-                        <span>Person</span>
-                        <span>Aktion</span>
-                    </span>
-                </template>
-                <template #body="{ data, index }">
-                    <span class="grid grid-cols-[16em_1fr_1fr_1fr] gap-1">
-                        <UserPeek :person="data.person" class="w-full" showGroup />
-                        <Button
-                            v-if="data.wuensche.length !== 0"
-                            icon="pi pi-crown"
-                            severity="info"
-                            text
-                            size="small"
-                            @click="showWishes($event, data)"
-                        />
-                        <span v-else></span>
-                        <Button
-                            v-if="data.warnings.length !== 0"
-                            icon="pi pi-exclamation-triangle"
-                            severity="warn"
-                            text
-                            size="small"
-                            @click="showWarnings($event, data)"
-                        />
-                        <span v-else></span>
-                        <Button
-                            v-if="!isEditing(data)"
-                            icon="pi pi-pencil"
-                            text
-                            size="small"
-                            @click="startEdit(data)"
-                        />
-                        <Button
-                            v-else
-                            icon="pi pi-check"
-                            severity="success"
-                            text
-                            size="small"
-                            @click="
-                                async () => {
-                                    if (await updateEnrollment(data)) {
-                                        stopEdit();
-                                    }
-                                }
-                            "
-                        />
-                    </span>
-                </template>
-            </Column>
+            <template #person-header>
+                <span class="inline-flex justify-between w-full font-semibold">
+                    <span>Person</span>
+                    <span>Aktion</span>
+                </span>
+            </template>
+            <template #person-cell="{ row }">
+                <span
+                    class="grid grid-cols-[16em_1fr_1fr_1fr_1fr] gap-1 sticky left-0 bg-default"
+                >
+                    <UserPeek :person="row.original.person" class="w-full" showGroup />
 
-            <Column v-for="slot of slots" :key="slot.id" :header="formatSlot(slot)">
-                <template #body="{ data }">
-                    <span class="flex gap-1 items-center">
-                        <template v-if="isEditing(data)">
-                            <Checkbox
-                                binary
-                                v-model="enrollmentForSlot(data, slot.id).isFixed"
-                            />
-
-                            <Select
-                                showClear
-                                filter
-                                class="w-60 select-compact"
-                                :options="sortedInstanzenForSlot(slot.id, data)"
-                                option-label="profundumInfo.bezeichnung"
-                                option-value="id"
-                                v-model="enrollmentForSlot(data, slot.id).profundumInstanzId"
-                                :disabled="!enrollmentForSlot(data, slot.id).isFixed"
+                    <UPopover v-if="row.original.wuensche.length !== 0">
+                        <UButton icon="i-lucide-crown" color="info" variant="ghost" size="sm" />
+                        <template #content>
+                            <div
+                                v-for="[slotId, wishes] of wuenscheBySlot(row.original)"
+                                :key="slotId"
+                                class="mb-2 p-3"
                             >
-                                <template #option="slotProps">
-                                    <span class="option-row gap-2">
-                                        <span v-if="wishForOption(data, slotProps.option)">
-                                            ★ {{ wishForOption(data, slotProps.option).rang }}
-                                        </span>
-
-                                        <span>{{
-                                            slotProps.option.profundumInfo.bezeichnung
-                                        }}</span>
-
-                                        <span
-                                            >({{
-                                                instanzen
-                                                    .map((i) => {
-                                                        return {
-                                                            id: i.id,
-                                                            value: `${i.numEinschreibungen} / ${i.maxEinschreibungen}`,
-                                                        };
-                                                    })
-                                                    .find((i) => i.id === slotProps.option.id)
-                                                    ?.value
-                                            }})</span
-                                        >
-                                    </span>
-                                </template>
-                            </Select>
+                                <b class="block mb-1">{{ slotLabel(slotId) }}</b>
+                                <ul class="ml-3">
+                                    <li v-for="w in wishes" :key="`${slotId}-${w.id}`">
+                                        {{ w.rang }}.
+                                        {{
+                                            profunda.find((p) => p.id === w.id)?.bezeichnung ??
+                                            '—'
+                                        }}
+                                    </li>
+                                </ul>
+                            </div>
                         </template>
-                        <template v-else>
-                            <span class="readonly-value w-60 flex items-center gap-2">
-                                <span
-                                    v-if="wishInfoForSlot(data, slot.id).normal"
-                                    class="wish-indicator text-green-500"
-                                >
-                                    <i class="pi pi-crown" />
-                                    {{ wishInfoForSlot(data, slot.id).normal.rang }}
-                                </span>
+                    </UPopover>
+                    <span v-else></span>
 
-                                <span
-                                    v-else-if="wishInfoForSlot(data, slot.id).moved"
-                                    class="wish-indicator text-yellow-500"
-                                >
-                                    <i class="pi pi-arrow-right-arrow-left" />
-                                    {{ wishInfoForSlot(data, slot.id).moved.rang }}
-                                </span>
+                    <UTooltip
+                        v-if="(row.original.partnerschaften?.length ?? 0) !== 0"
+                        text="Partnerschaft(en)"
+                    >
+                        <UPopover>
+                            <UButton
+                                icon="i-lucide-users"
+                                color="primary"
+                                variant="ghost"
+                                size="sm"
+                            />
+                            <template #content>
+                                <ul class="list-disc pl-4 p-3">
+                                    <li v-for="p in row.original.partnerschaften" :key="p.id">
+                                        {{ p.bezeichnung }}: mit
+                                        {{ formatStudent(partnerFor(row.original, p)) }}
+                                    </li>
+                                </ul>
+                            </template>
+                        </UPopover>
+                    </UTooltip>
+                    <span v-else></span>
 
-                                <template v-if="enrollmentForSlot(data, slot.id)?.isFixed">
-                                    <div class="text-orange-600 flex gap-1 items-center">
-                                        <i class="pi pi-lock" />
-                                        <b>
-                                            {{
-                                                instanzen.find(
-                                                    (i) =>
-                                                        i.id ===
-                                                        enrollmentForSlot(data, slot.id)
-                                                            ?.profundumInstanzId,
-                                                )?.profundumInfo.bezeichnung ?? '—'
-                                            }}
-                                        </b>
-                                    </div>
-                                </template>
-
-                                <template v-else>
-                                    {{
-                                        instanzen.find(
-                                            (i) =>
-                                                i.id ===
-                                                enrollmentForSlot(data, slot.id)
-                                                    ?.profundumInstanzId,
-                                        )?.profundumInfo.bezeichnung ?? '—'
-                                    }}
-                                </template>
-                            </span>
+                    <UPopover v-if="row.original.warnings.length !== 0">
+                        <UButton
+                            icon="i-lucide-triangle-alert"
+                            color="warning"
+                            variant="ghost"
+                            size="sm"
+                        />
+                        <template #content>
+                            <ul class="list-disc pl-4 p-3">
+                                <li v-for="w in row.original.warnings" :key="w">
+                                    {{ w.text }}
+                                </li>
+                            </ul>
                         </template>
-                    </span>
-                </template>
-            </Column>
-        </DataTable>
+                    </UPopover>
+                    <span v-else></span>
 
-        <Popover ref="wuenschePopoverRef" dismissable showCloseIcon style="min-width: 15rem">
-            <div
-                v-if="selectedItem"
-                v-for="[slotId, wishes] of wuenscheBySlot(selectedItem)"
-                :key="slotId"
-                class="mb-2"
+                    <UButton
+                        v-if="!isEditing(row.original)"
+                        icon="i-lucide-pencil"
+                        color="neutral"
+                        variant="ghost"
+                        size="sm"
+                        @click="startEdit(row.original)"
+                    />
+                    <UButton
+                        v-else
+                        icon="i-lucide-check"
+                        color="success"
+                        variant="ghost"
+                        size="sm"
+                        @click="
+                            async () => {
+                                if (await updateEnrollment(row.original)) {
+                                    stopEdit();
+                                }
+                            }
+                        "
+                    />
+                </span>
+            </template>
+
+            <template
+                v-for="slot in visibleSlots"
+                :key="slot.id"
+                #[`${slot.id}-cell`]="{ row }"
             >
-                <b class="block mb-1">{{ slotLabel(slotId) }}</b>
+                <span class="flex gap-1 items-center">
+                    <template v-if="isEditing(row.original)">
+                        <USwitch v-model="enrollmentForSlot(row.original, slot.id).isFixed" />
 
-                <ul class="ml-3">
-                    <li v-for="w in wishes" :key="`${slotId}-${w.id}`">
-                        {{ w.rang }}.
-                        {{
-                            instanzen.find((p) => p.id == w.id)?.profundumInfo.bezeichnung ??
-                            '—'
-                        }}
-                    </li>
-                </ul>
-            </div>
-        </Popover>
-        <Popover ref="warningsRef" dismissable showCloseIcon style="min-width: 15rem">
-            <ul class="list-disc pl-4" v-if="selectedItem">
-                <li v-for="w in selectedItem.warnings" :key="w">
-                    {{ w.text }}
-                </li>
-            </ul>
-        </Popover>
-
-        <DataTable
-            :value="instanzen"
-            v-model:filters="instanzenFilters"
-            filterDisplay="row"
-            :globalFilterFields="[
-                'profundumInfo.bezeichnung',
-                'numEinschreibungen',
-                'maxEinschreibungen',
-            ]"
-        >
-            <Column field="profundumInfo.bezeichnung" header="Bezeichnung" filter>
-                <template #filter="{ filterModel, filterCallback }">
-                    <InputText
-                        v-model="filterModel.value"
-                        placeholder="Suchen…"
-                        class="p-column-filter w-full"
-                        @input="filterCallback()"
-                    />
-                </template>
-
-                <template #body="{ data }">
-                    <Button
-                        as="RouterLink"
-                        :to="{
-                            name: 'Profundum-Edit',
-                            params: { profundumId: data.profundumId },
-                        }"
-                        text
-                    >
-                        {{ data.profundumInfo.bezeichnung }}
-                    </Button>
-                </template>
-            </Column>
-            <Column header="pdf">
-                <template #body="{ data }">
-                    <Button
-                        as="a"
-                        :href="`/api/profundum/management/instanz/${data.id}.pdf`"
-                        icon="pi pi-file-pdf"
-                        variant="text"
-                        size="small"
-                        download
-                        severity="info"
-                        v-tooltip.left="'PDF (experimentell)'"
-                        aria-label="PDF (experimentell)'"
-                    />
-                </template>
-            </Column>
-            <Column header="slots" field="slots" filter>
-                <template #filter="{ filterModel, filterCallback }">
-                    <MultiSelect
-                        v-model="filterModel.value"
-                        :options="slots"
-                        optionLabel="jahr"
-                        optionValue="id"
-                        placeholder="Slots wählen…"
-                        display="chip"
-                        class="p-column-filter w-full"
-                        @change="filterCallback()"
-                    >
-                        <template #option="{ option }">
-                            {{ formatSlot(option) }}
-                        </template>
-
-                        <template #chip="{ value }">
-                            {{ slotLabel(value) }}
-                        </template>
-                    </MultiSelect>
-                </template>
-
-                <template #body="{ data }">
-                    <span class="flex flex-wrap gap-1">
-                        <Tag
-                            v-for="slotId in data.slots"
-                            :key="slotId"
-                            class="text-sm px-1.5"
-                            severity="secondary"
+                        <USelectMenu
+                            v-model="
+                                enrollmentForSlot(row.original, slot.id).profundumInstanzId
+                            "
+                            :items="sortedInstanzenForSlot(slot.id, row.original)"
+                            label-key="profundumInfo.bezeichnung"
+                            value-key="id"
+                            clear
+                            class="w-60"
+                            :disabled="!enrollmentForSlot(row.original, slot.id).isFixed"
                         >
-                            {{ slotLabel(slotId) }}
-                        </Tag>
-                    </span>
-                </template>
-            </Column>
-            <Column header="Warnung">
-                <template #body="{ data }">
-                    <i
-                        v-if="data.maxEinschreibungen < data.numEinschreibungen"
-                        class="pi pi-exclamation-triangle text-xl p-2 inline-block bg-yellow-200 text-yellow-800 dark:text-yellow-400 dark:bg-yellow-950 rounded-lg"
+                            <template #item="{ item }">
+                                <span class="option-row gap-2">
+                                    <span v-if="wishForOption(row.original, item)">
+                                        ★ {{ wishForOption(row.original, item).rang }}
+                                    </span>
+                                    <span>{{ item.profundumInfo.bezeichnung }}</span>
+                                    <span
+                                        >({{ item.numEinschreibungen }} /
+                                        {{ item.maxEinschreibungen }})</span
+                                    >
+                                </span>
+                            </template>
+                        </USelectMenu>
+                    </template>
+                    <template v-else>
+                        <span class="readonly-value w-60 flex items-center gap-2">
+                            <span
+                                v-if="wishForSelectedEnrollment(row.original, slot.id)"
+                                class="wish-indicator text-green-500"
+                            >
+                                <UIcon name="i-lucide-crown" />
+                                {{ wishForSelectedEnrollment(row.original, slot.id).rang }}
+                            </span>
+
+                            <template v-if="enrollmentForSlot(row.original, slot.id)?.isFixed">
+                                <div class="text-orange-600 flex gap-1 items-center">
+                                    <UIcon name="i-lucide-lock" />
+                                    <b>
+                                        {{
+                                            instanzen.find(
+                                                (i) =>
+                                                    i.id ===
+                                                    enrollmentForSlot(row.original, slot.id)
+                                                        ?.profundumInstanzId,
+                                            )?.profundumInfo.bezeichnung ?? '—'
+                                        }}
+                                    </b>
+                                </div>
+                            </template>
+
+                            <template v-else>
+                                {{
+                                    instanzen.find(
+                                        (i) =>
+                                            i.id ===
+                                            enrollmentForSlot(row.original, slot.id)
+                                                ?.profundumInstanzId,
+                                    )?.profundumInfo.bezeichnung ?? '—'
+                                }}
+                            </template>
+                        </span>
+                    </template>
+                </span>
+            </template>
+        </UTable>
+
+        <div class="flex flex-wrap gap-3 items-center">
+            <UInput
+                v-model="bezeichnungFilter"
+                placeholder="Bezeichnung suchen…"
+                class="w-64"
+            />
+            <USelect
+                v-model="slotsFilter"
+                :items="slotSelectItems"
+                label-key="label"
+                value-key="id"
+                multiple
+                placeholder="Slots filtern…"
+                class="w-80"
+            />
+        </div>
+
+        <UTable :data="filteredInstanzen" :columns="instanzenColumns">
+            <template #bezeichnung-cell="{ row }">
+                <UButton
+                    :to="{
+                        name: 'Profundum-Edit',
+                        params: { profundumId: row.original.profundumId },
+                    }"
+                    variant="ghost"
+                    :label="row.original.profundumInfo.bezeichnung"
+                />
+            </template>
+            <template #pdf-cell="{ row }">
+                <UTooltip text="PDF (experimentell)">
+                    <UButton
+                        :href="`/api/profundum/management/instanz/${row.original.id}.pdf`"
+                        icon="i-lucide-file-text"
+                        variant="ghost"
+                        size="sm"
+                        download
+                        color="info"
+                        aria-label="PDF (experimentell)"
                     />
-                </template>
-            </Column>
-            <Column field="numEinschreibungen" header="Einschreibungen"></Column>
-            <Column field="maxEinschreibungen" header="MaxEinschreibungen"></Column>
-        </DataTable>
+                </UTooltip>
+            </template>
+            <template #slots-cell="{ row }">
+                <span class="flex flex-wrap gap-1">
+                    <UBadge
+                        v-for="slotId in row.original.slots"
+                        :key="slotId"
+                        class="text-sm px-1.5"
+                        color="neutral"
+                        variant="subtle"
+                    >
+                        {{ slotLabel(slotId) }}
+                    </UBadge>
+                </span>
+            </template>
+            <template #warnung-cell="{ row }">
+                <UIcon
+                    v-if="
+                        row.original.maxEinschreibungen &&
+                        row.original.maxEinschreibungen < row.original.numEinschreibungen
+                    "
+                    name="i-lucide-triangle-alert"
+                    class="text-xl p-2 inline-block bg-yellow-200 text-yellow-800 dark:text-yellow-400 dark:bg-yellow-950 rounded-lg"
+                />
+            </template>
+        </UTable>
     </span>
 </template>
 
 <style scoped>
-.datatable-compact :deep(.p-datatable-thead > tr > th),
-.datatable-compact :deep(.p-datatable-tbody > tr > td) {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.75rem;
-}
-
-.datatable-compact :deep(.p-select) {
-    font-size: 0.7rem;
-}
-
-:deep(.select-compact .p-select-label) {
-    font-size: 0.8rem;
-}
-
-:deep(.select-compact .p-select-trigger) {
-    width: 1.75rem;
-}
-
 .option-row {
     display: flex;
     justify-content: space-between;
@@ -710,7 +639,7 @@ function showWishes(evt, data) {
     position: absolute;
     inset: 0;
     width: 0;
-    background: color-mix(in srgb, var(--primary-color) 22%, transparent);
+    background: color-mix(in srgb, var(--ui-primary) 22%, transparent);
     transition: width 1s linear;
     pointer-events: none;
 }
@@ -726,7 +655,7 @@ function showWishes(evt, data) {
     font-weight: 700;
     font-size: 0.85rem;
     padding-left: 0.75rem;
-    border-left: 1px solid color-mix(in srgb, var(--primary-color) 35%, var(--surface-border));
+    border-left: 1px solid color-mix(in srgb, var(--ui-primary) 35%, var(--ui-border));
     min-width: 3.2rem;
     text-align: right;
 }

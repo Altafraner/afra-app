@@ -13,7 +13,10 @@ import { isDark } from '@/helpers/isdark';
 import ReloadPrompt from '@/components/ReloadPrompt.vue';
 import type { ToasterProps } from '@nuxt/ui/components/Toaster.d.vue.ts';
 import { de } from '@nuxt/ui/locale';
+import { useRoute } from 'vue-router';
+import UContainer from '@nuxt/ui/components/Container.vue';
 
+const route = useRoute();
 const user = useUser();
 const toast = useToast();
 user.update().catch(() => {
@@ -41,7 +44,11 @@ const toastProps: ToasterProps = {
         <template v-if="!user.loading">
             <afra-nav v-if="user.loggedIn" />
             <main class="flex justify-center min-h-[90vh] mt-4">
-                <UContainer v-if="user.loggedIn">
+                <component
+                    :is="route.meta.fullWidth ? 'div' : UContainer"
+                    v-if="user.loggedIn"
+                    :class="route.meta.fullWidth ? 'w-19/20' : undefined"
+                >
                     <RouterView v-slot="{ Component }">
                         <template v-if="Component">
                             <Suspense>
@@ -66,7 +73,7 @@ const toastProps: ToasterProps = {
                             </Suspense>
                         </template>
                     </RouterView>
-                </UContainer>
+                </component>
                 <div v-else class="min-container">
                     <div class="flex justify-center">
                         <img :src="logo" alt="Logo des Verein der Altafraner" height="200" />

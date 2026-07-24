@@ -286,7 +286,7 @@ const wochentagOptions = [
                 <USwitch v-model="state.hasTutor" label="Betreuer:in zuweisen" />
                 <USwitch v-model="state.hasMaxTn" label="Teilnehmer:innen begrenzen" />
                 <UFormField v-if="state.hasTutor" label="Betreuer:in" name="tutor" required>
-                    <PersonSelectorNuxt
+                    <PersonSelector
                         v-model="state.tutor"
                         class="w-full"
                         placeholder="Betreuer:in auswählen"
