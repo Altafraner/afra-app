@@ -32,4 +32,3 @@ export function isNowInDateTimeInterval(interval) {
     const now = new Date();
     return now >= start && now < end;
 }
-

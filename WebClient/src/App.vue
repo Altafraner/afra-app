@@ -69,11 +69,7 @@ const toastProps: ToasterProps = {
                 </UContainer>
                 <div v-else class="min-container">
                     <div class="flex justify-center">
-                        <img
-                            :src="logo"
-                            alt="Logo des Verein der Altafraner"
-                            height="200"
-                        ></img>
+                        <img :src="logo" alt="Logo des Verein der Altafraner" height="200" />
                     </div>
                     <h1>Willkommen bei der Afra-App</h1>
                     <p>Bitte logge dich ein, um die Afra-App zu nutzen.</p>

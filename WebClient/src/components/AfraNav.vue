@@ -241,10 +241,7 @@ function evaluateItems(items: MenuItemWithCondition[]): NavigationMenuItem[] {
             const children = evaluateItems(item.children);
             workingCopy = Object.assign({}, workingCopy, { children: children });
         }
-        if (
-            workingCopy.to ||
-            (workingCopy.children && workingCopy.children.length > 0)
-        )
+        if (workingCopy.to || (workingCopy.children && workingCopy.children.length > 0))
             selectedItems.push(workingCopy);
     }
     return selectedItems;
@@ -257,12 +254,21 @@ const logo = computed(() => (isDark().value ? wappenDark : wappenLight));
 <template>
     <UHeader>
         <template #title>
-            <img :src="logo" alt="Verein der Altafraner" class="h-10 w-auto inline-block"></img>
+            <img :src="logo" alt="Verein der Altafraner" class="h-10 w-auto inline-block" />
         </template>
         <UNavigationMenu :items="items" color="neutral" />
-        <template #right><UButton class="text-muted hover:text-highlighted" color="neutral" icon="i-lucide-power" variant="ghost" @click="logout">Logout</UButton></template>
+        <template #right
+            ><UButton
+                class="text-muted hover:text-highlighted"
+                color="neutral"
+                icon="i-lucide-power"
+                variant="ghost"
+                @click="logout"
+                >Logout</UButton
+            ></template
+        >
         <template #body>
-                <UNavigationMenu :items="items" color="neutral" orientation="vertical" />
+            <UNavigationMenu :items="items" color="neutral" orientation="vertical" />
         </template>
     </UHeader>
 </template>

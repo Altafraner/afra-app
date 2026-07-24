@@ -1,8 +1,8 @@
 @import 'tailwindcss';
 @import 'tailwindcss-primeui';
-@import "@nuxt/ui";
+@import '@nuxt/ui';
 
-@theme{
+@theme {
     --font-sans: 'Inter', 'Noto Sans', 'Lato', 'Segoe UI', 'Helvetica', 'Arial', sans-serif;
     --font-serif: 'Noto Serif', serif;
 
@@ -22,7 +22,6 @@
 :root {
     --ui-container: 60rem;
 }
-
 
 @layer base {
     h1 {
@@ -61,7 +60,7 @@
         @apply m-[1rem];
 
         &::after {
-            content: "";
+            content: '';
             position: fixed;
             top: 0;
             left: 0;
@@ -87,4 +86,3 @@
         color: var(--p-button-text-danger-color);
     }
 }
-
