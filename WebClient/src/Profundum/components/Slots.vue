@@ -1,12 +1,16 @@
 <script setup>
 import { onMounted, ref } from 'vue';
 import { mande } from 'mande';
-import { Button, Dialog, Dropdown, InputNumber } from 'primevue';
 
 import Grid from '@/components/Form/Grid.vue';
 import GridEditRow from '@/components/Form/GridEditRow.vue';
+import CreateSlotForm from '@/Profundum/components/Forms/CreateSlotForm.vue';
+import TermineDialog from '@/Profundum/components/Forms/TermineDialog.vue';
+import { useConfirmPopover } from '@/composables/confirmPopover';
 
 const toast = useToast();
+const { requireConfirm } = useConfirmPopover();
+const overlay = useOverlay();
 
 const apiSlots = mande('/api/profundum/management/slot');
 const apiZeitraeume = mande('/api/profundum/management/einwahlzeitraum');
@@ -14,14 +18,6 @@ const apiZeitraeume = mande('/api/profundum/management/einwahlzeitraum');
 const slots = ref([]);
 const zeitraeume = ref([]);
 const loading = ref(true);
-
-const dialogOpen = ref(false);
-const createModel = ref({
-    jahr: new Date().getFullYear(),
-    quartal: 1,
-    wochentag: 1,
-    einwahlZeitraumId: null,
-});
 
 const weekdayOptions = [
     { label: 'Montag', value: 'Monday' },
@@ -40,25 +36,10 @@ async function load() {
     loading.value = false;
 }
 
-async function createSlot() {
+async function createSlot(data) {
     try {
-        await apiSlots.post({
-            jahr: createModel.value.jahr,
-            quartal: createModel.value.quartal,
-            wochentag: createModel.value.wochentag,
-            einwahlZeitraumId: createModel.value.einwahlZeitraumId,
-        });
-
+        await apiSlots.post(data);
         toast.add({ color: 'success', title: 'Slot angelegt' });
-        dialogOpen.value = false;
-
-        createModel.value = {
-            jahr: new Date().getFullYear(),
-            quartal: 1,
-            wochentag: 1,
-            einwahlZeitraumId: null,
-        };
-
         await load();
     } catch (e) {
         toast.add({
@@ -67,6 +48,23 @@ async function createSlot() {
             description: e?.body ?? 'Konnte Slot nicht speichern',
         });
     }
+}
+
+const createDialog = overlay.create(CreateSlotForm);
+
+async function openCreateDialog() {
+    const data = await createDialog.open({ zeitraeume: zeitraeume.value });
+    if (!data) return;
+    await createSlot(data);
+}
+
+const termineDialog = overlay.create(TermineDialog);
+
+function openTermineDialog(slot) {
+    const label = `${slot.jahr} ${slot.quartal} ${
+        weekdayOptions.find((d) => d.value === slot.wochentag)?.label ?? slot.wochentag
+    }`;
+    termineDialog.open({ slotId: slot.id, slotLabel: label });
 }
 
 async function updateSlot(slot) {
@@ -91,7 +89,8 @@ async function updateSlot(slot) {
 }
 
 async function deleteSlot(slot) {
-    if (!confirm('Möchten Sie diesen Slot wirklich löschen?')) return;
+    if (!(await requireConfirm('Möchten Sie diesen Slot wirklich löschen?', 'Slot löschen')))
+        return;
 
     try {
         await apiSlots.delete(`/${slot.id}`);
@@ -126,17 +125,27 @@ onMounted(load);
                 @delete="deleteSlot(s)"
             >
                 <template #body>
-                    <Button
-                        as="a"
-                        :href="`/api/profundum/management/instanz/${s.id}.zip`"
-                        icon="pi pi-file-pdf"
-                        variant="text"
-                        size="small"
-                        download
-                        severity="info"
-                        v-tooltip.left="'PDFs aller Profunda (experimentell)'"
-                        aria-label="PDFs aller Profunda (experimentell)'"
-                    />
+                    <UTooltip text="PDFs aller Profunda (experimentell)">
+                        <UButton
+                            :href="`/api/profundum/management/instanz/${s.id}.zip`"
+                            aria-label="PDFs aller Profunda (experimentell)"
+                            color="info"
+                            download
+                            icon="i-lucide-file-text"
+                            size="sm"
+                            variant="ghost"
+                        />
+                    </UTooltip>
+                    <UTooltip text="Termine verwalten">
+                        <UButton
+                            aria-label="Termine verwalten"
+                            color="neutral"
+                            icon="i-lucide-calendar-days"
+                            size="sm"
+                            variant="ghost"
+                            @click="openTermineDialog(s)"
+                        />
+                    </UTooltip>
                     Jahr: {{ s.jahr }}, Quartal: {{ s.quartal }}, Wochentag:
                     {{
                         weekdayOptions.find((d) => d.value === s.wochentag)?.label ??
@@ -152,42 +161,36 @@ onMounted(load);
                     <div class="flex flex-col gap-2 w-full">
                         <div>
                             <label class="block mb-1">Jahr</label>
-                            <InputNumber
-                                v-model.number="s.jahr"
-                                :min="2020"
-                                class="w-full"
-                                :useGrouping="false"
-                            />
+                            <UInputNumber v-model="s.jahr" :min="2020" class="w-full" />
                         </div>
 
                         <div>
                             <label class="block mb-1">Quartal</label>
-                            <Dropdown
+                            <USelect
                                 v-model="s.quartal"
-                                :options="['Q1', 'Q2', 'Q3', 'Q4']"
-                                placeholder="Quartal"
+                                :items="['Q1', 'Q2', 'Q3', 'Q4']"
                                 class="w-full"
                             />
                         </div>
 
                         <div>
                             <label class="block mb-1">Wochentag</label>
-                            <Dropdown
+                            <USelect
                                 v-model="s.wochentag"
-                                :options="weekdayOptions"
-                                optionLabel="label"
-                                optionValue="value"
+                                :items="weekdayOptions"
+                                label-key="label"
+                                value-key="value"
                                 class="w-full"
                             />
                         </div>
 
                         <div>
                             <label class="block mb-1">Einwahlzeitraum</label>
-                            <Dropdown
+                            <USelect
                                 v-model="s.einwahlZeitraumId"
-                                :options="zeitraeume"
-                                optionLabel="einwahlStart"
-                                optionValue="id"
+                                :items="zeitraeume"
+                                label-key="einwahlStart"
+                                value-key="id"
                                 placeholder="Zeitraum auswählen"
                                 class="w-full"
                             />
@@ -199,58 +202,13 @@ onMounted(load);
 
         <div v-else>Keine Slots vorhanden.</div>
 
-        <Button icon="pi pi-plus" label="Neuer Slot" class="mt-4" @click="dialogOpen = true" />
+        <UButton
+            icon="i-lucide-plus"
+            label="Neuer Slot"
+            class="mt-4"
+            @click="openCreateDialog"
+        />
     </template>
-
-    <Dialog v-model:visible="dialogOpen" header="Neuer Slot" modal>
-        <div class="flex flex-col gap-3 w-full">
-            <div>
-                <label class="block mb-1">Jahr</label>
-                <InputNumber v-model.number="createModel.jahr" class="w-full" />
-            </div>
-
-            <div>
-                <label class="block mb-1">Quartal</label>
-                <Dropdown
-                    v-model="createModel.quartal"
-                    :options="['Q1', 'Q2', 'Q3', 'Q4']"
-                    class="w-full"
-                />
-            </div>
-
-            <div>
-                <label class="block mb-1">Wochentag</label>
-                <Dropdown
-                    v-model="createModel.wochentag"
-                    :options="weekdayOptions"
-                    optionLabel="label"
-                    optionValue="value"
-                    class="w-full"
-                />
-            </div>
-
-            <div>
-                <label class="block mb-1">Einwahlzeitraum</label>
-                <Dropdown
-                    v-model="createModel.einwahlZeitraumId"
-                    :options="zeitraeume"
-                    optionLabel="einwahlStart"
-                    optionValue="id"
-                    placeholder="Zeitraum auswählen"
-                    class="w-full"
-                />
-            </div>
-        </div>
-
-        <template #footer>
-            <Button label="Abbrechen" @click="dialogOpen = false" />
-            <Button label="Speichern" icon="pi pi-check" @click="createSlot" />
-        </template>
-    </Dialog>
 </template>
 
-<style scoped>
-:deep(.p-inputtext) {
-    width: 100%;
-}
-</style>
+<style scoped></style>

@@ -9,6 +9,7 @@ import { watch } from 'vue';
 import ReloadPrompt from '@/components/ReloadPrompt.vue';
 import type { ToasterProps } from '@nuxt/ui/components/Toaster.d.vue.ts';
 import { de } from '@nuxt/ui/locale';
+import UContainer from '@nuxt/ui/components/Container.vue';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 
@@ -65,8 +66,10 @@ const toastProps: ToasterProps = {
         <template v-if="!user.loading">
             <afra-nav v-if="user.loggedIn" />
             <main class="flex justify-center min-h-[90vh] mt-4">
-                <UContainer>
-                    <!-- v-if="user.loggedIn" -->
+                <component
+                    :is="router.currentRoute.value.meta.fullWidth ? 'div' : UContainer"
+                    :class="router.currentRoute.value.meta.fullWidth ? 'w-19/20' : undefined"
+                >
                     <RouterView v-slot="{ Component }">
                         <template v-if="Component">
                             <Suspense>
@@ -91,15 +94,7 @@ const toastProps: ToasterProps = {
                             </Suspense>
                         </template>
                     </RouterView>
-                </UContainer>
-                <!--div v-else class="min-container">
-                    <div class="flex justify-center">
-                        <img :src="logo" alt="Logo des Verein der Altafraner" height="200" />
-                    </div>
-                    <h1>Willkommen bei der Afra-App</h1>
-                    <p>Bitte logge dich ein, um die Afra-App zu nutzen.</p>
-                    <Login></Login>
-                </div-->
+                </component>
             </main>
         </template>
         <template v-else>
