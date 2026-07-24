@@ -107,7 +107,7 @@ watch(filteredAttendance, (newAttendance) => {
         }}
     </div>
     <UFieldGroup class="mb-6 w-full" size="lg">
-        <PersonSelectorNuxt
+        <PersonSelector
             class="w-full"
             v-model="filterPerson"
             :filter="(s: UserInfoMinimal) => s.rolle === 'Mittelstufe'"
