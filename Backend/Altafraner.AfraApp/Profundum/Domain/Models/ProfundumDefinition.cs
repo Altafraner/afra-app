@@ -64,6 +64,12 @@ public class ProfundumDefinition : IHasTimestamps, IHasUserTracking
     /// </summary>
     public List<ProfundumDefinition> Dependants { get; set; } = null!;
 
+    /// <summary>
+    ///     Whether the organizer allows students to submit a mutual team-partner wish for this Profundum. See
+    ///     <see cref="ProfundumPartnerEinladung" />/<see cref="ProfundumPartnerWunsch" />.
+    /// </summary>
+    public bool ErlaubtPartnerwahl { get; set; }
+
     /// <inheritdoc/>
     public DateTime CreatedAt { get; set; }
 

@@ -19,6 +19,22 @@ public interface IProfundumIndividualRule
     IEnumerable<ProfundumBelegWunsch> wuensche);
 
     /// <summary>
+    ///     Whether this rule could ever accept <paramref name="definition" /> into a submission for
+    ///     <paramref name="student" />, independent of whatever else ends up in the same wish list - used to keep the
+    ///     enrollment catalog from suggesting Profunda that are certain to be rejected anyway (e.g. an unmet
+    ///     Dependency, or one already enrolled in). Defaults to <see cref="RuleStatus.Valid" />: only override this
+    ///     when the rule's eligibility for a single Definition can be decided without knowing the rest of the wish
+    ///     list. A rule whose <see cref="CheckForSubmission" /> logic is inherently cross-wish-dependent (e.g. "at
+    ///     least one Profil pick across the whole submission") must NOT reuse that logic here, since probing it with
+    ///     a single candidate would spuriously reject Definitionen that are perfectly pickable alongside others.
+    /// </summary>
+    RuleStatus CheckDefinitionEligibility(Person student,
+        ProfundumDefinition definition,
+        IEnumerable<ProfundumSlot> slots,
+        IEnumerable<ProfundumEinschreibung> enrollments)
+        => RuleStatus.Valid;
+
+    /// <summary>
     ///     Add constraints to matching solver
     /// </summary>
     void AddConstraints(Person student,
