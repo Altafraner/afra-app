@@ -107,7 +107,7 @@ public class EmergencyUploadJob : IJob
         {
             return personen
                        .Select(person =>
-                           $"<tr><td>{HttpUtility.HtmlEncode(person.LastName)}, {HttpUtility.HtmlEncode(person.FirstName)}</td><td>{HttpUtility.HtmlEncode(attendances.GetValueOrDefault(person, (IAttendanceService.DefaultAttendanceStatus, AttendanceEntryType.Manual)).Item1)}</td></tr>")
+                           $"<tr><td>{HttpUtility.HtmlEncode(person.LastName)}, {HttpUtility.HtmlEncode(person.FirstName)}</td><td>{HttpUtility.HtmlEncode(attendances.GetValueOrDefault(person, new AttendanceInformation { State = IAttendanceService.DefaultAttendanceStatus, Type = AttendanceEntryType.Manual }).State)}</td></tr>")
                        .Aggregate("<table><tr><th>Name</th><th>Status</th></tr>", (current, row) => current + row) +
                    "</table>";
         }

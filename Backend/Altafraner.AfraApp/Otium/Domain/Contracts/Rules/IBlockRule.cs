@@ -1,3 +1,4 @@
+using Altafraner.AfraApp.Attendance.Domain.Dto;
 using Altafraner.AfraApp.Otium.Domain.Models;
 using Altafraner.AfraApp.Schuljahr.Domain.Models;
 using Altafraner.AfraApp.User.Domain.Models;
@@ -12,7 +13,10 @@ public interface IBlockRule
     /// <summary>
     ///     Checks if the rule is valid for the given person and enrollments during a block.
     /// </summary>
-    ValueTask<RuleStatus> IsValidAsync(Person person, Block block, IEnumerable<OtiumEinschreibung> einschreibungen)
+    ValueTask<RuleStatus> IsValidAsync(Person person,
+        Block block,
+        IEnumerable<OtiumEinschreibung> einschreibungen,
+        AttendanceInformation attendance)
     {
         return new ValueTask<RuleStatus>(RuleStatus.Valid);
     }
