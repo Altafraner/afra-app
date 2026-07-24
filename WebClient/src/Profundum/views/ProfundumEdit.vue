@@ -1,5 +1,4 @@
 <script setup>
-import { InputText, MultiSelect, Select, Textarea } from 'primevue';
 import { mande } from 'mande';
 import { computed, onMounted, ref } from 'vue';
 import Grid from '@/components/Form/Grid.vue';
@@ -128,6 +127,8 @@ const updateFachbereiche = () =>
     savePatch({
         fachbereichIds: profundum.value.fachbereichIds,
     });
+const updateErlaubtPartnerwahl = () =>
+    savePatch({ erlaubtPartnerwahl: profundum.value.erlaubtPartnerwahl });
 </script>
 <template>
     <template v-if="loading">Lade...</template>
@@ -142,7 +143,7 @@ const updateFachbereiche = () =>
                     <span>{{ profundum.bezeichnung }}</span>
                 </template>
                 <template #edit>
-                    <InputText v-model="profundum.bezeichnung" fluid maxlength="80" />
+                    <UInput v-model="profundum.bezeichnung" class="w-full" maxlength="80" />
                 </template>
             </GridEditRow>
 
@@ -154,14 +155,13 @@ const updateFachbereiche = () =>
                     }}
                 </template>
                 <template #edit>
-                    <Select
+                    <USelect
                         v-model="profundum.kategorieId"
-                        :options="categories"
-                        optionLabel="bezeichnung"
-                        optionValue="id"
+                        :items="categories"
+                        label-key="bezeichnung"
+                        value-key="id"
                         placeholder="Kategorie auswählen"
                         class="w-full"
-                        appendTo="self"
                     />
                 </template>
             </GridEditRow>
@@ -178,11 +178,11 @@ const updateFachbereiche = () =>
                     />
                 </template>
                 <template #edit>
-                    <Textarea
+                    <UTextarea
                         v-model="profundum.beschreibung"
-                        auto-resize
-                        fluid
-                        rows="3"
+                        autoresize
+                        class="w-full"
+                        :rows="3"
                         maxlength="2000"
                     />
                 </template>
@@ -231,17 +231,14 @@ const updateFachbereiche = () =>
                 </template>
                 <template #body v-else> Keine Voraussetzungen </template>
                 <template #edit>
-                    <MultiSelect
+                    <USelect
                         v-model="profundum.dependencyIds"
-                        :options="profundaList"
-                        optionLabel="bezeichnung"
-                        optionValue="id"
-                        display="chip"
-                        filter
-                        filterPlaceholder="Suchen..."
-                        class="w-full multiselect-wrap"
-                        appendTo="self"
+                        :items="profundaList"
+                        label-key="bezeichnung"
+                        value-key="id"
+                        multiple
                         placeholder="Voraussetzungen auswählen"
+                        class="w-full"
                     />
                 </template>
             </GridEditRow>
@@ -254,16 +251,28 @@ const updateFachbereiche = () =>
                 </template>
                 <template #body v-else> Keinen Fachbereichen zugeordnet </template>
                 <template #edit>
-                    <MultiSelect
+                    <USelect
                         v-model="profundum.fachbereichIds"
-                        :options="fachbereiche"
-                        optionLabel="label"
-                        optionValue="id"
-                        display="chip"
-                        filter
-                        filterPlaceholder="Suchen..."
-                        class="w-full multiselect-wrap"
-                        appendTo="self"
+                        :items="fachbereiche"
+                        label-key="label"
+                        value-key="id"
+                        multiple
+                        class="w-full"
+                    />
+                </template>
+            </GridEditRow>
+            <GridEditRow header="Partnerwahl" @update="updateErlaubtPartnerwahl">
+                <template #body>
+                    <span>{{
+                        profundum.erlaubtPartnerwahl
+                            ? 'Erlaubt - Schüler:innen können sich gegenseitig als Team-Partner wählen'
+                            : 'Nicht erlaubt'
+                    }}</span>
+                </template>
+                <template #edit>
+                    <USwitch
+                        v-model="profundum.erlaubtPartnerwahl"
+                        label="Partnerwahl erlauben"
                     />
                 </template>
             </GridEditRow>
@@ -273,21 +282,4 @@ const updateFachbereiche = () =>
     </template>
 </template>
 
-<style scoped>
-.multiselect-wrap :deep(.p-multiselect-label-container) {
-    height: auto;
-}
-
-.multiselect-wrap :deep(.p-multiselect-label) {
-    display: flex;
-    flex-wrap: wrap;
-    white-space: normal;
-    gap: 0.25rem;
-    padding-top: 0.25rem;
-    padding-bottom: 0.25rem;
-}
-
-.multiselect-wrap :deep(.p-multiselect-token) {
-    margin-bottom: 0.25rem;
-}
-</style>
+<style scoped></style>

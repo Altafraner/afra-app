@@ -237,7 +237,7 @@ await fetchData();
             <template #edit>
                 <div class="w-full flex flex-col gap-3">
                     <USwitch v-model="betreuerZuweisenSelected" label="Betreuer:in zuweisen" />
-                    <PersonSelectorNuxt
+                    <PersonSelector
                         v-model="personSelected"
                         :disabled="!betreuerZuweisenSelected"
                         name="tutor"
