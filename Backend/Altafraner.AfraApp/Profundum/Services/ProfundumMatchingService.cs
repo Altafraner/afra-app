@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text;
 using Altafraner.AfraApp.Profundum.Configuration;
+using Altafraner.AfraApp.Profundum.Domain.Contracts.Rules;
 using Altafraner.AfraApp.Profundum.Domain.Contracts.Services;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Domain.Models;
@@ -43,7 +44,7 @@ internal class ProfundumMatchingService
             .Where(e => !e.IsFixed)
             .ExecuteDeleteAsync();
 
-        var slots = _dbContext.ProfundaSlots.ToArray();
+        var slots = _dbContext.ProfundaSlots.Include(s => s.EinwahlZeitraum).ToArray();
         var fixEinschreibungen = _dbContext.ProfundaEinschreibungen
             .Where(e => e.IsFixed).ToArray();
         var angebote = (await _dbContext.ProfundaInstanzen
@@ -51,12 +52,10 @@ internal class ProfundumMatchingService
                 .Include(pi => pi.Profundum)
                 .ToArrayAsync())
             .ToArray();
-        var angeboteList = angebote.ToList();
         var belegwuensche = await _dbContext.ProfundaBelegWuensche
             .Include(b => b.BetroffenePerson)
-            .Include(b => b.ProfundumInstanz).ThenInclude(b => b.Slots).ThenInclude(s => s.EinwahlZeitraum)
-            .Include(b => b.ProfundumInstanz).ThenInclude(pi => pi.Profundum).ThenInclude(p => p.Kategorie)
-            .Where(b => angeboteList.Contains(b.ProfundumInstanz))
+            .Include(b => b.ProfundumDefinition).ThenInclude(p => p.Kategorie)
+            .Include(b => b.EinwahlZeitraum).ThenInclude(z => z.Slots)
             .ToArrayAsync();
         var students = _dbContext.Personen.Where(p => p.Rolle == Rolle.Mittelstufe).ToArray();
 
@@ -114,18 +113,7 @@ internal class ProfundumMatchingService
             }
         }
 
-        var weights = new Dictionary<ProfundumBelegWunschStufe, int>
-        {
-            { ProfundumBelegWunschStufe.ErstWunsch, 128 },
-            { ProfundumBelegWunschStufe.ZweitWunsch, 64 },
-            { ProfundumBelegWunschStufe.DrittWunsch, 32 }
-        }.AsReadOnly();
-        var weightsVerschoben = new Dictionary<ProfundumBelegWunschStufe, int>
-        {
-            { ProfundumBelegWunschStufe.ErstWunsch, 16 },
-            { ProfundumBelegWunschStufe.ZweitWunsch, 8 },
-            { ProfundumBelegWunschStufe.DrittWunsch, 4 }
-        }.AsReadOnly();
+        var cfg = _profundumConfiguration.Value;
 
         // Set-Up Objective
         foreach (var currentSlot in slots)
@@ -137,41 +125,20 @@ internal class ProfundumMatchingService
                 var nev = personNotEnrolledVariables[(currentStudent, currentSlot)];
                 objective.AddTerm(nev, 1); // Not matched is slightly better than stupid solutions.
 
-                var wuensche = belegwuensche.Where(b => b.BetroffenePerson == currentStudent).ToArray();
-                var wuenscheInSlot = wuensche.Where(w => w.ProfundumInstanz.Slots.Contains(currentSlot)
-                        && w.EinwahlZeitraum.Slots.Contains(currentSlot)).ToArray();
+                var wuensche = belegwuensche.Where(b => b.BetroffenePerson == currentStudent
+                        && b.EinwahlZeitraum.Slots.Contains(currentSlot))
+                    .ToArray();
 
                 // angebote vars
                 foreach (var currentInstanzInSlot in angeboteInSlot)
                 {
                     var currentVar = belegVars[(currentStudent, currentSlot, currentInstanzInSlot)];
 
-                    // gewichtung
-                    var wunsch = wuenscheInSlot.FirstOrDefault(w => w.ProfundumInstanz == currentInstanzInSlot);
+                    var wunsch = wuensche.FirstOrDefault(w => w.ProfundumDefinition == currentInstanzInSlot.Profundum);
                     if (wunsch is not null)
                     {
-                        objective.AddTerm(currentVar, weights[wunsch.Stufe]);
+                        objective.AddTerm(currentVar, WunschReward(wunsch.Rang, cfg));
                     }
-                }
-
-                // Wünsche from different slots
-                var wunschVerschobenVars = belegVars
-                    .Where(b => b.Key.p == currentStudent)
-                    .Select(b => (
-                            stufe: wuensche
-                                .Where(w => w.ProfundumInstanz.Profundum == b.Key.i.Profundum
-                                            && w.ProfundumInstanz != b.Key.i
-                                            && w.EinwahlZeitraum.Slots.Contains(b.Key.s)
-                                )
-                                .Select(w => w.Stufe),
-                            var: b.Value
-                        )
-                    )
-                    .Where(x => x.stufe.Any())
-                    .Select(x => (x.stufe.Max(), x.var));
-                foreach (var (stufe, v) in wunschVerschobenVars)
-                {
-                    objective.AddTerm(v, weightsVerschoben[stufe]);
                 }
             }
         }
@@ -199,7 +166,7 @@ internal class ProfundumMatchingService
         }
 
         foreach (var r in _rulesFactory.GetAggregateRules())
-            r.AddConstraints(slots, students, belegwuensche, belegVars, model);
+            r.AddConstraints(slots, students, belegwuensche, belegVars, model, objective);
 
         var timeConstraintsAdded = stopwatch.ElapsedMilliseconds;
         stopwatch.Restart();
@@ -243,6 +210,26 @@ internal class ProfundumMatchingService
                 }
         await _dbContext.ProfundaEinschreibungen.AddRangeAsync(newEinschreibungen);
         await _dbContext.SaveChangesAsync();
+
+        var rangVerteilung = new Dictionary<int, int>();
+        foreach (var e in newEinschreibungen)
+        {
+            var wunsch = belegwuensche.FirstOrDefault(w => w.BetroffenePerson == e.BetroffenePerson
+                    && w.ProfundumDefinition == e.ProfundumInstanz!.Profundum
+                    && w.EinwahlZeitraum.Slots.Contains(e.Slot));
+            if (wunsch is null) continue;
+            rangVerteilung[wunsch.Rang] = rangVerteilung.GetValueOrDefault(wunsch.Rang) + 1;
+        }
+
+        var studentsWithWishes = belegwuensche.Select(w => w.BetroffenePerson).Distinct().ToHashSet();
+        var nichtEingeschriebenTrotzWunsch = personNotEnrolledVariables
+            .Where(kv => studentsWithWishes.Contains(kv.Key.p)
+                    && !fixEinschreibungen.Any(e => e.BetroffenePerson == kv.Key.p && e.Slot == kv.Key.s)
+                    && solver.Value(kv.Value) > 0)
+            .Select(kv => kv.Key.p)
+            .Distinct()
+            .Count();
+
         var timeAfter = stopwatch.ElapsedMilliseconds;
         stopwatch.Stop();
 
@@ -264,10 +251,23 @@ internal class ProfundumMatchingService
         {
             CalculationTime = solver.WallTime(),
             Result = MatchingResultStatus.MatchingComplete,
+            NichtEingeschriebenTrotzWunsch = nichtEingeschriebenTrotzWunsch,
+            RangVerteilung = rangVerteilung,
         };
     }
 
-    ///
+    /// <summary>
+    ///     The reward for satisfying a wish of the given rank. Convex-decreasing (quadratic cost subtracted from a
+    ///     base reward, floored) so that spreading bad outcomes across many students is preferred over concentrating
+    ///     them on a few, while every ranked wish - however low - still beats leaving a student unenrolled.
+    /// </summary>
+    private static int WunschReward(int rang, ProfundumConfiguration cfg)
+    {
+        var reward = cfg.WunschBasisWert - cfg.WunschKostenFaktor * rang * rang;
+        return Math.Max(reward, cfg.WunschMindestWert);
+    }
+
+    /// <summary>Flips every matched (non-null) enrollment to <c>IsFixed = true</c>, locking it in for future runs.</summary>
     public Task FinalizeMatching()
     {
         return _dbContext.ProfundaEinschreibungen
@@ -275,6 +275,7 @@ internal class ProfundumMatchingService
             .ExecuteUpdateAsync(e => e.SetProperty(ei => ei.IsFixed, true));
     }
 
+    /// <summary>Collects every individual rule's <see cref="IProfundumIndividualRule.GetWarnings" /> for a student.</summary>
     private IEnumerable<MatchingWarning> GetStudentWarnings(Person student,
         ProfundumSlot[] slots,
         ProfundumEinschreibung[] enrollments)
@@ -282,9 +283,33 @@ internal class ProfundumMatchingService
         return _rulesFactory.GetIndividualRules().SelectMany(r => r.GetWarnings(student, slots, enrollments));
     }
 
+    /// <summary>
+    ///     Staff-facing view of every Mittelstufe student's current enrollments, wishes, rule warnings, and
+    ///     team-partner pairing sync status - independent of whether a matching run just happened, e.g. also used to
+    ///     inspect the effect of a manual override.
+    /// </summary>
     public async IAsyncEnumerable<DTOProfundumEnrollmentSet> GetAllEnrollmentsAsync()
     {
-        var slots = await _dbContext.ProfundaSlots.ToArrayAsync();
+        var slots = await _dbContext.ProfundaSlots.Include(s => s.EinwahlZeitraum).ToArrayAsync();
+
+        // Loaded up front (small tables) so manual-override staff can see, per student, who they're paired with and
+        // whether the pairing currently holds - a manual override (unlike PerformMatching) bypasses the solver's
+        // hard pairing constraint entirely, so the two can silently drift apart.
+        var pairings = await _dbContext.ProfundumPartnerWuensche
+            .Include(w => w.ProfundumDefinition)
+            .Include(w => w.PersonA)
+            .Include(w => w.PersonB)
+            .ToArrayAsync();
+        var pairingsByPerson = pairings
+            .SelectMany(p => new[] { (personId: p.PersonAId, pairing: p), (personId: p.PersonBId, pairing: p) })
+            .GroupBy(x => x.personId)
+            .ToDictionary(g => g.Key, g => g.Select(x => x.pairing).ToArray());
+        var instanzenByPersonAndDefinition = (await _dbContext.ProfundaEinschreibungen
+                .Where(e => e.ProfundumInstanz != null)
+                .Select(e => new { e.BetroffenePersonId, DefinitionId = e.ProfundumInstanz!.Profundum.Id, e.ProfundumInstanzId })
+                .ToArrayAsync())
+            .GroupBy(e => (e.BetroffenePersonId, e.DefinitionId))
+            .ToDictionary(g => g.Key, g => g.Select(x => x.ProfundumInstanzId).ToHashSet());
 
         var personenWithData = _dbContext.Personen
             .AsSplitQuery()
@@ -293,11 +318,9 @@ internal class ProfundumMatchingService
             .ThenBy(p => p.LastName)
             .ThenBy(p => p.FirstName)
             .Include(p => p.ProfundaBelegwuensche)
-            .ThenInclude(p => p.ProfundumInstanz)
-            .ThenInclude(p => p.Profundum)
-            .Include(p => p.ProfundaBelegwuensche)
-            .ThenInclude(p => p.ProfundumInstanz)
-            .ThenInclude(p => p.Slots)
+            .ThenInclude(p => p.ProfundumDefinition)
+            .ThenInclude(p => p.Instanzen)
+            .ThenInclude(i => i.Slots)
             .Include(p => p.ProfundaEinschreibungen)
             .ThenInclude(p => p.ProfundumInstanz)
             .ThenInclude(p => p!.Profundum)
@@ -328,21 +351,36 @@ internal class ProfundumMatchingService
                         { ProfundumSlotId = e.slotId, ProfundumInstanzId = null, IsFixed = false });
 
             var personsWishes = person.ProfundaBelegwuensche
-                .Select(e => new DTOWunsch(e.ProfundumInstanz.Id,
-                    e.ProfundumInstanz.Slots.Select(s => s.Id),
-                    (int)e.Stufe));
+                .Select(e => new DTOWunsch(e.ProfundumDefinition.Id,
+                    e.ProfundumDefinition.Instanzen.SelectMany(i => i.Slots).Select(s => s.Id).Distinct(),
+                    e.Rang));
             var warnings = GetStudentWarnings(person,
                 slots,
                 person.ProfundaEinschreibungen
                     .Where(e => e.ProfundumInstanz is not null)
-                    .ToArray());
+                    .ToArray()).ToList();
+
+            var myPairings = pairingsByPerson.GetValueOrDefault(person.Id, []);
+            foreach (var pairing in myPairings)
+            {
+                var partnerId = pairing.PersonAId == person.Id ? pairing.PersonBId : pairing.PersonAId;
+                var myInstanzen = instanzenByPersonAndDefinition.GetValueOrDefault((person.Id, pairing.ProfundumDefinitionId), []);
+                var partnerInstanzen = instanzenByPersonAndDefinition.GetValueOrDefault((partnerId, pairing.ProfundumDefinitionId), []);
+                if (!myInstanzen.SetEquals(partnerInstanzen))
+                {
+                    var partner = pairing.PersonAId == person.Id ? pairing.PersonB : pairing.PersonA;
+                    warnings.Add(new MatchingWarning(
+                        $"Partnerschaft mit {partner.FirstName} {partner.LastName} für {pairing.ProfundumDefinition.Bezeichnung} nicht synchron - unterschiedliche Instanzen belegt."));
+                }
+            }
 
             yield return new DTOProfundumEnrollmentSet
             {
                 Person = new PersonInfoMinimal(person),
                 Enrollments = personsEnrollments,
                 Wuensche = personsWishes,
-                Warnings = warnings
+                Warnings = warnings,
+                Partnerschaften = myPairings.Select(p => new DTOProfundumPartnerWunschStaff(p)),
             };
         }
     }

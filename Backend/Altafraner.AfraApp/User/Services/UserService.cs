@@ -102,19 +102,68 @@ public class UserService
     }
 
     /// <summary>
-    ///     Gets the grade level of a student based on their group.
+    ///     Gets the current grade level of a student based on their group. Equivalent to
+    ///     <see cref="GetKlassenstufe(Person, DateTime)" /> as of now.
     /// </summary>
     /// <exception cref="InvalidOperationException">The person is not a student</exception>
     /// <exception cref="InvalidDataException">The persons group does not contain a valid grade level</exception>
-    public int GetKlassenstufe(Person person)
+    public int GetKlassenstufe(Person person) => GetKlassenstufe(person, DateTime.UtcNow);
+
+    /// <summary>
+    ///     Gets the grade level a student's group implied as of a specific point in time, based on the historized
+    ///     group log (<see cref="PersonGruppenHistorie" />). Falls back to the person's current
+    ///     <see cref="Person.Gruppe" /> if no historical entry predates <paramref name="asOf" /> - this covers data
+    ///     that predates group history being tracked at all.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">The person is not a student</exception>
+    /// <exception cref="InvalidDataException">The persons group does not contain a valid grade level</exception>
+    public int GetKlassenstufe(Person person, DateTime asOf)
     {
         if (person.Rolle == Rolle.Tutor)
             throw new InvalidOperationException("Only students have a grade level.");
 
-        if (string.IsNullOrWhiteSpace(person.Gruppe) || !char.IsAsciiDigit(person.Gruppe[0]))
+        var gruppe = GetGruppe(person, asOf);
+
+        if (string.IsNullOrWhiteSpace(gruppe) || !char.IsAsciiDigit(gruppe[0]))
             throw new InvalidDataException("The person does not have a valid group.");
 
-        return Convert.ToInt32(String.Concat(person.Gruppe.TakeWhile(char.IsAsciiDigit)));
+        return Convert.ToInt32(String.Concat(gruppe.TakeWhile(char.IsAsciiDigit)));
+    }
+
+    /// <summary>
+    ///     Gets the raw group (e.g. "9a") a person had as of a specific point in time, based on the historized
+    ///     group log (<see cref="PersonGruppenHistorie" />) - falls back to <see cref="Person.Gruppe" /> if no
+    ///     historical entry predates <paramref name="asOf" />. Unlike <see cref="GetKlassenstufe(Person, DateTime)" />,
+    ///     this returns the full group string (including the class-letter suffix), for display/reporting purposes.
+    /// </summary>
+    public string? GetGruppe(Person person, DateTime asOf)
+    {
+        var entry = _dbContext.PersonGruppenHistorien
+            .Where(h => h.PersonId == person.Id && h.GueltigAb <= asOf)
+            .OrderByDescending(h => h.GueltigAb)
+            .FirstOrDefault();
+        return entry is not null ? entry.Gruppe : person.Gruppe;
+    }
+
+    /// <summary>
+    ///     Sets a person's <see cref="Person.Gruppe" />, logging the change to <see cref="PersonGruppenHistorie" />
+    ///     if the value actually differs from the current one - this is the only place <see cref="Person.Gruppe" />
+    ///     should ever be written, so that <see cref="GetKlassenstufe(Person, DateTime)" /> can later reconstruct
+    ///     what it used to be. Does not save changes; the caller is expected to as part of its own batch (e.g. one
+    ///     LDAP sync run).
+    /// </summary>
+    public void SetGruppe(Person person, string? gruppe, DateTime asOf)
+    {
+        if (gruppe == person.Gruppe)
+            return;
+
+        _dbContext.PersonGruppenHistorien.Add(new PersonGruppenHistorie
+        {
+            Person = person,
+            Gruppe = gruppe,
+            GueltigAb = asOf,
+        });
+        person.Gruppe = gruppe;
     }
 
     /// <summary>

@@ -18,6 +18,7 @@ public class LdapService
     private readonly AfraAppContext _dbContext;
     private readonly IEmailOutbox _emailOutbox;
     private readonly ILogger<LdapService> _logger;
+    private readonly UserService _userService;
 
     private readonly Dictionary<string, Person> _studentsByDn = [];
     private readonly Dictionary<string, Person> _tutorsByDn = [];
@@ -28,12 +29,14 @@ public class LdapService
     public LdapService(IOptions<LdapConfiguration> configuration,
         ILogger<LdapService> logger,
         AfraAppContext dbContext,
-        IEmailOutbox emailOutbox)
+        IEmailOutbox emailOutbox,
+        UserService userService)
     {
         _configuration = configuration.Value;
         _logger = logger;
         _dbContext = dbContext;
         _emailOutbox = emailOutbox;
+        _userService = userService;
     }
 
     /// <summary>
@@ -106,7 +109,7 @@ public class LdapService
             foreach (SearchResultEntry entry in groupEntries)
             {
                 var success =
-                    TryGetOrCreatePersonFromEntry(entry, ldapGroup.Rolle, ldapGroup.Group, dbUsers, out var person);
+                    TryGetOrCreatePersonFromEntry(entry, ldapGroup.Rolle, ldapGroup.Group, dbUsers, syncTime, out var person);
                 if (!success)
                 {
                     _logger.LogError("Sync: Failed to create of find user from entry");
@@ -298,6 +301,7 @@ public class LdapService
         Rolle rolle,
         string? gruppe,
         IEnumerable<Person> users,
+        DateTime syncTime,
         out Person? user)
     {
         if (!entry.TryGetGuid(out var objGuid))
@@ -328,10 +332,10 @@ public class LdapService
                 LastName = surname,
                 Email = mail,
                 Rolle = rolle,
-                Gruppe = gruppe
             };
 
             _dbContext.Personen.Add(user);
+            _userService.SetGruppe(user, gruppe, syncTime);
             AddPersonToDict(entry, user);
             return true;
         }
@@ -340,7 +344,7 @@ public class LdapService
         user.LastName = surname;
         user.Email = mail;
         user.Rolle = rolle;
-        user.Gruppe = gruppe;
+        _userService.SetGruppe(user, gruppe, syncTime);
         AddPersonToDict(entry, user);
         return true;
     }

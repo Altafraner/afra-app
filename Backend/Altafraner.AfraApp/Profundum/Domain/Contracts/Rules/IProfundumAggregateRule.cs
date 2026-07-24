@@ -10,12 +10,15 @@ namespace Altafraner.AfraApp.Profundum.Domain.Contracts.Rules;
 public interface IProfundumAggregateRule
 {
     /// <summary>
-    ///     Add constraints to matching solver
+    ///     Add constraints to matching solver. <paramref name="objective" /> lets a rule prefer an outcome
+    ///     without hard-blocking it (add a penalty term instead of a <c>model.Add</c> constraint) - not every
+    ///     aggregate rule needs this, but the option must exist for the ones that do.
     /// </summary>
     void AddConstraints(
         IEnumerable<ProfundumSlot> slots,
         IEnumerable<Person> students,
         IEnumerable<ProfundumBelegWunsch> wuensche,
         Dictionary<(Person p, ProfundumSlot s, ProfundumInstanz i), BoolVar> belegVars,
-        CpModel model);
+        CpModel model,
+        LinearExprBuilder objective);
 }

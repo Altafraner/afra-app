@@ -38,7 +38,7 @@ public class KlassenLimitsRule : IProfundumIndividualRule
         CpModel model,
         LinearExprBuilder objective)
     {
-        var klasse = _userService.GetKlassenstufe(student);
+        var klasse = _userService.GetKlassenstufe(student, DateTime.UtcNow);
 
         foreach (var (k, v) in belegVars)
         {
@@ -59,10 +59,12 @@ public class KlassenLimitsRule : IProfundumIndividualRule
     /// <inheritdoc/>
     public IEnumerable<MatchingWarning> GetWarnings(Person student, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
     {
-        var klasse = _userService.GetKlassenstufe(student);
         var warnings = new List<MatchingWarning>();
         foreach (var e in enrollments)
         {
+            // Historical enrollments must be checked against the grade the student had when the enrollment was
+            // made, not their current grade - otherwise a normal grade progression looks like a rule violation.
+            var klasse = _userService.GetKlassenstufe(student, e.CreatedAt);
             var p = e.ProfundumInstanz!.Profundum;
             var minKlasse = p.MinKlasse;
             var maxKlasse = p.MaxKlasse;

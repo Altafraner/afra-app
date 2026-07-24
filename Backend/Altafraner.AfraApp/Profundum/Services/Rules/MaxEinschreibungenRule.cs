@@ -25,7 +25,8 @@ public class MaxEinschreibungenRule : IProfundumAggregateRule
         IEnumerable<Person> students,
         IEnumerable<ProfundumBelegWunsch> wuensche,
         Dictionary<(Person p, ProfundumSlot s, ProfundumInstanz i), BoolVar> belegVars,
-        CpModel model)
+        CpModel model,
+        LinearExprBuilder objective)
     {
         var angebote = _dbContext.ProfundaInstanzen
             .Include(pi => pi.Slots)

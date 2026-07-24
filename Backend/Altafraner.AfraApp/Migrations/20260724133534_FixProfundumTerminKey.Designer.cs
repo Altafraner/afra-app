@@ -7,6 +7,7 @@ using Altafraner.AfraApp.Schuljahr.Domain.Models;
 using Altafraner.AfraApp.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -15,9 +16,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Altafraner.AfraApp.Migrations
 {
     [DbContext(typeof(AfraAppContext))]
-    partial class AfraAppContextModelSnapshot : ModelSnapshot
+    [Migration("20260724133534_FixProfundumTerminKey")]
+    partial class FixProfundumTerminKey
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -791,23 +794,17 @@ namespace Altafraner.AfraApp.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("profundum_definition_id");
 
-                    b.Property<string>("Token")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("token");
-
                     b.HasKey("Id")
                         .HasName("pk_profundum_partner_einladungen");
+
+                    b.HasIndex("EinwahlZeitraumId")
+                        .HasDatabaseName("ix_profundum_partner_einladungen_einwahl_zeitraum_id");
 
                     b.HasIndex("InitiatorPersonId")
                         .HasDatabaseName("ix_profundum_partner_einladungen_initiator_person_id");
 
                     b.HasIndex("ProfundumDefinitionId")
                         .HasDatabaseName("ix_profundum_partner_einladungen_profundum_definition_id");
-
-                    b.HasIndex("EinwahlZeitraumId", "Token")
-                        .IsUnique()
-                        .HasDatabaseName("ix_profundum_partner_einladungen_einwahl_zeitraum_id_token");
 
                     b.ToTable("profundum_partner_einladungen");
                 });
