@@ -29,4 +29,7 @@ public record DTOProfundumDefinitionCreation
 
     /// <inheritdoc cref="ProfundumDefinition.Dependencies"/>
     public ICollection<Guid> DependencyIds { get; set; } = [];
+
+    /// <inheritdoc cref="ProfundumDefinition.ErlaubtPartnerwahl"/>
+    public bool ErlaubtPartnerwahl { get; set; }
 }

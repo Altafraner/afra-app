@@ -36,6 +36,11 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
     public DbSet<MentorMenteeRelation> MentorMenteeRelations { get; set; }
 
     /// <summary>
+    ///     An append-only log of past <see cref="Person.Gruppe" /> values, keyed by when they took effect.
+    /// </summary>
+    public DbSet<PersonGruppenHistorie> PersonGruppenHistorien { get; set; }
+
+    /// <summary>
     /// Dependencies between profunda
     /// </summary>
     public DbSet<ProfundaDefinitionDependency> ProfundumDefinitionDependencies { get; set; }
@@ -116,6 +121,16 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
     public DbSet<ProfundumBelegWunsch> ProfundaBelegWuensche { get; set; }
 
     /// <summary>
+    ///     All outstanding team-partner invites
+    /// </summary>
+    public DbSet<ProfundumPartnerEinladung> ProfundumPartnerEinladungen { get; set; }
+
+    /// <summary>
+    ///     All confirmed team-partner pairings
+    /// </summary>
+    public DbSet<ProfundumPartnerWunsch> ProfundumPartnerWuensche { get; set; }
+
+    /// <summary>
     ///     All slots for profunda to have ProfundaInstanzen in
     /// </summary>
     public DbSet<ProfundumSlot> ProfundaSlots { get; set; }
@@ -134,11 +149,6 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
     ///     All Kategorien for Profunda
     /// </summary>
     public DbSet<ProfundumKategorie> ProfundaKategorien { get; set; }
-
-    /// <summary>
-    ///     All Profundum Profil Befreiungen
-    /// </summary>
-    public DbSet<ProfundumProfilBefreiung> ProfundumProfilBefreiungen { get; set; }
 
     /// <summary>
     ///     All Fachbereiche for Profunda
@@ -198,6 +208,12 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
 
         modelBuilder.Entity<MentorMenteeRelation>()
             .HasKey(r => new { r.MentorId, r.StudentId, r.Type });
+
+        modelBuilder.Entity<PersonGruppenHistorie>(h =>
+        {
+            h.HasOne(e => e.Person).WithMany().HasForeignKey(e => e.PersonId);
+            h.HasIndex(e => new { e.PersonId, e.GueltigAb });
+        });
 
         modelBuilder.Entity<OtiumDefinition>(o =>
         {
@@ -288,20 +304,32 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
 
         modelBuilder.Entity<ProfundumBelegWunsch>(w =>
         {
-            w.HasKey(b => new { b.ProfundumInstanzId, b.BetroffenePersonId, b.Stufe });
+            w.HasKey(b => new { b.ProfundumDefinitionId, b.BetroffenePersonId, b.EinwahlZeitraumId });
             w.HasOne(b => b.BetroffenePerson).WithMany(p => p.ProfundaBelegwuensche);
+            w.HasOne(b => b.ProfundumDefinition).WithMany();
+            w.HasOne(b => b.EinwahlZeitraum).WithMany();
         });
 
         modelBuilder.Entity<ProfundumTermin>(w =>
         {
-            w.HasKey(t => t.Day);
-            w.HasOne(t => t.Slot).WithMany(s => s.Termine);
+            w.HasKey(t => new { t.SlotId, t.Day });
+            w.HasOne(t => t.Slot).WithMany(s => s.Termine).HasForeignKey(t => t.SlotId);
         });
 
-        modelBuilder.Entity<ProfundumProfilBefreiung>(w =>
+        modelBuilder.Entity<ProfundumPartnerEinladung>(w =>
         {
-            w.HasKey(b => new { b.BetroffenePersonId, b.Jahr, b.Quartal });
-            w.HasOne(b => b.BetroffenePerson).WithMany();
+            w.HasOne(e => e.ProfundumDefinition).WithMany().HasForeignKey(e => e.ProfundumDefinitionId);
+            w.HasOne(e => e.EinwahlZeitraum).WithMany().HasForeignKey(e => e.EinwahlZeitraumId);
+            w.HasOne(e => e.InitiatorPerson).WithMany().HasForeignKey(e => e.InitiatorPersonId);
+            w.HasIndex(e => new { e.EinwahlZeitraumId, e.Token }).IsUnique();
+        });
+
+        modelBuilder.Entity<ProfundumPartnerWunsch>(w =>
+        {
+            w.HasOne(e => e.ProfundumDefinition).WithMany().HasForeignKey(e => e.ProfundumDefinitionId);
+            w.HasOne(e => e.EinwahlZeitraum).WithMany().HasForeignKey(e => e.EinwahlZeitraumId);
+            w.HasOne(e => e.PersonA).WithMany().HasForeignKey(e => e.PersonAId);
+            w.HasOne(e => e.PersonB).WithMany().HasForeignKey(e => e.PersonBId);
         });
 
         modelBuilder.Entity<CalendarSubscription>(s => { s.HasOne(b => b.BetroffenePerson).WithMany(); });

@@ -11,6 +11,12 @@ public class ProfundumTermin
     public required ProfundumSlot Slot { get; set; }
 
     /// <summary>
+    ///     The primary key of <see cref="Slot" />.
+    /// </summary>
+    /// <remarks>Do not use directly!</remarks>
+    protected internal Guid SlotId { get; set; }
+
+    /// <summary>
     ///     the day the profundum happens at
     /// </summary>
     public required DateOnly Day { get; set; }

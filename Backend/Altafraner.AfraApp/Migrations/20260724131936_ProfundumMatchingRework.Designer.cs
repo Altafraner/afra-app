@@ -7,6 +7,7 @@ using Altafraner.AfraApp.Schuljahr.Domain.Models;
 using Altafraner.AfraApp.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -15,9 +16,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Altafraner.AfraApp.Migrations
 {
     [DbContext(typeof(AfraAppContext))]
-    partial class AfraAppContextModelSnapshot : ModelSnapshot
+    [Migration("20260724131936_ProfundumMatchingRework")]
+    partial class ProfundumMatchingRework
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -791,23 +794,17 @@ namespace Altafraner.AfraApp.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("profundum_definition_id");
 
-                    b.Property<string>("Token")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("token");
-
                     b.HasKey("Id")
                         .HasName("pk_profundum_partner_einladungen");
+
+                    b.HasIndex("EinwahlZeitraumId")
+                        .HasDatabaseName("ix_profundum_partner_einladungen_einwahl_zeitraum_id");
 
                     b.HasIndex("InitiatorPersonId")
                         .HasDatabaseName("ix_profundum_partner_einladungen_initiator_person_id");
 
                     b.HasIndex("ProfundumDefinitionId")
                         .HasDatabaseName("ix_profundum_partner_einladungen_profundum_definition_id");
-
-                    b.HasIndex("EinwahlZeitraumId", "Token")
-                        .IsUnique()
-                        .HasDatabaseName("ix_profundum_partner_einladungen_einwahl_zeitraum_id_token");
 
                     b.ToTable("profundum_partner_einladungen");
                 });
@@ -899,10 +896,6 @@ namespace Altafraner.AfraApp.Migrations
 
             modelBuilder.Entity("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumTermin", b =>
                 {
-                    b.Property<Guid>("SlotId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("slot_id");
-
                     b.Property<DateOnly>("Day")
                         .HasColumnType("date")
                         .HasColumnName("day");
@@ -911,12 +904,19 @@ namespace Altafraner.AfraApp.Migrations
                         .HasColumnType("time without time zone")
                         .HasColumnName("end_time");
 
+                    b.Property<Guid>("SlotId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("slot_id");
+
                     b.Property<TimeOnly>("StartTime")
                         .HasColumnType("time without time zone")
                         .HasColumnName("start_time");
 
-                    b.HasKey("SlotId", "Day")
+                    b.HasKey("Day")
                         .HasName("pk_profunda_termine");
+
+                    b.HasIndex("SlotId")
+                        .HasDatabaseName("ix_profunda_termine_slot_id");
 
                     b.ToTable("profunda_termine");
                 });

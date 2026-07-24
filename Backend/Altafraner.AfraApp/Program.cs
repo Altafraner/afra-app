@@ -48,33 +48,32 @@ builder.Services.AddControllers();
 
 var app = builder.Build();
 
-if (!app.Environment.IsDevelopment())
-    app.UseExceptionHandler(errorApp =>
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
     {
-        errorApp.Run(async context =>
-        {
-            var exception = context.Features
-                .Get<IExceptionHandlerFeature>()
-                ?
-                .Error;
+        var exception = context.Features
+            .Get<IExceptionHandlerFeature>()
+            ?
+            .Error;
 
-            switch (exception)
-            {
-                case ArgumentException:
-                    context.Response.StatusCode = StatusCodes.Status400BadRequest;
-                    await context.Response.WriteAsJsonAsync(new { error = exception.Message });
-                    return;
-                case NotFoundException:
-                    context.Response.StatusCode = StatusCodes.Status404NotFound;
-                    await context.Response.WriteAsJsonAsync(new { error = exception.Message });
-                    return;
-                default:
-                    context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-                    await context.Response.WriteAsJsonAsync(new { error = "An unspecified error occurred" });
-                    break;
-            }
-        });
+        switch (exception)
+        {
+            case ArgumentException:
+                context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                await context.Response.WriteAsJsonAsync(new { error = exception.Message });
+                return;
+            case NotFoundException:
+                context.Response.StatusCode = StatusCodes.Status404NotFound;
+                await context.Response.WriteAsJsonAsync(new { error = exception.Message });
+                return;
+            default:
+                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                await context.Response.WriteAsJsonAsync(new { error = "An unspecified error occurred" });
+                break;
+        }
     });
+});
 
 app.AddAltafranerMiddleware();
 app.MapAltafranerBackbone();
