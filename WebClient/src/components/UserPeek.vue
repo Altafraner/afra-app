@@ -63,14 +63,23 @@ const onOpen = async () => {
         showCloseIcon
         @update:open="onOpen"
     >
-        <UButton class="py-1 font-semibold h-8" size="lg" v-bind="$attrs" variant="ghost">
-            <span class="inline-flex justify-between items-center gap-2 w-full">
-                <span class="w-full inline-block text-center">
+        <UButton
+            class="py-1 font-semibold h-8 w-full"
+            size="lg"
+            v-bind="$attrs"
+            variant="ghost"
+        >
+            <span class="inline-flex justify-between items-center gap-2 w-full min-w-0">
+                <span class="min-w-0 flex-1 truncate text-center">
                     {{ displayFunction(person) }}
                 </span>
-                <UBadge v-if="person && showGroup" color="info" variant="soft">{{
-                    person.gruppe ?? person.rolle
-                }}</UBadge>
+                <UBadge
+                    v-if="person && showGroup"
+                    color="info"
+                    variant="soft"
+                    class="shrink-0"
+                    >{{ person.gruppe ?? person.rolle }}</UBadge
+                >
             </span>
         </UButton>
         <template #content>

@@ -5,16 +5,14 @@ import 'primeicons/primeicons.css';
 import DynamicDialog from 'primevue/dynamicdialog';
 import AfraNav from '@/components/AfraNav.vue';
 import { useUser } from '@/stores/user';
-import { computed } from 'vue';
-import wappenLight from '/vdaa/favicon.svg?url';
-import wappenDark from '/vdaa/favicon-dark.svg?url';
 import Login from '@/components/Login.vue';
-import { isDark } from '@/helpers/isdark';
+import { useLogo } from '@/composables/logo';
 import ReloadPrompt from '@/components/ReloadPrompt.vue';
 import type { ToasterProps } from '@nuxt/ui/components/Toaster.d.vue.ts';
 import { de } from '@nuxt/ui/locale';
 import { useRoute } from 'vue-router';
 import UContainer from '@nuxt/ui/components/Container.vue';
+import { useCommandPalette } from '@/composables/commandPalette';
 
 const route = useRoute();
 const user = useUser();
@@ -27,7 +25,17 @@ user.update().catch(() => {
     });
 });
 
-const logo = computed(() => (isDark().value ? wappenDark : wappenLight));
+const commandPalette = useCommandPalette();
+defineShortcuts({
+    meta_k: {
+        usingInput: true,
+        handler: () => {
+            if (user.loggedIn) commandPalette.open();
+        },
+    },
+});
+
+const logo = useLogo();
 
 const toastProps: ToasterProps = {
     position: 'top-right',
