@@ -12,11 +12,22 @@ import { de } from '@nuxt/ui/locale';
 import UContainer from '@nuxt/ui/components/Container.vue';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
+import { useCommandPalette } from '@/composables/commandPalette';
 
 const router = useRouter();
 const user = useUser();
 const toast = useToast();
 const { loggedIn, loading } = storeToRefs(user);
+
+const commandPalette = useCommandPalette();
+defineShortcuts({
+  meta_k: {
+    usingInput: true,
+    handler: () => {
+      if (user.loggedIn) commandPalette.open();
+    },
+  },
+});
 
 const userLoadingPromise = user.update().catch(() => {
     toast.add({

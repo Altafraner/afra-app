@@ -2,7 +2,7 @@
 import { useOtiumStore } from '@/Otium/stores/otium.js';
 import { useUser } from '@/stores/user';
 import { mande } from 'mande';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import SimpleBreadcrumb from '@/components/SimpleBreadcrumb.vue';
 import { findChildren, findPath } from '@/helpers/tree.js';
 import OtiumKategorieTag from '@/Otium/components/Shared/OtiumKategorieTag.vue';
@@ -312,6 +312,8 @@ async function editReg(data) {
 }
 
 setup();
+
+watch(() => props.otiumId, setup);
 
 const accordionItems = [
     {

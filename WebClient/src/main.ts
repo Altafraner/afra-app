@@ -162,7 +162,7 @@ app.use(PrimeVue, {
     theme: {
         preset: AfraAppPreset,
         options: {
-            darkModeSelector: 'system',
+            darkModeSelector: '.dark',
             cssLayer: {
                 name: 'primevue',
                 order: 'theme, base, primevue',

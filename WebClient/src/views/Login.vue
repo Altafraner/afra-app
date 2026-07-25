@@ -1,15 +1,13 @@
 <script lang="ts" setup>
 import { withQuery } from 'ufo';
 import { computed, ref } from 'vue';
-import { isDark } from '@/helpers/isdark.ts';
-import wappenLight from '/vdaa/favicon.svg?url';
-import wappenDark from '/vdaa/favicon-dark.svg?url';
 import { useUser } from '@/stores/user.ts';
 import { useRouter } from 'vue-router';
+import { useLogo } from '@/composables/logo.ts';
 
-const logo = computed(() => (isDark().value ? wappenDark : wappenLight));
 const user = useUser();
 const router = useRouter();
+const logo = useLogo();
 
 if (user.loggedIn) router.replace('/');
 const isDev = import.meta.env.DEV;
