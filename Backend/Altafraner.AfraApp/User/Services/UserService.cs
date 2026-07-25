@@ -122,12 +122,7 @@ public class UserService
         if (person.Rolle == Rolle.Tutor)
             throw new InvalidOperationException("Only students have a grade level.");
 
-        var gruppe = GetGruppe(person, asOf);
-
-        if (string.IsNullOrWhiteSpace(gruppe) || !char.IsAsciiDigit(gruppe[0]))
-            throw new InvalidDataException("The person does not have a valid group.");
-
-        return Convert.ToInt32(String.Concat(gruppe.TakeWhile(char.IsAsciiDigit)));
+        return ParseKlassenstufe(GetGruppe(person, asOf));
     }
 
     /// <summary>
@@ -143,6 +138,45 @@ public class UserService
             .OrderByDescending(h => h.GueltigAb)
             .FirstOrDefault();
         return entry is not null ? entry.Gruppe : person.Gruppe;
+    }
+
+    /// <summary>
+    ///     Loads the <see cref="PersonGruppenHistorie" /> log for a batch of students in a single query. Pass the
+    ///     result to <see cref="GetKlassenstufe(Person, DateTime, IReadOnlyDictionary{Guid, List{PersonGruppenHistorie}})" />
+    ///     instead of the DB-hitting overload when a caller needs grade levels for many students - e.g. the
+    ///     Profundum matching solver and enrollment overview, which otherwise re-query per (student, rule) or
+    ///     per (student, historical Einwahlzeitraum) pair.
+    /// </summary>
+    public Dictionary<Guid, List<PersonGruppenHistorie>> LoadGruppenHistorien(IEnumerable<Guid> personIds)
+    {
+        var ids = personIds.Distinct().ToArray();
+        return _dbContext.PersonGruppenHistorien
+            .Where(h => ids.Contains(h.PersonId))
+            .ToList()
+            .GroupBy(h => h.PersonId)
+            .ToDictionary(g => g.Key, g => g.OrderByDescending(h => h.GueltigAb).ToList());
+    }
+
+    /// <summary>
+    ///     Equivalent to <see cref="GetKlassenstufe(Person, DateTime)" />, resolved in memory against a
+    ///     <see cref="LoadGruppenHistorien" /> result instead of querying the database.
+    /// </summary>
+    public static int GetKlassenstufe(Person person, DateTime asOf, IReadOnlyDictionary<Guid, List<PersonGruppenHistorie>> historien)
+    {
+        if (person.Rolle == Rolle.Tutor)
+            throw new InvalidOperationException("Only students have a grade level.");
+
+        var entry = historien.GetValueOrDefault(person.Id)?.FirstOrDefault(h => h.GueltigAb <= asOf);
+        var gruppe = entry is not null ? entry.Gruppe : person.Gruppe;
+        return ParseKlassenstufe(gruppe);
+    }
+
+    private static int ParseKlassenstufe(string? gruppe)
+    {
+        if (string.IsNullOrWhiteSpace(gruppe) || !char.IsAsciiDigit(gruppe[0]))
+            throw new InvalidDataException("The person does not have a valid group.");
+
+        return Convert.ToInt32(String.Concat(gruppe.TakeWhile(char.IsAsciiDigit)));
     }
 
     /// <summary>
