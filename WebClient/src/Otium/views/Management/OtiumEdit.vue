@@ -13,7 +13,7 @@ import OtiumRegTable from '@/Otium/components/Management/OtiumRegTable.vue';
 import OtiumDateTable from '@/Otium/components/Management/OtiumDateTable.vue';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
 import KlassenrangeSelector from '@/components/KlassenRangeSelector.vue';
-import { convertMarkdownToHtml } from '@/composables/markdown.ts';
+import MarkdownEditor from '@/components/MarkdownEditor.vue';
 
 const props = defineProps({
     otiumId: String,
@@ -398,16 +398,10 @@ const accordionItems = [
                 @update="updateBeschreibung"
             >
                 <template #body>
-                    <div v-html="convertMarkdownToHtml(otium.beschreibung)" />
+                    <MarkdownEditor :model-value="otium.beschreibung" :editable="false" />
                 </template>
                 <template #edit>
-                    <UTextarea
-                        v-model="beschreibung"
-                        :rows="2"
-                        maxlength="500"
-                        autoresize
-                        class="w-full"
-                    />
+                    <MarkdownEditor v-model="beschreibung" :maxlength="500" />
                 </template>
             </GridEditRow>
         </Grid>

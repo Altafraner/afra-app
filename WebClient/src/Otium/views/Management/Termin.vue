@@ -8,7 +8,7 @@ import Grid from '@/components/Form/Grid.vue';
 import GridEditRow from '@/components/Form/GridEditRow.vue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
 import HybridAttendanceTable from '@/Attendance/components/HybridAttendanceTable.vue';
-import { convertMarkdownToHtml } from '@/composables/markdown.ts';
+import MarkdownEditor from '@/components/MarkdownEditor.vue';
 
 const props = defineProps({
     terminId: String,
@@ -305,7 +305,7 @@ await fetchData();
             @update="updateBeschreibung"
         >
             <template v-if="otium.beschreibung" #body>
-                <div v-html="convertMarkdownToHtml(otium.beschreibung)" />
+                <MarkdownEditor :model-value="otium.beschreibung" :editable="false" />
             </template>
             <template #body v-else> Unverändert </template>
             <template #edit>
@@ -319,12 +319,9 @@ await fetchData();
                         label="Beschreibung"
                         name="beschreibung"
                     >
-                        <UTextarea
+                        <MarkdownEditor
                             v-model="beschreibung"
                             :maxlength="500"
-                            :rows="2"
-                            autoresize
-                            class="w-full"
                             placeholder="Beschreibung eingeben"
                         />
                     </UFormField>
