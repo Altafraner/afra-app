@@ -67,6 +67,7 @@ async function openEditDialog(angebot) {
         slots: slots.value,
         variant: 'edit',
         maxEinschreibungen: angebot.maxEinschreibungen,
+        wantedEinschreibungen: angebot.wantedEinschreibungen,
         slotIds: angebot.slots,
         ort: angebot.ort,
         verantwortlicheIds: angebot.verantwortlicheIds ?? [],
@@ -110,7 +111,12 @@ onMounted(load);
                     {{ slots.find((s) => s.id === slotId)?.label }}
                 </UBadge>
             </span>
-            <span> {{ angebot.maxEinschreibungen }} Plätze </span>
+            <span>
+                {{ angebot.maxEinschreibungen }} Plätze
+                <template v-if="angebot.wantedEinschreibungen">
+                    (Ziel: {{ angebot.wantedEinschreibungen }})
+                </template>
+            </span>
             <span> Raum: {{ angebot.ort ? angebot.ort : '–' }} </span>
             <span>
                 <template v-if="(angebot.verantwortlicheInfo?.length ?? 0) === 0">
