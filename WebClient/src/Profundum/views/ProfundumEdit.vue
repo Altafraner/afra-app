@@ -5,7 +5,7 @@ import Grid from '@/components/Form/Grid.vue';
 import GridEditRow from '@/components/Form/GridEditRow.vue';
 import ProfundumInstanzen from '@/Profundum/components/ProfundumInstanzen.vue';
 import KlassenrangeSelector from '@/components/KlassenRangeSelector.vue';
-import { convertMarkdownToHtml } from '@/composables/markdown';
+import MarkdownEditor from '@/components/MarkdownEditor.vue';
 import { useManagement } from '@/Profundum/composables/verwaltung.ts';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
 
@@ -167,26 +167,16 @@ const updateErlaubtPartnerwahl = () =>
                     />
                 </template>
             </GridEditRow>
-
             <GridEditRow
                 header="Beschreibung"
                 header-class="self-start"
                 @update="updateBeschreibung"
             >
                 <template #body>
-                    <div
-                        class="m-trim"
-                        v-html="convertMarkdownToHtml(profundum.beschreibung)"
-                    />
+                    <MarkdownEditor :model-value="profundum.beschreibung" :editable="false" />
                 </template>
                 <template #edit>
-                    <UTextarea
-                        v-model="profundum.beschreibung"
-                        autoresize
-                        class="w-full"
-                        :rows="3"
-                        maxlength="2000"
-                    />
+                    <MarkdownEditor v-model="profundum.beschreibung" :maxlength="2000" />
                 </template>
             </GridEditRow>
 

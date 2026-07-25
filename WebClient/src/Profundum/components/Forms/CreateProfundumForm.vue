@@ -1,5 +1,6 @@
 <script setup>
 import { reactive } from 'vue';
+import MarkdownEditor from '@/components/MarkdownEditor.vue';
 
 const props = defineProps({
     categories: { type: Array, default: () => [] },
@@ -74,13 +75,7 @@ function submit(event) {
                 </UFormField>
 
                 <UFormField label="Beschreibung" name="beschreibung">
-                    <UTextarea
-                        v-model="state.beschreibung"
-                        :rows="4"
-                        autoresize
-                        maxlength="1000"
-                        class="w-full"
-                    />
+                    <MarkdownEditor v-model="state.beschreibung" :maxlength="2000" />
                 </UFormField>
 
                 <UFormField label="Jahrgänge" name="jahrgaenge">
