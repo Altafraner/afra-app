@@ -2,7 +2,6 @@ using Altafraner.AfraApp.Profundum.Domain.Contracts.Rules;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.User.Domain.Models;
-using Altafraner.AfraApp.User.Services;
 using Google.OrTools.Sat;
 
 namespace Altafraner.AfraApp.Profundum.Services.Rules;
@@ -12,14 +11,6 @@ namespace Altafraner.AfraApp.Profundum.Services.Rules;
 /// </summary>
 public class KlassenLimitsRule : IProfundumIndividualRule
 {
-    private readonly UserService _userService;
-
-    ///
-    public KlassenLimitsRule(UserService userService)
-    {
-        _userService = userService;
-    }
-
     /// <inheritdoc/>
     public RuleStatus CheckForSubmission(Person student,
         IEnumerable<ProfundumSlot> slots,
@@ -31,6 +22,7 @@ public class KlassenLimitsRule : IProfundumIndividualRule
 
     /// <inheritdoc/>
     public void AddConstraints(Person student,
+        int klasse,
         IEnumerable<ProfundumSlot> slots,
         IEnumerable<ProfundumBelegWunsch> wuensche,
         Dictionary<(ProfundumSlot, ProfundumInstanz), BoolVar> belegVars,
@@ -38,8 +30,6 @@ public class KlassenLimitsRule : IProfundumIndividualRule
         CpModel model,
         LinearExprBuilder objective)
     {
-        var klasse = _userService.GetKlassenstufe(student, DateTime.UtcNow);
-
         foreach (var (k, v) in belegVars)
         {
             var (_, i) = k;
@@ -57,14 +47,12 @@ public class KlassenLimitsRule : IProfundumIndividualRule
     }
 
     /// <inheritdoc/>
-    public IEnumerable<MatchingWarning> GetWarnings(Person student, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
+    public IEnumerable<MatchingWarning> GetWarnings(Person student, Func<DateTime, int> klasseAsOf, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
     {
         var warnings = new List<MatchingWarning>();
         foreach (var e in enrollments)
         {
-            // Historical enrollments must be checked against the grade the student had when the enrollment was
-            // made, not their current grade - otherwise a normal grade progression looks like a rule violation.
-            var klasse = _userService.GetKlassenstufe(student, e.CreatedAt);
+            var klasse = klasseAsOf(e.CreatedAt);
             var p = e.ProfundumInstanz!.Profundum;
             var minKlasse = p.MinKlasse;
             var maxKlasse = p.MaxKlasse;

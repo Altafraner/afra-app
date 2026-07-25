@@ -7,6 +7,7 @@ using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.User.Domain.DTO;
 using Altafraner.AfraApp.User.Domain.Models;
+using Altafraner.AfraApp.User.Services;
 using Google.OrTools.Sat;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -20,16 +21,19 @@ internal class ProfundumMatchingService
     private readonly ILogger _logger;
     private readonly IOptions<ProfundumConfiguration> _profundumConfiguration;
     private readonly IRulesFactory _rulesFactory;
+    private readonly UserService _userService;
 
     public ProfundumMatchingService(AfraAppContext dbContext,
         ILogger<ProfundumEnrollmentService> logger,
         IOptions<ProfundumConfiguration> profundumConfiguration,
-        IRulesFactory rulesFactory)
+        IRulesFactory rulesFactory,
+        UserService userService)
     {
         _dbContext = dbContext;
         _logger = logger;
         _profundumConfiguration = profundumConfiguration;
         _rulesFactory = rulesFactory;
+        _userService = userService;
     }
 
 
@@ -49,7 +53,7 @@ internal class ProfundumMatchingService
             .Where(e => e.IsFixed).ToArray();
         var angebote = (await _dbContext.ProfundaInstanzen
                 .Include(pi => pi.Slots).ThenInclude(s => s.EinwahlZeitraum)
-                .Include(pi => pi.Profundum)
+                .Include(pi => pi.Profundum).ThenInclude(p => p.Kategorie)
                 .ToArrayAsync())
             .ToArray();
         var belegwuensche = await _dbContext.ProfundaBelegWuensche
@@ -144,6 +148,8 @@ internal class ProfundumMatchingService
         }
 
 
+        var historienByPerson = _userService.LoadGruppenHistorien(students.Select(s => s.Id));
+
         foreach (var student in students)
         {
             var sBelegWuensche = belegwuensche.Where(w => w.BetroffenePerson == student).ToArray();
@@ -151,10 +157,12 @@ internal class ProfundumMatchingService
                 .ToDictionary(x => (x.Key.s, x.Key.i), x => x.Value);
             var sNotEnrolledVars = personNotEnrolledVariables.Where(k => k.Key.p == student)
                 .ToDictionary(x => x.Key.s, x => x.Value);
+            var klasse = UserService.GetKlassenstufe(student, DateTime.UtcNow, historienByPerson);
 
             foreach (var r in _rulesFactory.GetIndividualRules())
             {
                 r.AddConstraints(student,
+                    klasse,
                     slots,
                     sBelegWuensche,
                     sBelegVars,
@@ -277,10 +285,12 @@ internal class ProfundumMatchingService
 
     /// <summary>Collects every individual rule's <see cref="IProfundumIndividualRule.GetWarnings" /> for a student.</summary>
     private IEnumerable<MatchingWarning> GetStudentWarnings(Person student,
+        IReadOnlyDictionary<Guid, List<PersonGruppenHistorie>> historienByPerson,
         ProfundumSlot[] slots,
         ProfundumEinschreibung[] enrollments)
     {
-        return _rulesFactory.GetIndividualRules().SelectMany(r => r.GetWarnings(student, slots, enrollments));
+        int KlasseAsOf(DateTime asOf) => UserService.GetKlassenstufe(student, asOf, historienByPerson);
+        return _rulesFactory.GetIndividualRules().SelectMany(r => r.GetWarnings(student, KlasseAsOf, slots, enrollments));
     }
 
     /// <summary>
@@ -292,9 +302,12 @@ internal class ProfundumMatchingService
     {
         var slots = await _dbContext.ProfundaSlots.Include(s => s.EinwahlZeitraum).ToArrayAsync();
 
-        // Loaded up front (small tables) so manual-override staff can see, per student, who they're paired with and
-        // whether the pairing currently holds - a manual override (unlike PerformMatching) bypasses the solver's
-        // hard pairing constraint entirely, so the two can silently drift apart.
+        var mittelstufeIds = await _dbContext.Personen
+            .Where(p => p.Rolle == Rolle.Mittelstufe)
+            .Select(p => p.Id)
+            .ToArrayAsync();
+        var historienByPerson = _userService.LoadGruppenHistorien(mittelstufeIds);
+
         var pairings = await _dbContext.ProfundumPartnerWuensche
             .Include(w => w.ProfundumDefinition)
             .Include(w => w.PersonA)
@@ -355,6 +368,7 @@ internal class ProfundumMatchingService
                     e.ProfundumDefinition.Instanzen.SelectMany(i => i.Slots).Select(s => s.Id).Distinct(),
                     e.Rang));
             var warnings = GetStudentWarnings(person,
+                historienByPerson,
                 slots,
                 person.ProfundaEinschreibungen
                     .Where(e => e.ProfundumInstanz is not null)

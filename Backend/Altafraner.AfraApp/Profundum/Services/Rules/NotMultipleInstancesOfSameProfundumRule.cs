@@ -35,6 +35,7 @@ public class NotMultipleInstancesOfSameProfundumRule : IProfundumIndividualRule
 
     /// <inheritdoc/>
     public void AddConstraints(Person student,
+        int klasse,
         IEnumerable<ProfundumSlot> slots,
         IEnumerable<ProfundumBelegWunsch> wuensche,
         Dictionary<(ProfundumSlot s, ProfundumInstanz i), BoolVar> belegVars,
@@ -90,7 +91,7 @@ public class NotMultipleInstancesOfSameProfundumRule : IProfundumIndividualRule
     }
 
     /// <inheritdoc/>
-    public IEnumerable<MatchingWarning> GetWarnings(Person student, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
+    public IEnumerable<MatchingWarning> GetWarnings(Person student, Func<DateTime, int> klasseAsOf, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
         => enrollments.GroupBy(e => e.ProfundumInstanz!.Profundum)
             .Where(x => x.Select(x => x.ProfundumInstanz).Distinct().Count() > 1)
             .Select(x => new MatchingWarning($"Mehrere Instanzen desselben Profundums: {x.Key.Bezeichnung}"));

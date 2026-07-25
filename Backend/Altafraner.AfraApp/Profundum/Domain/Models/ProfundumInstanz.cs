@@ -30,6 +30,13 @@ public class ProfundumInstanz : IHasTimestamps, IHasUserTracking
     public int? MaxEinschreibungen { get; set; } = null;
 
     /// <summary>
+    ///     An optional target enrollment count set by the course organizer. If set, the matching solver is nudged
+    ///     (softly - see <see cref="Services.Rules.WantedEinschreibungenRule"/>) toward this size, but never at the
+    ///     expense of student wishes, which remain paramount.
+    /// </summary>
+    public int? WantedEinschreibungen { get; set; } = null;
+
+    /// <summary>
     ///     all enrollments into this instance
     /// </summary>
     /// <remarks>Enrollments might be partial, be careful</remarks>
