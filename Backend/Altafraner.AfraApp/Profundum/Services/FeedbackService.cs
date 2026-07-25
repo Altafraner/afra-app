@@ -123,7 +123,7 @@ internal sealed class FeedbackService
             .ToListAsync();
 
         var feedback = await _dbContext.ProfundumFeedbackEntries.Select(e => new
-                { e.Einschreibung.BetroffenePersonId, e.Einschreibung.ProfundumInstanzId, e.Einschreibung.SlotId })
+        { e.Einschreibung.BetroffenePersonId, e.Einschreibung.ProfundumInstanzId, e.Einschreibung.SlotId })
             .Distinct()
             .ToArrayAsync();
 

@@ -316,7 +316,9 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
         {
             e.HasKey(fe => new
             {
-                fe.AnkerId, fe.SlotId, fe.BetroffenePersonId
+                fe.AnkerId,
+                fe.SlotId,
+                fe.BetroffenePersonId
             });
 
             e.HasOne(fe => fe.Einschreibung)

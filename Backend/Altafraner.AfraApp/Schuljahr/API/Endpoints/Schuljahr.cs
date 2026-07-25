@@ -149,12 +149,12 @@ public static class Schuljahr
             .OrderBy(b => b.Schema.Unterrichtsstunde)
             .ThenBy(b => b.Schema.Id)
             .Select(b => new
-        {
-            schemaId = b.Schema.Id,
-            name = b.Schema.Bezeichnung,
-            id = b.Block.Id,
-            supervisors = b.Block.Supervisors.Select(e => new PersonInfoMinimal(e))
-        });
+            {
+                schemaId = b.Schema.Id,
+                name = b.Schema.Bezeichnung,
+                id = b.Block.Id,
+                supervisors = b.Block.Supervisors.Select(e => new PersonInfoMinimal(e))
+            });
 
         return Results.Ok(blocksMapped);
     }

@@ -48,10 +48,10 @@ public class SchuljahrService
             .AsAsyncEnumerable()
             .Select(s => new DTO_Schultag(s.Datum, s.Wochentyp,
                 s.Blocks.Select(b => new
-                    {
-                        Block = b,
-                        Schema = blocks[b.SchemaId]
-                    })
+                {
+                    Block = b,
+                    Schema = blocks[b.SchemaId]
+                })
                     .OrderBy(b => b.Schema.Unterrichtsstunde)
                     .ThenBy(b => b.Block.SchemaId)
                     .Select(b => new BlockSchema(b.Block.SchemaId, b.Schema.Bezeichnung))))
