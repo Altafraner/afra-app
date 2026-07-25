@@ -1,16 +1,13 @@
 using System.Security.Claims;
-using System.Text;
 using Altafraner.AfraApp.Attendance.Domain.Contracts;
+using Altafraner.AfraApp.Attendance.Domain.Dto;
 using Altafraner.AfraApp.Attendance.Domain.Dto.Notes;
 using Altafraner.AfraApp.Attendance.Domain.HubClients;
 using Altafraner.AfraApp.Attendance.Services;
 using Altafraner.AfraApp.Domain;
-using Altafraner.AfraApp.Domain.TimeInterval;
 using Altafraner.AfraApp.Otium.Domain.DTO;
-using Altafraner.AfraApp.Otium.Domain.DTO.Dashboard;
 using Altafraner.AfraApp.Otium.Domain.DTO.Katalog;
 using Altafraner.AfraApp.Otium.Domain.Models;
-using Altafraner.AfraApp.Schuljahr.Domain.Models;
 using Altafraner.AfraApp.User.Domain.DTO;
 using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.AfraApp.User.Services;
@@ -173,6 +170,18 @@ internal class OtiumEndpointService
             .Include(s => s.Blocks)
             .ToListAsync();
         var blocks = schultage.SelectMany(s => s.Blocks);
+        var today = schultage.First(s => s.Datum == date);
+
+        // Get all termine in the given week
+        var klassenstufe = _userService.GetKlassenstufe(user);
+        var termine = await _dbContext.OtiaTermine
+            .Include(t => t.Otium)
+            .ThenInclude(e => e.Kategorie)
+            .Where(e => blocks.Contains(e.Block))
+            .Where(e =>
+                (e.Otium.MinKlasse == null || e.Otium.MinKlasse <= klassenstufe) &&
+                (e.Otium.MaxKlasse == null || e.Otium.MaxKlasse >= klassenstufe))
+            .ToListAsync();
 
         // Get all enrollments for the given week
         var weeksEnrollments = await _dbContext.OtiaEinschreibungen
@@ -186,280 +195,26 @@ internal class OtiumEndpointService
             .ToListAsync();
         var datesEnrollments = weeksEnrollments.Where(e => e.Termin.Block.SchultagKey == date).ToList();
 
+        // Get attendances
+        var weeksAttendances = (await _attendanceService.GetAttendances(blocks.Select(e => new AttendanceEntryId
+        {
+            Scope = OtiumAttendanceInformationProvider.ScopeValue,
+            SlotId = e.Id,
+            StudentId = user.Id
+        }))).ToDictionary(e => e.Key.SlotId, e => e.Value);
+        var todaysAttendances = today.Blocks.ToDictionary(e => e.Id, e => weeksAttendances[e.Id]);
+
         messages.AddRange(await _rulesValidationService.GetMessagesForEnrollmentsAsync(user, datesEnrollments));
-        messages.AddRange(await _rulesValidationService.GetMessagesForDayAsync(user,
-            schultage.First(s => s.Datum == date),
-            datesEnrollments));
-        messages.AddRange(await _rulesValidationService.GetMessagesForWeekAsync(user, schultage, weeksEnrollments));
+        messages.AddRange(
+            await _rulesValidationService.GetMessagesForDayAsync(user, today, datesEnrollments, todaysAttendances));
+        messages.AddRange(
+            await _rulesValidationService.GetMessagesForWeekAsync(user,
+                schultage,
+                termine,
+                weeksEnrollments,
+                weeksAttendances));
 
         return messages;
-    }
-
-    /// <summary>
-    ///     Generates the dashboard for a student.
-    /// </summary>
-    /// <param name="user">The student to generate the dashboard for</param>
-    /// <param name="all">Iff true, all available school-days are included. Otherwise, just the current and next two weeks.</param>
-    // I hate myself for writing this mess of a method. Have fun!
-    public async IAsyncEnumerable<Week> GetStudentDashboardAsyncEnumerable(Models_Person user,
-        bool all)
-    {
-        var thisMonday = DateOnly.FromDateTime(DateTime.Today).GetStartOfWeek();
-
-        var startDate = thisMonday;
-        var endDate = startDate.AddDays(7 * 3);
-
-        IQueryable<Schultag> schultageQuery = _dbContext.Schultage
-            .Include(s => s.Blocks)
-            .OrderBy(s => s.Datum);
-        if (!all) schultageQuery = schultageQuery.Where(s => s.Datum >= startDate && s.Datum < endDate);
-
-        var schultage = await schultageQuery.ToListAsync();
-
-        var einschreibungen = await _dbContext.OtiaEinschreibungen
-            .Where(e => e.BetroffenePerson.Id == user.Id)
-            .Include(e => e.Termin)
-            .ThenInclude(e => e.Block)
-            .ThenInclude(e => e.Schultag)
-            .Include(e => e.Termin)
-            .ThenInclude(e => e.Tutor)
-            .Include(e => e.Termin)
-            .ThenInclude(e => e.Otium)
-            .ThenInclude(e => e.Kategorie)
-            .OrderBy(s => s.Termin.Block.SchultagKey)
-            .ThenBy(s => s.Termin.Block.SchemaId)
-            .Where(e => schultage.Contains(e.Termin.Block.Schultag))
-            .ToListAsync();
-
-        var weeks = schultage.GroupBy(s => s.Datum.GetStartOfWeek());
-
-        var messageBuilder = new StringBuilder();
-        foreach (var week in weeks)
-        {
-            messageBuilder.Clear();
-            // Increase performance by taking from the already sorted list of enrollments, then removing them from the list before the next iteration.
-            var weekEnd = week.Key.AddDays(7);
-            var einschreibungenForWeek = einschreibungen
-                .TakeWhile(e => e.Termin.Block.SchultagKey < weekEnd)
-                .ToList();
-            einschreibungen.RemoveRange(0, einschreibungenForWeek.Count);
-
-            foreach (var schultag in week)
-            {
-                var messagesForBlocksOnDay =
-                    await _rulesValidationService.GetMessagesForDayAsync(user, schultag, einschreibungenForWeek);
-                if (messagesForBlocksOnDay.Count == 0) continue;
-                messageBuilder.AppendLine();
-                messageBuilder.AppendLine($"**{schultag.Datum:dddd, dd.MM.yyyy}**");
-                foreach (var message in messagesForBlocksOnDay)
-                    messageBuilder.AppendLine($"- {message}");
-            }
-
-            var messagesForWeek =
-                await _rulesValidationService.GetMessagesForWeekAsync(user, week.ToList(), einschreibungenForWeek);
-            if (messagesForWeek.Count > 0)
-            {
-                if (messageBuilder.Length > 0) messageBuilder.AppendLine();
-                messageBuilder.AppendLine("**Wöchentliche Bedingungen**");
-                foreach (var message in messagesForWeek)
-                    messageBuilder.AppendLine($"- {message}");
-            }
-
-            yield return new Week(
-                week.Key,
-                messageBuilder.ToString(),
-                await GenerateDtosWithPlaceholders(einschreibungenForWeek, week.ToList(), user)
-            );
-        }
-    }
-
-    /// <summary>
-    ///     Generates DTOs for the enrollments, including placeholders for unenrolled blocks.
-    /// </summary>
-    /// <param name="enrollments">The enrollments in the week</param>
-    /// <param name="schooldays">All schooldays with block in the week</param>
-    /// <param name="user">The user whose enrollments are given</param>
-    /// <returns>
-    ///     An enumerable containing DTOs for all enrollments and all unenrolled blocks. DTOs for unenrolled blocks only
-    ///     include date and block information. The sorting is stable.
-    /// </returns>
-    private async Task<IEnumerable<Einschreibung>> GenerateDtosWithPlaceholders(
-        List<OtiumEinschreibung> enrollments, List<Schultag> schooldays, Models_Person user)
-    {
-        var allBlocks = schooldays.SelectMany(s => s.Blocks).ToList();
-
-        var blocksUnenrolled =
-            _enrollmentService.GetNotEnrolledBlocks(enrollments, allBlocks);
-
-        var blocksDoneOrRunning = user.Rolle == Rolle.Mittelstufe
-            ? allBlocks.Where(e =>
-                    _blockHelper.GetBlockStatus(e) is BlockHelper.BlockStatus.Running or BlockHelper.BlockStatus.Done)
-                .Select(b => (OtiumAttendanceInformationProvider.ScopeValue, b.Id))
-                .ToHashSet()
-            : [];
-        var attendances = user.Rolle == Rolle.Mittelstufe
-            ? await _attendanceService.GetAttendanceForStudentInSlotsAsync(blocksDoneOrRunning, user.Id)
-            : [];
-
-        var additionalEnrollments = blocksUnenrolled.Select(b => (b.SchemaId, new Einschreibung
-        {
-            Datum = b.SchultagKey,
-            Block = _blockHelper.Get(b.SchemaId)!.Bezeichnung,
-            Anwesenheit = blocksDoneOrRunning.Contains((OtiumAttendanceInformationProvider.ScopeValue, b.Id))
-                ? attendances[(OtiumAttendanceInformationProvider.ScopeValue, b.Id)]
-                : null
-        }));
-
-        return enrollments.Select(e => (e.Termin.Block.SchemaId, new Einschreibung
-        {
-            Block = _blockHelper.Get(e.Termin.Block.SchemaId)!.Bezeichnung,
-            Datum = e.Termin.Block.SchultagKey,
-            KategorieId = e.Termin.Otium.Kategorie.Id,
-            Ort = e.Termin.Ort,
-            Otium = e.Termin.Bezeichnung,
-            TerminId = e.Termin.Id,
-            Anwesenheit =
-                blocksDoneOrRunning.Contains((OtiumAttendanceInformationProvider.ScopeValue, e.Termin.Block.Id))
-                    ? attendances[(OtiumAttendanceInformationProvider.ScopeValue, e.Termin.Block.Id)]
-                    : null
-        }))
-            .Concat(additionalEnrollments)
-            .OrderBy(e => e.Item2.Datum)
-            .ThenBy(e => e.SchemaId)
-            .Select(e => e.Item2);
-    }
-
-    /// <summary>
-    ///     Returns an overview of termine and mentees for a teacher.
-    /// </summary>
-    public async Task<LehrerUebersicht> GetTeacherDashboardAsync(Models_Person user)
-    {
-        var startDate = DateOnly.FromDateTime(DateTime.Today).GetStartOfWeek().AddDays(-7);
-        var endDate = startDate.AddDays(21);
-
-        var mentees = (await _userService.GetMenteesAsync(user))
-            .OrderBy(s => s.Rolle switch
-            {
-                Rolle.Mittelstufe => 0,
-                Rolle.Oberstufe => 1,
-                _ => -1,
-            })
-            .ThenBy(s => s.FirstName)
-            .ThenBy(s => s.LastName);
-
-        var menteesEnrollments = await _dbContext.OtiaEinschreibungen
-            .Where(e => mentees.Contains(e.BetroffenePerson))
-            .Where(e => e.Termin.Block.Schultag.Datum >= startDate && e.Termin.Block.Schultag.Datum < endDate)
-            .Include(p => p.Termin)
-            .ThenInclude(p => p.Block)
-            .ThenInclude(b => b.Schultag)
-            .Include(e => e.Termin)
-            .ThenInclude(t => t.Otium)
-            .ThenInclude(o => o.Kategorie)
-            .GroupBy(e => e.BetroffenePerson.Id)
-            .ToDictionaryAsync(e => e.Key, e => e.AsEnumerable());
-
-        var schultage = await _dbContext.Schultage
-            .Include(s => s.Blocks)
-            .Where(s => s.Datum >= startDate && s.Datum < endDate)
-            .ToListAsync();
-
-        List<MenteePreview> menteePreviews = [];
-
-        var lastWeekInterval = new DateTimeInterval(startDate.ToDateTime(new TimeOnly(0, 0)), TimeSpan.FromDays(7));
-        var thisWeekInterval = new DateTimeInterval(lastWeekInterval.End, TimeSpan.FromDays(7));
-        var nextWeekInterval = new DateTimeInterval(thisWeekInterval.End, TimeSpan.FromDays(7));
-
-        foreach (var mentee in mentees)
-            menteePreviews.Add(await GenerateMenteePreview(mentee,
-                menteesEnrollments.GetValueOrDefault(mentee.Id, [])));
-
-        List<LehrerTerminPreview> terminPreviews = [];
-
-        var termine = await _dbContext.OtiaTermine
-            .Include(t => t.Otium)
-            .Include(t => t.Block)
-            .ThenInclude(b => b.Schultag)
-            .OrderBy(t => t.Block.Schultag.Datum)
-            .ThenBy(t => t.Block.SchemaId)
-            .Where(t => !t.IstAbgesagt && t.Tutor != null && t.Tutor.Id == user.Id &&
-                        t.Block.Schultag.Datum >= DateOnly.FromDateTime(DateTime.Today) &&
-                        t.Block.Schultag.Datum < endDate)
-            .ToListAsync();
-
-        foreach (var termin in termine)
-            terminPreviews.Add(
-                new LehrerTerminPreview(termin.Id,
-                    termin.OverrideBezeichnung ?? termin.Bezeichnung,
-                    termin.Ort,
-                    await _enrollmentService.GetLoadPercent(termin), termin.Block.Schultag.Datum,
-                    _blockHelper.Get(termin.Block.SchemaId)!.Bezeichnung)
-            );
-
-        return new LehrerUebersicht(terminPreviews, menteePreviews);
-
-
-        async Task<MenteePreview> GenerateMenteePreview(Models_Person mentee,
-            IEnumerable<OtiumEinschreibung> enrollments)
-        {
-            if (mentee.Rolle == Rolle.Oberstufe)
-                return new MenteePreview(new PersonInfoMinimal(mentee),
-                    MenteePreviewStatus.NichtVerfuegbar,
-                    MenteePreviewStatus.NichtVerfuegbar,
-                    MenteePreviewStatus.NichtVerfuegbar);
-
-            var enrollmentsList = enrollments as OtiumEinschreibung[] ?? enrollments.ToArray();
-
-            return new MenteePreview(new PersonInfoMinimal(mentee),
-                await IsWeekOkay(lastWeekInterval),
-                await IsWeekOkay(thisWeekInterval),
-                await IsWeekOkay(nextWeekInterval)
-            );
-
-            async Task<MenteePreviewStatus> IsWeekOkay(DateTimeInterval week)
-            {
-                var schultageInWeek = schultage.Where(s =>
-                    week.Contains(s.Datum.ToDateTime(new TimeOnly(0, 0)))).ToList();
-                if (schultageInWeek.Count == 0) return MenteePreviewStatus.NichtVerfuegbar;
-
-                var weeksMessages = await _rulesValidationService.GetMessagesForWeekAsync(mentee,
-                    schultage.Where(schultageInWeek.Contains).ToList(),
-                    enrollmentsList.Where(e => schultageInWeek.Contains(e.Termin.Block.Schultag)).ToList());
-                if (weeksMessages.Count > 0) return DecideBetweenOpenAndConspicuous(schultageInWeek);
-
-                foreach (var schultag in schultageInWeek)
-                {
-                    var daysMessages = await _rulesValidationService.GetMessagesForDayAsync(mentee, schultag,
-                        enrollmentsList.Where(e => e.Termin.Block.Schultag == schultag).ToList());
-                    if (daysMessages.Count > 0) return DecideBetweenOpenAndConspicuous(schultageInWeek);
-                }
-
-                var enrollmentsMessages =
-                    await _rulesValidationService.GetMessagesForEnrollmentsAsync(mentee, enrollmentsList.ToList());
-                return enrollmentsMessages.Count > 0
-                    ? DecideBetweenOpenAndConspicuous(schultageInWeek)
-                    : MenteePreviewStatus.Okay;
-            }
-
-            MenteePreviewStatus DecideBetweenOpenAndConspicuous(List<Schultag> daysInWeek)
-            {
-                var today = DateOnly.FromDateTime(DateTime.Now);
-                var lastDayWithBlocks = daysInWeek.Where(s => s.Blocks.Count > 0).MaxBy(s => s.Datum)?.Datum;
-                if (lastDayWithBlocks is null) return MenteePreviewStatus.NichtVerfuegbar;
-                if (lastDayWithBlocks >= today) return MenteePreviewStatus.Offen;
-                return MenteePreviewStatus.Auffaellig;
-            }
-        }
-    }
-
-    /// <summary>
-    ///     Generates the dashboard view as a mentee would see it and adds information about the mentee
-    /// </summary>
-    public LehrerMenteeView GetStudentDashboardForTeacher(Models_Person student, bool all = false)
-    {
-        return new LehrerMenteeView(
-            GetStudentDashboardAsyncEnumerable(student, all),
-            new PersonInfoMinimal(student));
     }
 
     /// <summary>
@@ -491,16 +246,18 @@ internal class OtiumEndpointService
             termin.Block.Id);
 
         var anwesenheiten =
-            await (await _attendanceService.GetAttendanceForStudentsInSlotAsync(
-                    OtiumAttendanceInformationProvider.ScopeValue,
-                    termin.Block.Id,
-                    persons.Keys))
+            await (await _attendanceService.GetAttendances(persons.Keys.Select(e => new AttendanceEntryId
+                {
+                    Scope = OtiumAttendanceInformationProvider.ScopeValue,
+                    SlotId = termin.Block.Id,
+                    StudentId = e
+                })))
             .ToAsyncEnumerable()
             .Select(e =>
-                new IAttendanceHubClient.StudentStatus(new PersonInfoMinimal(persons[e.Key]),
-                    e.Value.state,
-                    e.Value.type,
-                    notes.GetValueOrDefault(e.Key, []).Select(n => new Note(n))))
+                    new IAttendanceHubClient.StudentStatus(new PersonInfoMinimal(persons[e.Key.StudentId]),
+                        e.Value.State,
+                        e.Value.Type,
+                    notes.GetValueOrDefault(e.Key.StudentId, []).Select(n => new Note(n))))
             .OrderBy(e => e.Student.Nachname)
             .ThenBy(e => e.Student.Vorname)
             .ToArrayAsync();

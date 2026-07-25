@@ -275,7 +275,7 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
         {
             p.HasOne(i => i.Profundum)
                 .WithMany(e => e.Instanzen);
-            p.HasMany(e => e.Slots).WithMany();
+            p.HasMany(e => e.Slots).WithMany(e => e.Angebote);
             p.HasMany(e => e.Verantwortliche).WithMany(e => e.BetreuteProfunda);
         });
 
@@ -294,7 +294,8 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
 
         modelBuilder.Entity<ProfundumTermin>(w =>
         {
-            w.HasKey(t => t.Day);
+            w.HasKey(t => t.Id);
+            w.HasIndex(t => t.Day).IsUnique();
             w.HasOne(t => t.Slot).WithMany(s => s.Termine);
         });
 

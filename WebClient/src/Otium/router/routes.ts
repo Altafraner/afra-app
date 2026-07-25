@@ -17,12 +17,6 @@ export const routes = [
         props: true,
     },
     {
-        path: '/student/:studentId',
-        name: 'Mentee',
-        component: () => import('@/Otium/views/Teacher/Mentee.vue'),
-        props: true,
-    },
-    {
         path: '/otium/management/termin/:terminId',
         name: 'Verwaltung-Termin',
         component: () => import('@/Otium/views/Management/Termin.vue'),

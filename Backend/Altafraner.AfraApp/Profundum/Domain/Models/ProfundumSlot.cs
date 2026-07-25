@@ -3,7 +3,7 @@ namespace Altafraner.AfraApp.Profundum.Domain.Models;
 /// <summary>
 ///     A db record representing a Profundum.
 /// </summary>
-public record ProfundumSlot
+public class ProfundumSlot
 {
     /// <summary>
     ///     A unique identifier for the Profundum Slot
@@ -34,6 +34,11 @@ public record ProfundumSlot
     ///     all dates this slot happens at
     /// </summary>
     public List<ProfundumTermin> Termine { get; set; } = null!;
+
+    /// <summary>
+    ///     All angebote that happen in this slot
+    /// </summary>
+    public List<ProfundumInstanz> Angebote { get; set; } = [];
 
     /// <summary>
     ///     Defines, whether feedback for this slot will be visible to mentors and students.

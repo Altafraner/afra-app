@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using Altafraner.AfraApp.Attendance.Domain.Contracts;
+using Altafraner.AfraApp.Attendance.Domain.Dto;
 using Altafraner.AfraApp.Attendance.Domain.Models;
 using Altafraner.AfraApp.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
@@ -30,23 +31,25 @@ internal sealed class AttendanceService : IAttendanceService
         _serviceProvider = serviceProvider;
     }
 
-    public async Task<AttendanceState> GetAttendanceForStudentInSlotAsync(AttendanceScope scope,
-        Guid slotId,
-        Guid studentId)
+    public async Task<AttendanceInformation> GetAttendance(AttendanceEntryId request)
     {
         var attendanceEntry = await _dbContext.Attendances
             .Where(e =>
-                e.Scope == scope && e.SlotId == slotId && e.StudentId == studentId)
-            .Select(e => new { e.Status })
+                e.Scope == request.Scope && e.SlotId == request.SlotId && e.StudentId == request.StudentId)
+            .Select(e => new { e.Status, e.EntryType })
             .FirstOrDefaultAsync();
-        return attendanceEntry?.Status ?? IAttendanceService.DefaultAttendanceStatus;
+        return new AttendanceInformation
+        {
+            State = attendanceEntry?.Status ?? IAttendanceService.DefaultAttendanceStatus,
+            Type = attendanceEntry?.EntryType ?? AttendanceEntryType.Manual
+        };
     }
 
     public async Task<Dictionary<Guid, (AttendanceState state, AttendanceEntryType type)>>
         GetAttendanceForStudentsInSlotAsync(
             AttendanceScope scope,
-        Guid slotId,
-        IEnumerable<Guid> studentIds)
+            Guid slotId,
+            IEnumerable<Guid> studentIds)
     {
         var attendanceEntry = await _dbContext.Attendances
             .Where(e =>
@@ -59,29 +62,32 @@ internal sealed class AttendanceService : IAttendanceService
         return attendanceEntry;
     }
 
-    public async Task<Dictionary<(AttendanceScope Scope, Guid SlotId), AttendanceState>>
-        GetAttendanceForStudentInSlotsAsync(
-            IEnumerable<(AttendanceScope Scope, Guid SlotId)> slots,
-            Guid personId)
+    public async Task<Dictionary<AttendanceEntryId, AttendanceInformation>> GetAttendances(
+        IEnumerable<AttendanceEntryId> requests)
     {
         var parameter = Expression.Parameter(typeof(Domain.Models.Attendance), "e");
         Expression body = Expression.Constant(false);
 
-        var slotsArray = slots as (AttendanceScope Scope, Guid SlotId)[] ?? slots.ToArray();
-        foreach (var slot in slotsArray)
+        var requestsArray = requests as AttendanceEntryId[] ?? requests.ToArray();
+        foreach (var request in requestsArray)
         {
             // e.Scope == slot.Scope
             var scopeEqual = Expression.Equal(
                 Expression.Property(parameter, nameof(Domain.Models.Attendance.Scope)),
-                Expression.Constant(slot.Scope));
+                Expression.Constant(request.Scope));
 
             // e.SlotId == slot.SlotId
             var slotIdEqual = Expression.Equal(
                 Expression.Property(parameter, nameof(Domain.Models.Attendance.SlotId)),
-                Expression.Constant(slot.SlotId));
+                Expression.Constant(request.SlotId));
+
+            // e.StudentId == slot.StudentId
+            var studentIdEqual = Expression.Equal(
+                Expression.Property(parameter, nameof(Domain.Models.Attendance.StudentId)),
+                Expression.Constant(request.StudentId));
 
             // e.Scope == slot.Scope && e.SlotId == slot.SlotId
-            var andExpression = Expression.AndAlso(scopeEqual, slotIdEqual);
+            var andExpression = Expression.AndAlso(Expression.AndAlso(scopeEqual, slotIdEqual), studentIdEqual);
 
             body = Expression.OrElse(body, andExpression);
         }
@@ -89,19 +95,31 @@ internal sealed class AttendanceService : IAttendanceService
         var compositeFilter = Expression.Lambda<Func<Domain.Models.Attendance, bool>>(body, parameter);
 
         var attendanceEntries = await _dbContext.Attendances
-            .Where(e => e.StudentId == personId)
             .Where(compositeFilter)
-            .Select(e => new { e.Scope, e.SlotId, e.Status })
-            .ToDictionaryAsync(e => (e.Scope, e.SlotId), e => e.Status);
+            .Select(e => new { e.Scope, e.SlotId, e.StudentId, e.Status, e.EntryType })
+            .ToDictionaryAsync(e => new AttendanceEntryId
+                    { Scope = e.Scope, SlotId = e.SlotId, StudentId = e.StudentId },
+                e => new AttendanceInformation
+                {
+                    State = e.Status,
+                    Type = e.EntryType
+                });
         var keys = attendanceEntries.Keys;
-        var missing = slotsArray.Where(s => !keys.Contains(s)).ToArray();
-        attendanceEntries.EnsureCapacity(attendanceEntries.Count + missing.Length);
-        foreach (var slot in missing) attendanceEntries.Add(slot, IAttendanceService.DefaultAttendanceStatus);
+        var missingAttendanceIds = requestsArray.Where(s => !keys.Contains(s)).ToArray();
+        attendanceEntries.EnsureCapacity(attendanceEntries.Count + missingAttendanceIds.Length);
+        foreach (var missingAttendanceId in missingAttendanceIds)
+            attendanceEntries.Add(missingAttendanceId,
+                new AttendanceInformation
+                {
+                    State = IAttendanceService.DefaultAttendanceStatus,
+                    Type = AttendanceEntryType.Manual
+                }
+            );
 
         return attendanceEntries;
     }
 
-    public async Task<Dictionary<Person, (AttendanceState state, AttendanceEntryType type)>> GetAttendanceForSlotAsync(
+    public async Task<Dictionary<Person, AttendanceInformation>> GetAttendanceForSlotAsync(
         AttendanceScope scope,
         Guid slotId)
     {
@@ -113,27 +131,29 @@ internal sealed class AttendanceService : IAttendanceService
                 a => a.StudentId,
                 (p, a) => new { Person = p, Attendance = a })
             .ToDictionaryAsync(x => x.Person,
-                x => (x.Attendance?.Status ?? IAttendanceService.DefaultAttendanceStatus,
-                    x.Attendance?.EntryType ?? AttendanceEntryType.Manual));
+                x => new AttendanceInformation
+                {
+                    State = x.Attendance?.Status ?? IAttendanceService.DefaultAttendanceStatus,
+                    Type = x.Attendance?.EntryType ?? AttendanceEntryType.Manual
+                });
     }
 
-    public async Task SetAttendanceAsync(AttendanceScope scope, Guid slotId, Guid studentId, AttendanceState status)
+    public async Task SetAttendanceAsync(AttendanceEntryId entryId, AttendanceState status)
     {
         var attendanceEntry = await _dbContext.Attendances
-            .FirstOrDefaultAsync(e => e.Scope == scope && e.SlotId == slotId && e.StudentId == studentId);
+            .FirstOrDefaultAsync(e =>
+                e.Scope == entryId.Scope && e.SlotId == entryId.SlotId && e.StudentId == entryId.StudentId);
         if (attendanceEntry is null)
         {
             _dbContext.Attendances.Add(new Domain.Models.Attendance
             {
-                Scope = scope,
-                SlotId = slotId,
-                StudentId = studentId,
+                Scope = entryId.Scope,
+                SlotId = entryId.SlotId,
+                StudentId = entryId.StudentId,
                 Status = status,
                 EntryType = AttendanceEntryType.Manual
             });
-            await _simpleAttendanceNotificationService.UpdateSingleAttendance(scope,
-                slotId,
-                studentId,
+            await _simpleAttendanceNotificationService.UpdateSingleAttendance(entryId,
                 status,
                 AttendanceEntryType.Manual);
             await _dbContext.SaveChangesAsync();
@@ -142,9 +162,7 @@ internal sealed class AttendanceService : IAttendanceService
 
         attendanceEntry.Status = status;
         attendanceEntry.EntryType = AttendanceEntryType.Manual;
-        await _simpleAttendanceNotificationService.UpdateSingleAttendance(scope,
-            slotId,
-            studentId,
+        await _simpleAttendanceNotificationService.UpdateSingleAttendance(entryId,
             status,
             AttendanceEntryType.Manual);
         await _dbContext.SaveChangesAsync();
@@ -223,15 +241,19 @@ internal sealed class AttendanceService : IAttendanceService
 
         foreach (var (studentId, attendanceState) in results)
         {
+            var attendanceId = new AttendanceEntryId
+            {
+                Scope = scope,
+                SlotId = slotId,
+                StudentId = studentId
+            };
             if (!allMsStudentIds.Contains(studentId)) continue;
             if (attendances.TryGetValue(studentId, out var attendance))
             {
                 if (attendance.EntryType == AttendanceEntryType.Manual ||
                     attendance.Status == attendanceState) continue;
                 attendance.Status = attendanceState;
-                await _simpleAttendanceNotificationService.UpdateSingleAttendance(scope,
-                    slotId,
-                    studentId,
+                await _simpleAttendanceNotificationService.UpdateSingleAttendance(attendanceId,
                     attendance.Status,
                     attendance.EntryType);
             }
@@ -249,10 +271,14 @@ internal sealed class AttendanceService : IAttendanceService
         studentIds.ExceptWith(results.Keys);
         foreach (var studentId in studentIds)
         {
+            var attendanceId = new AttendanceEntryId
+            {
+                Scope = scope,
+                SlotId = slotId,
+                StudentId = studentId
+            };
             _dbContext.Remove(attendances[studentId]);
-            await _simpleAttendanceNotificationService.UpdateSingleAttendance(scope,
-                slotId,
-                studentId,
+            await _simpleAttendanceNotificationService.UpdateSingleAttendance(attendanceId,
                 IAttendanceService.DefaultAttendanceStatus,
                 AttendanceEntryType.Manual);
         }

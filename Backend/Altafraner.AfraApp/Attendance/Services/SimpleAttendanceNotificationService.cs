@@ -1,5 +1,6 @@
 using Altafraner.AfraApp.Attendance.API.Hubs;
 using Altafraner.AfraApp.Attendance.Domain.Contracts;
+using Altafraner.AfraApp.Attendance.Domain.Dto;
 using Altafraner.AfraApp.Attendance.Domain.Dto.Notes;
 using Altafraner.AfraApp.Attendance.Domain.HubClients;
 using Altafraner.AfraApp.Attendance.Domain.Models;
@@ -22,17 +23,17 @@ internal sealed class SimpleAttendanceNotificationService
     /// <summary>
     ///     Updates a single attendance
     /// </summary>
-    public async Task UpdateSingleAttendance(AttendanceScope scope,
-        Guid slotId,
-        Guid studentId,
+    public async Task UpdateSingleAttendance(AttendanceEntryId entryId,
         AttendanceState attendanceState,
         AttendanceEntryType type)
     {
-        var informationProvider = _serviceProvider.GetRequiredKeyedService<IAttendanceInformationProvider>(scope);
-        var eventId = await informationProvider.GetEventForStudentAndSlot(slotId, studentId);
-        await _hubContext.Clients.Groups(AttendanceHub.SlotGroupName(scope, slotId),
-                AttendanceHub.EventGroupName(scope, slotId, eventId))
-            .UpdateAttendance(new IAttendanceHubClient.AttendanceUpdate(studentId, eventId, attendanceState, type));
+        var informationProvider =
+            _serviceProvider.GetRequiredKeyedService<IAttendanceInformationProvider>(entryId.Scope);
+        var eventId = await informationProvider.GetEventForStudentAndSlot(entryId.SlotId, entryId.StudentId);
+        await _hubContext.Clients.Groups(AttendanceHub.SlotGroupName(entryId.Scope, entryId.SlotId),
+                AttendanceHub.EventGroupName(entryId.Scope, entryId.SlotId, eventId))
+            .UpdateAttendance(
+                new IAttendanceHubClient.AttendanceUpdate(entryId.StudentId, eventId, attendanceState, type));
     }
 
     /// <summary>

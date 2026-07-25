@@ -814,6 +814,11 @@ namespace Altafraner.AfraApp.Migrations
 
             modelBuilder.Entity("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumTermin", b =>
                 {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
                     b.Property<DateOnly>("Day")
                         .HasColumnType("date")
                         .HasColumnName("day");
@@ -821,6 +826,10 @@ namespace Altafraner.AfraApp.Migrations
                     b.Property<TimeOnly>("EndTime")
                         .HasColumnType("time without time zone")
                         .HasColumnName("end_time");
+
+                    b.Property<int>("Lesson")
+                        .HasColumnType("integer")
+                        .HasColumnName("lesson");
 
                     b.Property<Guid>("SlotId")
                         .HasColumnType("uuid")
@@ -830,8 +839,12 @@ namespace Altafraner.AfraApp.Migrations
                         .HasColumnType("time without time zone")
                         .HasColumnName("start_time");
 
-                    b.HasKey("Day")
+                    b.HasKey("Id")
                         .HasName("pk_profunda_termine");
+
+                    b.HasIndex("Day")
+                        .IsUnique()
+                        .HasDatabaseName("ix_profunda_termine_day");
 
                     b.HasIndex("SlotId")
                         .HasDatabaseName("ix_profunda_termine_slot_id");
@@ -1131,15 +1144,15 @@ namespace Altafraner.AfraApp.Migrations
 
             modelBuilder.Entity("ProfundumInstanzProfundumSlot", b =>
                 {
-                    b.Property<Guid>("ProfundumInstanzId")
+                    b.Property<Guid>("AngeboteId")
                         .HasColumnType("uuid")
-                        .HasColumnName("profundum_instanz_id");
+                        .HasColumnName("angebote_id");
 
                     b.Property<Guid>("SlotsId")
                         .HasColumnType("uuid")
                         .HasColumnName("slots_id");
 
-                    b.HasKey("ProfundumInstanzId", "SlotsId")
+                    b.HasKey("AngeboteId", "SlotsId")
                         .HasName("pk_profundum_instanz_profundum_slot");
 
                     b.HasIndex("SlotsId")
@@ -1589,10 +1602,10 @@ namespace Altafraner.AfraApp.Migrations
                 {
                     b.HasOne("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumInstanz", null)
                         .WithMany()
-                        .HasForeignKey("ProfundumInstanzId")
+                        .HasForeignKey("AngeboteId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_profundum_instanz_profundum_slot_profunda_instanzen_profund~");
+                        .HasConstraintName("fk_profundum_instanz_profundum_slot_profunda_instanzen_angebot~");
 
                     b.HasOne("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumSlot", null)
                         .WithMany()
