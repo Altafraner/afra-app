@@ -20,6 +20,7 @@ public class AllSlotsRule : IProfundumIndividualRule
 
     /// <inheritdoc/>
     public void AddConstraints(Person student,
+        int klasse,
         IEnumerable<ProfundumSlot> slots,
         IEnumerable<ProfundumBelegWunsch> wuensche,
         Dictionary<(ProfundumSlot s, ProfundumInstanz i), BoolVar> belegVars,
@@ -42,7 +43,7 @@ public class AllSlotsRule : IProfundumIndividualRule
     }
 
     /// <inheritdoc/>
-    public IEnumerable<MatchingWarning> GetWarnings(Person student, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
+    public IEnumerable<MatchingWarning> GetWarnings(Person student, Func<DateTime, int> klasseAsOf, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
     {
         List<MatchingWarning> warnings = [];
         var enrollmentsArray = enrollments as ProfundumEinschreibung[] ?? enrollments.ToArray();

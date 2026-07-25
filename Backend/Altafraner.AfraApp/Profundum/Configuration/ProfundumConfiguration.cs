@@ -48,6 +48,15 @@ public class ProfundumConfiguration
     public int WunschMindestWert { get; set; } = 5;
 
     /// <summary>
+    ///     Penalty subtracted from the objective, per student of deviation between an Instanz's actual enrollment
+    ///     count and its optional organizer-chosen <see cref="Models.ProfundumInstanz.WantedEinschreibungen"/>
+    ///     target. Deliberately kept small relative to <see cref="WunschBasisWert"/>/<see cref="WunschKostenFaktor"/>
+    ///     - this is only a slight tendency toward a "good" course size, since student wishes must remain paramount
+    ///     and this must never outweigh even one rank of wish satisfaction. Set to 0 to disable entirely.
+    /// </summary>
+    public int WantedEinschreibungenStrafFaktor { get; set; } = 2;
+
+    /// <summary>
     ///     Path to a plain text file, one word per line, used to generate the human-shareable Partnerwahl invite
     ///     tokens (see <see cref="Services.ProfundumPartnerTokenService" />).
     /// </summary>
