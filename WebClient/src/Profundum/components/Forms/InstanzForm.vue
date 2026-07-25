@@ -5,6 +5,7 @@ import PersonSelector from '@/components/PersonSelector.vue';
 const props = defineProps({
     slots: { type: Array, default: () => [] },
     maxEinschreibungen: { type: Number, default: 15 },
+    wantedEinschreibungen: { type: Number, default: null },
     slotIds: { type: Array, default: () => [] },
     ort: { type: String, default: '' },
     verantwortlicheIds: { type: Array, default: () => [] },
@@ -15,6 +16,7 @@ const emit = defineEmits(['close']);
 
 const state = reactive({
     maxEinschreibungen: props.maxEinschreibungen,
+    wantedEinschreibungen: props.wantedEinschreibungen,
     slotIds: [...props.slotIds],
     ort: props.ort,
     verantwortlicheIds: [...props.verantwortlicheIds],
@@ -28,12 +30,29 @@ function validate(state) {
             message: 'Bitte geben Sie die Platzzahl an.',
         });
     }
+    if (state.wantedEinschreibungen != null) {
+        if (state.wantedEinschreibungen < 1) {
+            errors.push({
+                name: 'wantedEinschreibungen',
+                message: 'Die gewünschte Größe muss mindestens 1 sein.',
+            });
+        } else if (
+            state.maxEinschreibungen &&
+            state.wantedEinschreibungen > state.maxEinschreibungen
+        ) {
+            errors.push({
+                name: 'wantedEinschreibungen',
+                message: 'Die gewünschte Größe darf die Platzzahl nicht übersteigen.',
+            });
+        }
+    }
     return errors;
 }
 
 function submit(event) {
     emit('close', {
         maxEinschreibungen: event.data.maxEinschreibungen,
+        wantedEinschreibungen: event.data.wantedEinschreibungen ?? null,
         slots: event.data.slotIds,
         ort: event.data.ort?.trim() ?? '',
         verantwortlicheIds: event.data.verantwortlicheIds,
@@ -52,6 +71,19 @@ function submit(event) {
             >
                 <UFormField label="Plätze" name="maxEinschreibungen" required>
                     <UInputNumber v-model="state.maxEinschreibungen" :min="1" class="w-full" />
+                </UFormField>
+                <UFormField
+                    label="Gewünschte Größe"
+                    name="wantedEinschreibungen"
+                    hint="optional"
+                    help="Der Matching-Algorithmus bevorzugt diese Kursgröße leicht - Wünsche der Schüler bleiben aber immer vorrangig."
+                >
+                    <UInputNumber
+                        v-model="state.wantedEinschreibungen"
+                        :min="1"
+                        placeholder="keine Präferenz"
+                        class="w-full"
+                    />
                 </UFormField>
                 <UFormField label="Slots" name="slotIds">
                     <USelect
