@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Altafraner.AfraApp.Attendance.Domain.Models;
 using Microsoft.EntityFrameworkCore.Migrations;
 
@@ -10,7 +10,7 @@ namespace Altafraner.AfraApp.Migrations
     public partial class AttendanceRework : Migration
     {
         /// <inheritdoc />
-       protected override void Up(MigrationBuilder migrationBuilder)
+        protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.Sql("""
                 ALTER TYPE anwesenheits_status RENAME TO attendance_state;

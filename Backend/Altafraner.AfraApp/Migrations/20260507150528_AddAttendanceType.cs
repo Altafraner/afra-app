@@ -1,4 +1,4 @@
-﻿using Altafraner.AfraApp.Attendance.Domain.Models;
+using Altafraner.AfraApp.Attendance.Domain.Models;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
