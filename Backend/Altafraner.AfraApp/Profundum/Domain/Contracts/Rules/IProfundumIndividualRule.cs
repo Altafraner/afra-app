@@ -35,9 +35,13 @@ public interface IProfundumIndividualRule
         => RuleStatus.Valid;
 
     /// <summary>
-    ///     Add constraints to matching solver
+    ///     Add constraints to matching solver. <paramref name="klasse" /> is the student's grade level, precomputed
+    ///     once by the caller (a single batched query across all students) rather than looked up here - this method
+    ///     runs once per (student, rule) in a tight loop over every student, so a per-call DB lookup here would
+    ///     multiply into hundreds of round-trips per matching run.
     /// </summary>
     void AddConstraints(Person student,
+        int klasse,
         IEnumerable<ProfundumSlot> slots,
         IEnumerable<ProfundumBelegWunsch> wuensche,
         Dictionary<(ProfundumSlot s, ProfundumInstanz i), BoolVar> belegVars,
@@ -46,13 +50,14 @@ public interface IProfundumIndividualRule
         LinearExprBuilder objective);
 
     /// <summary>
-    ///  Gets warnings for a student
+    ///     Gets warnings for a student. <paramref name="klasseAsOf" /> resolves the student's grade level as of an
+    ///     arbitrary point in time, backed by a group-history log the caller already batch-loaded for every student
+    ///     up front - rules that need a grade level as of a specific historical Einwahlzeitraum/enrollment must go
+    ///     through this instead of querying per call, since this method runs once per student across a potentially
+    ///     large enrollment history.
     /// </summary>
-    /// <param name="student">The student to get warnings for</param>
-    /// <param name="slots">The slots the student can enroll for</param>
-    /// <param name="enrollments">The students enrollments</param>
-    /// <returns></returns>
     IEnumerable<MatchingWarning> GetWarnings(Person student,
+        Func<DateTime, int> klasseAsOf,
         IEnumerable<ProfundumSlot> slots,
         IEnumerable<ProfundumEinschreibung> enrollments);
 }

@@ -45,6 +45,7 @@ public class DependencyRule : IProfundumIndividualRule
 
     /// <inheritdoc/>
     public void AddConstraints(Person student,
+        int klasse,
         IEnumerable<ProfundumSlot> slots,
         IEnumerable<ProfundumBelegWunsch> wuensche,
         Dictionary<(ProfundumSlot, ProfundumInstanz), BoolVar> belegVars,
@@ -55,7 +56,7 @@ public class DependencyRule : IProfundumIndividualRule
     }
 
     /// <inheritdoc/>
-    public IEnumerable<MatchingWarning> GetWarnings(Person student, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
+    public IEnumerable<MatchingWarning> GetWarnings(Person student, Func<DateTime, int> klasseAsOf, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
     {
         var enrollmentsArray = enrollments as ProfundumEinschreibung[] ?? enrollments.ToArray();
         foreach (var e in enrollmentsArray.Where(e => e.ProfundumInstanz is not null))

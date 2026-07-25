@@ -393,6 +393,7 @@ internal class ProfundumManagementService
         {
             Profundum = def,
             MaxEinschreibungen = request.MaxEinschreibungen,
+            WantedEinschreibungen = request.WantedEinschreibungen,
             Slots = slots,
             Ort = request.Ort,
             Verantwortliche = verantwortliche
@@ -406,14 +407,14 @@ internal class ProfundumManagementService
     public Task<DTOProfundumInstanz[]> GetInstanzenAsync()
     {
         return _dbContext.ProfundaInstanzen
-            .AsSingleQuery()
+            .AsSplitQuery()
             .Include(p => p.Verantwortliche)
             .Include(i => i.Profundum).ThenInclude(p => p.Dependencies)
             .Include(i => i.Profundum).ThenInclude(p => p.Kategorie)
             .Include(i => i.Profundum)
             .ThenInclude(p => p.Fachbereiche)
             .Include(i => i.Slots)
-            .Include(i => i.Einschreibungen).ThenInclude(e => e.BetroffenePerson)
+            .Include(i => i.Einschreibungen)
             .OrderBy(i => i.Profundum.Bezeichnung.ToLower())
             .Select(i => new DTOProfundumInstanz(i))
             .ToArrayAsync();
@@ -423,14 +424,14 @@ internal class ProfundumManagementService
     public Task<DTOProfundumInstanz?> GetInstanzAsync(Guid instanzId)
     {
         return _dbContext.ProfundaInstanzen
-            .AsSingleQuery()
+            .AsSplitQuery()
             .Include(p => p.Verantwortliche)
             .Include(i => i.Profundum).ThenInclude(p => p.Dependencies)
             .Include(i => i.Profundum).ThenInclude(p => p.Kategorie)
             .Include(i => i.Profundum)
             .ThenInclude(p => p.Fachbereiche)
             .Include(i => i.Slots)
-            .Include(i => i.Einschreibungen).ThenInclude(e => e.BetroffenePerson)
+            .Include(i => i.Einschreibungen)
             .Where(i => i.Id == instanzId)
             .Select(i => new DTOProfundumInstanz(i))
             .FirstOrDefaultAsync();
@@ -466,6 +467,7 @@ internal class ProfundumManagementService
         instanz.Verantwortliche.AddRange(verantwortliche.Where(v => !instanzVerantwortlicheIds.Contains(v.Id)));
 
         instanz.MaxEinschreibungen = patch.MaxEinschreibungen;
+        instanz.WantedEinschreibungen = patch.WantedEinschreibungen;
         instanz.Ort = patch.Ort;
 
         await _dbContext.SaveChangesAsync();
