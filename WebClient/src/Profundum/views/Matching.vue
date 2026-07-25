@@ -2,9 +2,11 @@
 import { mande } from 'mande';
 import { computed, ref } from 'vue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
-import UserPeek from '@/components/UserPeek.vue';
-import { formatSlot, formatStudent } from '@/helpers/formatters.ts';
+import { formatSlot } from '@/helpers/formatters.ts';
+import { fuzzyMatch } from '@/helpers/fuzzy.ts';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
+import MatchingPersonCell from '@/Profundum/components/MatchingPersonCell.vue';
+import MatchingSlotCell from '@/Profundum/components/MatchingSlotCell.vue';
 
 const navItems = [
     {
@@ -123,8 +125,15 @@ async function finalize() {
     enrollments.value = await mande('/api/profundum/management/enrollments').get();
 }
 
+const enrollmentsByPersonAndSlot = computed(() => {
+    const map = new Map();
+    for (const row of enrollments.value) {
+        map.set(row.person.id, new Map(row.enrollments?.map((e) => [e.profundumSlotId, e])));
+    }
+    return map;
+});
 const enrollmentForSlot = (row, slotId) =>
-    row.enrollments?.find((e) => e.profundumSlotId === slotId);
+    enrollmentsByPersonAndSlot.value.get(row.person.id)?.get(slotId);
 
 async function updateEnrollment(row) {
     const updater = mande(`/api/profundum/management/enrollment/${row.person.id}`);
@@ -184,43 +193,10 @@ const instanzenBySlot = computed(() => {
 
 const instanzenForSlot = (slotId) => instanzenBySlot.value.get(slotId) ?? [];
 
-const wishForSelectedEnrollment = (row, slotId) => {
-    const enrollment = enrollmentForSlot(row, slotId);
-    if (!enrollment?.profundumInstanzId) return null;
-
-    const instanz = instanzen.value.find((i) => i.id === enrollment.profundumInstanzId);
-
-    if (!instanz) return null;
-
-    return wishForOption(row, instanz);
-};
-
 getSlots();
 getEnrollments();
 getInstanzen();
 getProfunda();
-
-const wishForOption = (row, option) => {
-    return row.wuensche?.find((w) => w.id === option.profundumId) ?? null;
-};
-
-const sortedInstanzenForSlot = (slotId, row) => {
-    const options = instanzenForSlot(slotId);
-    const selectedId = enrollmentForSlot(row, slotId)?.profundumInstanzId;
-
-    return options.toSorted((a, b) => {
-        const wishA = wishForOption(row, a);
-        const wishB = wishForOption(row, b);
-
-        const score = (opt, wish) => {
-            if (opt.id === selectedId) return 0;
-            if (wish) return 10 + wish.rang;
-            return 100;
-        };
-
-        return score(a, wishA) - score(b, wishB);
-    });
-};
 
 const editingPersonId = ref(null);
 
@@ -234,37 +210,11 @@ const stopEdit = () => {
 
 const isEditing = (row) => editingPersonId.value === row.person.id;
 
-const wuenscheBySlot = (row) => {
-    const map = new Map();
-
-    for (const w of row.wuensche ?? []) {
-        for (const slotId of w.slotId ?? []) {
-            if (!map.has(slotId)) map.set(slotId, []);
-            map.get(slotId).push(w);
-        }
+async function handleSave(row) {
+    if (await updateEnrollment(row)) {
+        stopEdit();
     }
-
-    for (const [slotId, list] of map) {
-        map.set(
-            slotId,
-            list.toSorted((a, b) => a.rang - b.rang),
-        );
-    }
-
-    const slotOrder = slots.value.map((s) => s.id);
-
-    return [...map.entries()].toSorted(
-        ([a], [b]) => slotOrder.indexOf(a) - slotOrder.indexOf(b),
-    );
-};
-
-const slotLabel = (slotId) => {
-    const s = slots.value.find((x) => x.id === slotId);
-    return s ? formatSlot(s) : 'Unbekannter Slot';
-};
-
-const partnerFor = (row, partnerschaft) =>
-    partnerschaft.personA.id === row.person.id ? partnerschaft.personB : partnerschaft.personA;
+}
 
 const visibleSlotIds = ref([]);
 const slotSelectItems = computed(() =>
@@ -274,13 +224,40 @@ const visibleSlots = computed(() =>
     slots.value.filter((s) => visibleSlotIds.value.includes(s.id)),
 );
 
+const personFilter = ref('');
+const filteredEnrollments = computed(() => {
+    if (!personFilter.value.trim()) return enrollments.value;
+
+    return enrollments.value
+        .map((row) => {
+            const haystack = [
+                row.person.vorname,
+                row.person.nachname,
+                row.person.gruppe,
+                row.person.email,
+            ]
+                .filter(Boolean)
+                .join(' ');
+            return { row, score: fuzzyMatch(personFilter.value, haystack) };
+        })
+        .filter(({ score }) => score !== null)
+        .toSorted((a, b) => b.score - a.score)
+        .map(({ row }) => row);
+});
+
 const enrollmentColumns = computed(() => [
     { id: 'person' },
     ...visibleSlots.value.map((slot) => ({ id: slot.id, header: formatSlot(slot) })),
 ]);
 
+const columnPinning = ref({ left: ['person'] });
+
+const slotLabel = (slotId) => {
+    const s = slots.value.find((x) => x.id === slotId);
+    return s ? formatSlot(s) : 'Unbekannter Slot';
+};
+
 const bezeichnungFilter = ref('');
-const slotsFilter = ref([]);
 
 const filteredInstanzen = computed(() =>
     instanzen.value.filter((row) => {
@@ -290,8 +267,8 @@ const filteredInstanzen = computed(() =>
                 .toLowerCase()
                 .includes(bezeichnungFilter.value.toLowerCase());
         const matchesSlots =
-            slotsFilter.value.length === 0 ||
-            slotsFilter.value.some((s) => row.slots?.includes(s));
+            visibleSlotIds.value.length === 0 ||
+            visibleSlotIds.value.some((s) => row.slots?.includes(s));
         return matchesBezeichnung && matchesSlots;
     }),
 );
@@ -341,22 +318,38 @@ const instanzenColumns = [
             />
         </span>
 
-        <USelect
-            v-model="visibleSlotIds"
-            :items="slotSelectItems"
-            label-key="label"
-            value-key="id"
-            multiple
-            class="w-80"
-            placeholder="Slots anzeigen…"
-        />
+        <span class="flex flex-wrap gap-3 items-center">
+            <USelect
+                v-model="visibleSlotIds"
+                :items="slotSelectItems"
+                label-key="label"
+                value-key="id"
+                multiple
+                class="w-80"
+                placeholder="Slots anzeigen/filtern…"
+            />
+
+            <UInput
+                v-model="personFilter"
+                icon="i-lucide-search"
+                placeholder="Person suchen…"
+                class="w-64"
+            />
+        </span>
 
         <UTable
-            :data="enrollments"
+            :data="filteredEnrollments"
             :columns="enrollmentColumns"
+            v-model:column-pinning="columnPinning"
+            sticky="header"
             size="sm"
             :loading="matchingRunning"
-            :ui="{ root: 'overflow-x-auto' }"
+            :ui="{
+                root: 'overflow-auto max-h-[80vh]',
+                thead: 'bg-default backdrop-blur-none',
+                td: 'data-[pinned]:bg-default data-[pinned]:backdrop-blur-none',
+                th: 'data-[pinned]:bg-default data-[pinned]:backdrop-blur-none',
+            }"
         >
             <template #person-header>
                 <span class="inline-flex justify-between w-full font-semibold">
@@ -365,97 +358,14 @@ const instanzenColumns = [
                 </span>
             </template>
             <template #person-cell="{ row }">
-                <span
-                    class="grid grid-cols-[16em_1fr_1fr_1fr_1fr] gap-1 sticky left-0 bg-default"
-                >
-                    <UserPeek :person="row.original.person" class="w-full" showGroup />
-
-                    <UPopover v-if="row.original.wuensche.length !== 0">
-                        <UButton icon="i-lucide-crown" color="info" variant="ghost" size="sm" />
-                        <template #content>
-                            <div
-                                v-for="[slotId, wishes] of wuenscheBySlot(row.original)"
-                                :key="slotId"
-                                class="mb-2 p-3"
-                            >
-                                <b class="block mb-1">{{ slotLabel(slotId) }}</b>
-                                <ul class="ml-3">
-                                    <li v-for="w in wishes" :key="`${slotId}-${w.id}`">
-                                        {{ w.rang }}.
-                                        {{
-                                            profunda.find((p) => p.id === w.id)?.bezeichnung ??
-                                            '—'
-                                        }}
-                                    </li>
-                                </ul>
-                            </div>
-                        </template>
-                    </UPopover>
-                    <span v-else></span>
-
-                    <UTooltip
-                        v-if="(row.original.partnerschaften?.length ?? 0) !== 0"
-                        text="Partnerschaft(en)"
-                    >
-                        <UPopover>
-                            <UButton
-                                icon="i-lucide-users"
-                                color="primary"
-                                variant="ghost"
-                                size="sm"
-                            />
-                            <template #content>
-                                <ul class="list-disc pl-4 p-3">
-                                    <li v-for="p in row.original.partnerschaften" :key="p.id">
-                                        {{ p.bezeichnung }}: mit
-                                        {{ formatStudent(partnerFor(row.original, p)) }}
-                                    </li>
-                                </ul>
-                            </template>
-                        </UPopover>
-                    </UTooltip>
-                    <span v-else></span>
-
-                    <UPopover v-if="row.original.warnings.length !== 0">
-                        <UButton
-                            icon="i-lucide-triangle-alert"
-                            color="warning"
-                            variant="ghost"
-                            size="sm"
-                        />
-                        <template #content>
-                            <ul class="list-disc pl-4 p-3">
-                                <li v-for="w in row.original.warnings" :key="w">
-                                    {{ w.text }}
-                                </li>
-                            </ul>
-                        </template>
-                    </UPopover>
-                    <span v-else></span>
-
-                    <UButton
-                        v-if="!isEditing(row.original)"
-                        icon="i-lucide-pencil"
-                        color="neutral"
-                        variant="ghost"
-                        size="sm"
-                        @click="startEdit(row.original)"
-                    />
-                    <UButton
-                        v-else
-                        icon="i-lucide-check"
-                        color="success"
-                        variant="ghost"
-                        size="sm"
-                        @click="
-                            async () => {
-                                if (await updateEnrollment(row.original)) {
-                                    stopEdit();
-                                }
-                            }
-                        "
-                    />
-                </span>
+                <MatchingPersonCell
+                    :row="row.original"
+                    :slots="slots"
+                    :profunda="profunda"
+                    :editing="isEditing(row.original)"
+                    @start-edit="startEdit(row.original)"
+                    @save="handleSave(row.original)"
+                />
             </template>
 
             <template
@@ -463,74 +373,12 @@ const instanzenColumns = [
                 :key="slot.id"
                 #[`${slot.id}-cell`]="{ row }"
             >
-                <span class="flex gap-1 items-center">
-                    <template v-if="isEditing(row.original)">
-                        <USwitch v-model="enrollmentForSlot(row.original, slot.id).isFixed" />
-
-                        <USelectMenu
-                            v-model="
-                                enrollmentForSlot(row.original, slot.id).profundumInstanzId
-                            "
-                            :items="sortedInstanzenForSlot(slot.id, row.original)"
-                            label-key="profundumInfo.bezeichnung"
-                            value-key="id"
-                            clear
-                            class="w-60"
-                            :disabled="!enrollmentForSlot(row.original, slot.id).isFixed"
-                        >
-                            <template #item="{ item }">
-                                <span class="option-row gap-2">
-                                    <span v-if="wishForOption(row.original, item)">
-                                        ★ {{ wishForOption(row.original, item).rang }}
-                                    </span>
-                                    <span>{{ item.profundumInfo.bezeichnung }}</span>
-                                    <span
-                                        >({{ item.numEinschreibungen }} /
-                                        {{ item.maxEinschreibungen }})</span
-                                    >
-                                </span>
-                            </template>
-                        </USelectMenu>
-                    </template>
-                    <template v-else>
-                        <span class="readonly-value w-60 flex items-center gap-2">
-                            <span
-                                v-if="wishForSelectedEnrollment(row.original, slot.id)"
-                                class="wish-indicator text-green-500"
-                            >
-                                <UIcon name="i-lucide-crown" />
-                                {{ wishForSelectedEnrollment(row.original, slot.id).rang }}
-                            </span>
-
-                            <template v-if="enrollmentForSlot(row.original, slot.id)?.isFixed">
-                                <div class="text-orange-600 flex gap-1 items-center">
-                                    <UIcon name="i-lucide-lock" />
-                                    <b>
-                                        {{
-                                            instanzen.find(
-                                                (i) =>
-                                                    i.id ===
-                                                    enrollmentForSlot(row.original, slot.id)
-                                                        ?.profundumInstanzId,
-                                            )?.profundumInfo.bezeichnung ?? '—'
-                                        }}
-                                    </b>
-                                </div>
-                            </template>
-
-                            <template v-else>
-                                {{
-                                    instanzen.find(
-                                        (i) =>
-                                            i.id ===
-                                            enrollmentForSlot(row.original, slot.id)
-                                                ?.profundumInstanzId,
-                                    )?.profundumInfo.bezeichnung ?? '—'
-                                }}
-                            </template>
-                        </span>
-                    </template>
-                </span>
+                <MatchingSlotCell
+                    :enrollment="enrollmentForSlot(row.original, slot.id)"
+                    :wuensche="row.original.wuensche"
+                    :options="instanzenForSlot(slot.id)"
+                    :editing="isEditing(row.original)"
+                />
             </template>
         </UTable>
 
@@ -539,15 +387,6 @@ const instanzenColumns = [
                 v-model="bezeichnungFilter"
                 placeholder="Bezeichnung suchen…"
                 class="w-64"
-            />
-            <USelect
-                v-model="slotsFilter"
-                :items="slotSelectItems"
-                label-key="label"
-                value-key="id"
-                multiple
-                placeholder="Slots filtern…"
-                class="w-80"
             />
         </div>
 
@@ -595,7 +434,7 @@ const instanzenColumns = [
                         row.original.maxEinschreibungen < row.original.numEinschreibungen
                     "
                     name="i-lucide-triangle-alert"
-                    class="text-xl p-2 inline-block bg-yellow-200 text-yellow-800 dark:text-yellow-400 dark:bg-yellow-950 rounded-lg"
+                    class="text-xl p-2 inline-block bg-warning/15 text-warning rounded-lg"
                 />
             </template>
         </UTable>
@@ -603,25 +442,6 @@ const instanzenColumns = [
 </template>
 
 <style scoped>
-.option-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.option-row :last-child {
-    font-style: italic;
-}
-
-.readonly-value {
-    display: inline-flex;
-}
-
-.readonly-value.fixed {
-    font-weight: 800;
-    color: orange;
-}
-
 .match-btn {
     position: relative;
     overflow: hidden;
@@ -650,13 +470,5 @@ const instanzenColumns = [
     border-left: 1px solid color-mix(in srgb, var(--ui-primary) 35%, var(--ui-border));
     min-width: 3.2rem;
     text-align: right;
-}
-
-.wish-indicator {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    font-weight: 700;
-    white-space: nowrap;
 }
 </style>
