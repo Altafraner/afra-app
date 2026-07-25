@@ -1,10 +1,7 @@
 <script setup>
-import { computed } from 'vue';
-import wappenLight from '/vdaa/favicon.svg?url';
-import wappenDark from '/vdaa/favicon-dark.svg?url';
-import { isDark } from '@/helpers/isdark';
+import { useLogo } from '@/composables/logo';
 
-const logo = computed(() => (isDark().value ? wappenDark : wappenLight));
+const logo = useLogo();
 </script>
 
 <template>

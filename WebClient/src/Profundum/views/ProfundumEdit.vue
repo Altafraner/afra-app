@@ -1,6 +1,6 @@
 <script setup>
 import { mande } from 'mande';
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import Grid from '@/components/Form/Grid.vue';
 import GridEditRow from '@/components/Form/GridEditRow.vue';
 import ProfundumInstanzen from '@/Profundum/components/ProfundumInstanzen.vue';
@@ -94,6 +94,8 @@ async function setup() {
 }
 
 onMounted(setup);
+
+watch(() => props.profundumId, setup);
 
 async function savePatch(patch) {
     try {
