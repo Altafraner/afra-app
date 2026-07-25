@@ -1,254 +1,30 @@
 <script lang="ts" setup>
-import { computed, onMounted } from 'vue';
+import { watch } from 'vue';
 
-import wappenLight from '/vdaa/favicon.svg?url';
-import wappenDark from '/vdaa/favicon-dark.svg?url';
 import { useUser } from '@/stores/user';
 import { useProfundumEinwahl } from '@/Profundum/stores/profundumEinwahlStore';
-import { useRouter } from 'vue-router';
-import { isDark } from '@/helpers/isdark';
-import type { NavigationMenuItem } from '@nuxt/ui/components/NavigationMenu.d.vue.ts';
+import { useLogo } from '@/composables/logo';
+import { useNavItems } from '@/composables/navigationItems';
+import { useCommandPalette } from '@/composables/commandPalette';
+import { useLogout } from '@/composables/logout';
 
-type GlobalPermissions = 'Otiumsverantwortlich' | 'Profundumsverantwortlich' | 'Admin';
-type Role = 'Tutor' | 'Oberstufe' | 'Mittelstufe';
-
-interface Conditions {
-    permissions?: GlobalPermissions[] | undefined;
-    roles?: Role[] | undefined;
-    feature?: (() => boolean) | undefined;
-}
-
-interface MenuItemWithCondition extends NavigationMenuItem {
-    conditions?: Conditions | undefined;
-    children?: MenuItemWithCondition[] | undefined;
-}
-
-const all_items: MenuItemWithCondition[] = [
-    {
-        label: 'Übersicht',
-        to: '/',
-        icon: 'i-lucide-house',
-    },
-    {
-        label: 'Otium',
-        children: [
-            {
-                label: 'Katalog',
-                to: {
-                    name: 'Otium-Katalog',
-                },
-                icon: 'i-lucide-list',
-            },
-            {
-                label: 'Verwaltung',
-                to: {
-                    name: 'Verwaltung',
-                },
-                icon: 'i-lucide-wrench',
-                conditions: {
-                    permissions: ['Otiumsverantwortlich'],
-                },
-            },
-        ],
-    },
-    {
-        label: 'Profundum',
-        children: [
-            {
-                label: 'Einwahl',
-                to: {
-                    name: 'Profundum-Einwahl',
-                },
-                icon: 'i-lucide-square-check-big',
-                conditions: {
-                    roles: ['Mittelstufe'],
-                    feature: () => profundumEinwahl.isEinwahlActive,
-                },
-            },
-            {
-                label: 'Feedback',
-                to: {
-                    name: 'Profundum-Feedback-Abgeben',
-                },
-                icon: 'i-lucide-sliders-horizontal',
-                conditions: {
-                    roles: ['Tutor'],
-                },
-            },
-            {
-                label: 'Verwaltung',
-                to: { name: 'Profundum-Verwaltung' },
-                icon: 'i-lucide-wrench',
-                conditions: {
-                    permissions: ['Profundumsverantwortlich'],
-                },
-            },
-            {
-                label: 'Matching',
-                to: { name: 'Profundum-Matching' },
-                icon: 'i-lucide-grid-2x2-plus',
-                conditions: {
-                    permissions: ['Profundumsverantwortlich'],
-                },
-            },
-            {
-                label: 'Feedback Kriterien',
-                to: {
-                    name: 'Profundum-Feedback-Kriterien',
-                },
-                icon: 'i-lucide-wrench',
-                conditions: {
-                    permissions: ['Profundumsverantwortlich'],
-                },
-            },
-            {
-                label: 'Feedback Überwachung',
-                to: {
-                    name: 'Profundum-Feedback-Control',
-                },
-                icon: 'i-lucide-eye',
-                conditions: {
-                    permissions: ['Profundumsverantwortlich'],
-                },
-            },
-            {
-                label: 'Feedback Drucken',
-                to: {
-                    name: 'Profundum-Feedback-Download',
-                },
-                icon: 'i-lucide-printer',
-                conditions: {
-                    permissions: ['Profundumsverantwortlich'],
-                },
-            },
-            {
-                label: 'Feedback',
-                to: {
-                    name: 'Profundum-Feedback-Einsicht',
-                },
-                icon: 'i-lucide-sliders-horizontal',
-                conditions: {
-                    roles: ['Mittelstufe', 'Oberstufe'],
-                },
-            },
-        ],
-    },
-    {
-        label: 'Aufsicht',
-        to: {
-            name: 'Aufsicht',
-        },
-        icon: 'i-lucide-eye',
-        conditions: {
-            roles: ['Tutor'],
-        },
-    },
-    {
-        label: 'Admin',
-        icon: 'i-lucide-asterisk',
-        children: [
-            {
-                label: 'Impersonieren',
-                to: {
-                    name: 'Admin-Impersonate',
-                },
-                conditions: {
-                    permissions: ['Admin'],
-                },
-            },
-            {
-                label: 'Cevex',
-                to: {
-                    name: 'Admin-Cevex',
-                },
-                conditions: {
-                    permissions: ['Admin'],
-                },
-            },
-        ],
-    },
-    {
-        label: 'Einstellungen',
-        to: {
-            name: 'Settings',
-        },
-        icon: 'i-lucide-settings',
-    },
-];
-
-const toast = useToast();
-const router = useRouter();
 const user = useUser();
 const profundumEinwahl = useProfundumEinwahl();
+const commandPalette = useCommandPalette();
+const { logout } = useLogout();
 
-onMounted(() => {
-    if (user.isMittelstufe) {
-        profundumEinwahl.update();
-    }
-});
-
-const logout = async () => {
-    try {
-        await user.logout();
-        await router.push('/');
-        toast.add({
-            color: 'success',
-            title: 'Abgemeldet!',
-            description: 'Sie wurden erfolgreich abgemeldet.',
-            duration: 3000,
-        });
-    } catch (error) {
-        toast.add({
-            color: 'error',
-            title: 'Fehler!',
-            description: 'Sie konnten nicht abgemeldet werden.',
-        });
-    }
-};
-
-function evaluateCondition(item: MenuItemWithCondition): boolean {
-    if (!user.user) return false;
-    if (item.conditions === undefined) return true;
-
-    if (item.conditions.permissions !== undefined && item.conditions.permissions.length > 0) {
-        for (const permission of item.conditions.permissions) {
-            if (!user.user.berechtigungen.includes(permission)) return false;
+watch(
+    () => user.isMittelstufe,
+    (isMittelstufe) => {
+        if (isMittelstufe) {
+            profundumEinwahl.update();
         }
-    }
+    },
+    { immediate: true },
+);
 
-    if (item.conditions.roles !== undefined && item.conditions.roles.length > 0) {
-        let success = false;
-        for (const role of item.conditions.roles) {
-            if (!(user.user.rolle === role)) continue;
-            success = true;
-            break;
-        }
-        if (!success) return false;
-    }
-
-    if (item.conditions.feature !== undefined && !item.conditions.feature()) return false;
-
-    return true;
-}
-
-function evaluateItems(items: MenuItemWithCondition[]): NavigationMenuItem[] {
-    const selectedItems: NavigationMenuItem[] = [];
-
-    for (const item of items) {
-        if (!evaluateCondition(item)) continue;
-        let workingCopy = item;
-        if (item.children && item.children.length > 0) {
-            const children = evaluateItems(item.children);
-            workingCopy = Object.assign({}, workingCopy, { children: children });
-        }
-        if (workingCopy.to || (workingCopy.children && workingCopy.children.length > 0))
-            selectedItems.push(workingCopy);
-    }
-    return selectedItems;
-}
-
-const items = computed(() => evaluateItems(all_items));
-const logo = computed(() => (isDark().value ? wappenDark : wappenLight));
+const items = useNavItems();
+const logo = useLogo();
 </script>
 
 <template>
@@ -256,17 +32,27 @@ const logo = computed(() => (isDark().value ? wappenDark : wappenLight));
         <template #title>
             <img :src="logo" alt="Verein der Altafraner" class="h-10 w-auto inline-block" />
         </template>
-        <UNavigationMenu :items="items" color="neutral" />
-        <template #right
-            ><UButton
+        <UNavigationMenu :items="items" color="neutral" content-orientation="vertical" />
+        <template #right>
+            <UTooltip text="Seite suchen (Strg+K)">
+                <UButton
+                    class="text-muted hover:text-highlighted"
+                    color="neutral"
+                    icon="i-lucide-search"
+                    variant="ghost"
+                    aria-label="Seite suchen"
+                    @click="commandPalette.open()"
+                />
+            </UTooltip>
+            <UButton
                 class="text-muted hover:text-highlighted"
                 color="neutral"
                 icon="i-lucide-power"
                 variant="ghost"
                 @click="logout"
                 >Logout</UButton
-            ></template
-        >
+            >
+        </template>
         <template #body>
             <UNavigationMenu :items="items" color="neutral" orientation="vertical" />
         </template>
