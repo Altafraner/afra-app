@@ -22,6 +22,7 @@ export interface ProfundumInstanz {
     profundumInfo: ProfundumDefinition;
     slots: string[];
     maxEinschreibungen: null | number;
+    wantedEinschreibungen: null | number;
     numEinschreibungen: number;
     verantwortlicheIds: string[];
     verantwortlicheInfo: UserInfoMinimal[];
