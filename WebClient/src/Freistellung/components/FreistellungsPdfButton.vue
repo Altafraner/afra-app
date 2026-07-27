@@ -11,6 +11,7 @@ defineProps<{
     <UTooltip text="Als PDF exportieren">
         <UButton
             :href="`${basePath}/${antragId}.pdf`"
+            external
             download
             icon="i-lucide-file-text"
             color="info"
