@@ -5,7 +5,7 @@
     "type": "module",
     "scripts": {
         "dev": "vite --host",
-        "build": "run-p build-only type-check",
+        "build": "run-s build-only type-check",
         "build-only": "vite build",
         "preview": "vite preview",
         "type-check": "vue-tsc --noEmit",
