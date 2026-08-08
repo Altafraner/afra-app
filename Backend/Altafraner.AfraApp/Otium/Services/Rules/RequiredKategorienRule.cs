@@ -1,3 +1,5 @@
+using Altafraner.AfraApp.Attendance.Domain.Dto;
+using Altafraner.AfraApp.Attendance.Domain.Models;
 using Altafraner.AfraApp.Domain.TimeInterval;
 using Altafraner.AfraApp.Otium.Domain.Contracts.Rules;
 using Altafraner.AfraApp.Otium.Domain.Models;
@@ -28,8 +30,11 @@ public class RequiredKategorienRule : IWeekRule
     }
 
     /// <inheritdoc />
-    public async ValueTask<RuleStatus> IsValidAsync(Person person, IEnumerable<Schultag> schultage,
-        IEnumerable<OtiumEinschreibung> einschreibungen)
+    public async ValueTask<RuleStatus> IsValidAsync(Person person,
+        IEnumerable<Schultag> schultage,
+        List<OtiumTermin> termine,
+        IEnumerable<OtiumEinschreibung> einschreibungen,
+        Dictionary<Guid, AttendanceInformation> attendanceByBlock)
     {
         var schultageArray = schultage as Schultag[] ?? schultage.ToArray();
         var wochentyp = GetWochentypForSchultage(schultageArray);
@@ -37,11 +42,22 @@ public class RequiredKategorienRule : IWeekRule
         var fulfilledCategories =
             await GetFulfilledCategoriesFromEnrollments(einschreibungen, schultageArray, wochentyp);
         var missingCategories = await GetUnfulfilledRequiredCategories(fulfilledCategories, wochentyp);
+
+        var categoriesAndBlocks = termine.Select(t => (Block: t.Block.Id, Kategorie: t.Otium.Kategorie.Id))
+            .Distinct()
+            .ToArray();
+
         var messages = new List<string>();
         foreach (var missingCategory in missingCategories)
+        {
+            var blocksWithCategory =
+                categoriesAndBlocks.Where(c => c.Kategorie == missingCategory).Select(e => e.Block);
+            if (blocksWithCategory.All(b => attendanceByBlock[b].State == AttendanceState.Entschuldigt)) continue;
             messages.Add(
                 $"Fehlende Einschreibungen für die Kategorie „{(await _kategorieService.GetKategorieByIdAsync(missingCategory))!.Bezeichnung}“.");
-        return missingCategories.Count == 0
+        }
+
+        return messages.Count == 0
             ? RuleStatus.Valid
             : new RuleStatus
             {
@@ -122,7 +138,7 @@ public class RequiredKategorienRule : IWeekRule
         return angeboteForCurrentBlock.Count == 0
             ? RuleStatus.Valid
             : RuleStatus.Invalid(
-                "Es ist nicht mehr möglich, alle Pflichtkategorien zu erfüllen. Mit einer anderen Einschreibung in diesem Block kannst du aber noch mehr Pflichtkategorien wahrnehmen.");
+                "Es ist nicht mehr möglich, alle Pflichtkategorien zu erfüllen. Mit einer anderen Einschreibung in diesem Block können aber noch mehr Pflichtkategorien wahrgenommen werden.");
     }
 
     private async Task<HashSet<Guid>> GetUnfulfilledRequiredCategories(IEnumerable<Guid> categories, Wochentyp typ)

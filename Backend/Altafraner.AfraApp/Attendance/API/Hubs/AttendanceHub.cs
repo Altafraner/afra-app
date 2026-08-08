@@ -1,4 +1,5 @@
 using Altafraner.AfraApp.Attendance.Domain.Contracts;
+using Altafraner.AfraApp.Attendance.Domain.Dto;
 using Altafraner.AfraApp.Attendance.Domain.Dto.Enrollments;
 using Altafraner.AfraApp.Attendance.Domain.HubClients;
 using Altafraner.AfraApp.Attendance.Domain.Models;
@@ -95,7 +96,13 @@ internal partial class AttendanceHub : Hub<IAttendanceHubClient>
         EnsureSubscribed();
         var informationProvider = GetInformationProvider();
         await Authorize(informationProvider);
-        await _attendanceService.SetAttendanceAsync(Scope!.Value, SlotId, studentId, status);
+        var attendanceId = new AttendanceEntryId
+        {
+            Scope = Scope!.Value,
+            SlotId = SlotId,
+            StudentId = studentId
+        };
+        await _attendanceService.SetAttendanceAsync(attendanceId, status);
     }
 
     /// <summary>
