@@ -67,6 +67,17 @@ const routes = [
     },
 ];
 
+if (import.meta.env.DEV) {
+    routes.push({
+        name: 'Dev-Login',
+        path: '/dev/login',
+        component: () => import('@/views/Dev/DevLogin.vue'),
+        meta: {
+            allowAnonymous: true,
+        },
+    });
+}
+
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
     routes,

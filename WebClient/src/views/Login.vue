@@ -11,6 +11,7 @@ const user = useUser();
 const router = useRouter();
 
 if (user.loggedIn) router.replace('/');
+const isDev = import.meta.env.DEV;
 </script>
 
 <template>
@@ -28,6 +29,15 @@ if (user.loggedIn) router.replace('/');
                 icon="i-lucide-arrow-right"
                 label="Anmelden"
                 to="/api/oidc/start"
+                variant="soft"
+            />
+            <UButton
+                v-if="isDev"
+                :to="{ name: 'Dev-Login' }"
+                class="w-full mt-4"
+                color="warning"
+                icon="i-lucide-user"
+                label="Nutzerauswahl"
                 variant="soft"
             />
         </div>

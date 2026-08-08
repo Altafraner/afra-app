@@ -37,5 +37,10 @@ public class UserModule : IModule
     {
         app.MapUserEndpoints();
         app.MapPeopleEndpoints();
+        if (app.Environment.IsDevelopment())
+        {
+            app.Logger.LogCritical("Dev mode active, this application is insecure!");
+            app.MapDevEndpoints();
+        }
     }
 }
