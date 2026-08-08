@@ -68,7 +68,7 @@ internal class OtiumEndpointService
     public async Task<Tag> GetKatalogForDay(Models_Person person, DateOnly date)
     {
         return new Tag(GetTerminPreviewsForDay(date, person),
-            person.Rolle != Rolle.Oberstufe ? await GetStatusForDayAsync(person, date) : []);
+            person.Rolle == Rolle.Mittelstufe ? await GetStatusForDayAsync(person, date) : []);
     }
 
     /// <summary>
