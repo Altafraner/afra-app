@@ -7,7 +7,7 @@ const props = defineProps<{
     filter?: boolean;
 }>();
 
-const targetItems = defineModel<ListboxItem[]>({ default: [] });
+const targetItems = defineModel<ListboxItem[]>({ default: () => [] });
 const sourceSelection = ref<ListboxItem[]>([]);
 const targetSelection = ref<ListboxItem[]>([]);
 
