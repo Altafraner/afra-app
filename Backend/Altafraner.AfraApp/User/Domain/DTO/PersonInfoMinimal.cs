@@ -12,7 +12,7 @@ public record struct PersonInfoMinimal
     ///     Constructs a new minimal person representation from a person entity
     /// </summary>
     /// <param name="person">The persons DB entry</param>
-    public PersonInfoMinimal(Models.Person person)
+    public PersonInfoMinimal(Person person)
     {
         Vorname = person.FirstName;
         Nachname = person.LastName;
@@ -22,22 +22,32 @@ public record struct PersonInfoMinimal
         Email = person.Email;
     }
 
-    /// <inheritdoc cref="User.Domain.DTO.Person.Id" />
+    /// <summary>
+    ///     A unique identifier for the person
+    /// </summary>
     public Guid Id { get; set; }
 
-    /// <inheritdoc cref="User.Domain.DTO.Person.Vorname" />
+    /// <summary>
+    ///     The first name of the person
+    /// </summary>
     public string Vorname { get; set; }
 
-    /// <inheritdoc cref="User.Domain.DTO.Person.Nachname" />
+    /// <summary>
+    ///     The last name of the person
+    /// </summary>
     public string Nachname { get; set; }
 
-    /// <inheritdoc cref="User.Domain.DTO.Person.Rolle" />
+    /// <summary>
+    ///     The role of the person
+    /// </summary>
     [JsonConverter(typeof(JsonStringEnumConverter<Rolle>))]
     public Rolle Rolle { get; set; }
 
     /// <inheritdoc cref="User.Domain.Models.Person.Gruppe" />
     public string? Gruppe { get; set; }
 
-    /// <inheritdoc cref="User.Domain.Models.Person.Email" />
+    /// <summary>
+    ///     The email address of the person
+    /// </summary>
     public string Email { get; set; }
 }

@@ -8,16 +8,24 @@ namespace Altafraner.AfraApp.User.Domain.DTO;
 /// </summary>
 public record PersonLoginInfo
 {
-    /// <inheritdoc cref="User.Domain.DTO.Person.Id" />
+    /// <summary>
+    ///     A unique identifier for the person
+    /// </summary>
     public required Guid Id { get; set; }
 
-    /// <inheritdoc cref="User.Domain.DTO.Person.Vorname" />
+    /// <summary>
+    ///     The first name of the person
+    /// </summary>
     public required string Vorname { get; set; }
 
-    /// <inheritdoc cref="User.Domain.DTO.Person.Nachname" />
+    /// <summary>
+    ///     The last name of the person
+    /// </summary>
     public required string Nachname { get; set; }
 
-    /// <inheritdoc cref="User.Domain.DTO.Person.Rolle" />
+    /// <summary>
+    ///     The role of the person
+    /// </summary>
     [JsonConverter(typeof(JsonStringEnumConverter<Rolle>))]
     public required Rolle Rolle { get; set; }
 
@@ -30,4 +38,9 @@ public record PersonLoginInfo
     ///     Whether the current session is an impersonation session.
     /// </summary>
     public string? ImpersonationId { get; set; }
+
+    /// <summary>
+    ///     The URL for managing the user's account.
+    /// </summary>
+    public required string AccountManagementUrl { get; set; }
 }

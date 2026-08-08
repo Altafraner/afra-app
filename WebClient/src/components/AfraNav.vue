@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onMounted } from 'vue';
+import { computed, ComputedRef, onMounted } from 'vue';
 
 import wappenLight from '/vdaa/favicon.svg?url';
 import wappenDark from '/vdaa/favicon-dark.svg?url';
@@ -8,6 +8,7 @@ import { useProfundumEinwahl } from '@/Profundum/stores/profundumEinwahlStore';
 import { useRouter } from 'vue-router';
 import { isDark } from '@/helpers/isdark';
 import type { NavigationMenuItem } from '@nuxt/ui/components/NavigationMenu.d.vue.ts';
+import type { DropdownMenuItem } from '@nuxt/ui/components/DropdownMenu.d.vue.ts';
 
 type GlobalPermissions = 'Otiumsverantwortlich' | 'Profundumsverantwortlich' | 'Admin';
 type Role = 'Tutor' | 'Oberstufe' | 'Mittelstufe';
@@ -167,13 +168,6 @@ const all_items: MenuItemWithCondition[] = [
             },
         ],
     },
-    {
-        label: 'Einstellungen',
-        to: {
-            name: 'Settings',
-        },
-        icon: 'i-lucide-settings',
-    },
 ];
 
 const toast = useToast();
@@ -190,12 +184,6 @@ onMounted(() => {
 const logout = async () => {
     try {
         await user.logout();
-        toast.add({
-            color: 'success',
-            title: 'Abgemeldet!',
-            description: 'Sie wurden erfolgreich abgemeldet.',
-            duration: 3000,
-        });
     } catch (error) {
         toast.add({
             color: 'error',
@@ -248,6 +236,32 @@ function evaluateItems(items: MenuItemWithCondition[]): NavigationMenuItem[] {
 
 const items = computed(() => evaluateItems(all_items));
 const logo = computed(() => (isDark().value ? wappenDark : wappenLight));
+
+const userMenuItems: ComputedRef<DropdownMenuItem[][]> = computed(() => [
+    [
+        {
+            label: 'Account',
+            icon: 'i-lucide-user',
+            target: '_blank',
+            to: user.user?.accountManagementUrl,
+            disabled: !user.user?.accountManagementUrl,
+        },
+        {
+            label: 'Einstellungen',
+            icon: 'i-lucide-settings',
+            to: {
+                name: 'Settings',
+            },
+        },
+    ],
+    [
+        {
+            label: 'Logout',
+            icon: 'i-lucide-log-out',
+            onSelect: logout,
+        },
+    ],
+]);
 </script>
 
 <template>
@@ -256,16 +270,26 @@ const logo = computed(() => (isDark().value ? wappenDark : wappenLight));
             <img :src="logo" alt="Verein der Altafraner" class="h-10 w-auto inline-block" />
         </template>
         <UNavigationMenu :items="items" color="neutral" />
-        <template #right
-            ><UButton
-                class="text-muted hover:text-highlighted"
-                color="neutral"
-                icon="i-lucide-power"
-                variant="ghost"
-                @click="logout"
-                >Logout</UButton
-            ></template
-        >
+        <template #right>
+            <UDropdownMenu
+                :items="userMenuItems"
+                :ui="{ content: 'w-(--reka-dropdown-menu-trigger-width)' }"
+            >
+                <UButton
+                    :avatar="{
+                        alt: `${user.user?.vorname} ${user.user?.nachname}`,
+                    }"
+                    :label="
+                        user.user ? `${user.user?.vorname} ${user.user?.nachname}` : 'Nutzer'
+                    "
+                    :ui="{
+                        label: 'max-w-[16ch]',
+                    }"
+                    color="secondary"
+                    variant="ghost"
+                />
+            </UDropdownMenu>
+        </template>
         <template #body>
             <UNavigationMenu :items="items" color="neutral" orientation="vertical" />
         </template>

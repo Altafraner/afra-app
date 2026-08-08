@@ -1,7 +1,9 @@
 using System.Security.Claims;
 using Altafraner.AfraApp.Backbone.Auth;
+using Altafraner.AfraApp.Domain.Configuration;
 using Altafraner.AfraApp.User.Domain.DTO;
 using Altafraner.AfraApp.User.Services;
+using Microsoft.Extensions.Options;
 
 namespace Altafraner.AfraApp.User.API.Endpoints;
 
@@ -16,7 +18,8 @@ public static class User
     public static void MapUserEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapGet("/api/user",
-            async (UserAccessor userAccessor, ClaimsPrincipal claimsPrincipal) =>
+            async (UserAccessor userAccessor, ClaimsPrincipal claimsPrincipal,
+                IOptions<GeneralConfiguration> generalConfiguration) =>
             {
                 try
                 {
@@ -29,7 +32,8 @@ public static class User
                         Nachname = user.LastName,
                         Rolle = user.Rolle,
                         Berechtigungen = user.GlobalPermissions.ToArray(),
-                        ImpersonationId = impersonationId
+                        ImpersonationId = impersonationId,
+                        AccountManagementUrl = generalConfiguration.Value.AccountManagementUrl
                     });
                 }
                 catch (InvalidOperationException)

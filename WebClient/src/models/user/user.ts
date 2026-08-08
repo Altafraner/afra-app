@@ -1,8 +1,6 @@
 export type UserRolle = 'Oberstufe' | 'Mittelstufe' | 'Tutor';
 export type UserGlobalPermission =
-    | 'Admin'
-    | 'Otiumsverantwortlich'
-    | 'Profundumsverantwortlich';
+    'Admin' | 'Otiumsverantwortlich' | 'Profundumsverantwortlich';
 
 export interface UserInfoMinimal {
     id: string;
@@ -20,4 +18,5 @@ export interface UserLoginInfo {
     rolle: UserRolle;
     berechtigungen: UserGlobalPermission[];
     impersonationId: string;
+    accountManagementUrl: string;
 }

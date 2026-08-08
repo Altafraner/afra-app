@@ -11,4 +11,9 @@ public class GeneralConfiguration
     ///     The current principal
     /// </summary>
     public PersonInfoMinimal Schulleiter { get; init; }
+
+    /// <summary>
+    ///     A url for account management
+    /// </summary>
+    public string AccountManagementUrl { get; init; } = "";
 }
