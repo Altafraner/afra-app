@@ -5,18 +5,19 @@ import 'primeicons/primeicons.css';
 import DynamicDialog from 'primevue/dynamicdialog';
 import AfraNav from '@/components/AfraNav.vue';
 import { useUser } from '@/stores/user';
-import { computed } from 'vue';
-import wappenLight from '/vdaa/favicon.svg?url';
-import wappenDark from '/vdaa/favicon-dark.svg?url';
-import Login from '@/components/Login.vue';
-import { isDark } from '@/helpers/isdark';
+import { watch } from 'vue';
 import ReloadPrompt from '@/components/ReloadPrompt.vue';
 import type { ToasterProps } from '@nuxt/ui/components/Toaster.d.vue.ts';
 import { de } from '@nuxt/ui/locale';
+import { useRouter } from 'vue-router';
+import { storeToRefs } from 'pinia';
 
+const router = useRouter();
 const user = useUser();
 const toast = useToast();
-user.update().catch(() => {
+const { loggedIn, loading } = storeToRefs(user);
+
+const userLoadingPromise = user.update().catch(() => {
     toast.add({
         color: 'error',
         title: 'Fehler',
@@ -24,7 +25,27 @@ user.update().catch(() => {
     });
 });
 
-const logo = computed(() => (isDark().value ? wappenDark : wappenLight));
+router.beforeEach(async (to, _from) => {
+    await userLoadingPromise;
+    const isAnonymousAllowed = to.matched.some((record) => record.meta.allowAnonymous);
+    if (!loading.value && !loggedIn.value && !isAnonymousAllowed && to.name != 'Login') {
+        return {
+            name: 'Login',
+        };
+    }
+});
+
+watch(loggedIn, async (isLoggedIn) => {
+    if (!isLoggedIn) {
+        const currentRoute = router.currentRoute.value;
+        const isAnonymousAllowed = currentRoute.matched.some(
+            (record) => record.meta.allowAnonymous,
+        );
+        if (!isAnonymousAllowed && currentRoute.name !== 'Login') {
+            await router.push({ name: 'Login' });
+        }
+    }
+});
 
 const toastProps: ToasterProps = {
     position: 'top-right',
@@ -41,7 +62,8 @@ const toastProps: ToasterProps = {
         <template v-if="!user.loading">
             <afra-nav v-if="user.loggedIn" />
             <main class="flex justify-center min-h-[90vh] mt-4">
-                <UContainer v-if="user.loggedIn">
+                <UContainer>
+                    <!-- v-if="user.loggedIn" -->
                     <RouterView v-slot="{ Component }">
                         <template v-if="Component">
                             <Suspense>
@@ -67,14 +89,14 @@ const toastProps: ToasterProps = {
                         </template>
                     </RouterView>
                 </UContainer>
-                <div v-else class="min-container">
+                <!--div v-else class="min-container">
                     <div class="flex justify-center">
                         <img :src="logo" alt="Logo des Verein der Altafraner" height="200" />
                     </div>
                     <h1>Willkommen bei der Afra-App</h1>
                     <p>Bitte logge dich ein, um die Afra-App zu nutzen.</p>
                     <Login></Login>
-                </div>
+                </div-->
             </main>
         </template>
         <template v-else>
@@ -134,9 +156,4 @@ const toastProps: ToasterProps = {
     </UApp>
 </template>
 
-<style scoped>
-.min-container {
-    max-width: min(95%, 50rem);
-    margin-top: 5rem;
-}
-</style>
+<style scoped></style>

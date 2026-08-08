@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import Home from '@/views/Dashboard/Home.vue';
 import { routes as otium } from '@/Otium/router/routes';
 import { routes as profundum } from '@/Profundum/router/routes';
 import { routes as attendance } from '@/Attendance/router/routes';
@@ -8,7 +7,7 @@ const routes = [
     {
         path: '/',
         name: 'Home',
-        component: Home,
+        component: () => import('@/views/Dashboard/Home.vue'),
     },
     {
         path: '/admin/impersonate',
@@ -35,9 +34,20 @@ const routes = [
     ...profundum,
     ...attendance,
     {
+        path: '/login',
+        name: 'Login',
+        component: () => import('@/views/Login.vue'),
+        meta: {
+            allowAnonymous: true,
+        },
+    },
+    {
         path: '/:pathMatch(?!api/)(.*)*',
         name: 'NotFound',
         component: () => import('@/views/NotFound.vue'),
+        meta: {
+            allowAnonymous: true,
+        },
     },
 ];
 

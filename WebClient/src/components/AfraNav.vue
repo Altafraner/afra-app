@@ -190,7 +190,6 @@ onMounted(() => {
 const logout = async () => {
     try {
         await user.logout();
-        await router.push('/');
         toast.add({
             color: 'success',
             title: 'Abgemeldet!',

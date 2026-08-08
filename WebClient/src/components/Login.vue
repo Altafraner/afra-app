@@ -2,10 +2,12 @@
 import { ref, shallowRef } from 'vue';
 import { mande, MandeError } from 'mande';
 import { useUser } from '@/stores/user';
+import { useRouter } from 'vue-router';
 
 const loading = ref(false);
 const user = useUser();
 const toast = useToast();
+const router = useRouter();
 const username = shallowRef<string>();
 const password = shallowRef<string>();
 const remember = shallowRef<boolean>(false);
@@ -24,6 +26,7 @@ const submit = async () => {
             { responseAs: 'response' },
         );
         await user.update();
+        router.push('/');
     } catch (error) {
         const mandeError = error as MandeError;
         if (mandeError.response.status === 401) {
