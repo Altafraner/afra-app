@@ -32,6 +32,26 @@ namespace Altafraner.AfraApp.Migrations
                 table: "profunda_beleg_wuensche",
                 newName: "profundum_definition_id");
 
+            migrationBuilder.Sql("""
+                                     UPDATE profunda_beleg_wuensche bw
+                                     SET profundum_definition_id = pi.profundum_id
+                                     FROM profunda_instanzen pi
+                                     WHERE bw.profundum_definition_id = pi.id;
+
+                                     WITH ranked AS (
+                                         SELECT ctid,
+                                                ROW_NUMBER() OVER (
+                                                    PARTITION BY profundum_definition_id, betroffene_person_id, einwahl_zeitraum_id
+                                                    ORDER BY rang ASC
+                                                ) AS rn
+                                         FROM profunda_beleg_wuensche
+                                     )
+                                     DELETE FROM profunda_beleg_wuensche bw
+                                     USING ranked r
+                                     WHERE bw.ctid = r.ctid
+                                       AND r.rn > 1;
+                                 """);
+
             migrationBuilder.AddColumn<int>(
                 name: "wanted_einschreibungen",
                 table: "profunda_instanzen",
