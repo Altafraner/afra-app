@@ -1,5 +1,5 @@
 <script setup>
-import { chooseColorNuxtUi } from '@/helpers/formatters';
+import { chooseColor } from '@/helpers/formatters';
 
 const props = defineProps({
     istAbgesagt: Boolean,
@@ -15,7 +15,7 @@ const ui = {
     <UBadge v-if="istAbgesagt" :ui="ui" color="error" variant="soft">Abgesagt</UBadge>
     <UBadge
         v-else-if="auslastung != null"
-        :color="chooseColorNuxtUi(auslastung)"
+        :color="chooseColor(auslastung)"
         :ui="ui"
         variant="soft"
     >
