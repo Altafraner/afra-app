@@ -127,7 +127,7 @@ internal class AuthModule : IModule
         var userId = oidcUser?.FindFirst(oidcSettings.IdClaim!)?.Value;
         logger.LogWarning("UserId: {userId}", userId);
 
-        if (userId is null)
+        if (userId is null || oidcUser is null)
         {
             logger.LogWarning("Received OIDC event without ID");
             context.Fail("The authentication provider did not provide a user ID");
@@ -152,8 +152,8 @@ internal class AuthModule : IModule
         var claims = UserSigninService.GenerateClaims(user);
 
         // Add claims necessary for oidc single logout to work
-        var subClaim = oidcUser?.FindFirst(ClaimTypes.NameIdentifier);
-        var sidClaim = oidcUser?.FindFirst("sid");
+        var subClaim = oidcUser.FindFirst(ClaimTypes.NameIdentifier);
+        var sidClaim = oidcUser.FindFirst("sid");
         var idToken = context.TokenEndpointResponse?.IdToken;
         if (subClaim is not null) claims.Add(subClaim);
         if (sidClaim is not null) claims.Add(sidClaim);
@@ -176,9 +176,13 @@ internal class AuthModule : IModule
     public void Configure(WebApplication app)
     {
         app.MapGet("/api/oidc/start",
-            () => TypedResults.Challenge(new AuthenticationProperties
+            (IOptions<CookieAuthenticationSettings> cookieSettings, bool staySignedIn = false,
+                string redirectUrl = "/") => TypedResults.Challenge(
+                new AuthenticationProperties
                 {
-                    RedirectUri = "/"
+                    RedirectUri = redirectUrl,
+                    IsPersistent = staySignedIn,
+                    ExpiresUtc = staySignedIn ? DateTimeOffset.UtcNow.Add(cookieSettings.Value.CookieTimeout) : null
                 },
                 [OpenIdConnectDefaults.AuthenticationScheme]));
     }

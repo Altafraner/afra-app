@@ -31,6 +31,9 @@ router.beforeEach(async (to, _from) => {
     if (!loading.value && !loggedIn.value && !isAnonymousAllowed && to.name != 'Login') {
         return {
             name: 'Login',
+            query: {
+                redirectUrl: encodeURIComponent(to.fullPath),
+            },
         };
     }
 });

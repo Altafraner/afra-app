@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import { computed } from 'vue';
+import { withQuery } from 'ufo';
+import { computed, ref } from 'vue';
 import { isDark } from '@/helpers/isdark.ts';
 import wappenLight from '/vdaa/favicon.svg?url';
 import wappenDark from '/vdaa/favicon-dark.svg?url';
@@ -12,6 +13,28 @@ const router = useRouter();
 
 if (user.loggedIn) router.replace('/');
 const isDev = import.meta.env.DEV;
+
+const remember = ref(true);
+
+const loginUrl = computed(() => {
+    let redirectUrl = router.currentRoute.value.query['redirectUrl'];
+    if (Array.isArray(redirectUrl)) {
+        redirectUrl = null;
+    } else if (redirectUrl) redirectUrl = decodeURIComponent(redirectUrl);
+    return withQuery('/api/oidc/start', {
+        staySignedIn: remember.value,
+        redirectUrl: !redirectUrl || !sameOrigin(redirectUrl) ? '/' : redirectUrl,
+    });
+});
+
+function sameOrigin(link: string) {
+    try {
+        const url = new URL(link, location.origin);
+        return url.origin === location.origin;
+    } catch (e) {
+        return false;
+    }
+}
 </script>
 
 <template>
@@ -28,8 +51,14 @@ const isDev = import.meta.env.DEV;
                 external
                 icon="i-lucide-arrow-right"
                 label="Anmelden"
-                to="/api/oidc/start"
+                :to="loginUrl"
                 variant="soft"
+            />
+            <UCheckbox
+                v-model="remember"
+                class="mt-4"
+                color="secondary"
+                label="Angemeldet bleiben"
             />
             <UButton
                 v-if="isDev"
