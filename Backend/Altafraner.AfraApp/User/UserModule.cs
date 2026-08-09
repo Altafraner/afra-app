@@ -1,6 +1,7 @@
 using Altafraner.AfraApp.Backbone.Authorization;
 using Altafraner.AfraApp.User.API.Endpoints;
 using Altafraner.AfraApp.User.Configuration.LDAP;
+using Altafraner.AfraApp.User.Domain.Contracts;
 using Altafraner.AfraApp.User.Services;
 using Altafraner.AfraApp.User.Services.LDAP;
 using Altafraner.Backbone.Abstractions;
@@ -30,6 +31,8 @@ public class UserModule : IModule
         services.AddScoped<LdapService>();
 
         services.AddHostedService<LdapAutoSyncScheduler>();
+
+        services.AddScoped<IUserEventHandler, DefaultUserEventHandler>();
     }
 
     /// <inheritdoc />

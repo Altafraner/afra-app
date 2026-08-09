@@ -68,7 +68,7 @@ internal class ProfundumDashboardProvider : IDashboardProvider
 
         var termine = await _dbContext.ProfundaTermine
             .Include(e => e.Slot)
-            .Where(e => e.Day >= start && e.Day < endDate)
+            .Where(e => e.Day >= start && e.Day < endDate && e.Day >= DateOnly.FromDateTime(student.CreatedAt))
             .ToListAsync();
         var slots = termine.Select(e => e.Slot).Distinct();
         var enrollments = await _dbContext.ProfundaEinschreibungen

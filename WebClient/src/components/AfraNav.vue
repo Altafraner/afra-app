@@ -148,9 +148,9 @@ const all_items: MenuItemWithCondition[] = [
         icon: 'i-lucide-asterisk',
         children: [
             {
-                label: 'Impersonieren',
+                label: 'Nutzer',
                 to: {
-                    name: 'Admin-Impersonate',
+                    name: 'Admin-Users',
                 },
                 conditions: {
                     permissions: ['Admin'],

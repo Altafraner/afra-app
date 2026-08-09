@@ -6,6 +6,7 @@ using Altafraner.AfraApp.Attendance.Domain.Contracts;
 using Altafraner.AfraApp.Attendance.Jobs;
 using Altafraner.AfraApp.Attendance.Services;
 using Altafraner.AfraApp.Backbone.Authorization;
+using Altafraner.AfraApp.User.Domain.Contracts;
 using Altafraner.Backbone.Abstractions;
 using Altafraner.Backbone.Defaults;
 using AttendanceHub = Altafraner.AfraApp.Attendance.API.Hubs.AttendanceHub;
@@ -30,6 +31,7 @@ internal class AttendanceModule : IModule
         services.AddScoped<NotesService>();
         services.AddScoped<EmergencyUploadJob>();
         services.AddScoped<IAttendanceNotificationService, AttendanceNotificationService>();
+        services.AddScoped<IUserEventHandler, AttendanceUserEventHandler>();
 
         if (settings.Cevex is not null && !string.IsNullOrWhiteSpace(settings.Cevex.FilePath))
         {
