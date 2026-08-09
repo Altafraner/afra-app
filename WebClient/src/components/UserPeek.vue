@@ -6,11 +6,19 @@ import type { UserInfoMinimal } from '@/models/user/user';
 
 defineOptions({ name: 'UserPeek' });
 
-const props = defineProps({
-    showGroup: { type: Boolean, default: false },
-    person: { type: Object, required: true },
-    displayFunction: { type: Function, default: formatStudent },
-});
+const props = withDefaults(
+    defineProps<{
+        showGroup?: boolean;
+        fullSize?: boolean;
+        person: UserInfoMinimal;
+        displayFunction?: (person: UserInfoMinimal) => string;
+    }>(),
+    {
+        fullSize: false,
+        showGroup: false,
+        displayFunction: formatStudent,
+    },
+);
 
 const toast = useToast();
 
@@ -64,7 +72,10 @@ const onOpen = async () => {
         @update:open="onOpen"
     >
         <UButton
-            class="py-1 font-semibold h-8 w-full"
+            :class="{
+                'w-full': fullSize,
+            }"
+            class="py-1 font-semibold h-8 max-w-full"
             size="lg"
             v-bind="$attrs"
             variant="ghost"
