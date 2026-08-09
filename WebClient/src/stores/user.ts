@@ -46,8 +46,6 @@ export const useUser = defineStore('user', {
         },
 
         async logout() {
-            this.loggedIn = false;
-            this.user = null;
             location.href = '/api/user/logout';
         },
     },
