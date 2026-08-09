@@ -1,8 +1,6 @@
 <script lang="ts" setup>
 import '@/assets/main.css';
-import 'primeicons/primeicons.css';
 
-import DynamicDialog from 'primevue/dynamicdialog';
 import AfraNav from '@/components/AfraNav.vue';
 import { useUser } from '@/stores/user';
 import { watch } from 'vue';
@@ -70,7 +68,6 @@ const toastProps: ToasterProps = {
 </script>
 
 <template>
-    <DynamicDialog />
     <div v-if="user.isImpersonating" aria-hidden="true" class="impersonation-tag hidden"></div>
     <UApp :locale="de" :toaster="toastProps">
         <ReloadPrompt />

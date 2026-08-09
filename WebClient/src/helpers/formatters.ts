@@ -66,23 +66,7 @@ export const formatMachineDate = (date: Date) => date.toISOString().split('T')[0
 export const formatTime = (date: Date) =>
     padString(date.getHours(), 2) + ':' + padString(date.getMinutes(), 2);
 
-export const chooseColor = (now: number, max: number) => {
-    if (max === 0 || now <= 0.7) return 'var(--p-button-success-background)';
-    if (now < 1) return 'var(--p-button-warn-background)';
-    return 'var(--p-button-danger-background)';
-};
-
-export const chooseSeverity = (
-    now: number,
-    warnThreshold: number = 70,
-    invert: boolean = false,
-) => {
-    if (now <= warnThreshold) return !invert ? 'success' : 'danger';
-    if (now < 100) return 'warn';
-    return !invert ? 'danger' : 'success';
-};
-
-export const chooseColorNuxtUi = (
+export const chooseColor = (
     now: number,
     warnThreshold: number = 70,
     invert: boolean = false,
