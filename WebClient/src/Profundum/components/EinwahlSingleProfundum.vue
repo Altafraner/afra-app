@@ -1,4 +1,6 @@
 <script setup>
+import { formatSlotId } from '@/helpers/formatters.ts';
+
 defineProps({
     angebot: { type: Object, required: true },
     index: { type: Number, required: false },
@@ -31,7 +33,7 @@ defineEmits([
             <UBadge
                 v-for="slot in angebot.slotIds"
                 :key="slot"
-                :label="slot"
+                :label="formatSlotId(slot)"
                 color="secondary"
             />
         </span>

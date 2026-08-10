@@ -78,19 +78,35 @@ export const chooseColor = (
 
 export const formatDayOfWeek = (number: number) => wochentage[number % 7];
 
-export const formatDayOfWeekFromEnum = (
-    day: 'Sunday' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday',
-) => {
-    if (day === 'Sunday') return formatDayOfWeek(0);
-    if (day === 'Monday') return formatDayOfWeek(1);
-    if (day === 'Tuesday') return formatDayOfWeek(2);
-    if (day === 'Wednesday') return formatDayOfWeek(3);
-    if (day === 'Thursday') return formatDayOfWeek(4);
-    if (day === 'Friday') return formatDayOfWeek(5);
-    if (day === 'Saturday') return formatDayOfWeek(6);
-    throw Error(`Unknown day: ${day}`);
+export type Weekday =
+    'Sunday' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday';
+
+export const formatDayOfWeekFromEnum = (day: Weekday) => {
+    switch (day) {
+        case 'Sunday':
+            return formatDayOfWeek(0);
+        case 'Monday':
+            return formatDayOfWeek(1);
+        case 'Tuesday':
+            return formatDayOfWeek(2);
+        case 'Wednesday':
+            return formatDayOfWeek(3);
+        case 'Thursday':
+            return formatDayOfWeek(4);
+        case 'Friday':
+            return formatDayOfWeek(5);
+        case 'Saturday':
+            return formatDayOfWeek(6);
+        default:
+            throw Error(`Unknown day: ${day}`);
+    }
 };
 
 export const formatSlot = (slot: ProfundumSlot) => {
     return `${slot.jahr} / ${slot.jahr + 1} ${slot.quartal} ${formatDayOfWeekFromEnum(slot.wochentag)}`;
 };
+
+export function formatSlotId(slotId: string) {
+    const parts = slotId.split('-');
+    return `${parts[0]}/${Number(parts[0]) + 1} ${parts[1]} ${formatDayOfWeekFromEnum(parts[2] as Weekday)}`;
+}
