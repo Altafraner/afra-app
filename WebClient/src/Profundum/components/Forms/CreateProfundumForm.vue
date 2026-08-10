@@ -83,13 +83,13 @@ function submit(event) {
                         <UInputNumber
                             v-model="state.minKlasse"
                             placeholder="min"
-                            class="w-20"
+                            class="w-20 flex-1"
                         />
                         –
                         <UInputNumber
                             v-model="state.maxKlasse"
                             placeholder="max"
-                            class="w-20"
+                            class="w-20 flex-1"
                         />
                     </div>
                 </UFormField>
