@@ -7,6 +7,8 @@ import GridEditRow from '@/components/Form/GridEditRow.vue';
 import CreateSlotForm from '@/Profundum/components/Forms/CreateSlotForm.vue';
 import TermineDialog from '@/Profundum/components/Forms/TermineDialog.vue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
+import { parseAbsolute } from '@internationalized/date';
+import { formatCalendarDateTime } from '@/helpers/formatters.ts';
 
 const toast = useToast();
 const { requireConfirm } = useConfirmPopover();
@@ -32,7 +34,9 @@ const weekdayOptions = [
 async function load() {
     loading.value = true;
     slots.value = await apiSlots.get();
-    zeitraeume.value = await apiZeitraeume.get();
+    zeitraeume.value = (await apiZeitraeume.get()).map((e) => {
+        return { ...e, label: formatCalendarDateTime(parseAbsolute(e.einwahlStart)) };
+    });
     loading.value = false;
 }
 
@@ -128,6 +132,7 @@ onMounted(load);
                     <UTooltip text="PDFs aller Profunda (experimentell)">
                         <UButton
                             :href="`/api/profundum/management/instanz/${s.id}.zip`"
+                            external
                             aria-label="PDFs aller Profunda (experimentell)"
                             color="info"
                             download
@@ -146,35 +151,42 @@ onMounted(load);
                             @click="openTermineDialog(s)"
                         />
                     </UTooltip>
-                    Jahr: {{ s.jahr }}, Quartal: {{ s.quartal }}, Wochentag:
+                    {{ s.jahr }} / {{ s.jahr + 1 }}, {{ s.quartal }},
                     {{
                         weekdayOptions.find((d) => d.value === s.wochentag)?.label ??
                         s.wochentag
                     }}, Einwahl:
                     {{
-                        zeitraeume.find((z) => z.id === s.einwahlZeitraumId)?.einwahlStart ??
-                        '–'
+                        formatCalendarDateTime(
+                            parseAbsolute(
+                                zeitraeume.find((z) => z.id === s.einwahlZeitraumId)
+                                    ?.einwahlStart,
+                            ),
+                        ) ?? '–'
                     }}
                 </template>
 
                 <template #edit>
-                    <div class="flex flex-col gap-2 w-full">
-                        <div>
-                            <label class="block mb-1">Jahr</label>
-                            <UInputNumber v-model="s.jahr" :min="2020" class="w-full" />
-                        </div>
+                    <div class="flex flex-col gap-2 w-full border border-muted rounded-md p-4">
+                        <UFormField label="Jahr" required>
+                            <UInputNumber
+                                v-model="s.jahr"
+                                :format-options="{ useGrouping: false }"
+                                :min="2020"
+                                class="w-full"
+                                color="neutral"
+                            />
+                        </UFormField>
 
-                        <div>
-                            <label class="block mb-1">Quartal</label>
+                        <UFormField label="Quartal" required>
                             <USelect
                                 v-model="s.quartal"
                                 :items="['Q1', 'Q2', 'Q3', 'Q4']"
                                 class="w-full"
                             />
-                        </div>
+                        </UFormField>
 
-                        <div>
-                            <label class="block mb-1">Wochentag</label>
+                        <UFormField label="Wochentag" required>
                             <USelect
                                 v-model="s.wochentag"
                                 :items="weekdayOptions"
@@ -182,19 +194,18 @@ onMounted(load);
                                 value-key="value"
                                 class="w-full"
                             />
-                        </div>
+                        </UFormField>
 
-                        <div>
-                            <label class="block mb-1">Einwahlzeitraum</label>
+                        <UFormField label="Einwahlzeitraum" required>
                             <USelect
                                 v-model="s.einwahlZeitraumId"
                                 :items="zeitraeume"
-                                label-key="einwahlStart"
+                                label-key="label"
                                 value-key="id"
                                 placeholder="Zeitraum auswählen"
                                 class="w-full"
                             />
-                        </div>
+                        </UFormField>
                     </div>
                 </template>
             </GridEditRow>
