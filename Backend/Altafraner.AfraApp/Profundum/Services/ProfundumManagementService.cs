@@ -45,6 +45,7 @@ internal class ProfundumManagementService
         {
             EinwahlStart = DateTimeOffset.Parse(zeitraum.EinwahlStart).UtcDateTime,
             EinwahlStop = DateTimeOffset.Parse(zeitraum.EinwahlStop).UtcDateTime,
+            Bezeichnung = zeitraum.Bezeichnung,
         };
         _dbContext.ProfundumEinwahlZeitraeume.Add(einwahlZeitraum);
         await _dbContext.SaveChangesAsync();
@@ -71,6 +72,8 @@ internal class ProfundumManagementService
 
         if (dto.EinwahlStop != null)
             zeitraum.EinwahlStop = DateTimeOffset.Parse(dto.EinwahlStop).UtcDateTime;
+
+        zeitraum.Bezeichnung = dto.Bezeichnung;
 
         await _dbContext.SaveChangesAsync();
     }
