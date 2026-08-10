@@ -11,16 +11,16 @@ public record DTOProfundumEinwahlZeitraum
     public DTOProfundumEinwahlZeitraum(ProfundumEinwahlZeitraum dbEinwahlZeitraum)
     {
         Id = dbEinwahlZeitraum.Id;
-        EinwahlStart = new DateTimeOffset(dbEinwahlZeitraum.EinwahlStart).ToLocalTime().ToString();
-        EinwahlStop = new DateTimeOffset(dbEinwahlZeitraum.EinwahlStop).ToLocalTime().ToString();
+        EinwahlStart = new DateTimeOffset(dbEinwahlZeitraum.EinwahlStart).ToLocalTime();
+        EinwahlStop = new DateTimeOffset(dbEinwahlZeitraum.EinwahlStop).ToLocalTime();
     }
 
     /// <inheritdoc cref="ProfundumEinwahlZeitraum.Id"/>
     public Guid? Id { get; set; }
 
     /// <inheritdoc cref="ProfundumEinwahlZeitraum.EinwahlStart"/>
-    public string? EinwahlStart { get; set; }
+    public DateTimeOffset EinwahlStart { get; set; }
 
     /// <inheritdoc cref="ProfundumEinwahlZeitraum.EinwahlStop"/>
-    public string? EinwahlStop { get; set; }
+    public DateTimeOffset EinwahlStop { get; set; }
 }

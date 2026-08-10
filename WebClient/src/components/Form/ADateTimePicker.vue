@@ -1,12 +1,12 @@
 <script lang="ts" setup>
-import type { CalendarDateTime } from '@internationalized/date';
+import { CalendarDateTime, ZonedDateTime } from '@internationalized/date';
 
-const modelValue = defineModel<CalendarDateTime | undefined>();
+const modelValue = defineModel<CalendarDateTime | undefined | ZonedDateTime>();
 </script>
 
 <template>
     <UPopover>
-        <UInputDate ref="inputDate" v-model="modelValue">
+        <UInputDate ref="inputDate" v-model="modelValue" hideTimeZone>
             <template #trailing>
                 <UButton
                     aria-label="Select a date"

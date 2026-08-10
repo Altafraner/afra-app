@@ -1,13 +1,14 @@
 <script setup>
 import { onMounted, ref } from 'vue';
 import { mande } from 'mande';
-import { fromDate, getLocalTimeZone, toCalendarDateTime } from '@internationalized/date';
+import { getLocalTimeZone, parseAbsolute } from '@internationalized/date';
 
 import Grid from '@/components/Form/Grid.vue';
 import GridEditRow from '@/components/Form/GridEditRow.vue';
 import ADateTimePicker from '@/components/Form/ADateTimePicker.vue';
 import CreateEinwahlzeitraumForm from '@/Profundum/components/Forms/CreateEinwahlzeitraumForm.vue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
+import { formatCalendarDateTime } from '@/helpers/formatters.ts';
 
 const toast = useToast();
 const { requireConfirm } = useConfirmPopover();
@@ -17,19 +18,13 @@ const api = mande('/api/profundum/management/einwahlzeitraum');
 const zeitraeume = ref([]);
 const loading = ref(true);
 
-function toCalendarDateTimeOrNull(value) {
-    if (!value) return null;
-    const d = new Date(value);
-    return isNaN(d.getTime()) ? null : toCalendarDateTime(fromDate(d, getLocalTimeZone()));
-}
-
 async function load() {
     loading.value = true;
     const res = await api.get();
     zeitraeume.value = res.map((z) => ({
         ...z,
-        einwahlStartDate: toCalendarDateTimeOrNull(z.einwahlStart),
-        einwahlStopDate: toCalendarDateTimeOrNull(z.einwahlStop),
+        einwahlStartDate: parseAbsolute(z.einwahlStart),
+        einwahlStopDate: parseAbsolute(z.einwahlStop),
     }));
     loading.value = false;
 }
@@ -120,37 +115,28 @@ onMounted(load);
             <GridEditRow
                 v-for="z in zeitraeume"
                 :key="z.id"
-                header="Einwahlzeitraum"
+                header=""
                 :canDelete="true"
                 @update="updateEinwahlzeitraum(z)"
                 @delete="deleteEinwahlzeitraum(z)"
             >
                 <template #body>
                     <span>
-                        {{
-                            z.einwahlStartDate
-                                ?.toDate(getLocalTimeZone())
-                                .toLocaleString('de-DE') ?? '–'
-                        }}
+                        {{ formatCalendarDateTime(z.einwahlStartDate) }}
                         –
-                        {{
-                            z.einwahlStopDate
-                                ?.toDate(getLocalTimeZone())
-                                .toLocaleString('de-DE') ?? '–'
-                        }}
+                        {{ formatCalendarDateTime(z.einwahlStopDate) }}
                     </span>
                 </template>
 
                 <template #edit>
-                    <div class="flex flex-col gap-2 w-full">
-                        <div>
-                            <label class="block mb-1">Start</label>
+                    <div class="flex gap-2 w-full items-end">
+                        <UFormField label="Start" required>
                             <ADateTimePicker v-model="z.einwahlStartDate" />
-                        </div>
-                        <div>
-                            <label class="block mb-1">Ende</label>
+                        </UFormField>
+                        <span class="mb-2">–</span>
+                        <UFormField label="Ende" required>
                             <ADateTimePicker v-model="z.einwahlStopDate" />
-                        </div>
+                        </UFormField>
                     </div>
                 </template>
             </GridEditRow>
