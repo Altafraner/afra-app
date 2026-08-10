@@ -12,4 +12,7 @@ public record DTOProfundumEinwahlZeitraumCreation
 
     /// <inheritdoc cref="ProfundumEinwahlZeitraum.EinwahlStop"/>
     public string? EinwahlStop { get; set; }
+
+    /// <inheritdoc cref="ProfundumEinwahlZeitraum.Bezeichnung"/>
+    public string Bezeichnung { get; set; } = "";
 }
