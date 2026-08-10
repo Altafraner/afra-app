@@ -131,6 +131,8 @@ const updateFachbereiche = () =>
     });
 const updateErlaubtPartnerwahl = () =>
     savePatch({ erlaubtPartnerwahl: profundum.value.erlaubtPartnerwahl });
+const updateAusgeblendetInEinwahl = () =>
+    savePatch({ ausgeblendetInEinwahl: profundum.value.ausgeblendetInEinwahl });
 </script>
 <template>
     <template v-if="loading">Lade...</template>
@@ -265,6 +267,24 @@ const updateErlaubtPartnerwahl = () =>
                     <USwitch
                         v-model="profundum.erlaubtPartnerwahl"
                         label="Partnerwahl erlauben"
+                    />
+                </template>
+            </GridEditRow>
+            <GridEditRow
+                header="Sichtbarkeit in der Einwahl"
+                @update="updateAusgeblendetInEinwahl"
+            >
+                <template #body>
+                    <span>{{
+                        profundum.ausgeblendetInEinwahl
+                            ? 'Ausgeblendet - Schüler:innen können dieses Profundum nicht wählen'
+                            : 'Sichtbar'
+                    }}</span>
+                </template>
+                <template #edit>
+                    <USwitch
+                        v-model="profundum.ausgeblendetInEinwahl"
+                        label="In der Einwahl ausblenden"
                     />
                 </template>
             </GridEditRow>

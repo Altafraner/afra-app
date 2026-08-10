@@ -20,6 +20,8 @@ public record DTOProfundumDefinition
         Fachbereiche = dbProfundumDefinition.Fachbereiche.Select(e => new DtoProfundumFachbereich(e));
         FachbereichIds = dbProfundumDefinition.Fachbereiche.Select(e => e.Id);
         ErlaubtPartnerwahl = dbProfundumDefinition.ErlaubtPartnerwahl;
+        Hidden = dbProfundumDefinition.Hidden;
+        AusgeblendetInEinwahl = dbProfundumDefinition.AusgeblendetInEinwahl;
     }
 
     /// <inheritdoc cref="ProfundumDefinition.Id"/>
@@ -51,4 +53,10 @@ public record DTOProfundumDefinition
 
     /// <inheritdoc cref="ProfundumDefinition.ErlaubtPartnerwahl"/>
     public bool ErlaubtPartnerwahl { get; set; }
+
+    /// <inheritdoc cref="ProfundumDefinition.Hidden"/>
+    public bool Hidden { get; set; }
+
+    /// <inheritdoc cref="ProfundumDefinition.AusgeblendetInEinwahl"/>
+    public bool AusgeblendetInEinwahl { get; set; }
 }

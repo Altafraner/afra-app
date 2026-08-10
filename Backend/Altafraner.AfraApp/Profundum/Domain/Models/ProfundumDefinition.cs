@@ -70,6 +70,20 @@ public class ProfundumDefinition : IHasTimestamps, IHasUserTracking
     /// </summary>
     public bool ErlaubtPartnerwahl { get; set; }
 
+    /// <summary>
+    ///     If true, hides this Profundum from staff management interfaces by default. Independent of
+    ///     <see cref="AusgeblendetInEinwahl" /> - this only affects the management list, never the student-facing
+    ///     Einwahl catalog.
+    /// </summary>
+    public bool Hidden { get; set; }
+
+    /// <summary>
+    ///     If true, hides this Profundum from the student-facing Einwahl catalog (<c>GetKatalog</c>), without
+    ///     affecting staff management visibility or any existing Einschreibung/Bewertung/calendar entry. Independent
+    ///     of <see cref="Hidden" />.
+    /// </summary>
+    public bool AusgeblendetInEinwahl { get; set; }
+
     /// <inheritdoc/>
     public DateTime CreatedAt { get; set; }
 
