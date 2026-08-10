@@ -1,9 +1,10 @@
 <script setup>
-import { computed, h, ref } from 'vue';
+import { computed, h, ref, watch } from 'vue';
 import { mande } from 'mande';
 import { useSortable } from '@vueuse/integrations/useSortable';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
 import { convertMarkdownToHtml } from '@/composables/markdown';
+import EinwahlSingleProfundum from '@/Profundum/views/EinwahlSingleProfundum.vue';
 
 const navItems = [
     {
@@ -28,10 +29,21 @@ const katalog = ref({
     aktuelleWuensche: [],
     istAbgegeben: false,
 });
+const uncommitedChanges = ref(false);
 const ranked = ref([]);
 const draftBusy = ref(false);
 
 useSortable('.ranked-list', ranked, { animation: 150, handle: '.drag-handle' });
+
+watch(
+    ranked,
+    () => {
+        uncommitedChanges.value = true;
+    },
+    {
+        deep: true,
+    },
+);
 
 async function get() {
     const api = mande('/api/profundum/sus/wuensche');
@@ -47,6 +59,7 @@ async function saveDraft() {
         await api.post(ranked.value);
         katalog.value.istAbgegeben = false;
         toast.add({ color: 'success', title: 'Entwurf gespeichert' });
+        uncommitedChanges.value = false;
     } catch (e) {
         toast.add({
             color: 'error',
@@ -85,6 +98,7 @@ async function send() {
         return;
     }
 
+    uncommitedChanges.value = false;
     katalog.value.istAbgegeben = true;
     toast.add({
         color: 'success',
@@ -268,7 +282,7 @@ async function startup() {
     await Promise.all([get(), loadPartnerData()]);
 }
 
-startup();
+await startup();
 </script>
 
 <template>
@@ -276,201 +290,224 @@ startup();
 
     <h1>Profundums-Einwahl</h1>
 
-    <p>
-        Bitte lest euch die folgenden Hinweise aufmerksam durch.
-        <strong
-            >Der Zeitpunkt der Abgabe eurer Wünsche innerhalb des Einwahlzeitraums hat keinen
-            Einfluss auf die Vergabe.</strong
+    <h2>Hinweise</h2>
+
+    <UAlert color="info" icon="i-lucide-info" title="Hinweis">
+        <template #description>
+            <p class="mt-0">Bitte lest euch die folgenden Hinweise aufmerksam durch.</p>
+            <p class="mb-0">
+                Sie erklären den Prozess der Einwahl sowie notwendige Kriterien, die ihr
+                erfüllen müsst, damit eure Wünsche berücksichtigt werden können.
+            </p>
+        </template>
+    </UAlert>
+
+    <template v-if="katalog.fixiert.length > 0">
+        <h3>Bereits festgelegte Belegungen</h3>
+
+        <p>
+            Hier siehst du, welche Belegungen für dich bereits hinterlegt sind. Du kannst diese
+            nicht ändern. Solltes du mit den Belegungen nicht einverstanden sein, melde dich
+            bitte bei der Verantwortlichen Person für die Profundumseinwahl.
+        </p>
+
+        <UTable
+            :columns="[
+                { header: 'Slot', accessorKey: 'slotLabel' },
+                { header: 'Angebot', accessorKey: 'bezeichnung' },
+            ]"
+            :data="katalog.fixiert"
+            :ui="{
+                td: 'p-2',
+                th: 'p-2',
+            }"
         >
-    </p>
+        </UTable>
+    </template>
 
-    <h2>Bereits fixierte Belegungen</h2>
-
-    <p v-if="katalog.fixiert.length === 0">
-        Ihr habt aktuell keine bereits fixierten Belegungen für diesen Einwahlzeitraum.
-    </p>
-    <ul v-else class="list-disc pl-6">
-        <li v-for="f in katalog.fixiert" :key="f.slotId">
-            {{ f.slotLabel }}: {{ f.bezeichnung }}
-        </li>
-    </ul>
-
-    <h2>Kriterien</h2>
+    <h3>Auswahlverfahren</h3>
 
     <p>
-        Bitte beachtet das <em>profundarium</em> sowie die Detailansicht Info-Symbol neben jedem
-        Angebot) für ausführliche Informationen zu jedem Angebot.
+        Unten seht ihr eine Liste mit den für euch verfügbaren Angeboten. Aus diesen könnt ihr
+        über das <UIcon class="inline-block" name="i-lucide-plus" /> Plus Angebote auswählen,
+        die ihr euch wünschen wollt.
     </p>
 
     <p>
-        Bringt eure Profunda unten in eine Rangfolge, absteigend nach Präferenz. Wählt
-        mindestens
-        <strong>{{ katalog.minBelegWuensche }}</strong> Profunda. Für jeden offenen Slot müssen
-        mindestens <strong>{{ katalog.minWuenschePerSlot }}</strong> eurer gewählten Profunda
-        ein Angebot enthalten – nicht gewählte Profunda gelten als "möchte ich nicht belegen".
+        Mit den Knöpfen <UIcon class="inline-block" name="i-lucide-arrow-up" /> Hoch und
+        <UIcon class="inline-block" name="i-lucide-arrow-down" /> Runter könnt ihr eine
+        Rangfolge eurer Wünsche erstellen. Wünsche weiter oben in der Liste werden dabei eher
+        beachtet, als Wünsche weiter unten. Bei Profunda die ihr nicht in eure Wunschliste
+        aufnehmt gehen wir davon aus, dass ihr diese nicht belegen wollt.
     </p>
 
     <p>
-        Weitere Einschränkungen werden euch möglicherweise angezeigt, nachdem ihr auf "abgeben"
-        geklickt habt. In diesem Fall nehmt ihr bitte entsprechende Änderungen vor und versucht
-        es erneut.
+        Für jedes Profundum könnt ihr über den
+        <UIcon class="inline-block" name="i-lucide-info" /> Info-Knopf oder aus dem
+        <em>Profundarium</em>
+        weitere Infos erhalten.
     </p>
 
-    <h2>Matching</h2>
+    <UAlert icon="i-lucide-info" title="Mindestanzahlen beachten">
+        <template #description>
+            <p class="mt-0">
+                Damit alle eine Chance haben in Angebote zu kommen, die sie sich gewünscht
+                haben, müsst ihr mindestens eine bestimmte Anzahl an Angeboten in eure
+                Wunschliste aufnehmen.
+            </p>
+            <p>Das sind</p>
+            <ul>
+                <li>
+                    Mindestens
+                    <strong>{{ katalog.minBelegWuensche }} Profunda insgesamt</strong> und
+                </li>
+                <li>
+                    Mindestens
+                    <strong>{{ katalog.minWuenschePerSlot }} Profunda für jeden Slot,</strong>
+                    für den ihr euch einwählen müsst.
+                </li>
+            </ul>
+            <p class="mb-0">
+                Weitere Einschränkungen werden dir möglicherweise angezeigt, nachdem du auf
+                "abgeben" geklickt hast. Nimm in diesem Fall bitte entsprechende Änderungen vor
+                und versuche es erneut.
+            </p>
+        </template>
+    </UAlert>
+
+    <p>
+        Für manche Profunda hast du die Möglichkeit eine <strong>Partner:in zu wählen</strong>.
+        Nutze dazu den <UIcon class="inline-block" name="i-lucide-user" /> Person-Knopf. Wenn du
+        eine Partner:in hast, dann sollte eine:r von euch beiden dort einen Partner:innen-Code
+        generieren. Diesen muss die andere Partner:in dann eingeben. Nur, wenn ein Code
+        eingegeben wurde, können wir euren Wunsch berücksichtigen, zusammen mit einer anderen
+        Person eingewählt zu werden.
+    </p>
+
+    <h3>Auswertung</h3>
 
     <p>
         Nach dem Zeitfenster zur Einwahl berechnen wir aus den abgegebenen Wünschen eine
-        Belegung, die eure Präferenzen nach
+        Belegung, die eure Präferenzen bestmöglich berücksichtigt. Falls es dich interessiert,
+        kannst du
         <a
             class="text-blue-500 hover:underline cursor-pointer"
             href="https://github.com/Altafraner/afra-app"
             target="_blank"
-            >veröffentlichter Berechnungsvorschrift</a
+            >im Quellcode dieses Programms</a
         >
-        bestmöglich berücksichtigt.
+        sogar nachlesen, wie wir das machen.
     </p>
 
-    <hr class="my-3" />
+    <p>
+        Solange du deine Wünsche fristgerecht abgibst, spielt es keine Rolle, ob du deine
+        Wünsche früher oder später als deine Mitschüler:innen abgibst.
+    </p>
+
+    <USeparator class="my-6" size="lg" />
+
+    <h2>Deine Wünsche</h2>
 
     <div class="grid grid-cols-1 md:grid-cols-1 gap-6 mb-4">
         <div>
             <h3 class="flex items-center gap-2">
-                Meine Rangfolge
+                Deine Rangfolge
                 <UBadge
-                    v-if="katalog.aktuelleWuensche.length > 0"
+                    v-if="katalog.aktuelleWuensche.length > 0 && !uncommitedChanges"
                     :label="katalog.istAbgegeben ? 'Abgegeben' : 'Entwurf gespeichert'"
                     :color="katalog.istAbgegeben ? 'success' : 'warning'"
                 />
             </h3>
             <ol class="ranked-list flex flex-col gap-2 list-none pl-0">
-                <li
+                <EinwahlSingleProfundum
                     v-for="(id, index) in ranked"
                     :key="id"
-                    class="flex items-center gap-2 border rounded p-2"
-                >
-                    <UIcon
-                        name="i-lucide-grip-vertical"
-                        class="drag-handle cursor-grab text-muted"
-                    />
-                    <span class="w-6 text-right font-bold">{{ index + 1 }}.</span>
-                    <span class="flex-1">{{ optionenById.get(id)?.bezeichnung }}</span>
-                    <UBadge
-                        v-if="optionenById.get(id)?.profilProfundum"
-                        label="Profil"
-                        color="info"
-                    />
-                    <UTooltip
-                        v-if="optionenById.get(id)?.erlaubtPartnerwahl"
-                        text="Partnerwahl"
-                    >
-                        <UButton
-                            icon="i-lucide-users"
-                            :color="wunschByDefinition.get(id) ? 'success' : 'neutral'"
-                            variant="ghost"
-                            @click="openPartnerDialog(optionenById.get(id))"
-                        />
-                    </UTooltip>
-                    <UTooltip text="Details">
-                        <UButton
-                            icon="i-lucide-info"
-                            color="neutral"
-                            variant="ghost"
-                            @click="openDetailDialog(optionenById.get(id))"
-                        />
-                    </UTooltip>
-                    <UButton
-                        icon="i-lucide-arrow-up"
-                        color="neutral"
-                        variant="ghost"
-                        :disabled="index === 0"
-                        @click="moveUp(index)"
-                    />
-                    <UButton
-                        icon="i-lucide-arrow-down"
-                        color="neutral"
-                        variant="ghost"
-                        :disabled="index === ranked.length - 1"
-                        @click="moveDown(index)"
-                    />
-                    <UButton
-                        icon="i-lucide-x"
-                        color="error"
-                        variant="ghost"
-                        @click="removeFromRanked(index)"
-                    />
-                </li>
+                    :angebot="optionenById.get(id)"
+                    :has-partner="wunschByDefinition.get(id) != null"
+                    :index="index"
+                    :is-ranked="true"
+                    :last-in-list="index === ranked.length - 1"
+                    @openPartnerDialog="openPartnerDialog"
+                    @move-down="moveDown"
+                    @move-up="moveUp"
+                    @open-detail-dialog="openDetailDialog"
+                    @remove-from-ranked="removeFromRanked"
+                />
             </ol>
+            <div v-if="ranked.length === 0" class="w-full text-center text-muted text-sm">
+                Keine Profunda ausgewählt.
+            </div>
         </div>
 
         <div>
             <h3>belegbare Profunda außerhalb der Rangfolge</h3>
             <ul class="flex flex-col gap-2 list-none pl-0">
-                <li
+                <EinwahlSingleProfundum
                     v-for="option in verfuegbareOptionen"
                     :key="option.definitionId"
-                    class="flex items-center gap-2 border rounded p-2"
-                >
-                    <span class="flex-1">{{ option.bezeichnung }}</span>
-                    <UBadge v-if="option.profilProfundum" label="Profil" color="info" />
-                    <UTooltip text="Details">
-                        <UButton
-                            icon="i-lucide-info"
-                            color="neutral"
-                            variant="ghost"
-                            @click="openDetailDialog(option)"
-                        />
-                    </UTooltip>
-                    <UTooltip v-if="option.erlaubtPartnerwahl" text="Partnerwahl">
-                        <UButton
-                            icon="i-lucide-users"
-                            :color="
-                                wunschByDefinition.get(option.definitionId)
-                                    ? 'success'
-                                    : 'neutral'
-                            "
-                            variant="ghost"
-                            @click="openPartnerDialog(option)"
-                        />
-                    </UTooltip>
-                    <UButton
-                        icon="i-lucide-plus"
-                        color="neutral"
-                        variant="ghost"
-                        @click="addToRanked(option.definitionId)"
-                    />
-                </li>
+                    :angebot="option"
+                    :has-partner="wunschByDefinition.get(option.definitionId) != null"
+                    :is-ranked="false"
+                    @open-detail-dialog="openDetailDialog"
+                    @open-partner-dialog="openPartnerDialog"
+                    @add-to-ranked="addToRanked"
+                />
             </ul>
+            <div
+                v-if="verfuegbareOptionen.length === 0"
+                class="w-full text-center text-muted text-sm"
+            >
+                Keine weiteren Profunda verfügbar.
+            </div>
         </div>
-    </div>
 
-    <p v-if="ranked.length < katalog.minBelegWuensche" class="text-red-600">
-        Insgesamt nur {{ ranked.length }} von {{ katalog.minBelegWuensche }} benötigten Profunda
-        gewählt.
-    </p>
-    <p v-for="[slotId, count] in unterversorgteSlots" :key="slotId" class="text-red-600">
-        Slot {{ slotId }}: nur {{ count }} von {{ katalog.minWuenschePerSlot }}
-        benötigten Profunda gewählt.
-    </p>
+        <UAlert
+            v-if="ranked.length < katalog.minBelegWuensche || unterversorgteSlots.length > 0"
+            color="error"
+            icon="i-lucide-circle-x"
+            title="Nicht ausreichend Profunda gewählt"
+            variant="subtle"
+        >
+            <template #description>
+                <p v-if="ranked.length < katalog.minBelegWuensche">
+                    Insgesamt nur {{ ranked.length }} von
+                    {{ katalog.minBelegWuensche }} benötigten Profunda gewählt.
+                </p>
+                <div class="grid grid-cols-[auto_1fr] gap-x-1">
+                    <template v-for="[slotId, count] in unterversorgteSlots" :key="slotId">
+                        <span>Slot {{ slotId }}:</span>
+                        <span>
+                            nur {{ count }} von {{ katalog.minWuenschePerSlot }} benötigten
+                            Profunda gewählt.</span
+                        >
+                    </template>
+                </div>
+            </template>
+        </UAlert>
 
-    <div class="flex gap-2 mb-4">
-        <UButton
-            :disabled="ranked.length === 0 || draftBusy"
-            color="neutral"
-            class="flex-1 justify-center"
-            label="Speichern"
-            @click="saveDraft"
-        />
-        <UButton
-            :disabled="!maySend"
-            class="flex-1 justify-center"
-            label="Überprüfen und abgeben"
-            @click="send"
-        />
+        <div class="flex gap-2 mb-4">
+            <UButton
+                :disabled="ranked.length === 0 || draftBusy"
+                class="flex-1 justify-center"
+                color="neutral"
+                label="Speichern"
+                @click="saveDraft"
+            />
+            <UButton
+                :disabled="!maySend"
+                class="flex-1 justify-center"
+                label="Überprüfen und abgeben"
+                @click="send"
+            />
+        </div>
     </div>
 
     <UModal
         v-model:open="partnerDialogOpen"
         :title="`Partnerwahl: ${partnerDialogOption?.bezeichnung ?? ''}`"
+        :ui="{
+            footer: 'justify-end',
+        }"
     >
         <template #body>
             <template v-if="wunschByDefinition.get(partnerDialogOption?.definitionId)">
@@ -488,7 +525,7 @@ startup();
                     </template>
                 </UAlert>
                 <UButton
-                    class="mt-4"
+                    class="mt-4 w-full"
                     label="Partnerschaft auflösen"
                     color="error"
                     :disabled="partnerBusy"
@@ -504,9 +541,9 @@ startup();
                 <p>
                     Teile diesen Code mit deiner Wunsch-Partnerin/deinem Wunsch-Partner. Erst
                     wenn sie oder er ihn ebenfalls einträgt, gilt die Partnerschaft als
-                    bestätigt und wird beim Matching berücksichtigt.
+                    bestätigt und wird berücksichtigt.
                 </p>
-                <div class="flex gap-2 mt-2">
+                <UFieldGroup class="mt-2 w-full">
                     <UInput
                         readonly
                         class="w-full"
@@ -517,7 +554,7 @@ startup();
                     <UTooltip text="Kopieren">
                         <UButton
                             icon="i-lucide-copy"
-                            color="neutral"
+                            color="primary"
                             @click="
                                 copyToken(
                                     einladungByDefinition.get(partnerDialogOption.definitionId)
@@ -526,12 +563,12 @@ startup();
                             "
                         />
                     </UTooltip>
-                </div>
+                </UFieldGroup>
                 <UButton
-                    class="mt-4"
+                    class="mt-4 w-full"
                     label="Einladung zurückziehen"
                     color="error"
-                    variant="ghost"
+                    variant="subtle"
                     :disabled="partnerBusy"
                     @click="
                         cancelEinladung(
@@ -541,37 +578,44 @@ startup();
                 />
             </template>
 
-            <template v-else>
+            <div v-else class="flex flex-col gap-4">
                 <p>
-                    Ihr könnt euch gegenseitig als Team-Partner für dieses Profundum wählen. Das
-                    wird beim Matching nur berücksichtigt, wenn <strong>beide</strong> sich
-                    gegenseitig bestätigen.
+                    Ihr könnt euch gegenseitig als Team-Partner für dieses Profundum wählen.
+                    Dazu muss einer von euch hier einen Code generieren, und der/die andere
+                    diesen bei sich eingeben.
                 </p>
-
-                <h4 class="mt-4 mb-1">Einladung erstellen</h4>
-                <UButton
-                    label="Code für Partnerin/Partner erzeugen"
-                    :disabled="partnerBusy"
-                    @click="createEinladung"
-                />
-
-                <h4 class="mt-4 mb-1">Einladung annehmen</h4>
-                <div class="flex gap-2">
-                    <UInput
-                        v-model="redeemToken"
-                        placeholder="z. B. apfel-baum-schnee"
+                <UFormField label="Einladung annehmen">
+                    <UFieldGroup class="w-full">
+                        <UInput
+                            v-model="redeemToken"
+                            class="w-full"
+                            placeholder="z. B. apfel-baum-schnee"
+                        />
+                        <UButton
+                            :disabled="partnerBusy || !redeemToken.trim()"
+                            label="Annehmen"
+                            @click="redeemEinladung"
+                        />
+                    </UFieldGroup>
+                </UFormField>
+                <UFormField label="Einladung erstellen">
+                    <UButton
+                        :disabled="partnerBusy"
+                        label="Code für Partnerin/Partner erzeugen"
+                        @click="createEinladung"
                         class="w-full"
                     />
-                    <UButton
-                        label="Annehmen"
-                        :disabled="partnerBusy || !redeemToken.trim()"
-                        @click="redeemEinladung"
-                    />
-                </div>
-            </template>
+                </UFormField>
+            </div>
         </template>
         <template #footer>
-            <UButton label="Schließen" color="neutral" @click="partnerDialogOpen = false" />
+            <UButton
+                color="neutral"
+                icon="i-lucide-x"
+                label="Schließen"
+                variant="soft"
+                @click="partnerDialogOpen = false"
+            />
         </template>
     </UModal>
 
@@ -580,9 +624,9 @@ startup();
         :title="detailOption?.bezeichnung ?? ''"
         :ui="{ content: 'max-w-2xl' }"
     >
-        <template #body>
-            <div class="flex flex-row flex-wrap items-center gap-4 mb-4 text-muted">
-                <UBadge v-if="detailOption?.profilProfundum" label="Profil" color="info" />
+        <template #description>
+            <span class="flex flex-row flex-wrap items-center gap-4 text-muted">
+                <UBadge v-if="detailOption?.profilProfundum" color="info" label="Profil" />
                 <span
                     v-for="fachbereich in detailOption?.fachbereiche"
                     :key="fachbereich"
@@ -590,21 +634,20 @@ startup();
                 >
                     <UIcon name="i-lucide-bookmark" />{{ fachbereich }}
                 </span>
-                <span
-                    v-if="detailOption?.voraussetzungen?.length"
-                    class="inline-flex items-center gap-1"
-                >
-                    <UIcon name="i-lucide-network" />
-                    Voraussetzung: {{ detailOption.voraussetzungen.join(', ') }}
-                </span>
-            </div>
-
-            <h4 class="mt-0 mb-1">Beschreibung</h4>
+            </span>
+        </template>
+        <template #body>
+            <template v-if="detailOption?.voraussetzungen?.length">
+                <h4><UIcon class="inline-block" name="i-lucide-network" />Voraussetzungen</h4>
+                <ul class="mb-2">
+                    <li v-for="element in detailOption.voraussetzungen">{{ element }}</li>
+                </ul>
+            </template>
             <div v-if="detailDescriptionHtml" class="m-trim" v-html="detailDescriptionHtml" />
             <p v-else class="text-muted italic">Keine Beschreibung hinterlegt.</p>
 
             <template v-if="detailOption?.instanzen?.length">
-                <h4 class="mb-1 mt-4">Angebotene Instanzen</h4>
+                <USeparator class="my-4" size="sm" />
                 <UTable :data="detailOption.instanzen" :columns="detailInstanzColumns">
                     <template #termin-cell="{ row }">{{
                         row.original.slotIds.join(', ')
@@ -620,9 +663,21 @@ startup();
         </template>
 
         <template #footer>
-            <UButton label="Schließen" color="neutral" @click="detailDialogOpen = false" />
+            <div class="flex justify-end w-full">
+                <UButton
+                    color="neutral"
+                    icon="i-lucide-x"
+                    label="Schließen"
+                    variant="soft"
+                    @click="detailDialogOpen = false"
+                />
+            </div>
         </template>
     </UModal>
 </template>
 
-<style scoped></style>
+<style scoped>
+h3 {
+    margin-top: calc(6 * var(--spacing));
+}
+</style>
