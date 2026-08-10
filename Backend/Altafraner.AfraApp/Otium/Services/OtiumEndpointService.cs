@@ -340,7 +340,7 @@ internal class OtiumEndpointService
             Kategorie = otium.Kategorie.Id,
             Verantwortliche = otium.Verantwortliche.Select(v => new PersonInfoMinimal(v)),
             Termine = otium.Termine.Select(t =>
-                new ManagementTerminView(t, _blockHelper.Get(t.Block.SchemaId)!.Bezeichnung)),
+                new ManagementTerminView(t, _blockHelper.Get(t.Block.SchemaId)!)),
             Wiederholungen = otium.Wiederholungen.Select(r =>
                 new ManagementWiederholungView(r, _blockHelper.Get(r.Block)!.Bezeichnung)),
             MinKlasse = otium.MinKlasse,
@@ -454,6 +454,8 @@ internal class OtiumEndpointService
     public async Task DeleteOtiumTerminAsync(Guid otiumTerminId)
     {
         var otiumTermin = await _dbContext.OtiaTermine
+            .AsSplitQuery()
+            .Include(x => x.Block)
             .Include(x => x.Enrollments)
             .Include(x => x.Wiederholung)
             .Include(x => x.Otium)
@@ -469,6 +471,9 @@ internal class OtiumEndpointService
 
         if (hatEinschreibungen)
             throw new EntityDeletionException("Termine mit Einschreibungen können nicht gelöscht werden.");
+
+        if (!otiumTermin.IstAbgesagt && _blockHelper.GetBlockStatus(otiumTermin.Block) == BlockHelper.BlockStatus.Done)
+            throw new EntityDeletionException("Vergangene, nicht abgesagte, Termine, können nicht gelöscht werden.");
 
         _dbContext.OtiaTermine.Remove(otiumTermin);
         await _dbContext.SaveChangesAsync();
@@ -651,6 +656,8 @@ internal class OtiumEndpointService
         if (otiumTermin.IstAbgesagt)
             return;
 
+        if (_blockHelper.GetBlockStatus(otiumTermin.Block) == BlockHelper.BlockStatus.Done)
+            throw new EntityDeletionException("Der Termin liegt in der Vergangenheit");
         // Delete existing enrollments
         var einschreibungen = otiumTermin.Enrollments;
 

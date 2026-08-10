@@ -70,7 +70,6 @@ async function getOtium(setInternal = true) {
 async function getKlassen() {
     const getter = mande('/api/klassen');
     klassenstufen.value = await getter.get();
-    console.log(klassenstufen.value);
 }
 
 async function setup() {
@@ -236,7 +235,6 @@ async function cancelReg(id, date) {
 }
 
 async function createTermin(data) {
-    console.log(data);
     const api = mande(`/api/otium/management/termin`);
     try {
         await api.post({
