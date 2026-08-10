@@ -4,7 +4,8 @@ import { mande } from 'mande';
 import { useSortable } from '@vueuse/integrations/useSortable';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
 import { convertMarkdownToHtml } from '@/composables/markdown';
-import EinwahlSingleProfundum from '@/Profundum/views/EinwahlSingleProfundum.vue';
+import EinwahlSingleProfundum from '@/Profundum/components/EinwahlSingleProfundum.vue';
+import { formatSlotId } from '@/helpers/formatters.ts';
 
 const navItems = [
     {
@@ -480,7 +481,7 @@ await startup();
                 </p>
                 <div class="grid grid-cols-[auto_1fr] gap-x-1">
                     <template v-for="[slotId, count] in unterversorgteSlots" :key="slotId">
-                        <span>Slot {{ slotId }}:</span>
+                        <span>Slot {{ formatSlotId(slotId) }}:</span>
                         <span>
                             nur {{ count }} von {{ katalog.minWuenschePerSlot }} benötigten
                             Profunda gewählt.</span
@@ -655,7 +656,7 @@ await startup();
                 <USeparator class="my-4" size="sm" />
                 <UTable :data="detailOption.instanzen" :columns="detailInstanzColumns">
                     <template #termin-cell="{ row }">{{
-                        row.original.slotIds.join(', ')
+                        row.original.slotIds.map(formatSlotId).join(', ')
                     }}</template>
                     <template #verantwortlich-cell="{ row }">
                         {{ row.original.verantwortliche.join(', ') || '–' }}
