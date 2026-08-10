@@ -294,10 +294,10 @@ await startup();
 
     <UAlert color="info" icon="i-lucide-info" title="Hinweis">
         <template #description>
-            <p class="mt-0">Bitte lest euch die folgenden Hinweise aufmerksam durch.</p>
+            <p class="mt-0">Bitte lese dir die folgenden Hinweise aufmerksam durch.</p>
             <p class="mb-0">
-                Sie erklären den Prozess der Einwahl sowie notwendige Kriterien, die ihr
-                erfüllen müsst, damit eure Wünsche berücksichtigt werden können.
+                Sie erklären den Prozess der Einwahl sowie notwendige Kriterien, die du erfüllen
+                musst, damit deine Wünsche berücksichtigt werden können.
             </p>
         </template>
     </UAlert>
@@ -328,21 +328,21 @@ await startup();
     <h3>Auswahlverfahren</h3>
 
     <p>
-        Unten seht ihr eine Liste mit den für euch verfügbaren Angeboten. Aus diesen könnt ihr
+        Unten siehst du eine Liste mit den für dich verfügbaren Angeboten. Aus diesen kannst du
         über das <UIcon class="inline-block" name="i-lucide-plus" /> Plus Angebote auswählen,
-        die ihr euch wünschen wollt.
+        die du dir wünschst.
     </p>
 
     <p>
         Mit den Knöpfen <UIcon class="inline-block" name="i-lucide-arrow-up" /> Hoch und
-        <UIcon class="inline-block" name="i-lucide-arrow-down" /> Runter könnt ihr eine
-        Rangfolge eurer Wünsche erstellen. Wünsche weiter oben in der Liste werden dabei eher
-        beachtet, als Wünsche weiter unten. Bei Profunda die ihr nicht in eure Wunschliste
-        aufnehmt gehen wir davon aus, dass ihr diese nicht belegen wollt.
+        <UIcon class="inline-block" name="i-lucide-arrow-down" /> Runter kannst du eine
+        Rangfolge deiner Wünsche erstellen. Wünsche weiter oben in der Liste werden dabei eher
+        beachtet, als Wünsche weiter unten. Bei Profunda die du nicht in deine Wunschliste
+        aufnimmst gehen wir davon aus, dass du diese nicht belegen willst.
     </p>
 
     <p>
-        Für jedes Profundum könnt ihr über den
+        Für jedes Profundum kannst du über den
         <UIcon class="inline-block" name="i-lucide-info" /> Info-Knopf oder aus dem
         <em>Profundarium</em>
         weitere Infos erhalten.
@@ -352,7 +352,7 @@ await startup();
         <template #description>
             <p class="mt-0">
                 Damit alle eine Chance haben in Angebote zu kommen, die sie sich gewünscht
-                haben, müsst ihr mindestens eine bestimmte Anzahl an Angeboten in eure
+                haben, musst du mindestens eine bestimmte Anzahl an Angeboten in deine
                 Wunschliste aufnehmen.
             </p>
             <p>Das sind</p>
@@ -364,7 +364,7 @@ await startup();
                 <li>
                     Mindestens
                     <strong>{{ katalog.minWuenschePerSlot }} Profunda für jeden Slot,</strong>
-                    für den ihr euch einwählen müsst.
+                    für den du dich einwählen musst.
                 </li>
             </ul>
             <p class="mb-0">
@@ -380,8 +380,8 @@ await startup();
         Nutze dazu den <UIcon class="inline-block" name="i-lucide-user" /> Person-Knopf. Wenn du
         eine Partner:in hast, dann sollte eine:r von euch beiden dort einen Partner:innen-Code
         generieren. Diesen muss die andere Partner:in dann eingeben. Nur, wenn ein Code
-        eingegeben wurde, können wir euren Wunsch berücksichtigen, zusammen mit einer anderen
-        Person eingewählt zu werden.
+        eingegeben wurde, können wir euren Wunsch berücksichtigen, zusammen eingewählt zu
+        werden.
     </p>
 
     <h3>Auswertung</h3>
@@ -402,6 +402,11 @@ await startup();
     <p>
         Solange du deine Wünsche fristgerecht abgibst, spielt es keine Rolle, ob du deine
         Wünsche früher oder später als deine Mitschüler:innen abgibst.
+    </p>
+
+    <p>
+        Die berechnete Belegung bildet dann die Grundlage für die letztendliche Entscheidung
+        über die Einwahlergebnise, die von den verantwortlichen Lehrer:innen getroffen wird.
     </p>
 
     <USeparator class="my-6" size="lg" />
