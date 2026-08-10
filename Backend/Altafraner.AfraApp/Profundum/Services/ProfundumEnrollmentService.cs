@@ -97,6 +97,7 @@ internal class ProfundumEnrollmentService
             .Include(p => p.Profundum).ThenInclude(p => p.Fachbereiche)
             .Where(p => (p.Profundum.MinKlasse == null || klasse >= p.Profundum.MinKlasse)
                         && (p.Profundum.MaxKlasse == null || klasse <= p.Profundum.MaxKlasse))
+            .Where(p => !p.Profundum.AusgeblendetInEinwahl)
             .Where(p => !p.Profundum.Kategorie.ProfilProfundum || profil)
             .Where(p => p.Slots.All(x => slots.Contains(x)))
             .ToArray()

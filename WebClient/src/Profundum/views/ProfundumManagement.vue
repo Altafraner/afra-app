@@ -1,5 +1,5 @@
 <script setup>
-import { ref, h } from 'vue';
+import { ref, shallowRef, watch, h } from 'vue';
 import { mande } from 'mande';
 
 import EinwahlZeitraeume from '@/Profundum/components/EinwahlZeitraeume.vue';
@@ -41,6 +41,7 @@ const tabItems = [
 const profunda = ref([]);
 const categories = ref([]);
 const fachbereiche = ref([]);
+const showHidden = shallowRef(false);
 
 async function createProfundum(data) {
     const api = mande('/api/profundum/management/profundum');
@@ -97,7 +98,22 @@ async function deleteProfundum(data) {
 
 async function getProfunda() {
     const getter = mande('/api/profundum/management/profundum');
-    profunda.value = await getter.get();
+    profunda.value = await getter.get({ query: { includeHidden: showHidden.value } });
+}
+
+async function hideProfundum(data, value) {
+    try {
+        const api = mande(`/api/profundum/management/profundum/${data.id}/hidden`);
+        await api.put(null, { query: { value: value } });
+    } catch (e) {
+        toast.add({
+            color: 'error',
+            title: 'Fehler',
+            description: e?.body ?? 'Ein unerwarteter Fehler ist beim Verstecken aufgetreten',
+        });
+    } finally {
+        await getProfunda();
+    }
 }
 
 async function getKategorien() {
@@ -114,6 +130,8 @@ async function setup() {
 }
 
 await setup();
+
+watch(showHidden, getProfunda);
 
 const columns = [
     {
@@ -143,14 +161,33 @@ const columns = [
                 }),
             ]),
         cell: ({ row }) =>
-            h(UTooltip, { text: 'Löschen' }, () => [
-                h(UButton, {
-                    'aria-label': 'Löschen',
-                    color: 'error',
-                    icon: 'i-lucide-trash',
-                    variant: 'ghost',
-                    onClick: () => deleteProfundum(row.original),
-                }),
+            h('span', { class: 'flex gap-1 justify-end' }, [
+                !row.original.hidden
+                    ? h(UTooltip, { text: 'Verstecken' }, () => [
+                          h(UButton, {
+                              'aria-label': 'Verstecken',
+                              variant: 'ghost',
+                              icon: 'i-lucide-eye',
+                              color: 'primary',
+                              onClick: () => hideProfundum(row.original, true),
+                          }),
+                      ])
+                    : h(UButton, {
+                          'aria-label': 'Einblenden',
+                          variant: 'ghost',
+                          icon: 'i-lucide-eye-off',
+                          color: 'warning',
+                          onClick: () => hideProfundum(row.original, false),
+                      }),
+                h(UTooltip, { text: 'Löschen' }, () => [
+                    h(UButton, {
+                        'aria-label': 'Löschen',
+                        color: 'error',
+                        icon: 'i-lucide-trash',
+                        variant: 'ghost',
+                        onClick: () => deleteProfundum(row.original),
+                    }),
+                ]),
             ]),
     },
 ];
@@ -165,6 +202,22 @@ const columns = [
             <UTable :columns="columns" :data="profunda" class="mt-4">
                 <template #empty>Es sind keine Profunda angelegt.</template>
             </UTable>
+            <div class="flex mt-4">
+                <UButton
+                    v-if="!showHidden"
+                    color="neutral"
+                    label="Ausgeblendete anzeigen"
+                    icon="i-lucide-eye"
+                    @click="showHidden = true"
+                />
+                <UButton
+                    v-else
+                    color="neutral"
+                    label="Ausgeblendete verbergen"
+                    icon="i-lucide-eye-off"
+                    @click="showHidden = false"
+                />
+            </div>
         </template>
 
         <template #einwahlzeitraeume>

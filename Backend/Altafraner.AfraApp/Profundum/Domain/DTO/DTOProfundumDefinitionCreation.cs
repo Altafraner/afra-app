@@ -32,4 +32,7 @@ public record DTOProfundumDefinitionCreation
 
     /// <inheritdoc cref="ProfundumDefinition.ErlaubtPartnerwahl"/>
     public bool ErlaubtPartnerwahl { get; set; }
+
+    /// <inheritdoc cref="ProfundumDefinition.AusgeblendetInEinwahl"/>
+    public bool AusgeblendetInEinwahl { get; set; }
 }

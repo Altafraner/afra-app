@@ -289,6 +289,7 @@ internal class ProfundumManagementService
             Dependencies = deps,
             Fachbereiche = fachbereiche,
             ErlaubtPartnerwahl = dtoProfundum.ErlaubtPartnerwahl,
+            AusgeblendetInEinwahl = dtoProfundum.AusgeblendetInEinwahl,
         };
         _dbContext.Profunda.Add(def);
         await _dbContext.SaveChangesAsync();
@@ -326,6 +327,7 @@ internal class ProfundumManagementService
         profundum.MinKlasse = dtoProfundum.MinKlasse;
         profundum.MaxKlasse = dtoProfundum.MaxKlasse;
         profundum.ErlaubtPartnerwahl = dtoProfundum.ErlaubtPartnerwahl;
+        profundum.AusgeblendetInEinwahl = dtoProfundum.AusgeblendetInEinwahl;
 
         var kat = await _dbContext.ProfundaKategorien.FindAsync(dtoProfundum.KategorieId);
         if (kat is null)
@@ -343,17 +345,28 @@ internal class ProfundumManagementService
         if (numDeleted == 0) throw new NotFoundException("no such profundum");
     }
 
-    /// <summary>Returns every Profundum-Definition, ordered by Bezeichnung.</summary>
-    public Task<DTOProfundumDefinition[]> GetProfundaAsync()
+    /// <summary>Returns every Profundum-Definition, ordered by Bezeichnung, excluding <see cref="ProfundumDefinition.Hidden"/> ones unless <paramref name="includeHidden"/> is set.</summary>
+    public Task<DTOProfundumDefinition[]> GetProfundaAsync(bool includeHidden = false)
     {
         return _dbContext.Profunda
             .AsSplitQuery()
+            .Where(p => includeHidden || !p.Hidden)
             .Include(p => p.Kategorie)
             .Include(p => p.Dependencies)
             .Include(e => e.Fachbereiche)
             .OrderBy(p => p.Bezeichnung.ToLower())
             .Select(p => new DTOProfundumDefinition(p))
             .ToArrayAsync();
+    }
+
+    /// <summary>Sets a Profundum-Definition's <see cref="ProfundumDefinition.Hidden"/> flag (management-view visibility only).</summary>
+    public async Task SetProfundumHiddenAsync(Guid profundumId, bool value)
+    {
+        var profundum = await _dbContext.Profunda.FindAsync(profundumId);
+        if (profundum is null)
+            throw new NotFoundException("profundum to hide not found");
+        profundum.Hidden = value;
+        await _dbContext.SaveChangesAsync();
     }
 
     /// <summary>Returns a single Profundum-Definition by id, or null if it doesn't exist.</summary>

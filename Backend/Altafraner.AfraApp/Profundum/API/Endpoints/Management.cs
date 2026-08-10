@@ -66,10 +66,15 @@ public static class Management
 
         var pf = gp.MapGroup("profundum");
         pf.MapGet("/{id:guid}", (Mgmt svc, Guid id) => svc.GetProfundumAsync(id));
-        pf.MapGet("/", (Mgmt svc) => svc.GetProfundaAsync());
+        pf.MapGet("/", (Mgmt svc, bool includeHidden = false) => svc.GetProfundaAsync(includeHidden));
         pf.MapPost("/", async (Mgmt svc, DTOProfundumDefinitionCreation definition) => (await svc.CreateProfundumAsync(definition)).Id);
         pf.MapPut("/{id:guid}", async (Mgmt svc, Guid id, DTOProfundumDefinitionCreation definition) => (await svc.UpdateProfundumAsync(id, definition)).Id);
         pf.MapDelete("/{id:guid}", (Mgmt svc, Guid id) => svc.DeleteProfundumAsync(id));
+        pf.MapPut("/{id:guid}/hidden", async (Mgmt svc, Guid id, bool value) =>
+        {
+            await svc.SetProfundumHiddenAsync(id, value);
+            return TypedResults.Ok();
+        });
 
         var ins = gp.MapGroup("instanz");
         ins.MapPost("/", async (Mgmt svc, DTOProfundumInstanzCreation instanz) => (await svc.CreateInstanzAsync(instanz)).Id);
