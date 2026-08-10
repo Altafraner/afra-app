@@ -17,7 +17,7 @@
         "@microsoft/signalr": "^10.0.11",
         "@nuxt/ui": "^4.10.0",
         "@primeuix/themes": "^2.0.3",
-        "@primevue/forms": "^4.5.5",
+        "@primevue/forms": "^5.0.0",
         "@tailwindcss/vite": "^4.3.3",
         "dompurify": "^3.4.13",
         "mande": "^2.0.10",
