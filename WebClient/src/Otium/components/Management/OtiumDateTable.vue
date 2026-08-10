@@ -1,6 +1,6 @@
 <script setup>
 import { formatDate, formatPerson } from '@/helpers/formatters';
-import { computed, defineAsyncComponent, h } from 'vue';
+import { computed, defineAsyncComponent, h, ref } from 'vue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
 import UButton from '@nuxt/ui/components/Button.vue';
 import UTooltip from '@nuxt/ui/components/Tooltip.vue';
@@ -16,6 +16,8 @@ const props = defineProps({
     dates: Array,
     allowEdit: Boolean,
 });
+
+const showDone = ref(false);
 
 const emit = defineEmits(['delete', 'cancel', 'create', 'continue']);
 
@@ -97,55 +99,71 @@ const columns = [
                 onClick: triggerCreateDialog,
             }),
         cell: ({ row }) =>
-            !row.original.istAbgesagt
-                ? h(UTooltip, { text: 'Absagen' }, () =>
-                      h(UButton, {
-                          ariaLabel: 'Absagen',
-                          icon: 'i-lucide-square',
-                          color: 'error',
-                          variant: 'ghost',
-                          size: 'sm',
-                          onClick: (evt) => confirmCancel(row.original.id),
-                      }),
-                  )
-                : h('span', { class: 'flex gap-1 justify-end' }, [
-                      h(UTooltip, { text: 'Nicht mehr Absagen' }, () =>
+            row.original.status !== 'Done'
+                ? !row.original.istAbgesagt
+                    ? h(UTooltip, { text: 'Absagen' }, () =>
                           h(UButton, {
-                              ariaLabel: 'Absagen beenden',
-                              icon: 'i-lucide-play',
-                              color: 'success',
+                              ariaLabel: 'Absagen',
+                              icon: 'i-lucide-square',
+                              color: 'error',
                               variant: 'ghost',
                               size: 'sm',
-                              onClick: () => confirmContinue(row.original.id),
+                              onClick: (evt) => confirmCancel(row.original.id),
                           }),
-                      ),
-                      row.original.wiederholungId === null
-                          ? h(UTooltip, { text: 'Löschen' }, () =>
-                                h(UButton, {
-                                    ariaLabel: 'Löschen',
-                                    icon: 'i-lucide-x',
-                                    color: 'error',
-                                    variant: 'ghost',
-                                    size: 'sm',
-                                    onClick: () => confirmDelete(row.original.id),
-                                }),
-                            )
-                          : h(
-                                UTooltip,
-                                {
-                                    text: 'Das Löschen von Terminen aus einer Wiederholung ist nicht möglich.',
-                                },
-                                () =>
+                      )
+                    : h('span', { class: 'flex gap-1 justify-end' }, [
+                          h(UTooltip, { text: 'Nicht mehr Absagen' }, () =>
+                              h(UButton, {
+                                  ariaLabel: 'Absagen beenden',
+                                  icon: 'i-lucide-play',
+                                  color: 'success',
+                                  variant: 'ghost',
+                                  size: 'sm',
+                                  onClick: () => confirmContinue(row.original.id),
+                              }),
+                          ),
+                          row.original.wiederholungId === null
+                              ? h(UTooltip, { text: 'Löschen' }, () =>
                                     h(UButton, {
                                         ariaLabel: 'Löschen',
-                                        disabled: true,
                                         icon: 'i-lucide-x',
-                                        color: 'neutral',
+                                        color: 'error',
                                         variant: 'ghost',
                                         size: 'sm',
+                                        onClick: () => confirmDelete(row.original.id),
                                     }),
-                            ),
-                  ]),
+                                )
+                              : h(
+                                    UTooltip,
+                                    {
+                                        text: 'Das Löschen von Terminen aus einer Wiederholung ist nicht möglich.',
+                                    },
+                                    () =>
+                                        h(UButton, {
+                                            ariaLabel: 'Löschen',
+                                            disabled: true,
+                                            icon: 'i-lucide-x',
+                                            color: 'neutral',
+                                            variant: 'ghost',
+                                            size: 'sm',
+                                        }),
+                                ),
+                      ])
+                : h(
+                      UTooltip,
+                      {
+                          text: 'Vergangene Termine können nicht abgesagt oder gelöscht werden.',
+                      },
+                      () =>
+                          h(UButton, {
+                              ariaLabel: 'Löschen',
+                              disabled: true,
+                              icon: 'i-lucide-x',
+                              color: 'neutral',
+                              variant: 'ghost',
+                              size: 'sm',
+                          }),
+                  ),
         meta: {
             class: {
                 th: 'text-right',
@@ -159,18 +177,33 @@ const columnVisibility = computed(() => ({
     bezeichnung: props.dates.some((d) => d.bezeichnung),
     actions: props.allowEdit,
 }));
+
+const filtered = computed(() =>
+    showDone.value ? props.dates : props.dates.filter((d) => d.status !== 'Done'),
+);
 </script>
 
 <template>
-    <UTable
-        :column-visibility="columnVisibility"
-        :columns="columns"
-        :data="dates"
-        :ui="{
-            td: 'p-2 first:pl-4 last:pr-4',
-            th: 'p-2 first:pl-4 last:pr-4',
-        }"
-    >
-        <template #empty>Keine Termine angelegt.</template>
-    </UTable>
+    <div class="w-full">
+        <UTable
+            :column-visibility="columnVisibility"
+            :columns="columns"
+            :data="filtered"
+            :ui="{
+                td: 'p-2 first:pl-4 last:pr-4',
+                th: 'p-2 first:pl-4 last:pr-4',
+            }"
+        >
+            <template #empty>Keine Termine angelegt.</template>
+        </UTable>
+        <USeparator />
+        <div class="py-2 px-4">
+            <UButton
+                v-if="!showDone"
+                label="Vergangene Termine anzeigen"
+                @click="showDone = true"
+            />
+            <UButton v-else label="Vergangene Termine ausblenden" @click="showDone = false" />
+        </div>
+    </div>
 </template>

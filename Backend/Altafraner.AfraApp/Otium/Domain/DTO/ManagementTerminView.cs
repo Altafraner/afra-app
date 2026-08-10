@@ -1,5 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Altafraner.AfraApp.Otium.Domain.Models;
+using Altafraner.AfraApp.Otium.Services;
+using Altafraner.AfraApp.Schuljahr.Domain.Models;
 using Altafraner.AfraApp.User.Domain.DTO;
 
 namespace Altafraner.AfraApp.Otium.Domain.DTO;
@@ -20,8 +22,10 @@ public record ManagementTerminView
     ///     Construct a ManagementTerminView from a Database Termin
     /// </summary>
     [SetsRequiredMembers]
-    public ManagementTerminView(OtiumTermin termin, string block)
+    public ManagementTerminView(OtiumTermin termin, BlockMetadata block)
     {
+        var now = DateTime.Now;
+        var today = DateOnly.FromDateTime(now);
         Id = termin.Id;
         OtiumId = termin.Otium.Id;
         Ort = termin.Ort;
@@ -31,9 +35,12 @@ public record ManagementTerminView
         Datum = termin.Block.Schultag.Datum;
         IstAbgesagt = termin.IstAbgesagt;
         WiederholungId = termin.Wiederholung?.Id;
-        Block = block;
+        Block = block.Bezeichnung;
         Bezeichnung = termin.OverrideBezeichnung;
         Beschreibung = termin.OverrideBeschreibung;
+        Status = termin.Block.SchultagKey < today ? BlockHelper.BlockStatus.Done :
+            termin.Block.SchultagKey == today ? BlockHelper.GetBlockStatus(block, TimeOnly.FromDateTime(now)) :
+            BlockHelper.BlockStatus.Pending;
     }
 
     /// <summary>
@@ -95,4 +102,9 @@ public record ManagementTerminView
     ///     A one time override description for the Otium Termin
     /// </summary>
     public string? Beschreibung { get; set; }
+
+    /// <summary>
+    ///     Wether this termin is done already
+    /// </summary>
+    public required BlockHelper.BlockStatus Status { get; set; }
 }
