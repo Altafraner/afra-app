@@ -7,8 +7,6 @@ import GridEditRow from '@/components/Form/GridEditRow.vue';
 import CreateSlotForm from '@/Profundum/components/Forms/CreateSlotForm.vue';
 import TermineDialog from '@/Profundum/components/Forms/TermineDialog.vue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
-import { parseAbsolute } from '@internationalized/date';
-import { formatCalendarDateTime } from '@/helpers/formatters.ts';
 
 const toast = useToast();
 const { requireConfirm } = useConfirmPopover();
@@ -34,9 +32,7 @@ const weekdayOptions = [
 async function load() {
     loading.value = true;
     slots.value = await apiSlots.get();
-    zeitraeume.value = (await apiZeitraeume.get()).map((e) => {
-        return { ...e, label: formatCalendarDateTime(parseAbsolute(e.einwahlStart)) };
-    });
+    zeitraeume.value = await apiZeitraeume.get();
     loading.value = false;
 }
 
@@ -156,14 +152,7 @@ onMounted(load);
                         weekdayOptions.find((d) => d.value === s.wochentag)?.label ??
                         s.wochentag
                     }}, Einwahl:
-                    {{
-                        formatCalendarDateTime(
-                            parseAbsolute(
-                                zeitraeume.find((z) => z.id === s.einwahlZeitraumId)
-                                    ?.einwahlStart,
-                            ),
-                        ) ?? '–'
-                    }}
+                    {{ zeitraeume.find((z) => z.id === s.einwahlZeitraumId)?.bezeichnung }}
                 </template>
 
                 <template #edit>
@@ -200,7 +189,7 @@ onMounted(load);
                             <USelect
                                 v-model="s.einwahlZeitraumId"
                                 :items="zeitraeume"
-                                label-key="label"
+                                label-key="bezeichnung"
                                 value-key="id"
                                 placeholder="Zeitraum auswählen"
                                 class="w-full"

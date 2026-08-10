@@ -55,6 +55,7 @@ async function updateEinwahlzeitraum(z) {
     try {
         await api.put(`/${z.id}`, {
             id: z.id,
+            bezeichnung: z.bezeichnung,
             einwahlStart: z.einwahlStartDate
                 ? z.einwahlStartDate.toDate(getLocalTimeZone()).toISOString()
                 : null,
@@ -122,7 +123,7 @@ onMounted(load);
             >
                 <template #body>
                     <span>
-                        {{ formatCalendarDateTime(z.einwahlStartDate) }}
+                        {{ z.bezeichnung }}: {{ formatCalendarDateTime(z.einwahlStartDate) }}
                         –
                         {{ formatCalendarDateTime(z.einwahlStopDate) }}
                     </span>
@@ -130,6 +131,9 @@ onMounted(load);
 
                 <template #edit>
                     <div class="flex gap-2 w-full items-end">
+                        <UFormField label="Bezeichnung">
+                            <UInput v-model="z.bezeichnung" />
+                        </UFormField>
                         <UFormField label="Start" required>
                             <ADateTimePicker v-model="z.einwahlStartDate" />
                         </UFormField>

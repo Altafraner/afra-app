@@ -27,4 +27,9 @@ public class ProfundumEinwahlZeitraum
     ///     the date by which the wishes have to be submitted.
     /// </summary>
     public DateTime EinwahlStop { get; set; }
+
+    /// <summary>
+    ///     An admin-settable display name for this Einwahlzeitraum
+    /// </summary>
+    public string Bezeichnung { get; set; } = "";
 }
