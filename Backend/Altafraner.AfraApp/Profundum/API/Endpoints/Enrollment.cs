@@ -1,6 +1,7 @@
 using Altafraner.AfraApp.Backbone.Auth;
 using Altafraner.AfraApp.Profundum.Services;
 using Altafraner.AfraApp.User.Services;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
 namespace Altafraner.AfraApp.Profundum.API.Endpoints;
@@ -17,8 +18,25 @@ public static class Enrollment
     {
         var group = app.MapGroup("/sus")
             .RequireAuthorization(AuthorizationPolicies.MittelStufeStudentOnly);
-        group.MapPost("/wuensche", async (ProfundumEnrollmentService svc, UserAccessor userAccessor, List<Guid> wuensche) =>
-            await svc.RegisterBelegWunschAsync(await userAccessor.GetUserAsync(), wuensche)
+        group.MapPost("/wuensche",
+            async Task<Results<NoContent, Conflict<object>>> (ProfundumEnrollmentService svc, UserAccessor userAccessor,
+                List<Guid> wuensche,
+                bool dry = false) =>
+            {
+                try
+                {
+                    await svc.RegisterBelegWunschAsync(await userAccessor.GetUserAsync(), wuensche, dryRun: dry);
+                }
+                catch (ProfundumEinwahlWunschException e)
+                {
+                    return TypedResults.Conflict<object>(new
+                    {
+                        Error = e.Message
+                    });
+                }
+
+                return TypedResults.NoContent();
+            }
         );
         group.MapPost("/wuensche/entwurf", async (ProfundumEnrollmentService svc, UserAccessor userAccessor, List<Guid> wuensche) =>
             await svc.RegisterBelegWunschAsync(await userAccessor.GetUserAsync(), wuensche, istEntwurf: true)
