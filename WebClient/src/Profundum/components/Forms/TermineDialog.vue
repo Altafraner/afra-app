@@ -1,12 +1,13 @@
 <script setup>
 import { onMounted, ref } from 'vue';
 import { mande } from 'mande';
-import { CalendarDate, parseDate } from '@internationalized/date';
+import { parseDate, parseTime } from '@internationalized/date';
 
 import Grid from '@/components/Form/Grid.vue';
 import GridEditRow from '@/components/Form/GridEditRow.vue';
 import ADatePicker from '@/components/Form/ADatePicker.vue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
+import { formatCalendarDate } from '@/helpers/formatters.ts';
 
 const props = defineProps({
     slotId: { type: String, required: true },
@@ -25,8 +26,8 @@ const loading = ref(true);
 function toRow(t) {
     return {
         day: parseDate(t.day),
-        startTime: t.startTime.slice(0, 5),
-        endTime: t.endTime.slice(0, 5),
+        startTime: parseTime(t.startTime),
+        endTime: parseTime(t.endTime),
     };
 }
 
@@ -39,12 +40,12 @@ async function load() {
 function toDto(row) {
     return {
         day: row.day.toString(),
-        startTime: `${row.startTime}:00`,
-        endTime: `${row.endTime}:00`,
+        startTime: `${row.startTime}`,
+        endTime: `${row.endTime}`,
     };
 }
 
-const newTermin = ref({ day: undefined, startTime: '', endTime: '' });
+const newTermin = ref({ day: undefined, startTime: undefined, endTime: undefined });
 
 async function createTermin() {
     if (!newTermin.value.day || !newTermin.value.startTime || !newTermin.value.endTime) {
@@ -59,7 +60,7 @@ async function createTermin() {
     try {
         await api.post(toDto(newTermin.value));
         toast.add({ color: 'success', title: 'Termin angelegt' });
-        newTermin.value = { day: undefined, startTime: '', endTime: '' };
+        newTermin.value = { day: undefined, startTime: undefined, endTime: undefined };
         await load();
     } catch (e) {
         toast.add({
@@ -122,24 +123,20 @@ onMounted(load);
                         @delete="deleteTermin(t)"
                     >
                         <template #body>
-                            {{ t.day }}, {{ t.startTime }}–{{ t.endTime }} Uhr
+                            {{ formatCalendarDate(t.day, false) }}, {{ t.startTime }}–{{
+                                t.endTime
+                            }}
+                            Uhr
                         </template>
 
                         <template #edit>
                             <div class="flex flex-col gap-2 w-full">
                                 <ADatePicker v-model="t.day" />
-                                <div class="flex gap-2">
-                                    <input
-                                        v-model="t.startTime"
-                                        type="time"
-                                        class="border rounded px-2 py-1 w-full"
-                                    />
-                                    <input
-                                        v-model="t.endTime"
-                                        type="time"
-                                        class="border rounded px-2 py-1 w-full"
-                                    />
-                                </div>
+                                <UFieldGroup class="w-full">
+                                    <UInputTime v-model="t.startTime" class="flex-1" />
+                                    <UBadge color="neutral" label="-" variant="outline" />
+                                    <UInputTime v-model="t.endTime" class="flex-1" />
+                                </UFieldGroup>
                             </div>
                         </template>
                     </GridEditRow>
@@ -147,24 +144,23 @@ onMounted(load);
 
                 <div v-else class="mb-4">Keine Termine vorhanden.</div>
 
-                <div class="flex flex-wrap items-end gap-2 mt-4">
-                    <ADatePicker v-model="newTermin.day" />
-                    <input
-                        v-model="newTermin.startTime"
-                        type="time"
-                        class="border rounded px-2 py-1"
-                    />
-                    <input
-                        v-model="newTermin.endTime"
-                        type="time"
-                        class="border rounded px-2 py-1"
-                    />
-                    <UButton
-                        icon="i-lucide-plus"
-                        label="Termin hinzufügen"
-                        @click="createTermin"
-                    />
-                </div>
+                <UFieldGroup class="w-full">
+                    <UFormField class="w-full" label="Datum">
+                        <ADatePicker v-model="newTermin.day" class="w-full rounded-r-none" />
+                    </UFormField>
+                    <UFormField label="Von">
+                        <UInputTime v-model="newTermin.startTime" class="rounded-none" />
+                    </UFormField>
+                    <UFormField label="Bis">
+                        <UInputTime v-model="newTermin.endTime" class="rounded-l-none" />
+                    </UFormField>
+                </UFieldGroup>
+                <UButton
+                    class="mt-2 w-full"
+                    icon="i-lucide-plus"
+                    label="Termin hinzufügen"
+                    @click="createTermin"
+                />
             </template>
         </template>
     </UModal>

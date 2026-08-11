@@ -133,6 +133,7 @@ onMounted(load);
                         aria-label="PDF (experimentell)"
                         color="info"
                         download
+                        external
                         icon="i-lucide-file-text"
                         size="sm"
                         variant="ghost"
