@@ -1,3 +1,4 @@
+using Altafraner.AfraApp.User.Domain.Contracts;
 using Altafraner.AfraApp.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,13 +10,16 @@ namespace Altafraner.AfraApp.User.Services;
 public class UserService
 {
     private readonly AfraAppContext _dbContext;
+    private readonly IServiceProvider _serviceProvider;
 
     /// <summary>
     ///     Called by DI
     /// </summary>
-    public UserService(AfraAppContext dbContext)
+    public UserService(AfraAppContext dbContext,
+        IServiceProvider serviceProvider)
     {
         _dbContext = dbContext;
+        _serviceProvider = serviceProvider;
     }
 
     /// <summary>
@@ -217,5 +221,19 @@ public class UserService
             .Select(int.Parse)
             .Order()
             .Distinct();
+    }
+
+    /// <summary>
+    ///     Softly deletes a user from the database
+    /// </summary>
+    public async Task SoftDelete(Person user)
+    {
+        if (user.LdapObjectId is not null && user.LdapSyncFailureTime is null)
+            throw new InvalidOperationException("The user is synced via ldap and may not be deleted.");
+        var handlers = _serviceProvider.GetRequiredService<IEnumerable<IUserEventHandler>>();
+
+        foreach (var handler in handlers) await handler.OnUserSoftDeletedAsync(user);
+
+        await _dbContext.SaveChangesAsync();
     }
 }

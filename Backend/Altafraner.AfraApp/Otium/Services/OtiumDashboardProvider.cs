@@ -114,6 +114,7 @@ internal class OtiumDashboardProvider : IDashboardProvider
 
         foreach (var mentee in mentees)
         {
+            var menteesWeeks = weeks.Where(e => e >= DateOnly.FromDateTime(mentee.CreatedAt));
             var menteeResults = new Dictionary<DateOnly, DashboardMenteeStatus>();
             results[mentee.Id] = menteeResults;
             var menteesEnrollments = enrollments.GetValueOrDefault(mentee.Id, []).ToArray();
@@ -123,7 +124,7 @@ internal class OtiumDashboardProvider : IDashboardProvider
                     (e.Otium.MinKlasse == null || e.Otium.MinKlasse <= klassenstufe) &&
                     (e.Otium.MaxKlasse == null || e.Otium.MaxKlasse >= klassenstufe))
                 .ToList();
-            foreach (var week in weeks)
+            foreach (var week in menteesWeeks)
                 menteeResults[week] = await GetMenteeStatusForWeek(mentee, menteesEnrollments, week, menteesTermine);
         }
 
@@ -134,7 +135,8 @@ internal class OtiumDashboardProvider : IDashboardProvider
             DateOnly monday,
             List<OtiumTermin> termine)
         {
-            if (mentee.Rolle != Rolle.Mittelstufe) return DashboardMenteeStatus.NotApplicable;
+            if (mentee.Rolle != Rolle.Mittelstufe || DateOnly.FromDateTime(mentee.CreatedAt) < monday)
+                return DashboardMenteeStatus.NotApplicable;
 
             var endOfWeek = monday.AddDays(7);
             var schultageInWeek = schultage.Where(s =>
@@ -203,7 +205,7 @@ internal class OtiumDashboardProvider : IDashboardProvider
 
         var schultage = await _dbContext.Schultage
             .Include(s => s.Blocks)
-            .Where(s => s.Datum >= start && s.Datum < end)
+            .Where(s => s.Datum >= start && s.Datum < end && s.Datum >= DateOnly.FromDateTime(student.CreatedAt))
             .OrderBy(s => s.Datum)
             .ToListAsync();
 

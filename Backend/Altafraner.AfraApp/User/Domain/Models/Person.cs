@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using Altafraner.AfraApp.Otium.Domain.Models;
 using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.Backbone.EmailSchedulingModule;
+using Altafraner.Backbone.Utils;
 
 namespace Altafraner.AfraApp.User.Domain.Models;
 
@@ -9,7 +10,7 @@ namespace Altafraner.AfraApp.User.Domain.Models;
 ///     A record representing a person using the application.
 /// </summary>
 /// <remarks>Usually provided by an external directory service and cached for performance and convenience.</remarks>
-public class Person : IEmailRecipient
+public class Person : IEmailRecipient, IHasTimestamps
 {
     /// <summary>
     ///     The unique identifier of the person.
@@ -121,4 +122,15 @@ public class Person : IEmailRecipient
     {
         return $"{FirstName} {LastName}";
     }
+
+    /// <inheritdoc />
+    public DateTime CreatedAt { get; set; }
+
+    /// <inheritdoc />
+    public DateTime LastModified { get; set; }
+
+    /// <summary>
+    ///     If true, the user should be considered deleted
+    /// </summary>
+    public bool Deleted { get; set; } = false;
 }
