@@ -56,6 +56,7 @@ internal class ProfundumManagementService
     public Task<DTOProfundumEinwahlZeitraum[]> GetEinwahlZeiträumeAsync()
     {
         return _dbContext.ProfundumEinwahlZeitraeume
+            .OrderByDescending(e => e.EinwahlStart)
             .Select(e => new DTOProfundumEinwahlZeitraum(e))
             .ToArrayAsync();
     }
@@ -590,7 +591,10 @@ internal class ProfundumManagementService
             beschreibung = "",
             voraussetzungen = p.Profundum.Dependencies.Select(d => d.Bezeichnung),
             ort = p.Ort,
-            slots = p.Slots.OrderBy(e => e.Jahr).ThenBy(e => e.Quartal).ThenBy(e => e.Wochentag),
+            slots = p.Slots.OrderBy(e => e.Jahr)
+                .ThenBy(e => e.Quartal)
+                .ThenBy(e => e.Wochentag)
+                .Select(e => new DTOProfundumSlot(e)),
             verantwortliche = p.Verantwortliche.Select(v => new PersonInfoMinimal(v)),
             teilnehmer,
         };
@@ -644,7 +648,10 @@ internal class ProfundumManagementService
                 beschreibung = "",
                 voraussetzungen = inst.Profundum.Dependencies.Select(d => d.Bezeichnung),
                 ort = inst.Ort,
-                slots = inst.Slots.OrderBy(e => e.Jahr).ThenBy(e => e.Quartal).ThenBy(e => e.Wochentag),
+                slots = inst.Slots.OrderBy(e => e.Jahr)
+                    .ThenBy(e => e.Quartal)
+                    .ThenBy(e => e.Wochentag)
+                    .Select(e => new DTOProfundumSlot(e)),
                 verantwortliche = inst.Verantwortliche.Select(v => new PersonInfoMinimal(v)),
                 teilnehmer
             };
