@@ -39,10 +39,11 @@ public class SchuljahrService
     ///     Gets the current school year, including all school days and the next day.
     /// </summary>
     /// <returns></returns>
-    public async Task<Domain.DTO.Schuljahr> GetSchuljahrAsync()
+    public async Task<Domain.DTO.Schuljahr> GetSchuljahrAsync(Person? user)
     {
         var blocks = _blockHelper.GetAll().ToDictionary(b => b.Id);
         var schultage = await _dbContext.Schultage
+            .Where(e => user == null || user.Rolle == Rolle.Tutor || e.Datum >= DateOnly.FromDateTime(user.CreatedAt))
             .Include(s => s.Blocks)
             .OrderBy(s => s.Datum)
             .AsAsyncEnumerable()

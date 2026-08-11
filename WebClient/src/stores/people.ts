@@ -9,8 +9,8 @@ export const usePeople = defineStore('people', {
         personen: null,
     }),
     actions: {
-        async updatePersonen() {
-            if (this.personen) return;
+        async updatePersonen(force: boolean = false) {
+            if (!force && this.personen) return;
             const personenGetter = mande('/api/people');
 
             try {
