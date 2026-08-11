@@ -6,6 +6,7 @@ import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
 import { convertMarkdownToHtml } from '@/composables/markdown';
 import EinwahlSingleProfundum from '@/Profundum/components/EinwahlSingleProfundum.vue';
 import { formatSlotId } from '@/helpers/formatters.ts';
+import { useIntervalFn } from '@vueuse/core';
 
 const navItems = [
     {
@@ -33,6 +34,8 @@ const katalog = ref({
 const uncommitedChanges = ref(false);
 const ranked = ref([]);
 const draftBusy = ref(false);
+const currentProblems = ref([]);
+const currentProblemsValid = ref(false);
 
 useSortable('.ranked-list', ranked, { animation: 150, handle: '.drag-handle' });
 
@@ -40,6 +43,7 @@ watch(
     ranked,
     () => {
         uncommitedChanges.value = true;
+        currentProblemsValid.value = false;
     },
     {
         deep: true,
@@ -69,6 +73,24 @@ async function saveDraft() {
         });
     } finally {
         draftBusy.value = false;
+    }
+}
+
+async function check() {
+    if (currentProblemsValid.value) return;
+    const api = mande('/api/profundum/sus/wuensche?dry=true');
+    try {
+        await api.post(ranked.value);
+        currentProblems.value = [];
+    } catch (e) {
+        console.log(e.body);
+        currentProblems.value = Array.isArray(e.body?.error)
+            ? e.body.error
+            : String(e.body?.error ?? 'Unbekannter Fehler')
+                  .split('\n')
+                  .filter(Boolean);
+    } finally {
+        currentProblemsValid.value = true;
     }
 }
 
@@ -140,7 +162,8 @@ const unterversorgteSlots = computed(() =>
 const maySend = computed(
     () =>
         ranked.value.length >= katalog.value.minBelegWuensche &&
-        unterversorgteSlots.value.length === 0,
+        unterversorgteSlots.value.length === 0 &&
+        currentProblems.value.length === 0,
 );
 
 function addToRanked(definitionId) {
@@ -284,6 +307,7 @@ async function startup() {
 }
 
 await startup();
+useIntervalFn(check, 1000);
 </script>
 
 <template>
@@ -424,7 +448,9 @@ await startup();
                     :color="katalog.istAbgegeben ? 'success' : 'warning'"
                 />
             </h3>
-            <ol class="ranked-list flex flex-col gap-2 list-none pl-0">
+            <ol
+                class="ranked-list gap-2 list-none pl-0 grid grid-cols-[auto_auto_1fr_auto_auto_auto_auto_auto_auto] auto-rows-fr"
+            >
                 <EinwahlSingleProfundum
                     v-for="(id, index) in ranked"
                     :key="id"
@@ -447,7 +473,9 @@ await startup();
 
         <div>
             <h3>belegbare Profunda außerhalb der Rangfolge</h3>
-            <ul class="flex flex-col gap-2 list-none pl-0">
+            <ul
+                class="gap-2 list-none pl-0 grid grid-cols-[auto_auto_1fr_auto_auto_auto_auto_auto_auto] auto-rows-fr"
+            >
                 <EinwahlSingleProfundum
                     v-for="option in verfuegbareOptionen"
                     :key="option.definitionId"
@@ -468,10 +496,14 @@ await startup();
         </div>
 
         <UAlert
-            v-if="ranked.length < katalog.minBelegWuensche || unterversorgteSlots.length > 0"
+            v-if="
+                ranked.length < katalog.minBelegWuensche ||
+                unterversorgteSlots.length > 0 ||
+                currentProblems.length > 0
+            "
             color="error"
             icon="i-lucide-circle-x"
-            title="Nicht ausreichend Profunda gewählt"
+            title="Vorgaben nicht erfüllt"
             variant="subtle"
         >
             <template #description>
@@ -487,9 +519,22 @@ await startup();
                             Profunda gewählt.</span
                         >
                     </template>
+                    <span
+                        v-for="(problem, index) in currentProblems"
+                        :class="{ 'mt-2': index === 0 }"
+                        class="col-span-2"
+                        >{{ problem }}</span
+                    >
                 </div>
             </template>
         </UAlert>
+        <UAlert
+            v-else
+            color="success"
+            description="Du hast die Mindestanzahl an Profunda ausgewählt. Es kann dennoch sein, dass du noch weitere Anforderungen erfüllen musst. Das erfährst du, wenn du deine Wünsche abgibst."
+            title="Ausreichend Profunda gewählt"
+            variant="subtle"
+        />
 
         <div class="flex gap-2 mb-4">
             <UButton

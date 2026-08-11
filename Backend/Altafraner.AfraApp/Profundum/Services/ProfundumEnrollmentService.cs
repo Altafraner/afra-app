@@ -217,7 +217,11 @@ internal class ProfundumEnrollmentService
     /// <param name="student">The student wanting to enroll</param>
     /// <param name="wuensche">The ranked ids of ProfundumDefinitionen, in order of preference (index 0 = rank 1)</param>
     /// <param name="istEntwurf">True to save as an unfinished draft rather than a final submission.</param>
-    public async Task RegisterBelegWunschAsync(Models_Person student, List<Guid> wuensche, bool istEntwurf = false)
+    /// <param name="dryRun">Iff true, <paramref name="wuensche"/> will be checked but not submitted to database</param>
+    public async Task RegisterBelegWunschAsync(Models_Person student,
+        List<Guid> wuensche,
+        bool istEntwurf = false,
+        bool dryRun = false)
     {
         var cfg = _profundumConfiguration.Value;
         var now = DateTime.UtcNow;
@@ -230,7 +234,9 @@ internal class ProfundumEnrollmentService
         var fixedEnrollments = await _dbContext.ProfundaEinschreibungen
             .Where(e => e.IsFixed)
             .Where(e => e.BetroffenePerson == student)
-            .Include(e => e.ProfundumInstanz).ThenInclude(p => p!.Profundum)
+            .Include(e => e.ProfundumInstanz)
+            .ThenInclude(p => p!.Profundum)
+            .ThenInclude(e => e.Kategorie)
             .Include(e => e.Slot)
             .ToArrayAsync();
         var fixedSlots = fixedEnrollments.Select(s => s.Slot).Distinct().ToArray();
@@ -242,9 +248,9 @@ internal class ProfundumEnrollmentService
         var toRemove = _dbContext.ProfundaBelegWuensche
             .Where(w => w.BetroffenePerson == student)
             .Where(w => w.EinwahlZeitraum == einschreibeZeitraum);
-        _dbContext.ProfundaBelegWuensche.RemoveRange(toRemove);
+        if (!dryRun) _dbContext.ProfundaBelegWuensche.RemoveRange(toRemove);
 
-        if (!istEntwurf && wuensche.Count < cfg.MinBelegWuensche)
+        if (!istEntwurf && !dryRun && wuensche.Count < cfg.MinBelegWuensche)
             throw new ProfundumEinwahlWunschException($"Es müssen mindestens {cfg.MinBelegWuensche} Profunda gewählt werden.");
         if (wuensche.Distinct().Count() != wuensche.Count)
             throw new ProfundumEinwahlWunschException("Ein Profundum darf nur einmal gewählt werden.");
@@ -264,8 +270,8 @@ internal class ProfundumEnrollmentService
                 throw new ProfundumEinwahlWunschException($"Profundum nicht gefunden oder nicht wählbar: {definitionId}.");
 
             foreach (var s in instanzenForDefinition.SelectMany(a => a.Slots).Distinct())
-                if (slotCoverage.ContainsKey(s))
-                    slotCoverage[s]++;
+                if (slotCoverage.TryGetValue(s, out var value))
+                    slotCoverage[s] = ++value;
 
             belegWuensche.Add(new ProfundumBelegWunsch
             {
@@ -280,18 +286,22 @@ internal class ProfundumEnrollmentService
         if (!istEntwurf)
         {
             var uncovered = slotCoverage.Where(kv => kv.Value < cfg.MinWuenschePerSlot).Select(kv => kv.Key).ToArray();
-            if (uncovered.Length != 0)
+            if (!dryRun && uncovered.Length != 0)
                 throw new ProfundumEinwahlWunschException(
                     $"Für die folgenden Slots müssen mindestens {cfg.MinWuenschePerSlot} der gewählten Profunda ein Angebot enthalten: "
                     + string.Join(", ", uncovered.Select(s => s.ToString())));
 
             var errmsgs = _rulesFactory.GetIndividualRules().Select(r => r.CheckForSubmission(student, slots, fixedEnrollments, belegWuensche))
-                .Where(x => !x.IsValid).SelectMany(x => x.Messages);
-            if (errmsgs.Any())
+                .Where(x => !x.IsValid)
+                .SelectMany(x => x.Messages)
+                .ToArray();
+            if (errmsgs.Length != 0)
             {
                 throw new ProfundumEinwahlWunschException(errmsgs.Aggregate(new StringBuilder(), (a, b) => a.AppendLine(b)).ToString());
             }
         }
+
+        if (dryRun) return;
 
         _dbContext.ProfundaBelegWuensche.AddRange(belegWuensche);
         await _dbContext.SaveChangesAsync();
