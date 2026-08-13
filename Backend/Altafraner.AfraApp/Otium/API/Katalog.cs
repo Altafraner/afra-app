@@ -1,4 +1,4 @@
-using Altafraner.AfraApp.Backbone.Authorization;
+using Altafraner.AfraApp.Backbone.Auth;
 using Altafraner.AfraApp.Otium.Services;
 using Altafraner.AfraApp.User.Services;
 using Microsoft.AspNetCore.Mvc;

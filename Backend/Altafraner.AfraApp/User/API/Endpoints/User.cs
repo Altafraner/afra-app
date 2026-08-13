@@ -1,8 +1,7 @@
 using System.Security.Claims;
-using Altafraner.AfraApp.Backbone.Authorization;
+using Altafraner.AfraApp.Backbone.Auth;
 using Altafraner.AfraApp.User.Domain.DTO;
 using Altafraner.AfraApp.User.Services;
-using Altafraner.Backbone.CookieAuthentication;
 
 namespace Altafraner.AfraApp.User.API.Endpoints;
 
@@ -16,13 +15,6 @@ public static class User
     /// </summary>
     public static void MapUserEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapPost("/api/user/login",
-                async (UserSigninService userSigninService, UserSigninService.SignInRequest request,
-                        IWebHostEnvironment environment) =>
-                    await userSigninService.HandleSignInRequestAsync(request, environment))
-            .WithName("sign-in")
-            .AllowAnonymous();
-
         app.MapGet("/api/user",
             async (UserAccessor userAccessor, ClaimsPrincipal claimsPrincipal) =>
             {

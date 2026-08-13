@@ -1,4 +1,4 @@
-using Altafraner.AfraApp.Backbone.Authorization;
+using Altafraner.AfraApp.Backbone.Auth;
 using Altafraner.AfraApp.Dashboard.Contracts.DTO;
 using Altafraner.AfraApp.Dashboard.Services;
 using Altafraner.AfraApp.User.Domain.Models;

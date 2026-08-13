@@ -5,7 +5,7 @@ using Altafraner.AfraApp.Attendance.Configuration;
 using Altafraner.AfraApp.Attendance.Domain.Contracts;
 using Altafraner.AfraApp.Attendance.Jobs;
 using Altafraner.AfraApp.Attendance.Services;
-using Altafraner.AfraApp.Backbone.Authorization;
+using Altafraner.AfraApp.Backbone.Auth;
 using Altafraner.Backbone.Abstractions;
 using Altafraner.Backbone.Defaults;
 using AttendanceHub = Altafraner.AfraApp.Attendance.API.Hubs.AttendanceHub;

@@ -1,6 +1,6 @@
 using Altafraner.AfraApp.Attendance.AbsenceProviders.Cevex;
 using Altafraner.AfraApp.Attendance.Configuration;
-using Altafraner.AfraApp.Backbone.Authorization;
+using Altafraner.AfraApp.Backbone.Auth;
 using Altafraner.AfraApp.User.Domain.DTO;
 using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.AfraApp.User.Services;

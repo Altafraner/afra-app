@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using Altafraner.AfraApp.Attendance.Domain.Contracts;
 using Altafraner.AfraApp.Attendance.Domain.Dto;
-using Altafraner.AfraApp.Backbone.Authorization;
+using Altafraner.AfraApp.Backbone.Auth;
 using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace Altafraner.AfraApp.Attendance.API.Endpoints;

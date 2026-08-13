@@ -1,6 +1,6 @@
 using System.Globalization;
 using Altafraner.AfraApp;
-using Altafraner.AfraApp.Backbone.Authorization;
+using Altafraner.AfraApp.Backbone.Auth;
 using Altafraner.AfraApp.Backbone.EmergencyBackup;
 using Altafraner.AfraApp.Calendar;
 using Altafraner.AfraApp.Dashboard;
@@ -11,7 +11,6 @@ using Altafraner.AfraApp.Schuljahr;
 using Altafraner.AfraApp.User;
 using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.Backbone;
-using Altafraner.Backbone.CookieAuthentication;
 using Altafraner.Backbone.DataProtection;
 using Altafraner.Backbone.Defaults;
 using Altafraner.Backbone.EmailOutbox;
@@ -32,10 +31,9 @@ builder.UseAltafranerBackbone(configure: altafranerBuilder => altafranerBuilder
     .AddModule<SchuljahrModule>()
     .AddModule<ProfundumModule>()
     .AddModule<DashboardModule>()
-    .AddModule<AuthorizationModule>()
+    .AddModule<AuthModule>()
     .AddModule<EmergencyBackupModule>()
 // Backbone modules
-    .AddModule<CookieAuthenticationModule>()
     .AddModule<DataProtectionModule<AfraAppContext>>()
     .AddModule<EmailOutboxModule>()
     .AddModuleAndConfigure<EmailSchedulingModule<Person>, EmailSchedulingSettings<Person>>(settings =>

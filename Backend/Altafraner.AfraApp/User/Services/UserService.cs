@@ -1,7 +1,5 @@
-using Altafraner.AfraApp.User.Configuration.LDAP;
 using Altafraner.AfraApp.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 namespace Altafraner.AfraApp.User.Services;
 
@@ -11,15 +9,13 @@ namespace Altafraner.AfraApp.User.Services;
 public class UserService
 {
     private readonly AfraAppContext _dbContext;
-    private readonly LdapConfiguration _ldapConfiguration;
 
     /// <summary>
     ///     Called by DI
     /// </summary>
-    public UserService(AfraAppContext dbContext, IOptions<LdapConfiguration> ldapConfiguration)
+    public UserService(AfraAppContext dbContext)
     {
         _dbContext = dbContext;
-        _ldapConfiguration = ldapConfiguration.Value;
     }
 
     /// <summary>
@@ -48,6 +44,14 @@ public class UserService
         var distinctUserIds = userIds.Distinct().ToArray();
         var users = await _dbContext.Personen.Where(p => distinctUserIds.Contains(p.Id)).ToListAsync();
         return users.Count == distinctUserIds.Length ? users : throw new KeyNotFoundException();
+    }
+
+    /// <summary>
+    ///     Gets a user by its id in the ldap directory
+    /// </summary>
+    public async Task<Person?> GetUserByLdapIdAsync(Guid ldapId)
+    {
+        return await _dbContext.Personen.FirstOrDefaultAsync(p => p.LdapObjectId == ldapId);
     }
 
     /// <summary>

@@ -3,7 +3,7 @@ using Altafraner.AfraApp.Attendance.Domain.Contracts;
 using Altafraner.AfraApp.Attendance.Domain.Dto;
 using Altafraner.AfraApp.Attendance.Domain.Dto.Enrollments;
 using Altafraner.AfraApp.Attendance.Domain.Models;
-using Altafraner.AfraApp.Backbone.Authorization;
+using Altafraner.AfraApp.Backbone.Auth;
 using Altafraner.AfraApp.Domain.TimeInterval;
 using Altafraner.AfraApp.Otium.Configuration;
 using Altafraner.AfraApp.Otium.Domain.Models;

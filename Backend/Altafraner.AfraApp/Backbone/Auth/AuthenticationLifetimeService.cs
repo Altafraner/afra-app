@@ -1,8 +1,9 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 
-namespace Altafraner.Backbone.CookieAuthentication.Services;
+namespace Altafraner.AfraApp.Backbone.Auth;
 
 internal class AuthenticationLifetimeService : IAuthenticationLifetimeService
 {
@@ -28,6 +29,15 @@ internal class AuthenticationLifetimeService : IAuthenticationLifetimeService
     {
         var context = _httpContextAccessor.HttpContext ??
                       throw new InvalidOperationException("There is no httpContext in the current scope");
-        await context.SignOutAsync();
+        var props = new AuthenticationProperties { RedirectUri = "/" };
+        var idToken = context.User.FindFirst(AfraAppClaimTypes.OidcIdTokenHint);
+        if (idToken is not null)
+        {
+            await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            await context.SignOutAsync(OpenIdConnectDefaults.AuthenticationScheme, props);
+            return;
+        }
+
+        await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme, props);
     }
 }

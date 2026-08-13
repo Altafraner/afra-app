@@ -42,9 +42,25 @@ const routes = [
         },
     },
     {
-        path: '/:pathMatch(?!api/)(.*)*',
+        path: '/error/access-denied',
+        name: 'Error-Access-Denied',
+        component: () => import('@/views/Error/AccessDenied.vue'),
+        meta: {
+            allowAnonymous: true,
+        },
+    },
+    {
+        path: '/error/remote-failure',
+        name: 'Error-Remote-Failure',
+        component: () => import('@/views/Error/RemoteFailure.vue'),
+        meta: {
+            allowAnonymous: true,
+        },
+    },
+    {
+        path: '/:pathMatch(.*)*',
         name: 'NotFound',
-        component: () => import('@/views/NotFound.vue'),
+        component: () => import('@/views/Error/NotFound.vue'),
         meta: {
             allowAnonymous: true,
         },

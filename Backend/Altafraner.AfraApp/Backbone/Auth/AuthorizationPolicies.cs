@@ -1,4 +1,4 @@
-namespace Altafraner.AfraApp.Backbone.Authorization;
+namespace Altafraner.AfraApp.Backbone.Auth;
 
 /// <summary>
 /// A static class containing constants for authorization policies.
