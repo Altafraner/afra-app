@@ -1,11 +1,12 @@
 using System.ComponentModel.DataAnnotations;
+using Altafraner.Backbone.Utils;
 
 namespace Altafraner.AfraApp.Domain.Configuration;
 
 /// <summary>
 ///     Contains OIDC Configuration
 /// </summary>
-public class OidcConfiguration
+public class OidcConfiguration : IValidatable<OidcConfiguration>
 {
     /// <summary>
     ///     Whether OIDC is used
@@ -33,7 +34,8 @@ public class OidcConfiguration
     /// </summary>
     public string? ClientSecret { get; init; }
 
-    internal static bool Validate(OidcConfiguration configuration)
+    /// <inheritdoc />
+    public static bool Validate(OidcConfiguration configuration)
     {
         if (!configuration.Enabled) return true;
         if (!string.IsNullOrWhiteSpace(configuration.Authority)

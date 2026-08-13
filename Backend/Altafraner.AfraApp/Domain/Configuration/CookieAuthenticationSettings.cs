@@ -1,9 +1,11 @@
+using Altafraner.Backbone.Utils;
+
 namespace Altafraner.AfraApp.Domain.Configuration;
 
 /// <summary>
 ///     Settings for handling cookie authentication
 /// </summary>
-public class CookieAuthenticationSettings
+public class CookieAuthenticationSettings : IValidatable<CookieAuthenticationSettings>
 {
     /// <summary>
     ///     Specified whether 3rd party cookies are allowed

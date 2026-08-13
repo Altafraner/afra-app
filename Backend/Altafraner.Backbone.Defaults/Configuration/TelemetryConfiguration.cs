@@ -1,9 +1,10 @@
+using Altafraner.Backbone.Utils;
 using OpenTelemetry.Exporter;
 
 namespace Altafraner.Backbone.Defaults.Configuration;
 
 /// <summary> General Telemetry configuration </summary>
-public class TelemetryConfiguration
+public class TelemetryConfiguration : IValidatable<TelemetryConfiguration>
 {
     /// <summary> tracing configuration </summary>
     public TraceConfiguration? Tracing { get; set; }

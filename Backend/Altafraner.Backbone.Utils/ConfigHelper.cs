@@ -13,10 +13,13 @@ public static class ConfigHelper
     ///     Gets and registers config
     /// </summary>
     public static T GetAndRegisterConfig<T>(IServiceCollection services, IConfiguration config, string section)
-        where T : class, new()
+        where T : class, IValidatable<T>, new()
     {
         var configSection = config.GetSection(section);
-        services.AddOptions<T>().Bind(configSection);
+        services.AddOptions<T>()
+            .Bind(configSection)
+            .Validate(T.Validate)
+            .ValidateOnStart();
 
         var configObject = configSection.Exists()
             ? configSection.Get<T>() ??
@@ -24,5 +27,19 @@ public static class ConfigHelper
             : new T();
 
         return configObject;
+    }
+}
+
+/// <summary>
+///     An interface for validatable config
+/// </summary>
+public interface IValidatable<in T> where T : IValidatable<T>
+{
+    /// <summary>
+    ///     Validates the object
+    /// </summary>
+    static virtual bool Validate(T entity)
+    {
+        return true;
     }
 }
