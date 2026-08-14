@@ -341,9 +341,13 @@ internal class ProfundumManagementService
         return profundum;
     }
 
-    /// <summary>Deletes the given Profundum-Definition.</summary>
+    /// <summary>Deletes the given Profundum-Definition. Refuses if any Instanz of it still exists.</summary>
     public async Task DeleteProfundumAsync(Guid profundumId)
     {
+        var hasInstanzen = await _dbContext.ProfundaInstanzen.AnyAsync(i => i.Profundum.Id == profundumId);
+        if (hasInstanzen)
+            throw new ArgumentException("Profundum kann nicht gelöscht werden, solange noch Instanzen davon existieren.");
+
         var numDeleted = await _dbContext.Profunda.Where(p => p.Id == profundumId).ExecuteDeleteAsync();
         if (numDeleted == 0) throw new NotFoundException("no such profundum");
     }
@@ -460,6 +464,7 @@ internal class ProfundumManagementService
             .AsSplitQuery()
             .Include(i => i.Slots)
             .Include(i => i.Verantwortliche)
+            .Include(i => i.Einschreibungen).ThenInclude(e => e.Slot)
             .FirstOrDefaultAsync(i => i.Id == instanzId);
 
         if (instanz is null) throw new NotFoundException("instanz to update not found");
@@ -474,6 +479,20 @@ internal class ProfundumManagementService
 
         var slots = await _dbContext.ProfundaSlots.Where(slot => patch.Slots.Contains(slot.Id)).ToArrayAsync();
         if (slots.Length != patch.Slots.Count) throw new NotFoundException("At least one of the slots does not exist");
+
+        // A slot being dropped from the Instanz invalidates any Einschreibung fixed to it (its (Instanz, Slot)
+        // pair would no longer exist) - refuse rather than silently corrupting a finalized enrollment. An
+        // unfixed one is just stale solver/draft output, so it's safe to clean up instead of blocking.
+        var newSlotIds = slots.Select(s => s.Id).ToHashSet();
+        var einschreibungenForRemovedSlots = instanz.Einschreibungen
+            .Where(e => !newSlotIds.Contains(e.Slot.Id))
+            .ToArray();
+
+        if (einschreibungenForRemovedSlots.Any(e => e.IsFixed))
+            throw new ArgumentException(
+                "Diese Änderung würde fixierte Einschreibungen ungültig machen, da ein belegter Slot entfernt würde.");
+
+        _dbContext.ProfundaEinschreibungen.RemoveRange(einschreibungenForRemovedSlots);
 
         instanz.Slots = slots.ToList();
 
@@ -490,9 +509,25 @@ internal class ProfundumManagementService
         return instanz;
     }
 
-    /// <summary>Deletes the given Instanz.</summary>
+    /// <summary>
+    ///     Deletes the given Instanz. Refuses if any fixed Einschreibung still points to it (deleting the Instanz
+    ///     would invalidate it); unfixed ones are just stale solver/draft output and are deleted along with it.
+    /// </summary>
     public async Task DeleteInstanzAsync(Guid instanzId)
     {
+        var einschreibungen = await _dbContext.ProfundaEinschreibungen
+            .Where(e => e.ProfundumInstanz != null && e.ProfundumInstanz.Id == instanzId)
+            .ToArrayAsync();
+
+        if (einschreibungen.Any(e => e.IsFixed))
+            throw new ArgumentException("Instanz kann nicht gelöscht werden, solange fixierte Einschreibungen bestehen.");
+
+        if (einschreibungen.Length != 0)
+        {
+            _dbContext.ProfundaEinschreibungen.RemoveRange(einschreibungen);
+            await _dbContext.SaveChangesAsync();
+        }
+
         var numDeleted = await _dbContext.ProfundaInstanzen.Where(i => i.Id == instanzId).ExecuteDeleteAsync();
         if (numDeleted == 0) throw new NotFoundException("no such instanz");
     }

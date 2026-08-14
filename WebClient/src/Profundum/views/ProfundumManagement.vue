@@ -91,7 +91,7 @@ async function deleteProfundum(data) {
         toast.add({
             color: 'error',
             title: 'Fehler',
-            description: e?.body ?? 'Konnte Profundum nicht löschen',
+            description: e?.body?.error ?? 'Konnte Profundum nicht löschen',
         });
     }
 }
