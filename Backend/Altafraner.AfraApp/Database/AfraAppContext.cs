@@ -36,11 +36,6 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
     public DbSet<MentorMenteeRelation> MentorMenteeRelations { get; set; }
 
     /// <summary>
-    ///     An append-only log of past <see cref="Person.Gruppe" /> values, keyed by when they took effect.
-    /// </summary>
-    public DbSet<PersonGruppenHistorie> PersonGruppenHistorien { get; set; }
-
-    /// <summary>
     /// Dependencies between profunda
     /// </summary>
     public DbSet<ProfundaDefinitionDependency> ProfundumDefinitionDependencies { get; set; }
@@ -208,12 +203,6 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
 
         modelBuilder.Entity<MentorMenteeRelation>()
             .HasKey(r => new { r.MentorId, r.StudentId, r.Type });
-
-        modelBuilder.Entity<PersonGruppenHistorie>(h =>
-        {
-            h.HasOne(e => e.Person).WithMany().HasForeignKey(e => e.PersonId);
-            h.HasIndex(e => new { e.PersonId, e.GueltigAb });
-        });
 
         modelBuilder.Entity<OtiumDefinition>(o =>
         {

@@ -110,73 +110,16 @@ public class UserService
     }
 
     /// <summary>
-    ///     Gets the current grade level of a student based on their group. Equivalent to
-    ///     <see cref="GetKlassenstufe(Person, DateTime)" /> as of now.
+    ///     Gets the current grade level of a student based on their group.
     /// </summary>
     /// <exception cref="InvalidOperationException">The person is not a student</exception>
     /// <exception cref="InvalidDataException">The persons group does not contain a valid grade level</exception>
-    public int GetKlassenstufe(Person person) => GetKlassenstufe(person, DateTime.UtcNow);
-
-    /// <summary>
-    ///     Gets the grade level a student's group implied as of a specific point in time, based on the historized
-    ///     group log (<see cref="PersonGruppenHistorie" />). Falls back to the person's current
-    ///     <see cref="Person.Gruppe" /> if no historical entry predates <paramref name="asOf" /> - this covers data
-    ///     that predates group history being tracked at all.
-    /// </summary>
-    /// <exception cref="InvalidOperationException">The person is not a student</exception>
-    /// <exception cref="InvalidDataException">The persons group does not contain a valid grade level</exception>
-    public int GetKlassenstufe(Person person, DateTime asOf)
+    public int GetKlassenstufe(Person person)
     {
         if (person.Rolle == Rolle.Tutor)
             throw new InvalidOperationException("Only students have a grade level.");
 
-        return ParseKlassenstufe(GetGruppe(person, asOf));
-    }
-
-    /// <summary>
-    ///     Gets the raw group (e.g. "9a") a person had as of a specific point in time, based on the historized
-    ///     group log (<see cref="PersonGruppenHistorie" />) - falls back to <see cref="Person.Gruppe" /> if no
-    ///     historical entry predates <paramref name="asOf" />. Unlike <see cref="GetKlassenstufe(Person, DateTime)" />,
-    ///     this returns the full group string (including the class-letter suffix), for display/reporting purposes.
-    /// </summary>
-    public string? GetGruppe(Person person, DateTime asOf)
-    {
-        var entry = _dbContext.PersonGruppenHistorien
-            .Where(h => h.PersonId == person.Id && h.GueltigAb <= asOf)
-            .OrderByDescending(h => h.GueltigAb)
-            .FirstOrDefault();
-        return entry is not null ? entry.Gruppe : person.Gruppe;
-    }
-
-    /// <summary>
-    ///     Loads the <see cref="PersonGruppenHistorie" /> log for a batch of students in a single query. Pass the
-    ///     result to <see cref="GetKlassenstufe(Person, DateTime, IReadOnlyDictionary{Guid, List{PersonGruppenHistorie}})" />
-    ///     instead of the DB-hitting overload when a caller needs grade levels for many students - e.g. the
-    ///     Profundum matching solver and enrollment overview, which otherwise re-query per (student, rule) or
-    ///     per (student, historical Einwahlzeitraum) pair.
-    /// </summary>
-    public Dictionary<Guid, List<PersonGruppenHistorie>> LoadGruppenHistorien(IEnumerable<Guid> personIds)
-    {
-        var ids = personIds.Distinct().ToArray();
-        return _dbContext.PersonGruppenHistorien
-            .Where(h => ids.Contains(h.PersonId))
-            .ToList()
-            .GroupBy(h => h.PersonId)
-            .ToDictionary(g => g.Key, g => g.OrderByDescending(h => h.GueltigAb).ToList());
-    }
-
-    /// <summary>
-    ///     Equivalent to <see cref="GetKlassenstufe(Person, DateTime)" />, resolved in memory against a
-    ///     <see cref="LoadGruppenHistorien" /> result instead of querying the database.
-    /// </summary>
-    public static int GetKlassenstufe(Person person, DateTime asOf, IReadOnlyDictionary<Guid, List<PersonGruppenHistorie>> historien)
-    {
-        if (person.Rolle == Rolle.Tutor)
-            throw new InvalidOperationException("Only students have a grade level.");
-
-        var entry = historien.GetValueOrDefault(person.Id)?.FirstOrDefault(h => h.GueltigAb <= asOf);
-        var gruppe = entry is not null ? entry.Gruppe : person.Gruppe;
-        return ParseKlassenstufe(gruppe);
+        return ParseKlassenstufe(person.Gruppe);
     }
 
     private static int ParseKlassenstufe(string? gruppe)
@@ -188,23 +131,12 @@ public class UserService
     }
 
     /// <summary>
-    ///     Sets a person's <see cref="Person.Gruppe" />, logging the change to <see cref="PersonGruppenHistorie" />
-    ///     if the value actually differs from the current one - this is the only place <see cref="Person.Gruppe" />
-    ///     should ever be written, so that <see cref="GetKlassenstufe(Person, DateTime)" /> can later reconstruct
-    ///     what it used to be. Does not save changes; the caller is expected to as part of its own batch (e.g. one
+    ///     Sets a person's <see cref="Person.Gruppe" />. This is the only place <see cref="Person.Gruppe" /> should
+    ///     ever be written. Does not save changes; the caller is expected to as part of its own batch (e.g. one
     ///     LDAP sync run).
     /// </summary>
-    public void SetGruppe(Person person, string? gruppe, DateTime asOf)
+    public void SetGruppe(Person person, string? gruppe)
     {
-        if (gruppe == person.Gruppe)
-            return;
-
-        _dbContext.PersonGruppenHistorien.Add(new PersonGruppenHistorie
-        {
-            Person = person,
-            Gruppe = gruppe,
-            GueltigAb = asOf,
-        });
         person.Gruppe = gruppe;
     }
 

@@ -43,13 +43,15 @@ public class AllSlotsRule : IProfundumIndividualRule
     }
 
     /// <inheritdoc/>
-    public IEnumerable<MatchingWarning> GetWarnings(Person student, Func<DateTime, int> klasseAsOf, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
+    public IEnumerable<MatchingWarning> GetWarnings(Person student, int klasse, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
     {
         List<MatchingWarning> warnings = [];
+        var slotsArray = slots as ProfundumSlot[] ?? slots.ToArray();
         var enrollmentsArray = enrollments as ProfundumEinschreibung[] ?? enrollments.ToArray();
         var angebote = enrollmentsArray
             .Where(p => p.ProfundumInstanz is not null)
-            .Select(x => x.ProfundumInstanz!).Distinct();
+            .Select(x => x.ProfundumInstanz!).Distinct()
+            .Where(i => i.Slots.Any(slotsArray.Contains));
         foreach (var i in angebote)
         {
             var belegtSlots = enrollmentsArray.Where(e => e.ProfundumInstanz == i).Select(e => e.Slot).ToArray();

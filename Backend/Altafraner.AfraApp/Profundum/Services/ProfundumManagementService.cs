@@ -18,19 +18,16 @@ internal class ProfundumManagementService
 {
     private readonly AfraAppContext _dbContext;
     private readonly Altafraner.Typst.Typst _typst;
-    private readonly UserService _userService;
 
     /// <summary>
     ///     Constructs the ManagementService. Usually called by the DI container.
     /// </summary>
     public ProfundumManagementService(AfraAppContext dbContext,
-        Altafraner.Typst.Typst typst,
-        UserService userService
+        Altafraner.Typst.Typst typst
         )
     {
         _dbContext = dbContext;
         _typst = typst;
-        _userService = userService;
     }
 
     /// <summary>Creates a new EinwahlZeitraum (enrollment submission window).</summary>
@@ -571,10 +568,7 @@ internal class ProfundumManagementService
 
         var teilnehmer = einschreibungenForInstanz
             .GroupBy(e => e.BetroffenePerson)
-            .Select(g => new PersonInfoMinimal(g.Key)
-            {
-                Gruppe = _userService.GetGruppe(g.Key, g.Min(e => e.CreatedAt)),
-            })
+            .Select(g => new PersonInfoMinimal(g.Key))
             .OrderBy(x => int.Parse((x.Gruppe ?? "0").TakeWhile(char.IsDigit).ToArray()))
             .ThenBy(x =>
                 (x.Gruppe ?? "").SkipWhile(c => !char.IsDigit(c))
@@ -630,10 +624,7 @@ internal class ProfundumManagementService
             var teilnehmer = einschreibungen
                 .Where(e => e.ProfundumInstanz!.Id == inst.Id)
                 .GroupBy(e => e.BetroffenePerson)
-                .Select(g => new PersonInfoMinimal(g.Key)
-                {
-                    Gruppe = _userService.GetGruppe(g.Key, g.Min(e => e.CreatedAt)),
-                })
+                .Select(g => new PersonInfoMinimal(g.Key))
                 .OrderBy(x => int.Parse((x.Gruppe ?? "0").TakeWhile(char.IsDigit).ToArray()))
                 .ThenBy(x =>
                     (x.Gruppe ?? "").SkipWhile(c => !char.IsDigit(c))

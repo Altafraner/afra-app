@@ -47,12 +47,12 @@ public class KlassenLimitsRule : IProfundumIndividualRule
     }
 
     /// <inheritdoc/>
-    public IEnumerable<MatchingWarning> GetWarnings(Person student, Func<DateTime, int> klasseAsOf, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
+    public IEnumerable<MatchingWarning> GetWarnings(Person student, int klasse, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
     {
+        var slotsArray = slots as ProfundumSlot[] ?? slots.ToArray();
         var warnings = new List<MatchingWarning>();
-        foreach (var e in enrollments)
+        foreach (var e in enrollments.Where(e => slotsArray.Contains(e.Slot)))
         {
-            var klasse = klasseAsOf(e.CreatedAt);
             var p = e.ProfundumInstanz!.Profundum;
             var minKlasse = p.MinKlasse;
             var maxKlasse = p.MaxKlasse;

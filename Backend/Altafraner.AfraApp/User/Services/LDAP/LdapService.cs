@@ -335,7 +335,7 @@ public class LdapService
             };
 
             _dbContext.Personen.Add(user);
-            _userService.SetGruppe(user, gruppe, syncTime);
+            _userService.SetGruppe(user, gruppe);
             AddPersonToDict(entry, user);
             return true;
         }
@@ -344,7 +344,7 @@ public class LdapService
         user.LastName = surname;
         user.Email = mail;
         user.Rolle = rolle;
-        _userService.SetGruppe(user, gruppe, syncTime);
+        _userService.SetGruppe(user, gruppe);
         AddPersonToDict(entry, user);
         return true;
     }
