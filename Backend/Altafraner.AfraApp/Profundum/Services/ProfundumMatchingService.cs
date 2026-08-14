@@ -151,6 +151,9 @@ internal class ProfundumMatchingService
         foreach (var student in students)
         {
             var sBelegWuensche = belegwuensche.Where(w => w.BetroffenePerson == student).ToArray();
+            var sEnrollments = fixEinschreibungen
+                .Where(e => e.BetroffenePerson == student && e.ProfundumInstanz is not null)
+                .ToArray();
             var sBelegVars = belegVars.Where(k => k.Key.p == student)
                 .ToDictionary(x => (x.Key.s, x.Key.i), x => x.Value);
             var sNotEnrolledVars = personNotEnrolledVariables.Where(k => k.Key.p == student)
@@ -163,6 +166,7 @@ internal class ProfundumMatchingService
                     klasse,
                     slots,
                     sBelegWuensche,
+                    sEnrollments,
                     sBelegVars,
                     sNotEnrolledVars,
                     model,
