@@ -18,6 +18,14 @@ public class ProfundumConfiguration
     public required Dictionary<int, ProfundumQuartal[]> ProfilPflichtigkeit { get; set; }
 
     /// <summary>
+    ///     Grants a specific Klasse (e.g. "9a" - a homeroom section, not a whole Klassenstufe/grade, keyed by the
+    ///     raw <c>Person.Gruppe</c> string) permission to enroll in a Profilprofundum during the given Quartale,
+    ///     without making it mandatory - unlike <see cref="ProfilPflichtigkeit" />, this only ever widens
+    ///     eligibility, it can never make something mandatory that the grade-level config doesn't already require.
+    /// </summary>
+    public Dictionary<string, ProfundumQuartal[]> ProfilOptionaleKlassen { get; set; } = new();
+
+    /// <summary>
     ///     The minimum number of Profunda a student must rank in a single Belegwunsch submission.
     /// </summary>
     public int MinBelegWuensche { get; set; } = 7;

@@ -58,6 +58,21 @@ internal class ProfundumEnrollmentService
     }
 
     /// <summary>
+    ///     Whether any of the given Quartale falls in a Halbjahr this student may take a Profil in at all - either
+    ///     because it's mandatory (<see cref="IsProfilPflichtig" />), or because their specific Klasse (e.g. "9a",
+    ///     not the whole grade) was granted optional eligibility via <see cref="ProfundumConfiguration.ProfilOptionaleKlassen" />.
+    /// </summary>
+    public bool IsProfilErlaubt(Models_Person student, IEnumerable<ProfundumQuartal> quartale)
+    {
+        var quartaleArray = quartale as ProfundumQuartal[] ?? quartale.ToArray();
+        if (IsProfilPflichtig(student, quartaleArray)) return true;
+
+        if (student.Gruppe is null) return false;
+        var optionaleQuartale = _profundumConfiguration.Value.ProfilOptionaleKlassen.GetValueOrDefault(student.Gruppe);
+        return optionaleQuartale is not null && optionaleQuartale.Intersect(quartaleArray).Any();
+    }
+
+    /// <summary>
     ///     Whether a student meets the grade-range and (if applicable) Profil-eligibility criteria to enroll in the
     ///     given Definition. Used to guard team-partner invite redemption up front - see
     ///     <see cref="ProfundumPartnerService" />.
@@ -69,7 +84,7 @@ internal class ProfundumEnrollmentService
         if (definition.MaxKlasse is not null && klasse > definition.MaxKlasse) return false;
         if (definition.Kategorie.ProfilProfundum)
         {
-            return IsProfilPflichtig(student, quartale);
+            return IsProfilErlaubt(student, quartale);
         }
 
         return true;
@@ -148,8 +163,8 @@ internal class ProfundumEnrollmentService
         var fixedSlots = fixedEnrollments.Select(e => e.Slot).Distinct().ToArray();
         var openSlots = slots.Where(s => !fixedSlots.Contains(s)).ToArray();
 
-        var profilPflichtig = IsProfilPflichtig(student, slots.Select(s => s.Quartal));
-        var angebote = GetAvailableProfundaInstanzen(student, openSlots, profilPflichtig, fixedEnrollments).ToArray();
+        var profilErlaubt = IsProfilErlaubt(student, slots.Select(s => s.Quartal));
+        var angebote = GetAvailableProfundaInstanzen(student, openSlots, profilErlaubt, fixedEnrollments).ToArray();
 
         var optionen = angebote
             .GroupBy(a => a.Profundum)
@@ -255,8 +270,8 @@ internal class ProfundumEnrollmentService
         if (wuensche.Distinct().Count() != wuensche.Count)
             throw new ProfundumEinwahlWunschException("Ein Profundum darf nur einmal gewählt werden.");
 
-        var profilPflichtig = IsProfilPflichtig(student, slots.Select(s => s.Quartal));
-        var angebote = GetAvailableProfundaInstanzen(student, openSlots, profilPflichtig, fixedEnrollments)
+        var profilErlaubt = IsProfilErlaubt(student, slots.Select(s => s.Quartal));
+        var angebote = GetAvailableProfundaInstanzen(student, openSlots, profilErlaubt, fixedEnrollments)
             .ToLookup(a => a.Profundum.Id);
 
         var slotCoverage = openSlots.ToDictionary(s => s, _ => 0);
