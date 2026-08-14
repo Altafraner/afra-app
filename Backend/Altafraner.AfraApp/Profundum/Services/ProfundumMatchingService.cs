@@ -295,16 +295,15 @@ internal class ProfundumMatchingService
     }
 
     /// <summary>
-    ///     The Einwahlzeitraum matching/the staff overview currently operate on: the most recently opened one
-    ///     (<see cref="ProfundumEinwahlZeitraum.EinwahlStart" /> in the past) - unlike student-facing submission,
-    ///     which needs "is the window open right now," staff review/finalize a round after its deadline has passed,
-    ///     so this doesn't also check <see cref="ProfundumEinwahlZeitraum.EinwahlStop" />.
+    ///     The Einwahlzeitraum matching/the staff overview currently operate on: always the last one by
+    ///     <see cref="ProfundumEinwahlZeitraum.EinwahlStart" />, regardless of whether it's already open, not yet
+    ///     open, or already past its <see cref="ProfundumEinwahlZeitraum.EinwahlStop" /> - unlike student-facing
+    ///     submission, which needs "is the window open right now," staff may need to run/review a match for a round
+    ///     that hasn't opened for students yet, so this deliberately doesn't filter by "now" at all.
     /// </summary>
     private Task<ProfundumEinwahlZeitraum?> GetCurrentEinwahlZeitraumAsync()
     {
-        var now = DateTime.UtcNow;
         return _dbContext.ProfundumEinwahlZeitraeume
-            .Where(z => z.EinwahlStart <= now)
             .OrderByDescending(z => z.EinwahlStart)
             .FirstOrDefaultAsync();
     }
