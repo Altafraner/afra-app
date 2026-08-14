@@ -38,12 +38,16 @@ public interface IProfundumIndividualRule
     ///     Add constraints to matching solver. <paramref name="klasse" /> is the student's grade level, precomputed
     ///     once by the caller (a single batched query across all students) rather than looked up here - this method
     ///     runs once per (student, rule) in a tight loop over every student, so a per-call DB lookup here would
-    ///     multiply into hundreds of round-trips per matching run.
+    ///     multiply into hundreds of round-trips per matching run. <paramref name="enrollments" /> is the student's
+    ///     fixed (already-committed, from past periods) enrollment history - e.g. needed by
+    ///     <see cref="Altafraner.AfraApp.Profundum.Services.Rules.ProfilRule" /> to steer the solver toward a
+    ///     Profil-Kategorie the student hasn't covered yet rather than a redundant one.
     /// </summary>
     void AddConstraints(Person student,
         int klasse,
         IEnumerable<ProfundumSlot> slots,
         IEnumerable<ProfundumBelegWunsch> wuensche,
+        IEnumerable<ProfundumEinschreibung> enrollments,
         Dictionary<(ProfundumSlot s, ProfundumInstanz i), BoolVar> belegVars,
         Dictionary<ProfundumSlot, BoolVar> personNotEnrolledVars,
         CpModel model,

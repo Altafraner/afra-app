@@ -29,6 +29,8 @@ namespace Altafraner.AfraApp.Profundum.Services.Rules;
 /// </summary>
 public class ProfilRule : IProfundumIndividualRule
 {
+    private const int ProfilKategorieDiversitaetBonus = 3000;
+
     private readonly AfraAppContext _dbContext;
     private readonly UserService _userService;
     private readonly IOptions<ProfundumConfiguration> _profundumConfiguration;
@@ -115,6 +117,7 @@ public class ProfilRule : IProfundumIndividualRule
         int klasse,
         IEnumerable<ProfundumSlot> slots,
         IEnumerable<ProfundumBelegWunsch> wuensche,
+        IEnumerable<ProfundumEinschreibung> enrollments,
         Dictionary<(ProfundumSlot s, ProfundumInstanz i), BoolVar> belegVars,
         Dictionary<ProfundumSlot, BoolVar> personNotEnrolledVars,
         CpModel model,
@@ -122,11 +125,22 @@ public class ProfilRule : IProfundumIndividualRule
     {
         var slotsArray = slots as ProfundumSlot[] ?? slots.ToArray();
 
+        var belegteKategorien = enrollments
+            .Where(e => e.ProfundumInstanz?.Profundum.Kategorie.ProfilProfundum ?? false)
+            .Select(e => e.ProfundumInstanz!.Profundum.Kategorie.Id)
+            .ToHashSet();
+
         foreach (var (k, v) in belegVars)
         {
-            if (k.i.Profundum.Kategorie.ProfilProfundum && !IsProfilPflichtig(klasse, k.s.Quartal))
+            if (!k.i.Profundum.Kategorie.ProfilProfundum) continue;
+
+            if (!IsProfilPflichtig(klasse, k.s.Quartal))
             {
                 objective.AddTerm(v, -20000);
+            }
+            else if (!belegteKategorien.Contains(k.i.Profundum.Kategorie.Id))
+            {
+                objective.AddTerm(v, ProfilKategorieDiversitaetBonus);
             }
         }
 
