@@ -31,10 +31,10 @@ function validate(state) {
         });
     }
     if (state.wantedEinschreibungen != null) {
-        if (state.wantedEinschreibungen < 1) {
+        if (state.wantedEinschreibungen < 0) {
             errors.push({
                 name: 'wantedEinschreibungen',
-                message: 'Die gewünschte Größe muss mindestens 1 sein.',
+                message: 'Die gewünschte Größe darf nicht negativ sein.',
             });
         } else if (
             state.maxEinschreibungen &&
@@ -80,7 +80,7 @@ function submit(event) {
                 >
                     <UInputNumber
                         v-model="state.wantedEinschreibungen"
-                        :min="1"
+                        :min="0"
                         placeholder="keine Präferenz"
                         class="w-full"
                     />
