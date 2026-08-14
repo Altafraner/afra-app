@@ -34,7 +34,11 @@ async function createInstanz(data) {
         toast.add({ color: 'success', title: 'Instanz erstellt' });
         await load();
     } catch (e) {
-        toast.add({ color: 'error', title: 'Fehler', description: e.body });
+        toast.add({
+            color: 'error',
+            title: 'Fehler',
+            description: e?.body?.error ?? 'Konnte Instanz nicht erstellen',
+        });
     }
 }
 
@@ -55,7 +59,7 @@ async function updateInstanz(inst, data) {
         toast.add({
             color: 'error',
             title: 'Fehler',
-            description: e?.body ?? 'Konnte Angebot nicht speichern',
+            description: e?.body?.error ?? 'Konnte Angebot nicht speichern',
         });
     }
 }
@@ -84,9 +88,17 @@ async function deleteInstanz(id) {
         ))
     )
         return;
-    await apiInstanz.delete(`/${id}`);
-    toast.add({ color: 'success', title: 'Instanz gelöscht' });
-    await load();
+    try {
+        await apiInstanz.delete(`/${id}`);
+        toast.add({ color: 'success', title: 'Instanz gelöscht' });
+        await load();
+    } catch (e) {
+        toast.add({
+            color: 'error',
+            title: 'Fehler',
+            description: e?.body?.error ?? 'Konnte Instanz nicht löschen',
+        });
+    }
 }
 
 onMounted(load);
