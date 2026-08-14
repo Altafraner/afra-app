@@ -132,16 +132,22 @@ public class ProfilRule : IProfundumIndividualRule
 
         foreach (var (k, v) in belegVars)
         {
-            if (!k.i.Profundum.Kategorie.ProfilProfundum) continue;
-
-            if (!IsProfilPflichtig(klasse, k.s.Quartal))
+            if (k.i.Profundum.Kategorie.ProfilProfundum && !IsProfilPflichtig(klasse, k.s.Quartal))
             {
                 objective.AddTerm(v, -20000);
             }
-            else if (!belegteKategorien.Contains(k.i.Profundum.Kategorie.Id))
-            {
-                objective.AddTerm(v, ProfilKategorieDiversitaetBonus);
-            }
+        }
+
+        foreach (var kategorieGroup in belegVars
+                     .Where(x => x.Key.i.Profundum.Kategorie.ProfilProfundum
+                                 && IsProfilPflichtig(klasse, x.Key.s.Quartal)
+                                 && !belegteKategorien.Contains(x.Key.i.Profundum.Kategorie.Id))
+                     .GroupBy(x => x.Key.i.Profundum.Kategorie.Id))
+        {
+            var vars = kategorieGroup.Select(x => x.Value).ToList();
+            var hasNeueKategorie = model.NewBoolVar($"neueKategorie-{student.Id}-{kategorieGroup.Key}");
+            model.AddMaxEquality(hasNeueKategorie, vars);
+            objective.AddTerm(hasNeueKategorie, ProfilKategorieDiversitaetBonus);
         }
 
         foreach (var einwahlzeitraumGroup in belegVars
