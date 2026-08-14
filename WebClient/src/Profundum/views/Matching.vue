@@ -25,7 +25,7 @@ const navItems = [
 
 const slots = ref([]);
 const zeitraeume = ref([]);
-const selectedZeitraumId = ref(null);
+const selectedZeitraumIds = ref([]);
 const enrollments = ref([]);
 const instanzen = ref([]);
 const profunda = ref([]);
@@ -39,8 +39,9 @@ async function getSlots() {
 
 async function getZeitraeume() {
     zeitraeume.value = await mande('/api/profundum/management/einwahlzeitraum').get();
-    if (!selectedZeitraumId.value) {
-        selectedZeitraumId.value = zeitraeume.value[0]?.id ?? null;
+    if (selectedZeitraumIds.value.length === 0) {
+        const current = zeitraeume.value[0]?.id;
+        selectedZeitraumIds.value = current ? [current] : [];
     }
 }
 
@@ -229,7 +230,7 @@ const zeitraumSelectItems = computed(() =>
     zeitraeume.value.map((z) => ({ id: z.id, label: z.bezeichnung || formatDate(new Date(z.einwahlStart)) })),
 );
 const visibleSlotIds = computed(() =>
-    slots.value.filter((s) => s.einwahlZeitraumId === selectedZeitraumId.value).map((s) => s.id),
+    slots.value.filter((s) => selectedZeitraumIds.value.includes(s.einwahlZeitraumId)).map((s) => s.id),
 );
 const visibleSlots = computed(() =>
     slots.value.filter((s) => visibleSlotIds.value.includes(s.id)),
@@ -331,12 +332,13 @@ const instanzenColumns = [
 
         <span class="flex flex-wrap gap-3 items-center">
             <USelect
-                v-model="selectedZeitraumId"
+                v-model="selectedZeitraumIds"
                 :items="zeitraumSelectItems"
                 label-key="label"
                 value-key="id"
+                multiple
                 class="w-80"
-                placeholder="Einwahlzeitraum…"
+                placeholder="Einwahlzeiträume…"
             />
 
             <UInput
