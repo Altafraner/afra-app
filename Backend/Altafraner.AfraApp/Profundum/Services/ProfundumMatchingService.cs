@@ -313,13 +313,11 @@ internal class ProfundumMatchingService
     public async IAsyncEnumerable<DTOProfundumEnrollmentSet> GetAllEnrollmentsAsync()
     {
         var currentZeitraum = await GetCurrentEinwahlZeitraumAsync();
-        if (currentZeitraum is null)
-        {
-            yield break;
-        }
 
-        var slots = await _dbContext.ProfundaSlots.Include(s => s.EinwahlZeitraum)
-            .Where(s => s.EinwahlZeitraum == currentZeitraum).ToArrayAsync();
+        var slots = await _dbContext.ProfundaSlots.Include(s => s.EinwahlZeitraum).ToArrayAsync();
+        var currentSlots = currentZeitraum is null
+            ? []
+            : slots.Where(s => s.EinwahlZeitraum == currentZeitraum).ToArray();
 
         var pairings = await _dbContext.ProfundumPartnerWuensche
             .Include(w => w.ProfundumDefinition)
@@ -340,7 +338,6 @@ internal class ProfundumMatchingService
         var personenWithData = _dbContext.Personen
             .AsSplitQuery()
             .Where(p => p.Rolle == Rolle.Mittelstufe)
-            .Where(p => p.CreatedAt <= currentZeitraum.EinwahlStart)
             .OrderBy(p => p.Gruppe)
             .ThenBy(p => p.LastName)
             .ThenBy(p => p.FirstName)
@@ -380,12 +377,12 @@ internal class ProfundumMatchingService
                         { ProfundumSlotId = e.slotId, ProfundumInstanzId = null, IsFixed = false });
 
             var personsWishes = person.ProfundaBelegwuensche
-                .Where(e => e.EinwahlZeitraum == currentZeitraum)
+                .Where(e => currentZeitraum is not null && e.EinwahlZeitraum == currentZeitraum)
                 .Select(e => new DTOWunsch(e.ProfundumDefinition.Id,
                     e.ProfundumDefinition.Instanzen.SelectMany(i => i.Slots).Select(s => s.Id).Distinct(),
                     e.Rang));
             var warnings = GetStudentWarnings(person,
-                slots,
+                currentSlots,
                 person.ProfundaEinschreibungen
                     .Where(e => e.ProfundumInstanz is not null)
                     .ToArray()).ToList();
