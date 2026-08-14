@@ -31,7 +31,7 @@ public class AllSlotsRule : IProfundumIndividualRule
         var angebote = belegVars.Keys.Select(x => x.i).Distinct();
         foreach (var i in angebote)
         {
-            var psVars = i.Slots.Select(s => belegVars[(s, i)]).ToArray();
+            var psVars = i.Slots.Where(s => belegVars.ContainsKey((s, i))).Select(s => belegVars[(s, i)]).ToArray();
             foreach (var (v, w) in psVars.Zip(psVars.Skip(1)))
             {
                 var ineq = model.NewBoolVar($"{Guid.NewGuid()}");
