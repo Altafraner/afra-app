@@ -133,6 +133,8 @@ const updateErlaubtPartnerwahl = () =>
     savePatch({ erlaubtPartnerwahl: profundum.value.erlaubtPartnerwahl });
 const updateAusgeblendetInEinwahl = () =>
     savePatch({ ausgeblendetInEinwahl: profundum.value.ausgeblendetInEinwahl });
+const updatePflichtFuerBerechtigte = () =>
+    savePatch({ pflichtFuerBerechtigte: profundum.value.pflichtFuerBerechtigte });
 </script>
 <template>
     <template v-if="loading">Lade...</template>
@@ -285,6 +287,21 @@ const updateAusgeblendetInEinwahl = () =>
                     <USwitch
                         v-model="profundum.ausgeblendetInEinwahl"
                         label="In der Einwahl ausblenden"
+                    />
+                </template>
+            </GridEditRow>
+            <GridEditRow header="Pflicht" @update="updatePflichtFuerBerechtigte">
+                <template #body>
+                    <span>{{
+                        profundum.pflichtFuerBerechtigte
+                            ? 'Pflicht - alle berechtigten Schüler:innen sollen dieses Profundum belegen, wenn es angeboten wird'
+                            : 'Nicht verpflichtend'
+                    }}</span>
+                </template>
+                <template #edit>
+                    <USwitch
+                        v-model="profundum.pflichtFuerBerechtigte"
+                        label="Für berechtigte Klassenstufen verpflichtend"
                     />
                 </template>
             </GridEditRow>
