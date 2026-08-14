@@ -22,6 +22,7 @@ public record DTOProfundumDefinition
         ErlaubtPartnerwahl = dbProfundumDefinition.ErlaubtPartnerwahl;
         Hidden = dbProfundumDefinition.Hidden;
         AusgeblendetInEinwahl = dbProfundumDefinition.AusgeblendetInEinwahl;
+        PflichtFuerBerechtigte = dbProfundumDefinition.PflichtFuerBerechtigte;
     }
 
     /// <inheritdoc cref="ProfundumDefinition.Id"/>
@@ -59,4 +60,7 @@ public record DTOProfundumDefinition
 
     /// <inheritdoc cref="ProfundumDefinition.AusgeblendetInEinwahl"/>
     public bool AusgeblendetInEinwahl { get; set; }
+
+    /// <inheritdoc cref="ProfundumDefinition.PflichtFuerBerechtigte"/>
+    public bool PflichtFuerBerechtigte { get; set; }
 }

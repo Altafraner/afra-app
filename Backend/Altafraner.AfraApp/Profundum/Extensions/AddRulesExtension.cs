@@ -20,6 +20,7 @@ public static class AddRulesExtension
         services.AddScoped<IProfundumIndividualRule, NotMultipleInstancesOfSameProfundumRule>();
         services.AddScoped<IProfundumIndividualRule, KlassenLimitsRule>();
         services.AddScoped<IProfundumIndividualRule, DependencyRule>();
+        services.AddScoped<IProfundumIndividualRule, PflichtProfundumRule>();
         services.AddScoped<IRulesFactory, ServiceProviderRulesFactory>();
     }
 }

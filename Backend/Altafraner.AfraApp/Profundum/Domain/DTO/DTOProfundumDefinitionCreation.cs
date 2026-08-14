@@ -35,4 +35,7 @@ public record DTOProfundumDefinitionCreation
 
     /// <inheritdoc cref="ProfundumDefinition.AusgeblendetInEinwahl"/>
     public bool AusgeblendetInEinwahl { get; set; }
+
+    /// <inheritdoc cref="ProfundumDefinition.PflichtFuerBerechtigte"/>
+    public bool PflichtFuerBerechtigte { get; set; }
 }

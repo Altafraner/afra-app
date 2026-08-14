@@ -84,6 +84,14 @@ public class ProfundumDefinition : IHasTimestamps, IHasUserTracking
     /// </summary>
     public bool AusgeblendetInEinwahl { get; set; }
 
+    /// <summary>
+    ///     If true, every student within <see cref="MinKlasse" />/<see cref="MaxKlasse" /> is expected to enroll
+    ///     whenever this Profundum is offered - the matching solver applies a soft penalty (see
+    ///     <c>Services.Rules.PflichtProfundumRule</c>) to any such eligible student who ends up not enrolled in it,
+    ///     without ever making a matching run infeasible over it.
+    /// </summary>
+    public bool PflichtFuerBerechtigte { get; set; }
+
     /// <inheritdoc/>
     public DateTime CreatedAt { get; set; }
 

@@ -291,6 +291,7 @@ internal class ProfundumManagementService
             Fachbereiche = fachbereiche,
             ErlaubtPartnerwahl = dtoProfundum.ErlaubtPartnerwahl,
             AusgeblendetInEinwahl = dtoProfundum.AusgeblendetInEinwahl,
+            PflichtFuerBerechtigte = dtoProfundum.PflichtFuerBerechtigte,
         };
         _dbContext.Profunda.Add(def);
         await _dbContext.SaveChangesAsync();
@@ -329,6 +330,7 @@ internal class ProfundumManagementService
         profundum.MaxKlasse = dtoProfundum.MaxKlasse;
         profundum.ErlaubtPartnerwahl = dtoProfundum.ErlaubtPartnerwahl;
         profundum.AusgeblendetInEinwahl = dtoProfundum.AusgeblendetInEinwahl;
+        profundum.PflichtFuerBerechtigte = dtoProfundum.PflichtFuerBerechtigte;
 
         var kat = await _dbContext.ProfundaKategorien.FindAsync(dtoProfundum.KategorieId);
         if (kat is null)
