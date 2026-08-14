@@ -50,14 +50,15 @@ public interface IProfundumIndividualRule
         LinearExprBuilder objective);
 
     /// <summary>
-    ///     Gets warnings for a student. <paramref name="klasseAsOf" /> resolves the student's grade level as of an
-    ///     arbitrary point in time, backed by a group-history log the caller already batch-loaded for every student
-    ///     up front - rules that need a grade level as of a specific historical Einwahlzeitraum/enrollment must go
-    ///     through this instead of querying per call, since this method runs once per student across a potentially
-    ///     large enrollment history.
+    ///     Gets warnings for a student. <paramref name="klasse" /> is the student's current grade level, precomputed
+    ///     once by the caller (same value <see cref="AddConstraints" /> already gets). <paramref name="slots" /> is
+    ///     restricted to the current Einwahlzeitraum - old, already-fixed enrollments are not re-validated - while
+    ///     <paramref name="enrollments" /> is the student's full enrollment history, since some rules (e.g.
+    ///     dependency/duplicate/Profil-coverage checks) need that as evidence even though they only warn about
+    ///     something in the current period.
     /// </summary>
     IEnumerable<MatchingWarning> GetWarnings(Person student,
-        Func<DateTime, int> klasseAsOf,
+        int klasse,
         IEnumerable<ProfundumSlot> slots,
         IEnumerable<ProfundumEinschreibung> enrollments);
 }

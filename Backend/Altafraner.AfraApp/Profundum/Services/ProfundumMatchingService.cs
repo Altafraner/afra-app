@@ -44,11 +44,15 @@ internal class ProfundumMatchingService
     {
         var stopwatch = Stopwatch.StartNew();
 
+        var currentZeitraum = await GetCurrentEinwahlZeitraumAsync()
+            ?? throw new ArgumentException("Kein Einwahlzeitraum vorhanden.");
+
         await _dbContext.ProfundaEinschreibungen
             .Where(e => !e.IsFixed)
             .ExecuteDeleteAsync();
 
-        var slots = _dbContext.ProfundaSlots.Include(s => s.EinwahlZeitraum).ToArray();
+        var slots = _dbContext.ProfundaSlots.Include(s => s.EinwahlZeitraum)
+            .Where(s => s.EinwahlZeitraum == currentZeitraum).ToArray();
         var fixEinschreibungen = _dbContext.ProfundaEinschreibungen
             .Where(e => e.IsFixed).ToArray();
         var angebote = (await _dbContext.ProfundaInstanzen
@@ -61,7 +65,10 @@ internal class ProfundumMatchingService
             .Include(b => b.ProfundumDefinition).ThenInclude(p => p.Kategorie)
             .Include(b => b.EinwahlZeitraum).ThenInclude(z => z.Slots)
             .ToArrayAsync();
-        var students = _dbContext.Personen.Where(p => p.Rolle == Rolle.Mittelstufe).ToArray();
+        var students = _dbContext.Personen
+            .Where(p => p.Rolle == Rolle.Mittelstufe)
+            .Where(p => p.CreatedAt <= currentZeitraum.EinwahlStart)
+            .ToArray();
 
         if (!_profundumConfiguration.Value.DeterministicMatching)
         {
@@ -141,8 +148,6 @@ internal class ProfundumMatchingService
         }
 
 
-        var historienByPerson = _userService.LoadGruppenHistorien(students.Select(s => s.Id));
-
         foreach (var student in students)
         {
             var sBelegWuensche = belegwuensche.Where(w => w.BetroffenePerson == student).ToArray();
@@ -150,7 +155,7 @@ internal class ProfundumMatchingService
                 .ToDictionary(x => (x.Key.s, x.Key.i), x => x.Value);
             var sNotEnrolledVars = personNotEnrolledVariables.Where(k => k.Key.p == student)
                 .ToDictionary(x => x.Key.s, x => x.Value);
-            var klasse = UserService.GetKlassenstufe(student, DateTime.UtcNow, historienByPerson);
+            var klasse = _userService.GetKlassenstufe(student);
 
             foreach (var r in _rulesFactory.GetIndividualRules())
             {
@@ -192,7 +197,7 @@ internal class ProfundumMatchingService
         var newEinschreibungen = new List<ProfundumEinschreibung>();
         foreach (var p in students)
             foreach (var i in angebote)
-                foreach (var s in i.Slots)
+                foreach (var s in i.Slots.Where(slots.Contains))
                 {
                     if (fixEinschreibungen.Any(e => e.BetroffenePerson == p && e.Slot == s))
                     {
@@ -278,12 +283,26 @@ internal class ProfundumMatchingService
 
     /// <summary>Collects every individual rule's <see cref="IProfundumIndividualRule.GetWarnings" /> for a student.</summary>
     private IEnumerable<MatchingWarning> GetStudentWarnings(Person student,
-        IReadOnlyDictionary<Guid, List<PersonGruppenHistorie>> historienByPerson,
         ProfundumSlot[] slots,
         ProfundumEinschreibung[] enrollments)
     {
-        int KlasseAsOf(DateTime asOf) => UserService.GetKlassenstufe(student, asOf, historienByPerson);
-        return _rulesFactory.GetIndividualRules().SelectMany(r => r.GetWarnings(student, KlasseAsOf, slots, enrollments));
+        var klasse = _userService.GetKlassenstufe(student);
+        return _rulesFactory.GetIndividualRules().SelectMany(r => r.GetWarnings(student, klasse, slots, enrollments));
+    }
+
+    /// <summary>
+    ///     The Einwahlzeitraum matching/the staff overview currently operate on: the most recently opened one
+    ///     (<see cref="ProfundumEinwahlZeitraum.EinwahlStart" /> in the past) - unlike student-facing submission,
+    ///     which needs "is the window open right now," staff review/finalize a round after its deadline has passed,
+    ///     so this doesn't also check <see cref="ProfundumEinwahlZeitraum.EinwahlStop" />.
+    /// </summary>
+    private Task<ProfundumEinwahlZeitraum?> GetCurrentEinwahlZeitraumAsync()
+    {
+        var now = DateTime.UtcNow;
+        return _dbContext.ProfundumEinwahlZeitraeume
+            .Where(z => z.EinwahlStart <= now)
+            .OrderByDescending(z => z.EinwahlStart)
+            .FirstOrDefaultAsync();
     }
 
     /// <summary>
@@ -293,13 +312,14 @@ internal class ProfundumMatchingService
     /// </summary>
     public async IAsyncEnumerable<DTOProfundumEnrollmentSet> GetAllEnrollmentsAsync()
     {
-        var slots = await _dbContext.ProfundaSlots.Include(s => s.EinwahlZeitraum).ToArrayAsync();
+        var currentZeitraum = await GetCurrentEinwahlZeitraumAsync();
+        if (currentZeitraum is null)
+        {
+            yield break;
+        }
 
-        var mittelstufeIds = await _dbContext.Personen
-            .Where(p => p.Rolle == Rolle.Mittelstufe)
-            .Select(p => p.Id)
-            .ToArrayAsync();
-        var historienByPerson = _userService.LoadGruppenHistorien(mittelstufeIds);
+        var slots = await _dbContext.ProfundaSlots.Include(s => s.EinwahlZeitraum)
+            .Where(s => s.EinwahlZeitraum == currentZeitraum).ToArrayAsync();
 
         var pairings = await _dbContext.ProfundumPartnerWuensche
             .Include(w => w.ProfundumDefinition)
@@ -320,6 +340,7 @@ internal class ProfundumMatchingService
         var personenWithData = _dbContext.Personen
             .AsSplitQuery()
             .Where(p => p.Rolle == Rolle.Mittelstufe)
+            .Where(p => p.CreatedAt <= currentZeitraum.EinwahlStart)
             .OrderBy(p => p.Gruppe)
             .ThenBy(p => p.LastName)
             .ThenBy(p => p.FirstName)
@@ -327,6 +348,8 @@ internal class ProfundumMatchingService
             .ThenInclude(p => p.ProfundumDefinition)
             .ThenInclude(p => p.Instanzen)
             .ThenInclude(i => i.Slots)
+            .Include(p => p.ProfundaBelegwuensche)
+            .ThenInclude(p => p.EinwahlZeitraum)
             .Include(p => p.ProfundaEinschreibungen)
             .ThenInclude(p => p.ProfundumInstanz)
             .ThenInclude(p => p!.Profundum)
@@ -357,11 +380,11 @@ internal class ProfundumMatchingService
                         { ProfundumSlotId = e.slotId, ProfundumInstanzId = null, IsFixed = false });
 
             var personsWishes = person.ProfundaBelegwuensche
+                .Where(e => e.EinwahlZeitraum == currentZeitraum)
                 .Select(e => new DTOWunsch(e.ProfundumDefinition.Id,
                     e.ProfundumDefinition.Instanzen.SelectMany(i => i.Slots).Select(s => s.Id).Distinct(),
                     e.Rang));
             var warnings = GetStudentWarnings(person,
-                historienByPerson,
                 slots,
                 person.ProfundaEinschreibungen
                     .Where(e => e.ProfundumInstanz is not null)

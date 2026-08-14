@@ -49,7 +49,7 @@ internal class ProfundumEnrollmentService
     /// <summary>Whether any of the given Quartale falls in a Halbjahr where this student's grade must take a Profil.</summary>
     public bool IsProfilPflichtig(Models_Person student, IEnumerable<ProfundumQuartal> quartale)
     {
-        var klasse = _userService.GetKlassenstufe(student, DateTime.UtcNow);
+        var klasse = _userService.GetKlassenstufe(student);
         var profilQuartale = _profundumConfiguration.Value.ProfilPflichtigkeit.GetValueOrDefault(klasse);
         if (profilQuartale is null) return false;
 
@@ -64,7 +64,7 @@ internal class ProfundumEnrollmentService
     /// </summary>
     public bool IsEligibleForDefinition(Models_Person student, ProfundumDefinition definition, IEnumerable<ProfundumQuartal> quartale)
     {
-        var klasse = _userService.GetKlassenstufe(student, DateTime.UtcNow);
+        var klasse = _userService.GetKlassenstufe(student);
         if (definition.MinKlasse is not null && klasse < definition.MinKlasse) return false;
         if (definition.MaxKlasse is not null && klasse > definition.MaxKlasse) return false;
         if (definition.Kategorie.ProfilProfundum)
@@ -85,7 +85,7 @@ internal class ProfundumEnrollmentService
     public IEnumerable<ProfundumInstanz> GetAvailableProfundaInstanzen(Models_Person student,
         IEnumerable<ProfundumSlot> slots, bool profil, IEnumerable<ProfundumEinschreibung> enrollments)
     {
-        var klasse = _userService.GetKlassenstufe(student, DateTime.UtcNow);
+        var klasse = _userService.GetKlassenstufe(student);
         var enrollmentsArray = enrollments as ProfundumEinschreibung[] ?? enrollments.ToArray();
         var individualRules = _rulesFactory.GetIndividualRules().ToArray();
         var profundaInstanzen = _dbContext.ProfundaInstanzen

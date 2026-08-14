@@ -61,7 +61,7 @@ public class ProfilRule : IProfundumIndividualRule
         IEnumerable<ProfundumEinschreibung> enrollments,
         IEnumerable<ProfundumBelegWunsch> wuensche)
     {
-        var klasse = _userService.GetKlassenstufe(student, DateTime.UtcNow);
+        var klasse = _userService.GetKlassenstufe(student);
         var enrollmentsArray = enrollments as ProfundumEinschreibung[] ?? enrollments.ToArray();
         var wuenscheArray = wuensche as ProfundumBelegWunsch[] ?? wuensche.ToArray();
         var wantsProfil = wuenscheArray.Any(w => w.ProfundumDefinition.Kategorie.ProfilProfundum);
@@ -178,44 +178,38 @@ public class ProfilRule : IProfundumIndividualRule
     }
 
     /// <inheritdoc/>
-    public IEnumerable<MatchingWarning> GetWarnings(Person student, Func<DateTime, int> klasseAsOf, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
+    /// <remarks>
+    ///     <paramref name="slots" /> is restricted to the current Einwahlzeitraum, so the Pflicht/MaxEine checks
+    ///     below only ever look at "now" - old, already-fixed periods are no longer re-validated. The Klasse-10
+    ///     Kategoriediversität check is the one exception: it's gated on the current period being the Klasse-10
+    ///     designated Halbjahr, but still evaluates coverage against the student's <em>full</em> enrollment history
+    ///     (<paramref name="enrollments" />), since "every Profil-Kategorie ever covered" is inherently cross-period.
+    /// </remarks>
+    public IEnumerable<MatchingWarning> GetWarnings(Person student, int klasse, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
     {
         var slotsArray = slots as ProfundumSlot[] ?? slots.ToArray();
         var enrollmentsArray = enrollments as ProfundumEinschreibung[] ?? enrollments.ToArray();
         var profilEnrollments = enrollmentsArray.Where(e => e.ProfundumInstanz?.Profundum.Kategorie.ProfilProfundum ?? false).ToArray();
-
-        DateTime AsOfForZeitraum(IReadOnlyCollection<ProfundumSlot> zeitraumSlots) =>
-            enrollmentsArray.Where(e => zeitraumSlots.Contains(e.Slot)).Select(e => e.CreatedAt)
-                .DefaultIfEmpty(DateTime.UtcNow).Min();
+        var profilEnrollmentsInZeitraum = profilEnrollments.Where(e => slotsArray.Contains(e.Slot)).ToArray();
 
         var warnings = new List<MatchingWarning>();
 
-        foreach (var group in slotsArray.GroupBy(s => s.EinwahlZeitraum.Id))
+        var profilErlaubt = slotsArray.Any(s => IsProfilPflichtig(klasse, s.Quartal));
+        var hatProfilInZeitraum = profilEnrollmentsInZeitraum.Length != 0;
+        if (profilErlaubt && !hatProfilInZeitraum)
         {
-            var zeitraumSlots = group.ToArray();
-            var klasseForZeitraum = klasseAsOf(AsOfForZeitraum(zeitraumSlots));
-            var profilErlaubt = zeitraumSlots.Any(s => IsProfilPflichtig(klasseForZeitraum, s.Quartal));
-            var hatProfilInZeitraum = profilEnrollments.Any(e => zeitraumSlots.Contains(e.Slot));
-            if (profilErlaubt && !hatProfilInZeitraum)
-            {
-                warnings.Add(new MatchingWarning($"Profilpflicht nicht erfüllt ({zeitraumSlots[0].Jahr})."));
-            }
+            warnings.Add(new MatchingWarning($"Profilpflicht nicht erfüllt ({slotsArray.FirstOrDefault()?.Jahr})."));
         }
 
-        var mehrfachBelegt = profilEnrollments
-            .GroupBy(e => e.Slot.EinwahlZeitraum.Id)
-            .Any(g => g.Select(e => e.ProfundumInstanz!.Profundum.Id).Distinct().Count() > 1);
+        var mehrfachBelegt = profilEnrollmentsInZeitraum
+            .Select(e => e.ProfundumInstanz!.Profundum.Id).Distinct().Count() > 1;
         if (mehrfachBelegt)
         {
             warnings.Add(new MatchingWarning("Mehr als ein Profilprofundum im selben Einwahlzeitraum belegt."));
         }
 
         var grade10Quartale = _profundumConfiguration.Value.ProfilPflichtigkeit.GetValueOrDefault(10) ?? [];
-        var amEndeKlasse10 = slotsArray
-            .GroupBy(s => s.EinwahlZeitraum.Id)
-            .Select(g => g.ToArray())
-            .Any(zeitraumSlots => klasseAsOf(AsOfForZeitraum(zeitraumSlots)) == 10
-                                   && zeitraumSlots.Any(s => grade10Quartale.Contains(s.Quartal)));
+        var amEndeKlasse10 = klasse == 10 && slotsArray.Any(s => grade10Quartale.Contains(s.Quartal));
         if (amEndeKlasse10)
         {
             var belegteKategorien = profilEnrollments.Select(e => e.ProfundumInstanz!.Profundum.Kategorie.Id).ToHashSet();

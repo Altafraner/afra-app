@@ -56,10 +56,11 @@ public class DependencyRule : IProfundumIndividualRule
     }
 
     /// <inheritdoc/>
-    public IEnumerable<MatchingWarning> GetWarnings(Person student, Func<DateTime, int> klasseAsOf, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
+    public IEnumerable<MatchingWarning> GetWarnings(Person student, int klasse, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
     {
+        var slotsArray = slots as ProfundumSlot[] ?? slots.ToArray();
         var enrollmentsArray = enrollments as ProfundumEinschreibung[] ?? enrollments.ToArray();
-        foreach (var e in enrollmentsArray.Where(e => e.ProfundumInstanz is not null))
+        foreach (var e in enrollmentsArray.Where(e => e.ProfundumInstanz is not null && slotsArray.Contains(e.Slot)))
             foreach (var d in e.ProfundumInstanz!.Profundum.Dependencies.Where(d =>
                          enrollmentsArray.All(x => x.ProfundumInstanz?.Profundum != d)))
                 yield return new MatchingWarning(

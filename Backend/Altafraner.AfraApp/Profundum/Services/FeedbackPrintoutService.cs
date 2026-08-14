@@ -162,18 +162,13 @@ internal partial class FeedbackPrintoutService
             .GroupBy(e => e.Einschreibung.BetroffenePersonId)
             .ToDictionaryAsync(e => e.Key, e => e.ToArray());
 
-        DateTime AsOfFor(Person person) =>
-            allFeedback.TryGetValue(person.Id, out var feedback) && feedback.Length > 0
-                ? feedback.Min(f => f.Einschreibung.CreatedAt)
-                : DateTime.UtcNow;
-
         var allUsers = await _dbContext.Personen.Where(e => e.Rolle == Rolle.Mittelstufe)
             .Include(e => e.MentorMenteeRelations.Where(m => m.Type == MentorType.GM))
             .OrderBy(e => e.FirstName)
             .ThenBy(e => e.LastName)
             .AsAsyncEnumerable()
             .GroupBy(e => (
-                mode.HasFlag(BatchingModes.ByClass) ? _userService.GetGruppe(e, AsOfFor(e)) ?? "unbekannt" : "beliebig",
+                mode.HasFlag(BatchingModes.ByClass) ? e.Gruppe ?? "unbekannt" : "beliebig",
                 mode.HasFlag(BatchingModes.ByGm)
                     ? e.MentorMenteeRelations.FirstOrDefault()?.MentorId
                     : Guid.AllBitsSet))
@@ -214,7 +209,7 @@ internal partial class FeedbackPrintoutService
                     {
                         var file = _typstService.GeneratePdf(Altafraner.Typst.Templates.Profundum.Feedback, data);
                         var entry = zip.CreateEntry(
-                            FilenameSanitizer.Sanitize($"{_userService.GetGruppe(person, AsOfFor(person))}_{NicePersonName(person)}.pdf"));
+                            FilenameSanitizer.Sanitize($"{person.Gruppe}_{NicePersonName(person)}.pdf"));
                         await using var entryStream = await entry.OpenAsync();
                         await entryStream.WriteAsync(file);
                         data.Clear();
@@ -263,7 +258,7 @@ internal partial class FeedbackPrintoutService
 
         string WarningForUser(Person user, string warning)
         {
-            return $"{user.LastName}, {user.FirstName} ({_userService.GetGruppe(user, AsOfFor(user))}): {warning}";
+            return $"{user.LastName}, {user.FirstName} ({user.Gruppe}): {warning}";
         }
     }
 
