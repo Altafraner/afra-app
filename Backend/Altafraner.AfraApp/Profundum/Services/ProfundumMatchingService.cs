@@ -368,7 +368,10 @@ internal class ProfundumMatchingService
 
         await foreach (var person in personenWithData)
         {
-            var personsEnrollments = slots.Select(slot => (slotId: slot.Id,
+            var personsEnrollments = slots
+                .Where(slot => person.CreatedAt <= slot.EinwahlZeitraum.EinwahlStart
+                    || person.ProfundaEinschreibungen.Any(e => e.Slot == slot))
+                .Select(slot => (slotId: slot.Id,
                     enrollment: person.ProfundaEinschreibungen.FirstOrDefault(e => e.Slot == slot)))
                 .Select(e =>
                     e.enrollment is not null
