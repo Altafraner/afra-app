@@ -40,7 +40,7 @@ const sortedOptions = computed(() => {
 </script>
 
 <template>
-    <span class="flex gap-1 items-center">
+    <span v-if="enrollment" class="flex gap-1 items-center">
         <template v-if="editing">
             <UCheckbox v-model="enrollment.isFixed" size="xs" />
 
