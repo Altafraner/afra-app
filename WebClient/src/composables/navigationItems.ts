@@ -161,13 +161,6 @@ const allNavItems: NavItem[] = [
             },
         ],
     },
-    {
-        label: 'Einstellungen',
-        to: {
-            name: 'Settings',
-        },
-        icon: 'i-lucide-settings',
-    },
 ];
 
 function evaluateCondition(item: NavItem, user: ReturnType<typeof useUser>): boolean {
