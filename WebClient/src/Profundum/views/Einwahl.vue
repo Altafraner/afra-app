@@ -130,6 +130,26 @@ async function send() {
     });
 }
 
+const weekdayOrder = {
+    Monday: 0,
+    Tuesday: 1,
+    Wednesday: 2,
+    Thursday: 3,
+    Friday: 4,
+    Saturday: 5,
+    Sunday: 6,
+};
+
+const fixiertSorted = computed(() =>
+    [...katalog.value.fixiert].sort((a, b) => {
+        const [jahrA, quartalA, tagA] = a.slotId.split('-');
+        const [jahrB, quartalB, tagB] = b.slotId.split('-');
+        if (jahrA !== jahrB) return Number(jahrA) - Number(jahrB);
+        if (quartalA !== quartalB) return quartalA.localeCompare(quartalB);
+        return weekdayOrder[tagA] - weekdayOrder[tagB];
+    }),
+);
+
 const optionenById = computed(() => {
     const map = new Map();
     for (const option of katalog.value.optionen) map.set(option.definitionId, option);
@@ -341,7 +361,7 @@ useIntervalFn(check, 1000);
                 { header: 'Slot', accessorKey: 'slotLabel' },
                 { header: 'Angebot', accessorKey: 'bezeichnung' },
             ]"
-            :data="katalog.fixiert"
+            :data="fixiertSorted"
             :ui="{
                 td: 'p-2',
                 th: 'p-2',

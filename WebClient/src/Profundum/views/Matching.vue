@@ -2,7 +2,7 @@
 import { mande } from 'mande';
 import { computed, ref } from 'vue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
-import { formatSlot } from '@/helpers/formatters.ts';
+import { formatSlot, formatDate } from '@/helpers/formatters.ts';
 import { fuzzyMatch } from '@/helpers/fuzzy.ts';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
 import MatchingPersonCell from '@/Profundum/components/MatchingPersonCell.vue';
@@ -24,6 +24,8 @@ const navItems = [
 ];
 
 const slots = ref([]);
+const zeitraeume = ref([]);
+const selectedZeitraumId = ref(null);
 const enrollments = ref([]);
 const instanzen = ref([]);
 const profunda = ref([]);
@@ -33,7 +35,13 @@ const confirm = useConfirmPopover();
 
 async function getSlots() {
     slots.value = await mande('/api/profundum/management/slot').get();
-    visibleSlotIds.value = slots.value.map((s) => s.id);
+}
+
+async function getZeitraeume() {
+    zeitraeume.value = await mande('/api/profundum/management/einwahlzeitraum').get();
+    if (!selectedZeitraumId.value) {
+        selectedZeitraumId.value = zeitraeume.value[0]?.id ?? null;
+    }
 }
 
 async function getEnrollments() {
@@ -194,6 +202,7 @@ const instanzenBySlot = computed(() => {
 const instanzenForSlot = (slotId) => instanzenBySlot.value.get(slotId) ?? [];
 
 getSlots();
+getZeitraeume();
 getEnrollments();
 getInstanzen();
 getProfunda();
@@ -216,9 +225,11 @@ async function handleSave(row) {
     }
 }
 
-const visibleSlotIds = ref([]);
-const slotSelectItems = computed(() =>
-    slots.value.map((s) => ({ id: s.id, label: formatSlot(s) })),
+const zeitraumSelectItems = computed(() =>
+    zeitraeume.value.map((z) => ({ id: z.id, label: z.bezeichnung || formatDate(new Date(z.einwahlStart)) })),
+);
+const visibleSlotIds = computed(() =>
+    slots.value.filter((s) => s.einwahlZeitraumId === selectedZeitraumId.value).map((s) => s.id),
 );
 const visibleSlots = computed(() =>
     slots.value.filter((s) => visibleSlotIds.value.includes(s.id)),
@@ -320,13 +331,12 @@ const instanzenColumns = [
 
         <span class="flex flex-wrap gap-3 items-center">
             <USelect
-                v-model="visibleSlotIds"
-                :items="slotSelectItems"
+                v-model="selectedZeitraumId"
+                :items="zeitraumSelectItems"
                 label-key="label"
                 value-key="id"
-                multiple
                 class="w-80"
-                placeholder="Slots anzeigen/filtern…"
+                placeholder="Einwahlzeitraum…"
             />
 
             <UInput
