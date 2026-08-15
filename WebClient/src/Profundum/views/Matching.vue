@@ -466,6 +466,7 @@ const instanzenColumns = [
                         download
                         color="info"
                         aria-label="PDF (experimentell)"
+                        external
                     />
                 </UTooltip>
             </template>
