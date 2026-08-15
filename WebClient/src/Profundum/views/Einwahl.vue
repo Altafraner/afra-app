@@ -40,9 +40,12 @@ const currentProblemsValid = ref(false);
 
 useSortable('.ranked-list', ranked, { animation: 150, handle: '.drag-handle' });
 
+let hydrating = false;
+
 watch(
     ranked,
     () => {
+        if (hydrating) return;
         uncommitedChanges.value = true;
         currentProblemsValid.value = false;
     },
@@ -51,13 +54,22 @@ watch(
     },
 );
 
-watchDebounced(ranked, () => saveDraft(), { debounce: 1000, deep: true });
+watchDebounced(
+    ranked,
+    () => {
+        if (hydrating) return;
+        saveDraft();
+    },
+    { debounce: 1000, deep: true },
+);
 
 async function get() {
     const api = mande('/api/profundum/sus/wuensche');
+    hydrating = true;
     katalog.value = await api.get();
     const availableIds = new Set(katalog.value.optionen.map((o) => o.definitionId));
     ranked.value = katalog.value.aktuelleWuensche.filter((id) => availableIds.has(id));
+    hydrating = false;
 }
 
 async function saveDraft() {
@@ -122,8 +134,7 @@ async function send() {
         return;
     }
 
-    uncommitedChanges.value = false;
-    katalog.value.istAbgegeben = true;
+    await get();
     toast.add({
         color: 'success',
         title: 'Wünsche erfolgreich abgegeben',
@@ -547,9 +558,9 @@ useIntervalFn(check, 1000);
                 Deine Rangfolge
                 <span v-if="draftBusy" class="text-sm text-muted">Speichert…</span>
                 <UBadge
-                    v-else-if="katalog.aktuelleWuensche.length > 0 && !uncommitedChanges"
-                    :label="katalog.istAbgegeben ? 'Abgegeben' : 'Entwurf gespeichert'"
-                    :color="katalog.istAbgegeben ? 'success' : 'warning'"
+                    v-else-if="ranked.length > 0 && !uncommitedChanges"
+                    :label="katalog.istAbgegeben && !entwurfWeichtAb ? 'Abgegeben' : 'Entwurf gespeichert'"
+                    :color="katalog.istAbgegeben && !entwurfWeichtAb ? 'success' : 'warning'"
                 />
             </h3>
             <ol
