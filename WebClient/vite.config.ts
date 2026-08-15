@@ -13,6 +13,10 @@ const nuxtUiOptions: NuxtUIOptions = {
             primary: 'blue',
             secondary: 'neutral',
             neutral: 'neutral',
+            success: 'green',
+            info: 'blue',
+            warning: 'yellow',
+            error: 'red',
         },
         accordion: {
             slots: {
