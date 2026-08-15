@@ -150,6 +150,7 @@ internal class ProfundumEnrollmentService
                 MinBelegWuensche = cfg.MinBelegWuensche,
                 MinWuenschePerSlot = cfg.MinWuenschePerSlot,
                 AktuelleWuensche = [],
+                AbgegebeneWuensche = [],
                 IstAbgegeben = false,
             };
         }
@@ -203,7 +204,7 @@ internal class ProfundumEnrollmentService
             })
             .ToArray();
 
-        var aktuelleWuensche = _dbContext.ProfundaBelegWuensche
+        var submission = _dbContext.ProfundaBelegWuensche
             .Where(w => w.BetroffenePerson == student && w.EinwahlZeitraum == einschreibeZeitraum)
             .OrderBy(w => w.Rang)
             .ToArray();
@@ -214,7 +215,7 @@ internal class ProfundumEnrollmentService
             .ToArray();
         var formWuensche = entwurf.Length != 0
             ? entwurf.Select(w => w.ProfundumDefinitionId)
-            : aktuelleWuensche.Select(w => w.ProfundumDefinitionId);
+            : submission.Select(w => w.ProfundumDefinitionId);
 
         return new DTOProfundumKatalog
         {
@@ -224,7 +225,8 @@ internal class ProfundumEnrollmentService
             MinBelegWuensche = cfg.MinBelegWuensche,
             MinWuenschePerSlot = cfg.MinWuenschePerSlot,
             AktuelleWuensche = formWuensche.ToArray(),
-            IstAbgegeben = aktuelleWuensche.Length > 0,
+            AbgegebeneWuensche = submission.Select(w => w.ProfundumDefinitionId).ToArray(),
+            IstAbgegeben = submission.Length > 0,
         };
     }
 
