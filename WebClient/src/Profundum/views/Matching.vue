@@ -217,6 +217,12 @@ const instanzenBySlot = computed(() => {
 
 const instanzenForSlot = (slotId) => instanzenBySlot.value.get(slotId) ?? [];
 
+const overfilledInstanzen = computed(() =>
+    instanzen.value.filter(
+        (i) => i.maxEinschreibungen != null && i.numEinschreibungen > i.maxEinschreibungen,
+    ),
+);
+
 getSlots();
 getZeitraeume();
 getEnrollments();
@@ -408,6 +414,28 @@ const instanzenColumns = [
                 />
             </template>
         </UTable>
+
+        <UAlert
+            v-if="overfilledInstanzen.length > 0"
+            color="error"
+            variant="subtle"
+            icon="i-lucide-triangle-alert"
+            title="Überbelegte Profunda-Instanzen"
+            :ui="{ root: 'p-6', title: 'text-lg', description: 'text-base' }"
+        >
+            <template #description>
+                <p class="mt-0 mb-2">
+                    Die folgenden Instanzen haben mehr Einschreibungen als Plätze. Bitte vor
+                    dem automatischen Matching prüfen und bereinigen.
+                </p>
+                <ul class="mb-0 list-disc pl-5">
+                    <li v-for="i in overfilledInstanzen" :key="i.id">
+                        <b>{{ i.profundumInfo.bezeichnung }}</b>
+                        ({{ i.numEinschreibungen }} von {{ i.maxEinschreibungen }} Plätzen belegt)
+                    </li>
+                </ul>
+            </template>
+        </UAlert>
 
         <div class="flex flex-wrap gap-3 items-center">
             <UInput
