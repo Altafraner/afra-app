@@ -388,7 +388,6 @@ const instanzenColumns = [
             <template #person-cell="{ row }">
                 <MatchingPersonCell
                     :row="row.original"
-                    :slots="slots"
                     :profunda="profunda"
                     :editing="isEditing(row.original)"
                     @start-edit="startEdit(row.original)"
