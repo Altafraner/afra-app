@@ -491,6 +491,56 @@ useIntervalFn(check, 1000);
         </p>
     </template>
 
+    <UAlert
+        v-if="
+            ranked.length < katalog.minBelegWuensche ||
+            unterversorgteSlots.length > 0 ||
+            currentProblems.length > 0
+        "
+        color="error"
+        icon="i-lucide-circle-x"
+        title="Vorgaben nicht erfüllt"
+        variant="subtle"
+    >
+        <template #description>
+            <p v-if="ranked.length < katalog.minBelegWuensche">
+                Insgesamt nur {{ ranked.length }} von
+                {{ katalog.minBelegWuensche }} benötigten Profunda gewählt.
+            </p>
+            <div class="grid grid-cols-[auto_1fr] gap-x-1">
+                <template v-for="[slotId, count] in unterversorgteSlots" :key="slotId">
+                    <span>Slot {{ formatSlotId(slotId) }}:</span>
+                    <span>
+                        nur {{ count }} von {{ katalog.minWuenschePerSlot }} benötigten
+                        Profunda gewählt.</span
+                    >
+                </template>
+                <span
+                    v-for="(problem, index) in currentProblems"
+                    :class="{ 'mt-2': index === 0 }"
+                    class="col-span-2"
+                    >{{ problem }}</span
+                >
+            </div>
+        </template>
+    </UAlert>
+    <UAlert
+        v-else
+        color="success"
+        description="Du hast die Mindestanzahl an Profunda ausgewählt. Es kann dennoch sein, dass du noch weitere Anforderungen erfüllen musst. Das erfährst du, wenn du deine Wünsche abgibst."
+        title="Ausreichend Profunda gewählt"
+        variant="subtle"
+    />
+
+    <div class="flex gap-2 mb-4">
+        <UButton
+            :disabled="!maySend"
+            class="flex-1 justify-center"
+            label="Überprüfen und abgeben"
+            @click="send"
+        />
+    </div>
+
     <div class="grid grid-cols-1 md:grid-cols-1 gap-6 mb-4">
         <div>
             <h3 class="flex items-center gap-2">
@@ -547,56 +597,6 @@ useIntervalFn(check, 1000);
             >
                 Keine weiteren Profunda verfügbar.
             </div>
-        </div>
-
-        <UAlert
-            v-if="
-                ranked.length < katalog.minBelegWuensche ||
-                unterversorgteSlots.length > 0 ||
-                currentProblems.length > 0
-            "
-            color="error"
-            icon="i-lucide-circle-x"
-            title="Vorgaben nicht erfüllt"
-            variant="subtle"
-        >
-            <template #description>
-                <p v-if="ranked.length < katalog.minBelegWuensche">
-                    Insgesamt nur {{ ranked.length }} von
-                    {{ katalog.minBelegWuensche }} benötigten Profunda gewählt.
-                </p>
-                <div class="grid grid-cols-[auto_1fr] gap-x-1">
-                    <template v-for="[slotId, count] in unterversorgteSlots" :key="slotId">
-                        <span>Slot {{ formatSlotId(slotId) }}:</span>
-                        <span>
-                            nur {{ count }} von {{ katalog.minWuenschePerSlot }} benötigten
-                            Profunda gewählt.</span
-                        >
-                    </template>
-                    <span
-                        v-for="(problem, index) in currentProblems"
-                        :class="{ 'mt-2': index === 0 }"
-                        class="col-span-2"
-                        >{{ problem }}</span
-                    >
-                </div>
-            </template>
-        </UAlert>
-        <UAlert
-            v-else
-            color="success"
-            description="Du hast die Mindestanzahl an Profunda ausgewählt. Es kann dennoch sein, dass du noch weitere Anforderungen erfüllen musst. Das erfährst du, wenn du deine Wünsche abgibst."
-            title="Ausreichend Profunda gewählt"
-            variant="subtle"
-        />
-
-        <div class="flex gap-2 mb-4">
-            <UButton
-                :disabled="!maySend"
-                class="flex-1 justify-center"
-                label="Überprüfen und abgeben"
-                @click="send"
-            />
         </div>
     </div>
 
