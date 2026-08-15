@@ -26,11 +26,6 @@ public class ProfundumConfiguration
     public Dictionary<string, ProfundumQuartal[]> ProfilOptionaleKlassen { get; set; } = new();
 
     /// <summary>
-    ///     The minimum number of Profunda a student must rank in a single Belegwunsch submission.
-    /// </summary>
-    public int MinBelegWuensche { get; set; } = 7;
-
-    /// <summary>
     ///     The minimum number of ranked Profunda that must offer an Instanz in each currently open Slot.
     /// </summary>
     public int MinWuenschePerSlot { get; set; } = 3;

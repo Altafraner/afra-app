@@ -22,11 +22,6 @@ public record DTOProfundumKatalog
     public required string[] OffeneSlotIds { get; set; }
 
     /// <summary>
-    ///     The minimum number of Profunda that must be ranked for a submission to be valid.
-    /// </summary>
-    public required int MinBelegWuensche { get; set; }
-
-    /// <summary>
     ///     The minimum number of ranked Profunda that must offer an Instanz in each open slot.
     /// </summary>
     public required int MinWuenschePerSlot { get; set; }

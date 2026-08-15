@@ -28,7 +28,6 @@ const katalog = ref({
     optionen: [],
     fixiert: [],
     offeneSlotIds: [],
-    minBelegWuensche: 7,
     minWuenschePerSlot: 3,
     aktuelleWuensche: [],
     abgegebeneWuensche: [],
@@ -292,9 +291,13 @@ const unterversorgteSlots = computed(() =>
     ),
 );
 
+const minGesamtWuensche = computed(
+    () => katalog.value.offeneSlotIds.length * katalog.value.minWuenschePerSlot,
+);
+
 const maySend = computed(
     () =>
-        ranked.value.length >= katalog.value.minBelegWuensche &&
+        ranked.value.length >= minGesamtWuensche.value &&
         unterversorgteSlots.value.length === 0 &&
         currentProblems.value.length === 0,
 );
@@ -570,7 +573,7 @@ useIntervalFn(check, 1000);
             <ul>
                 <li>
                     Mindestens
-                    <strong>{{ katalog.minBelegWuensche }} Profunda insgesamt</strong> und
+                    <strong>{{ minGesamtWuensche }} Profunda insgesamt</strong> und
                 </li>
                 <li>
                     Mindestens
@@ -643,7 +646,7 @@ useIntervalFn(check, 1000);
 
     <UAlert
         v-if="
-            ranked.length < katalog.minBelegWuensche ||
+            ranked.length < minGesamtWuensche ||
             unterversorgteSlots.length > 0 ||
             currentProblems.length > 0
         "
@@ -653,9 +656,9 @@ useIntervalFn(check, 1000);
         variant="subtle"
     >
         <template #description>
-            <p v-if="ranked.length < katalog.minBelegWuensche">
+            <p v-if="ranked.length < minGesamtWuensche">
                 Insgesamt nur {{ ranked.length }} von
-                {{ katalog.minBelegWuensche }} benötigten Profunda gewählt.
+                {{ minGesamtWuensche }} benötigten Profunda gewählt.
             </p>
             <div class="grid grid-cols-[auto_1fr] gap-x-1">
                 <template v-for="[slotId, count] in unterversorgteSlots" :key="slotId">
