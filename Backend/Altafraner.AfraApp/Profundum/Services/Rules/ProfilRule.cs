@@ -156,7 +156,7 @@ public class ProfilRule : IProfundumIndividualRule
 
         foreach (var kategorieGroup in belegVars
                      .Where(x => x.Key.i.Profundum.Kategorie.ProfilProfundum
-                                 && IstProfilErlaubt(klasse, student.Gruppe, x.Key.s.Quartal)
+                                 && IsProfilPflichtig(klasse, x.Key.s.Quartal)
                                  && !belegteKategorien.Contains(x.Key.i.Profundum.Kategorie.Id))
                      .GroupBy(x => x.Key.i.Profundum.Kategorie.Id))
         {
