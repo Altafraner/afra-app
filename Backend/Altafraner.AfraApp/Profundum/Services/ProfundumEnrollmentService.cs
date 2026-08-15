@@ -139,7 +139,9 @@ internal class ProfundumEnrollmentService
     {
         var cfg = _profundumConfiguration.Value;
         var now = DateTime.UtcNow;
-        var einschreibeZeitraum = _dbContext.ProfundumEinwahlZeitraeume.FirstOrDefault(z => z.EinwahlStart <= now && z.EinwahlStop > now);
+        var einschreibeZeitraum = _dbContext.ProfundumEinwahlZeitraeume
+            .Include(z => z.Slots)
+            .FirstOrDefault(z => z.EinwahlStart <= now && z.EinwahlStop > now);
         if (einschreibeZeitraum is null)
         {
             return new DTOProfundumKatalog
@@ -155,7 +157,7 @@ internal class ProfundumEnrollmentService
             };
         }
 
-        var slots = _dbContext.ProfundaSlots.ToArray().Order(new ProfundumSlotComparer()).ToArray();
+        var slots = einschreibeZeitraum.Slots.Order(new ProfundumSlotComparer()).ToArray();
         var fixedEnrollments = _dbContext.ProfundaEinschreibungen
             .Where(e => e.IsFixed)
             .Where(e => e.BetroffenePerson == student)
@@ -289,7 +291,9 @@ internal class ProfundumEnrollmentService
         var cfg = _profundumConfiguration.Value;
         var now = DateTime.UtcNow;
         var einschreibeZeitraum =
-            await _dbContext.ProfundumEinwahlZeitraeume.FirstOrDefaultAsync(z =>
+            await _dbContext.ProfundumEinwahlZeitraeume
+                .Include(z => z.Slots)
+                .FirstOrDefaultAsync(z =>
                 z.EinwahlStart <= now && z.EinwahlStop > now);
         if (einschreibeZeitraum is null)
             throw new ProfundumEinwahlWunschException("Einwahl geschlossen");
@@ -303,10 +307,8 @@ internal class ProfundumEnrollmentService
             .Include(e => e.Slot)
             .ToArrayAsync();
         var fixedSlots = fixedEnrollments.Select(s => s.Slot).Distinct().ToArray();
-        var slots = _dbContext.ProfundaSlots.ToArray();
-        var openSlots = await _dbContext.ProfundaSlots
-            .Where(s => !fixedSlots.Contains(s))
-            .ToArrayAsync();
+        var slots = einschreibeZeitraum.Slots.ToArray();
+        var openSlots = slots.Where(s => !fixedSlots.Contains(s)).ToArray();
 
         if (!istEntwurf && !dryRun && wuensche.Count < cfg.MinBelegWuensche)
             throw new ProfundumEinwahlWunschException($"Es müssen mindestens {cfg.MinBelegWuensche} Profunda gewählt werden.");
