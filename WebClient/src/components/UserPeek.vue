@@ -1,8 +1,10 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
 import { mande } from 'mande';
+import { useRouter } from 'vue-router';
 import { formatStudent, formatTutor } from '@/helpers/formatters';
 import type { UserInfoMinimal } from '@/models/user/user';
+import { useUser } from '@/stores/user';
 
 defineOptions({ name: 'UserPeek' });
 
@@ -21,6 +23,23 @@ const props = withDefaults(
 );
 
 const toast = useToast();
+const user = useUser();
+const router = useRouter();
+
+const impersonating = ref(false);
+const impersonate = async () => {
+    if (!props.person?.id) return;
+    impersonating.value = true;
+    try {
+        await mande(`/api/user/${props.person.id}/impersonate`).get();
+        await user.update();
+        await router.push('/');
+    } catch {
+        toast.add({ color: 'error', title: 'Impersonieren fehlgeschlagen' });
+    } finally {
+        impersonating.value = false;
+    }
+};
 
 const copy = async (text: string) => {
     try {
@@ -119,6 +138,16 @@ const onOpen = async () => {
                     variant="ghost"
                     @click.prevent="copy(person.email)"
                     >{{ person.email }}</UButton
+                >
+
+                <UButton
+                    v-if="user.isAdmin && person?.id"
+                    icon="i-lucide-user-cog"
+                    variant="ghost"
+                    color="warning"
+                    :loading="impersonating"
+                    @click.prevent="impersonate"
+                    >Impersonieren</UButton
                 >
 
                 <template v-if="mentorsLoaded && mentors.length">
