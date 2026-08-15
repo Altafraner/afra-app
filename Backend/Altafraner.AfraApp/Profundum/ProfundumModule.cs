@@ -30,6 +30,7 @@ internal class ProfundumModule : IModule
         services.AddSingleton<ProfundumPartnerTokenService>();
         services.AddScoped<ProfundumManagementService>();
         services.AddScoped<ProfundumMatchingService>();
+        services.AddSingleton<ProfundumMatchingRunner>();
         services.AddScoped<ProfundumFachbereicheService>();
         services.AddScoped<FeedbackAnkerService>();
         services.AddScoped<FeedbackKategorienService>();
