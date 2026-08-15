@@ -35,4 +35,10 @@ public record struct DTOProfundumEnrollmentSet
     /// </summary>
     public required IEnumerable<DTOProfundumPartnerWunschStaff> Partnerschaften { get; set; }
 
+    /// <summary>
+    ///     Free-text supplementary information (Auslandsaufenthalt, Lernvertrag) the student provided for the
+    ///     current Einwahlzeitraum, opaque to the backend. Empty if the student hasn't answered or had nothing to
+    ///     report.
+    /// </summary>
+    public required string ZusatzInformation { get; set; }
 }

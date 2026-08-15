@@ -21,6 +21,31 @@ const slotLabel = (slotId) => {
     return s ? formatSlot(s) : 'Unbekannter Slot';
 };
 
+const formatDatum = (iso) => {
+    if (!iso) return '?';
+    const [y, m, d] = iso.split('-');
+    return `${d}.${m}.${y}`;
+};
+
+const zusatzInfoLines = () => {
+    if (!props.row.zusatzInformation) return [];
+    try {
+        const parsed = JSON.parse(props.row.zusatzInformation);
+        const lines = [];
+        if (parsed.auslandVon || parsed.auslandBis) {
+            lines.push(
+                `Auslandsaufenthalt: ${formatDatum(parsed.auslandVon)} – ${formatDatum(parsed.auslandBis)}`,
+            );
+        }
+        if (parsed.lernvertragLehrer) {
+            lines.push(`Lernvertrag mit: ${parsed.lernvertragLehrer}`);
+        }
+        return lines;
+    } catch {
+        return [props.row.zusatzInformation];
+    }
+};
+
 const wuenscheBySlot = () => {
     const map = new Map();
 
@@ -47,7 +72,7 @@ const wuenscheBySlot = () => {
 </script>
 
 <template>
-    <span class="grid grid-cols-[19em_1fr_1fr_1fr_1fr] gap-1">
+    <span class="grid grid-cols-[19em_1fr_1fr_1fr_1fr_1fr] gap-1">
         <UserPeek :person="row.person" class="w-full min-w-0" fullSize showGroup />
 
         <UPopover v-if="row.wuensche.length !== 0">
@@ -90,6 +115,18 @@ const wuenscheBySlot = () => {
                 <ul class="list-disc pl-4 p-3">
                     <li v-for="w in row.warnings" :key="w">
                         {{ w.text }}
+                    </li>
+                </ul>
+            </template>
+        </UPopover>
+        <span v-else></span>
+
+        <UPopover v-if="row.zusatzInformation">
+            <UButton icon="i-lucide-clipboard-list" color="secondary" variant="ghost" size="sm" />
+            <template #content>
+                <ul class="list-disc pl-4 p-3">
+                    <li v-for="line in zusatzInfoLines()" :key="line">
+                        {{ line }}
                     </li>
                 </ul>
             </template>

@@ -2,7 +2,9 @@
 import { computed, h, ref, watch } from 'vue';
 import { mande } from 'mande';
 import { useSortable } from '@vueuse/integrations/useSortable';
+import { parseDate } from '@internationalized/date';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
+import ADateRangePicker from '@/components/Form/ADateRangePicker.vue';
 import { convertMarkdownToHtml } from '@/composables/markdown';
 import EinwahlSingleProfundum from '@/Profundum/components/EinwahlSingleProfundum.vue';
 import { formatSlotId } from '@/helpers/formatters.ts';
@@ -31,12 +33,79 @@ const katalog = ref({
     aktuelleWuensche: [],
     abgegebeneWuensche: [],
     istAbgegeben: false,
+    zusatzInformation: null,
 });
 const uncommitedChanges = ref(false);
 const ranked = ref([]);
 const draftBusy = ref(false);
 const currentProblems = ref([]);
 const currentProblemsValid = ref(false);
+
+const auslandJa = ref(false);
+const auslandRange = ref({ start: undefined, end: undefined });
+const lernvertragJa = ref(false);
+const lernvertragLehrer = ref('');
+const zusatzangabenExpanded = ref(false);
+
+let hydratingZusatzangaben = false;
+
+function zusatzangabenPayload() {
+    const hasAusland = auslandJa.value && auslandRange.value.start && auslandRange.value.end;
+    const hasLernvertrag = lernvertragJa.value && lernvertragLehrer.value.trim().length > 0;
+    if (!hasAusland && !hasLernvertrag) return '';
+    return JSON.stringify({
+        auslandVon: hasAusland ? auslandRange.value.start.toString() : null,
+        auslandBis: hasAusland ? auslandRange.value.end.toString() : null,
+        lernvertragLehrer: hasLernvertrag ? lernvertragLehrer.value.trim() : null,
+    });
+}
+
+async function saveZusatzangaben() {
+    const api = mande('/api/profundum/sus/wuensche/zusatzinfo');
+    try {
+        await api.post({ value: zusatzangabenPayload() });
+    } catch (e) {
+        toast.add({
+            color: 'error',
+            title: 'Fehler',
+            description: 'Zusatzangaben konnten nicht gespeichert werden.',
+        });
+    }
+}
+
+watchDebounced(
+    [auslandJa, auslandRange, lernvertragJa, lernvertragLehrer],
+    () => {
+        if (hydratingZusatzangaben) return;
+        saveZusatzangaben();
+    },
+    { debounce: 1000, deep: true },
+);
+
+const formatDatum = (iso) => {
+    if (!iso) return '?';
+    const [y, m, d] = iso.split('-');
+    return `${d}.${m}.${y}`;
+};
+
+const zusatzangabenZusammenfassung = computed(() => {
+    if (!katalog.value.zusatzInformation) return ['Keine Zusatzangaben.'];
+    try {
+        const parsed = JSON.parse(katalog.value.zusatzInformation);
+        const lines = [];
+        if (parsed.auslandVon || parsed.auslandBis) {
+            lines.push(
+                `Auslandsaufenthalt: ${formatDatum(parsed.auslandVon)} – ${formatDatum(parsed.auslandBis)}`,
+            );
+        }
+        if (parsed.lernvertragLehrer) {
+            lines.push(`Lernvertrag mit: ${parsed.lernvertragLehrer}`);
+        }
+        return lines.length > 0 ? lines : ['Keine Zusatzangaben.'];
+    } catch {
+        return ['Keine Zusatzangaben.'];
+    }
+});
 
 useSortable('.ranked-list', ranked, { animation: 150, handle: '.drag-handle' });
 
@@ -70,6 +139,23 @@ async function get() {
     const availableIds = new Set(katalog.value.optionen.map((o) => o.definitionId));
     ranked.value = katalog.value.aktuelleWuensche.filter((id) => availableIds.has(id));
     hydrating = false;
+
+    hydratingZusatzangaben = true;
+    zusatzangabenExpanded.value = katalog.value.zusatzInformation === null;
+    let parsed = null;
+    try {
+        parsed = katalog.value.zusatzInformation ? JSON.parse(katalog.value.zusatzInformation) : null;
+    } catch {
+        parsed = null;
+    }
+    auslandJa.value = !!(parsed?.auslandVon || parsed?.auslandBis);
+    auslandRange.value = {
+        start: parsed?.auslandVon ? parseDate(parsed.auslandVon) : undefined,
+        end: parsed?.auslandBis ? parseDate(parsed.auslandBis) : undefined,
+    };
+    lernvertragJa.value = !!parsed?.lernvertragLehrer;
+    lernvertragLehrer.value = parsed?.lernvertragLehrer ?? '';
+    hydratingZusatzangaben = false;
 }
 
 async function saveDraft() {
@@ -373,6 +459,59 @@ useIntervalFn(check, 1000);
             </p>
         </template>
     </UAlert>
+
+    <h2>Zusatzangaben</h2>
+
+    <p>
+        Bevor du deine Rangfolge festlegst, beantworte bitte kurz die folgenden Fragen.
+    </p>
+
+    <template v-if="!zusatzangabenExpanded">
+        <UAlert color="neutral" variant="subtle" icon="i-lucide-clipboard-list">
+            <template #description>
+                <ul class="mb-0">
+                    <li v-for="line in zusatzangabenZusammenfassung" :key="line">{{ line }}</li>
+                </ul>
+            </template>
+        </UAlert>
+        <UButton
+            class="mt-2 mb-4"
+            label="Bearbeiten"
+            icon="i-lucide-pencil"
+            variant="soft"
+            size="sm"
+            @click="zusatzangabenExpanded = true"
+        />
+    </template>
+    <div v-else class="flex flex-col gap-4 mb-6">
+        <div>
+            <USwitch
+                v-model="auslandJa"
+                label="Steht in diesem Halbjahr ein Auslandsaufenthalt für dich an?"
+            />
+            <div v-if="auslandJa" class="mt-2 max-w-sm">
+                <UFormField label="Zeitraum des Auslandsaufenthalts">
+                    <ADateRangePicker v-model="auslandRange" class="w-full" />
+                </UFormField>
+            </div>
+        </div>
+
+        <div>
+            <USwitch
+                v-model="lernvertragJa"
+                label="Hast du für dieses Halbjahr einen Lernvertrag vereinbart?"
+            />
+            <div v-if="lernvertragJa" class="mt-2 max-w-sm">
+                <UFormField label="Mit welchen Lehrer:innen?">
+                    <UInput
+                        v-model="lernvertragLehrer"
+                        class="w-full"
+                        placeholder="z. B. Herr Mustermann, Frau Beispiel"
+                    />
+                </UFormField>
+            </div>
+        </div>
+    </div>
 
     <template v-if="katalog.fixiert.length > 0">
         <h3>Bereits festgelegte Belegungen</h3>

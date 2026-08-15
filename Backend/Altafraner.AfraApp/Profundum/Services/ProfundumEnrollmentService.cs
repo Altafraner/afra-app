@@ -217,6 +217,9 @@ internal class ProfundumEnrollmentService
             ? entwurf.Select(w => w.ProfundumDefinitionId)
             : submission.Select(w => w.ProfundumDefinitionId);
 
+        var zusatzInformation = _dbContext.ProfundumZusatzInformationen
+            .FirstOrDefault(z => z.BetroffenePerson == student && z.EinwahlZeitraum == einschreibeZeitraum);
+
         return new DTOProfundumKatalog
         {
             Optionen = optionen,
@@ -227,7 +230,42 @@ internal class ProfundumEnrollmentService
             AktuelleWuensche = formWuensche.ToArray(),
             AbgegebeneWuensche = submission.Select(w => w.ProfundumDefinitionId).ToArray(),
             IstAbgegeben = submission.Length > 0,
+            ZusatzInformation = zusatzInformation?.Information,
         };
+    }
+
+    /// <summary>
+    ///     Upserts a student's free-text supplementary information (Auslandsaufenthalt, Lernvertrag) for the
+    ///     currently open Einwahlzeitraum. Unlike <see cref="RegisterBelegWunschAsync" />, this isn't validated by
+    ///     the rules engine and has no draft/final distinction - the latest value the student submits is what's
+    ///     shown to staff.
+    /// </summary>
+    public async Task SetZusatzInformationAsync(Models_Person student, string information)
+    {
+        var now = DateTime.UtcNow;
+        var einschreibeZeitraum =
+            await _dbContext.ProfundumEinwahlZeitraeume.FirstOrDefaultAsync(z =>
+                z.EinwahlStart <= now && z.EinwahlStop > now);
+        if (einschreibeZeitraum is null)
+            throw new ProfundumEinwahlWunschException("Einwahl geschlossen");
+
+        var existing = await _dbContext.ProfundumZusatzInformationen
+            .FirstOrDefaultAsync(z => z.BetroffenePerson == student && z.EinwahlZeitraum == einschreibeZeitraum);
+        if (existing is not null)
+        {
+            existing.Information = information;
+        }
+        else
+        {
+            _dbContext.ProfundumZusatzInformationen.Add(new ProfundumZusatzInformation
+            {
+                BetroffenePerson = student,
+                EinwahlZeitraum = einschreibeZeitraum,
+                Information = information,
+            });
+        }
+
+        await _dbContext.SaveChangesAsync();
     }
 
     /// <summary>

@@ -121,6 +121,12 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
     public DbSet<ProfundumBelegWunschEntwurf> ProfundaBelegWuenscheEntwuerfe { get; set; }
 
     /// <summary>
+    ///     Free-text supplementary information (e.g. Auslandsaufenthalt, Lernvertrag) students provide per
+    ///     Einwahlzeitraum before ranking Profunda.
+    /// </summary>
+    public DbSet<ProfundumZusatzInformation> ProfundumZusatzInformationen { get; set; }
+
+    /// <summary>
     ///     All outstanding team-partner invites
     /// </summary>
     public DbSet<ProfundumPartnerEinladung> ProfundumPartnerEinladungen { get; set; }
@@ -309,6 +315,13 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
             w.HasKey(b => new { b.ProfundumDefinitionId, b.BetroffenePersonId, b.EinwahlZeitraumId });
             w.HasOne(b => b.BetroffenePerson).WithMany();
             w.HasOne(b => b.ProfundumDefinition).WithMany();
+            w.HasOne(b => b.EinwahlZeitraum).WithMany();
+        });
+
+        modelBuilder.Entity<ProfundumZusatzInformation>(w =>
+        {
+            w.HasKey(b => new { b.BetroffenePersonId, b.EinwahlZeitraumId });
+            w.HasOne(b => b.BetroffenePerson).WithMany();
             w.HasOne(b => b.EinwahlZeitraum).WithMany();
         });
 
