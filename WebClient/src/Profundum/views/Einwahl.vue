@@ -65,7 +65,6 @@ async function saveDraft() {
     draftBusy.value = true;
     try {
         await api.post(ranked.value);
-        katalog.value.istAbgegeben = false;
         uncommitedChanges.value = false;
     } catch (e) {
         toast.add({
