@@ -6,7 +6,7 @@ import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
 import { convertMarkdownToHtml } from '@/composables/markdown';
 import EinwahlSingleProfundum from '@/Profundum/components/EinwahlSingleProfundum.vue';
 import { formatSlotId } from '@/helpers/formatters.ts';
-import { useIntervalFn } from '@vueuse/core';
+import { useIntervalFn, watchDebounced } from '@vueuse/core';
 
 const navItems = [
     {
@@ -50,6 +50,8 @@ watch(
     },
 );
 
+watchDebounced(ranked, () => saveDraft(), { debounce: 1000, deep: true });
+
 async function get() {
     const api = mande('/api/profundum/sus/wuensche');
     katalog.value = await api.get();
@@ -63,7 +65,6 @@ async function saveDraft() {
     try {
         await api.post(ranked.value);
         katalog.value.istAbgegeben = false;
-        toast.add({ color: 'success', title: 'Entwurf gespeichert' });
         uncommitedChanges.value = false;
     } catch (e) {
         toast.add({
@@ -462,8 +463,9 @@ useIntervalFn(check, 1000);
         <div>
             <h3 class="flex items-center gap-2">
                 Deine Rangfolge
+                <span v-if="draftBusy" class="text-sm text-muted">Speichert…</span>
                 <UBadge
-                    v-if="katalog.aktuelleWuensche.length > 0 && !uncommitedChanges"
+                    v-else-if="katalog.aktuelleWuensche.length > 0 && !uncommitedChanges"
                     :label="katalog.istAbgegeben ? 'Abgegeben' : 'Entwurf gespeichert'"
                     :color="katalog.istAbgegeben ? 'success' : 'warning'"
                 />
@@ -557,13 +559,6 @@ useIntervalFn(check, 1000);
         />
 
         <div class="flex gap-2 mb-4">
-            <UButton
-                :disabled="ranked.length === 0 || draftBusy"
-                class="flex-1 justify-center"
-                color="neutral"
-                label="Speichern"
-                @click="saveDraft"
-            />
             <UButton
                 :disabled="!maySend"
                 class="flex-1 justify-center"
