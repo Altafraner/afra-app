@@ -25,6 +25,9 @@ async function load() {
         ...z,
         einwahlStartDate: parseAbsolute(z.einwahlStart),
         einwahlStopDate: parseAbsolute(z.einwahlStop),
+        veroeffentlichungsdatumDate: z.veroeffentlichungsdatum
+            ? parseAbsolute(z.veroeffentlichungsdatum)
+            : undefined,
     }));
     loading.value = false;
 }
@@ -61,6 +64,9 @@ async function updateEinwahlzeitraum(z) {
                 : null,
             einwahlStop: z.einwahlStopDate
                 ? z.einwahlStopDate.toDate(getLocalTimeZone()).toISOString()
+                : null,
+            veroeffentlichungsdatum: z.veroeffentlichungsdatumDate
+                ? z.veroeffentlichungsdatumDate.toDate(getLocalTimeZone()).toISOString()
                 : null,
         });
 
@@ -126,6 +132,11 @@ onMounted(load);
                         {{ z.bezeichnung }}: {{ formatCalendarDateTime(z.einwahlStartDate) }}
                         –
                         {{ formatCalendarDateTime(z.einwahlStopDate) }}
+                        <template v-if="z.veroeffentlichungsdatumDate">
+                            · veröffentlicht ab
+                            {{ formatCalendarDateTime(z.veroeffentlichungsdatumDate) }}
+                        </template>
+                        <template v-else> · nicht veröffentlicht </template>
                     </span>
                 </template>
 
@@ -140,6 +151,9 @@ onMounted(load);
                         <span class="mb-2">–</span>
                         <UFormField label="Ende" required>
                             <ADateTimePicker v-model="z.einwahlStopDate" />
+                        </UFormField>
+                        <UFormField label="Veröffentlichungsdatum">
+                            <ADateTimePicker v-model="z.veroeffentlichungsdatumDate" />
                         </UFormField>
                     </div>
                 </template>
