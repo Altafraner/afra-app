@@ -57,6 +57,21 @@ public class ProfilRule : IProfundumIndividualRule
     private List<Guid> AlleProfilKategorien =>
         _alleProfilKategorien ??= _dbContext.ProfundaKategorien.Where(k => k.ProfilProfundum).Select(k => k.Id).ToList();
 
+    /// <summary>Whether <paramref name="gruppe" /> (a specific Klasse, e.g. "9a") was granted optional (not
+    /// mandatory) Profil eligibility for <paramref name="quartal" /> via <see cref="ProfundumConfiguration.ProfilOptionaleKlassen" />.</summary>
+    private bool IstProfilOptional(string? gruppe, ProfundumQuartal quartal)
+    {
+        if (gruppe is null) return false;
+        var quartale = _profundumConfiguration.Value.ProfilOptionaleKlassen.GetValueOrDefault(gruppe);
+        return quartale is not null && quartale.Contains(quartal);
+    }
+
+    /// <summary>Whether a student may enroll in a Profilprofundum for <paramref name="quartal" /> at all - either
+    /// because their Klassenstufe is mandated to (<see cref="IsProfilPflichtig" />), or because their specific
+    /// Klasse was granted optional eligibility (<see cref="IstProfilOptional" />).</summary>
+    private bool IstProfilErlaubt(int klasse, string? gruppe, ProfundumQuartal quartal)
+        => IsProfilPflichtig(klasse, quartal) || IstProfilOptional(gruppe, quartal);
+
     /// <inheritdoc/>
     public RuleStatus CheckForSubmission(Person student,
         IEnumerable<ProfundumSlot> slots,
@@ -69,14 +84,15 @@ public class ProfilRule : IProfundumIndividualRule
         var wantsProfil = wuenscheArray.Any(w => w.ProfundumDefinition.Kategorie.ProfilProfundum);
 
         var zeitraum = wuenscheArray.Select(w => w.EinwahlZeitraum).FirstOrDefault();
-        var profilErlaubt = zeitraum is not null && zeitraum.Slots.Any(s => IsProfilPflichtig(klasse, s.Quartal));
+        var profilZulaessig = zeitraum is not null && zeitraum.Slots.Any(s => IstProfilErlaubt(klasse, student.Gruppe, s.Quartal));
+        var profilPflicht = zeitraum is not null && zeitraum.Slots.Any(s => IsProfilPflichtig(klasse, s.Quartal));
 
-        if (wantsProfil && !profilErlaubt)
+        if (wantsProfil && !profilZulaessig)
         {
             return RuleStatus.Invalid("Profilprofundum ist für diese Klassenstufe in diesem Halbjahr nicht vorgesehen.");
         }
 
-        if (profilErlaubt && !wantsProfil)
+        if (profilPflicht && !wantsProfil)
         {
             var hatSchonProfil = enrollmentsArray.Any(e => zeitraum!.Slots.Contains(e.Slot)
                                                             && (e.ProfundumInstanz?.Profundum.Kategorie.ProfilProfundum ?? false));
@@ -132,7 +148,7 @@ public class ProfilRule : IProfundumIndividualRule
 
         foreach (var (k, v) in belegVars)
         {
-            if (k.i.Profundum.Kategorie.ProfilProfundum && !IsProfilPflichtig(klasse, k.s.Quartal))
+            if (k.i.Profundum.Kategorie.ProfilProfundum && !IstProfilErlaubt(klasse, student.Gruppe, k.s.Quartal))
             {
                 objective.AddTerm(v, -20000);
             }
@@ -140,7 +156,7 @@ public class ProfilRule : IProfundumIndividualRule
 
         foreach (var kategorieGroup in belegVars
                      .Where(x => x.Key.i.Profundum.Kategorie.ProfilProfundum
-                                 && IsProfilPflichtig(klasse, x.Key.s.Quartal)
+                                 && IstProfilErlaubt(klasse, student.Gruppe, x.Key.s.Quartal)
                                  && !belegteKategorien.Contains(x.Key.i.Profundum.Kategorie.Id))
                      .GroupBy(x => x.Key.i.Profundum.Kategorie.Id))
         {
@@ -214,9 +230,9 @@ public class ProfilRule : IProfundumIndividualRule
 
         var warnings = new List<MatchingWarning>();
 
-        var profilErlaubt = slotsArray.Any(s => IsProfilPflichtig(klasse, s.Quartal));
+        var profilPflicht = slotsArray.Any(s => IsProfilPflichtig(klasse, s.Quartal));
         var hatProfilInZeitraum = profilEnrollmentsInZeitraum.Length != 0;
-        if (profilErlaubt && !hatProfilInZeitraum)
+        if (profilPflicht && !hatProfilInZeitraum)
         {
             warnings.Add(new MatchingWarning($"Profilpflicht nicht erfüllt ({slotsArray.FirstOrDefault()?.Jahr})."));
         }
