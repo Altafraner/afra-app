@@ -29,6 +29,7 @@ const katalog = ref({
     minBelegWuensche: 7,
     minWuenschePerSlot: 3,
     aktuelleWuensche: [],
+    abgegebeneWuensche: [],
     istAbgegeben: false,
 });
 const uncommitedChanges = ref(false);
@@ -160,6 +161,21 @@ const optionenById = computed(() => {
 const verfuegbareOptionen = computed(() =>
     katalog.value.optionen.filter((o) => !ranked.value.includes(o.definitionId)),
 );
+
+const abgegebeneRangfolge = computed(() =>
+    katalog.value.abgegebeneWuensche.map(
+        (id) => optionenById.value.get(id)?.bezeichnung ?? 'Unbekanntes Profundum',
+    ),
+);
+
+const entwurfWeichtAb = computed(() => {
+    if (!katalog.value.istAbgegeben) return false;
+    const abgegeben = katalog.value.abgegebeneWuensche;
+    return (
+        abgegeben.length !== ranked.value.length ||
+        abgegeben.some((id, index) => id !== ranked.value[index])
+    );
+});
 
 const slotAbdeckung = computed(() => {
     const counts = {};
@@ -458,6 +474,23 @@ useIntervalFn(check, 1000);
     <USeparator class="my-6" size="lg" />
 
     <h2>Deine Wünsche</h2>
+
+    <template v-if="katalog.istAbgegeben">
+        <h3 class="flex items-center gap-2">
+            Deine abgegebene Rangfolge
+            <UBadge v-if="entwurfWeichtAb" label="Entwurf weicht ab" color="warning" />
+        </h3>
+        <ol class="list-decimal pl-6 mb-4 flex flex-col gap-1">
+            <li v-for="(bezeichnung, index) in abgegebeneRangfolge" :key="index">
+                {{ bezeichnung }}
+            </li>
+        </ol>
+        <p v-if="entwurfWeichtAb" class="text-sm text-muted mb-4">
+            Deine Bearbeitung unten weicht von deiner abgegebenen Rangfolge ab. Erst wenn du erneut
+            abgibst, wird die neue Rangfolge berücksichtigt - bis dahin bleibt die oben gezeigte
+            Rangfolge gültig.
+        </p>
+    </template>
 
     <div class="grid grid-cols-1 md:grid-cols-1 gap-6 mb-4">
         <div>

@@ -32,15 +32,23 @@ public record DTOProfundumKatalog
     public required int MinWuenschePerSlot { get; set; }
 
     /// <summary>
-    ///     The student's currently saved ranked Profundum-Definition ids, in preference order (index 0 = rank 1) -
-    ///     either a draft in progress or a final submission, see <see cref="IstAbgegeben" />. Empty if nothing has
-    ///     been saved yet for the open Einwahlzeitraum.
+    ///     The ranked Profundum-Definition ids the Einwahl form should show/restore, in preference order (index 0 =
+    ///     rank 1) - the student's in-progress draft, since that's what they're actively editing, falling back to
+    ///     their final submission (<see cref="AbgegebeneWuensche" />) only if no draft has been saved yet. Empty if
+    ///     nothing has been saved at all for the open Einwahlzeitraum.
     /// </summary>
     public required Guid[] AktuelleWuensche { get; set; }
 
     /// <summary>
-    ///     Whether <see cref="AktuelleWuensche" /> is a final submission (<c>true</c>) or an unfinished draft the
-    ///     student saved without submitting (<c>false</c>).
+    ///     The student's actual final submission, in preference order - independent of <see cref="AktuelleWuensche" />,
+    ///     which may have since diverged from this if the student kept editing their draft afterward. Empty if they
+    ///     haven't submitted for the open Einwahlzeitraum yet (see <see cref="IstAbgegeben" />).
+    /// </summary>
+    public required Guid[] AbgegebeneWuensche { get; set; }
+
+    /// <summary>
+    ///     Whether the student has a final submission on file for the open Einwahlzeitraum at all - independent of
+    ///     any draft edits made since; the submission itself is never silently overwritten by further draft saves.
     /// </summary>
     public required bool IstAbgegeben { get; set; }
 }
