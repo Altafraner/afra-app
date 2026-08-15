@@ -149,7 +149,6 @@ internal class ProfundumEnrollmentService
                 Optionen = [],
                 Fixiert = [],
                 OffeneSlotIds = [],
-                MinBelegWuensche = cfg.MinBelegWuensche,
                 MinWuenschePerSlot = cfg.MinWuenschePerSlot,
                 AktuelleWuensche = [],
                 AbgegebeneWuensche = [],
@@ -227,7 +226,6 @@ internal class ProfundumEnrollmentService
             Optionen = optionen,
             Fixiert = fixiert,
             OffeneSlotIds = openSlots.Select(s => s.ToString()).ToArray(),
-            MinBelegWuensche = cfg.MinBelegWuensche,
             MinWuenschePerSlot = cfg.MinWuenschePerSlot,
             AktuelleWuensche = formWuensche.ToArray(),
             AbgegebeneWuensche = submission.Select(w => w.ProfundumDefinitionId).ToArray(),
@@ -272,10 +270,10 @@ internal class ProfundumEnrollmentService
 
     /// <summary>
     ///     Register a ranked set of Profundum Belegwuensche.
-    ///     When <paramref name="istEntwurf" /> is false (a final submission), validates that at least
-    ///     <see cref="ProfundumConfiguration.MinBelegWuensche" /> Profunda are ranked, that each currently open slot
-    ///     is covered by at least <see cref="ProfundumConfiguration.MinWuenschePerSlot" /> of them, and runs the full
-    ///     rule engine. When <paramref name="istEntwurf" /> is true (an unfinished draft save), only structural/
+    ///     When <paramref name="istEntwurf" /> is false (a final submission), validates that each currently open
+    ///     slot is covered by at least <see cref="ProfundumConfiguration.MinWuenschePerSlot" /> ranked Profunda,
+    ///     that at least <see cref="ProfundumConfiguration.MinWuenschePerSlot" /> times the number of currently
+    ///     open slots are ranked in total, and runs the full rule engine. When <paramref name="istEntwurf" /> is true (an unfinished draft save), only structural/
     ///     eligibility checks run (Einwahl open, no duplicate Profunda, each wish resolves to something offerable) -
     ///     completeness is deliberately not required for a draft, since the student is still working on it.
     /// </summary>
@@ -310,10 +308,12 @@ internal class ProfundumEnrollmentService
         var slots = einschreibeZeitraum.Slots.ToArray();
         var openSlots = slots.Where(s => !fixedSlots.Contains(s)).ToArray();
 
-        if (!istEntwurf && !dryRun && wuensche.Count < cfg.MinBelegWuensche)
-            throw new ProfundumEinwahlWunschException($"Es müssen mindestens {cfg.MinBelegWuensche} Profunda gewählt werden.");
         if (wuensche.Distinct().Count() != wuensche.Count)
             throw new ProfundumEinwahlWunschException("Ein Profundum darf nur einmal gewählt werden.");
+
+        var minGesamtWuensche = cfg.MinWuenschePerSlot * openSlots.Length;
+        if (!istEntwurf && !dryRun && wuensche.Count < minGesamtWuensche)
+            throw new ProfundumEinwahlWunschException($"Es müssen mindestens {minGesamtWuensche} Profunda gewählt werden.");
 
         var profilErlaubt = IsProfilErlaubt(student, slots.Select(s => s.Quartal));
         var angebote = GetAvailableProfundaInstanzen(student, openSlots, profilErlaubt, fixedEnrollments)
