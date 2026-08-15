@@ -1,10 +1,9 @@
 <script setup>
 import UserPeek from '@/components/UserPeek.vue';
-import { formatSlot, formatStudent } from '@/helpers/formatters.ts';
+import { formatStudent } from '@/helpers/formatters.ts';
 
 const props = defineProps({
     row: { type: Object, required: true },
-    slots: { type: Array, required: true },
     profunda: { type: Array, required: true },
     editing: { type: Boolean, default: false },
 });
@@ -15,11 +14,6 @@ const partnerFor = (partnerschaft) =>
     partnerschaft.personA.id === props.row.person.id
         ? partnerschaft.personB
         : partnerschaft.personA;
-
-const slotLabel = (slotId) => {
-    const s = props.slots.find((x) => x.id === slotId);
-    return s ? formatSlot(s) : 'Unbekannter Slot';
-};
 
 const formatDatum = (iso) => {
     if (!iso) return '?';
@@ -46,29 +40,8 @@ const zusatzInfoLines = () => {
     }
 };
 
-const wuenscheBySlot = () => {
-    const map = new Map();
-
-    for (const w of props.row.wuensche ?? []) {
-        for (const slotId of w.slotId ?? []) {
-            if (!map.has(slotId)) map.set(slotId, []);
-            map.get(slotId).push(w);
-        }
-    }
-
-    for (const [slotId, list] of map) {
-        map.set(
-            slotId,
-            list.toSorted((a, b) => a.rang - b.rang),
-        );
-    }
-
-    const slotOrder = props.slots.map((s) => s.id);
-
-    return [...map.entries()].toSorted(
-        ([a], [b]) => slotOrder.indexOf(a) - slotOrder.indexOf(b),
-    );
-};
+const sortedWuensche = () =>
+    [...(props.row.wuensche ?? [])].toSorted((a, b) => a.rang - b.rang);
 </script>
 
 <template>
@@ -78,19 +51,11 @@ const wuenscheBySlot = () => {
         <UPopover v-if="row.wuensche.length !== 0">
             <UButton icon="i-lucide-crown" color="info" variant="ghost" size="sm" />
             <template #content>
-                <div
-                    v-for="[slotId, wishes] of wuenscheBySlot()"
-                    :key="slotId"
-                    class="mb-2 p-3"
-                >
-                    <b class="block mb-1">{{ slotLabel(slotId) }}</b>
-                    <ul class="ml-3">
-                        <li v-for="w in wishes" :key="`${slotId}-${w.id}`">
-                            {{ w.rang }}.
-                            {{ profunda.find((p) => p.id === w.id)?.bezeichnung ?? '—' }}
-                        </li>
-                    </ul>
-                </div>
+                <ol class="list-decimal pl-6 p-3">
+                    <li v-for="w in sortedWuensche()" :key="w.id">
+                        {{ profunda.find((p) => p.id === w.id)?.bezeichnung ?? '—' }}
+                    </li>
+                </ol>
             </template>
         </UPopover>
         <span v-else></span>
