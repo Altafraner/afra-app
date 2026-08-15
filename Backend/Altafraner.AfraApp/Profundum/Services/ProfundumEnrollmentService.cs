@@ -208,6 +208,14 @@ internal class ProfundumEnrollmentService
             .OrderBy(w => w.Rang)
             .ToArray();
 
+        var entwurf = _dbContext.ProfundaBelegWuenscheEntwuerfe
+            .Where(w => w.BetroffenePerson == student && w.EinwahlZeitraum == einschreibeZeitraum)
+            .OrderBy(w => w.Rang)
+            .ToArray();
+        var formWuensche = entwurf.Length != 0
+            ? entwurf.Select(w => w.ProfundumDefinitionId)
+            : aktuelleWuensche.Select(w => w.ProfundumDefinitionId);
+
         return new DTOProfundumKatalog
         {
             Optionen = optionen,
@@ -215,8 +223,8 @@ internal class ProfundumEnrollmentService
             OffeneSlotIds = openSlots.Select(s => s.ToString()).ToArray(),
             MinBelegWuensche = cfg.MinBelegWuensche,
             MinWuenschePerSlot = cfg.MinWuenschePerSlot,
-            AktuelleWuensche = aktuelleWuensche.Select(w => w.ProfundumDefinitionId).ToArray(),
-            IstAbgegeben = aktuelleWuensche.Length > 0 && aktuelleWuensche[0].IstAbgegeben,
+            AktuelleWuensche = formWuensche.ToArray(),
+            IstAbgegeben = aktuelleWuensche.Length > 0,
         };
     }
 
@@ -260,11 +268,6 @@ internal class ProfundumEnrollmentService
             .Where(s => !fixedSlots.Contains(s))
             .ToArrayAsync();
 
-        var toRemove = _dbContext.ProfundaBelegWuensche
-            .Where(w => w.BetroffenePerson == student)
-            .Where(w => w.EinwahlZeitraum == einschreibeZeitraum);
-        if (!dryRun) _dbContext.ProfundaBelegWuensche.RemoveRange(toRemove);
-
         if (!istEntwurf && !dryRun && wuensche.Count < cfg.MinBelegWuensche)
             throw new ProfundumEinwahlWunschException($"Es müssen mindestens {cfg.MinBelegWuensche} Profunda gewählt werden.");
         if (wuensche.Distinct().Count() != wuensche.Count)
@@ -294,7 +297,7 @@ internal class ProfundumEnrollmentService
                 ProfundumDefinition = instanzenForDefinition[0].Profundum,
                 Rang = i + 1,
                 EinwahlZeitraum = einschreibeZeitraum,
-                IstAbgegeben = !istEntwurf,
+                IstAbgegeben = true,
             });
         }
 
@@ -318,7 +321,23 @@ internal class ProfundumEnrollmentService
 
         if (dryRun) return;
 
-        _dbContext.ProfundaBelegWuensche.AddRange(belegWuensche);
+        _dbContext.ProfundaBelegWuenscheEntwuerfe.RemoveRange(_dbContext.ProfundaBelegWuenscheEntwuerfe
+            .Where(w => w.BetroffenePerson == student && w.EinwahlZeitraum == einschreibeZeitraum));
+        _dbContext.ProfundaBelegWuenscheEntwuerfe.AddRange(belegWuensche.Select(w => new ProfundumBelegWunschEntwurf
+        {
+            BetroffenePerson = student,
+            ProfundumDefinition = w.ProfundumDefinition,
+            Rang = w.Rang,
+            EinwahlZeitraum = einschreibeZeitraum,
+        }));
+
+        if (!istEntwurf)
+        {
+            _dbContext.ProfundaBelegWuensche.RemoveRange(_dbContext.ProfundaBelegWuensche
+                .Where(w => w.BetroffenePerson == student && w.EinwahlZeitraum == einschreibeZeitraum));
+            _dbContext.ProfundaBelegWuensche.AddRange(belegWuensche);
+        }
+
         await _dbContext.SaveChangesAsync();
         if (!istEntwurf)
             await SendWuenscheEMail(student, belegWuensche);

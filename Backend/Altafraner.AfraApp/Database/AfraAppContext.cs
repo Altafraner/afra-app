@@ -116,6 +116,11 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
     public DbSet<ProfundumBelegWunsch> ProfundaBelegWuensche { get; set; }
 
     /// <summary>
+    ///     Every student's in-progress, unsubmitted draft ranking - kept separate from <see cref="ProfundaBelegWuensche"/>.
+    /// </summary>
+    public DbSet<ProfundumBelegWunschEntwurf> ProfundaBelegWuenscheEntwuerfe { get; set; }
+
+    /// <summary>
     ///     All outstanding team-partner invites
     /// </summary>
     public DbSet<ProfundumPartnerEinladung> ProfundumPartnerEinladungen { get; set; }
@@ -295,6 +300,14 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
         {
             w.HasKey(b => new { b.ProfundumDefinitionId, b.BetroffenePersonId, b.EinwahlZeitraumId });
             w.HasOne(b => b.BetroffenePerson).WithMany(p => p.ProfundaBelegwuensche);
+            w.HasOne(b => b.ProfundumDefinition).WithMany();
+            w.HasOne(b => b.EinwahlZeitraum).WithMany();
+        });
+
+        modelBuilder.Entity<ProfundumBelegWunschEntwurf>(w =>
+        {
+            w.HasKey(b => new { b.ProfundumDefinitionId, b.BetroffenePersonId, b.EinwahlZeitraumId });
+            w.HasOne(b => b.BetroffenePerson).WithMany();
             w.HasOne(b => b.ProfundumDefinition).WithMany();
             w.HasOne(b => b.EinwahlZeitraum).WithMany();
         });
