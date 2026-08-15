@@ -138,7 +138,8 @@ public static class Management
             return TypedResults.NoContent();
         });
 
-        gp.MapPost("/matching", PerformMatchingSynchronized);
+        gp.MapPost("/matching", StartMatching);
+        gp.MapGet("/matching/status", (ProfundumMatchingRunner runner) => TypedResults.Ok(runner.GetStatus()));
         gp.MapPost("/finalize", (Match svc) => svc.FinalizeMatching());
         gp.MapGet("/enrollments", (Match svc) => svc.GetAllEnrollmentsAsync());
         gp.MapPut("/enrollment/{personId:guid}", PutEnrollmentsAsync);
@@ -149,34 +150,17 @@ public static class Management
             .RequireAuthorization(AuthorizationPolicies.TutorOnly);
     }
 
-    private static readonly SemaphoreSlim _matchingSemaphore = new SemaphoreSlim(1, 1);
-    private static async Task<Results<Ok<MatchingStats>, StatusCodeHttpResult>> PerformMatchingSynchronized(Match svc)
+    private static Results<Ok<DTOMatchingJobStatus>, StatusCodeHttpResult> StartMatching(ProfundumMatchingRunner runner)
     {
-        if (!await _matchingSemaphore.WaitAsync(0))
-            return TypedResults.StatusCode(429);
-        try
-        {
-            return TypedResults.Ok(await svc.PerformMatching());
-        }
-        finally
-        {
-            _matchingSemaphore.Release();
-        }
+        if (!runner.TryStart())
+            return TypedResults.StatusCode(StatusCodes.Status409Conflict);
+        return TypedResults.Ok(runner.GetStatus());
     }
 
-    private static async Task<Results<Ok, StatusCodeHttpResult>> PutEnrollmentsAsync(Mgmt svc, Guid personId, List<DTOProfundumEnrollment> enrollments)
+    private static async Task<Results<Ok, StatusCodeHttpResult>> PutEnrollmentsAsync(Mgmt svc, ProfundumMatchingRunner runner, Guid personId, List<DTOProfundumEnrollment> enrollments)
     {
-        if (!await _matchingSemaphore.WaitAsync(0))
-            return TypedResults.StatusCode(429);
-        try
-        {
-            await svc.UpdateEnrollmentsAsync(personId, enrollments);
-            return TypedResults.Ok();
-        }
-        finally
-        {
-            _matchingSemaphore.Release();
-        }
+        var ran = await runner.TryRunExclusiveAsync(() => svc.UpdateEnrollmentsAsync(personId, enrollments));
+        return ran ? TypedResults.Ok() : TypedResults.StatusCode(StatusCodes.Status409Conflict);
     }
 
     // TODO This is slow and should be replaced by something more in line with the new matching interface.

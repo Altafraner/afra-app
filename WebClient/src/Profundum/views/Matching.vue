@@ -1,6 +1,7 @@
 <script setup>
 import { mande } from 'mande';
 import { computed, ref } from 'vue';
+import { useIntervalFn } from '@vueuse/core';
 import { useConfirmPopover } from '@/composables/confirmPopover';
 import { formatSlot, formatDate } from '@/helpers/formatters.ts';
 import { fuzzyMatch } from '@/helpers/fuzzy.ts';
@@ -29,7 +30,6 @@ const selectedZeitraumIds = ref([]);
 const enrollments = ref([]);
 const instanzen = ref([]);
 const profunda = ref([]);
-const matchingRunning = ref(false);
 const toast = useToast();
 const confirm = useConfirmPopover();
 
@@ -59,67 +59,82 @@ async function getProfunda() {
 
 const MATCH_DURATION = 240;
 
-const remaining = ref(0);
+const matchingStatus = ref(null);
+const matchingRunning = computed(() => matchingStatus.value?.status === 'Running');
+
 const fillPct = computed(() => {
-    if (!matchingRunning.value) return 0;
-    const elapsed = MATCH_DURATION - remaining.value;
-    return Math.max(0, Math.min(100, (elapsed / MATCH_DURATION) * 100));
+    if (!matchingRunning.value || !matchingStatus.value?.startedAt) return 0;
+    const elapsedS = (Date.now() - new Date(matchingStatus.value.startedAt).getTime()) / 1000;
+    return Math.max(0, Math.min(100, (elapsedS / MATCH_DURATION) * 100));
 });
 
-let timer = null;
+const remaining = computed(() => {
+    if (!matchingRunning.value || !matchingStatus.value?.startedAt) return 0;
+    const elapsedS = (Date.now() - new Date(matchingStatus.value.startedAt).getTime()) / 1000;
+    return Math.max(0, Math.round(MATCH_DURATION - elapsedS));
+});
 
-function startCountdown() {
-    remaining.value = MATCH_DURATION;
-    clearInterval(timer);
-    timer = setInterval(() => {
-        remaining.value--;
-        if (remaining.value <= 0) {
-            clearInterval(timer);
-            timer = null;
-            remaining.value = 0;
-        }
-    }, 1000);
+async function fetchMatchingStatus() {
+    matchingStatus.value = await mande('/api/profundum/management/matching/status').get();
+    return matchingStatus.value;
 }
 
-function stopCountdown() {
-    clearInterval(timer);
-    timer = null;
-    remaining.value = 0;
+const { pause: pausePolling, resume: resumePolling } = useIntervalFn(
+    async () => {
+        await fetchMatchingStatus();
+        if (matchingStatus.value?.status === 'Running') return;
+
+        pausePolling();
+        getEnrollments();
+        getInstanzen();
+        if (matchingStatus.value?.status === 'Failed') {
+            toast.add({
+                color: 'error',
+                title: 'Fehler',
+                description:
+                    matchingStatus.value.error ?? 'Es ist ein Fehler beim Matching aufgetreten.',
+            });
+        } else if (matchingStatus.value?.status === 'Completed') {
+            toast.add({
+                color: 'success',
+                title: 'Erfolg',
+                description: matchingStatus.value.result?.result,
+            });
+        }
+    },
+    2000,
+    { immediate: false },
+);
+
+async function initMatchingStatus() {
+    await fetchMatchingStatus();
+    if (matchingStatus.value?.status === 'Running') resumePolling();
 }
 
 async function autoMatching() {
-    matchingRunning.value = true;
-    startCountdown();
-
     try {
-        const r = await mande('/api/profundum/management/matching').post();
-        toast.add({
-            color: 'success',
-            title: 'Erfolg',
-            description: r.result,
-        });
+        matchingStatus.value = await mande('/api/profundum/management/matching').post();
     } catch (e) {
-        if (e?.response?.status === 429) {
+        if (e?.response?.status === 409) {
             toast.add({
                 color: 'warning',
                 title: 'Matching läuft bereits',
                 description:
                     'Das Matching wird gerade von einer anderen Sitzung ausgeführt. Bitte warten.',
             });
+            await fetchMatchingStatus();
         } else {
             toast.add({
                 color: 'error',
                 title: 'Fehler',
                 description: 'Es ist ein Fehler beim Matching aufgetreten. ' + e,
             });
+            console.error(e);
         }
-        console.error(e);
-    } finally {
-        getEnrollments();
-        getInstanzen();
-        matchingRunning.value = false;
-        stopCountdown();
+        return;
     }
+
+    resumePolling();
 }
 
 async function finalize() {
@@ -165,7 +180,7 @@ async function updateEnrollment(row) {
         return true;
     } catch (err) {
         console.error(err);
-        if (err?.response?.status === 429) {
+        if (err?.response?.status === 409) {
             toast.add({
                 color: 'error',
                 title: 'Matching läuft.',
@@ -207,6 +222,7 @@ getZeitraeume();
 getEnrollments();
 getInstanzen();
 getProfunda();
+initMatchingStatus();
 
 const editingPersonId = ref(null);
 
