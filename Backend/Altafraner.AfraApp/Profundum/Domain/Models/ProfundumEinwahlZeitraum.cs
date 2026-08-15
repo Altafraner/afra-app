@@ -32,4 +32,12 @@ public class ProfundumEinwahlZeitraum
     ///     An admin-settable display name for this Einwahlzeitraum
     /// </summary>
     public string Bezeichnung { get; set; } = "";
+
+    /// <summary>
+    ///     The date/time from which students may see their matched Profundum Termine in their personal
+    ///     calendar/dashboard. <c>null</c> means not yet published - matched enrollments exist but stay hidden from
+    ///     students until staff explicitly set this. Doesn't affect what supervising Tutoren see; they know their
+    ///     own teaching schedule regardless of publication state.
+    /// </summary>
+    public DateTime? Veroeffentlichungsdatum { get; set; }
 }

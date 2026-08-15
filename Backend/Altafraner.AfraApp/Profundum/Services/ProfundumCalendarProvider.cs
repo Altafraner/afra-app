@@ -20,10 +20,14 @@ public class ProfundumCalendarProvider : ICalendarProvider
     /// <inheritdoc/>
     public IEnumerable<CalendarEvent> GetEventsForPerson(Person person)
     {
+        var now = DateTime.UtcNow;
         var enrollments = _dbContext.ProfundaEinschreibungen
             .Where(e => e.IsFixed)
             .Where(e => e.BetroffenePerson == person)
             .Where(e => e.ProfundumInstanz != null)
+            // Students only see a Termin once staff have published its Einwahlzeitraum's results - Tutoren
+            // teaching it don't need to wait for that, so this filter only applies here, not to taughtEvents below.
+            .Where(e => e.Slot.EinwahlZeitraum.Veroeffentlichungsdatum != null && e.Slot.EinwahlZeitraum.Veroeffentlichungsdatum <= now)
             .Include(e => e.ProfundumInstanz).ThenInclude(i => i!.Slots).ThenInclude(s => s.Termine);
         var enrolledEvents = enrollments
             .SelectMany(e => e.Slot.Termine

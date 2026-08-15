@@ -14,6 +14,9 @@ public record DTOProfundumEinwahlZeitraum
         EinwahlStart = new DateTimeOffset(dbEinwahlZeitraum.EinwahlStart).ToLocalTime();
         EinwahlStop = new DateTimeOffset(dbEinwahlZeitraum.EinwahlStop).ToLocalTime();
         Bezeichnung = dbEinwahlZeitraum.Bezeichnung;
+        Veroeffentlichungsdatum = dbEinwahlZeitraum.Veroeffentlichungsdatum is { } v
+            ? new DateTimeOffset(v).ToLocalTime()
+            : null;
     }
 
     /// <inheritdoc cref="ProfundumEinwahlZeitraum.Id"/>
@@ -27,4 +30,7 @@ public record DTOProfundumEinwahlZeitraum
 
     /// <inheritdoc cref="ProfundumEinwahlZeitraum.Bezeichnung"/>
     public string Bezeichnung { get; set; } = "";
+
+    /// <inheritdoc cref="ProfundumEinwahlZeitraum.Veroeffentlichungsdatum"/>
+    public DateTimeOffset? Veroeffentlichungsdatum { get; set; }
 }

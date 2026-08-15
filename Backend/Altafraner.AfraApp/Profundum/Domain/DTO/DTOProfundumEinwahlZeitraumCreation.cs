@@ -15,4 +15,7 @@ public record DTOProfundumEinwahlZeitraumCreation
 
     /// <inheritdoc cref="ProfundumEinwahlZeitraum.Bezeichnung"/>
     public string Bezeichnung { get; set; } = "";
+
+    /// <inheritdoc cref="ProfundumEinwahlZeitraum.Veroeffentlichungsdatum"/>
+    public string? Veroeffentlichungsdatum { get; set; }
 }
