@@ -1,4 +1,5 @@
 using Altafraner.AfraApp.Backbone.Auth;
+using Altafraner.AfraApp.Otium.API;
 using Altafraner.AfraApp.Profundum.Services;
 using Altafraner.AfraApp.User.Services;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -41,6 +42,12 @@ public static class Enrollment
         group.MapPost("/wuensche/entwurf", async (ProfundumEnrollmentService svc, UserAccessor userAccessor, List<Guid> wuensche) =>
             await svc.RegisterBelegWunschAsync(await userAccessor.GetUserAsync(), wuensche, istEntwurf: true)
         );
+        group.MapPost("/wuensche/zusatzinfo",
+            async (ProfundumEnrollmentService svc, UserAccessor userAccessor, ValueWrapper<string> request) =>
+            {
+                await svc.SetZusatzInformationAsync(await userAccessor.GetUserAsync(), request.Value);
+                return TypedResults.NoContent();
+            });
         group.MapGet("/wuensche", async (ProfundumEnrollmentService svc, UserAccessor userAccessor) => svc.GetKatalog(await userAccessor.GetUserAsync()));
         group.MapGet("/einschreibungen", GetEnrollmentsAsync);
         group.MapGet("/einwahl/aktiv", (AfraAppContext db) =>

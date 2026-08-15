@@ -51,4 +51,12 @@ public record DTOProfundumKatalog
     ///     any draft edits made since; the submission itself is never silently overwritten by further draft saves.
     /// </summary>
     public required bool IstAbgegeben { get; set; }
+
+    /// <summary>
+    ///     Free-text supplementary information (Auslandsaufenthalt, Lernvertrag) the student provided for this
+    ///     Einwahlzeitraum, as sent by the client - opaque to the backend. <c>null</c> means the student has never
+    ///     answered the corresponding questions yet (the Einwahl form should show them prominently); an empty
+    ///     string means they answered but had nothing to report (the form should stay collapsed).
+    /// </summary>
+    public string? ZusatzInformation { get; set; }
 }

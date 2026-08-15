@@ -338,6 +338,12 @@ internal class ProfundumMatchingService
             .GroupBy(e => (e.BetroffenePersonId, e.DefinitionId))
             .ToDictionary(g => g.Key, g => g.Select(x => x.ProfundumInstanzId).ToHashSet());
 
+        var zusatzInfoByPerson = currentZeitraum is null
+            ? new Dictionary<Guid, string>()
+            : await _dbContext.ProfundumZusatzInformationen
+                .Where(z => z.EinwahlZeitraum == currentZeitraum)
+                .ToDictionaryAsync(z => z.BetroffenePersonId, z => z.Information);
+
         var personenWithData = _dbContext.Personen
             .AsSplitQuery()
             .Where(p => p.Rolle == Rolle.Mittelstufe)
@@ -414,6 +420,7 @@ internal class ProfundumMatchingService
                 Wuensche = personsWishes,
                 Warnings = warnings,
                 Partnerschaften = myPairings.Select(p => new DTOProfundumPartnerWunschStaff(p)),
+                ZusatzInformation = zusatzInfoByPerson.GetValueOrDefault(person.Id, ""),
             };
         }
     }
