@@ -3,7 +3,7 @@ import { mande } from 'mande';
 import { computed, ref } from 'vue';
 import { useIntervalFn } from '@vueuse/core';
 import { useConfirmPopover } from '@/composables/confirmPopover';
-import { formatSlot, formatDate } from '@/helpers/formatters.ts';
+import { formatDate, formatSlot } from '@/helpers/formatters.ts';
 import { fuzzyMatch } from '@/helpers/fuzzy.ts';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
 import MatchingPersonCell from '@/Profundum/components/MatchingPersonCell.vue';
@@ -92,7 +92,8 @@ const { pause: pausePolling, resume: resumePolling } = useIntervalFn(
                 color: 'error',
                 title: 'Fehler',
                 description:
-                    matchingStatus.value.error ?? 'Es ist ein Fehler beim Matching aufgetreten.',
+                    matchingStatus.value.error ??
+                    'Es ist ein Fehler beim Matching aufgetreten.',
             });
         } else if (matchingStatus.value?.status === 'Completed') {
             toast.add({
@@ -249,10 +250,15 @@ async function handleSave(row) {
 }
 
 const zeitraumSelectItems = computed(() =>
-    zeitraeume.value.map((z) => ({ id: z.id, label: z.bezeichnung || formatDate(new Date(z.einwahlStart)) })),
+    zeitraeume.value.map((z) => ({
+        id: z.id,
+        label: z.bezeichnung || formatDate(new Date(z.einwahlStart)),
+    })),
 );
 const visibleSlotIds = computed(() =>
-    slots.value.filter((s) => selectedZeitraumIds.value.includes(s.einwahlZeitraumId)).map((s) => s.id),
+    slots.value
+        .filter((s) => selectedZeitraumIds.value.includes(s.einwahlZeitraumId))
+        .map((s) => s.id),
 );
 const visibleSlots = computed(() =>
     slots.value.filter((s) => visibleSlotIds.value.includes(s.id)),
@@ -349,6 +355,7 @@ const instanzenColumns = [
                 icon="i-lucide-table"
                 download
                 label="CSV-Export"
+                extern
             />
         </span>
 
@@ -425,13 +432,14 @@ const instanzenColumns = [
         >
             <template #description>
                 <p class="mt-0 mb-2">
-                    Die folgenden Instanzen haben mehr Einschreibungen als Plätze. Bitte vor
-                    dem automatischen Matching prüfen und bereinigen.
+                    Die folgenden Instanzen haben mehr Einschreibungen als Plätze. Bitte vor dem
+                    automatischen Matching prüfen und bereinigen.
                 </p>
                 <ul class="mb-0 list-disc pl-5">
                     <li v-for="i in overfilledInstanzen" :key="i.id">
                         <b>{{ i.profundumInfo.bezeichnung }}</b>
-                        ({{ i.numEinschreibungen }} von {{ i.maxEinschreibungen }} Plätzen belegt)
+                        ({{ i.numEinschreibungen }} von {{ i.maxEinschreibungen }} Plätzen
+                        belegt)
                     </li>
                 </ul>
             </template>

@@ -36,6 +36,7 @@ defineEmits([
                 v-for="slot in angebot.slotIds"
                 :key="slot"
                 :label="formatSlotId(slot)"
+                variant="outline"
                 color="secondary"
             />
         </span>

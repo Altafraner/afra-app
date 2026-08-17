@@ -23,6 +23,17 @@ const nuxtUiOptions: NuxtUIOptions = {
                 trigger: 'transition-color duration-100 hover:text-highlighted',
             },
         },
+        alert: {
+            compoundVariants: [
+                {
+                    variant: 'subtle',
+                    color: 'warning',
+                    class: {
+                        root: 'bg-warning/5',
+                    },
+                },
+            ],
+        },
     },
 };
 

@@ -174,7 +174,11 @@ const description = computed(() => {
 <template>
     <MobileSwitch>
         <template #large>
-            <div v-if="!props.minimal && description" v-html="description" />
+            <div
+                v-if="!props.minimal && description"
+                class="prosa m-trim mb-2"
+                v-html="description"
+            />
             <div class="grid auto-rows-[1fr] grid-cols-[1fr_auto] items-center gap-1">
                 <!-- Row 1 Column 1 -->
                 <SimpleBreadcrumb :model="findPath(settings.kategorien, otium.kategorie)" wrap>
@@ -216,6 +220,7 @@ const description = computed(() => {
                         variant="subtle"
                         @click="() => multiEnroll()"
                     />
+                    <span v-else />
                 </template>
                 <template v-else-if="user.isOtiumsverantwortlich">
                     <UFieldGroup>
@@ -349,7 +354,7 @@ const description = computed(() => {
             </div>
             <div
                 v-if="!props.minimal && description"
-                class="mt-2 mb-3 text-justify hyphens-auto"
+                class="mt-2 mb-3 text-justify hyphens-auto prosa m-trim"
                 v-html="description"
             />
             <UAlert

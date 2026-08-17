@@ -19,12 +19,12 @@ const { loggedIn, loading } = storeToRefs(user);
 
 const commandPalette = useCommandPalette();
 defineShortcuts({
-  meta_k: {
-    usingInput: true,
-    handler: () => {
-      if (user.loggedIn) commandPalette.open();
+    meta_k: {
+        usingInput: true,
+        handler: () => {
+            if (user.loggedIn) commandPalette.open();
+        },
     },
-  },
 });
 
 const userLoadingPromise = user.update().catch(() => {
@@ -127,13 +127,13 @@ const toastProps: ToasterProps = {
             </main>
         </template>
         <footer
-            class="bg-primary dark:bg-blue-950 w-full py-6 px-8 mt-[1rem] text-center text-primary-contrast sm:grid sm:grid-cols-[1fr_auto_1fr] items-center gap-3 flex flex-wrap justify-between"
+            class="bg-primary dark:bg-blue-950 w-full py-6 px-8 mt-[1rem] text-center text-neutral-200 sm:grid sm:grid-cols-[1fr_auto_1fr] items-center gap-3 flex flex-wrap justify-between"
         >
             <span></span>
             <p class="min-h-[1.2em]">
                 In Kooperation mit dem
                 <a
-                    class="font-bold inline-block text-primary-contrast underline decoration-primary hover:decoration-primary-contrast transition-all"
+                    class="font-bold inline-block underline dark:decoration-primary decoration-primary-contrast hover:dark:decoration-primary-contrast hover:decoration-primary transition-all"
                     href="https://verein-der-altafraner.de"
                     target="_blank"
                     >Verein der Altafraner</a
