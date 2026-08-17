@@ -40,9 +40,9 @@ const draftBusy = ref(false);
 const currentProblems = ref([]);
 const currentProblemsValid = ref(false);
 
-const auslandJa = ref(false);
+const auslandJa = ref(undefined);
 const auslandRange = ref({ start: undefined, end: undefined });
-const lernvertragJa = ref(false);
+const lernvertragJa = ref(undefined);
 const lernvertragLehrer = ref('');
 const zusatzangabenExpanded = ref(false);
 
@@ -88,17 +88,17 @@ const formatDatum = (iso) => {
 };
 
 const zusatzangabenZusammenfassung = computed(() => {
-    if (!katalog.value.zusatzInformation) return ['Keine Zusatzangaben.'];
+    if (!katalog.value.zusatzInformation) return ['Keine Besonderheiten.'];
     try {
         const parsed = JSON.parse(katalog.value.zusatzInformation);
         const lines = [];
         if (parsed.auslandVon || parsed.auslandBis) {
             lines.push(
-                `Auslandsaufenthalt: ${formatDatum(parsed.auslandVon)} – ${formatDatum(parsed.auslandBis)}`,
+                `Auslandsaufenthalt von ${formatDatum(parsed.auslandVon)} bis ${formatDatum(parsed.auslandBis)}`,
             );
         }
         if (parsed.lernvertragLehrer) {
-            lines.push(`Lernvertrag mit: ${parsed.lernvertragLehrer}`);
+            lines.push(`Lernvertrag mit ${parsed.lernvertragLehrer}`);
         }
         return lines.length > 0 ? lines : ['Keine Zusatzangaben.'];
     } catch {
@@ -143,16 +143,18 @@ async function get() {
     zusatzangabenExpanded.value = katalog.value.zusatzInformation === null;
     let parsed = null;
     try {
-        parsed = katalog.value.zusatzInformation ? JSON.parse(katalog.value.zusatzInformation) : null;
+        parsed = katalog.value.zusatzInformation
+            ? JSON.parse(katalog.value.zusatzInformation)
+            : null;
     } catch {
         parsed = null;
     }
-    auslandJa.value = !!(parsed?.auslandVon || parsed?.auslandBis);
+    auslandJa.value = !parsed ? undefined : !!(parsed?.auslandVon || parsed?.auslandBis);
     auslandRange.value = {
         start: parsed?.auslandVon ? parseDate(parsed.auslandVon) : undefined,
         end: parsed?.auslandBis ? parseDate(parsed.auslandBis) : undefined,
     };
-    lernvertragJa.value = !!parsed?.lernvertragLehrer;
+    lernvertragJa.value = !parsed ? undefined : !!parsed?.lernvertragLehrer;
     lernvertragLehrer.value = parsed?.lernvertragLehrer ?? '';
     hydratingZusatzangaben = false;
 }
@@ -299,7 +301,8 @@ const maySend = computed(
     () =>
         ranked.value.length >= minGesamtWuensche.value &&
         unterversorgteSlots.value.length === 0 &&
-        currentProblems.value.length === 0,
+        currentProblems.value.length === 0 &&
+        !zusatzangabenExpanded,
 );
 
 function addToRanked(definitionId) {
@@ -429,8 +432,16 @@ const detailDescriptionHtml = computed(() =>
 const detailInstanzColumns = [
     { id: 'termin', header: 'Termin' },
     { id: 'ort', accessorKey: 'ort', header: 'Ort' },
-    { id: 'verantwortlich', header: 'Verantwortlich' },
-    { id: 'maxEinschreibungen', header: 'Max. Teilnehmer' },
+    {
+        id: 'verantwortlich',
+        header: 'Verantwortlich',
+        accessorFn: (data) => data.verantwortliche.join(', ') || '–',
+    },
+    {
+        id: 'maxEinschreibungen',
+        header: 'Max. Teilnehmer',
+        accessorFn: (data) => data.maxEinschreibungen ?? '–',
+    },
 ];
 
 async function copyToken(token) {
@@ -444,6 +455,17 @@ async function startup() {
 
 await startup();
 useIntervalFn(check, 1000);
+</script>
+
+<script>
+const auslandItems = [
+    { label: 'Ja', description: 'Ich nehme an einem Auslandsaufenthalt teil.', value: true },
+    { label: 'Nein', description: 'Es ist kein Auslandsaufenthalt geplant.', value: false },
+];
+const lernvertragItems = [
+    { label: 'Ja', description: 'Ich habe einen Lernvertrag vereinbart', value: true },
+    { label: 'Nein', description: 'Ich habe keinen Lernvertrag.', value: false },
+];
 </script>
 
 <template>
@@ -463,59 +485,6 @@ useIntervalFn(check, 1000);
         </template>
     </UAlert>
 
-    <h2>Zusatzangaben</h2>
-
-    <p>
-        Bevor du deine Rangfolge festlegst, beantworte bitte kurz die folgenden Fragen.
-    </p>
-
-    <template v-if="!zusatzangabenExpanded">
-        <UAlert color="neutral" variant="subtle" icon="i-lucide-clipboard-list">
-            <template #description>
-                <ul class="mb-0">
-                    <li v-for="line in zusatzangabenZusammenfassung" :key="line">{{ line }}</li>
-                </ul>
-            </template>
-        </UAlert>
-        <UButton
-            class="mt-2 mb-4"
-            label="Bearbeiten"
-            icon="i-lucide-pencil"
-            variant="soft"
-            size="sm"
-            @click="zusatzangabenExpanded = true"
-        />
-    </template>
-    <div v-else class="flex flex-col gap-4 mb-6">
-        <div>
-            <USwitch
-                v-model="auslandJa"
-                label="Steht in diesem Halbjahr ein Auslandsaufenthalt für dich an?"
-            />
-            <div v-if="auslandJa" class="mt-2 max-w-sm">
-                <UFormField label="Zeitraum des Auslandsaufenthalts">
-                    <ADateRangePicker v-model="auslandRange" class="w-full" />
-                </UFormField>
-            </div>
-        </div>
-
-        <div>
-            <USwitch
-                v-model="lernvertragJa"
-                label="Hast du für dieses Halbjahr einen Lernvertrag vereinbart?"
-            />
-            <div v-if="lernvertragJa" class="mt-2 max-w-sm">
-                <UFormField label="Mit welchen Lehrer:innen?">
-                    <UInput
-                        v-model="lernvertragLehrer"
-                        class="w-full"
-                        placeholder="z. B. Herr Mustermann, Frau Beispiel"
-                    />
-                </UFormField>
-            </div>
-        </div>
-    </div>
-
     <template v-if="katalog.fixiert.length > 0">
         <h3>Bereits festgelegte Belegungen</h3>
 
@@ -527,7 +496,7 @@ useIntervalFn(check, 1000);
 
         <UTable
             :columns="[
-                { header: 'Slot', accessorKey: 'slotLabel' },
+                { header: 'Slot', accessorFn: (data) => formatSlotId(data.slotId) },
                 { header: 'Angebot', accessorKey: 'bezeichnung' },
             ]"
             :data="fixiertSorted"
@@ -582,9 +551,10 @@ useIntervalFn(check, 1000);
                 </li>
             </ul>
             <p class="mb-0">
-                Weitere Einschränkungen werden dir möglicherweise angezeigt, nachdem du auf
-                "abgeben" geklickt hast. Nimm in diesem Fall bitte entsprechende Änderungen vor
-                und versuche es erneut.
+                Weitere Einschränkungen, insbesondere zu <strong>Profilprofunda</strong>, werden
+                dir möglicherweise unten, oder nachdem du auf "abgeben" geklickt hast,
+                angezeigt. Nimm in diesem Fall bitte entsprechende Änderungen vor und versuche
+                es erneut.
             </p>
         </template>
     </UAlert>
@@ -605,7 +575,7 @@ useIntervalFn(check, 1000);
         Belegung, die eure Präferenzen bestmöglich berücksichtigt. Falls es dich interessiert,
         kannst du
         <a
-            class="text-blue-500 hover:underline cursor-pointer"
+            class="text-blue-500 hover:underline cursor-pointer dark:text-blue-300"
             href="https://github.com/Altafraner/afra-app"
             target="_blank"
             >im Quellcode dieses Programms</a
@@ -625,6 +595,94 @@ useIntervalFn(check, 1000);
 
     <USeparator class="my-6" size="lg" />
 
+    <h2>Allgemeine Angaben</h2>
+
+    <p>Bevor du deine Rangfolge festlegst, beantworte bitte kurz die folgenden Fragen.</p>
+
+    <UCard class="mt-2 mb-6" variant="soft">
+        <template #footer>
+            <UButton
+                v-if="!zusatzangabenExpanded"
+                color="secondary"
+                icon="i-lucide-pencil"
+                label="Bearbeiten"
+                @click="zusatzangabenExpanded = true"
+            />
+            <UButton
+                v-else
+                :color="
+                    auslandJa === undefined || lernvertragJa === undefined
+                        ? 'neutral'
+                        : 'success'
+                "
+                :disabled="auslandJa === undefined || lernvertragJa === undefined"
+                class="w-full"
+                icon="i-lucide-check"
+                label="Speichern"
+                @click="zusatzangabenExpanded = false"
+            />
+        </template>
+        <template v-if="!zusatzangabenExpanded">
+            <ul class="mb-0">
+                <li v-for="line in zusatzangabenZusammenfassung" :key="line">
+                    {{ line }}
+                </li>
+            </ul>
+        </template>
+        <div v-else class="flex flex-col gap-4">
+            <UTheme
+                :props="{
+                    radioGroup: { orientation: 'horizontal', variant: 'table' },
+                }"
+                :ui="{
+                    radioGroup: {
+                        item: 'flex-1',
+                        label: 'my-0',
+                        description: 'my-0',
+                    },
+                    checkbox: {
+                        label: 'my-0',
+                        description: 'my-0',
+                    },
+                }"
+            >
+                <UFormField
+                    label="Nimmst du in diesem Halbjahr an einem Auslandsaufenthalt teil?"
+                    required
+                >
+                    <URadioGroup
+                        v-model="auslandJa"
+                        :items="auslandItems"
+                        orientation="horizontal"
+                        variant="card"
+                    />
+                </UFormField>
+                <UFormField v-if="auslandJa" label="Zeitraum des Auslandsaufenthalts" required>
+                    <ADateRangePicker v-model="auslandRange" class="w-full" />
+                </UFormField>
+
+                <UFormField
+                    label="Hast du für dieses Halbjahr einen Lernvertrag für das Profundum vereinbart?"
+                    required
+                >
+                    <URadioGroup
+                        v-model="lernvertragJa"
+                        :items="lernvertragItems"
+                        orientation="horizontal"
+                        variant="card"
+                    />
+                </UFormField>
+                <UFormField v-if="lernvertragJa" label="Mit welchen Lehrer:innen?" required>
+                    <UInput
+                        v-model="lernvertragLehrer"
+                        class="w-full"
+                        placeholder="z. B. Herr Mustermann, Frau Beispiel"
+                    />
+                </UFormField>
+            </UTheme>
+        </div>
+    </UCard>
+
     <h2>Deine Wünsche</h2>
 
     <template v-if="katalog.istAbgegeben">
@@ -638,9 +696,9 @@ useIntervalFn(check, 1000);
             </li>
         </ol>
         <p v-if="entwurfWeichtAb" class="text-sm text-muted mb-4">
-            Deine Bearbeitung unten weicht von deiner abgegebenen Rangfolge ab. Erst wenn du erneut
-            abgibst, wird die neue Rangfolge berücksichtigt - bis dahin bleibt die oben gezeigte
-            Rangfolge gültig.
+            Deine Bearbeitung unten weicht von deiner abgegebenen Rangfolge ab. Erst wenn du
+            erneut abgibst, wird die neue Rangfolge berücksichtigt - bis dahin bleibt die oben
+            gezeigte Rangfolge gültig.
         </p>
     </template>
 
@@ -648,7 +706,8 @@ useIntervalFn(check, 1000);
         v-if="
             ranked.length < minGesamtWuensche ||
             unterversorgteSlots.length > 0 ||
-            currentProblems.length > 0
+            currentProblems.length > 0 ||
+            zusatzangabenExpanded
         "
         color="error"
         icon="i-lucide-circle-x"
@@ -656,16 +715,19 @@ useIntervalFn(check, 1000);
         variant="subtle"
     >
         <template #description>
+            <p v-if="zusatzangabenExpanded">
+                Bitte speichere die obenstehenden allgemeinen Angaben.
+            </p>
             <p v-if="ranked.length < minGesamtWuensche">
-                Insgesamt nur {{ ranked.length }} von
-                {{ minGesamtWuensche }} benötigten Profunda gewählt.
+                Insgesamt nur {{ ranked.length }} von {{ minGesamtWuensche }} benötigten
+                Profunda gewählt.
             </p>
             <div class="grid grid-cols-[auto_1fr] gap-x-1">
                 <template v-for="[slotId, count] in unterversorgteSlots" :key="slotId">
                     <span>Slot {{ formatSlotId(slotId) }}:</span>
                     <span>
-                        nur {{ count }} von {{ katalog.minWuenschePerSlot }} benötigten
-                        Profunda gewählt.</span
+                        nur {{ count }} von {{ katalog.minWuenschePerSlot }} benötigten Profunda
+                        gewählt.</span
                     >
                 </template>
                 <span
@@ -685,7 +747,7 @@ useIntervalFn(check, 1000);
         variant="subtle"
     />
 
-    <div class="flex gap-2 mb-4">
+    <div class="flex gap-2 mb-4 mt-4">
         <UButton
             :disabled="!maySend"
             class="flex-1 justify-center"
@@ -698,10 +760,14 @@ useIntervalFn(check, 1000);
         <div>
             <h3 class="flex items-center gap-2">
                 Deine Rangfolge
-                <span v-if="draftBusy" class="text-sm text-muted">Speichert…</span>
+                <UBadge v-if="draftBusy" color="secondary">Speichert…</UBadge>
                 <UBadge
                     v-else-if="ranked.length > 0 && !uncommitedChanges"
-                    :label="katalog.istAbgegeben && !entwurfWeichtAb ? 'Abgegeben' : 'Entwurf gespeichert'"
+                    :label="
+                        katalog.istAbgegeben && !entwurfWeichtAb
+                            ? 'Abgegeben'
+                            : 'Entwurf gespeichert'
+                    "
                     :color="katalog.istAbgegeben && !entwurfWeichtAb ? 'success' : 'warning'"
                 />
             </h3>
@@ -729,7 +795,7 @@ useIntervalFn(check, 1000);
         </div>
 
         <div>
-            <h3>belegbare Profunda außerhalb der Rangfolge</h3>
+            <h3>Nicht gewünschte Profunda</h3>
             <ul
                 class="gap-2 list-none pl-0 grid grid-cols-[auto_auto_1fr_auto_auto_auto_auto_auto_auto] auto-rows-fr"
             >
@@ -870,11 +936,10 @@ useIntervalFn(check, 1000);
         </template>
     </UModal>
 
-    <UModal
-        v-model:open="detailDialogOpen"
-        :title="detailOption?.bezeichnung ?? ''"
-        :ui="{ content: 'max-w-2xl' }"
-    >
+    <UModal v-model:open="detailDialogOpen" :ui="{ content: 'max-w-2xl' }">
+        <template #title>
+            <div class="text-balance">{{ detailOption?.bezeichnung ?? '' }}</div>
+        </template>
         <template #description>
             <span class="flex flex-row flex-wrap items-center gap-4 text-muted">
                 <UBadge v-if="detailOption?.profilProfundum" color="info" label="Profil" />
@@ -894,20 +959,22 @@ useIntervalFn(check, 1000);
                     <li v-for="element in detailOption.voraussetzungen">{{ element }}</li>
                 </ul>
             </template>
-            <div v-if="detailDescriptionHtml" class="m-trim" v-html="detailDescriptionHtml" />
+            <div
+                v-if="detailDescriptionHtml"
+                class="m-trim prosa"
+                v-html="detailDescriptionHtml"
+            />
             <p v-else class="text-muted italic">Keine Beschreibung hinterlegt.</p>
 
             <template v-if="detailOption?.instanzen?.length">
                 <USeparator class="my-4" size="sm" />
                 <UTable :data="detailOption.instanzen" :columns="detailInstanzColumns">
-                    <template #termin-cell="{ row }">{{
-                        row.original.slotIds.map(formatSlotId).join(', ')
-                    }}</template>
-                    <template #verantwortlich-cell="{ row }">
-                        {{ row.original.verantwortliche.join(', ') || '–' }}
-                    </template>
-                    <template #maxEinschreibungen-cell="{ row }">
-                        {{ row.original.maxEinschreibungen ?? '–' }}
+                    <template #termin-cell="{ row }">
+                        <ul>
+                            <li v-for="slotId in row.original.slotIds" :key="slotId">
+                                {{ formatSlotId(slotId) }}
+                            </li>
+                        </ul>
                     </template>
                 </UTable>
             </template>

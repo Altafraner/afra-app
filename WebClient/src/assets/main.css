@@ -16,6 +16,7 @@
     --color-blue-800: #003963;
     --color-blue-900: #002a48;
     --color-blue-950: #001a2d;
+
 }
 
 :root {
@@ -67,6 +68,21 @@
             bottom: 0;
             pointer-events: none;
             @apply border-[1rem] border-red-500;
+        }
+    }
+
+    .prosa {
+        p {
+            @apply my-2;
+        }
+    ;
+
+        ul {
+            @apply list-disc ml-4
+        }
+
+        ol {
+            @apply list-decimal ml-4
         }
     }
 }

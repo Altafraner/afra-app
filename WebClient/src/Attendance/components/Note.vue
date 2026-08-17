@@ -18,7 +18,7 @@ defineProps<{
         variant="subtle"
     >
         <template #default>
-            <div class="m-trim" v-html="convertMarkdownToHtml(note.content)" />
+            <div class="m-trim prosa" v-html="convertMarkdownToHtml(note.content)" />
         </template>
         <template #footer>
             <div class="flex flex-col justify-between flex-wrap text-sm gap-1">
