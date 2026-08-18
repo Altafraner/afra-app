@@ -67,7 +67,7 @@ internal class ProfundumMatchingService
             .ToArrayAsync();
         var students = _dbContext.Personen
             .Where(p => p.Rolle == Rolle.Mittelstufe)
-            .Where(p => p.CreatedAt <= currentZeitraum.EinwahlStart)
+            .Where(p => p.CreatedAt <= currentZeitraum.EinwahlStop)
             .ToArray();
 
         if (!_profundumConfiguration.Value.DeterministicMatching)
@@ -378,7 +378,7 @@ internal class ProfundumMatchingService
         await foreach (var person in personenWithData)
         {
             var personsEnrollments = slots
-                .Where(slot => person.CreatedAt <= slot.EinwahlZeitraum.EinwahlStart
+                .Where(slot => person.CreatedAt <= slot.EinwahlZeitraum.EinwahlStop
                     || person.ProfundaEinschreibungen.Any(e => e.Slot == slot))
                 .Select(slot => (slotId: slot.Id,
                     enrollment: person.ProfundaEinschreibungen.FirstOrDefault(e => e.Slot == slot)))
