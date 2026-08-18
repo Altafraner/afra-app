@@ -308,6 +308,7 @@ internal class OtiumDashboardProvider : IDashboardProvider
 
         async Task PopulateMessages()
         {
+            if (student.Rolle != Rolle.Mittelstufe) return;
             var localEinschreibungen = einschreibungen.ToList();
             foreach (var week in schultageByWeek)
             {
