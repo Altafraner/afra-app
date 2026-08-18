@@ -5,6 +5,10 @@ import ui from '@nuxt/ui/vue-plugin';
 import { createPinia } from 'pinia';
 // @ts-ignore
 import { registerSW } from 'virtual:pwa-register';
+import lucideIcons from '@iconify-json/lucide/icons.json';
+import { addCollection } from '@iconify/vue';
+
+addCollection(lucideIcons);
 
 const pinia = createPinia();
 const app = createApp(App);
