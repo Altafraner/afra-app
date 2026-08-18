@@ -62,7 +62,9 @@ function zusatzangabenPayload() {
 async function saveZusatzangaben() {
     const api = mande('/api/profundum/sus/wuensche/zusatzinfo');
     try {
-        await api.post({ value: zusatzangabenPayload() });
+        const payload = zusatzangabenPayload();
+        await api.post({ value: payload });
+        katalog.value.zusatzInformation = payload;
     } catch (e) {
         toast.add({
             color: 'error',
@@ -611,11 +613,21 @@ const lernvertragItems = [
             <UButton
                 v-else
                 :color="
-                    auslandJa === undefined || lernvertragJa === undefined
+                    auslandJa === undefined ||
+                    lernvertragJa === undefined ||
+                    (auslandJa && auslandRange?.start === undefined) ||
+                    auslandRange?.end === undefined ||
+                    (lernvertragJa && !lernvertragLehrer)
                         ? 'neutral'
                         : 'success'
                 "
-                :disabled="auslandJa === undefined || lernvertragJa === undefined"
+                :disabled="
+                    auslandJa === undefined ||
+                    lernvertragJa === undefined ||
+                    (auslandJa && auslandRange?.start === undefined) ||
+                    auslandRange?.end === undefined ||
+                    (lernvertragJa && !lernvertragLehrer)
+                "
                 class="w-full"
                 icon="i-lucide-check"
                 label="Speichern"
