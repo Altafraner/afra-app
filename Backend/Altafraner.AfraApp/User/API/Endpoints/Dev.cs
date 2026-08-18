@@ -13,12 +13,9 @@ internal static class Dev
                 async (AfraAppContext dbContext) =>
                 {
                     return await dbContext.Personen
-                        .GroupBy(e => e.Gruppe ?? e.Rolle.ToString())
-                        .ToDictionaryAsync(e => e.Key,
-                            e => e
-                                .OrderBy(e2 => e2.FirstName)
-                                .ThenBy(e2 => e2.LastName)
-                                .Select(e2 => new PersonInfoMinimal(e2)));
+                        .Where(e => !e.Deleted)
+                        .Select(e2 => new PersonInfoMinimal(e2))
+                        .ToArrayAsync();
                 })
             .AllowAnonymous();
 
