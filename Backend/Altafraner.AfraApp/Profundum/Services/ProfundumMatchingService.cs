@@ -67,6 +67,7 @@ internal class ProfundumMatchingService
             .ToArrayAsync();
         var students = _dbContext.Personen
             .Where(p => p.Rolle == Rolle.Mittelstufe)
+            .Where(p => !p.Deleted)
             .Where(p => p.CreatedAt <= currentZeitraum.EinwahlStop)
             .ToArray();
 
@@ -347,6 +348,7 @@ internal class ProfundumMatchingService
         var personenWithData = _dbContext.Personen
             .AsSplitQuery()
             .Where(p => p.Rolle == Rolle.Mittelstufe)
+            .Where(p => !p.Deleted)
             .OrderBy(p => p.Gruppe)
             .ThenBy(p => p.LastName)
             .ThenBy(p => p.FirstName)
