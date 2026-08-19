@@ -58,7 +58,9 @@ const sortedOptions = computed(() => {
                         <span v-if="wishForOption(item)">
                             ★ {{ wishForOption(item).rang }}
                         </span>
-                        <span>{{ item.profundumInfo.bezeichnung }}</span>
+                        <span :class="{ 'font-bold': item.profundumInfo.profilProfundum }">{{
+                            item.profundumInfo.bezeichnung
+                        }}</span>
                         <span
                             >({{ item.numEinschreibungen }} /
                             {{ item.maxEinschreibungen }})</span
@@ -80,7 +82,10 @@ const sortedOptions = computed(() => {
                 >
                     <span
                         class="flex items-center gap-1 min-w-0"
-                        :class="{ 'text-warning font-semibold': enrollment?.isFixed }"
+                        :class="{
+                            'text-warning font-semibold': enrollment?.isFixed,
+                            'font-bold': selectedInstanz?.profundumInfo.profilProfundum,
+                        }"
                     >
                         <UIcon
                             v-if="enrollment?.isFixed"

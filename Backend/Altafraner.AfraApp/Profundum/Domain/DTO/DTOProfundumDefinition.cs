@@ -23,6 +23,7 @@ public record DTOProfundumDefinition
         Hidden = dbProfundumDefinition.Hidden;
         AusgeblendetInEinwahl = dbProfundumDefinition.AusgeblendetInEinwahl;
         PflichtFuerBerechtigte = dbProfundumDefinition.PflichtFuerBerechtigte;
+        ProfilProfundum = dbProfundumDefinition.Kategorie.ProfilProfundum;
     }
 
     /// <inheritdoc cref="ProfundumDefinition.Id"/>
@@ -63,4 +64,7 @@ public record DTOProfundumDefinition
 
     /// <inheritdoc cref="ProfundumDefinition.PflichtFuerBerechtigte"/>
     public bool PflichtFuerBerechtigte { get; set; }
+
+    /// <inheritdoc cref="ProfundumKategorie.ProfilProfundum"/>
+    public bool ProfilProfundum { get; set; }
 }
