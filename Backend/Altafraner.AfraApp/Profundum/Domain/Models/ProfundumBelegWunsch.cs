@@ -45,11 +45,4 @@ public class ProfundumBelegWunsch
     /// </summary>
     /// <remarks>Do not use directly!</remarks>
     protected internal Guid EinwahlZeitraumId { get; set; }
-
-    /// <summary>
-    ///     Whether this wish is part of a final submission (<c>true</c>) or an unfinished, unvalidated draft the
-    ///     student saved without submitting (<c>false</c>). All rows for one (student, EinwahlZeitraum) share the
-    ///     same value, since they are always written as one delete-and-replace batch together.
-    /// </summary>
-    public bool IstAbgegeben { get; set; }
 }
