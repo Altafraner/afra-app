@@ -339,7 +339,6 @@ internal class ProfundumEnrollmentService
                 ProfundumDefinition = instanzenForDefinition[0].Profundum,
                 Rang = i + 1,
                 EinwahlZeitraum = einschreibeZeitraum,
-                IstAbgegeben = true,
             });
         }
 
