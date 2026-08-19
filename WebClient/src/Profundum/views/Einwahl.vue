@@ -42,6 +42,7 @@ const currentProblemsValid = ref(false);
 
 const auslandJa = ref(undefined);
 const auslandRange = ref({ start: undefined, end: undefined });
+const interkulturellesEssayJa = ref(undefined);
 const lernvertragJa = ref(undefined);
 const lernvertragLehrer = ref('');
 const zusatzangabenExpanded = ref(false);
@@ -55,6 +56,7 @@ function zusatzangabenPayload() {
     return JSON.stringify({
         auslandVon: hasAusland ? auslandRange.value.start.toString() : null,
         auslandBis: hasAusland ? auslandRange.value.end.toString() : null,
+        interkulturellesEssay: auslandJa.value ? !!interkulturellesEssayJa.value : null,
         lernvertragLehrer: hasLernvertrag ? lernvertragLehrer.value.trim() : null,
     });
 }
@@ -75,7 +77,7 @@ async function saveZusatzangaben() {
 }
 
 watchDebounced(
-    [auslandJa, auslandRange, lernvertragJa, lernvertragLehrer],
+    [auslandJa, auslandRange, interkulturellesEssayJa, lernvertragJa, lernvertragLehrer],
     () => {
         if (hydratingZusatzangaben) return;
         saveZusatzangaben();
@@ -98,6 +100,11 @@ const zusatzangabenZusammenfassung = computed(() => {
             lines.push(
                 `Auslandsaufenthalt von ${formatDatum(parsed.auslandVon)} bis ${formatDatum(parsed.auslandBis)}`,
             );
+            if (parsed.interkulturellesEssay === true) {
+                lines.push('Ersetzt Humanities durch das Interkulturelle Essay.');
+            } else if (parsed.interkulturellesEssay === false) {
+                lines.push('Belegt Humanities regulär.');
+            }
         }
         if (parsed.lernvertragLehrer) {
             lines.push(`Lernvertrag mit ${parsed.lernvertragLehrer}`);
@@ -156,6 +163,10 @@ async function get() {
         start: parsed?.auslandVon ? parseDate(parsed.auslandVon) : undefined,
         end: parsed?.auslandBis ? parseDate(parsed.auslandBis) : undefined,
     };
+    interkulturellesEssayJa.value =
+        !parsed || parsed?.interkulturellesEssay === null
+            ? undefined
+            : !!parsed?.interkulturellesEssay;
     lernvertragJa.value = !parsed ? undefined : !!parsed?.lernvertragLehrer;
     lernvertragLehrer.value = parsed?.lernvertragLehrer ?? '';
     hydratingZusatzangaben = false;
@@ -464,6 +475,14 @@ const auslandItems = [
     { label: 'Ja', description: 'Ich nehme an einem Auslandsaufenthalt teil.', value: true },
     { label: 'Nein', description: 'Es ist kein Auslandsaufenthalt geplant.', value: false },
 ];
+const interkulturellesEssayItems = [
+    {
+        label: 'Ja',
+        description: 'Ich möchte Humanities durch das Interkulturelle Essay ersetzen.',
+        value: true,
+    },
+    { label: 'Nein', description: 'Ich möchte Humanities regulär belegen.', value: false },
+];
 const lernvertragItems = [
     { label: 'Ja', description: 'Ich habe einen Lernvertrag vereinbart', value: true },
     { label: 'Nein', description: 'Ich habe keinen Lernvertrag.', value: false },
@@ -616,7 +635,8 @@ const lernvertragItems = [
                     auslandJa === undefined ||
                     lernvertragJa === undefined ||
                     (auslandJa && auslandRange?.start === undefined) ||
-                    auslandRange?.end === undefined ||
+                    (auslandJa && auslandRange?.end === undefined) ||
+                    (auslandJa && interkulturellesEssayJa === undefined) ||
                     (lernvertragJa && !lernvertragLehrer)
                         ? 'neutral'
                         : 'success'
@@ -625,7 +645,8 @@ const lernvertragItems = [
                     auslandJa === undefined ||
                     lernvertragJa === undefined ||
                     (auslandJa && auslandRange?.start === undefined) ||
-                    auslandRange?.end === undefined ||
+                    (auslandJa && auslandRange?.end === undefined) ||
+                    (auslandJa && interkulturellesEssayJa === undefined) ||
                     (lernvertragJa && !lernvertragLehrer)
                 "
                 class="w-full"
@@ -671,6 +692,18 @@ const lernvertragItems = [
                 </UFormField>
                 <UFormField v-if="auslandJa" label="Zeitraum des Auslandsaufenthalts" required>
                     <ADateRangePicker v-model="auslandRange" class="w-full" />
+                </UFormField>
+                <UFormField
+                    v-if="auslandJa"
+                    label="Musst du noch Humanities belegen und möchtest du es durch das Interkulturelle Essay ersetzen?"
+                    required
+                >
+                    <URadioGroup
+                        v-model="interkulturellesEssayJa"
+                        :items="interkulturellesEssayItems"
+                        orientation="horizontal"
+                        variant="card"
+                    />
                 </UFormField>
 
                 <UFormField
