@@ -315,7 +315,7 @@ const maySend = computed(
         ranked.value.length >= minGesamtWuensche.value &&
         unterversorgteSlots.value.length === 0 &&
         currentProblems.value.length === 0 &&
-        !zusatzangabenExpanded,
+        !zusatzangabenExpanded.value,
 );
 
 function addToRanked(definitionId) {
