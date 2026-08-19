@@ -30,6 +30,11 @@ const zusatzInfoLines = () => {
             lines.push(
                 `Auslandsaufenthalt: ${formatDatum(parsed.auslandVon)} – ${formatDatum(parsed.auslandBis)}`,
             );
+            if (parsed.interkulturellesEssay === true) {
+                lines.push('Ersetzt Humanities durch das Interkulturelle Essay');
+            } else if (parsed.interkulturellesEssay === false) {
+                lines.push('Belegt Humanities regulär');
+            }
         }
         if (parsed.lernvertragLehrer) {
             lines.push(`Lernvertrag mit: ${parsed.lernvertragLehrer}`);
