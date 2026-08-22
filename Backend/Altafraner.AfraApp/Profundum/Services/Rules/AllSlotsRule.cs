@@ -22,10 +22,8 @@ public class AllSlotsRule : IProfundumIndividualRule
     public void AddConstraints(Person student,
         int klasse,
         IEnumerable<ProfundumSlot> slots,
-        IEnumerable<ProfundumBelegWunsch> wuensche,
         IEnumerable<ProfundumEinschreibung> enrollments,
         Dictionary<(ProfundumSlot s, ProfundumInstanz i), BoolVar> belegVars,
-        Dictionary<ProfundumSlot, BoolVar> personNotEnrolledVars,
         CpModel model,
         LinearExprBuilder objective)
     {

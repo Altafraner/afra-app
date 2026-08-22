@@ -32,7 +32,6 @@ public class WantedEinschreibungenRule : IProfundumAggregateRule
     public void AddConstraints(
         IEnumerable<ProfundumSlot> slots,
         IEnumerable<Person> students,
-        IEnumerable<ProfundumBelegWunsch> wuensche,
         Dictionary<(Person p, ProfundumSlot s, ProfundumInstanz i), BoolVar> belegVars,
         CpModel model,
         LinearExprBuilder objective)

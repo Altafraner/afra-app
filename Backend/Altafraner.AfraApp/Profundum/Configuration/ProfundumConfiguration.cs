@@ -41,7 +41,7 @@ public class ProfundumConfiguration
     ///     rang^2, subtracted from <see cref="WunschBasisWert" />. A larger factor makes the objective punish spreading
     ///     bad outcomes across students more aggressively, satisfying strong preferences at the expense of weak ones.
     /// </summary>
-    public int WunschKostenFaktor { get; set; } = 1;
+    public int WunschKostenFaktor { get; set; } = 5;
 
     /// <summary>
     ///     The reward floor for any ranked wish, regardless of how low its rank is. Kept comfortably above the "not
@@ -49,6 +49,8 @@ public class ProfundumConfiguration
     ///     unenrolled.
     /// </summary>
     public int WunschMindestWert { get; set; } = 5;
+
+    public int WunschMaxWert { get; set; } = 105;
 
     /// <summary>
     ///     Penalty subtracted from the objective, per student of deviation between an Instanz's actual enrollment
