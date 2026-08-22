@@ -17,9 +17,12 @@ namespace Altafraner.AfraApp.Profundum.Services;
 
 internal class ProfundumMatchingService
 {
+    // Should be greater than 0 to avoid random solutions when no wishes exist or are feasible
+    private const int NotEnrolledValue = 3;
+
     private readonly AfraAppContext _dbContext;
     private readonly ILogger _logger;
-    private readonly IOptions<ProfundumConfiguration> _profundumConfiguration;
+    private readonly ProfundumConfiguration _profundumConfiguration;
     private readonly IRulesFactory _rulesFactory;
     private readonly UserService _userService;
 
@@ -31,7 +34,7 @@ internal class ProfundumMatchingService
     {
         _dbContext = dbContext;
         _logger = logger;
-        _profundumConfiguration = profundumConfiguration;
+        _profundumConfiguration = profundumConfiguration.Value;
         _rulesFactory = rulesFactory;
         _userService = userService;
     }
@@ -64,14 +67,16 @@ internal class ProfundumMatchingService
             .Include(b => b.BetroffenePerson)
             .Include(b => b.ProfundumDefinition).ThenInclude(p => p.Kategorie)
             .Include(b => b.EinwahlZeitraum).ThenInclude(z => z.Slots)
+            .Where(e => e.EinwahlZeitraum == currentZeitraum)
             .ToArrayAsync();
         var students = _dbContext.Personen
             .Where(p => p.Rolle == Rolle.Mittelstufe)
             .Where(p => !p.Deleted)
             .Where(p => p.CreatedAt <= currentZeitraum.EinwahlStop)
             .ToArray();
+        var wuenscheSlotAware = ProcessWuenscheSlotAware(belegwuensche);
 
-        if (!_profundumConfiguration.Value.DeterministicMatching)
+        if (!_profundumConfiguration.DeterministicMatching)
         {
             Random.Shared.Shuffle(angebote);
             Random.Shared.Shuffle(belegwuensche);
@@ -92,145 +97,40 @@ internal class ProfundumMatchingService
             var angeboteInSlot = angebote.Where(a => a.Slots.Contains(currentSlot)).ToArray();
             foreach (var currentStudent in students)
             {
-                List<BoolVar> personsVariablesInSlot = [];
-                var fixE = fixEinschreibungen
-                    .SingleOrDefault(e => e.BetroffenePerson == currentStudent
-                                         && e.Slot == currentSlot);
-
-                var nev = model.NewBoolVar($"beleg-{currentStudent.Id}-not-enrolled-in-{currentSlot.Id}");
-                personNotEnrolledVariables[(currentStudent, currentSlot)] = nev;
-                personsVariablesInSlot.Add(nev);
-                if (fixE is not null && fixE.ProfundumInstanz is null)
-                {
-                    model.Add(nev == 1);
-                }
-
-                foreach (var currentInstanzInSlot in angeboteInSlot)
-                {
-                    var currentVar =
-                        model.NewBoolVar($"beleg-{currentStudent.Id}-{currentSlot.Id}-{currentInstanzInSlot.Id}");
-                    belegVars[(currentStudent, currentSlot, currentInstanzInSlot)] = currentVar;
-                    personsVariablesInSlot.Add(currentVar);
-
-                    if (fixE?.ProfundumInstanz == currentInstanzInSlot)
-                    {
-                        model.Add(currentVar == 1);
-                    }
-                }
-                model.AddExactlyOne(personsVariablesInSlot);
+                AddStudentVarsWithObjectives(currentStudent, currentSlot, angeboteInSlot);
             }
         }
 
-        var cfg = _profundumConfiguration.Value;
-
-        foreach (var currentSlot in slots)
-        {
-            var angeboteInSlot = angebote.Where(a => a.Slots.Contains(currentSlot)).ToArray();
-            foreach (var currentStudent in students)
-            {
-                var nev = personNotEnrolledVariables[(currentStudent, currentSlot)];
-                objective.AddTerm(nev, 1); // Not matched is slightly better than stupid solutions.
-
-                var wuensche = belegwuensche.Where(b => b.BetroffenePerson == currentStudent
-                        && b.EinwahlZeitraum.Slots.Contains(currentSlot))
-                    .ToArray();
-
-                foreach (var currentInstanzInSlot in angeboteInSlot)
-                {
-                    var currentVar = belegVars[(currentStudent, currentSlot, currentInstanzInSlot)];
-
-                    var wunsch = wuensche.FirstOrDefault(w => w.ProfundumDefinition == currentInstanzInSlot.Profundum);
-                    if (wunsch is not null)
-                    {
-                        objective.AddTerm(currentVar, WunschReward(wunsch.Rang, cfg));
-                    }
-                }
-            }
-        }
-
-
-        foreach (var student in students)
-        {
-            var sBelegWuensche = belegwuensche.Where(w => w.BetroffenePerson == student).ToArray();
-            var sEnrollments = fixEinschreibungen
-                .Where(e => e.BetroffenePerson == student && e.ProfundumInstanz is not null)
-                .ToArray();
-            var sBelegVars = belegVars.Where(k => k.Key.p == student)
-                .ToDictionary(x => (x.Key.s, x.Key.i), x => x.Value);
-            var sNotEnrolledVars = personNotEnrolledVariables.Where(k => k.Key.p == student)
-                .ToDictionary(x => x.Key.s, x => x.Value);
-            var klasse = _userService.GetKlassenstufe(student);
-
-            foreach (var r in _rulesFactory.GetIndividualRules())
-            {
-                r.AddConstraints(student,
-                    klasse,
-                    slots,
-                    sBelegWuensche,
-                    sEnrollments,
-                    sBelegVars,
-                    sNotEnrolledVars,
-                    model,
-                    objective
-                );
-            }
-        }
-
-        foreach (var r in _rulesFactory.GetAggregateRules())
-            r.AddConstraints(slots, students, belegwuensche, belegVars, model, objective);
+        AddIndividualRules();
+        AddAggregateRules();
 
         var timeConstraintsAdded = stopwatch.ElapsedMilliseconds;
         stopwatch.Restart();
-        model.Maximize(objective);
 
+        model.Maximize(objective);
         _logger.LogInformation("Model stats: {stats}", model.ModelStats());
 
         using var solver = new CpSolver();
-
         solver.StringParameters = "max_time_in_seconds:240.0";
+
         var timeSolverPrep = stopwatch.ElapsedMilliseconds;
         stopwatch.Restart();
+
         var resultStatus = solver.Solve(model, new SolutionCallBack(_logger));
 
         var timeSolver = stopwatch.ElapsedMilliseconds;
         stopwatch.Restart();
+
         if (resultStatus != CpSolverStatus.Optimal && resultStatus != CpSolverStatus.Feasible)
         {
             throw new ArgumentException("No solution found in Matching.");
         }
 
-        var newEinschreibungen = new List<ProfundumEinschreibung>();
-        foreach (var p in students)
-            foreach (var i in angebote)
-                foreach (var s in i.Slots.Where(slots.Contains))
-                {
-                    if (fixEinschreibungen.Any(e => e.BetroffenePerson == p && e.Slot == s))
-                    {
-                        continue;
-                    }
-
-                    if (solver.Value(belegVars[(p, s, i)]) > 0)
-                    {
-                        newEinschreibungen.Add(new ProfundumEinschreibung
-                        {
-                            ProfundumInstanz = i,
-                            BetroffenePerson = p,
-                            Slot = s,
-                        });
-                    }
-                }
+        var newEinschreibungen = ExtractEnrollmentsFromResults();
         await _dbContext.ProfundaEinschreibungen.AddRangeAsync(newEinschreibungen);
         await _dbContext.SaveChangesAsync();
 
-        var rangVerteilung = new Dictionary<int, int>();
-        foreach (var e in newEinschreibungen)
-        {
-            var wunsch = belegwuensche.FirstOrDefault(w => w.BetroffenePerson == e.BetroffenePerson
-                    && w.ProfundumDefinition == e.ProfundumInstanz!.Profundum
-                    && w.EinwahlZeitraum.Slots.Contains(e.Slot));
-            if (wunsch is null) continue;
-            rangVerteilung[wunsch.Rang] = rangVerteilung.GetValueOrDefault(wunsch.Rang) + 1;
-        }
+        var rangVerteilung = CalculateRangDistributionFromEnrollments(newEinschreibungen, wuenscheSlotAware);
 
         var studentsWithWishes = belegwuensche.Select(w => w.BetroffenePerson).Distinct().ToHashSet();
         var nichtEingeschriebenTrotzWunsch = personNotEnrolledVariables
@@ -263,8 +163,131 @@ internal class ProfundumMatchingService
             CalculationTime = solver.WallTime(),
             Result = MatchingResultStatus.MatchingComplete,
             NichtEingeschriebenTrotzWunsch = nichtEingeschriebenTrotzWunsch,
-            RangVerteilung = rangVerteilung,
+            RangVerteilung = rangVerteilung
         };
+
+        List<ProfundumEinschreibung> ExtractEnrollmentsFromResults()
+        {
+            var profundumEinschreibungs = new List<ProfundumEinschreibung>();
+            foreach (var p in students)
+            foreach (var i in angebote)
+            foreach (var s in i.Slots.Where(slots.Contains))
+            {
+                if (fixEinschreibungen.Any(e => e.BetroffenePerson == p && e.Slot == s)) continue;
+
+                if (solver.Value(belegVars[(p, s, i)]) > 0)
+                    profundumEinschreibungs.Add(new ProfundumEinschreibung
+                    {
+                        ProfundumInstanz = i,
+                        BetroffenePerson = p,
+                        Slot = s
+                    });
+            }
+
+            return profundumEinschreibungs;
+        }
+
+        void AddAggregateRules()
+        {
+            foreach (var r in _rulesFactory.GetAggregateRules())
+                r.AddConstraints(slots, students, belegVars, model, objective);
+        }
+
+        void AddIndividualRules()
+        {
+            foreach (var student in students)
+            {
+                var sEnrollments = fixEinschreibungen
+                    .Where(e => e.BetroffenePerson == student && e.ProfundumInstanz is not null)
+                    .ToArray();
+                var sBelegVars = belegVars.Where(k => k.Key.p == student)
+                    .ToDictionary(x => (x.Key.s, x.Key.i), x => x.Value);
+                var klasse = _userService.GetKlassenstufe(student);
+
+                foreach (var r in _rulesFactory.GetIndividualRules())
+                    r.AddConstraints(student,
+                        klasse,
+                        slots,
+                        sEnrollments,
+                        sBelegVars,
+                        model,
+                        objective
+                    );
+            }
+        }
+
+        void AddStudentVarsWithObjectives(Person currentStudent,
+            ProfundumSlot currentSlot,
+            ProfundumInstanz[] angeboteInSlot)
+        {
+            List<BoolVar> personsVariablesInSlot = [];
+            var fixedEnrollment = fixEinschreibungen
+                .SingleOrDefault(e => e.BetroffenePerson == currentStudent
+                                      && e.Slot == currentSlot);
+
+            var notEnrolledVar = model.NewBoolVar($"beleg-{currentStudent.Id}-not-enrolled-in-{currentSlot.Id}");
+            personNotEnrolledVariables[(currentStudent, currentSlot)] = notEnrolledVar;
+            personsVariablesInSlot.Add(notEnrolledVar);
+            objective.AddTerm(notEnrolledVar,
+                NotEnrolledValue); // Not matched is slightly better than stupid solutions.
+            if (fixedEnrollment is not null && fixedEnrollment.ProfundumInstanz is null) model.Add(notEnrolledVar == 1);
+
+            foreach (var currentInstanzInSlot in angeboteInSlot)
+            {
+                var currentVar =
+                    model.NewBoolVar($"beleg-{currentStudent.Id}-{currentSlot.Id}-{currentInstanzInSlot.Id}");
+                belegVars[(currentStudent, currentSlot, currentInstanzInSlot)] = currentVar;
+                personsVariablesInSlot.Add(currentVar);
+
+                if (fixedEnrollment?.ProfundumInstanz == currentInstanzInSlot) model.Add(currentVar == 1);
+
+                if (wuenscheSlotAware.TryGetValue((currentStudent, currentSlot, currentInstanzInSlot),
+                        out var wunschRang))
+                    objective.AddTerm(currentVar, WunschReward(wunschRang, _profundumConfiguration));
+            }
+
+            model.AddExactlyOne(personsVariablesInSlot);
+        }
+    }
+
+    private static Dictionary<int, int> CalculateRangDistributionFromEnrollments(
+        List<ProfundumEinschreibung> newEinschreibungen,
+        Dictionary<(Person student, ProfundumSlot slot, ProfundumInstanz instanz), int> wuensche)
+    {
+        var rangVerteilung = new Dictionary<int, int>();
+        foreach (var e in newEinschreibungen)
+            if (e.ProfundumInstanz is not null &&
+                wuensche.TryGetValue((e.BetroffenePerson, e.Slot, e.ProfundumInstanz), out var rang))
+                rangVerteilung[rang] = rangVerteilung.GetValueOrDefault(rang) + 1;
+
+        return rangVerteilung;
+    }
+
+    private Dictionary<(Person student, ProfundumSlot slot, ProfundumInstanz instanz), int> ProcessWuenscheSlotAware(
+        ProfundumBelegWunsch[] belegwuensche)
+    {
+        var result = new Dictionary<(Person student, ProfundumSlot slot, ProfundumInstanz instanz), int>();
+        var wuenschePerStudent = belegwuensche.GroupBy(e => e.BetroffenePerson);
+        foreach (var group in wuenschePerStudent)
+        {
+            var student = group.Key;
+            var studentsWuensche = group.AsEnumerable();
+            var wuenscheWithSlots = studentsWuensche.SelectMany(e =>
+                e.ProfundumDefinition.Instanzen.Where(i => i.Slots.Any(e.EinwahlZeitraum.Slots.Contains))
+                    .SelectMany(i => i.Slots.Select(s => (e, s, i))));
+            var wuenscheBySlotsAndStudent = wuenscheWithSlots.GroupBy(e => e.s);
+            foreach (var wuensche in wuenscheBySlotsAndStudent)
+            {
+                var ordered = wuensche.Distinct().OrderBy(w => w.e.Rang).ToArray();
+                for (var rang = 0; rang < ordered.Length; rang++)
+                {
+                    var current = ordered[rang];
+                    result[(student, current.s, current.i)] = rang + 1;
+                }
+            }
+        }
+
+        return result;
     }
 
     /// <summary>

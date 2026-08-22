@@ -37,16 +37,16 @@ public class NotMultipleInstancesOfSameProfundumRule : IProfundumIndividualRule
     public void AddConstraints(Person student,
         int klasse,
         IEnumerable<ProfundumSlot> slots,
-        IEnumerable<ProfundumBelegWunsch> wuensche,
         IEnumerable<ProfundumEinschreibung> enrollments,
         Dictionary<(ProfundumSlot s, ProfundumInstanz i), BoolVar> belegVars,
-        Dictionary<ProfundumSlot, BoolVar> personNotEnrolledVars,
         CpModel model,
         LinearExprBuilder objective)
     {
         var profundaInstanzen = belegVars.Keys.ToArray().Select(x => x.i).Distinct().ToArray();
 
         var instanceActive = new Dictionary<ProfundumInstanz, BoolVar>();
+
+        // mehrquartalige Profunda werden zu einer Variable
         foreach (var instanz in profundaInstanzen)
         {
             var varsForInstance = belegVars
@@ -73,20 +73,21 @@ public class NotMultipleInstancesOfSameProfundumRule : IProfundumIndividualRule
 
         foreach (var defGroup in instanzenByDefinition)
         {
+            // instanzen pro Definition
             var actives = defGroup
                 .Select(k => instanceActive[k])
                 .ToArray();
 
             if (actives.Length <= 1) continue;
 
+            // Anzahl eingeschriebener Instanzen
             var count = model.NewIntVar(0, actives.Length, $"count_{student.Id}_{defGroup.Key.Id}");
             model.Add(count == LinearExpr.Sum(actives));
             var excess = model.NewIntVar(
                 0,
                 actives.Length,
                 $"excess_{student.Id}_{defGroup.Key.Id}");
-            model.Add(excess >= count - 1);
-            model.Add(excess >= 0);
+            model.AddMaxEquality(excess, [count - 1, LinearExpr.Constant(0)]);
             objective.AddTerm(excess, -5000);
         }
     }
