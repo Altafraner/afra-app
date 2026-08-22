@@ -1,7 +1,8 @@
 <script lang="ts" setup>
 import { convertMarkdownToHtml } from '@/composables/markdown';
 import type { Note } from '@/Attendance/models/note';
-import { formatDateTime, formatPerson } from '@/helpers/formatters';
+import { formatCalendarDateTime, formatPerson } from '@/helpers/formatters';
+import { getLocalTimeZone, parseAbsolute } from '@internationalized/date';
 
 defineProps<{
     note: Note;
@@ -24,10 +25,18 @@ defineProps<{
             <div class="flex flex-col justify-between flex-wrap text-sm gap-1">
                 <div class="text-primary font-medium">{{ formatPerson(note.creator) }}</div>
                 <div class="text-muted">
-                    Erstellt: {{ formatDateTime(new Date(note.created)) }}
-                    <template v-if="note.created !== note.changed">
+                    Erstellt:
+                    {{
+                        formatCalendarDateTime(parseAbsolute(note.created, getLocalTimeZone()))
+                    }}
+                    <template v-if="note.created !== note.changed && note.changed">
                         <br />
-                        Geändert: {{ formatDateTime(new Date(note.changed)) }}
+                        Geändert:
+                        {{
+                            formatCalendarDateTime(
+                                parseAbsolute(note.changed, getLocalTimeZone()),
+                            )
+                        }}
                     </template>
                 </div>
             </div>

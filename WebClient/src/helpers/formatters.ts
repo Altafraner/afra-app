@@ -1,6 +1,12 @@
 import type { UserInfoMinimal } from '@/models/user/user';
 import type { ProfundumSlot } from '@/Profundum/models/verwaltung';
-import { AnyTime, CalendarDateTime, DateValue, getDayOfWeek } from '@internationalized/date';
+import {
+    AnyTime,
+    CalendarDateTime,
+    DateValue,
+    getDayOfWeek,
+    ZonedDateTime,
+} from '@internationalized/date';
 
 const wochentage = [
     'Sonntag',
@@ -23,26 +29,8 @@ export const formatPerson = (person: UserInfoMinimal) =>
         ? formatStudent(person)
         : formatTutor(person);
 
-export const formatDate = (date: Date, hideWeekday: boolean = false) =>
-    date.toLocaleDateString('de-DE', {
-        weekday: hideWeekday ? undefined : 'short',
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-    });
-
-export const formatDateTime = (date: Date) =>
-    date.toLocaleDateString('de-DE', {
-        weekday: 'short',
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-    });
-
 const shortWochentage = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
-export function formatCalendarDateTime(date: CalendarDateTime) {
+export function formatCalendarDateTime(date: CalendarDateTime | ZonedDateTime) {
     const dayOfWeek = getDayOfWeek(date, 'de-DE', 'mon');
     return `${shortWochentage[dayOfWeek]}., ${padNumber(date.day, 2)}.${padNumber(date.month, 2)}.${date.year} ${padNumber(date.hour, 2)}:${padNumber(date.minute, 2)} Uhr`;
 }
@@ -62,9 +50,6 @@ export function padNumber(number: number, length: number): string {
 }
 
 export const formatMachineDate = (date: Date) => date.toISOString().split('T')[0];
-
-export const formatTime = (date: Date) =>
-    padString(date.getHours(), 2) + ':' + padString(date.getMinutes(), 2);
 
 export const chooseColor = (
     now: number,

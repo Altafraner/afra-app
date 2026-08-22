@@ -1,5 +1,6 @@
 <script setup>
 import { reactive } from 'vue';
+import { getLocalTimeZone, today } from '@internationalized/date';
 
 const props = defineProps({
     zeitraeume: { type: Array, default: () => [] },
@@ -18,7 +19,7 @@ const weekdayOptions = [
 ];
 
 const state = reactive({
-    jahr: new Date().getFullYear(),
+    jahr: today(getLocalTimeZone()).year,
     quartal: 'Q1',
     wochentag: 'Monday',
     einwahlZeitraumId: null,

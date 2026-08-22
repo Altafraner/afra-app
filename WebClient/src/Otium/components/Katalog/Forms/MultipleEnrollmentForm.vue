@@ -1,8 +1,9 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
-import { formatDate } from '@/helpers/formatters';
+import { formatCalendarDate } from '@/helpers/formatters';
 import ATransferList from '@/components/Form/ATransferList.vue';
 import type { ListboxItem } from '@nuxt/ui';
+import { parseDate } from '@internationalized/date';
 
 const props = defineProps<{
     options: string[];
@@ -13,7 +14,7 @@ const emit = defineEmits<{
 }>();
 
 const mappedOptions = props.options.map((option) => ({
-    label: formatDate(new Date(option), true),
+    label: formatCalendarDate(parseDate(option), false),
     value: option,
 }));
 

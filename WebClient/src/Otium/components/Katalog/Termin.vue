@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue';
-import { formatDate, formatTutor } from '@/helpers/formatters';
+import { formatCalendarDate, formatTutor } from '@/helpers/formatters';
 import { mande } from 'mande';
 import { useUser } from '@/stores/user';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
@@ -13,6 +13,7 @@ import { useConfirmPopover } from '@/composables/confirmPopover';
 import Notes from '@/Attendance/components/Notes.vue';
 import { convertMarkdownToHtml } from '@/composables/markdown.ts';
 import MobileSwitch from '@/components/MobileSwitch.vue';
+import { parseDate } from '@internationalized/date';
 
 const settings = useOtiumStore();
 const user = useUser();
@@ -98,7 +99,7 @@ async function multiEnroll() {
             toast.add({
                 color: 'warn',
                 title: 'Einschreibung teilweise fehlgeschlagen',
-                description: `Die Einschreibung in die folgenden Termine ist fehlgeschlagen: ${response.denied.map((d) => formatDate(new Date(d))).join(', ')}`,
+                description: `Die Einschreibung in die folgenden Termine ist fehlgeschlagen: ${response.denied.map((d) => formatCalendarDate(parseDate(d))).join(', ')}`,
             });
         }
     } catch (err) {
@@ -277,7 +278,7 @@ const description = computed(() => {
                     </span>
                     <span v-if="otium.block.datum" class="inline-flex items-center gap-1">
                         <UIcon class="size-4" name="i-lucide-clock" />
-                        {{ formatDate(new Date(otium.block.datum)) }},
+                        {{ formatCalendarDate(parseDate(otium.block.datum)) }},
                         {{ otium.block.uhrzeit.start }} Uhr
                     </span>
                     <span class="inline-flex items-center gap-1">
