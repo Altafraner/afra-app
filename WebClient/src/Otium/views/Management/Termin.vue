@@ -3,12 +3,13 @@ import { computed, ref } from 'vue';
 import { useUser } from '@/stores/user';
 import { mande } from 'mande';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
-import { formatDate, formatPerson } from '@/helpers/formatters';
+import { formatCalendarDate, formatPerson } from '@/helpers/formatters';
 import Grid from '@/components/Form/Grid.vue';
 import GridEditRow from '@/components/Form/GridEditRow.vue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
 import HybridAttendanceTable from '@/Attendance/components/HybridAttendanceTable.vue';
 import MarkdownEditor from '@/components/MarkdownEditor.vue';
+import { parseDate } from '@internationalized/date';
 
 const props = defineProps({
     terminId: String,
@@ -60,7 +61,7 @@ const navItems = computed(() => [
     {
         label:
             otium.value != null
-                ? `${formatDate(new Date(otium.value.datum))} ${otium.value.block}`
+                ? `${formatCalendarDate(parseDate(otium.value.datum))}, ${otium.value.block}`
                 : '',
     },
 ]);
@@ -199,7 +200,7 @@ await fetchData();
     <grid>
         <GridEditRow header="Datum" hide-edit>
             <template #body>
-                {{ formatDate(new Date(otium.datum)) }}
+                {{ formatCalendarDate(parseDate(otium.datum)) }}
             </template>
         </GridEditRow>
         <GridEditRow header="Block" hide-edit>

@@ -3,11 +3,12 @@ import { mande } from 'mande';
 import { computed, ref } from 'vue';
 import { useIntervalFn } from '@vueuse/core';
 import { useConfirmPopover } from '@/composables/confirmPopover';
-import { formatDate, formatSlot } from '@/helpers/formatters.ts';
+import { formatCalendarDate, formatSlot } from '@/helpers/formatters.ts';
 import { fuzzyMatch } from '@/helpers/fuzzy.ts';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
 import MatchingPersonCell from '@/Profundum/components/MatchingPersonCell.vue';
 import MatchingSlotCell from '@/Profundum/components/MatchingSlotCell.vue';
+import { parseAbsolute } from '@internationalized/date';
 
 const navItems = [
     {
@@ -252,7 +253,7 @@ async function handleSave(row) {
 const zeitraumSelectItems = computed(() =>
     zeitraeume.value.map((z) => ({
         id: z.id,
-        label: z.bezeichnung || formatDate(new Date(z.einwahlStart)),
+        label: z.bezeichnung || formatCalendarDate(parseAbsolute(z.einwahlStart)),
     })),
 );
 const visibleSlotIds = computed(() =>

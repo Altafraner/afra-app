@@ -1,9 +1,10 @@
 <script setup>
-import { formatDate, formatPerson } from '@/helpers/formatters';
+import { formatCalendarDate, formatPerson } from '@/helpers/formatters';
 import { computed, defineAsyncComponent, h, ref } from 'vue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
 import UButton from '@nuxt/ui/components/Button.vue';
 import UTooltip from '@nuxt/ui/components/Tooltip.vue';
+import { parseDate } from '@internationalized/date';
 
 const CreateTerminForm = defineAsyncComponent(
     () => import('@/Otium/components/Management/CreateTerminForm.vue'),
@@ -56,13 +57,13 @@ const columns = [
         cell: ({ row }) =>
             !row.original.istAbgesagt
                 ? h(UButton, {
-                      label: formatDate(new Date(row.original.datum)),
+                      label: formatCalendarDate(parseDate(row.original.datum)),
                       to: { name: 'Verwaltung-Termin', params: { terminId: row.original.id } },
                       icon: row.original.wiederholungId === null ? '' : 'i-lucide-repeat',
                       variant: 'subtle',
                   })
                 : h(UButton, {
-                      label: formatDate(new Date(row.original.datum)),
+                      label: formatCalendarDate(parseDate(row.original.datum)),
                       icon: row.original.wiederholungId === null ? '' : 'i-lucide-repeat',
                       variant: 'subtle',
                       color: 'error',

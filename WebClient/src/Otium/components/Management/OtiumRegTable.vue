@@ -1,10 +1,11 @@
 <script setup>
 import { computed, h, ref } from 'vue';
-import { formatDate, formatDayOfWeek, formatTutor } from '@/helpers/formatters';
+import { formatCalendarDate, formatDayOfWeek, formatTutor } from '@/helpers/formatters';
 import CreateWiederholungForm from '@/Otium/components/Management/CreateWiederholungForm.vue';
 import CancelWiederholungForm from '@/Otium/components/Management/CancelWiederholungForm.vue';
 import UButton from '@nuxt/ui/components/Button.vue';
 import UTooltip from '@nuxt/ui/components/Tooltip.vue';
+import { parseDate } from '@internationalized/date';
 
 const emits = defineEmits(['create', 'delete', 'cancel', 'edit']);
 const props = defineProps({
@@ -62,12 +63,12 @@ const columns = [
     {
         header: 'Start',
         accessorKey: 'startDate',
-        cell: ({ row }) => formatDate(new Date(row.getValue('startDate')), true),
+        cell: ({ row }) => formatCalendarDate(parseDate(row.getValue('startDate')), false),
     },
     {
         header: 'Ende',
         accessorKey: 'endDate',
-        cell: ({ row }) => formatDate(new Date(row.getValue('endDate')), true),
+        cell: ({ row }) => formatCalendarDate(parseDate(row.getValue('endDate')), false),
     },
     {
         id: 'actions',
