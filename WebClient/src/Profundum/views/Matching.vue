@@ -388,8 +388,9 @@ const instanzenColumns = [
             :ui="{
                 root: 'overflow-auto max-h-[80vh]',
                 thead: 'bg-default backdrop-blur-none',
-                td: 'data-[pinned]:bg-default data-[pinned]:backdrop-blur-none',
-                th: 'data-[pinned]:bg-default data-[pinned]:backdrop-blur-none',
+                td: 'data-[pinned]:bg-inherit data-[pinned]:backdrop-blur-none p-2',
+                th: 'data-[pinned]:bg-inherit data-[pinned]:backdrop-blur-none p-2',
+                tr: 'even:bg-muted/25',
             }"
         >
             <template #person-header>
@@ -415,7 +416,9 @@ const instanzenColumns = [
             >
                 <MatchingSlotCell
                     :enrollment="enrollmentForSlot(row.original, slot.id)"
-                    :wuensche="row.original.wuensche"
+                    :wuensche="
+                        row.original.wuensche[`${slot.jahr}-${slot.quartal}-${slot.wochentag}`]
+                    "
                     :options="instanzenForSlot(slot.id)"
                     :editing="isEditing(row.original)"
                 />

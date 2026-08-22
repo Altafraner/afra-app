@@ -42,38 +42,52 @@ const sortedOptions = computed(() => {
 <template>
     <span v-if="enrollment" class="flex gap-1 items-center">
         <template v-if="editing">
-            <UCheckbox v-model="enrollment.isFixed" size="xs" />
+            <UFieldGroup>
+                <UButton
+                    :color="enrollment.isFixed ? 'warning' : 'neutral'"
+                    :icon="enrollment.isFixed ? 'i-lucide-square-check-big' : 'i-lucide-square'"
+                    :variant="enrollment.isFixed ? 'solid' : 'outline'"
+                    size="sm"
+                    @click="enrollment.isFixed = !enrollment.isFixed"
+                />
 
-            <USelectMenu
-                v-model="enrollment.profundumInstanzId"
-                :items="sortedOptions"
-                label-key="profundumInfo.bezeichnung"
-                value-key="id"
-                clear
-                class="w-60"
-                :disabled="!enrollment.isFixed"
-            >
-                <template #item="{ item }">
-                    <span class="option-row gap-2">
-                        <span v-if="wishForOption(item)">
-                            ★ {{ wishForOption(item).rang }}
+                <USelectMenu
+                    v-model="enrollment.profundumInstanzId"
+                    :color="enrollment.isFixed ? 'warning' : 'neutral'"
+                    :disabled="!enrollment.isFixed"
+                    :highlight="enrollment.isFixed"
+                    :items="sortedOptions"
+                    class="w-60"
+                    clear
+                    label-key="profundumInfo.bezeichnung"
+                    value-key="id"
+                >
+                    <template #item="{ item }">
+                        <span class="option-row gap-2 w-full">
+                            <span v-if="wishForOption(item)">
+                                ★&nbsp;{{ wishForOption(item).rang }}
+                            </span>
+                            <span
+                                :class="{ 'font-bold': item.profundumInfo.profilProfundum }"
+                                class="w-full"
+                                >{{ item.profundumInfo.bezeichnung }}</span
+                            >
+                            <span
+                                >{{ item.numEinschreibungen }}/{{
+                                    item.maxEinschreibungen
+                                }}</span
+                            >
                         </span>
-                        <span :class="{ 'font-bold': item.profundumInfo.profilProfundum }">{{
-                            item.profundumInfo.bezeichnung
-                        }}</span>
-                        <span
-                            >({{ item.numEinschreibungen }} /
-                            {{ item.maxEinschreibungen }})</span
-                        >
-                    </span>
-                </template>
-            </USelectMenu>
+                    </template>
+                </USelectMenu>
+            </UFieldGroup>
         </template>
         <template v-else>
             <span class="readonly-value w-60 min-w-0 flex items-center gap-2">
                 <span v-if="wishForSelected" class="wish-indicator text-success shrink-0">
                     <UIcon name="i-lucide-crown" />
                     {{ wishForSelected.rang }}
+                    <span class="text-muted">({{ wishForSelected.unprocessedRang }})</span>
                 </span>
 
                 <UTooltip

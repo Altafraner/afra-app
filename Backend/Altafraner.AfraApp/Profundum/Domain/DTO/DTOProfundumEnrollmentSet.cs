@@ -20,7 +20,7 @@ public record struct DTOProfundumEnrollmentSet
     /// <summary>
     ///     The students enrollment preferences
     /// </summary>
-    public required IEnumerable<DTOWunsch> Wuensche { get; set; }
+    public required Dictionary<string, List<DtoProfundumWunsch>> Wuensche { get; set; }
 
     /// <summary>
     ///     Warnings about the students status of enrollment
