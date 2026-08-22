@@ -290,6 +290,30 @@ internal class ProfundumMatchingService
         return result;
     }
 
+    private static
+        Dictionary<(Person student, ProfundumSlot slot, ProfundumInstanz instanz), (int processed, int unprocessed)>
+        ProcessWuenscheSlotAwareForStudent(IEnumerable<ProfundumBelegWunsch> studentsWuensche,
+            Person student)
+    {
+        Dictionary<(Person student, ProfundumSlot slot, ProfundumInstanz instanz), (int processed, int unprocessed)>
+            result = [];
+        var wuenscheWithSlots = studentsWuensche.SelectMany(e =>
+            e.ProfundumDefinition.Instanzen.Where(i => i.Slots.Any(e.EinwahlZeitraum.Slots.Contains))
+                .SelectMany(i => i.Slots.Select(s => (e, s, i))));
+        var wuenscheBySlotsAndStudent = wuenscheWithSlots.GroupBy(e => e.s);
+        foreach (var wuensche in wuenscheBySlotsAndStudent)
+        {
+            var ordered = wuensche.Distinct().OrderBy(w => w.e.Rang).ToArray();
+            for (var rang = 0; rang < ordered.Length; rang++)
+            {
+                var current = ordered[rang];
+                result[(student, current.s, current.i)] = (rang + 1, current.e.Rang);
+            }
+        }
+
+        return result;
+    }
+
     /// <summary>
     ///     The reward for satisfying a wish of the given rank. Convex-decreasing (quadratic cost subtracted from a
     ///     base reward, floored) so that spreading bad outcomes across many students is preferred over concentrating
@@ -415,9 +439,20 @@ internal class ProfundumMatchingService
 
             var personsWishes = person.ProfundaBelegwuensche
                 .Where(e => currentZeitraum is not null && e.EinwahlZeitraum == currentZeitraum)
-                .Select(e => new DTOWunsch(e.ProfundumDefinition.Id,
-                    e.ProfundumDefinition.Instanzen.SelectMany(i => i.Slots).Select(s => s.Id).Distinct(),
-                    e.Rang));
+                .ToArray();
+            var transforms = ProcessWuenscheSlotAwareForStudent(personsWishes, person);
+            var niceWishes = new Dictionary<string, List<DtoProfundumWunsch>>();
+            foreach (var w in transforms)
+            {
+                if (!niceWishes.TryGetValue(w.Key.slot.ToString(), out var slotWishes)) slotWishes = [];
+
+                slotWishes = slotWishes
+                    .Prepend(new DtoProfundumWunsch(w.Key.instanz.Profundum.Id, w.Value.processed, w.Value.unprocessed))
+                    .OrderBy(e => e.Rang)
+                    .ToList();
+                niceWishes[w.Key.slot.ToString()] = slotWishes;
+            }
+
             var warnings = GetStudentWarnings(person,
                 currentSlots,
                 person.ProfundaEinschreibungen
@@ -442,7 +477,7 @@ internal class ProfundumMatchingService
             {
                 Person = new PersonInfoMinimal(person),
                 Enrollments = personsEnrollments,
-                Wuensche = personsWishes,
+                Wuensche = niceWishes,
                 Warnings = warnings,
                 Partnerschaften = myPairings.Select(p => new DTOProfundumPartnerWunschStaff(p)),
                 ZusatzInformation = zusatzInfoByPerson.GetValueOrDefault(person.Id, ""),

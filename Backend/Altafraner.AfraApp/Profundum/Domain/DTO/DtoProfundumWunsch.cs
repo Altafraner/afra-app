@@ -4,6 +4,6 @@ namespace Altafraner.AfraApp.Profundum.Domain.DTO;
 ///     A dto that represents a students enrollment wish
 /// </summary>
 /// <param name="Id">The id of the wished ProfundumDefinition</param>
-/// <param name="SlotId">the ids of the slots any Instanz of this Profundum occupies</param>
 /// <param name="Rang">the rank (1 = most preferred) this wish has</param>
-public record struct DTOWunsch(Guid Id, IEnumerable<Guid> SlotId, int Rang);
+/// <param name="UnprocessedRang">The rank as the student entered it before processing</param>
+public record struct DtoProfundumWunsch(Guid Id, int Rang, int UnprocessedRang);

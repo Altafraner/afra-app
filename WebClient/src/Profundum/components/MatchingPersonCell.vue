@@ -1,6 +1,6 @@
 <script setup>
 import UserPeek from '@/components/UserPeek.vue';
-import { formatStudent } from '@/helpers/formatters.ts';
+import { formatSlotId, formatStudent } from '@/helpers/formatters.ts';
 
 const props = defineProps({
     row: { type: Object, required: true },
@@ -44,9 +44,6 @@ const zusatzInfoLines = () => {
         return [props.row.zusatzInformation];
     }
 };
-
-const sortedWuensche = () =>
-    [...(props.row.wuensche ?? [])].toSorted((a, b) => a.rang - b.rang);
 </script>
 
 <template>
@@ -56,11 +53,17 @@ const sortedWuensche = () =>
         <UPopover v-if="row.wuensche.length !== 0">
             <UButton icon="i-lucide-crown" color="info" variant="ghost" size="sm" />
             <template #content>
-                <ol class="list-decimal pl-6 p-3">
-                    <li v-for="w in sortedWuensche()" :key="w.id">
-                        {{ profunda.find((p) => p.id === w.id)?.bezeichnung ?? '—' }}
+                <ul>
+                    <li v-for="(value, key) in row.wuensche" :key="key">
+                        <strong>{{ formatSlotId(key) }}</strong>
+                        <ol class="list-decimal pl-6 p-3">
+                            <li v-for="w in value" :key="w.id" :value="w.rang">
+                                ({{ w.unprocessedRang }})
+                                {{ profunda.find((p) => p.id === w.id)?.bezeichnung ?? '—' }}
+                            </li>
+                        </ol>
                     </li>
-                </ol>
+                </ul>
             </template>
         </UPopover>
         <span v-else></span>
@@ -92,7 +95,12 @@ const sortedWuensche = () =>
         <span v-else></span>
 
         <UPopover v-if="row.zusatzInformation">
-            <UButton icon="i-lucide-clipboard-list" color="secondary" variant="ghost" size="sm" />
+            <UButton
+                color="secondary"
+                icon="i-lucide-clipboard-list"
+                size="sm"
+                variant="ghost"
+            />
             <template #content>
                 <ul class="list-disc pl-4 p-3">
                     <li v-for="line in zusatzInfoLines()" :key="line">
