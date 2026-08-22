@@ -50,7 +50,7 @@ const zusatzInfoLines = () => {
     <span class="grid grid-cols-[19em_1fr_1fr_1fr_1fr_1fr] gap-1">
         <UserPeek :person="row.person" class="w-full min-w-0" fullSize showGroup />
 
-        <UPopover v-if="row.wuensche.length !== 0">
+        <UPopover v-if="Object.keys(row.wuensche).length > 0">
             <UButton icon="i-lucide-crown" color="info" variant="ghost" size="sm" />
             <template #content>
                 <ul>
