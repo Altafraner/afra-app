@@ -1,5 +1,5 @@
 <script setup>
-import { h } from 'vue';
+import { computed, h, ref } from 'vue';
 import { formatDate, formatDayOfWeek, formatTutor } from '@/helpers/formatters';
 import CreateWiederholungForm from '@/Otium/components/Management/CreateWiederholungForm.vue';
 import CancelWiederholungForm from '@/Otium/components/Management/CancelWiederholungForm.vue';
@@ -13,6 +13,8 @@ const props = defineProps({
     allowEdit: Boolean,
 });
 const overlay = useOverlay();
+
+const showDone = ref(false);
 
 async function showCreateDialog() {
     const modal = overlay.create(CreateWiederholungForm);
@@ -76,8 +78,9 @@ const columns = [
                     h(UButton, {
                         icon: 'i-lucide-pencil',
                         variant: 'ghost',
-                        color: 'primary',
+                        color: row.original.isDone ? 'neutral' : 'primary',
                         size: 'sm',
+                        disabled: row.original.isDone,
                         onClick: () => edit(row.original),
                     }),
                 ),
@@ -85,8 +88,9 @@ const columns = [
                     h(UButton, {
                         icon: 'i-lucide-square',
                         variant: 'ghost',
-                        color: 'warning',
+                        color: row.original.isDone ? 'neutral' : 'warning',
                         size: 'sm',
+                        disabled: row.original.isDone,
                         onClick: () => showCancelDialog(row.original),
                     }),
                 ),
@@ -94,8 +98,9 @@ const columns = [
                     h(UButton, {
                         icon: 'i-lucide-x',
                         variant: 'ghost',
-                        color: 'error',
+                        color: row.original.isDone ? 'neutral' : 'error',
                         size: 'sm',
+                        disabled: row.original.isDone,
                         onClick: () => emits('delete', row.original.id),
                     }),
                 ),
@@ -108,17 +113,34 @@ const columns = [
         },
     },
 ];
+
+const filtered = computed(() => props.regs.filter((reg) => showDone.value || !reg.isDone));
 </script>
 
 <template>
-    <UTable
-        :columns="columns"
-        :data="regs"
-        :ui="{
-            td: 'p-2 first:pl-4 last:pr-4',
-            th: 'p-2 first:pl-4 last:pr-4',
-        }"
-    />
+    <div class="w-full">
+        <UTable
+            :columns="columns"
+            :data="filtered"
+            :ui="{
+                td: 'p-2 first:pl-4 last:pr-4',
+                th: 'p-2 first:pl-4 last:pr-4',
+            }"
+        />
+        <USeparator />
+        <div class="py-2 px-4">
+            <UButton
+                v-if="!showDone"
+                label="Vergangene Regelmäßigkeiten anzeigen"
+                @click="showDone = true"
+            />
+            <UButton
+                v-else
+                label="Vergangene Regelmäßigkeiten ausblenden"
+                @click="showDone = false"
+            />
+        </div>
+    </div>
 </template>
 
 <style scoped></style>

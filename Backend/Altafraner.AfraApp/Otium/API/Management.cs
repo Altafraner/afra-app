@@ -77,9 +77,9 @@ public static class Management
         return Results.Ok(otia);
     }
 
-    private static IResult GetOtium(OtiumEndpointService service, Guid otiumId)
+    private static async Task<IResult> GetOtium(OtiumEndpointService service, Guid otiumId)
     {
-        var otium = service.GetOtium(otiumId);
+        var otium = await service.GetOtium(otiumId);
         return Results.Ok(otium);
     }
 

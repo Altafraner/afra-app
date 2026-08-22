@@ -35,6 +35,8 @@ public record ManagementWiederholungView
         BlockSchemaId = dbWiederholung.Block;
         Block = block;
         MaxEinschreibungen = dbWiederholung.MaxEinschreibungen;
+        var today = DateOnly.FromDateTime(DateTime.Now);
+        IsDone = today > EndDate;
     }
 
     /// <summary>
@@ -92,4 +94,9 @@ public record ManagementWiederholungView
     ///     The date of the Last Termin
     /// </summary>
     public DateOnly? EndDate { get; set; }
+
+    /// <summary>
+    ///     True, iff there are no termins left in the otium
+    /// </summary>
+    public required bool IsDone { get; init; }
 }
