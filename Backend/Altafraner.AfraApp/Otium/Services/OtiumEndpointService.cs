@@ -314,9 +314,9 @@ internal class OtiumEndpointService
     ///     Gets a single Otium
     /// </summary>
     /// <param name="otiumId">The ID of the Otium to get.</param>
-    public ManagementOtiumView GetOtium(Guid otiumId)
+    public async Task<ManagementOtiumView> GetOtium(Guid otiumId)
     {
-        var otium = _dbContext.Otia
+        var otium = await _dbContext.Otia
             .AsSplitQuery()
             .Include(o => o.Verantwortliche)
             .Include(o => o.Termine)
@@ -327,7 +327,7 @@ internal class OtiumEndpointService
             .Include(o => o.Wiederholungen.OrderBy(w => w.Wochentyp).ThenBy(w => w.Wochentyp).ThenBy(w => w.Block))
             .ThenInclude(t => t.Tutor)
             .Include(o => o.Kategorie)
-            .FirstOrDefault(o => o.Id == otiumId);
+            .FirstOrDefaultAsync(o => o.Id == otiumId);
 
         if (otium is null)
             throw new NotFoundException("Kein Otium mit dieser Id gefunden.");
