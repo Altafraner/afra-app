@@ -70,7 +70,7 @@ function submit(event) {
                 @submit="submit"
             >
                 <UFormField label="Plätze" name="maxEinschreibungen" required>
-                    <UInputNumber v-model="state.maxEinschreibungen" :min="1" class="w-full" />
+                    <UInputNumber v-model="state.maxEinschreibungen" :min="0" class="w-full" />
                 </UFormField>
                 <UFormField
                     label="Gewünschte Größe"
