@@ -24,7 +24,7 @@ const state = reactive({
 
 function validate(state) {
     const errors = [];
-    if (!state.maxEinschreibungen || state.maxEinschreibungen < 1) {
+    if (!state.maxEinschreibungen || state.maxEinschreibungen < 0) {
         errors.push({
             name: 'maxEinschreibungen',
             message: 'Bitte geben Sie die Platzzahl an.',
