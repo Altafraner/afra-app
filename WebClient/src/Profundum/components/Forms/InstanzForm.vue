@@ -24,7 +24,11 @@ const state = reactive({
 
 function validate(state) {
     const errors = [];
-    if (!state.maxEinschreibungen || state.maxEinschreibungen < 0) {
+    if (
+        state.maxEinschreibungen === undefined ||
+        state.maxEinschreibungen === null ||
+        state.maxEinschreibungen < 0
+    ) {
         errors.push({
             name: 'maxEinschreibungen',
             message: 'Bitte geben Sie die Platzzahl an.',
@@ -37,7 +41,8 @@ function validate(state) {
                 message: 'Die gewünschte Größe darf nicht negativ sein.',
             });
         } else if (
-            state.maxEinschreibungen &&
+            state.maxEinschreibungen !== null &&
+            state.maxEinschreibungen !== undefined &&
             state.wantedEinschreibungen > state.maxEinschreibungen
         ) {
             errors.push({
