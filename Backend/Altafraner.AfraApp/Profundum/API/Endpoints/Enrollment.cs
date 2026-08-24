@@ -1,5 +1,6 @@
 using Altafraner.AfraApp.Backbone.Auth;
 using Altafraner.AfraApp.Otium.API;
+using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.Profundum.Services;
 using Altafraner.AfraApp.User.Services;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -19,6 +20,30 @@ public static class Enrollment
     {
         var group = app.MapGroup("/sus")
             .RequireAuthorization(AuthorizationPolicies.MittelStufeStudentOnly);
+
+        // This is quick and dirty. It will need replacement
+        group.MapGet("/enrollments",
+            async (AfraAppContext dbContext, UserAccessor userAccessor) =>
+            {
+                var today = DateTimeOffset.UtcNow;
+                var userId = userAccessor.GetUserId();
+                var enrollments = await dbContext.ProfundaEinschreibungen
+                    .Include(e => e.Slot)
+                    .Include(e => e.ProfundumInstanz)
+                    .ThenInclude(e => e!.Profundum)
+                    .Where(e => e.IsFixed && e.BetroffenePersonId == userId &&
+                                e.Slot.EinwahlZeitraum.Veroeffentlichungsdatum < today)
+                    .ToArrayAsync();
+                var comparer = new ProfundumSlotComparer();
+                enrollments.Sort((e1, e2) => comparer.Compare(e2.Slot, e1.Slot));
+                return TypedResults.Ok(enrollments.Select(e => new
+                {
+                    SlotId = e.Slot.ToString(),
+                    Label = e.ProfundumInstanz?.Profundum.Bezeichnung,
+                    Location = e.ProfundumInstanz?.Ort
+                }));
+            });
+
         group.MapPost("/wuensche",
             async Task<Results<NoContent, Conflict<object>>> (ProfundumEnrollmentService svc, UserAccessor userAccessor,
                 List<Guid> wuensche,
