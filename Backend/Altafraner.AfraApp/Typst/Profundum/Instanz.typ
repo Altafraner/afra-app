@@ -95,15 +95,26 @@ heading(depth: 2)[Teilnehmer:innen]
 if (teilnehmer.len() == 0) [
   Keine Einschreibungen
 ] else {
-  table(
-    columns: (auto, auto),
-    align: (left, right),
-    stroke: none,
-    inset: 0pt,
-    row-gutter: 0.85em,
-    column-gutter: 1em,
-    table.header(text(weight: 520)[Name], text(weight: 520)[Klasse]),
-    ..(teilnehmer.map(e => (e.Nachname + ", " + e.Vorname, text(weight: 250, e.Gruppe)))).flatten()
-  )
+  let render-liste(items) = table(
+      columns: (1fr, auto),
+      align: (left, right),
+      stroke: none,
+      inset: 0pt,
+      row-gutter: 0.85em,
+      column-gutter: 1em,
+      table.header(text(weight: 520)[Name], text(weight: 520)[Klasse]),
+      ..(items.map(e => (e.Nachname + ", " + e.Vorname, text(weight: 250, e.Gruppe)))).flatten()
+    )
+
+    let half = calc.ceil(teilnehmer.len() / 2)
+    let spalte1 = teilnehmer.slice(0, half)
+    let spalte2 = teilnehmer.slice(half)
+
+    grid(
+      columns: (1fr, 1fr),
+      column-gutter: 2em,
+      render-liste(spalte1),
+      if spalte2.len() > 0 { render-liste(spalte2) },
+    )
 }
 }
