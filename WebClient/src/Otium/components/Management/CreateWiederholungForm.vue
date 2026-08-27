@@ -210,7 +210,6 @@ const wochentagOptions = [
                 class="flex flex-col gap-4"
                 @submit="submit"
             >
-                <pre>{{ state }}</pre>
                 <template v-if="!hasInitialData">
                     <UFormField label="Wochentyp" name="wochentyp" required>
                         <USelect
