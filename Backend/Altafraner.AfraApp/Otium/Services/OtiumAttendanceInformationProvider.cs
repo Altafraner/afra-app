@@ -184,7 +184,7 @@ internal sealed class OtiumAttendanceInformationProvider : IAttendanceInformatio
                 e => e.BetroffenePerson.Id,
                 (p, e) => new { Person = p, Einschreibung = e })
             .Where(e => e.Einschreibung == null && e.Person.Rolle == Rolle.Mittelstufe &&
-                        DateOnly.FromDateTime(e.Person.CreatedAt) >= block.SchultagKey)
+                        DateOnly.FromDateTime(e.Person.CreatedAt) <= block.SchultagKey)
             .Select(e => e.Person)
             .ToListAsync();
     }

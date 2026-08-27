@@ -135,7 +135,7 @@ internal class OtiumDashboardProvider : IDashboardProvider
             DateOnly monday,
             List<OtiumTermin> termine)
         {
-            if (mentee.Rolle != Rolle.Mittelstufe || DateOnly.FromDateTime(mentee.CreatedAt) < monday)
+            if (mentee.Rolle != Rolle.Mittelstufe || DateOnly.FromDateTime(mentee.CreatedAt) > monday)
                 return DashboardMenteeStatus.NotApplicable;
 
             var endOfWeek = monday.AddDays(7);
