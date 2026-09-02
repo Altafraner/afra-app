@@ -8,6 +8,7 @@ export const useOtiumStore = defineStore('otium', {
         defaultDay: null,
         kategorien: null,
         personen: null,
+        managementOtia: null,
     }),
     actions: {
         async updateKategorien() {
@@ -48,6 +49,15 @@ export const useOtiumStore = defineStore('otium', {
                 this.blocks = await blocksGetter.get();
             } catch (error) {
                 console.error('Error fetching blocks', error);
+            }
+        },
+        async updateManagementOtia(force = false) {
+            if (!force && this.managementOtia) return;
+            const getter = mande('/api/otium/management/otium');
+            try {
+                this.managementOtia = await getter.get();
+            } catch (error) {
+                console.error('Error fetching management otia', error);
             }
         },
     },

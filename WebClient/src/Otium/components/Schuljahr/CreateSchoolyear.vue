@@ -4,7 +4,7 @@ import { computed, h, reactive, ref, resolveComponent, watch } from 'vue';
 import { mande } from 'mande';
 import { useRouter } from 'vue-router';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
-import PersonSelectorNuxt from '@/components/PersonSelectorNuxt.vue';
+import PersonSelector from '@/components/PersonSelector.vue';
 import { ChipProps, FormError } from '@nuxt/ui';
 import ADateRangePicker from '@/components/Form/ADateRangePicker.vue';
 import { UserInfoMinimal } from '@/models/user/user.ts';
@@ -458,7 +458,7 @@ const supervisorColumns: TableColumn<SlotAndDayWithSupervisors>[] = [
     {
         header: 'Aufsichten',
         cell: ({ row }) => {
-            return h(PersonSelectorNuxt, {
+            return h(PersonSelector, {
                 class: 'w-full min-w-40',
                 multiple: true,
                 filter: (p: UserInfoMinimal) => p.rolle == 'Tutor',

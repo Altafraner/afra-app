@@ -29,4 +29,13 @@ public record DTOProfundumDefinitionCreation
 
     /// <inheritdoc cref="ProfundumDefinition.Dependencies"/>
     public ICollection<Guid> DependencyIds { get; set; } = [];
+
+    /// <inheritdoc cref="ProfundumDefinition.ErlaubtPartnerwahl"/>
+    public bool ErlaubtPartnerwahl { get; set; }
+
+    /// <inheritdoc cref="ProfundumDefinition.AusgeblendetInEinwahl"/>
+    public bool AusgeblendetInEinwahl { get; set; }
+
+    /// <inheritdoc cref="ProfundumDefinition.PflichtFuerBerechtigte"/>
+    public bool PflichtFuerBerechtigte { get; set; }
 }

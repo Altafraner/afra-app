@@ -1,4 +1,5 @@
 using Altafraner.AfraApp.Otium.Domain.Models;
+using Altafraner.AfraApp.Otium.Services;
 using Altafraner.AfraApp.Schuljahr.Domain.Models;
 using Altafraner.AfraApp.User.Domain.DTO;
 
@@ -21,6 +22,8 @@ public record KatalogTermin : IKatalogTermin
         Guid kategorie,
         BlockMetadata schema)
     {
+        var now = DateTime.Now;
+        var today = DateOnly.FromDateTime(now);
         Id = termin.Id;
         Otium = termin.Bezeichnung;
         Beschreibung = termin.Beschreibung;
@@ -37,6 +40,9 @@ public record KatalogTermin : IKatalogTermin
             .Order()
             .SkipWhile(d => d <= termin.Block.SchultagKey) ?? [];
         Block = new BlockInfo(termin.Block, schema);
+        Status = today < termin.Block.SchultagKey ? BlockHelper.BlockStatus.Pending :
+            today == termin.Block.SchultagKey ? BlockHelper.GetBlockStatus(schema, TimeOnly.FromDateTime(now)) :
+            BlockHelper.BlockStatus.Done;
     }
 
     /// <summary>
@@ -96,4 +102,9 @@ public record KatalogTermin : IKatalogTermin
     ///     A one time override name for the Otium Termin
     /// </summary>
     public string? Bezeichnung { get; set; }
+
+    /// <summary>
+    ///     The blocks status
+    /// </summary>
+    public BlockHelper.BlockStatus Status { get; set; }
 }

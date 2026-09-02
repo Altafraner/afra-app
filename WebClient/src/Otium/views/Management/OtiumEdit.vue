@@ -2,7 +2,7 @@
 import { useOtiumStore } from '@/Otium/stores/otium.js';
 import { useUser } from '@/stores/user';
 import { mande } from 'mande';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import SimpleBreadcrumb from '@/components/SimpleBreadcrumb.vue';
 import { findChildren, findPath } from '@/helpers/tree.js';
 import OtiumKategorieTag from '@/Otium/components/Shared/OtiumKategorieTag.vue';
@@ -13,7 +13,7 @@ import OtiumRegTable from '@/Otium/components/Management/OtiumRegTable.vue';
 import OtiumDateTable from '@/Otium/components/Management/OtiumDateTable.vue';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
 import KlassenrangeSelector from '@/components/KlassenRangeSelector.vue';
-import { convertMarkdownToHtml } from '@/composables/markdown.ts';
+import MarkdownEditor from '@/components/MarkdownEditor.vue';
 
 const props = defineProps({
     otiumId: String,
@@ -70,7 +70,6 @@ async function getOtium(setInternal = true) {
 async function getKlassen() {
     const getter = mande('/api/klassen');
     klassenstufen.value = await getter.get();
-    console.log(klassenstufen.value);
 }
 
 async function setup() {
@@ -236,7 +235,6 @@ async function cancelReg(id, date) {
 }
 
 async function createTermin(data) {
-    console.log(data);
     const api = mande(`/api/otium/management/termin`);
     try {
         await api.post({
@@ -312,6 +310,8 @@ async function editReg(data) {
 }
 
 setup();
+
+watch(() => props.otiumId, setup);
 
 const accordionItems = [
     {
@@ -396,16 +396,10 @@ const accordionItems = [
                 @update="updateBeschreibung"
             >
                 <template #body>
-                    <div v-html="convertMarkdownToHtml(otium.beschreibung)" />
+                    <MarkdownEditor :model-value="otium.beschreibung" :editable="false" />
                 </template>
                 <template #edit>
-                    <UTextarea
-                        v-model="beschreibung"
-                        :rows="2"
-                        maxlength="500"
-                        autoresize
-                        class="w-full"
-                    />
+                    <MarkdownEditor v-model="beschreibung" :maxlength="500" />
                 </template>
             </GridEditRow>
         </Grid>

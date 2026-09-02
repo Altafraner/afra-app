@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue';
-import { formatDate, formatTutor } from '@/helpers/formatters';
+import { formatCalendarDate, formatTutor } from '@/helpers/formatters';
 import { mande } from 'mande';
 import { useUser } from '@/stores/user';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
@@ -13,6 +13,7 @@ import { useConfirmPopover } from '@/composables/confirmPopover';
 import Notes from '@/Attendance/components/Notes.vue';
 import { convertMarkdownToHtml } from '@/composables/markdown.ts';
 import MobileSwitch from '@/components/MobileSwitch.vue';
+import { parseDate } from '@internationalized/date';
 
 const settings = useOtiumStore();
 const user = useUser();
@@ -98,7 +99,7 @@ async function multiEnroll() {
             toast.add({
                 color: 'warn',
                 title: 'Einschreibung teilweise fehlgeschlagen',
-                description: `Die Einschreibung in die folgenden Termine ist fehlgeschlagen: ${response.denied.map((d) => formatDate(new Date(d))).join(', ')}`,
+                description: `Die Einschreibung in die folgenden Termine ist fehlgeschlagen: ${response.denied.map((d) => formatCalendarDate(parseDate(d))).join(', ')}`,
             });
         }
     } catch (err) {
@@ -174,8 +175,93 @@ const description = computed(() => {
 <template>
     <MobileSwitch>
         <template #large>
+            <div
+                v-if="!props.minimal && description"
+                class="prosa m-trim mb-2"
+                v-html="description"
+            />
             <div class="grid auto-rows-[1fr] grid-cols-[1fr_auto] items-center gap-1">
                 <!-- Row 1 Column 1 -->
+                <SimpleBreadcrumb :model="findPath(settings.kategorien, otium.kategorie)" wrap>
+                    <template #item="{ item }">
+                        <OtiumKategorieTag :value="item" minimal />
+                    </template>
+                </SimpleBreadcrumb>
+
+                <!-- Row 1 Column 2 -->
+                <template v-if="user.isStudent">
+                    <UButton
+                        v-if="otium.einschreibung.eingeschrieben"
+                        :color="
+                            otium.einschreibung.notiz !== null ||
+                            otium.einschreibung.notizen.length !== 0
+                                ? 'warning'
+                                : 'secondary'
+                        "
+                        :loading="buttonLoading"
+                        class="w-full"
+                        icon="i-lucide-clipboard"
+                        label="Notizen"
+                        size="lg"
+                        variant="subtle"
+                        @click="editNotes"
+                    />
+                    <UButton
+                        v-else-if="
+                            !otium.einschreibung.eingeschrieben &&
+                            otium.einschreibung.kannBearbeiten &&
+                            otium.wiederholungen.length > 0
+                        "
+                        :loading="buttonLoading"
+                        class="w-full"
+                        color="secondary"
+                        icon="i-lucide-refresh-cw"
+                        label="Mehrmals Einschreiben"
+                        size="lg"
+                        variant="subtle"
+                        @click="() => multiEnroll()"
+                    />
+                    <span v-else />
+                </template>
+                <template v-else-if="user.isOtiumsverantwortlich">
+                    <UFieldGroup>
+                        <UTooltip text="Bearbeiten">
+                            <UButton
+                                aria-label="Bearbeiten"
+                                color="secondary"
+                                icon="i-lucide-pencil"
+                                size="lg"
+                                variant="ghost"
+                                @click="() => edit(otium)"
+                            />
+                        </UTooltip>
+                        <UTooltip v-if="otium.status !== 'Done'" text="Absagen">
+                            <UButton
+                                aria-label="Absagen"
+                                color="error"
+                                icon="i-lucide-square"
+                                size="lg"
+                                variant="ghost"
+                                @click="() => cancel(otium)"
+                            />
+                        </UTooltip>
+                        <UTooltip
+                            v-else
+                            text="Absagen nicht möglich, Termin liegt in der Vergangenheit"
+                        >
+                            <UButton
+                                aria-label="Absagen"
+                                color="neutral"
+                                disabled
+                                icon="i-lucide-square"
+                                size="lg"
+                                variant="ghost"
+                            />
+                        </UTooltip>
+                    </UFieldGroup>
+                </template>
+                <span v-else />
+                <!-- Row 2 Column 1 -->
                 <div class="flex flex-row gap-4 flex-wrap min-h-8">
                     <UBadge
                         v-if="otium.istAbgesagt"
@@ -192,7 +278,7 @@ const description = computed(() => {
                     </span>
                     <span v-if="otium.block.datum" class="inline-flex items-center gap-1">
                         <UIcon class="size-4" name="i-lucide-clock" />
-                        {{ formatDate(new Date(otium.block.datum)) }},
+                        {{ formatCalendarDate(parseDate(otium.block.datum)) }},
                         {{ otium.block.uhrzeit.start }} Uhr
                     </span>
                     <span class="inline-flex items-center gap-1">
@@ -201,7 +287,7 @@ const description = computed(() => {
                     </span>
                 </div>
 
-                <!-- Row 1 Column 2 -->
+                <!-- Row 2 Column 2 -->
                 <template v-if="user.isStudent">
                     <UButton
                         v-if="otium.istAbgesagt"
@@ -243,77 +329,7 @@ const description = computed(() => {
                 <span v-else>
                     <!-- At some point we'll add functionality to force enroll a student here -->
                 </span>
-                <!-- Row 2 Column 1 -->
-                <SimpleBreadcrumb :model="findPath(settings.kategorien, otium.kategorie)" wrap>
-                    <template #item="{ item }">
-                        <OtiumKategorieTag :value="item" minimal />
-                    </template>
-                </SimpleBreadcrumb>
-
-                <!-- Row 2 Column 2 -->
-                <template v-if="user.isStudent">
-                    <UButton
-                        v-if="otium.einschreibung.eingeschrieben"
-                        :loading="buttonLoading"
-                        :color="
-                            otium.einschreibung.notiz !== null ||
-                            otium.einschreibung.notizen.length !== 0
-                                ? 'warning'
-                                : 'secondary'
-                        "
-                        class="w-full"
-                        label="Notizen"
-                        icon="i-lucide-clipboard"
-                        size="lg"
-                        variant="subtle"
-                        @click="editNotes"
-                    />
-                    <UButton
-                        v-else-if="
-                            !otium.einschreibung.eingeschrieben &&
-                            otium.einschreibung.kannBearbeiten &&
-                            otium.wiederholungen.length > 0
-                        "
-                        :loading="buttonLoading"
-                        class="w-full"
-                        label="Mehrmals Einschreiben"
-                        color="secondary"
-                        icon="i-lucide-refresh-cw"
-                        size="lg"
-                        variant="subtle"
-                        @click="() => multiEnroll()"
-                    />
-                </template>
-                <template v-else-if="user.isOtiumsverantwortlich">
-                    <UFieldGroup>
-                        <UTooltip text="Bearbeiten">
-                            <UButton
-                                aria-label="Bearbeiten"
-                                color="secondary"
-                                icon="i-lucide-pencil"
-                                size="lg"
-                                variant="ghost"
-                                @click="() => edit(otium)"
-                            />
-                        </UTooltip>
-                        <UTooltip text="Absagen">
-                            <UButton
-                                aria-label="Absagen"
-                                color="error"
-                                icon="i-lucide-square"
-                                size="lg"
-                                variant="ghost"
-                                @click="() => cancel(otium)"
-                            />
-                        </UTooltip>
-                    </UFieldGroup>
-                </template>
-                <span v-else />
             </div>
-
-            <h3 class="font-bold mt-4 text-lg">Beschreibung</h3>
-            <div v-if="!props.minimal && description" v-html="description" />
-
             <UAlert
                 v-if="user.isStudent && otium.einschreibung.grund"
                 class="mt-4"
@@ -339,7 +355,7 @@ const description = computed(() => {
             </div>
             <div
                 v-if="!props.minimal && description"
-                class="mt-2 mb-3 text-justify hyphens-auto"
+                class="mt-2 mb-3 text-justify hyphens-auto prosa m-trim"
                 v-html="description"
             />
             <UAlert
@@ -358,10 +374,19 @@ const description = computed(() => {
                         @click="() => edit(otium)"
                     />
                     <UButton
+                        v-if="otium.status !== 'Done'"
                         color="error"
                         label="Absagen"
                         icon="i-lucide-square"
                         @click="() => cancel(otium)"
+                    />
+                    <UButton
+                        v-else
+                        color="error"
+                        disabled
+                        icon="i-lucide-square"
+                        label="Absagen nicht möglich"
+                        variant="outline"
                     />
                 </template>
                 <template v-if="user.isStudent">

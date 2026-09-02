@@ -1,17 +1,22 @@
 <script lang="ts" setup>
 import { useUser } from '@/stores/user';
-import { computed } from 'vue';
+import { computed, h, resolveComponent } from 'vue';
 import { formatTutor } from '@/helpers/formatters';
 import { mande } from 'mande';
 import { useRouter } from 'vue-router';
 import UserPeek from '@/components/UserPeek.vue';
 import { UserInfoMinimal } from '@/models/user/user';
 import { usePeople } from '@/stores/people';
+import { useConfirmPopover } from '@/composables/confirmPopover.ts';
+import { TableColumn } from '@nuxt/ui';
 
 const user = useUser();
 const router = useRouter();
 const toast = useToast();
 const peopleStore = usePeople();
+const confirm = useConfirmPopover();
+
+const UButton = resolveComponent('UButton');
 
 await peopleStore.updatePersonen();
 
@@ -71,29 +76,77 @@ const impersonate = async (userToImpersonate: UserInfoMinimal) => {
     await user.update();
     await router.push('/');
 };
+
+const deleteUser = async (userToDelete: UserInfoMinimal) => {
+    try {
+        const confirmed = await confirm.requireConfirm(
+            'Das Löschen kann nicht vollständig und nur unter hohen Umständen rückgängig gemacht werden.',
+            'Wollen Sie die Person wirklich löschen?',
+        );
+        if (!confirmed) return;
+        await mande(`/api/people/${userToDelete.id}`).delete();
+    } catch {
+        toast.add({
+            color: 'error',
+            title: 'Löschen fehlgeschlagen',
+        });
+    }
+    await peopleStore.updatePersonen(true);
+};
+
+const columns: TableColumn<UserInfoMinimal>[] = [
+    {
+        header: 'Nutzer',
+        cell: ({ row }) =>
+            h(UserPeek, {
+                person: row.original,
+            }),
+        meta: {
+            class: {
+                td: 'w-full',
+            },
+        },
+    },
+    {
+        id: 'impersonate',
+        cell: ({ row }) =>
+            h(UButton, {
+                icon: 'i-lucide-user',
+                variant: 'subtle',
+                label: 'Impersonieren',
+                onClick: () => impersonate(row.original),
+            }),
+    },
+    {
+        id: 'delete',
+        cell: ({ row }) =>
+            h(UButton, {
+                icon: 'i-lucide-x',
+                variant: 'subtle',
+                color: 'error',
+                label: 'Löschen',
+                onClick: () => deleteUser(row.original),
+            }),
+    },
+];
 </script>
 
 <template>
     <template v-if="isAdmin">
         <h1>Admin-Bereich</h1>
-        <h2>Impersonieren</h2>
-        <ul>
-            <li v-for="[gruppe, users] in personen" :key="gruppe" class="mb-4">
-                <h3 class="font-bold mb-2">{{ gruppe }}</h3>
-                <ul>
-                    <li class="flex flex-col gap-2">
-                        <div v-for="u in users" :key="u.id" class="flex flex-row items-center">
-                            <UButton
-                                icon="i-lucide-users"
-                                variant="subtle"
-                                @click="impersonate(u)"
-                            />
-                            <UserPeek :person="u" />
-                        </div>
-                    </li>
-                </ul>
-            </li>
-        </ul>
+        <h2>Nutzerübersicht</h2>
+        <div v-for="[gruppe, users] in personen" :key="gruppe" class="mb-4">
+            <h3 class="font-bold mb-2">{{ gruppe }}</h3>
+            <UTable
+                :columns="columns"
+                :data="users"
+                :ui="{
+                    td: 'whitespace-normal text-default px-2 py-1.5',
+                    th: 'px-2 py-1.5',
+                    root: 'overflow-x-visible',
+                }"
+            />
+        </div>
     </template>
     <template v-else>
         <h1>Kein Zugriff</h1>

@@ -40,6 +40,24 @@ public static class Management
         gp.MapPut("/slot/{id:guid}", (Mgmt svc, Guid id, DTOProfundumSlotCreation dto) => svc.UpdateSlotAsync(id, dto));
         gp.MapDelete("/slot/{id:guid}", (Mgmt svc, Guid id) => svc.DeleteSlotAsync(id));
 
+        var termin = gp.MapGroup("slot/{slotId:guid}/termin");
+        termin.MapGet("/", (Mgmt svc, Guid slotId) => svc.GetTermineAsync(slotId));
+        termin.MapPost("/", async (Mgmt svc, Guid slotId, DTOProfundumTerminCreation dto) =>
+        {
+            await svc.CreateTerminAsync(slotId, dto);
+            return TypedResults.NoContent();
+        });
+        termin.MapPut("/{day}", async (Mgmt svc, Guid slotId, DateOnly day, DTOProfundumTerminCreation dto) =>
+        {
+            await svc.UpdateTerminAsync(slotId, day, dto);
+            return TypedResults.NoContent();
+        });
+        termin.MapDelete("/{day}", async (Mgmt svc, Guid slotId, DateOnly day) =>
+        {
+            await svc.DeleteTerminAsync(slotId, day);
+            return TypedResults.NoContent();
+        });
+
         var kat = gp.MapGroup("kategorie");
         kat.MapGet("/", (Mgmt svc) => svc.GetKategorienAsync());
         kat.MapPost("/", async (Mgmt svc, DTOProfundumKategorieCreation kategorie) => (await svc.CreateKategorieAsync(kategorie)).Id);
@@ -48,10 +66,15 @@ public static class Management
 
         var pf = gp.MapGroup("profundum");
         pf.MapGet("/{id:guid}", (Mgmt svc, Guid id) => svc.GetProfundumAsync(id));
-        pf.MapGet("/", (Mgmt svc) => svc.GetProfundaAsync());
+        pf.MapGet("/", (Mgmt svc, bool includeHidden = false) => svc.GetProfundaAsync(includeHidden));
         pf.MapPost("/", async (Mgmt svc, DTOProfundumDefinitionCreation definition) => (await svc.CreateProfundumAsync(definition)).Id);
         pf.MapPut("/{id:guid}", async (Mgmt svc, Guid id, DTOProfundumDefinitionCreation definition) => (await svc.UpdateProfundumAsync(id, definition)).Id);
         pf.MapDelete("/{id:guid}", (Mgmt svc, Guid id) => svc.DeleteProfundumAsync(id));
+        pf.MapPut("/{id:guid}/hidden", async (Mgmt svc, Guid id, bool value) =>
+        {
+            await svc.SetProfundumHiddenAsync(id, value);
+            return TypedResults.Ok();
+        });
 
         var ins = gp.MapGroup("instanz");
         ins.MapPost("/", async (Mgmt svc, DTOProfundumInstanzCreation instanz) => (await svc.CreateInstanzAsync(instanz)).Id);
@@ -107,7 +130,16 @@ public static class Management
                 return TypedResults.NoContent();
             });
 
-        gp.MapPost("/matching", PerformMatchingSynchronized);
+        var partner = gp.MapGroup("partner");
+        partner.MapGet("/", (ProfundumPartnerService svc) => svc.GetAllWuenscheAsync());
+        partner.MapDelete("/{id:guid}", async (ProfundumPartnerService svc, Guid id) =>
+        {
+            await svc.DissolveWunschAsync(id);
+            return TypedResults.NoContent();
+        });
+
+        gp.MapPost("/matching", StartMatching);
+        gp.MapGet("/matching/status", (ProfundumMatchingRunner runner) => TypedResults.Ok(runner.GetStatus()));
         gp.MapPost("/finalize", (Match svc) => svc.FinalizeMatching());
         gp.MapGet("/enrollments", (Match svc) => svc.GetAllEnrollmentsAsync());
         gp.MapPut("/enrollment/{personId:guid}", PutEnrollmentsAsync);
@@ -118,34 +150,17 @@ public static class Management
             .RequireAuthorization(AuthorizationPolicies.TutorOnly);
     }
 
-    private static readonly SemaphoreSlim _matchingSemaphore = new SemaphoreSlim(1, 1);
-    private static async Task<Results<Ok<MatchingStats>, StatusCodeHttpResult>> PerformMatchingSynchronized(Match svc)
+    private static Results<Ok<DTOMatchingJobStatus>, StatusCodeHttpResult> StartMatching(ProfundumMatchingRunner runner)
     {
-        if (!await _matchingSemaphore.WaitAsync(0))
-            return TypedResults.StatusCode(429);
-        try
-        {
-            return TypedResults.Ok(await svc.PerformMatching());
-        }
-        finally
-        {
-            _matchingSemaphore.Release();
-        }
+        if (!runner.TryStart())
+            return TypedResults.StatusCode(StatusCodes.Status409Conflict);
+        return TypedResults.Ok(runner.GetStatus());
     }
 
-    private static async Task<Results<Ok, StatusCodeHttpResult>> PutEnrollmentsAsync(Mgmt svc, Guid personId, List<DTOProfundumEnrollment> enrollments)
+    private static async Task<Results<Ok, StatusCodeHttpResult>> PutEnrollmentsAsync(Mgmt svc, ProfundumMatchingRunner runner, Guid personId, List<DTOProfundumEnrollment> enrollments)
     {
-        if (!await _matchingSemaphore.WaitAsync(0))
-            return TypedResults.StatusCode(429);
-        try
-        {
-            await svc.UpdateEnrollmentsAsync(personId, enrollments);
-            return TypedResults.Ok();
-        }
-        finally
-        {
-            _matchingSemaphore.Release();
-        }
+        var ran = await runner.TryRunExclusiveAsync(() => svc.UpdateEnrollmentsAsync(personId, enrollments));
+        return ran ? TypedResults.Ok() : TypedResults.StatusCode(StatusCodes.Status409Conflict);
     }
 
     // TODO This is slow and should be replaced by something more in line with the new matching interface.

@@ -1,6 +1,7 @@
 <script setup>
-import { formatDate } from '@/helpers/formatters';
+import { formatCalendarDate } from '@/helpers/formatters';
 import { computed } from 'vue';
+import { parseDate } from '@internationalized/date';
 
 const props = defineProps({
     options: Array,
@@ -53,7 +54,7 @@ const increment_date = () => change_date((n) => n + 1);
 const decrement_date = () => change_date((n) => n - 1);
 
 function date_to_label(data) {
-    return new Date(data.datum);
+    return formatCalendarDate(parseDate(data.datum));
 }
 </script>
 
@@ -78,7 +79,7 @@ function date_to_label(data) {
             <template #item="{ item }">
                 <span class="inline-flex gap-2 justify-between w-full md:justify-start">
                     <span>
-                        {{ formatDate(date_to_label(item)) }}
+                        {{ date_to_label(item) }}
                     </span>
                     <UBadge
                         :label="item.wochentyp"
@@ -93,7 +94,7 @@ function date_to_label(data) {
                     class="inline-flex gap-2 justify-between w-full md:justify-start text-default"
                 >
                     <span>
-                        {{ formatDate(date_to_label(selectedOption)) }}
+                        {{ date_to_label(selectedOption) }}
                     </span>
                     <UBadge
                         :label="selectedOption.wochentyp"

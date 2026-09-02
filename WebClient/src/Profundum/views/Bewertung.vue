@@ -196,7 +196,6 @@ const quartaleSelect = computed(() => {
                         <template v-for="currentAnker in anker.ankerByKategorie[kategorie.id]">
                             <span class="flex items-center">
                                 <span
-                                    class=""
                                     v-html="convertMarkdownToHtml(currentAnker.label, true)"
                                 />
                             </span>

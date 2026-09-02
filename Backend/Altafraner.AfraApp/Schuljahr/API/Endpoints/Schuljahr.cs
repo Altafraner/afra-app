@@ -4,6 +4,7 @@ using Altafraner.AfraApp.Otium.Services;
 using Altafraner.AfraApp.Schuljahr.Domain.DTO;
 using Altafraner.AfraApp.Schuljahr.Services;
 using Altafraner.AfraApp.User.Domain.DTO;
+using Altafraner.AfraApp.User.Services;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
@@ -93,9 +94,10 @@ public static class Schuljahr
         return TypedResults.NoContent();
     }
 
-    private static async Task<IResult> GetSchuljahr(SchuljahrService schuljahrService)
+    private static async Task<IResult> GetSchuljahr(SchuljahrService schuljahrService, UserAccessor userAccessor)
     {
-        return Results.Ok(await schuljahrService.GetSchuljahrAsync());
+        var user = await userAccessor.GetUserAsync();
+        return Results.Ok(await schuljahrService.GetSchuljahrAsync(user));
     }
 
     private static async Task<IResult> AddSchultage(SchuljahrService schuljahrService, BlockHelper blockHelper,

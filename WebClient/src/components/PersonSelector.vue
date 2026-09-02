@@ -1,106 +1,58 @@
-<script setup>
+<script lang="ts" setup>
 import { formatTutor } from '@/helpers/formatters';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
-import { ref } from 'vue';
-import { FloatLabel, MultiSelect, Select } from 'primevue';
+import { computed, ref } from 'vue';
+import { UserInfoMinimal } from '@/models/user/user';
 
-const model = defineModel();
+const model = defineModel<string | string[] | undefined>();
 
 const settings = useOtiumStore();
-const personen = ref(null);
 const loading = ref(true);
 
-const props = defineProps({
-    multi: Boolean,
-    hideRolle: Boolean,
-    id: {
-        type: String,
-        default: 'betreuerSelect',
-        required: false,
+const props = withDefaults(
+    defineProps<{
+        hideRolle?: boolean;
+        filter?: (student: UserInfoMinimal) => boolean;
+        multiple?: boolean;
+    }>(),
+    {
+        hideRolle: false,
+        filter: () => true,
+        multiple: false,
     },
-    name: {
-        type: String,
-        default: 'betreuerSelect',
-        required: false,
-    },
-    filter: {
-        type: Function,
-        default: () => true,
-        required: false,
-    },
-});
+);
 
 async function getPersonen() {
-    const personenMapper = (person) => {
-        return {
-            id: person.id,
-            name: props.hideRolle
-                ? formatTutor(person)
-                : `${formatTutor(person)} (${person.rolle})`,
-        };
-    };
-
     await settings.updatePersonen();
-    personen.value = settings.personen.filter(props.filter).map(personenMapper);
     loading.value = false;
 }
 
 getPersonen();
+
+const personenMapper = (person: UserInfoMinimal) => {
+    return {
+        id: person.id,
+        label: props.hideRolle
+            ? formatTutor(person)
+            : `${formatTutor(person)} (${person.rolle})`,
+    };
+};
+
+const personenMapped = computed(() => {
+    return (
+        (settings.personen as UserInfoMinimal[] | null)
+            ?.filter(props.filter)
+            .map(personenMapper) ?? []
+    );
+});
 </script>
 
 <template>
-    <FloatLabel class="w-full" variant="on">
-        <template v-if="!props.multi">
-            <Select
-                :id="id"
-                :name="name"
-                v-model="model"
-                :loading="loading"
-                :options="personen"
-                filter
-                fluid
-                option-label="name"
-                option-value="id"
-                v-bind="$attrs"
-                aria-labelledby="student-label"
-            />
-        </template>
-        <template v-else>
-            <MultiSelect
-                :id="id"
-                :name="name"
-                v-model="model"
-                :loading="loading"
-                :options="personen"
-                display="chip"
-                option-label="name"
-                option-value="id"
-                v-bind="$attrs"
-                filter
-                aria-labelledby="student-label"
-            />
-        </template>
-        <label id="student-label">
-            <slot name="label">Betreuer:in</slot>
-        </label>
-    </FloatLabel>
+    <USelectMenu
+        v-model="model as any"
+        :items="personenMapped"
+        :loading="loading"
+        :multiple="multiple"
+        value-key="id"
+    />
 </template>
-
-<style scoped>
-.multiselect-wrap :deep(.p-multiselect-label-container) {
-    height: auto;
-}
-
-.multiselect-wrap :deep(.p-multiselect-label) {
-    display: flex;
-    flex-wrap: wrap;
-    white-space: normal;
-    gap: 0.25rem;
-    padding-top: 0.25rem;
-    padding-bottom: 0.25rem;
-}
-
-.multiselect-wrap :deep(.p-multiselect-token) {
-    margin-bottom: 0.25rem;
-}
-</style>

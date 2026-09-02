@@ -101,6 +101,12 @@ const navItems = [
     <NavBreadcrumb :items="navItems" />
     <h1>Einstellungen</h1>
 
+    <h2>Erscheinungsbild</h2>
+
+    <p>Wähle, ob die App im hellen oder dunklen Design angezeigt wird.</p>
+
+    <UColorModeSelect class="w-fit" color="neutral" variant="subtle" />
+
     <h2>Kalender abonnieren</h2>
 
     <p v-if="user.isStudent">

@@ -19,6 +19,11 @@ public record DTOProfundumDefinition
         DependencyIds = dbProfundumDefinition.Dependencies.Select(d => d.Id).ToArray();
         Fachbereiche = dbProfundumDefinition.Fachbereiche.Select(e => new DtoProfundumFachbereich(e));
         FachbereichIds = dbProfundumDefinition.Fachbereiche.Select(e => e.Id);
+        ErlaubtPartnerwahl = dbProfundumDefinition.ErlaubtPartnerwahl;
+        Hidden = dbProfundumDefinition.Hidden;
+        AusgeblendetInEinwahl = dbProfundumDefinition.AusgeblendetInEinwahl;
+        PflichtFuerBerechtigte = dbProfundumDefinition.PflichtFuerBerechtigte;
+        ProfilProfundum = dbProfundumDefinition.Kategorie.ProfilProfundum;
     }
 
     /// <inheritdoc cref="ProfundumDefinition.Id"/>
@@ -47,4 +52,19 @@ public record DTOProfundumDefinition
 
     /// <inheritdoc cref="ProfundumDefinition.Dependencies"/>
     public ICollection<Guid> DependencyIds { get; set; } = [];
+
+    /// <inheritdoc cref="ProfundumDefinition.ErlaubtPartnerwahl"/>
+    public bool ErlaubtPartnerwahl { get; set; }
+
+    /// <inheritdoc cref="ProfundumDefinition.Hidden"/>
+    public bool Hidden { get; set; }
+
+    /// <inheritdoc cref="ProfundumDefinition.AusgeblendetInEinwahl"/>
+    public bool AusgeblendetInEinwahl { get; set; }
+
+    /// <inheritdoc cref="ProfundumDefinition.PflichtFuerBerechtigte"/>
+    public bool PflichtFuerBerechtigte { get; set; }
+
+    /// <inheritdoc cref="ProfundumKategorie.ProfilProfundum"/>
+    public bool ProfilProfundum { get; set; }
 }

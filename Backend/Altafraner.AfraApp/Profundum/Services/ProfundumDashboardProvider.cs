@@ -64,11 +64,14 @@ internal class ProfundumDashboardProvider : IDashboardProvider
     public async Task<DashboardStudentOverview> GetStudentOverview(Person student, DateOnly start, int weeks)
     {
         var now = DateTime.Now;
+        var nowUtc = DateTime.UtcNow;
         var endDate = start.AddDays(7 * weeks);
 
         var termine = await _dbContext.ProfundaTermine
-            .Include(e => e.Slot)
-            .Where(e => e.Day >= start && e.Day < endDate)
+            .Include(e => e.Slot).ThenInclude(s => s.EinwahlZeitraum)
+            .Where(e => e.Day >= start && e.Day < endDate && e.Day >= DateOnly.FromDateTime(student.CreatedAt))
+            // Students only see a Termin once staff have published its Einwahlzeitraum's results.
+            .Where(e => e.Slot.EinwahlZeitraum.Veroeffentlichungsdatum != null && e.Slot.EinwahlZeitraum.Veroeffentlichungsdatum <= nowUtc)
             .ToListAsync();
         var slots = termine.Select(e => e.Slot).Distinct();
         var enrollments = await _dbContext.ProfundaEinschreibungen

@@ -5,7 +5,7 @@ import { usePeople } from '@/stores/people';
 import { UserInfoMinimal } from '@/models/user/user';
 import type { TableColumn } from '@nuxt/ui/components/Table.d.vue.ts';
 import { formatStudent } from '@/helpers/formatters';
-import PersonSelectorNuxt from '@/components/PersonSelectorNuxt.vue';
+import PersonSelector from '@/components/PersonSelector.vue';
 
 const UButton = resolveComponent('UButton');
 
@@ -97,7 +97,7 @@ const columns: TableColumn<any>[] = [
         <template #footer="{ close }">
             <div class="flex flex-col gap-2 w-full">
                 <UFormField v-if="!loading" label="Neue Aufsicht">
-                    <PersonSelectorNuxt
+                    <PersonSelector
                         v-model="selectedPerson"
                         :filter="(p: UserInfoMinimal) => p.rolle === 'Tutor'"
                         class="w-full"

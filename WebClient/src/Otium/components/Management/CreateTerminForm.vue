@@ -3,6 +3,7 @@ import { computed, reactive, ref, watch } from 'vue';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
 import { formatTutor } from '@/helpers/formatters';
 import OtiumDateSelector from '@/Otium/components/Form/OtiumDateSelector.vue';
+import MarkdownEditor from '@/components/MarkdownEditor.vue';
 import { UserInfoMinimal } from '@/models/user/user.ts';
 import { FormError, FormSubmitEvent } from '@nuxt/ui';
 
@@ -243,7 +244,7 @@ watch(
                     name="hasOverwriteDescription"
                 />
                 <UFormField v-if="state.hasTutor" label="Betreuer:in" name="tutor">
-                    <PersonSelectorNuxt
+                    <PersonSelector
                         v-model="state.person"
                         class="w-full"
                         placeholder="Betreuer:in wählen"
@@ -274,11 +275,9 @@ watch(
                     label="Beschreibung"
                     name="description"
                 >
-                    <UTextarea
+                    <MarkdownEditor
                         v-model="state.description"
-                        :rows="3"
-                        autoresize
-                        class="w-full"
+                        :maxlength="500"
                         placeholder="Abweichende Beschreibung eingeben"
                     />
                 </UFormField>

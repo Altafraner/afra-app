@@ -2,7 +2,7 @@
 import { useFeedback } from '@/Profundum/composables/feedback';
 import { computed, shallowRef } from 'vue';
 import type { ProfundumFeedbackStatus } from '@/Profundum/models/feedback';
-import { chooseColorNuxtUi, formatSlot } from '@/helpers/formatters';
+import { chooseColor, formatSlot } from '@/helpers/formatters';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
 import type { AccordionItem } from '@nuxt/ui/components/Accordion.d.vue.ts';
 import { ProfundumSlot } from '@/Profundum/models/verwaltung.ts';
@@ -92,7 +92,7 @@ async function publish(evt: Event, id: string, status: boolean) {
                         @click="publish($event, item.info.id, false)"
                     />
                     <UBadge
-                        :color="chooseColorNuxtUi((100 * item.done) / item.count, 25, true)"
+                        :color="chooseColor((100 * item.done) / item.count, 25, true)"
                         variant="soft"
                         class="min-w-12 justify-center"
                         >{{ item.done }} / {{ item.count }}</UBadge
