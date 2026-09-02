@@ -64,10 +64,11 @@ internal class ProfundumAttendanceInformationProvider : IAttendanceInformationPr
         if (date is null) throw new KeyNotFoundException();
 
         var personen = await _dbContext.ProfundaInstanzen
-            .Include(e => e.Einschreibungen.Where(e2 => e2.SlotId == date.Slot.Id))
+            .Include(e => e.Einschreibungen.Where(e2 => e2.SlotId == date.SlotId))
             .ThenInclude(e => e.BetroffenePerson)
             .Where(e => e.Id == eventId)
             .SelectMany(e => e.Einschreibungen)
+            .Where(e => e.SlotId == date.SlotId)
             .Select(e => e.BetroffenePerson)
             .OrderBy(e => e.FirstName)
             .ThenBy(e => e.LastName)
