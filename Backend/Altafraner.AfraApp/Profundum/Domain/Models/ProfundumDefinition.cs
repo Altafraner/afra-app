@@ -64,6 +64,34 @@ public class ProfundumDefinition : IHasTimestamps, IHasUserTracking
     /// </summary>
     public List<ProfundumDefinition> Dependants { get; set; } = null!;
 
+    /// <summary>
+    ///     Whether the organizer allows students to submit a mutual team-partner wish for this Profundum. See
+    ///     <see cref="ProfundumPartnerEinladung" />/<see cref="ProfundumPartnerWunsch" />.
+    /// </summary>
+    public bool ErlaubtPartnerwahl { get; set; }
+
+    /// <summary>
+    ///     If true, hides this Profundum from staff management interfaces by default. Independent of
+    ///     <see cref="AusgeblendetInEinwahl" /> - this only affects the management list, never the student-facing
+    ///     Einwahl catalog.
+    /// </summary>
+    public bool Hidden { get; set; }
+
+    /// <summary>
+    ///     If true, hides this Profundum from the student-facing Einwahl catalog (<c>GetKatalog</c>), without
+    ///     affecting staff management visibility or any existing Einschreibung/Bewertung/calendar entry. Independent
+    ///     of <see cref="Hidden" />.
+    /// </summary>
+    public bool AusgeblendetInEinwahl { get; set; }
+
+    /// <summary>
+    ///     If true, every student within <see cref="MinKlasse" />/<see cref="MaxKlasse" /> is expected to enroll
+    ///     whenever this Profundum is offered - the matching solver applies a soft penalty (see
+    ///     <c>Services.Rules.PflichtProfundumRule</c>) to any such eligible student who ends up not enrolled in it,
+    ///     without ever making a matching run infeasible over it.
+    /// </summary>
+    public bool PflichtFuerBerechtigte { get; set; }
+
     /// <inheritdoc/>
     public DateTime CreatedAt { get; set; }
 

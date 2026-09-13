@@ -26,8 +26,11 @@ internal class ProfundumModule : IModule
             .Bind(config.GetSection("Profundum"));
 
         services.AddScoped<ProfundumEnrollmentService>();
+        services.AddScoped<ProfundumPartnerService>();
+        services.AddSingleton<ProfundumPartnerTokenService>();
         services.AddScoped<ProfundumManagementService>();
         services.AddScoped<ProfundumMatchingService>();
+        services.AddSingleton<ProfundumMatchingRunner>();
         services.AddScoped<ProfundumFachbereicheService>();
         services.AddScoped<FeedbackAnkerService>();
         services.AddScoped<FeedbackKategorienService>();

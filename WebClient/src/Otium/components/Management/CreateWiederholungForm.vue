@@ -6,6 +6,7 @@ import OtiumDateSelector from '@/Otium/components/Form/OtiumDateSelector.vue';
 import { UserInfoMinimal } from '@/models/user/user.ts';
 import { usePeople } from '@/stores/people.ts';
 import { FormError, FormSubmitEvent } from '@nuxt/ui';
+import { getDayOfWeek, getLocalTimeZone, parseDate, today } from '@internationalized/date';
 
 const emit = defineEmits(['close']);
 
@@ -91,22 +92,19 @@ async function setup() {
 const datesAvailable = computed(() => {
     if (!state.wochentyp || !state.wochentag || !state.block) return [];
 
-    const now = new Date(new Date().toDateString());
-    const result = dates.value.filter((date) => {
-        const datum = new Date(date.datum);
+    const now = today(getLocalTimeZone());
+    return dates.value.filter((date) => {
+        const datum = parseDate(date.datum);
         return (
             date.blocks.some((b: any) => b.schemaId === (state.block ?? '')) &&
-            datum >= now &&
-            datum.getDay() === state.wochentag &&
+            datum.compare(now) > 0 &&
+            getDayOfWeek(datum, 'de-DE', 'sun') === state.wochentag &&
             date.wochentyp === state.wochentyp
         );
     });
-    console.log(result);
-    return result;
 });
 
 watch(datesAvailable, (newValue) => {
-    console.log(newValue);
     if (newValue.length == 0) {
         state.start = undefined;
         state.end = undefined;
@@ -286,7 +284,7 @@ const wochentagOptions = [
                 <USwitch v-model="state.hasTutor" label="Betreuer:in zuweisen" />
                 <USwitch v-model="state.hasMaxTn" label="Teilnehmer:innen begrenzen" />
                 <UFormField v-if="state.hasTutor" label="Betreuer:in" name="tutor" required>
-                    <PersonSelectorNuxt
+                    <PersonSelector
                         v-model="state.tutor"
                         class="w-full"
                         placeholder="Betreuer:in auswählen"

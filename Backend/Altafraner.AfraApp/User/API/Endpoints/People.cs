@@ -28,6 +28,8 @@ internal static class People
             .RequireAuthorization(AuthorizationPolicies.TeacherOrAdmin);
         app.MapGet("/api/klassen", GetKlassen)
             .RequireAuthorization();
+        app.MapDelete("/api/people/{userId:guid}", DeletePerson)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly);
         var attendanceConfiguration = app.ServiceProvider.GetService<IOptions<AttendanceConfiguration>>();
         if (string.IsNullOrWhiteSpace(attendanceConfiguration?.Value.Cevex?.FilePath)) return;
         app.MapGet("/api/people/cevex", GetCevex)
@@ -40,6 +42,7 @@ internal static class People
         HttpContext httpContext)
     {
         var people = dbContext.Personen
+            .Where(p => !p.Deleted)
             .OrderBy(p => p.LastName)
             .ThenBy(p => p.FirstName)
             .Select(p => new PersonInfoMinimal(p))
@@ -79,7 +82,7 @@ internal static class People
         var cevexDict = cevexData.ToDictionary(data => data.Guid);
         var people = await dbContext.Personen
             .AsNoTracking()
-            .Where(p => p.Rolle == Rolle.Mittelstufe || p.Rolle == Rolle.Oberstufe)
+            .Where(p => p.Rolle == Rolle.Mittelstufe || (p.Rolle == Rolle.Oberstufe && !p.Deleted))
             .OrderByDescending(p => p.CevexId == null)
             .ThenBy(p => p.LastName)
             .ThenBy(p => p.FirstName)
@@ -149,5 +152,20 @@ internal static class People
         {
             return Results.NotFound();
         }
+    }
+
+    private static async Task<Results<NoContent, Conflict>> DeletePerson(Guid userId, UserService userService)
+    {
+        var user = await userService.GetUserByIdAsync(userId);
+        try
+        {
+            await userService.SoftDelete(user);
+        }
+        catch (InvalidOperationException)
+        {
+            return TypedResults.Conflict();
+        }
+
+        return TypedResults.NoContent();
     }
 }

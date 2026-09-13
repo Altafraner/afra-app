@@ -1,55 +1,41 @@
 <script setup>
 import { onMounted, ref } from 'vue';
 import { mande } from 'mande';
-import { Button, Calendar, Dialog } from 'primevue';
+import { getLocalTimeZone, parseAbsolute } from '@internationalized/date';
 
 import Grid from '@/components/Form/Grid.vue';
 import GridEditRow from '@/components/Form/GridEditRow.vue';
+import ADateTimePicker from '@/components/Form/ADateTimePicker.vue';
+import CreateEinwahlzeitraumForm from '@/Profundum/components/Forms/CreateEinwahlzeitraumForm.vue';
+import { useConfirmPopover } from '@/composables/confirmPopover';
+import { formatCalendarDateTime } from '@/helpers/formatters.ts';
 
 const toast = useToast();
+const { requireConfirm } = useConfirmPopover();
+const overlay = useOverlay();
 const api = mande('/api/profundum/management/einwahlzeitraum');
 
 const zeitraeume = ref([]);
 const loading = ref(true);
-
-const dialogOpen = ref(false);
-const createModel = ref({
-    einwahlStart: null,
-    einwahlStop: null,
-});
-
-function toDateOrNull(value) {
-    if (!value) return null;
-    const d = new Date(value);
-    return isNaN(d.getTime()) ? null : d;
-}
 
 async function load() {
     loading.value = true;
     const res = await api.get();
     zeitraeume.value = res.map((z) => ({
         ...z,
-        einwahlStartDate: toDateOrNull(z.einwahlStart),
-        einwahlStopDate: toDateOrNull(z.einwahlStop),
+        einwahlStartDate: parseAbsolute(z.einwahlStart),
+        einwahlStopDate: parseAbsolute(z.einwahlStop),
+        veroeffentlichungsdatumDate: z.veroeffentlichungsdatum
+            ? parseAbsolute(z.veroeffentlichungsdatum)
+            : undefined,
     }));
     loading.value = false;
 }
 
-async function createEinwahlzeitraum() {
+async function createEinwahlzeitraum(data) {
     try {
-        await api.post({
-            einwahlStart: createModel.value.einwahlStart
-                ? createModel.value.einwahlStart.toISOString()
-                : null,
-            einwahlStop: createModel.value.einwahlStop
-                ? createModel.value.einwahlStop.toISOString()
-                : null,
-        });
-
+        await api.post(data);
         toast.add({ color: 'success', title: 'Einwahlzeitraum angelegt' });
-
-        dialogOpen.value = false;
-        createModel.value = { einwahlStart: null, einwahlStop: null };
         await load();
     } catch (e) {
         toast.add({
@@ -60,12 +46,28 @@ async function createEinwahlzeitraum() {
     }
 }
 
+const createDialog = overlay.create(CreateEinwahlzeitraumForm);
+
+async function openCreateDialog() {
+    const data = await createDialog.open();
+    if (!data) return;
+    await createEinwahlzeitraum(data);
+}
+
 async function updateEinwahlzeitraum(z) {
     try {
         await api.put(`/${z.id}`, {
             id: z.id,
-            einwahlStart: z.einwahlStartDate ? z.einwahlStartDate.toISOString() : null,
-            einwahlStop: z.einwahlStopDate ? z.einwahlStopDate.toISOString() : null,
+            bezeichnung: z.bezeichnung,
+            einwahlStart: z.einwahlStartDate
+                ? z.einwahlStartDate.toDate(getLocalTimeZone()).toISOString()
+                : null,
+            einwahlStop: z.einwahlStopDate
+                ? z.einwahlStopDate.toDate(getLocalTimeZone()).toISOString()
+                : null,
+            veroeffentlichungsdatum: z.veroeffentlichungsdatumDate
+                ? z.veroeffentlichungsdatumDate.toDate(getLocalTimeZone()).toISOString()
+                : null,
         });
 
         toast.add({ color: 'success', title: 'Einwahlzeitraum gespeichert' });
@@ -80,7 +82,13 @@ async function updateEinwahlzeitraum(z) {
 }
 
 async function deleteEinwahlzeitraum(z) {
-    if (!confirm('Möchten Sie diesen Einwahlzeitraum wirklich löschen?')) return;
+    if (
+        !(await requireConfirm(
+            'Möchten Sie diesen Einwahlzeitraum wirklich löschen?',
+            'Einwahlzeitraum löschen',
+        ))
+    )
+        return;
 
     try {
         await api.delete(`/${z.id}`);
@@ -114,39 +122,39 @@ onMounted(load);
             <GridEditRow
                 v-for="z in zeitraeume"
                 :key="z.id"
-                header="Einwahlzeitraum"
+                header=""
                 :canDelete="true"
                 @update="updateEinwahlzeitraum(z)"
                 @delete="deleteEinwahlzeitraum(z)"
             >
                 <template #body>
                     <span>
-                        {{ z.einwahlStartDate?.toLocaleString('de-DE') ?? '–' }}
+                        {{ z.bezeichnung }}: {{ formatCalendarDateTime(z.einwahlStartDate) }}
                         –
-                        {{ z.einwahlStopDate?.toLocaleString('de-DE') ?? '–' }}
+                        {{ formatCalendarDateTime(z.einwahlStopDate) }}
+                        <template v-if="z.veroeffentlichungsdatumDate">
+                            · veröffentlicht ab
+                            {{ formatCalendarDateTime(z.veroeffentlichungsdatumDate) }}
+                        </template>
+                        <template v-else> · nicht veröffentlicht </template>
                     </span>
                 </template>
 
                 <template #edit>
-                    <div class="flex flex-col gap-2 w-full">
-                        <div>
-                            <label class="block mb-1">Start</label>
-                            <Calendar
-                                v-model="z.einwahlStartDate"
-                                showTime
-                                hourFormat="24"
-                                class="w-full"
-                            />
-                        </div>
-                        <div>
-                            <label class="block mb-1">Ende</label>
-                            <Calendar
-                                v-model="z.einwahlStopDate"
-                                showTime
-                                hourFormat="24"
-                                class="w-full"
-                            />
-                        </div>
+                    <div class="flex gap-2 w-full items-end">
+                        <UFormField label="Bezeichnung">
+                            <UInput v-model="z.bezeichnung" />
+                        </UFormField>
+                        <UFormField label="Start" required>
+                            <ADateTimePicker v-model="z.einwahlStartDate" />
+                        </UFormField>
+                        <span class="mb-2">–</span>
+                        <UFormField label="Ende" required>
+                            <ADateTimePicker v-model="z.einwahlStopDate" />
+                        </UFormField>
+                        <UFormField label="Veröffentlichungsdatum">
+                            <ADateTimePicker v-model="z.veroeffentlichungsdatumDate" />
+                        </UFormField>
                     </div>
                 </template>
             </GridEditRow>
@@ -154,46 +162,13 @@ onMounted(load);
 
         <div v-else>Keine Einwahlzeiträume vorhanden.</div>
 
-        <Button
-            icon="pi pi-plus"
+        <UButton
+            icon="i-lucide-plus"
             label="Neuer Einwahlzeitraum"
             class="mt-4"
-            @click="dialogOpen = true"
+            @click="openCreateDialog"
         />
     </template>
-
-    <Dialog v-model:visible="dialogOpen" header="Neuer Einwahlzeitraum" modal>
-        <div class="flex flex-col gap-3">
-            <div>
-                <label class="block mb-1">Start</label>
-                <Calendar
-                    v-model="createModel.einwahlStart"
-                    showTime
-                    hourFormat="24"
-                    class="w-full"
-                />
-            </div>
-
-            <div>
-                <label class="block mb-1">Ende</label>
-                <Calendar
-                    v-model="createModel.einwahlStop"
-                    showTime
-                    hourFormat="24"
-                    class="w-full"
-                />
-            </div>
-        </div>
-
-        <template #footer>
-            <Button label="Abbrechen" @click="dialogOpen = false" />
-            <Button label="Speichern" icon="pi pi-check" @click="createEinwahlzeitraum" />
-        </template>
-    </Dialog>
 </template>
 
-<style scoped>
-:deep(.p-inputtext) {
-    width: 100%;
-}
-</style>
+<style scoped></style>

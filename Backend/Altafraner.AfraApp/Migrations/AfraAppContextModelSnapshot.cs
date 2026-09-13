@@ -21,7 +21,7 @@ namespace Altafraner.AfraApp.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.9")
+                .HasAnnotation("ProductVersion", "10.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "attendance_entry_type", new[] { "automatic", "manual" });
@@ -517,23 +517,23 @@ namespace Altafraner.AfraApp.Migrations
 
             modelBuilder.Entity("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumBelegWunsch", b =>
                 {
-                    b.Property<Guid>("ProfundumInstanzId")
+                    b.Property<Guid>("ProfundumDefinitionId")
                         .HasColumnType("uuid")
-                        .HasColumnName("profundum_instanz_id");
+                        .HasColumnName("profundum_definition_id");
 
                     b.Property<Guid>("BetroffenePersonId")
                         .HasColumnType("uuid")
                         .HasColumnName("betroffene_person_id");
 
-                    b.Property<int>("Stufe")
-                        .HasColumnType("integer")
-                        .HasColumnName("stufe");
-
                     b.Property<Guid>("EinwahlZeitraumId")
                         .HasColumnType("uuid")
                         .HasColumnName("einwahl_zeitraum_id");
 
-                    b.HasKey("ProfundumInstanzId", "BetroffenePersonId", "Stufe")
+                    b.Property<int>("Rang")
+                        .HasColumnType("integer")
+                        .HasColumnName("rang");
+
+                    b.HasKey("ProfundumDefinitionId", "BetroffenePersonId", "EinwahlZeitraumId")
                         .HasName("pk_profunda_beleg_wuensche");
 
                     b.HasIndex("BetroffenePersonId")
@@ -545,12 +545,46 @@ namespace Altafraner.AfraApp.Migrations
                     b.ToTable("profunda_beleg_wuensche");
                 });
 
+            modelBuilder.Entity("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumBelegWunschEntwurf", b =>
+                {
+                    b.Property<Guid>("ProfundumDefinitionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("profundum_definition_id");
+
+                    b.Property<Guid>("BetroffenePersonId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("betroffene_person_id");
+
+                    b.Property<Guid>("EinwahlZeitraumId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("einwahl_zeitraum_id");
+
+                    b.Property<int>("Rang")
+                        .HasColumnType("integer")
+                        .HasColumnName("rang");
+
+                    b.HasKey("ProfundumDefinitionId", "BetroffenePersonId", "EinwahlZeitraumId")
+                        .HasName("pk_profunda_beleg_wuensche_entwuerfe");
+
+                    b.HasIndex("BetroffenePersonId")
+                        .HasDatabaseName("ix_profunda_beleg_wuensche_entwuerfe_betroffene_person_id");
+
+                    b.HasIndex("EinwahlZeitraumId")
+                        .HasDatabaseName("ix_profunda_beleg_wuensche_entwuerfe_einwahl_zeitraum_id");
+
+                    b.ToTable("profunda_beleg_wuensche_entwuerfe");
+                });
+
             modelBuilder.Entity("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumDefinition", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
+
+                    b.Property<bool>("AusgeblendetInEinwahl")
+                        .HasColumnType("boolean")
+                        .HasColumnName("ausgeblendet_in_einwahl");
 
                     b.Property<string>("Beschreibung")
                         .IsRequired()
@@ -572,6 +606,14 @@ namespace Altafraner.AfraApp.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("created_by_id");
 
+                    b.Property<bool>("ErlaubtPartnerwahl")
+                        .HasColumnType("boolean")
+                        .HasColumnName("erlaubt_partnerwahl");
+
+                    b.Property<bool>("Hidden")
+                        .HasColumnType("boolean")
+                        .HasColumnName("hidden");
+
                     b.Property<Guid>("KategorieId")
                         .HasColumnType("uuid")
                         .HasColumnName("kategorie_id");
@@ -591,6 +633,10 @@ namespace Altafraner.AfraApp.Migrations
                     b.Property<int?>("MinKlasse")
                         .HasColumnType("integer")
                         .HasColumnName("min_klasse");
+
+                    b.Property<bool>("PflichtFuerBerechtigte")
+                        .HasColumnType("boolean")
+                        .HasColumnName("pflicht_fuer_berechtigte");
 
                     b.HasKey("Id")
                         .HasName("pk_profunda");
@@ -654,6 +700,11 @@ namespace Altafraner.AfraApp.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<string>("Bezeichnung")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("bezeichnung");
+
                     b.Property<DateTime>("EinwahlStart")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("einwahl_start");
@@ -661,6 +712,10 @@ namespace Altafraner.AfraApp.Migrations
                     b.Property<DateTime>("EinwahlStop")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("einwahl_stop");
+
+                    b.Property<DateTime?>("Veroeffentlichungsdatum")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("veroeffentlichungsdatum");
 
                     b.HasKey("Id")
                         .HasName("pk_profundum_einwahl_zeitraeume");
@@ -724,6 +779,10 @@ namespace Altafraner.AfraApp.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("profundum_id");
 
+                    b.Property<int?>("WantedEinschreibungen")
+                        .HasColumnType("integer")
+                        .HasColumnName("wanted_einschreibungen");
+
                     b.HasKey("Id")
                         .HasName("pk_profunda_instanzen");
 
@@ -756,24 +815,101 @@ namespace Altafraner.AfraApp.Migrations
                     b.ToTable("profunda_kategorien");
                 });
 
-            modelBuilder.Entity("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumProfilBefreiung", b =>
+            modelBuilder.Entity("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumPartnerEinladung", b =>
                 {
-                    b.Property<Guid>("BetroffenePersonId")
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
-                        .HasColumnName("betroffene_person_id");
+                        .HasColumnName("id");
 
-                    b.Property<int>("Jahr")
-                        .HasColumnType("integer")
-                        .HasColumnName("jahr");
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
 
-                    b.Property<int>("Quartal")
-                        .HasColumnType("integer")
-                        .HasColumnName("quartal");
+                    b.Property<Guid>("EinwahlZeitraumId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("einwahl_zeitraum_id");
 
-                    b.HasKey("BetroffenePersonId", "Jahr", "Quartal")
-                        .HasName("pk_profundum_profil_befreiungen");
+                    b.Property<Guid>("InitiatorPersonId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("initiator_person_id");
 
-                    b.ToTable("profundum_profil_befreiungen");
+                    b.Property<DateTime>("LastModified")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_modified");
+
+                    b.Property<Guid>("ProfundumDefinitionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("profundum_definition_id");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("token");
+
+                    b.HasKey("Id")
+                        .HasName("pk_profundum_partner_einladungen");
+
+                    b.HasIndex("InitiatorPersonId")
+                        .HasDatabaseName("ix_profundum_partner_einladungen_initiator_person_id");
+
+                    b.HasIndex("ProfundumDefinitionId")
+                        .HasDatabaseName("ix_profundum_partner_einladungen_profundum_definition_id");
+
+                    b.HasIndex("EinwahlZeitraumId", "Token")
+                        .IsUnique()
+                        .HasDatabaseName("ix_profundum_partner_einladungen_einwahl_zeitraum_id_token");
+
+                    b.ToTable("profundum_partner_einladungen");
+                });
+
+            modelBuilder.Entity("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumPartnerWunsch", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("EinwahlZeitraumId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("einwahl_zeitraum_id");
+
+                    b.Property<DateTime>("LastModified")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_modified");
+
+                    b.Property<Guid>("PersonAId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("person_a_id");
+
+                    b.Property<Guid>("PersonBId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("person_b_id");
+
+                    b.Property<Guid>("ProfundumDefinitionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("profundum_definition_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_profundum_partner_wuensche");
+
+                    b.HasIndex("EinwahlZeitraumId")
+                        .HasDatabaseName("ix_profundum_partner_wuensche_einwahl_zeitraum_id");
+
+                    b.HasIndex("PersonAId")
+                        .HasDatabaseName("ix_profundum_partner_wuensche_person_a_id");
+
+                    b.HasIndex("PersonBId")
+                        .HasDatabaseName("ix_profundum_partner_wuensche_person_b_id");
+
+                    b.HasIndex("ProfundumDefinitionId")
+                        .HasDatabaseName("ix_profundum_partner_wuensche_profundum_definition_id");
+
+                    b.ToTable("profundum_partner_wuensche");
                 });
 
             modelBuilder.Entity("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumSlot", b =>
@@ -850,6 +986,30 @@ namespace Altafraner.AfraApp.Migrations
                         .HasDatabaseName("ix_profunda_termine_slot_id");
 
                     b.ToTable("profunda_termine");
+                });
+
+            modelBuilder.Entity("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumZusatzInformation", b =>
+                {
+                    b.Property<Guid>("BetroffenePersonId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("betroffene_person_id");
+
+                    b.Property<Guid>("EinwahlZeitraumId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("einwahl_zeitraum_id");
+
+                    b.Property<string>("Information")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("information");
+
+                    b.HasKey("BetroffenePersonId", "EinwahlZeitraumId")
+                        .HasName("pk_profundum_zusatz_informationen");
+
+                    b.HasIndex("EinwahlZeitraumId")
+                        .HasDatabaseName("ix_profundum_zusatz_informationen_einwahl_zeitraum_id");
+
+                    b.ToTable("profundum_zusatz_informationen");
                 });
 
             modelBuilder.Entity("Altafraner.AfraApp.Schuljahr.Domain.Models.Block", b =>
@@ -938,6 +1098,14 @@ namespace Altafraner.AfraApp.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("cevex_sync_failure_time");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<bool>("Deleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("deleted");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(150)
@@ -959,6 +1127,10 @@ namespace Altafraner.AfraApp.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("gruppe");
+
+                    b.Property<DateTime>("LastModified")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_modified");
 
                     b.Property<string>("LastName")
                         .IsRequired()
@@ -1370,18 +1542,48 @@ namespace Altafraner.AfraApp.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_profunda_beleg_wuensche_profundum_einwahl_zeitraeume_einwahl_~");
 
-                    b.HasOne("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumInstanz", "ProfundumInstanz")
+                    b.HasOne("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumDefinition", "ProfundumDefinition")
                         .WithMany()
-                        .HasForeignKey("ProfundumInstanzId")
+                        .HasForeignKey("ProfundumDefinitionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_profunda_beleg_wuensche_profunda_instanzen_profundum_instanz~");
+                        .HasConstraintName("fk_profunda_beleg_wuensche_profunda_profundum_definition_id");
 
                     b.Navigation("BetroffenePerson");
 
                     b.Navigation("EinwahlZeitraum");
 
-                    b.Navigation("ProfundumInstanz");
+                    b.Navigation("ProfundumDefinition");
+                });
+
+            modelBuilder.Entity("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumBelegWunschEntwurf", b =>
+                {
+                    b.HasOne("Altafraner.AfraApp.User.Domain.Models.Person", "BetroffenePerson")
+                        .WithMany()
+                        .HasForeignKey("BetroffenePersonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_profunda_beleg_wuensche_entwuerfe_personen_betroffene_perso~");
+
+                    b.HasOne("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumEinwahlZeitraum", "EinwahlZeitraum")
+                        .WithMany()
+                        .HasForeignKey("EinwahlZeitraumId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_profunda_beleg_wuensche_entwuerfe_profundum_einwahl_zeitraeum~");
+
+                    b.HasOne("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumDefinition", "ProfundumDefinition")
+                        .WithMany()
+                        .HasForeignKey("ProfundumDefinitionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_profunda_beleg_wuensche_entwuerfe_profunda_profundum_defini~");
+
+                    b.Navigation("BetroffenePerson");
+
+                    b.Navigation("EinwahlZeitraum");
+
+                    b.Navigation("ProfundumDefinition");
                 });
 
             modelBuilder.Entity("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumDefinition", b =>
@@ -1436,16 +1638,73 @@ namespace Altafraner.AfraApp.Migrations
                     b.Navigation("Profundum");
                 });
 
-            modelBuilder.Entity("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumProfilBefreiung", b =>
+            modelBuilder.Entity("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumPartnerEinladung", b =>
                 {
-                    b.HasOne("Altafraner.AfraApp.User.Domain.Models.Person", "BetroffenePerson")
+                    b.HasOne("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumEinwahlZeitraum", "EinwahlZeitraum")
                         .WithMany()
-                        .HasForeignKey("BetroffenePersonId")
+                        .HasForeignKey("EinwahlZeitraumId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_profundum_profil_befreiungen_personen_betroffene_person_id");
+                        .HasConstraintName("fk_profundum_partner_einladungen_profundum_einwahl_zeitraeume_~");
 
-                    b.Navigation("BetroffenePerson");
+                    b.HasOne("Altafraner.AfraApp.User.Domain.Models.Person", "InitiatorPerson")
+                        .WithMany()
+                        .HasForeignKey("InitiatorPersonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_profundum_partner_einladungen_personen_initiator_person_id");
+
+                    b.HasOne("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumDefinition", "ProfundumDefinition")
+                        .WithMany()
+                        .HasForeignKey("ProfundumDefinitionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_profundum_partner_einladungen_profunda_profundum_definition~");
+
+                    b.Navigation("EinwahlZeitraum");
+
+                    b.Navigation("InitiatorPerson");
+
+                    b.Navigation("ProfundumDefinition");
+                });
+
+            modelBuilder.Entity("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumPartnerWunsch", b =>
+                {
+                    b.HasOne("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumEinwahlZeitraum", "EinwahlZeitraum")
+                        .WithMany()
+                        .HasForeignKey("EinwahlZeitraumId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_profundum_partner_wuensche_profundum_einwahl_zeitraeume_ein~");
+
+                    b.HasOne("Altafraner.AfraApp.User.Domain.Models.Person", "PersonA")
+                        .WithMany()
+                        .HasForeignKey("PersonAId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_profundum_partner_wuensche_personen_person_a_id");
+
+                    b.HasOne("Altafraner.AfraApp.User.Domain.Models.Person", "PersonB")
+                        .WithMany()
+                        .HasForeignKey("PersonBId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_profundum_partner_wuensche_personen_person_b_id");
+
+                    b.HasOne("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumDefinition", "ProfundumDefinition")
+                        .WithMany()
+                        .HasForeignKey("ProfundumDefinitionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_profundum_partner_wuensche_profunda_profundum_definition_id");
+
+                    b.Navigation("EinwahlZeitraum");
+
+                    b.Navigation("PersonA");
+
+                    b.Navigation("PersonB");
+
+                    b.Navigation("ProfundumDefinition");
                 });
 
             modelBuilder.Entity("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumSlot", b =>
@@ -1470,6 +1729,27 @@ namespace Altafraner.AfraApp.Migrations
                         .HasConstraintName("fk_profunda_termine_profunda_slots_slot_id");
 
                     b.Navigation("Slot");
+                });
+
+            modelBuilder.Entity("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumZusatzInformation", b =>
+                {
+                    b.HasOne("Altafraner.AfraApp.User.Domain.Models.Person", "BetroffenePerson")
+                        .WithMany()
+                        .HasForeignKey("BetroffenePersonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_profundum_zusatz_informationen_personen_betroffene_person_id");
+
+                    b.HasOne("Altafraner.AfraApp.Profundum.Domain.Models.ProfundumEinwahlZeitraum", "EinwahlZeitraum")
+                        .WithMany()
+                        .HasForeignKey("EinwahlZeitraumId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_profundum_zusatz_informationen_profundum_einwahl_zeitraeume~");
+
+                    b.Navigation("BetroffenePerson");
+
+                    b.Navigation("EinwahlZeitraum");
                 });
 
             modelBuilder.Entity("Altafraner.AfraApp.Schuljahr.Domain.Models.Block", b =>

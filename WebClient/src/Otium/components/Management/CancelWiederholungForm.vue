@@ -2,6 +2,12 @@
 import { useOtiumStore } from '@/Otium/stores/otium.js';
 import { ref } from 'vue';
 import OtiumDateSelector from '@/Otium/components/Form/OtiumDateSelector.vue';
+import {
+    getDayOfWeek,
+    getLocalTimeZone,
+    parseDate,
+    today as getToday,
+} from '@internationalized/date';
 
 const props = defineProps({
     wiederholung: {
@@ -17,13 +23,13 @@ const settings = useOtiumStore();
 const end = ref<string | null>(null);
 const loading = ref(true);
 
-const today = new Date();
-const startDate = new Date(props.wiederholung.startDate);
-const endDate = new Date(props.wiederholung.endDate);
+const today = getToday(getLocalTimeZone());
+const startDate = parseDate(props.wiederholung.startDate);
+const endDate = parseDate(props.wiederholung.endDate);
 const datesAvailable = (settings.schuljahr ?? ([] as any[])).filter((day) => {
-    const datum = new Date(day.datum);
+    const datum = parseDate(day.datum);
     return (
-        datum.getDay() === props.wiederholung.wochentag &&
+        getDayOfWeek(datum, 'de-DE', 'sun') === props.wiederholung.wochentag &&
         day.wochentyp === props.wiederholung.wochentyp &&
         datum >= startDate &&
         datum >= today &&

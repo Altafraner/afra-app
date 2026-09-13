@@ -87,14 +87,31 @@ internal sealed class OtiumAttendanceInformationProvider : IAttendanceInformatio
                 Name = e.Termin.Bezeichnung,
                 Location = e.Termin.Ort
             })
-            .ToArray();
+            .ToList();
+        var eventIds = attendances.Select(e => e.EventId).ToArray();
+        var eventsWithoutEnrollments = await _dbContext.OtiaTermine
+            .Include(e => e.Otium)
+            .Where(e => e.Block == block && !eventIds.Contains(e.Id))
+            .OrderBy(e => e.Ort)
+            .Select(e => new EventWithEnrollments
+            {
+                Enrollments = Enumerable.Empty<Person>(),
+                EventId = e.Id,
+                Location = e.Ort,
+                Name = e.Bezeichnung
+            })
+            .ToArrayAsync();
+        attendances.AddRange(eventsWithoutEnrollments);
+        var finalEvents = attendances.OrderBy(e => e.Location);
 
-        if (!schema.Verpflichtend) return attendances;
+        if (!schema.Verpflichtend) return finalEvents;
 
         var attending = attendances.SelectMany(e => e.Enrollments);
-        var nonAttending = await _dbContext.Personen.Where(e => e.Rolle == Rolle.Mittelstufe && !attending.Contains(e))
+        var nonAttending = await _dbContext.Personen
+            .Where(e => e.Rolle == Rolle.Mittelstufe && !attending.Contains(e) &&
+                        DateOnly.FromDateTime(e.CreatedAt) <= block.SchultagKey)
             .ToListAsync();
-        return attendances.Prepend(new EventWithEnrollments
+        return finalEvents.Prepend(new EventWithEnrollments
         {
             Enrollments = nonAttending,
             EventId = Guid.Empty,
@@ -166,7 +183,8 @@ internal sealed class OtiumAttendanceInformationProvider : IAttendanceInformatio
                 e => e.Id,
                 e => e.BetroffenePerson.Id,
                 (p, e) => new { Person = p, Einschreibung = e })
-            .Where(e => e.Einschreibung == null && e.Person.Rolle == Rolle.Mittelstufe)
+            .Where(e => e.Einschreibung == null && e.Person.Rolle == Rolle.Mittelstufe &&
+                        DateOnly.FromDateTime(e.Person.CreatedAt) <= block.SchultagKey)
             .Select(e => e.Person)
             .ToListAsync();
     }

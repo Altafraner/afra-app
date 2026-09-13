@@ -1,6 +1,9 @@
 using Altafraner.AfraApp.Backbone.Auth;
+using Altafraner.AfraApp.Otium.API;
+using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.Profundum.Services;
 using Altafraner.AfraApp.User.Services;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
 namespace Altafraner.AfraApp.Profundum.API.Endpoints;
@@ -17,15 +20,86 @@ public static class Enrollment
     {
         var group = app.MapGroup("/sus")
             .RequireAuthorization(AuthorizationPolicies.MittelStufeStudentOnly);
-        group.MapPost("/wuensche", async (ProfundumEnrollmentService svc, UserAccessor userAccessor, Dictionary<String, Guid[]> wuensche) =>
-            await svc.RegisterBelegWunschAsync(await userAccessor.GetUserAsync(), wuensche)
+
+        // This is quick and dirty. It will need replacement
+        group.MapGet("/enrollments",
+            async (AfraAppContext dbContext, UserAccessor userAccessor) =>
+            {
+                var today = DateTimeOffset.UtcNow;
+                var userId = userAccessor.GetUserId();
+                var enrollments = await dbContext.ProfundaEinschreibungen
+                    .Include(e => e.Slot)
+                    .Include(e => e.ProfundumInstanz)
+                    .ThenInclude(e => e!.Profundum)
+                    .Where(e => e.IsFixed && e.BetroffenePersonId == userId &&
+                                e.Slot.EinwahlZeitraum.Veroeffentlichungsdatum < today)
+                    .ToArrayAsync();
+                var comparer = new ProfundumSlotComparer();
+                enrollments.Sort((e1, e2) => comparer.Compare(e2.Slot, e1.Slot));
+                return TypedResults.Ok(enrollments.Select(e => new
+                {
+                    SlotId = e.Slot.ToString(),
+                    Label = e.ProfundumInstanz?.Profundum.Bezeichnung,
+                    Location = e.ProfundumInstanz?.Ort
+                }));
+            });
+
+        group.MapPost("/wuensche",
+            async Task<Results<NoContent, Conflict<object>>> (ProfundumEnrollmentService svc, UserAccessor userAccessor,
+                List<Guid> wuensche,
+                bool dry = false) =>
+            {
+                try
+                {
+                    await svc.RegisterBelegWunschAsync(await userAccessor.GetUserAsync(), wuensche, dryRun: dry);
+                }
+                catch (ProfundumEinwahlWunschException e)
+                {
+                    return TypedResults.Conflict<object>(new
+                    {
+                        Error = e.Message
+                    });
+                }
+
+                return TypedResults.NoContent();
+            }
         );
+        group.MapPost("/wuensche/entwurf", async (ProfundumEnrollmentService svc, UserAccessor userAccessor, List<Guid> wuensche) =>
+            await svc.RegisterBelegWunschAsync(await userAccessor.GetUserAsync(), wuensche, istEntwurf: true)
+        );
+        group.MapPost("/wuensche/zusatzinfo",
+            async (ProfundumEnrollmentService svc, UserAccessor userAccessor, ValueWrapper<string> request) =>
+            {
+                await svc.SetZusatzInformationAsync(await userAccessor.GetUserAsync(), request.Value);
+                return TypedResults.NoContent();
+            });
         group.MapGet("/wuensche", async (ProfundumEnrollmentService svc, UserAccessor userAccessor) => svc.GetKatalog(await userAccessor.GetUserAsync()));
         group.MapGet("/einschreibungen", GetEnrollmentsAsync);
         group.MapGet("/einwahl/aktiv", (AfraAppContext db) =>
         {
             var now = DateTime.UtcNow;
             return db.ProfundumEinwahlZeitraeume.Any(ez => ez.EinwahlStart <= now && now < ez.EinwahlStop);
+        });
+
+        var partner = group.MapGroup("/partner");
+        partner.MapGet("/", async (ProfundumPartnerService svc, UserAccessor userAccessor) =>
+        {
+            var (einladungen, wuensche) = await svc.GetForStudentAsync(await userAccessor.GetUserAsync());
+            return Results.Ok(new { einladungen, wuensche });
+        });
+        partner.MapPost("/{definitionId:guid}", async (ProfundumPartnerService svc, UserAccessor userAccessor, Guid definitionId) =>
+            await svc.CreateEinladungAsync(await userAccessor.GetUserAsync(), definitionId));
+        partner.MapPost("/redeem/{definitionId:guid}/{token}", async (ProfundumPartnerService svc, UserAccessor userAccessor, Guid definitionId, string token) =>
+            await svc.RedeemEinladungAsync(await userAccessor.GetUserAsync(), definitionId, token));
+        partner.MapDelete("/einladung/{token}", async (ProfundumPartnerService svc, UserAccessor userAccessor, string token) =>
+        {
+            await svc.DeleteEinladungAsync(await userAccessor.GetUserAsync(), token);
+            return Results.NoContent();
+        });
+        partner.MapDelete("/wunsch/{id:guid}", async (ProfundumPartnerService svc, UserAccessor userAccessor, Guid id) =>
+        {
+            await svc.DeleteWunschAsync(await userAccessor.GetUserAsync(), id);
+            return Results.NoContent();
         });
     }
 

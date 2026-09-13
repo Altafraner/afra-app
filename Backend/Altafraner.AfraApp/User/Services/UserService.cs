@@ -1,3 +1,4 @@
+using Altafraner.AfraApp.User.Domain.Contracts;
 using Altafraner.AfraApp.User.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,13 +10,16 @@ namespace Altafraner.AfraApp.User.Services;
 public class UserService
 {
     private readonly AfraAppContext _dbContext;
+    private readonly IServiceProvider _serviceProvider;
 
     /// <summary>
     ///     Called by DI
     /// </summary>
-    public UserService(AfraAppContext dbContext)
+    public UserService(AfraAppContext dbContext,
+        IServiceProvider serviceProvider)
     {
         _dbContext = dbContext;
+        _serviceProvider = serviceProvider;
     }
 
     /// <summary>
@@ -106,7 +110,7 @@ public class UserService
     }
 
     /// <summary>
-    ///     Gets the grade level of a student based on their group.
+    ///     Gets the current grade level of a student based on their group.
     /// </summary>
     /// <exception cref="InvalidOperationException">The person is not a student</exception>
     /// <exception cref="InvalidDataException">The persons group does not contain a valid grade level</exception>
@@ -115,10 +119,25 @@ public class UserService
         if (person.Rolle == Rolle.Tutor)
             throw new InvalidOperationException("Only students have a grade level.");
 
-        if (string.IsNullOrWhiteSpace(person.Gruppe) || !char.IsAsciiDigit(person.Gruppe[0]))
+        return ParseKlassenstufe(person.Gruppe);
+    }
+
+    private static int ParseKlassenstufe(string? gruppe)
+    {
+        if (string.IsNullOrWhiteSpace(gruppe) || !char.IsAsciiDigit(gruppe[0]))
             throw new InvalidDataException("The person does not have a valid group.");
 
-        return Convert.ToInt32(String.Concat(person.Gruppe.TakeWhile(char.IsAsciiDigit)));
+        return Convert.ToInt32(String.Concat(gruppe.TakeWhile(char.IsAsciiDigit)));
+    }
+
+    /// <summary>
+    ///     Sets a person's <see cref="Person.Gruppe" />. This is the only place <see cref="Person.Gruppe" /> should
+    ///     ever be written. Does not save changes; the caller is expected to as part of its own batch (e.g. one
+    ///     LDAP sync run).
+    /// </summary>
+    public void SetGruppe(Person person, string? gruppe)
+    {
+        person.Gruppe = gruppe;
     }
 
     /// <summary>
@@ -134,5 +153,19 @@ public class UserService
             .Select(int.Parse)
             .Order()
             .Distinct();
+    }
+
+    /// <summary>
+    ///     Softly deletes a user from the database
+    /// </summary>
+    public async Task SoftDelete(Person user)
+    {
+        if (user.LdapObjectId is not null && user.LdapSyncFailureTime is null)
+            throw new InvalidOperationException("The user is synced via ldap and may not be deleted.");
+        var handlers = _serviceProvider.GetRequiredService<IEnumerable<IUserEventHandler>>();
+
+        foreach (var handler in handlers) await handler.OnUserSoftDeletedAsync(user);
+
+        await _dbContext.SaveChangesAsync();
     }
 }

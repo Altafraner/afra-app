@@ -14,10 +14,13 @@ public static class AddRulesExtension
     {
         services.AddScoped<IProfundumIndividualRule, AllSlotsRule>();
         services.AddScoped<IProfundumAggregateRule, MaxEinschreibungenRule>();
+        services.AddScoped<IProfundumAggregateRule, WantedEinschreibungenRule>();
+        services.AddScoped<IProfundumAggregateRule, PartnerPairingRule>();
         services.AddScoped<IProfundumIndividualRule, ProfilRule>();
         services.AddScoped<IProfundumIndividualRule, NotMultipleInstancesOfSameProfundumRule>();
         services.AddScoped<IProfundumIndividualRule, KlassenLimitsRule>();
         services.AddScoped<IProfundumIndividualRule, DependencyRule>();
+        services.AddScoped<IProfundumIndividualRule, PflichtProfundumRule>();
         services.AddScoped<IRulesFactory, ServiceProviderRulesFactory>();
     }
 }

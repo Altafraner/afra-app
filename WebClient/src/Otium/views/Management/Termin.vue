@@ -3,12 +3,13 @@ import { computed, ref } from 'vue';
 import { useUser } from '@/stores/user';
 import { mande } from 'mande';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
-import { formatDate, formatPerson } from '@/helpers/formatters';
+import { formatCalendarDate, formatPerson } from '@/helpers/formatters';
 import Grid from '@/components/Form/Grid.vue';
 import GridEditRow from '@/components/Form/GridEditRow.vue';
 import { useConfirmPopover } from '@/composables/confirmPopover';
 import HybridAttendanceTable from '@/Attendance/components/HybridAttendanceTable.vue';
-import { convertMarkdownToHtml } from '@/composables/markdown.ts';
+import MarkdownEditor from '@/components/MarkdownEditor.vue';
+import { parseDate } from '@internationalized/date';
 
 const props = defineProps({
     terminId: String,
@@ -60,7 +61,7 @@ const navItems = computed(() => [
     {
         label:
             otium.value != null
-                ? `${formatDate(new Date(otium.value.datum))} ${otium.value.block}`
+                ? `${formatCalendarDate(parseDate(otium.value.datum))}, ${otium.value.block}`
                 : '',
     },
 ]);
@@ -199,7 +200,7 @@ await fetchData();
     <grid>
         <GridEditRow header="Datum" hide-edit>
             <template #body>
-                {{ formatDate(new Date(otium.datum)) }}
+                {{ formatCalendarDate(parseDate(otium.datum)) }}
             </template>
         </GridEditRow>
         <GridEditRow header="Block" hide-edit>
@@ -237,7 +238,7 @@ await fetchData();
             <template #edit>
                 <div class="w-full flex flex-col gap-3">
                     <USwitch v-model="betreuerZuweisenSelected" label="Betreuer:in zuweisen" />
-                    <PersonSelectorNuxt
+                    <PersonSelector
                         v-model="personSelected"
                         :disabled="!betreuerZuweisenSelected"
                         name="tutor"
@@ -305,7 +306,7 @@ await fetchData();
             @update="updateBeschreibung"
         >
             <template v-if="otium.beschreibung" #body>
-                <div v-html="convertMarkdownToHtml(otium.beschreibung)" />
+                <MarkdownEditor :model-value="otium.beschreibung" :editable="false" />
             </template>
             <template #body v-else> Unverändert </template>
             <template #edit>
@@ -319,12 +320,9 @@ await fetchData();
                         label="Beschreibung"
                         name="beschreibung"
                     >
-                        <UTextarea
+                        <MarkdownEditor
                             v-model="beschreibung"
                             :maxlength="500"
-                            :rows="2"
-                            autoresize
-                            class="w-full"
                             placeholder="Beschreibung eingeben"
                         />
                     </UFormField>

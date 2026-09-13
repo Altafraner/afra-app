@@ -1,22 +1,14 @@
 <script setup>
-import {
-    Button,
-    Checkbox,
-    Column,
-    DataTable,
-    InputText,
-    MultiSelect,
-    Popover,
-    Select,
-    Tag,
-} from 'primevue';
 import { mande } from 'mande';
-import { computed, nextTick, ref } from 'vue';
+import { computed, ref } from 'vue';
+import { useIntervalFn } from '@vueuse/core';
 import { useConfirmPopover } from '@/composables/confirmPopover';
-import UserPeek from '@/components/UserPeek.vue';
-import { FilterMatchMode, FilterService } from '@primevue/core/api';
-import { formatSlot } from '@/helpers/formatters.ts';
+import { formatCalendarDate, formatSlot } from '@/helpers/formatters.ts';
+import { fuzzyMatch } from '@/helpers/fuzzy.ts';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
+import MatchingPersonCell from '@/Profundum/components/MatchingPersonCell.vue';
+import MatchingSlotCell from '@/Profundum/components/MatchingSlotCell.vue';
+import { parseAbsolute } from '@internationalized/date';
 
 const navItems = [
     {
@@ -33,39 +25,25 @@ const navItems = [
     },
 ];
 
-const instanzenFilters = ref({
-    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-
-    'profundumInfo.bezeichnung': {
-        value: null,
-        matchMode: FilterMatchMode.CONTAINS,
-    },
-    slots: {
-        value: null,
-        matchMode: 'slotsAny',
-    },
-});
-
-FilterService.register('slotsAny', (rowSlots, selectedSlots) => {
-    if (!selectedSlots || selectedSlots.length === 0) return true;
-    if (!Array.isArray(rowSlots)) return false;
-    return selectedSlots.some((s) => rowSlots.includes(s));
-});
-
 const slots = ref([]);
+const zeitraeume = ref([]);
+const selectedZeitraumIds = ref([]);
 const enrollments = ref([]);
 const instanzen = ref([]);
 const profunda = ref([]);
-const matchingRunning = ref(false);
 const toast = useToast();
 const confirm = useConfirmPopover();
 
-const selectedItem = ref();
-const warningsRef = ref();
-const wuenschePopoverRef = ref();
-
 async function getSlots() {
     slots.value = await mande('/api/profundum/management/slot').get();
+}
+
+async function getZeitraeume() {
+    zeitraeume.value = await mande('/api/profundum/management/einwahlzeitraum').get();
+    if (selectedZeitraumIds.value.length === 0) {
+        const current = zeitraeume.value[0]?.id;
+        selectedZeitraumIds.value = current ? [current] : [];
+    }
 }
 
 async function getEnrollments() {
@@ -82,68 +60,83 @@ async function getProfunda() {
 
 const MATCH_DURATION = 240;
 
-const remaining = ref(0);
+const matchingStatus = ref(null);
+const matchingRunning = computed(() => matchingStatus.value?.status === 'Running');
+
 const fillPct = computed(() => {
-    if (!matchingRunning.value) return 0;
-    const elapsed = MATCH_DURATION - remaining.value;
-    return Math.max(0, Math.min(100, (elapsed / MATCH_DURATION) * 100));
+    if (!matchingRunning.value || !matchingStatus.value?.startedAt) return 0;
+    const elapsedS = (Date.now() - new Date(matchingStatus.value.startedAt).getTime()) / 1000;
+    return Math.max(0, Math.min(100, (elapsedS / MATCH_DURATION) * 100));
 });
 
-let timer = null;
+const remaining = computed(() => {
+    if (!matchingRunning.value || !matchingStatus.value?.startedAt) return 0;
+    const elapsedS = (Date.now() - new Date(matchingStatus.value.startedAt).getTime()) / 1000;
+    return Math.max(0, Math.round(MATCH_DURATION - elapsedS));
+});
 
-function startCountdown() {
-    remaining.value = MATCH_DURATION;
-    clearInterval(timer);
-    timer = setInterval(() => {
-        remaining.value--;
-        if (remaining.value <= 0) {
-            clearInterval(timer);
-            timer = null;
-            remaining.value = 0;
-        }
-    }, 1000);
+async function fetchMatchingStatus() {
+    matchingStatus.value = await mande('/api/profundum/management/matching/status').get();
+    return matchingStatus.value;
 }
 
-function stopCountdown() {
-    clearInterval(timer);
-    timer = null;
-    remaining.value = 0;
+const { pause: pausePolling, resume: resumePolling } = useIntervalFn(
+    async () => {
+        await fetchMatchingStatus();
+        if (matchingStatus.value?.status === 'Running') return;
+
+        pausePolling();
+        getEnrollments();
+        getInstanzen();
+        if (matchingStatus.value?.status === 'Failed') {
+            toast.add({
+                color: 'error',
+                title: 'Fehler',
+                description:
+                    matchingStatus.value.error ??
+                    'Es ist ein Fehler beim Matching aufgetreten.',
+            });
+        } else if (matchingStatus.value?.status === 'Completed') {
+            toast.add({
+                color: 'success',
+                title: 'Erfolg',
+                description: matchingStatus.value.result?.result,
+            });
+        }
+    },
+    2000,
+    { immediate: false },
+);
+
+async function initMatchingStatus() {
+    await fetchMatchingStatus();
+    if (matchingStatus.value?.status === 'Running') resumePolling();
 }
 
 async function autoMatching() {
-    matchingRunning.value = true;
-    startCountdown();
-
     try {
-        const r = await mande('/api/profundum/management/matching').post();
-        toast.add({
-            color: 'success',
-            title: 'Erfolg',
-            description: r.result,
-        });
-        console.log(r);
+        matchingStatus.value = await mande('/api/profundum/management/matching').post();
     } catch (e) {
-        if (e?.response?.status === 429) {
+        if (e?.response?.status === 409) {
             toast.add({
-                color: 'warn',
+                color: 'warning',
                 title: 'Matching läuft bereits',
                 description:
                     'Das Matching wird gerade von einer anderen Sitzung ausgeführt. Bitte warten.',
             });
+            await fetchMatchingStatus();
         } else {
             toast.add({
                 color: 'error',
                 title: 'Fehler',
                 description: 'Es ist ein Fehler beim Matching aufgetreten. ' + e,
             });
+            console.error(e);
         }
-        console.error(e);
-    } finally {
-        getEnrollments();
-        getInstanzen();
-        matchingRunning.value = false;
-        stopCountdown();
+        return;
     }
+
+    resumePolling();
 }
 
 async function finalize() {
@@ -158,8 +151,15 @@ async function finalize() {
     enrollments.value = await mande('/api/profundum/management/enrollments').get();
 }
 
+const enrollmentsByPersonAndSlot = computed(() => {
+    const map = new Map();
+    for (const row of enrollments.value) {
+        map.set(row.person.id, new Map(row.enrollments?.map((e) => [e.profundumSlotId, e])));
+    }
+    return map;
+});
 const enrollmentForSlot = (row, slotId) =>
-    row.enrollments?.find((e) => e.profundumSlotId === slotId);
+    enrollmentsByPersonAndSlot.value.get(row.person.id)?.get(slotId);
 
 async function updateEnrollment(row) {
     const updater = mande(`/api/profundum/management/enrollment/${row.person.id}`);
@@ -182,7 +182,7 @@ async function updateEnrollment(row) {
         return true;
     } catch (err) {
         console.error(err);
-        if (err?.response?.status === 429) {
+        if (err?.response?.status === 409) {
             toast.add({
                 color: 'error',
                 title: 'Matching läuft.',
@@ -219,81 +219,18 @@ const instanzenBySlot = computed(() => {
 
 const instanzenForSlot = (slotId) => instanzenBySlot.value.get(slotId) ?? [];
 
-const wishForSelectedEnrollment = (row, slotId) => {
-    const enrollment = enrollmentForSlot(row, slotId);
-    if (!enrollment?.profundumInstanzId) return null;
-
-    const instanz = instanzen.value.find((i) => i.id === enrollment.profundumInstanzId);
-
-    if (!instanz) return null;
-
-    return wishForOption(row, instanz);
-};
-
-const wishMovedForSelectedEnrollment = (row, slotId) => {
-    const enrollment = enrollmentForSlot(row, slotId);
-    if (!enrollment?.profundumInstanzId) return null;
-
-    const instanz = instanzen.value.find((i) => i.id === enrollment.profundumInstanzId);
-
-    if (!instanz) return null;
-
-    return wishMovedForOption(row, instanz);
-};
+const overfilledInstanzen = computed(() =>
+    instanzen.value.filter(
+        (i) => i.maxEinschreibungen != null && i.numEinschreibungen > i.maxEinschreibungen,
+    ),
+);
 
 getSlots();
+getZeitraeume();
 getEnrollments();
 getInstanzen();
 getProfunda();
-
-const wishForOption = (row, option) => {
-    return row.wuensche?.find((w) => w.id === option.id) ?? null;
-};
-
-const wishMovedForOption = (row, option) => {
-    if (!option?.profundumId) return null;
-
-    const matches =
-        row.wuensche
-            ?.map((w) => {
-                const wishedInstanz = instanzen.value.find((i) => i.id === w.id);
-                if (!wishedInstanz) return null;
-
-                const isSameProfundum = wishedInstanz.profundumId === option.profundumId;
-                const isDifferentInstanz = wishedInstanz.id !== option.id;
-
-                return isSameProfundum && isDifferentInstanz ? w : null;
-            })
-            .filter(Boolean) ?? [];
-
-    if (matches.length === 0) return null;
-
-    return matches.reduce((best, w) => (w.rang < best.rang ? w : best), matches[0]);
-};
-
-const wishInfoForSlot = (row, slotId) => {
-    const normal = wishForSelectedEnrollment(row, slotId);
-    const moved = wishMovedForSelectedEnrollment(row, slotId);
-    return { normal, moved };
-};
-
-const sortedInstanzenForSlot = (slotId, row) => {
-    const options = instanzenForSlot(slotId);
-    const selectedId = enrollmentForSlot(row, slotId)?.profundumInstanzId;
-
-    return options.toSorted((a, b) => {
-        const wishA = wishForOption(row, a);
-        const wishB = wishForOption(row, b);
-
-        const score = (opt, wish) => {
-            if (opt.id === selectedId) return 0;
-            if (wish) return 10 + wish.rang;
-            return 100;
-        };
-
-        return score(a, wishA) - score(b, wishB);
-    });
-};
+initMatchingStatus();
 
 const editingPersonId = ref(null);
 
@@ -307,46 +244,88 @@ const stopEdit = () => {
 
 const isEditing = (row) => editingPersonId.value === row.person.id;
 
-const wuenscheBySlot = (row) => {
-    const map = new Map();
-
-    for (const w of row.wuensche ?? []) {
-        for (const slotId of w.slotId ?? []) {
-            if (!map.has(slotId)) map.set(slotId, []);
-            map.get(slotId).push(w);
-        }
+async function handleSave(row) {
+    if (await updateEnrollment(row)) {
+        stopEdit();
     }
+}
 
-    for (const [slotId, list] of map) {
-        map.set(
-            slotId,
-            list.toSorted((a, b) => a.rang - b.rang),
-        );
-    }
+const zeitraumSelectItems = computed(() =>
+    zeitraeume.value.map((z) => ({
+        id: z.id,
+        label: z.bezeichnung || formatCalendarDate(parseAbsolute(z.einwahlStart)),
+    })),
+);
+const visibleSlotIds = computed(() =>
+    slots.value
+        .filter((s) => selectedZeitraumIds.value.includes(s.einwahlZeitraumId))
+        .map((s) => s.id),
+);
+const visibleSlots = computed(() =>
+    slots.value.filter((s) => visibleSlotIds.value.includes(s.id)),
+);
 
-    const slotOrder = slots.value.map((s) => s.id);
+const personFilter = ref('');
+const filteredEnrollments = computed(() => {
+    if (!personFilter.value.trim()) return enrollments.value;
 
-    return [...map.entries()].toSorted(
-        ([a], [b]) => slotOrder.indexOf(a) - slotOrder.indexOf(b),
-    );
-};
+    return enrollments.value
+        .map((row) => {
+            const haystack = [
+                row.person.vorname,
+                row.person.nachname,
+                row.person.gruppe,
+                row.person.email,
+            ]
+                .filter(Boolean)
+                .join(' ');
+            return { row, score: fuzzyMatch(personFilter.value, haystack) };
+        })
+        .filter(({ score }) => score !== null)
+        .toSorted((a, b) => b.score - a.score)
+        .map(({ row }) => row);
+});
+
+const enrollmentColumns = computed(() => [
+    { id: 'person' },
+    ...visibleSlots.value.map((slot) => ({ id: slot.id, header: formatSlot(slot) })),
+]);
+
+const columnPinning = ref({ left: ['person'] });
 
 const slotLabel = (slotId) => {
     const s = slots.value.find((x) => x.id === slotId);
     return s ? formatSlot(s) : 'Unbekannter Slot';
 };
 
-function showWarnings(evt, data) {
-    warningsRef.value.hide();
-    selectedItem.value = data;
-    nextTick(() => warningsRef.value.show(evt));
-}
+const bezeichnungFilter = ref('');
 
-function showWishes(evt, data) {
-    wuenschePopoverRef.value.hide();
-    selectedItem.value = data;
-    nextTick(() => wuenschePopoverRef.value.show(evt));
-}
+const filteredInstanzen = computed(() =>
+    instanzen.value.filter((row) => {
+        const matchesBezeichnung =
+            !bezeichnungFilter.value ||
+            row.profundumInfo.bezeichnung
+                .toLowerCase()
+                .includes(bezeichnungFilter.value.toLowerCase());
+        const matchesSlots =
+            visibleSlotIds.value.length === 0 ||
+            visibleSlotIds.value.some((s) => row.slots?.includes(s));
+        return matchesBezeichnung && matchesSlots;
+    }),
+);
+
+const instanzenColumns = [
+    { id: 'bezeichnung', header: 'Bezeichnung' },
+    { id: 'pdf', header: 'pdf' },
+    { id: 'slots', header: 'Slots' },
+    { id: 'warnung', header: 'Überbelegung' },
+    { id: 'numEinschreibungen', accessorKey: 'numEinschreibungen', header: 'Einschreibungen' },
+    {
+        id: 'maxEinschreibungen',
+        accessorKey: 'maxEinschreibungen',
+        header: 'MaxEinschreibungen',
+    },
+];
 </script>
 <template>
     <nav-breadcrumb :items="navItems" />
@@ -354,7 +333,7 @@ function showWishes(evt, data) {
 
     <span class="flex flex-col gap-6">
         <span class="flex gap-1">
-            <Button :disabled="matchingRunning" class="match-btn" @click="autoMatching">
+            <UButton :disabled="matchingRunning" class="match-btn" @click="autoMatching">
                 <span class="match-btn__bg" :style="{ width: fillPct + '%' }" />
                 <span class="match-btn__content">
                     <span>
@@ -368,339 +347,169 @@ function showWishes(evt, data) {
                         < {{ remaining }}s</span
                     >
                 </span>
-            </Button>
+            </UButton>
 
-            <Button label="Matching finalisieren" severity="warn" @click="finalize" />
+            <UButton label="Matching finalisieren" color="warning" @click="finalize" />
 
-            <Button
-                as="a"
+            <UButton
                 :href="`/api/profundum/management/matching.csv`"
-                icon="pi pi-table"
+                icon="i-lucide-table"
                 download
                 label="CSV-Export"
+                extern
             />
         </span>
-        <DataTable
-            :value="enrollments"
-            value-key="id"
-            size="small"
-            class="datatable-compact"
-            scrollable
+
+        <span class="flex flex-wrap gap-3 items-center">
+            <USelect
+                v-model="selectedZeitraumIds"
+                :items="zeitraumSelectItems"
+                label-key="label"
+                value-key="id"
+                multiple
+                class="w-80"
+                placeholder="Einwahlzeiträume…"
+            />
+
+            <UInput
+                v-model="personFilter"
+                icon="i-lucide-search"
+                placeholder="Person suchen…"
+                class="w-64"
+            />
+        </span>
+
+        <UTable
+            :data="filteredEnrollments"
+            :columns="enrollmentColumns"
+            v-model:column-pinning="columnPinning"
+            sticky="header"
+            size="sm"
             :loading="matchingRunning"
+            :ui="{
+                root: 'overflow-auto max-h-[80vh]',
+                thead: 'bg-default backdrop-blur-none',
+                td: 'data-[pinned]:bg-inherit data-[pinned]:backdrop-blur-none p-2',
+                th: 'data-[pinned]:bg-inherit data-[pinned]:backdrop-blur-none p-2',
+                tr: 'even:bg-muted/25',
+            }"
         >
-            <Column frozen class="z-0 border-r">
-                <template #header>
-                    <span class="inline-flex justify-between w-full font-semibold">
-                        <span>Person</span>
-                        <span>Aktion</span>
-                    </span>
-                </template>
-                <template #body="{ data, index }">
-                    <span class="grid grid-cols-[16em_1fr_1fr_1fr] gap-1">
-                        <UserPeek :person="data.person" class="w-full" showGroup />
-                        <Button
-                            v-if="data.wuensche.length !== 0"
-                            icon="pi pi-crown"
-                            severity="info"
-                            text
-                            size="small"
-                            @click="showWishes($event, data)"
-                        />
-                        <span v-else></span>
-                        <Button
-                            v-if="data.warnings.length !== 0"
-                            icon="pi pi-exclamation-triangle"
-                            severity="warn"
-                            text
-                            size="small"
-                            @click="showWarnings($event, data)"
-                        />
-                        <span v-else></span>
-                        <Button
-                            v-if="!isEditing(data)"
-                            icon="pi pi-pencil"
-                            text
-                            size="small"
-                            @click="startEdit(data)"
-                        />
-                        <Button
-                            v-else
-                            icon="pi pi-check"
-                            severity="success"
-                            text
-                            size="small"
-                            @click="
-                                async () => {
-                                    if (await updateEnrollment(data)) {
-                                        stopEdit();
-                                    }
-                                }
-                            "
-                        />
-                    </span>
-                </template>
-            </Column>
+            <template #person-header>
+                <span class="inline-flex justify-between w-full font-semibold">
+                    <span>Person</span>
+                    <span>Aktion</span>
+                </span>
+            </template>
+            <template #person-cell="{ row }">
+                <MatchingPersonCell
+                    :row="row.original"
+                    :profunda="profunda"
+                    :editing="isEditing(row.original)"
+                    @start-edit="startEdit(row.original)"
+                    @save="handleSave(row.original)"
+                />
+            </template>
 
-            <Column v-for="slot of slots" :key="slot.id" :header="formatSlot(slot)">
-                <template #body="{ data }">
-                    <span class="flex gap-1 items-center">
-                        <template v-if="isEditing(data)">
-                            <Checkbox
-                                binary
-                                v-model="enrollmentForSlot(data, slot.id).isFixed"
-                            />
-
-                            <Select
-                                showClear
-                                filter
-                                class="w-60 select-compact"
-                                :options="sortedInstanzenForSlot(slot.id, data)"
-                                option-label="profundumInfo.bezeichnung"
-                                option-value="id"
-                                v-model="enrollmentForSlot(data, slot.id).profundumInstanzId"
-                                :disabled="!enrollmentForSlot(data, slot.id).isFixed"
-                            >
-                                <template #option="slotProps">
-                                    <span class="option-row gap-2">
-                                        <span v-if="wishForOption(data, slotProps.option)">
-                                            ★ {{ wishForOption(data, slotProps.option).rang }}
-                                        </span>
-
-                                        <span>{{
-                                            slotProps.option.profundumInfo.bezeichnung
-                                        }}</span>
-
-                                        <span
-                                            >({{
-                                                instanzen
-                                                    .map((i) => {
-                                                        return {
-                                                            id: i.id,
-                                                            value: `${i.numEinschreibungen} / ${i.maxEinschreibungen}`,
-                                                        };
-                                                    })
-                                                    .find((i) => i.id === slotProps.option.id)
-                                                    ?.value
-                                            }})</span
-                                        >
-                                    </span>
-                                </template>
-                            </Select>
-                        </template>
-                        <template v-else>
-                            <span class="readonly-value w-60 flex items-center gap-2">
-                                <span
-                                    v-if="wishInfoForSlot(data, slot.id).normal"
-                                    class="wish-indicator text-green-500"
-                                >
-                                    <i class="pi pi-crown" />
-                                    {{ wishInfoForSlot(data, slot.id).normal.rang }}
-                                </span>
-
-                                <span
-                                    v-else-if="wishInfoForSlot(data, slot.id).moved"
-                                    class="wish-indicator text-yellow-500"
-                                >
-                                    <i class="pi pi-arrow-right-arrow-left" />
-                                    {{ wishInfoForSlot(data, slot.id).moved.rang }}
-                                </span>
-
-                                <template v-if="enrollmentForSlot(data, slot.id)?.isFixed">
-                                    <div class="text-orange-600 flex gap-1 items-center">
-                                        <i class="pi pi-lock" />
-                                        <b>
-                                            {{
-                                                instanzen.find(
-                                                    (i) =>
-                                                        i.id ===
-                                                        enrollmentForSlot(data, slot.id)
-                                                            ?.profundumInstanzId,
-                                                )?.profundumInfo.bezeichnung ?? '—'
-                                            }}
-                                        </b>
-                                    </div>
-                                </template>
-
-                                <template v-else>
-                                    {{
-                                        instanzen.find(
-                                            (i) =>
-                                                i.id ===
-                                                enrollmentForSlot(data, slot.id)
-                                                    ?.profundumInstanzId,
-                                        )?.profundumInfo.bezeichnung ?? '—'
-                                    }}
-                                </template>
-                            </span>
-                        </template>
-                    </span>
-                </template>
-            </Column>
-        </DataTable>
-
-        <Popover ref="wuenschePopoverRef" dismissable showCloseIcon style="min-width: 15rem">
-            <div
-                v-if="selectedItem"
-                v-for="[slotId, wishes] of wuenscheBySlot(selectedItem)"
-                :key="slotId"
-                class="mb-2"
+            <template
+                v-for="slot in visibleSlots"
+                :key="slot.id"
+                #[`${slot.id}-cell`]="{ row }"
             >
-                <b class="block mb-1">{{ slotLabel(slotId) }}</b>
+                <MatchingSlotCell
+                    :enrollment="enrollmentForSlot(row.original, slot.id)"
+                    :wuensche="
+                        row.original.wuensche[`${slot.jahr}-${slot.quartal}-${slot.wochentag}`]
+                    "
+                    :options="instanzenForSlot(slot.id)"
+                    :editing="isEditing(row.original)"
+                />
+            </template>
+        </UTable>
 
-                <ul class="ml-3">
-                    <li v-for="w in wishes" :key="`${slotId}-${w.id}`">
-                        {{ w.rang }}.
-                        {{
-                            instanzen.find((p) => p.id == w.id)?.profundumInfo.bezeichnung ??
-                            '—'
-                        }}
+        <UAlert
+            v-if="overfilledInstanzen.length > 0"
+            color="error"
+            variant="subtle"
+            icon="i-lucide-triangle-alert"
+            title="Überbelegte Profunda-Instanzen"
+            :ui="{ root: 'p-6', title: 'text-lg', description: 'text-base' }"
+        >
+            <template #description>
+                <p class="mt-0 mb-2">
+                    Die folgenden Instanzen haben mehr Einschreibungen als Plätze. Bitte vor dem
+                    automatischen Matching prüfen und bereinigen.
+                </p>
+                <ul class="mb-0 list-disc pl-5">
+                    <li v-for="i in overfilledInstanzen" :key="i.id">
+                        <b>{{ i.profundumInfo.bezeichnung }}</b>
+                        ({{ i.numEinschreibungen }} von {{ i.maxEinschreibungen }} Plätzen
+                        belegt)
                     </li>
                 </ul>
-            </div>
-        </Popover>
-        <Popover ref="warningsRef" dismissable showCloseIcon style="min-width: 15rem">
-            <ul class="list-disc pl-4" v-if="selectedItem">
-                <li v-for="w in selectedItem.warnings" :key="w">
-                    {{ w.text }}
-                </li>
-            </ul>
-        </Popover>
+            </template>
+        </UAlert>
 
-        <DataTable
-            :value="instanzen"
-            v-model:filters="instanzenFilters"
-            filterDisplay="row"
-            :globalFilterFields="[
-                'profundumInfo.bezeichnung',
-                'numEinschreibungen',
-                'maxEinschreibungen',
-            ]"
-        >
-            <Column field="profundumInfo.bezeichnung" header="Bezeichnung" filter>
-                <template #filter="{ filterModel, filterCallback }">
-                    <InputText
-                        v-model="filterModel.value"
-                        placeholder="Suchen…"
-                        class="p-column-filter w-full"
-                        @input="filterCallback()"
-                    />
-                </template>
+        <div class="flex flex-wrap gap-3 items-center">
+            <UInput
+                v-model="bezeichnungFilter"
+                placeholder="Bezeichnung suchen…"
+                class="w-64"
+            />
+        </div>
 
-                <template #body="{ data }">
-                    <Button
-                        as="RouterLink"
-                        :to="{
-                            name: 'Profundum-Edit',
-                            params: { profundumId: data.profundumId },
-                        }"
-                        text
-                    >
-                        {{ data.profundumInfo.bezeichnung }}
-                    </Button>
-                </template>
-            </Column>
-            <Column header="pdf">
-                <template #body="{ data }">
-                    <Button
-                        as="a"
-                        :href="`/api/profundum/management/instanz/${data.id}.pdf`"
-                        icon="pi pi-file-pdf"
-                        variant="text"
-                        size="small"
+        <UTable :data="filteredInstanzen" :columns="instanzenColumns">
+            <template #bezeichnung-cell="{ row }">
+                <UButton
+                    :to="{
+                        name: 'Profundum-Edit',
+                        params: { profundumId: row.original.profundumId },
+                    }"
+                    variant="ghost"
+                    :label="row.original.profundumInfo.bezeichnung"
+                />
+            </template>
+            <template #pdf-cell="{ row }">
+                <UTooltip text="PDF (experimentell)">
+                    <UButton
+                        :href="`/api/profundum/management/instanz/${row.original.id}.pdf`"
+                        icon="i-lucide-file-text"
+                        variant="ghost"
+                        size="sm"
                         download
-                        severity="info"
-                        v-tooltip.left="'PDF (experimentell)'"
-                        aria-label="PDF (experimentell)'"
+                        color="info"
+                        aria-label="PDF (experimentell)"
+                        external
                     />
-                </template>
-            </Column>
-            <Column header="slots" field="slots" filter>
-                <template #filter="{ filterModel, filterCallback }">
-                    <MultiSelect
-                        v-model="filterModel.value"
-                        :options="slots"
-                        optionLabel="jahr"
-                        optionValue="id"
-                        placeholder="Slots wählen…"
-                        display="chip"
-                        class="p-column-filter w-full"
-                        @change="filterCallback()"
+                </UTooltip>
+            </template>
+            <template #slots-cell="{ row }">
+                <span class="flex flex-wrap gap-1">
+                    <UBadge
+                        v-for="slotId in row.original.slots"
+                        :key="slotId"
+                        class="text-sm px-1.5"
+                        color="neutral"
+                        variant="subtle"
                     >
-                        <template #option="{ option }">
-                            {{ formatSlot(option) }}
-                        </template>
-
-                        <template #chip="{ value }">
-                            {{ slotLabel(value) }}
-                        </template>
-                    </MultiSelect>
-                </template>
-
-                <template #body="{ data }">
-                    <span class="flex flex-wrap gap-1">
-                        <Tag
-                            v-for="slotId in data.slots"
-                            :key="slotId"
-                            class="text-sm px-1.5"
-                            severity="secondary"
-                        >
-                            {{ slotLabel(slotId) }}
-                        </Tag>
-                    </span>
-                </template>
-            </Column>
-            <Column header="Warnung">
-                <template #body="{ data }">
-                    <i
-                        v-if="data.maxEinschreibungen < data.numEinschreibungen"
-                        class="pi pi-exclamation-triangle text-xl p-2 inline-block bg-yellow-200 text-yellow-800 dark:text-yellow-400 dark:bg-yellow-950 rounded-lg"
-                    />
-                </template>
-            </Column>
-            <Column field="numEinschreibungen" header="Einschreibungen"></Column>
-            <Column field="maxEinschreibungen" header="MaxEinschreibungen"></Column>
-        </DataTable>
+                        {{ slotLabel(slotId) }}
+                    </UBadge>
+                </span>
+            </template>
+            <template #warnung-cell="{ row }">
+                <UIcon
+                    v-if="
+                        row.original.maxEinschreibungen &&
+                        row.original.maxEinschreibungen < row.original.numEinschreibungen
+                    "
+                    name="i-lucide-triangle-alert"
+                    class="text-xl p-2 inline-block bg-warning/15 text-warning rounded-lg"
+                />
+            </template>
+        </UTable>
     </span>
 </template>
 
 <style scoped>
-.datatable-compact :deep(.p-datatable-thead > tr > th),
-.datatable-compact :deep(.p-datatable-tbody > tr > td) {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.75rem;
-}
-
-.datatable-compact :deep(.p-select) {
-    font-size: 0.7rem;
-}
-
-:deep(.select-compact .p-select-label) {
-    font-size: 0.8rem;
-}
-
-:deep(.select-compact .p-select-trigger) {
-    width: 1.75rem;
-}
-
-.option-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.option-row :last-child {
-    font-style: italic;
-}
-
-.readonly-value {
-    display: inline-flex;
-}
-
-.readonly-value.fixed {
-    font-weight: 800;
-    color: orange;
-}
-
 .match-btn {
     position: relative;
     overflow: hidden;
@@ -710,7 +519,7 @@ function showWishes(evt, data) {
     position: absolute;
     inset: 0;
     width: 0;
-    background: color-mix(in srgb, var(--primary-color) 22%, transparent);
+    background: color-mix(in srgb, var(--ui-primary) 22%, transparent);
     transition: width 1s linear;
     pointer-events: none;
 }
@@ -726,16 +535,8 @@ function showWishes(evt, data) {
     font-weight: 700;
     font-size: 0.85rem;
     padding-left: 0.75rem;
-    border-left: 1px solid color-mix(in srgb, var(--primary-color) 35%, var(--surface-border));
+    border-left: 1px solid color-mix(in srgb, var(--ui-primary) 35%, var(--ui-border));
     min-width: 3.2rem;
     text-align: right;
-}
-
-.wish-indicator {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    font-weight: 700;
-    white-space: nowrap;
 }
 </style>

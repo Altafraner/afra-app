@@ -1,21 +1,31 @@
 <script lang="ts" setup>
 import '@/assets/main.css';
-import 'primeicons/primeicons.css';
 
-import DynamicDialog from 'primevue/dynamicdialog';
 import AfraNav from '@/components/AfraNav.vue';
 import { useUser } from '@/stores/user';
 import { watch } from 'vue';
 import ReloadPrompt from '@/components/ReloadPrompt.vue';
 import type { ToasterProps } from '@nuxt/ui/components/Toaster.d.vue.ts';
 import { de } from '@nuxt/ui/locale';
+import UContainer from '@nuxt/ui/components/Container.vue';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
+import { useCommandPalette } from '@/composables/commandPalette';
 
 const router = useRouter();
 const user = useUser();
 const toast = useToast();
 const { loggedIn, loading } = storeToRefs(user);
+
+const commandPalette = useCommandPalette();
+defineShortcuts({
+    meta_k: {
+        usingInput: true,
+        handler: () => {
+            if (user.loggedIn) commandPalette.open();
+        },
+    },
+});
 
 const userLoadingPromise = user.update().catch(() => {
     toast.add({
@@ -58,15 +68,16 @@ const toastProps: ToasterProps = {
 </script>
 
 <template>
-    <DynamicDialog />
     <div v-if="user.isImpersonating" aria-hidden="true" class="impersonation-tag hidden"></div>
     <UApp :locale="de" :toaster="toastProps">
         <ReloadPrompt />
         <template v-if="!user.loading">
             <afra-nav v-if="user.loggedIn" />
             <main class="flex justify-center min-h-[90vh] mt-4">
-                <UContainer>
-                    <!-- v-if="user.loggedIn" -->
+                <component
+                    :is="router.currentRoute.value.meta.fullWidth ? 'div' : UContainer"
+                    :class="router.currentRoute.value.meta.fullWidth ? 'w-19/20' : undefined"
+                >
                     <RouterView v-slot="{ Component }">
                         <template v-if="Component">
                             <Suspense>
@@ -91,15 +102,7 @@ const toastProps: ToasterProps = {
                             </Suspense>
                         </template>
                     </RouterView>
-                </UContainer>
-                <!--div v-else class="min-container">
-                    <div class="flex justify-center">
-                        <img :src="logo" alt="Logo des Verein der Altafraner" height="200" />
-                    </div>
-                    <h1>Willkommen bei der Afra-App</h1>
-                    <p>Bitte logge dich ein, um die Afra-App zu nutzen.</p>
-                    <Login></Login>
-                </div-->
+                </component>
             </main>
         </template>
         <template v-else>
@@ -124,13 +127,13 @@ const toastProps: ToasterProps = {
             </main>
         </template>
         <footer
-            class="bg-primary dark:bg-blue-950 w-full py-6 px-8 mt-[1rem] text-center text-primary-contrast sm:grid sm:grid-cols-[1fr_auto_1fr] items-center gap-3 flex flex-wrap justify-between"
+            class="bg-primary dark:bg-blue-950 w-full py-6 px-8 mt-[1rem] text-center text-neutral-200 sm:grid sm:grid-cols-[1fr_auto_1fr] items-center gap-3 flex flex-wrap justify-between"
         >
             <span></span>
             <p class="min-h-[1.2em]">
                 In Kooperation mit dem
                 <a
-                    class="font-bold inline-block text-primary-contrast underline decoration-primary hover:decoration-primary-contrast transition-all"
+                    class="font-bold inline-block underline dark:decoration-primary decoration-primary-contrast hover:dark:decoration-primary-contrast hover:decoration-primary transition-all"
                     href="https://verein-der-altafraner.de"
                     target="_blank"
                     >Verein der Altafraner</a

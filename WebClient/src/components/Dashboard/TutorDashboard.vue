@@ -9,11 +9,7 @@ import {
 } from '@/models/dashboard';
 import { TableColumn } from '@nuxt/ui';
 import { parseDateTime } from '@internationalized/date';
-import {
-    chooseColorNuxtUi,
-    formatCalendarDateTime,
-    formatStudent,
-} from '@/helpers/formatters.ts';
+import { chooseColor, formatCalendarDateTime, formatStudent } from '@/helpers/formatters.ts';
 import { useUser } from '@/stores/user.ts';
 
 const UBadge = resolveComponent('UBadge');
@@ -88,7 +84,7 @@ const eventColumns: TableColumn<ScopedDashboardTutorEventDescriptor>[] = [
                   })
                 : h(UBadge, {
                       label: `${row.original.occupancy * 100} %`,
-                      color: chooseColorNuxtUi(row.original.occupancy * 100),
+                      color: chooseColor(row.original.occupancy * 100),
                       variant: 'soft',
                       class: 'w-full justify-center items-center',
                   }),

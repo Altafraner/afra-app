@@ -1,12 +1,11 @@
 <script setup>
-import { InputText, MultiSelect, Select, Textarea } from 'primevue';
 import { mande } from 'mande';
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import Grid from '@/components/Form/Grid.vue';
 import GridEditRow from '@/components/Form/GridEditRow.vue';
 import ProfundumInstanzen from '@/Profundum/components/ProfundumInstanzen.vue';
 import KlassenrangeSelector from '@/components/KlassenRangeSelector.vue';
-import { convertMarkdownToHtml } from '@/composables/markdown';
+import MarkdownEditor from '@/components/MarkdownEditor.vue';
 import { useManagement } from '@/Profundum/composables/verwaltung.ts';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
 
@@ -96,6 +95,8 @@ async function setup() {
 
 onMounted(setup);
 
+watch(() => props.profundumId, setup);
+
 async function savePatch(patch) {
     try {
         await apiProfunda.put(`/${props.profundumId}`, {
@@ -128,6 +129,12 @@ const updateFachbereiche = () =>
     savePatch({
         fachbereichIds: profundum.value.fachbereichIds,
     });
+const updateErlaubtPartnerwahl = () =>
+    savePatch({ erlaubtPartnerwahl: profundum.value.erlaubtPartnerwahl });
+const updateAusgeblendetInEinwahl = () =>
+    savePatch({ ausgeblendetInEinwahl: profundum.value.ausgeblendetInEinwahl });
+const updatePflichtFuerBerechtigte = () =>
+    savePatch({ pflichtFuerBerechtigte: profundum.value.pflichtFuerBerechtigte });
 </script>
 <template>
     <template v-if="loading">Lade...</template>
@@ -142,7 +149,7 @@ const updateFachbereiche = () =>
                     <span>{{ profundum.bezeichnung }}</span>
                 </template>
                 <template #edit>
-                    <InputText v-model="profundum.bezeichnung" fluid maxlength="80" />
+                    <UInput v-model="profundum.bezeichnung" class="w-full" maxlength="80" />
                 </template>
             </GridEditRow>
 
@@ -154,37 +161,26 @@ const updateFachbereiche = () =>
                     }}
                 </template>
                 <template #edit>
-                    <Select
+                    <USelect
                         v-model="profundum.kategorieId"
-                        :options="categories"
-                        optionLabel="bezeichnung"
-                        optionValue="id"
+                        :items="categories"
+                        label-key="bezeichnung"
+                        value-key="id"
                         placeholder="Kategorie auswählen"
                         class="w-full"
-                        appendTo="self"
                     />
                 </template>
             </GridEditRow>
-
             <GridEditRow
                 header="Beschreibung"
                 header-class="self-start"
                 @update="updateBeschreibung"
             >
                 <template #body>
-                    <div
-                        class="m-trim"
-                        v-html="convertMarkdownToHtml(profundum.beschreibung)"
-                    />
+                    <MarkdownEditor :model-value="profundum.beschreibung" :editable="false" />
                 </template>
                 <template #edit>
-                    <Textarea
-                        v-model="profundum.beschreibung"
-                        auto-resize
-                        fluid
-                        rows="3"
-                        maxlength="2000"
-                    />
+                    <MarkdownEditor v-model="profundum.beschreibung" :maxlength="2000" />
                 </template>
             </GridEditRow>
 
@@ -231,17 +227,14 @@ const updateFachbereiche = () =>
                 </template>
                 <template #body v-else> Keine Voraussetzungen </template>
                 <template #edit>
-                    <MultiSelect
+                    <USelect
                         v-model="profundum.dependencyIds"
-                        :options="profundaList"
-                        optionLabel="bezeichnung"
-                        optionValue="id"
-                        display="chip"
-                        filter
-                        filterPlaceholder="Suchen..."
-                        class="w-full multiselect-wrap"
-                        appendTo="self"
+                        :items="profundaList"
+                        label-key="bezeichnung"
+                        value-key="id"
+                        multiple
                         placeholder="Voraussetzungen auswählen"
+                        class="w-full"
                     />
                 </template>
             </GridEditRow>
@@ -254,16 +247,61 @@ const updateFachbereiche = () =>
                 </template>
                 <template #body v-else> Keinen Fachbereichen zugeordnet </template>
                 <template #edit>
-                    <MultiSelect
+                    <USelect
                         v-model="profundum.fachbereichIds"
-                        :options="fachbereiche"
-                        optionLabel="label"
-                        optionValue="id"
-                        display="chip"
-                        filter
-                        filterPlaceholder="Suchen..."
-                        class="w-full multiselect-wrap"
-                        appendTo="self"
+                        :items="fachbereiche"
+                        label-key="label"
+                        value-key="id"
+                        multiple
+                        class="w-full"
+                    />
+                </template>
+            </GridEditRow>
+            <GridEditRow header="Partnerwahl" @update="updateErlaubtPartnerwahl">
+                <template #body>
+                    <span>{{
+                        profundum.erlaubtPartnerwahl
+                            ? 'Erlaubt - Schüler:innen können sich gegenseitig als Team-Partner wählen'
+                            : 'Nicht erlaubt'
+                    }}</span>
+                </template>
+                <template #edit>
+                    <USwitch
+                        v-model="profundum.erlaubtPartnerwahl"
+                        label="Partnerwahl erlauben"
+                    />
+                </template>
+            </GridEditRow>
+            <GridEditRow
+                header="Sichtbarkeit in der Einwahl"
+                @update="updateAusgeblendetInEinwahl"
+            >
+                <template #body>
+                    <span>{{
+                        profundum.ausgeblendetInEinwahl
+                            ? 'Ausgeblendet - Schüler:innen können dieses Profundum nicht wählen'
+                            : 'Sichtbar'
+                    }}</span>
+                </template>
+                <template #edit>
+                    <USwitch
+                        v-model="profundum.ausgeblendetInEinwahl"
+                        label="In der Einwahl ausblenden"
+                    />
+                </template>
+            </GridEditRow>
+            <GridEditRow header="Pflicht" @update="updatePflichtFuerBerechtigte">
+                <template #body>
+                    <span>{{
+                        profundum.pflichtFuerBerechtigte
+                            ? 'Pflicht - alle berechtigten Schüler:innen sollen dieses Profundum belegen, wenn es angeboten wird'
+                            : 'Nicht verpflichtend'
+                    }}</span>
+                </template>
+                <template #edit>
+                    <USwitch
+                        v-model="profundum.pflichtFuerBerechtigte"
+                        label="Für berechtigte Klassenstufen verpflichtend"
                     />
                 </template>
             </GridEditRow>
@@ -273,21 +311,4 @@ const updateFachbereiche = () =>
     </template>
 </template>
 
-<style scoped>
-.multiselect-wrap :deep(.p-multiselect-label-container) {
-    height: auto;
-}
-
-.multiselect-wrap :deep(.p-multiselect-label) {
-    display: flex;
-    flex-wrap: wrap;
-    white-space: normal;
-    gap: 0.25rem;
-    padding-top: 0.25rem;
-    padding-bottom: 0.25rem;
-}
-
-.multiselect-wrap :deep(.p-multiselect-token) {
-    margin-bottom: 0.25rem;
-}
-</style>
+<style scoped></style>

@@ -13,11 +13,26 @@ const nuxtUiOptions: NuxtUIOptions = {
             primary: 'blue',
             secondary: 'neutral',
             neutral: 'neutral',
+            success: 'green',
+            info: 'blue',
+            warning: 'yellow',
+            error: 'red',
         },
         accordion: {
             slots: {
                 trigger: 'transition-color duration-100 hover:text-highlighted',
             },
+        },
+        alert: {
+            compoundVariants: [
+                {
+                    variant: 'subtle',
+                    color: 'warning',
+                    class: {
+                        root: 'bg-warning/5',
+                    },
+                },
+            ],
         },
     },
 };

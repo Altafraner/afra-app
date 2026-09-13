@@ -2,6 +2,7 @@
 import { reactive, ref } from 'vue';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
 import OtiumKategorySelector from '@/Otium/components/Form/OtiumKategorySelector.vue';
+import MarkdownEditor from '@/components/MarkdownEditor.vue';
 import { FormError, FormSubmitEvent } from '@nuxt/ui';
 
 const emits = defineEmits<{
@@ -80,11 +81,9 @@ function validate(state: Partial<FormState>): FormError[] {
                     />
                 </UFormField>
                 <UFormField label="Beschreibung" name="description" required>
-                    <UTextarea
+                    <MarkdownEditor
                         v-model="state.description"
-                        :rows="3"
-                        autoresize
-                        class="w-full"
+                        :maxlength="500"
                         placeholder="Beschreibung eingeben"
                     />
                 </UFormField>

@@ -7,10 +7,11 @@ import { mande } from 'mande';
 import { useUser } from '@/stores/user';
 import { useRoute, useRouter } from 'vue-router';
 import { useOtiumStore } from '@/Otium/stores/otium.js';
-import { formatDate, formatStudent } from '@/helpers/formatters';
+import { formatCalendarDate, formatStudent } from '@/helpers/formatters';
 import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
 import EditSupervisorsForm from '@/Otium/components/Schuljahr/EditSupervisorsForm.vue';
 import USkeleton from '@nuxt/ui/components/Skeleton.vue';
+import { parseDate } from '@internationalized/date';
 
 const props = defineProps({
     datum: {
@@ -59,7 +60,7 @@ const navItems = computed(() => {
         : [
               ...start,
               {
-                  label: formatDate(new Date(date.value)),
+                  label: formatCalendarDate(parseDate(date.value)),
               },
           ];
 });

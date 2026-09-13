@@ -2,7 +2,6 @@ using Altafraner.AfraApp.Profundum.Domain.Contracts.Rules;
 using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.User.Domain.Models;
-using Altafraner.AfraApp.User.Services;
 using Google.OrTools.Sat;
 
 namespace Altafraner.AfraApp.Profundum.Services.Rules;
@@ -12,14 +11,6 @@ namespace Altafraner.AfraApp.Profundum.Services.Rules;
 /// </summary>
 public class KlassenLimitsRule : IProfundumIndividualRule
 {
-    private readonly UserService _userService;
-
-    ///
-    public KlassenLimitsRule(UserService userService)
-    {
-        _userService = userService;
-    }
-
     /// <inheritdoc/>
     public RuleStatus CheckForSubmission(Person student,
         IEnumerable<ProfundumSlot> slots,
@@ -31,15 +22,13 @@ public class KlassenLimitsRule : IProfundumIndividualRule
 
     /// <inheritdoc/>
     public void AddConstraints(Person student,
+        int klasse,
         IEnumerable<ProfundumSlot> slots,
-        IEnumerable<ProfundumBelegWunsch> wuensche,
+        IEnumerable<ProfundumEinschreibung> enrollments,
         Dictionary<(ProfundumSlot, ProfundumInstanz), BoolVar> belegVars,
-        Dictionary<ProfundumSlot, BoolVar> personNotEnrolledVars,
         CpModel model,
         LinearExprBuilder objective)
     {
-        var klasse = _userService.GetKlassenstufe(student);
-
         foreach (var (k, v) in belegVars)
         {
             var (_, i) = k;
@@ -57,11 +46,11 @@ public class KlassenLimitsRule : IProfundumIndividualRule
     }
 
     /// <inheritdoc/>
-    public IEnumerable<MatchingWarning> GetWarnings(Person student, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
+    public IEnumerable<MatchingWarning> GetWarnings(Person student, int klasse, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
     {
-        var klasse = _userService.GetKlassenstufe(student);
+        var slotsArray = slots as ProfundumSlot[] ?? slots.ToArray();
         var warnings = new List<MatchingWarning>();
-        foreach (var e in enrollments)
+        foreach (var e in enrollments.Where(e => slotsArray.Contains(e.Slot)))
         {
             var p = e.ProfundumInstanz!.Profundum;
             var minKlasse = p.MinKlasse;

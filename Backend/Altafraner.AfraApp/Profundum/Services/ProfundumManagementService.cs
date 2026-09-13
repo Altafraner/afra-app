@@ -5,6 +5,7 @@ using Altafraner.AfraApp.Profundum.Domain.DTO;
 using Altafraner.AfraApp.Profundum.Domain.Models;
 using Altafraner.AfraApp.User.Domain.DTO;
 using Altafraner.AfraApp.User.Domain.Models;
+using Altafraner.AfraApp.User.Services;
 using Altafraner.Backbone.Utils;
 using Microsoft.EntityFrameworkCore;
 
@@ -29,6 +30,7 @@ internal class ProfundumManagementService
         _typst = typst;
     }
 
+    /// <summary>Creates a new EinwahlZeitraum (enrollment submission window).</summary>
     public async Task<ProfundumEinwahlZeitraum> CreateEinwahlZeitraumAsync(DTOProfundumEinwahlZeitraumCreation zeitraum)
     {
         if (zeitraum.EinwahlStart is null || zeitraum.EinwahlStop is null)
@@ -40,19 +42,24 @@ internal class ProfundumManagementService
         {
             EinwahlStart = DateTimeOffset.Parse(zeitraum.EinwahlStart).UtcDateTime,
             EinwahlStop = DateTimeOffset.Parse(zeitraum.EinwahlStop).UtcDateTime,
+            Bezeichnung = zeitraum.Bezeichnung,
+            Veroeffentlichungsdatum = zeitraum.Veroeffentlichungsdatum is { } v ? DateTimeOffset.Parse(v).UtcDateTime : null,
         };
         _dbContext.ProfundumEinwahlZeitraeume.Add(einwahlZeitraum);
         await _dbContext.SaveChangesAsync();
         return einwahlZeitraum;
     }
 
+    /// <summary>Returns every EinwahlZeitraum.</summary>
     public Task<DTOProfundumEinwahlZeitraum[]> GetEinwahlZeiträumeAsync()
     {
         return _dbContext.ProfundumEinwahlZeitraeume
+            .OrderByDescending(e => e.EinwahlStart)
             .Select(e => new DTOProfundumEinwahlZeitraum(e))
             .ToArrayAsync();
     }
 
+    /// <summary>Updates the given EinwahlZeitraum's start/stop times.</summary>
     public async Task UpdateEinwahlZeitraumAsync(Guid id, DTOProfundumEinwahlZeitraumCreation dto)
     {
         var zeitraum = await _dbContext.ProfundumEinwahlZeitraeume.FindAsync(id);
@@ -65,15 +72,21 @@ internal class ProfundumManagementService
         if (dto.EinwahlStop != null)
             zeitraum.EinwahlStop = DateTimeOffset.Parse(dto.EinwahlStop).UtcDateTime;
 
+        zeitraum.Bezeichnung = dto.Bezeichnung;
+
+        zeitraum.Veroeffentlichungsdatum = dto.Veroeffentlichungsdatum is { } v ? DateTimeOffset.Parse(v).UtcDateTime : null;
+
         await _dbContext.SaveChangesAsync();
     }
 
+    /// <summary>Deletes the given EinwahlZeitraum.</summary>
     public async Task DeleteEinwahlZeitraumAsync(Guid id)
     {
         var numDeleted = await _dbContext.ProfundumEinwahlZeitraeume.Where(e => e.Id == id).ExecuteDeleteAsync();
         if (numDeleted == 0) throw new NotFoundException("no such einwahlzeitraum");
     }
 
+    /// <summary>Returns every Slot, ordered by <see cref="ProfundumSlotComparer" />.</summary>
     public async Task<DTOProfundumSlot[]> GetSlotsAsync()
     {
         return (await _dbContext.ProfundaSlots
@@ -84,6 +97,7 @@ internal class ProfundumManagementService
             .ToArray();
     }
 
+    /// <summary>Creates a new Slot within the given EinwahlZeitraum.</summary>
     public async Task<ProfundumSlot> CreateSlotAsync(DTOProfundumSlotCreation dtoSlot)
     {
         var zeitraum = await _dbContext.ProfundumEinwahlZeitraeume.FindAsync(dtoSlot.EinwahlZeitraumId);
@@ -104,6 +118,7 @@ internal class ProfundumManagementService
         return slot;
     }
 
+    /// <summary>Updates the given Slot, optionally moving it to a different EinwahlZeitraum.</summary>
     public async Task UpdateSlotAsync(Guid id, DTOProfundumSlotCreation dto)
     {
         var slot = await _dbContext.ProfundaSlots
@@ -132,12 +147,82 @@ internal class ProfundumManagementService
         await _dbContext.SaveChangesAsync();
     }
 
+    /// <summary>Deletes the given Slot.</summary>
     public async Task DeleteSlotAsync(Guid id)
     {
         var numDeleted = await _dbContext.ProfundaSlots.Where(s => s.Id == id).ExecuteDeleteAsync();
         if (numDeleted == 0) throw new NotFoundException("no such slot");
     }
 
+    /// <summary>Returns every Termin of the given Slot, ordered by day.</summary>
+    public async Task<DTOProfundumTermin[]> GetTermineAsync(Guid slotId)
+    {
+        return await _dbContext.ProfundaTermine
+            .Where(t => t.SlotId == slotId)
+            .OrderBy(t => t.Day)
+            .Select(t => new DTOProfundumTermin(t))
+            .ToArrayAsync();
+    }
+
+    /// <summary>Creates a new Termin for the given Slot.</summary>
+    public async Task CreateTerminAsync(Guid slotId, DTOProfundumTerminCreation dto)
+    {
+        var slot = await _dbContext.ProfundaSlots.FindAsync(slotId);
+        if (slot is null)
+            throw new NotFoundException("referenced slot not found");
+
+        _dbContext.ProfundaTermine.Add(new ProfundumTermin
+        {
+            Slot = slot,
+            Day = dto.Day,
+            StartTime = dto.StartTime,
+            EndTime = dto.EndTime,
+        });
+        await _dbContext.SaveChangesAsync();
+    }
+
+    /// <summary>Updates the given Termin (identified by its Slot and original day), including moving it to a new day.</summary>
+    public async Task UpdateTerminAsync(Guid slotId, DateOnly originalDay, DTOProfundumTerminCreation dto)
+    {
+        var termin = await _dbContext.ProfundaTermine
+            .FirstOrDefaultAsync(t => t.SlotId == slotId && t.Day == originalDay);
+        if (termin is null)
+            throw new NotFoundException("termin to update not found");
+
+        if (dto.Day != originalDay)
+        {
+            var slot = await _dbContext.ProfundaSlots.FindAsync(slotId);
+            if (slot is null)
+                throw new NotFoundException("referenced slot not found");
+
+            _dbContext.ProfundaTermine.Remove(termin);
+            _dbContext.ProfundaTermine.Add(new ProfundumTermin
+            {
+                Slot = slot,
+                Day = dto.Day,
+                StartTime = dto.StartTime,
+                EndTime = dto.EndTime,
+            });
+        }
+        else
+        {
+            termin.StartTime = dto.StartTime;
+            termin.EndTime = dto.EndTime;
+        }
+
+        await _dbContext.SaveChangesAsync();
+    }
+
+    /// <summary>Deletes the given Termin.</summary>
+    public async Task DeleteTerminAsync(Guid slotId, DateOnly day)
+    {
+        var numDeleted = await _dbContext.ProfundaTermine
+            .Where(t => t.SlotId == slotId && t.Day == day)
+            .ExecuteDeleteAsync();
+        if (numDeleted == 0) throw new NotFoundException("no such termin");
+    }
+
+    /// <summary>Creates a new Kategorie.</summary>
     public async Task<ProfundumKategorie> CreateKategorieAsync(DTOProfundumKategorieCreation dtoKategorie)
     {
         var kategorie = new ProfundumKategorie
@@ -151,6 +236,7 @@ internal class ProfundumManagementService
         return kategorie;
     }
 
+    /// <summary>Updates the given Kategorie's Bezeichnung/ProfilProfundum flag.</summary>
     public async Task<ProfundumKategorie?> UpdateKategorieAsync(Guid kategorieId, DTOProfundumKategorieCreation dtoKategorie)
     {
         var kategorie = await _dbContext.ProfundaKategorien.FindAsync(kategorieId);
@@ -168,17 +254,20 @@ internal class ProfundumManagementService
         return kategorie;
     }
 
+    /// <summary>Deletes the given Kategorie.</summary>
     public async Task DeleteKategorieAsync(Guid kategorieId)
     {
         var numDeleted = await _dbContext.ProfundaKategorien.Where(k => k.Id == kategorieId).ExecuteDeleteAsync();
         if (numDeleted == 0) throw new NotFoundException("no such kategorie");
     }
 
+    /// <summary>Returns every Kategorie.</summary>
     public Task<DTOProfundumKategorie[]> GetKategorienAsync()
     {
         return _dbContext.ProfundaKategorien.Select(k => new DTOProfundumKategorie(k)).ToArrayAsync();
     }
 
+    /// <summary>Creates a new Profundum-Definition, resolving its Kategorie/Dependencies/Fachbereiche by id.</summary>
     public async Task<ProfundumDefinition> CreateProfundumAsync(DTOProfundumDefinitionCreation dtoProfundum)
     {
         var kat = await _dbContext.ProfundaKategorien.FindAsync(dtoProfundum.KategorieId);
@@ -202,13 +291,17 @@ internal class ProfundumManagementService
             MinKlasse = dtoProfundum.MinKlasse,
             MaxKlasse = dtoProfundum.MaxKlasse,
             Dependencies = deps,
-            Fachbereiche = fachbereiche
+            Fachbereiche = fachbereiche,
+            ErlaubtPartnerwahl = dtoProfundum.ErlaubtPartnerwahl,
+            AusgeblendetInEinwahl = dtoProfundum.AusgeblendetInEinwahl,
+            PflichtFuerBerechtigte = dtoProfundum.PflichtFuerBerechtigte,
         };
         _dbContext.Profunda.Add(def);
         await _dbContext.SaveChangesAsync();
         return def;
     }
 
+    /// <summary>Updates a Profundum-Definition's fields, including its Kategorie/Dependencies/Fachbereiche.</summary>
     public async Task<ProfundumDefinition> UpdateProfundumAsync(Guid profundumId, DTOProfundumDefinitionCreation dtoProfundum)
     {
         var profundum = await _dbContext.Profunda
@@ -238,6 +331,9 @@ internal class ProfundumManagementService
             profundum.Beschreibung = dtoProfundum.Beschreibung;
         profundum.MinKlasse = dtoProfundum.MinKlasse;
         profundum.MaxKlasse = dtoProfundum.MaxKlasse;
+        profundum.ErlaubtPartnerwahl = dtoProfundum.ErlaubtPartnerwahl;
+        profundum.AusgeblendetInEinwahl = dtoProfundum.AusgeblendetInEinwahl;
+        profundum.PflichtFuerBerechtigte = dtoProfundum.PflichtFuerBerechtigte;
 
         var kat = await _dbContext.ProfundaKategorien.FindAsync(dtoProfundum.KategorieId);
         if (kat is null)
@@ -248,16 +344,23 @@ internal class ProfundumManagementService
         return profundum;
     }
 
+    /// <summary>Deletes the given Profundum-Definition. Refuses if any Instanz of it still exists.</summary>
     public async Task DeleteProfundumAsync(Guid profundumId)
     {
+        var hasInstanzen = await _dbContext.ProfundaInstanzen.AnyAsync(i => i.Profundum.Id == profundumId);
+        if (hasInstanzen)
+            throw new ArgumentException("Profundum kann nicht gelöscht werden, solange noch Instanzen davon existieren.");
+
         var numDeleted = await _dbContext.Profunda.Where(p => p.Id == profundumId).ExecuteDeleteAsync();
         if (numDeleted == 0) throw new NotFoundException("no such profundum");
     }
 
-    public Task<DTOProfundumDefinition[]> GetProfundaAsync()
+    /// <summary>Returns every Profundum-Definition, ordered by Bezeichnung, excluding <see cref="ProfundumDefinition.Hidden"/> ones unless <paramref name="includeHidden"/> is set.</summary>
+    public Task<DTOProfundumDefinition[]> GetProfundaAsync(bool includeHidden = false)
     {
         return _dbContext.Profunda
             .AsSplitQuery()
+            .Where(p => includeHidden || !p.Hidden)
             .Include(p => p.Kategorie)
             .Include(p => p.Dependencies)
             .Include(e => e.Fachbereiche)
@@ -266,6 +369,17 @@ internal class ProfundumManagementService
             .ToArrayAsync();
     }
 
+    /// <summary>Sets a Profundum-Definition's <see cref="ProfundumDefinition.Hidden"/> flag (management-view visibility only).</summary>
+    public async Task SetProfundumHiddenAsync(Guid profundumId, bool value)
+    {
+        var profundum = await _dbContext.Profunda.FindAsync(profundumId);
+        if (profundum is null)
+            throw new NotFoundException("profundum to hide not found");
+        profundum.Hidden = value;
+        await _dbContext.SaveChangesAsync();
+    }
+
+    /// <summary>Returns a single Profundum-Definition by id, or null if it doesn't exist.</summary>
     public Task<DTOProfundumDefinition?> GetProfundumAsync(Guid profundumId)
     {
         return _dbContext.Profunda
@@ -277,6 +391,7 @@ internal class ProfundumManagementService
             .Select(p => new DTOProfundumDefinition(p)).FirstOrDefaultAsync();
     }
 
+    /// <summary>Creates a new Instanz (offering) of a Profundum-Definition, with its Slots and Verantwortliche.</summary>
     public async Task<ProfundumInstanz> CreateInstanzAsync(DTOProfundumInstanzCreation request)
     {
         var def = await _dbContext.Profunda.FindAsync(request.ProfundumId);
@@ -301,6 +416,7 @@ internal class ProfundumManagementService
         {
             Profundum = def,
             MaxEinschreibungen = request.MaxEinschreibungen,
+            WantedEinschreibungen = request.WantedEinschreibungen,
             Slots = slots,
             Ort = request.Ort,
             Verantwortliche = verantwortliche
@@ -310,44 +426,48 @@ internal class ProfundumManagementService
         return inst;
     }
 
+    /// <summary>Returns every Instanz, ordered by the owning Profundum's Bezeichnung.</summary>
     public Task<DTOProfundumInstanz[]> GetInstanzenAsync()
     {
         return _dbContext.ProfundaInstanzen
-            .AsSingleQuery()
+            .AsSplitQuery()
             .Include(p => p.Verantwortliche)
             .Include(i => i.Profundum).ThenInclude(p => p.Dependencies)
             .Include(i => i.Profundum).ThenInclude(p => p.Kategorie)
             .Include(i => i.Profundum)
             .ThenInclude(p => p.Fachbereiche)
             .Include(i => i.Slots)
-            .Include(i => i.Einschreibungen).ThenInclude(e => e.BetroffenePerson)
+            .Include(i => i.Einschreibungen)
             .OrderBy(i => i.Profundum.Bezeichnung.ToLower())
             .Select(i => new DTOProfundumInstanz(i))
             .ToArrayAsync();
     }
 
+    /// <summary>Returns a single Instanz by id, or null if it doesn't exist.</summary>
     public Task<DTOProfundumInstanz?> GetInstanzAsync(Guid instanzId)
     {
         return _dbContext.ProfundaInstanzen
-            .AsSingleQuery()
+            .AsSplitQuery()
             .Include(p => p.Verantwortliche)
             .Include(i => i.Profundum).ThenInclude(p => p.Dependencies)
             .Include(i => i.Profundum).ThenInclude(p => p.Kategorie)
             .Include(i => i.Profundum)
             .ThenInclude(p => p.Fachbereiche)
             .Include(i => i.Slots)
-            .Include(i => i.Einschreibungen).ThenInclude(e => e.BetroffenePerson)
+            .Include(i => i.Einschreibungen)
             .Where(i => i.Id == instanzId)
             .Select(i => new DTOProfundumInstanz(i))
             .FirstOrDefaultAsync();
     }
 
+    /// <summary>Updates an Instanz's Slots, Verantwortliche, capacity, and Ort.</summary>
     public async Task<ProfundumInstanz> UpdateInstanzAsync(Guid instanzId, DTOProfundumInstanzCreation patch)
     {
         var instanz = await _dbContext.ProfundaInstanzen
             .AsSplitQuery()
             .Include(i => i.Slots)
             .Include(i => i.Verantwortliche)
+            .Include(i => i.Einschreibungen).ThenInclude(e => e.Slot)
             .FirstOrDefaultAsync(i => i.Id == instanzId);
 
         if (instanz is null) throw new NotFoundException("instanz to update not found");
@@ -363,6 +483,20 @@ internal class ProfundumManagementService
         var slots = await _dbContext.ProfundaSlots.Where(slot => patch.Slots.Contains(slot.Id)).ToArrayAsync();
         if (slots.Length != patch.Slots.Count) throw new NotFoundException("At least one of the slots does not exist");
 
+        // A slot being dropped from the Instanz invalidates any Einschreibung fixed to it (its (Instanz, Slot)
+        // pair would no longer exist) - refuse rather than silently corrupting a finalized enrollment. An
+        // unfixed one is just stale solver/draft output, so it's safe to clean up instead of blocking.
+        var newSlotIds = slots.Select(s => s.Id).ToHashSet();
+        var einschreibungenForRemovedSlots = instanz.Einschreibungen
+            .Where(e => !newSlotIds.Contains(e.Slot.Id))
+            .ToArray();
+
+        if (einschreibungenForRemovedSlots.Any(e => e.IsFixed))
+            throw new ArgumentException(
+                "Diese Änderung würde fixierte Einschreibungen ungültig machen, da ein belegter Slot entfernt würde.");
+
+        _dbContext.ProfundaEinschreibungen.RemoveRange(einschreibungenForRemovedSlots);
+
         instanz.Slots = slots.ToList();
 
         var verantwortlicheIds = verantwortliche.Select(e => e.Id).ToArray();
@@ -371,18 +505,41 @@ internal class ProfundumManagementService
         instanz.Verantwortliche.AddRange(verantwortliche.Where(v => !instanzVerantwortlicheIds.Contains(v.Id)));
 
         instanz.MaxEinschreibungen = patch.MaxEinschreibungen;
+        instanz.WantedEinschreibungen = patch.WantedEinschreibungen;
         instanz.Ort = patch.Ort;
 
         await _dbContext.SaveChangesAsync();
         return instanz;
     }
 
+    /// <summary>
+    ///     Deletes the given Instanz. Refuses if any fixed Einschreibung still points to it (deleting the Instanz
+    ///     would invalidate it); unfixed ones are just stale solver/draft output and are deleted along with it.
+    /// </summary>
     public async Task DeleteInstanzAsync(Guid instanzId)
     {
+        var einschreibungen = await _dbContext.ProfundaEinschreibungen
+            .Where(e => e.ProfundumInstanz != null && e.ProfundumInstanz.Id == instanzId)
+            .ToArrayAsync();
+
+        if (einschreibungen.Any(e => e.IsFixed))
+            throw new ArgumentException("Instanz kann nicht gelöscht werden, solange fixierte Einschreibungen bestehen.");
+
+        if (einschreibungen.Length != 0)
+        {
+            _dbContext.ProfundaEinschreibungen.RemoveRange(einschreibungen);
+            await _dbContext.SaveChangesAsync();
+        }
+
         var numDeleted = await _dbContext.ProfundaInstanzen.Where(i => i.Id == instanzId).ExecuteDeleteAsync();
         if (numDeleted == 0) throw new NotFoundException("no such instanz");
     }
 
+    /// <summary>
+    ///     Manual staff override: replaces a single student's entire set of <see cref="ProfundumEinschreibung" />
+    ///     rows directly, bypassing the matching solver and its rules (including team-partner pairing - see
+    ///     <c>rules-engine.md</c> on how a resulting desync is surfaced instead of blocked here).
+    /// </summary>
     public async Task UpdateEnrollmentsAsync(Guid personId, List<DTOProfundumEnrollment> enrollments)
     {
         var existing = _dbContext.ProfundaEinschreibungen
@@ -427,6 +584,7 @@ internal class ProfundumManagementService
         await _dbContext.SaveChangesAsync();
     }
 
+    /// <summary>Renders a single Instanz's roster/course sheet as a PDF via <c>Typst/Profundum/Instanz.typ</c>.</summary>
     public async Task<byte[]> GetInstanzPdfAsync(Guid instanzId)
     {
         var p = await _dbContext.ProfundaInstanzen
@@ -443,18 +601,21 @@ internal class ProfundumManagementService
             throw new NotFoundException("instanz not found");
         }
 
-        var teilnehmer = _dbContext.ProfundaEinschreibungen
+        var einschreibungenForInstanz = await _dbContext.ProfundaEinschreibungen
             .Where(e => e.ProfundumInstanz != null && e.ProfundumInstanz.Id == p.Id)
-            .Select(e => e.BetroffenePerson)
-            .Distinct()
-            .AsEnumerable()
+            .Include(e => e.BetroffenePerson)
+            .ToArrayAsync();
+
+        var teilnehmer = einschreibungenForInstanz
+            .GroupBy(e => e.BetroffenePerson)
+            .Select(g => new PersonInfoMinimal(g.Key))
             .OrderBy(x => int.Parse((x.Gruppe ?? "0").TakeWhile(char.IsDigit).ToArray()))
             .ThenBy(x =>
                 (x.Gruppe ?? "").SkipWhile(c => !char.IsDigit(c))
                 .Aggregate(new StringBuilder(), (a, b) => a.Append(b))
                 .ToString())
-            .ThenBy(e => e.LastName)
-            .ThenBy(e => e.FirstName);
+            .ThenBy(e => e.Nachname)
+            .ThenBy(e => e.Vorname);
 
         const string src = Altafraner.Typst.Templates.Profundum.Instanz;
 
@@ -464,13 +625,17 @@ internal class ProfundumManagementService
             beschreibung = "",
             voraussetzungen = p.Profundum.Dependencies.Select(d => d.Bezeichnung),
             ort = p.Ort,
-            slots = p.Slots.OrderBy(e => e.Jahr).ThenBy(e => e.Quartal).ThenBy(e => e.Wochentag),
+            slots = p.Slots.OrderBy(e => e.Jahr)
+                .ThenBy(e => e.Quartal)
+                .ThenBy(e => e.Wochentag)
+                .Select(e => new DTOProfundumSlot(e)),
             verantwortliche = p.Verantwortliche.Select(v => new PersonInfoMinimal(v)),
-            teilnehmer = teilnehmer.Select(v => new PersonInfoMinimal(v)),
+            teilnehmer,
         };
 
         return _typst.GeneratePdf(src, inputs);
     }
+    /// <summary>Renders every Instanz roster/course sheet for the given Slot as PDFs, bundled into one zip.</summary>
     public async Task<(byte[], string)> GetSlotPdfsZipAsync(Guid slotId)
     {
         var slot = await _dbContext.ProfundaSlots.FindAsync(slotId);
@@ -498,15 +663,14 @@ internal class ProfundumManagementService
         {
             var teilnehmer = einschreibungen
                 .Where(e => e.ProfundumInstanz!.Id == inst.Id)
-                .Select(e => e.BetroffenePerson)
-                .Distinct()
+                .GroupBy(e => e.BetroffenePerson)
+                .Select(g => new PersonInfoMinimal(g.Key))
                 .OrderBy(x => int.Parse((x.Gruppe ?? "0").TakeWhile(char.IsDigit).ToArray()))
                 .ThenBy(x =>
                     (x.Gruppe ?? "").SkipWhile(c => !char.IsDigit(c))
                     .Aggregate(new StringBuilder(), (a, b) => a.Append(b)).ToString())
-                .ThenBy(e => e.LastName)
-                .ThenBy(e => e.FirstName)
-                .Select(v => new PersonInfoMinimal(v))
+                .ThenBy(e => e.Nachname)
+                .ThenBy(e => e.Vorname)
                 .ToArray();
 
             var inputs = new
@@ -515,7 +679,10 @@ internal class ProfundumManagementService
                 beschreibung = "",
                 voraussetzungen = inst.Profundum.Dependencies.Select(d => d.Bezeichnung),
                 ort = inst.Ort,
-                slots = inst.Slots.OrderBy(e => e.Jahr).ThenBy(e => e.Quartal).ThenBy(e => e.Wochentag),
+                slots = inst.Slots.OrderBy(e => e.Jahr)
+                    .ThenBy(e => e.Quartal)
+                    .ThenBy(e => e.Wochentag)
+                    .Select(e => new DTOProfundumSlot(e)),
                 verantwortliche = inst.Verantwortliche.Select(v => new PersonInfoMinimal(v)),
                 teilnehmer
             };
@@ -545,7 +712,7 @@ internal class ProfundumManagementService
         return (ms.ToArray(), slot.ToString());
     }
 
-    ///
+    /// <summary>Tab-separated export of every Mittelstufe student's fixed enrollment per Slot, one row per student.</summary>
     public async Task<string> GetStudentMatchingCsv()
     {
         var personen = _dbContext.Personen

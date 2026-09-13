@@ -1,10 +1,11 @@
 <script setup>
-import { h } from 'vue';
-import { formatDate, formatDayOfWeek, formatTutor } from '@/helpers/formatters';
+import { computed, h, ref } from 'vue';
+import { formatCalendarDate, formatDayOfWeek, formatTutor } from '@/helpers/formatters';
 import CreateWiederholungForm from '@/Otium/components/Management/CreateWiederholungForm.vue';
 import CancelWiederholungForm from '@/Otium/components/Management/CancelWiederholungForm.vue';
 import UButton from '@nuxt/ui/components/Button.vue';
 import UTooltip from '@nuxt/ui/components/Tooltip.vue';
+import { parseDate } from '@internationalized/date';
 
 const emits = defineEmits(['create', 'delete', 'cancel', 'edit']);
 const props = defineProps({
@@ -13,6 +14,8 @@ const props = defineProps({
     allowEdit: Boolean,
 });
 const overlay = useOverlay();
+
+const showDone = ref(false);
 
 async function showCreateDialog() {
     const modal = overlay.create(CreateWiederholungForm);
@@ -60,12 +63,12 @@ const columns = [
     {
         header: 'Start',
         accessorKey: 'startDate',
-        cell: ({ row }) => formatDate(new Date(row.getValue('startDate')), true),
+        cell: ({ row }) => formatCalendarDate(parseDate(row.getValue('startDate')), false),
     },
     {
         header: 'Ende',
         accessorKey: 'endDate',
-        cell: ({ row }) => formatDate(new Date(row.getValue('endDate')), true),
+        cell: ({ row }) => formatCalendarDate(parseDate(row.getValue('endDate')), false),
     },
     {
         id: 'actions',
@@ -76,8 +79,9 @@ const columns = [
                     h(UButton, {
                         icon: 'i-lucide-pencil',
                         variant: 'ghost',
-                        color: 'primary',
+                        color: row.original.isDone ? 'neutral' : 'primary',
                         size: 'sm',
+                        disabled: row.original.isDone,
                         onClick: () => edit(row.original),
                     }),
                 ),
@@ -85,8 +89,9 @@ const columns = [
                     h(UButton, {
                         icon: 'i-lucide-square',
                         variant: 'ghost',
-                        color: 'warning',
+                        color: row.original.isDone ? 'neutral' : 'warning',
                         size: 'sm',
+                        disabled: row.original.isDone,
                         onClick: () => showCancelDialog(row.original),
                     }),
                 ),
@@ -94,8 +99,9 @@ const columns = [
                     h(UButton, {
                         icon: 'i-lucide-x',
                         variant: 'ghost',
-                        color: 'error',
+                        color: row.original.isDone ? 'neutral' : 'error',
                         size: 'sm',
+                        disabled: row.original.isDone,
                         onClick: () => emits('delete', row.original.id),
                     }),
                 ),
@@ -108,17 +114,34 @@ const columns = [
         },
     },
 ];
+
+const filtered = computed(() => props.regs.filter((reg) => showDone.value || !reg.isDone));
 </script>
 
 <template>
-    <UTable
-        :columns="columns"
-        :data="regs"
-        :ui="{
-            td: 'p-2 first:pl-4 last:pr-4',
-            th: 'p-2 first:pl-4 last:pr-4',
-        }"
-    />
+    <div class="w-full">
+        <UTable
+            :columns="columns"
+            :data="filtered"
+            :ui="{
+                td: 'p-2 first:pl-4 last:pr-4',
+                th: 'p-2 first:pl-4 last:pr-4',
+            }"
+        />
+        <USeparator />
+        <div class="py-2 px-4">
+            <UButton
+                v-if="!showDone"
+                label="Vergangene Regelmäßigkeiten anzeigen"
+                @click="showDone = true"
+            />
+            <UButton
+                v-else
+                label="Vergangene Regelmäßigkeiten ausblenden"
+                @click="showDone = false"
+            />
+        </div>
+    </div>
 </template>
 
 <style scoped></style>

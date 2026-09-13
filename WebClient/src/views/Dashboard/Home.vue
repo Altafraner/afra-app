@@ -20,12 +20,4 @@ await otiumStore.updateKategorien();
     <TutorDashboard v-if="user.isTeacher" />
 </template>
 
-<style scoped>
-p a {
-    color: var(--p-primary-500);
-}
-
-p a:visited {
-    color: var(--p-primary-700);
-}
-</style>
+<style scoped></style>

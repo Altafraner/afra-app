@@ -142,21 +142,6 @@ internal partial class FeedbackPrintoutService
 
         var warnings = new List<string>();
 
-        var allUsers = await _dbContext.Personen.Where(e => e.Rolle == Rolle.Mittelstufe)
-            .Include(e => e.MentorMenteeRelations.Where(m => m.Type == MentorType.GM))
-            .OrderBy(e => e.FirstName)
-            .ThenBy(e => e.LastName)
-            .AsAsyncEnumerable()
-            .GroupBy(e => (
-                mode.HasFlag(BatchingModes.ByClass) ? e.Gruppe ?? "unbekannt" : "beliebig",
-                mode.HasFlag(BatchingModes.ByGm)
-                    ? e.MentorMenteeRelations.FirstOrDefault()?.MentorId
-                    : Guid.AllBitsSet))
-            .ToArrayAsync();
-
-        var allMentors = (await _userService.GetUsersWithRoleAsync(Rolle.Tutor)).ToDictionary(e => e.Id, e => e)
-            .AsReadOnly();
-
         var quartale = GetQuartaleForHalbjahr(halbjahr);
 
         var allFeedback = await _dbContext.ProfundumFeedbackEntries.AsSplitQuery()
@@ -176,6 +161,21 @@ internal partial class FeedbackPrintoutService
                         quartale.Contains(e.Einschreibung.Slot.Quartal))
             .GroupBy(e => e.Einschreibung.BetroffenePersonId)
             .ToDictionaryAsync(e => e.Key, e => e.ToArray());
+
+        var allUsers = await _dbContext.Personen.Where(e => e.Rolle == Rolle.Mittelstufe)
+            .Include(e => e.MentorMenteeRelations.Where(m => m.Type == MentorType.GM))
+            .OrderBy(e => e.FirstName)
+            .ThenBy(e => e.LastName)
+            .AsAsyncEnumerable()
+            .GroupBy(e => (
+                mode.HasFlag(BatchingModes.ByClass) ? e.Gruppe ?? "unbekannt" : "beliebig",
+                mode.HasFlag(BatchingModes.ByGm)
+                    ? e.MentorMenteeRelations.FirstOrDefault()?.MentorId
+                    : Guid.AllBitsSet))
+            .ToArrayAsync();
+
+        var allMentors = (await _userService.GetUsersWithRoleAsync(Rolle.Tutor)).ToDictionary(e => e.Id, e => e)
+            .AsReadOnly();
 
         var meta = new ProfundumFeedbackPdfData.MetaData(ausgabedatum.ToString("dd.MM.yyyy"),
             schuljahr,

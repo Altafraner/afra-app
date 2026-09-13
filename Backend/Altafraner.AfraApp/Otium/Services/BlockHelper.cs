@@ -68,9 +68,22 @@ public class BlockHelper
 
         var dayPending = block.SchultagKey > dateToday;
         var today = block.SchultagKey == dateToday;
+        var blockStatus = GetBlockStatus(schema, nowTime);
 
-        if (dayPending || (today && nowTime <= schema.Interval.Start)) return BlockStatus.Pending;
-        if (today && nowTime <= schema.Interval.End) return BlockStatus.Running;
+        if (dayPending || (today && blockStatus == BlockStatus.Pending)) return BlockStatus.Pending;
+        if (today && blockStatus == BlockStatus.Running) return BlockStatus.Running;
+        return BlockStatus.Done;
+    }
+
+    /// <summary>
+    ///     Gets the block status for a block metadata when the block is today
+    /// </summary>
+    public static BlockStatus GetBlockStatus(BlockMetadata schema, TimeOnly? now = null)
+    {
+        now ??= TimeOnly.FromDateTime(DateTime.Now);
+
+        if (now < schema.Interval.Start) return BlockStatus.Pending;
+        if (now < schema.Interval.End) return BlockStatus.Running;
         return BlockStatus.Done;
     }
 

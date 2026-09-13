@@ -20,17 +20,17 @@ public class AllSlotsRule : IProfundumIndividualRule
 
     /// <inheritdoc/>
     public void AddConstraints(Person student,
+        int klasse,
         IEnumerable<ProfundumSlot> slots,
-        IEnumerable<ProfundumBelegWunsch> wuensche,
+        IEnumerable<ProfundumEinschreibung> enrollments,
         Dictionary<(ProfundumSlot s, ProfundumInstanz i), BoolVar> belegVars,
-        Dictionary<ProfundumSlot, BoolVar> personNotEnrolledVars,
         CpModel model,
         LinearExprBuilder objective)
     {
         var angebote = belegVars.Keys.Select(x => x.i).Distinct();
         foreach (var i in angebote)
         {
-            var psVars = i.Slots.Select(s => belegVars[(s, i)]).ToArray();
+            var psVars = i.Slots.Where(s => belegVars.ContainsKey((s, i))).Select(s => belegVars[(s, i)]).ToArray();
             foreach (var (v, w) in psVars.Zip(psVars.Skip(1)))
             {
                 var ineq = model.NewBoolVar($"{Guid.NewGuid()}");
@@ -42,13 +42,15 @@ public class AllSlotsRule : IProfundumIndividualRule
     }
 
     /// <inheritdoc/>
-    public IEnumerable<MatchingWarning> GetWarnings(Person student, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
+    public IEnumerable<MatchingWarning> GetWarnings(Person student, int klasse, IEnumerable<ProfundumSlot> slots, IEnumerable<ProfundumEinschreibung> enrollments)
     {
         List<MatchingWarning> warnings = [];
+        var slotsArray = slots as ProfundumSlot[] ?? slots.ToArray();
         var enrollmentsArray = enrollments as ProfundumEinschreibung[] ?? enrollments.ToArray();
         var angebote = enrollmentsArray
             .Where(p => p.ProfundumInstanz is not null)
-            .Select(x => x.ProfundumInstanz!).Distinct();
+            .Select(x => x.ProfundumInstanz!).Distinct()
+            .Where(i => i.Slots.Any(slotsArray.Contains));
         foreach (var i in angebote)
         {
             var belegtSlots = enrollmentsArray.Where(e => e.ProfundumInstanz == i).Select(e => e.Slot).ToArray();

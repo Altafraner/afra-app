@@ -28,4 +28,16 @@ public record MatchingStats
     ///     The result status
     /// </summary>
     public MatchingResultStatus Result { get; set; }
+
+    /// <summary>
+    ///     The number of students who ended up unenrolled in at least one non-fixed slot despite having submitted a
+    ///     valid set of Belegwuensche. A high number here usually indicates a capacity shortage.
+    /// </summary>
+    public int NichtEingeschriebenTrotzWunsch { get; set; }
+
+    /// <summary>
+    ///     A histogram of the achieved wish rank across all new (non-fixed) assignments: key = rank, value = number of
+    ///     (student, slot) assignments that satisfied a wish of that rank.
+    /// </summary>
+    public Dictionary<int, int> RangVerteilung { get; set; } = new();
 }
