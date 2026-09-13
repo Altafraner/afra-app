@@ -50,11 +50,9 @@ public class ProfundumConfiguration
     /// </summary>
     public int WunschMindestWert { get; set; } = 5;
 
-    public int WunschMaxWert { get; set; } = 105;
-
     /// <summary>
     ///     Penalty subtracted from the objective, per student of deviation between an Instanz's actual enrollment
-    ///     count and its optional organizer-chosen <see cref="Models.ProfundumInstanz.WantedEinschreibungen"/>
+    ///     count and its optional organizer-chosen <see cref="ProfundumInstanz.WantedEinschreibungen"/>
     ///     target. Deliberately kept small relative to <see cref="WunschBasisWert"/>/<see cref="WunschKostenFaktor"/>
     ///     - this is only a slight tendency toward a "good" course size, since student wishes must remain paramount
     ///     and this must never outweigh even one rank of wish satisfaction. Set to 0 to disable entirely.
