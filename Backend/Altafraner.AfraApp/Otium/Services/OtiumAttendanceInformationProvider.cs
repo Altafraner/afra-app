@@ -109,7 +109,7 @@ internal sealed class OtiumAttendanceInformationProvider : IAttendanceInformatio
         var attending = attendances.SelectMany(e => e.Enrollments);
         var nonAttending = await _dbContext.Personen
             .Where(e => e.Rolle == Rolle.Mittelstufe && !attending.Contains(e) &&
-                        DateOnly.FromDateTime(e.CreatedAt) <= block.SchultagKey)
+                        DateOnly.FromDateTime(e.CreatedAt) <= block.SchultagKey && !e.Deleted)
             .ToListAsync();
         return finalEvents.Prepend(new EventWithEnrollments
         {
@@ -184,7 +184,7 @@ internal sealed class OtiumAttendanceInformationProvider : IAttendanceInformatio
                 e => e.BetroffenePerson.Id,
                 (p, e) => new { Person = p, Einschreibung = e })
             .Where(e => e.Einschreibung == null && e.Person.Rolle == Rolle.Mittelstufe &&
-                        DateOnly.FromDateTime(e.Person.CreatedAt) <= block.SchultagKey)
+                        DateOnly.FromDateTime(e.Person.CreatedAt) <= block.SchultagKey && !e.Person.Deleted)
             .Select(e => e.Person)
             .ToListAsync();
     }
