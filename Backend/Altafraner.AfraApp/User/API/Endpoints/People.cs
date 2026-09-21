@@ -82,7 +82,7 @@ internal static class People
         var cevexDict = cevexData.ToDictionary(data => data.Guid);
         var people = await dbContext.Personen
             .AsNoTracking()
-            .Where(p => p.Rolle == Rolle.Mittelstufe || (p.Rolle == Rolle.Oberstufe && !p.Deleted))
+            .Where(p => (p.Rolle == Rolle.Mittelstufe || p.Rolle == Rolle.Oberstufe) && !p.Deleted)
             .OrderByDescending(p => p.CevexId == null)
             .ThenBy(p => p.LastName)
             .ThenBy(p => p.FirstName)
