@@ -87,7 +87,7 @@ internal class CevexDataParser
     {
         var cevexDataArray = cevexData as CevexUser[] ?? cevexData.ToArray();
         var allStudents = await _dbContext.Personen
-            .Where(p => p.Rolle == Rolle.Mittelstufe || p.Rolle == Rolle.Oberstufe)
+            .Where(p => !p.Deleted && (p.Rolle == Rolle.Mittelstufe || p.Rolle == Rolle.Oberstufe))
             .ToListAsync();
         var studentsByLastname = allStudents
             .Select(s => (lastname: s.LastName.ToLowerInvariant().Trim(),
