@@ -71,6 +71,12 @@ const pwaOptions: Partial<VitePWAOptions> = {
     workbox: {
         navigateFallbackDenylist: [/^\/api/],
     },
+    devOptions: {
+        enabled: true,
+        type: 'module',
+        navigateFallback: 'index.html',
+        suppressWarnings: true,
+    },
 };
 
 // https://vite.dev/config/
