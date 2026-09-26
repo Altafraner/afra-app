@@ -109,7 +109,7 @@ public static class Management
     }
 
     private static async Task<IResult> OtiumSetHidden(ManagementService managementService,
-        UserAuthorizationHelper authHelper, AfraAppContext dbContext, Guid otiumId, bool value)
+        UserAuthorizationHelper authHelper, OtiumEndpointService service, Guid otiumId, bool value)
     {
         OtiumDefinition otium;
         try
@@ -123,8 +123,7 @@ public static class Management
 
         if (!await MayEditAsync(authHelper, managementService, otium)) return Results.Forbid();
 
-        otium.Hidden = value;
-        await dbContext.SaveChangesAsync();
+        await service.OtiumSetHiddenAsync(otiumId, value);
         return Results.Ok();
     }
 
