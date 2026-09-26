@@ -43,6 +43,8 @@ const pwaOptions: Partial<VitePWAOptions> = {
     manifest: {
         name: 'Afra-App',
         short_name: 'Afra-App',
+        description:
+            'Einwahl in die Nachmittagsangebote am Sächsischen Landesgymnasium Sankt Afra.',
         theme_color: '#005899',
         lang: 'de',
         icons: [
