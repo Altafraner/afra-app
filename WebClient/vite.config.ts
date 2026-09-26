@@ -47,10 +47,28 @@ const pwaOptions: Partial<VitePWAOptions> = {
         lang: 'de',
         icons: [
             {
+                src: 'vdaa/appicon-192.png',
+                type: 'image/png',
+                sizes: '192x192',
+                purpose: 'any',
+            },
+            {
+                src: 'vdaa/appicon-512.png',
+                type: 'image/png',
+                sizes: '512x512',
+                purpose: 'any',
+            },
+            {
                 src: 'vdaa/appicon.svg',
                 type: 'image/svg+xml',
+                sizes: 'any',
+                purpose: 'any',
+            },
+            {
+                src: 'vdaa/appicon-maskable-512.png',
+                type: 'image/png',
                 sizes: '512x512',
-                purpose: ['any', 'maskable'],
+                purpose: 'maskable',
             },
         ],
         screenshots: [
