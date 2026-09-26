@@ -5,7 +5,6 @@ using Altafraner.AfraApp.Otium.Domain.Models;
 using Altafraner.AfraApp.Otium.Services;
 using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.AfraApp.User.Services;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
 namespace Altafraner.AfraApp.Otium.API;
@@ -109,13 +108,24 @@ public static class Management
         }
     }
 
-    private static async Task<Results<Ok, NotFound>> OtiumSetHidden(AfraAppContext dbContext, Guid otiumId, bool value)
+    private static async Task<IResult> OtiumSetHidden(ManagementService managementService,
+        UserAuthorizationHelper authHelper, AfraAppContext dbContext, Guid otiumId, bool value)
     {
-        var otium = await dbContext.Otia.FindAsync(otiumId);
-        if (otium is null) return TypedResults.NotFound();
+        OtiumDefinition otium;
+        try
+        {
+            otium = await managementService.GetOtiumByIdAsync(otiumId);
+        }
+        catch (KeyNotFoundException)
+        {
+            return Results.NotFound("Otium not found.");
+        }
+
+        if (!await MayEditAsync(authHelper, managementService, otium)) return Results.Forbid();
+
         otium.Hidden = value;
         await dbContext.SaveChangesAsync();
-        return TypedResults.Ok();
+        return Results.Ok();
     }
 
     private static async Task<IResult> CreateOtiumTermin(ManagementService managementService,
