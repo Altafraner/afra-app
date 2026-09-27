@@ -352,7 +352,7 @@ await fetchData();
     <HybridAttendanceTable
         :enable-supervision="aufsichtRunning"
         :event-id="props.terminId"
-        :show-attendance="otium.isDoneOrRunning"
+        :show-attendance="otium.isDoneOrRunning || otium.isSupervisionEnabled"
         :slot-id="otium.blockId"
         scope="otium"
         :enrollments="otium.einschreibungen"
