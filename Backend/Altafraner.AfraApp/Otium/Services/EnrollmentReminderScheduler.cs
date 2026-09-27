@@ -48,6 +48,7 @@ public class EnrollmentReminderScheduler : BackgroundService
         var triggerNow = TriggerBuilder.Create()
             .ForJob(key)
             .StartNow()
+            .WithRetryPolicy(RetryPolicy.Fixed(3, TimeSpan.FromSeconds(30)))
             .Build();
 
         var triggerCron = TriggerBuilder.Create()
@@ -59,8 +60,8 @@ public class EnrollmentReminderScheduler : BackgroundService
                             .Build()
                     )
                     .WithMisfireInstruction(CronTriggerMisfireInstruction.FireAndProceed))
-            .Build()
-            ;
+            .WithRetryPolicy(RetryPolicy.Fixed(3, TimeSpan.FromSeconds(30)))
+            .Build();
 
         var exists = await scheduler.Exists(key, stoppingToken);
         if (exists)

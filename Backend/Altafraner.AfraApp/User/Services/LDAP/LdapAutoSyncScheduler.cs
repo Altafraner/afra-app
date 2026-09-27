@@ -52,6 +52,7 @@ public class LdapAutoSyncScheduler : BackgroundService
             .WithSimpleSchedule(x => x
                 .WithInterval(TimeSpan.FromHours(1))
                 .RepeatForever())
+            .WithRetryPolicy(RetryPolicy.Fixed(5, TimeSpan.FromMinutes(2)))
             .WithPriority(0)
             .Build();
 

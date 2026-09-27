@@ -45,6 +45,12 @@ public class EmailConfiguration
     public required string SenderName { get; set; }
 
     /// <summary>
+    ///     A list of system administrator E-Mail addresses.
+    /// </summary>
+    /// <remarks>These addresses will receive notifications about system failures.</remarks>
+    public required string[] SystemAdministrators { get; set; }
+
+    /// <summary>
     /// Validates the configuration object. Should be called before using the configuration.
     /// </summary>
     /// <returns>True, iff the configuration is valid.</returns>

@@ -1,6 +1,5 @@
 using System.Text;
 using Altafraner.Backbone.EmailOutbox;
-using Altafraner.Backbone.Scheduling;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Quartz;
@@ -10,7 +9,7 @@ namespace Altafraner.Backbone.EmailSchedulingModule.Jobs;
 /// <summary>
 ///     A Job that sends a batched email with all pending notifications for a single User
 /// </summary>
-internal sealed class BatchEmailsJob<TPerson> : RetryJob where TPerson : class, IEmailRecipient
+internal sealed class BatchEmailsJob<TPerson> : IJob where TPerson : class, IEmailRecipient
 {
     private readonly IScheduledEmailContext<TPerson> _dbContext;
     private readonly IEmailOutbox _emailOutbox;
@@ -18,26 +17,24 @@ internal sealed class BatchEmailsJob<TPerson> : RetryJob where TPerson : class, 
 
     public BatchEmailsJob(
         IScheduledEmailContext<TPerson> dbContext, IEmailOutbox emailOutbox,
-        ILogger<BatchEmailsJob<TPerson>> logger) : base(logger)
+        ILogger<BatchEmailsJob<TPerson>> logger)
     {
         _dbContext = dbContext;
         _emailOutbox = emailOutbox;
         _logger = logger;
     }
 
-    protected override int MaxRetryCount => 1;
-    protected override TimeSpan GetRetryDelay(int _) => TimeSpan.FromMinutes(1);
-
-    protected override async Task ExecuteAsync(IJobExecutionContext jobContext, int _)
+    public async ValueTask Execute(IJobExecutionContext context,
+        CancellationToken cancellationToken)
     {
-        var dataMap = jobContext.JobDetail.JobDataMap;
+        var dataMap = context.JobDetail.JobDataMap;
         var userId = dataMap.Get<Guid>("user_id");
 
         var emailsForUser = await _dbContext.ScheduledEmails
             .Include(x => x.Recipient)
             .Where(x => x.RecipientId == userId)
             .OrderBy(x => x.Deadline) // Short notices are probably more important
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         // Flush jobs might be pending that were set by already sent notifications.
         // Do not send empty batches caused by this condition
@@ -80,6 +77,6 @@ internal sealed class BatchEmailsJob<TPerson> : RetryJob where TPerson : class, 
             throw new InvalidOperationException("The given email store is no dbContext");
 
         contextActions.RemoveRange(emailsForUser);
-        await contextActions.SaveChangesAsync();
+        await contextActions.SaveChangesAsync(cancellationToken);
     }
 }

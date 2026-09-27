@@ -46,6 +46,7 @@ internal class EmailNotificationService<TPerson> : INotificationService where TP
         var trigger = TriggerBuilder.Create()
             .ForJob(key)
             .StartAt(absDeadLine)
+            .WithRetryPolicy(RetryPolicy.Exponential(3, TimeSpan.FromSeconds(30)))
             .Build();
 
         var scheduler = await _schedulerFactory.GetScheduler();

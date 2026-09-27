@@ -5,6 +5,7 @@ using Altafraner.Backbone.Scheduling;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Quartz;
 
 namespace Altafraner.Backbone.EmailOutbox;
 
@@ -23,5 +24,11 @@ public class EmailOutboxModule : IModule
             .ValidateOnStart();
         services.AddTransient<IEmailService, SmtpEmailService>();
         services.AddScoped<IEmailOutbox, Services.EmailOutbox>();
+        services.AddScoped<FailureNotificationListener>();
+
+        services.ConfigureAllQuartzSchedulers(q =>
+        {
+            q.AddTriggerListener<FailureNotificationListener>(Matchers.AllTriggers());
+        });
     }
 }

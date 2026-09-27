@@ -27,7 +27,6 @@ internal class EmailOutbox : IEmailOutbox
             { "subject", subject },
             { "body", body },
             { "recipient", recipient },
-            { "retryCount", 0 }
         };
         var job = JobBuilder.Create<FlushEmailJob>()
             .WithIdentity($"report-{Guid.CreateVersion7()}", "flush-report")
@@ -36,6 +35,7 @@ internal class EmailOutbox : IEmailOutbox
 
         var trigger = TriggerBuilder.Create()
             .StartNow()
+            .WithRetryPolicy(RetryPolicy.Exponential(5, TimeSpan.FromSeconds(30), 2))
             .Build();
 
         return _scheduler.ScheduleJob(job, trigger).AsTask();

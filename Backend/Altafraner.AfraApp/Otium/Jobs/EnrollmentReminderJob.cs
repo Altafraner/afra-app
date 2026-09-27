@@ -2,7 +2,6 @@ using Altafraner.AfraApp.Otium.Configuration;
 using Altafraner.AfraApp.Otium.Services;
 using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.Backbone.EmailSchedulingModule;
-using Altafraner.Backbone.Scheduling;
 using Microsoft.Extensions.Options;
 using Quartz;
 
@@ -11,7 +10,7 @@ namespace Altafraner.AfraApp.Otium.Jobs;
 /// <summary>
 /// A background job that sends reminders to users about their missing enrollments in Otium events.
 /// </summary>
-internal sealed class EnrollmentReminderJob : RetryJob
+internal sealed class EnrollmentReminderJob : IJob
 {
     private readonly INotificationService _notificationService;
     private readonly EnrollmentService _enrollmentService;
@@ -22,7 +21,8 @@ internal sealed class EnrollmentReminderJob : RetryJob
     /// Constructor for the EnrollmentReminderJob. Called by the DI container.
     /// </summary>
     public EnrollmentReminderJob(ILogger<EnrollmentReminderJob> logger, EnrollmentService enrollmentService,
-        IOptions<OtiumConfiguration> otiumConfiguration, INotificationService notificationService) : base(logger)
+        IOptions<OtiumConfiguration> otiumConfiguration,
+        INotificationService notificationService)
     {
         _logger = logger;
         _enrollmentService = enrollmentService;
@@ -30,9 +30,8 @@ internal sealed class EnrollmentReminderJob : RetryJob
         _notificationService = notificationService;
     }
 
-    protected override int MaxRetryCount => 3;
-
-    protected override async Task ExecuteAsync(IJobExecutionContext context, int _)
+    public async ValueTask Execute(IJobExecutionContext context,
+        CancellationToken cancellationToken)
     {
         if (!_otiumConfiguration.Value.EnrollmentReminder.Enabled) return;
 

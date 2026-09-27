@@ -9,7 +9,6 @@ using Altafraner.AfraApp.Schuljahr.Services;
 using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.AfraApp.User.Services;
 using Altafraner.Backbone.EmailSchedulingModule;
-using Altafraner.Backbone.Scheduling;
 using Altafraner.Backbone.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -20,7 +19,7 @@ namespace Altafraner.AfraApp.Otium.Jobs;
 /// <summary>
 ///     A job that notifies mentors about student misbehaviour.
 /// </summary>
-internal sealed class StudentMisbehaviourNotificationJob : RetryJob
+internal sealed class StudentMisbehaviourNotificationJob : IJob
 {
     private readonly AfraAppContext _dbContext;
     private readonly INotificationService _notificationService;
@@ -38,7 +37,7 @@ internal sealed class StudentMisbehaviourNotificationJob : RetryJob
         SchuljahrService schuljahrService, UserService userService, IOptions<OtiumConfiguration> otiumConfiguration,
         AfraAppContext dbContext, RulesValidationService rulesValidationService,
         INotificationService notificationService,
-        IAttendanceService attendanceService) : base(logger)
+        IAttendanceService attendanceService)
     {
         _logger = logger;
         _schuljahrService = schuljahrService;
@@ -48,36 +47,6 @@ internal sealed class StudentMisbehaviourNotificationJob : RetryJob
         _rulesValidationService = rulesValidationService;
         _notificationService = notificationService;
         _attendanceService = attendanceService;
-    }
-
-    protected override int MaxRetryCount => 3;
-
-    /// <exception cref="ArgumentOutOfRangeException"></exception>
-    /// <inheritdoc />
-    protected override async Task ExecuteAsync(IJobExecutionContext context, int _)
-    {
-        if (!_otiumConfiguration.Value.StudentMisbehaviourNotification.Enabled) return;
-
-        var now = DateTime.Now;
-        var hasRun = context.JobDetail.JobDataMap.TryGet("last_run", out DateTime lastRun);
-        if (TimeOnly.FromDateTime(now) < _otiumConfiguration.Value.StudentMisbehaviourNotification.Time.AddMinutes(-5))
-        {
-            _logger.LogWarning(
-                "Student Misbehaviour job was scheduled before the default reminder time. Skipping execution.");
-            return;
-        }
-
-        if (hasRun && lastRun.Date == now.Date)
-        {
-            _logger.LogInformation("Student Misbehaviour job has already run today. Skipping execution.");
-            return;
-        }
-
-        _logger.LogInformation("Running student misbehaviour job at {Time}", now);
-
-        await DoWork();
-        context.JobDetail.JobDataMap["last_run"] = now;
-        _logger.LogInformation("Student misbehaviour job completed successfully.");
     }
 
     private async Task DoWork()
@@ -194,5 +163,31 @@ internal sealed class StudentMisbehaviourNotificationJob : RetryJob
             foreach (var mentor in mentoren)
                 await _notificationService.ScheduleNotificationAsync(mentor, subject, body, TimeSpan.FromMinutes(10));
         }
+    }
+
+    public async ValueTask Execute(IJobExecutionContext context, CancellationToken cancellationToken)
+    {
+        if (!_otiumConfiguration.Value.StudentMisbehaviourNotification.Enabled) return;
+
+        var now = DateTime.Now;
+        var hasRun = context.JobDetail.JobDataMap.TryGet("last_run", out DateTime lastRun);
+        if (TimeOnly.FromDateTime(now) < _otiumConfiguration.Value.StudentMisbehaviourNotification.Time.AddMinutes(-5))
+        {
+            _logger.LogWarning(
+                "Student Misbehaviour job was scheduled before the default reminder time. Skipping execution.");
+            return;
+        }
+
+        if (hasRun && lastRun.Date == now.Date)
+        {
+            _logger.LogInformation("Student Misbehaviour job has already run today. Skipping execution.");
+            return;
+        }
+
+        _logger.LogInformation("Running student misbehaviour job at {Time}", now);
+
+        await DoWork();
+        context.JobDetail.JobDataMap["last_run"] = now;
+        _logger.LogInformation("Student misbehaviour job completed successfully.");
     }
 }

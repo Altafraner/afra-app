@@ -104,6 +104,7 @@ internal partial class AttendanceHub
             var trigger = TriggerBuilder.Create()
                 .WithIdentity($"missing_student_notification-trigger-{Scope!.Value}-{SlotId}")
                 .StartAt(metadata.MissingStudentsNotificationTime.Value)
+                .WithRetryPolicy(RetryPolicy.Fixed(3, TimeSpan.FromSeconds(30)))
                 .Build();
             await scheduler.ScheduleJob(job, trigger);
         }

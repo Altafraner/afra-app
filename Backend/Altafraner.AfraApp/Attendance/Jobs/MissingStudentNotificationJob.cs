@@ -4,7 +4,6 @@ using Altafraner.AfraApp.Attendance.Domain.Models;
 using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.AfraApp.User.Services;
 using Altafraner.Backbone.EmailOutbox;
-using Altafraner.Backbone.Scheduling;
 using Quartz;
 
 namespace Altafraner.AfraApp.Attendance.Jobs;
@@ -12,7 +11,7 @@ namespace Altafraner.AfraApp.Attendance.Jobs;
 /// <summary>
 ///     Sends a notification to a list of recipients about missing students in a block.
 /// </summary>
-internal sealed class MissingStudentNotificationJob : RetryJob
+internal sealed class MissingStudentNotificationJob : IJob
 {
     internal const string ScopeItem = "scope";
     internal const string SlotIdItem = "slot_id";
@@ -29,7 +28,7 @@ internal sealed class MissingStudentNotificationJob : RetryJob
         IAttendanceService attendanceService,
         IEmailOutbox emailOutbox,
         IAttendanceNotificationService attendanceNotificationService,
-        UserService userService) : base(logger)
+        UserService userService)
     {
         _logger = logger;
         _serviceProvider = serviceProvider;
@@ -39,10 +38,8 @@ internal sealed class MissingStudentNotificationJob : RetryJob
         _userService = userService;
     }
 
-    protected override int MaxRetryCount => 5;
-    protected override TimeSpan GetRetryDelay(int retryCount) => TimeSpan.FromMinutes(1);
-
-    protected override async Task ExecuteAsync(IJobExecutionContext context, int _)
+    public async ValueTask Execute(IJobExecutionContext context,
+        CancellationToken cancellationToken)
     {
         var scope = context.MergedJobDataMap.Get<AttendanceScope>(ScopeItem);
         var slotId = context.MergedJobDataMap.Get<Guid>(SlotIdItem);

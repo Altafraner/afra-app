@@ -1,5 +1,3 @@
-using Altafraner.Backbone.Scheduling;
-using Microsoft.Extensions.Logging;
 using Quartz;
 
 namespace Altafraner.Backbone.EmailOutbox.Jobs;
@@ -7,18 +5,17 @@ namespace Altafraner.Backbone.EmailOutbox.Jobs;
 /// <summary>
 /// A job that sends a report via email.
 /// </summary>
-internal sealed class FlushEmailJob : RetryJob
+internal sealed class FlushEmailJob : IJob
 {
     private readonly IEmailService _emailService;
 
-    public FlushEmailJob(IEmailService emailService, ILogger<FlushEmailJob> logger) : base(logger)
+    public FlushEmailJob(IEmailService emailService)
     {
         _emailService = emailService;
     }
 
-    protected override int MaxRetryCount => 3;
-
-    protected override async Task ExecuteAsync(IJobExecutionContext context, int _)
+    public async ValueTask Execute(IJobExecutionContext context,
+        CancellationToken cancellationToken)
     {
         var subject = context.MergedJobDataMap.GetString("subject");
         var body = context.MergedJobDataMap.GetString("body");

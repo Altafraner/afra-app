@@ -6,7 +6,7 @@ using Quartz;
 namespace Altafraner.AfraApp.Otium.Services;
 
 /// <summary>
-///     A service for scheduling notifications for student misbehaviour.
+///     A service for scheduling notifications for student misbehavior.
 /// </summary>
 public class StudentMisbehaviourNotificationScheduler : BackgroundService
 {
@@ -38,6 +38,7 @@ public class StudentMisbehaviourNotificationScheduler : BackgroundService
         var triggerNow = TriggerBuilder.Create()
             .ForJob(key)
             .StartNow()
+            .WithRetryPolicy(RetryPolicy.Fixed(3, TimeSpan.FromMinutes(5)))
             .Build();
 
         var triggerCron = TriggerBuilder.Create()
@@ -48,6 +49,7 @@ public class StudentMisbehaviourNotificationScheduler : BackgroundService
                             .AtTime(new TimeOnly(defaultNotificationTime.Hour, defaultNotificationTime.Minute))
                             .Build())
                     .WithMisfireInstruction(CronTriggerMisfireInstruction.FireAndProceed))
+            .WithRetryPolicy(RetryPolicy.Fixed(3, TimeSpan.FromMinutes(5)))
             .Build();
 
         var exists = await scheduler.Exists(key, stoppingToken);
