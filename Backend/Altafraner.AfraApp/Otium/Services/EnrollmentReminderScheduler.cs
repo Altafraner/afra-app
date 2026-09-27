@@ -52,18 +52,24 @@ public class EnrollmentReminderScheduler : BackgroundService
 
         var triggerCron = TriggerBuilder.Create()
             .ForJob(key)
-            .WithSchedule(CronScheduleBuilder.DailyAtHourAndMinute(defaultReminderTime.Hour, defaultReminderTime.Minute)
-                .WithMisfireHandlingInstructionFireAndProceed())
-            .Build();
+            .WithCronSchedule(
+                CronScheduleBuilder.Create(
+                        CronExpressionBuilder.Create()
+                            .AtTime(new TimeOnly(defaultReminderTime.Hour, defaultReminderTime.Minute))
+                            .Build()
+                    )
+                    .WithMisfireInstruction(CronTriggerMisfireInstruction.FireAndProceed))
+            .Build()
+            ;
 
-        var exists = await scheduler.CheckExists(key, stoppingToken);
+        var exists = await scheduler.Exists(key, stoppingToken);
         if (exists)
         {
             var triggers = await scheduler.GetTriggersOfJob(key, stoppingToken);
             await scheduler.UnscheduleJobs(triggers.Select(t => t.Key).ToList(), stoppingToken);
 
-            await scheduler.ScheduleJob(triggerCron, stoppingToken);
-            await scheduler.ScheduleJob(triggerNow, stoppingToken);
+            await scheduler.ScheduleJob(triggerCron, cancellationToken: stoppingToken);
+            await scheduler.ScheduleJob(triggerNow, cancellationToken: stoppingToken);
             return;
         }
 
@@ -74,8 +80,8 @@ public class EnrollmentReminderScheduler : BackgroundService
             .WithIdentity(key)
             .Build();
 
-        await scheduler.AddJob(job, false, stoppingToken);
-        await scheduler.ScheduleJob(triggerCron, stoppingToken);
-        await scheduler.ScheduleJob(triggerNow, stoppingToken);
+        await scheduler.AddJob(job, new AddJobOptions { Replace = true }, stoppingToken);
+        await scheduler.ScheduleJob(triggerCron, cancellationToken: stoppingToken);
+        await scheduler.ScheduleJob(triggerNow, cancellationToken: stoppingToken);
     }
 }

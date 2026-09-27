@@ -19,9 +19,9 @@ public abstract partial class RetryJob : IJob
     }
 
     /// <inheritdoc />
-    public async Task Execute(IJobExecutionContext context)
+    public async ValueTask Execute(IJobExecutionContext context, CancellationToken cancellationToken)
     {
-        var hasRetryCount = context.MergedJobDataMap.TryGetIntValue("retryCount", out var retryCount);
+        var hasRetryCount = context.MergedJobDataMap.TryGet("retryCount", out int retryCount);
         if (!hasRetryCount) retryCount = 0;
 
         if (retryCount != 0)

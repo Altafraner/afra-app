@@ -31,7 +31,7 @@ internal sealed class BatchEmailsJob<TPerson> : RetryJob where TPerson : class, 
     protected override async Task ExecuteAsync(IJobExecutionContext jobContext, int _)
     {
         var dataMap = jobContext.JobDetail.JobDataMap;
-        var userId = dataMap.GetGuidValueFromString("user_id");
+        var userId = dataMap.Get<Guid>("user_id");
 
         var emailsForUser = await _dbContext.ScheduledEmails
             .Include(x => x.Recipient)

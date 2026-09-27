@@ -34,7 +34,7 @@ public class EmergencyUploadJob : IJob
     }
 
     /// <inheritdoc />
-    public async Task Execute(IJobExecutionContext context)
+    public async ValueTask Execute(IJobExecutionContext context, CancellationToken cancellationToken)
     {
         try
         {
@@ -43,6 +43,7 @@ public class EmergencyUploadJob : IJob
 
             foreach (var provider in allInformationProviders)
             {
+                if (cancellationToken.IsCancellationRequested) return;
                 var activeSlots = await provider.GetActiveSlots();
                 foreach (var slot in activeSlots) await BackupSlot(provider, slot);
             }

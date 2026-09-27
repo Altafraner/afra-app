@@ -8,6 +8,7 @@ using Microsoft.Extensions.Hosting;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using Quartz.Diagnostics;
 
 namespace Altafraner.Backbone.Defaults;
 
@@ -37,7 +38,7 @@ public class TelemetryModule : IModule
                     }
                 )
                 .AddEntityFrameworkCoreInstrumentation()
-                .AddQuartzInstrumentation()
+                .AddSource(QuartzInstrumentation.ActivitySourceName)
                 .AddAspNetCoreInstrumentation()
                 .AddSource("Altafraner.*")
             );

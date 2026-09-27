@@ -78,7 +78,7 @@ internal partial class AttendanceHub
         var warningJobKey = new JobKey($"missing_student_notification_warning-{Scope!.Value}-{SlotId}");
         var notificationJobKey = new JobKey($"missing_student_notification-{Scope!.Value}-{SlotId}");
 
-        if (!await scheduler.CheckExists(warningJobKey))
+        if (!await scheduler.Exists(warningJobKey))
         {
             var job = JobBuilder.Create<MissingStudentsNotificationWarningJob>()
                 .WithIdentity(warningJobKey)
@@ -93,7 +93,7 @@ internal partial class AttendanceHub
             await scheduler.ScheduleJob(job, trigger);
         }
 
-        if (!await scheduler.CheckExists(notificationJobKey))
+        if (!await scheduler.Exists(notificationJobKey))
         {
             var job = JobBuilder.Create<MissingStudentNotificationJob>()
                 .WithIdentity(notificationJobKey)

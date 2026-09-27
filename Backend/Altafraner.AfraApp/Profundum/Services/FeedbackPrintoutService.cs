@@ -12,7 +12,6 @@ using Altafraner.AfraApp.User.Services;
 using Altafraner.Backbone.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Quartz.Util;
 using Person = Altafraner.AfraApp.User.Domain.Models.Person;
 
 namespace Altafraner.AfraApp.Profundum.Services;
@@ -230,7 +229,7 @@ internal partial class FeedbackPrintoutService
             }
 
             var warningsText = string.Join(Environment.NewLine, warnings.Order());
-            if (!warningsText.IsNullOrWhiteSpace())
+            if (!string.IsNullOrWhiteSpace(warningsText))
             {
                 var bytes = Encoding.UTF8.GetBytes(warningsText);
                 var entry = zip.CreateEntry("_warnings.txt");

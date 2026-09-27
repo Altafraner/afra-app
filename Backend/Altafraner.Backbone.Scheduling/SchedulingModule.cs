@@ -3,7 +3,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Quartz;
-using Quartz.AspNetCore;
 
 namespace Altafraner.Backbone.Scheduling;
 
@@ -28,6 +27,6 @@ public class SchedulingModule : IModule
                 );
             }
         );
-        services.AddQuartzServer(options => { options.WaitForJobsToComplete = true; });
+        services.AddQuartzHostedService(options => { options.WaitForJobsToComplete = true; });
     }
 }

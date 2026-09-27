@@ -38,7 +38,7 @@ internal sealed class EnrollmentReminderJob : RetryJob
 
         var now = DateTime.Now;
         var tomorrow = DateOnly.FromDateTime(now.AddDays(1));
-        var hasRun = context.JobDetail.JobDataMap.TryGetDateTime("last_run", out var lastRun);
+        var hasRun = context.JobDetail.JobDataMap.TryGet("last_run", out DateTime lastRun);
         if (TimeOnly.FromDateTime(now) < _otiumConfiguration.Value.EnrollmentReminder.Time.AddMinutes(-5))
         {
             _logger.LogWarning(

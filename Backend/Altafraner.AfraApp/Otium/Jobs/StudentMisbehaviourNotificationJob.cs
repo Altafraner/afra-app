@@ -59,7 +59,7 @@ internal sealed class StudentMisbehaviourNotificationJob : RetryJob
         if (!_otiumConfiguration.Value.StudentMisbehaviourNotification.Enabled) return;
 
         var now = DateTime.Now;
-        var hasRun = context.JobDetail.JobDataMap.TryGetDateTime("last_run", out var lastRun);
+        var hasRun = context.JobDetail.JobDataMap.TryGet("last_run", out DateTime lastRun);
         if (TimeOnly.FromDateTime(now) < _otiumConfiguration.Value.StudentMisbehaviourNotification.Time.AddMinutes(-5))
         {
             _logger.LogWarning(

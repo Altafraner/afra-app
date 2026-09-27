@@ -17,10 +17,10 @@ internal sealed class MissingStudentsNotificationWarningJob : IJob
         _notificationService = notificationService;
     }
 
-    public async Task Execute(IJobExecutionContext context)
+    public async ValueTask Execute(IJobExecutionContext context, CancellationToken cancellationToken)
     {
-        var scope = (AttendanceScope)context.MergedJobDataMap[ScopeItem];
-        var slotId = Guid.Parse((string)context.MergedJobDataMap[SlotIdItem]);
+        var scope = context.MergedJobDataMap.Get<AttendanceScope>(ScopeItem);
+        var slotId = context.MergedJobDataMap.Get<Guid>(SlotIdItem);
 
         var notification = new IAttendanceHubClient.Notification(
             "Benachrichtigungen werden bald gesendet",

@@ -38,6 +38,6 @@ internal class EmailOutbox : IEmailOutbox
             .StartNow()
             .Build();
 
-        return _scheduler.ScheduleJob(job, trigger);
+        return _scheduler.ScheduleJob(job, trigger).AsTask();
     }
 }

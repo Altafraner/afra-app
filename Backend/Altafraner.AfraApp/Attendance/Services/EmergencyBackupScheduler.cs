@@ -35,10 +35,10 @@ public class EmergencyBackupScheduler : BackgroundService
         var scheduler = await schedulerFactory.GetScheduler(stoppingToken);
 
         var key = new JobKey(JobName, GroupName);
-        var exists = await scheduler.CheckExists(key, stoppingToken);
+        var exists = await scheduler.Exists(key, stoppingToken);
         var trigger = TriggerBuilder.Create()
             .ForJob(key)
-            .WithSchedule(CronScheduleBuilder.CronSchedule("0 * * * * ? *"))
+            .WithCronSchedule(CronExpressionBuilder.Create().WithSecond(0))
             .StartNow()
             .Build();
 
@@ -57,6 +57,6 @@ public class EmergencyBackupScheduler : BackgroundService
             .WithIdentity(key)
             .Build();
 
-        await scheduler.ScheduleJob(job, trigger, stoppingToken);
+        await scheduler.ScheduleJob(job, trigger, cancellationToken: stoppingToken);
     }
 }

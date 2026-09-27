@@ -24,8 +24,6 @@
         <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore"/>
         <PackageReference Include="OpenTelemetry.Instrumentation.Runtime"/>
         <PackageReference Include="Quartz"/>
-        <PackageReference Include="Quartz.AspNetCore"/>
-        <PackageReference Include="Quartz.Serialization.SystemTextJson"/>
         <PackageReference Include="Swashbuckle.AspNetCore"/>
         <PackageReference Include="System.DirectoryServices.Protocols"/>
         <PackageReference Include="Google.OrTools"/>

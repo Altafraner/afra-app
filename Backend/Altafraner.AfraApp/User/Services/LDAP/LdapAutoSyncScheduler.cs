@@ -30,7 +30,7 @@ public class LdapAutoSyncScheduler : BackgroundService
 
         var key = new JobKey(JobIdentity, GroupIdentity);
 
-        if (await scheduler.CheckExists(key, stoppingToken))
+        if (await scheduler.Exists(key, stoppingToken))
         {
             _logger.LogInformation("LDAP Sync Job already exists. Stopping.");
             await scheduler.DeleteJob(key, stoppingToken);
@@ -56,7 +56,7 @@ public class LdapAutoSyncScheduler : BackgroundService
             .Build();
 
 
-        await scheduler.ScheduleJob(job, trigger, stoppingToken);
+        await scheduler.ScheduleJob(job, trigger, cancellationToken: stoppingToken);
         _logger.LogInformation("LDAP Sync Job scheduled.");
     }
 }
