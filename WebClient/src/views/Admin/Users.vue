@@ -9,10 +9,13 @@ import { UserInfoMinimal } from '@/models/user/user';
 import { usePeople } from '@/stores/people';
 import { useConfirmPopover } from '@/composables/confirmPopover.ts';
 import { TableColumn } from '@nuxt/ui';
+import AvatarCtrl from '@/components/Admin/AvatarCtrl.vue';
+import AvatarMassUpload from '@/components/Admin/AvatarMassUpload.vue';
 
 const user = useUser();
 const router = useRouter();
 const toast = useToast();
+const overlay = useOverlay();
 const peopleStore = usePeople();
 const confirm = useConfirmPopover();
 
@@ -94,6 +97,8 @@ const deleteUser = async (userToDelete: UserInfoMinimal) => {
     await peopleStore.updatePersonen(true);
 };
 
+const massUploadOverlay = overlay.create(AvatarMassUpload);
+
 const columns: TableColumn<UserInfoMinimal>[] = [
     {
         header: 'Nutzer',
@@ -106,6 +111,13 @@ const columns: TableColumn<UserInfoMinimal>[] = [
                 td: 'w-full',
             },
         },
+    },
+    {
+        id: 'avatar',
+        cell: ({ row }) =>
+            h(AvatarCtrl, {
+                user: row.original,
+            }),
     },
     {
         id: 'impersonate',
@@ -134,6 +146,18 @@ const columns: TableColumn<UserInfoMinimal>[] = [
 <template>
     <template v-if="isAdmin">
         <h1>Admin-Bereich</h1>
+        <h2>Tools</h2>
+        <div class="flex flex-row gap-2 flex-wrap">
+            <UButton
+                icon="i-lucide-image-plus"
+                label="Bilder hochladen"
+                @click="
+                    async () => {
+                        await massUploadOverlay.open();
+                    }
+                "
+            />
+        </div>
         <h2>Nutzerübersicht</h2>
         <div v-for="[gruppe, users] in personen" :key="gruppe" class="mb-4">
             <h3 class="font-bold mb-2">{{ gruppe }}</h3>

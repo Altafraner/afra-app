@@ -1,4 +1,5 @@
 using Altafraner.AfraApp.Backbone.Auth;
+using Altafraner.AfraApp.Files;
 using Altafraner.AfraApp.User.API.Endpoints;
 using Altafraner.AfraApp.User.Configuration.LDAP;
 using Altafraner.AfraApp.User.Domain.Contracts;
@@ -13,6 +14,7 @@ namespace Altafraner.AfraApp.User;
 /// </summary>
 [DependsOn<DatabaseModule>]
 [DependsOn<AuthModule>]
+[DependsOn<FilesModule>]
 public class UserModule : IModule
 {
     /// <inheritdoc />
@@ -29,6 +31,7 @@ public class UserModule : IModule
         services.AddScoped<UserAuthorizationHelper>();
         services.AddHttpContextAccessor();
         services.AddScoped<LdapService>();
+        services.AddScoped<AvatarService>();
 
         services.AddHostedService<LdapAutoSyncScheduler>();
 

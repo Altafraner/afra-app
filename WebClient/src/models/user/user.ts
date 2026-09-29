@@ -9,6 +9,7 @@ export interface UserInfoMinimal {
     rolle: UserRolle;
     gruppe: string;
     email: string;
+    hasAvatar: boolean;
 }
 
 export interface UserLoginInfo {

@@ -24,6 +24,8 @@
         <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore"/>
         <PackageReference Include="OpenTelemetry.Instrumentation.Runtime"/>
         <PackageReference Include="Quartz"/>
+        <PackageReference Include="SkiaSharp"/>
+        <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies"/>
         <PackageReference Include="Swashbuckle.AspNetCore"/>
         <PackageReference Include="System.DirectoryServices.Protocols"/>
         <PackageReference Include="Google.OrTools"/>

@@ -20,6 +20,7 @@ public record struct PersonInfoMinimal
         Rolle = person.Rolle;
         Gruppe = person.Gruppe;
         Email = person.Email;
+        HasAvatar = person.HasAvatar;
     }
 
     /// <summary>
@@ -50,4 +51,9 @@ public record struct PersonInfoMinimal
     ///     The email address of the person
     /// </summary>
     public string Email { get; set; }
+
+    /// <summary>
+    ///     If true, the user should have an avatar
+    /// </summary>
+    public bool HasAvatar { get; set; }
 }

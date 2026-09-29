@@ -99,6 +99,11 @@ public class Person : IEmailRecipient, IHasTimestamps
     public DateTime? CevexSyncFailureTime { get; set; }
 
     /// <summary>
+    ///     Should be true if an avatar exists for this person
+    /// </summary>
+    public bool HasAvatar { get; set; }
+
+    /// <summary>
     ///     A list of all Otia the person is responsible for.
     /// </summary>
     public List<OtiumDefinition> VerwalteteOtia { get; set; } = null!;

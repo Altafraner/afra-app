@@ -1,3 +1,4 @@
+using System.Net.Mime;
 using Altafraner.AfraApp.Attendance.AbsenceProviders.Cevex;
 using Altafraner.AfraApp.Attendance.Configuration;
 using Altafraner.AfraApp.Backbone.Auth;
@@ -5,8 +6,11 @@ using Altafraner.AfraApp.User.Domain.DTO;
 using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.AfraApp.User.Services;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Microsoft.Net.Http.Headers;
+using SkiaSharp;
 
 namespace Altafraner.AfraApp.User.API.Endpoints;
 
@@ -30,12 +34,110 @@ internal static class People
             .RequireAuthorization();
         app.MapDelete("/api/people/{userId:guid}", DeletePerson)
             .RequireAuthorization(AuthorizationPolicies.AdminOnly);
+        app.MapGet("/api/people/{userId:guid}/avatar", GetAvatar)
+            .RequireAuthorization(AuthorizationPolicies.TeacherOrAdmin);
+        app.MapPost("/api/people/{userId:guid}/avatar", SetAvatar)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly);
+        app.MapDelete("/api/people/{userId:guid}/avatar", DeleteAvatar)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly);
+
         var attendanceConfiguration = app.ServiceProvider.GetService<IOptions<AttendanceConfiguration>>();
-        if (string.IsNullOrWhiteSpace(attendanceConfiguration?.Value.Cevex?.FilePath)) return;
-        app.MapGet("/api/people/cevex", GetCevex)
-            .RequireAuthorization(AuthorizationPolicies.AdminOnly);
-        app.MapPost("/api/people/cevex", SetCevex)
-            .RequireAuthorization(AuthorizationPolicies.AdminOnly);
+        // ReSharper disable once InvertIf
+        if (!string.IsNullOrWhiteSpace(attendanceConfiguration?.Value.Cevex?.FilePath))
+        {
+            app.MapGet("/api/people/cevex", GetCevex)
+                .RequireAuthorization(AuthorizationPolicies.AdminOnly);
+            app.MapPost("/api/people/cevex", SetCevex)
+                .RequireAuthorization(AuthorizationPolicies.AdminOnly);
+        }
+    }
+
+    private static async Task<NoContent> DeleteAvatar(Guid userId,
+        AvatarService avatarService)
+    {
+        await avatarService.DeleteImageAsync(userId);
+        return TypedResults.NoContent();
+    }
+
+    private static async Task<Results<BadRequest<string>, NoContent>> SetAvatar(HttpContext context,
+        Guid userId,
+        AvatarService avatarService,
+        CancellationToken token)
+    {
+        context.Request.EnableBuffering();
+        const int boundaryLengthLimit = 70;
+        var contentType = context.Request.ContentType;
+        if (contentType is null) return TypedResults.BadRequest("Missing Content-Type header");
+
+        if (!(!string.IsNullOrEmpty(contentType)
+              && contentType.Contains("multipart/", StringComparison.OrdinalIgnoreCase)))
+            return TypedResults.BadRequest("Invalid Content-Type");
+
+        var boundary = HeaderUtilities
+            .RemoveQuotes(MediaTypeHeaderValue.Parse(contentType).Boundary)
+            .Value;
+
+        if (string.IsNullOrWhiteSpace(boundary)) return TypedResults.BadRequest("Missing content-type boundary.");
+
+        if (boundary.Length > boundaryLengthLimit)
+            return TypedResults.BadRequest(
+                $"Multipart boundary length limit {boundaryLengthLimit} exceeded.");
+
+        var reader = new MultipartReader(boundary, context.Request.Body);
+        var section = await reader.ReadNextSectionAsync(token);
+
+        if (section is null) return TypedResults.BadRequest("No section of multipart message found");
+
+        var hasContentDispositionHeader =
+            ContentDispositionHeaderValue.TryParse(
+                section.ContentDisposition,
+                out var contentDisposition);
+
+        if (!hasContentDispositionHeader || contentDisposition is null ||
+            !contentDisposition.IsFileDisposition())
+            return TypedResults.BadRequest("Content disposition not properly defined for file upload");
+
+        await avatarService.SaveImageAsync(userId, section.Body);
+        return TypedResults.NoContent();
+    }
+
+    private static Results<FileStreamHttpResult, BadRequest, NotFound> GetAvatar(Guid userId,
+        AvatarService avatarService,
+        string dimension)
+    {
+        if (dimension == "original")
+        {
+            var stream = avatarService.GetOriginalAvatar(userId);
+            if (stream is null) return TypedResults.NotFound();
+
+            // Try to recover the mime type. Will return octet-stream if not possible, which will probably result in the browser discarding the image.
+            var codec = SKCodec.Create(stream);
+            var mimeType = GetMimeType(codec.EncodedFormat);
+            stream.Seek(0, SeekOrigin.Begin);
+
+            return TypedResults.Stream(stream, mimeType);
+        }
+
+        if (!int.TryParse(dimension, out var width)) return TypedResults.BadRequest();
+
+        var downsizedStream = avatarService.GetScaledImage(userId, width);
+        if (downsizedStream is null) return TypedResults.NotFound();
+        return TypedResults.Stream(downsizedStream, MediaTypeNames.Image.Webp);
+    }
+
+    private static string GetMimeType(SKEncodedImageFormat format)
+    {
+        return format switch
+        {
+            SKEncodedImageFormat.Png => MediaTypeNames.Image.Png,
+            SKEncodedImageFormat.Jpeg => MediaTypeNames.Image.Jpeg,
+            SKEncodedImageFormat.Gif => MediaTypeNames.Image.Gif,
+            SKEncodedImageFormat.Webp => MediaTypeNames.Image.Webp,
+            SKEncodedImageFormat.Avif => MediaTypeNames.Image.Avif,
+            SKEncodedImageFormat.Heif => "image/heif",
+            SKEncodedImageFormat.Bmp => MediaTypeNames.Image.Bmp,
+            _ => MediaTypeNames.Application.Octet
+        };
     }
 
     private static Ok<IAsyncEnumerable<PersonInfoMinimal>> GetPeople(AfraAppContext dbContext,

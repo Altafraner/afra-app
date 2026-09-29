@@ -1,12 +1,12 @@
 <script lang="ts" setup>
 import { formatTutor } from '@/helpers/formatters';
-import { useOtiumStore } from '@/Otium/stores/otium.js';
 import { computed, ref } from 'vue';
 import { UserInfoMinimal } from '@/models/user/user';
+import { usePeople } from '@/stores/people.ts';
 
 const model = defineModel<string | string[] | undefined>();
 
-const settings = useOtiumStore();
+const people = usePeople();
 const loading = ref(true);
 
 const props = withDefaults(
@@ -23,7 +23,7 @@ const props = withDefaults(
 );
 
 async function getPersonen() {
-    await settings.updatePersonen();
+    await people.updatePersonen();
     loading.value = false;
 }
 
@@ -40,7 +40,7 @@ const personenMapper = (person: UserInfoMinimal) => {
 
 const personenMapped = computed(() => {
     return (
-        (settings.personen as UserInfoMinimal[] | null)
+        (people.personen as UserInfoMinimal[] | null)
             ?.filter(props.filter)
             .map(personenMapper) ?? []
     );
