@@ -105,6 +105,7 @@ const columns: TableColumn<UserInfoMinimal>[] = [
         cell: ({ row }) =>
             h(UserPeek, {
                 person: row.original,
+                hideAvatar: true,
             }),
         meta: {
             class: {
