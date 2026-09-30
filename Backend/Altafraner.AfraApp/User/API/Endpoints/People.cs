@@ -111,7 +111,7 @@ internal static class People
             if (stream is null) return TypedResults.NotFound();
 
             // Try to recover the mime type. Will return octet-stream if not possible, which will probably result in the browser discarding the image.
-            var codec = SKCodec.Create(stream);
+            using var codec = SKCodec.Create(stream);
             var mimeType = GetMimeType(codec.EncodedFormat);
             stream.Seek(0, SeekOrigin.Begin);
 
