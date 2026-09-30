@@ -3,6 +3,7 @@ import { formatStudent } from '@/helpers/formatters';
 import { UserInfoMinimal } from '@/models/user/user';
 import { shallowRef, useTemplateRef, watch } from 'vue';
 import { mande, MandeError } from 'mande';
+import { getAvatarLink } from '@/helpers/user';
 
 const props = defineProps<{
     user: UserInfoMinimal;
@@ -18,10 +19,6 @@ watch(
         hasAvatar.value = newValue.hasAvatar;
     },
 );
-
-function getAvatarLink(user: UserInfoMinimal, size: number | 'original' = 64) {
-    return `/api/people/${user.id}/avatar?dimension=${size}`;
-}
 
 async function handleFileChange(event: Event) {
     const target = event.target as HTMLInputElement;
@@ -77,7 +74,7 @@ async function deleteAvatar() {
     <div class="flex flex-row gap-2">
         <UAvatar
             :alt="formatStudent(user)"
-            :src="hasAvatar ? getAvatarLink(user) : ''"
+            :src="hasAvatar ? getAvatarLink(user.id, 64) : ''"
             loading="lazy"
         />
         <input
@@ -91,7 +88,7 @@ async function deleteAvatar() {
         <UButton v-else icon="i-lucide-upload" @click="fileInput?.click()" />
         <UButton
             :disabled="!hasAvatar"
-            :to="getAvatarLink(user, 'original')"
+            :to="getAvatarLink(user.id, 'original')"
             color="secondary"
             download
             external

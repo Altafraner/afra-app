@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { watch, type ComputedRef, computed } from 'vue';
+import { computed, type ComputedRef, watch } from 'vue';
 import type { DropdownMenuItem } from '@nuxt/ui/components/DropdownMenu.d.vue.ts';
 import { useUser } from '@/stores/user';
 import { useProfundumEinwahl } from '@/Profundum/stores/profundumEinwahlStore';
@@ -7,6 +7,7 @@ import { useLogo } from '@/composables/logo';
 import { useNavItems } from '@/composables/navigationItems';
 import { useCommandPalette } from '@/composables/commandPalette';
 import { useLogout } from '@/composables/logout';
+import { getOwnAvatarLink } from '@/helpers/user';
 
 const user = useUser();
 const profundumEinwahl = useProfundumEinwahl();
@@ -27,35 +28,35 @@ const items = useNavItems();
 const logo = useLogo();
 
 const userMenuItems: ComputedRef<DropdownMenuItem[][]> = computed(() => [
-  [
-    {
-      label: 'Account',
-      icon: 'i-lucide-user',
-      target: '_blank',
-      to: user.user?.accountManagementUrl,
-      disabled: !user.user?.accountManagementUrl,
-    },
-    {
-      label: 'Schnellzugriff',
-      icon: 'i-lucide-search',
-      onSelect: () => commandPalette.open(),
-      kbds: ['STRG', 'K']
-    },
-    {
-      label: 'Einstellungen',
-      icon: 'i-lucide-settings',
-      to: {
-        name: 'Settings',
-      },
-    },
-  ],
-  [
-    {
-      label: 'Logout',
-      icon: 'i-lucide-log-out',
-      onSelect: logout,
-    },
-  ],
+    [
+        {
+            label: 'Account',
+            icon: 'i-lucide-user',
+            target: '_blank',
+            to: user.user?.accountManagementUrl,
+            disabled: !user.user?.accountManagementUrl,
+        },
+        {
+            label: 'Schnellzugriff',
+            icon: 'i-lucide-search',
+            onSelect: () => commandPalette.open(),
+            kbds: ['STRG', 'K'],
+        },
+        {
+            label: 'Einstellungen',
+            icon: 'i-lucide-settings',
+            to: {
+                name: 'Settings',
+            },
+        },
+    ],
+    [
+        {
+            label: 'Logout',
+            icon: 'i-lucide-log-out',
+            onSelect: logout,
+        },
+    ],
 ]);
 </script>
 
@@ -73,6 +74,7 @@ const userMenuItems: ComputedRef<DropdownMenuItem[][]> = computed(() => [
                 <UButton
                     :avatar="{
                         alt: `${user.user?.vorname} ${user.user?.nachname}`,
+                        src: (user.user?.hasAvatar ?? false) ? getOwnAvatarLink(64) : undefined,
                     }"
                     :label="
                         user.user ? `${user.user?.vorname} ${user.user?.nachname}` : 'Nutzer'

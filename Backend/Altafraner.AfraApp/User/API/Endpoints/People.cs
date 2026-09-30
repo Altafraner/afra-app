@@ -103,9 +103,9 @@ internal static class People
 
     private static Results<FileStreamHttpResult, BadRequest, NotFound> GetAvatar(Guid userId,
         AvatarService avatarService,
-        string dimension)
+        string size)
     {
-        if (dimension == "original")
+        if (size == "original")
         {
             var stream = avatarService.GetOriginalAvatar(userId);
             if (stream is null) return TypedResults.NotFound();
@@ -118,11 +118,11 @@ internal static class People
             return TypedResults.Stream(stream, mimeType);
         }
 
-        if (!int.TryParse(dimension, out var width)) return TypedResults.BadRequest();
+        if (!int.TryParse(size, out var width)) return TypedResults.BadRequest();
 
         var downsizedStream = avatarService.GetScaledImage(userId, width);
         if (downsizedStream is null) return TypedResults.NotFound();
-        return TypedResults.Stream(downsizedStream, MediaTypeNames.Image.Webp);
+        return TypedResults.Stream(downsizedStream, AvatarService.ScaledMimeType);
     }
 
     private static string GetMimeType(SKEncodedImageFormat format)

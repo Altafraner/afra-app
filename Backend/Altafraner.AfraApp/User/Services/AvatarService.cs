@@ -1,3 +1,4 @@
+using System.Net.Mime;
 using Altafraner.AfraApp.Files.Services;
 
 namespace Altafraner.AfraApp.User.Services;
@@ -10,6 +11,11 @@ public class AvatarService
     private readonly ImageService _imageService;
     private readonly AfraAppContext _dbContext;
     private const string ImageScope = "user_avatar";
+
+    /// <summary>
+    ///     The mime type of scaled images
+    /// </summary>
+    public const string ScaledMimeType = MediaTypeNames.Image.Webp;
 
     ///
     public AvatarService(ImageService imageService, AfraAppContext dbContext)

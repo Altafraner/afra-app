@@ -4,6 +4,7 @@ import { formatPerson, formatTutor } from '@/helpers/formatters.ts';
 import { nextTick, onMounted, ref, watch } from 'vue';
 import { mande } from 'mande';
 import { useSwipe } from '@vueuse/core';
+import { getAvatarLink } from '@/helpers/user.ts';
 
 const props = defineProps<{
     user: UserInfoMinimal;
@@ -88,8 +89,8 @@ onMounted(async () => {
         <template #body>
             <img
                 v-if="user.hasAvatar"
-                :src="`/api/people/${user.id}/avatar?dimension=512`"
-                :srcset="`/api/people/${user.id}/avatar?dimension=1024 2x, /api/people/${user.id}/avatar?dimension=512`"
+                :src="getAvatarLink(user.id, 512)"
+                :srcset="`${getAvatarLink(user.id, 1024)} 2x, ${getAvatarLink(user.id, 512)}`"
                 alt="Avatar"
                 class="rounded-xl max-w-full bg-elevated"
                 height="1024"

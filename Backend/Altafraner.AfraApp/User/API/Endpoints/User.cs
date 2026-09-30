@@ -3,6 +3,7 @@ using Altafraner.AfraApp.Backbone.Auth;
 using Altafraner.AfraApp.Domain.Configuration;
 using Altafraner.AfraApp.User.Domain.DTO;
 using Altafraner.AfraApp.User.Services;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.Options;
 
 namespace Altafraner.AfraApp.User.API.Endpoints;
@@ -33,7 +34,8 @@ public static class User
                         Rolle = user.Rolle,
                         Berechtigungen = user.GlobalPermissions.ToArray(),
                         ImpersonationId = impersonationId,
-                        AccountManagementUrl = generalConfiguration.Value.AccountManagementUrl
+                        AccountManagementUrl = generalConfiguration.Value.AccountManagementUrl,
+                        HasAvatar = user.HasAvatar
                     });
                 }
                 catch (InvalidOperationException)
@@ -45,6 +47,16 @@ public static class User
         app.MapGet("/api/user/logout",
                 async (IAuthenticationLifetimeService authenticationLifetimeService) =>
                     await authenticationLifetimeService.SignOutAsync())
+            .RequireAuthorization();
+
+        app.MapGet("/api/user/avatar",
+                (UserAccessor accessor, AvatarService avatarService, int size) =>
+                {
+                    var uid = accessor.GetUserId();
+                    var avatar = avatarService.GetScaledImage(uid, size);
+                    if (avatar is null) return (Results<NotFound, FileStreamHttpResult>)TypedResults.NotFound();
+                    return TypedResults.Stream(avatar, AvatarService.ScaledMimeType);
+                })
             .RequireAuthorization();
 
         app.MapGet("/api/user/{id:guid}/impersonate",

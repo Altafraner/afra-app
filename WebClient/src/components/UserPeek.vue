@@ -2,6 +2,7 @@
 import { formatStudent } from '@/helpers/formatters';
 import type { UserInfoMinimal } from '@/models/user/user';
 import UserSlideover from '@/components/UserSlideover.vue';
+import { getAvatarLink } from '@/helpers/user.ts';
 
 defineOptions({ name: 'UserPeek' });
 const overlay = useOverlay();
@@ -42,9 +43,7 @@ async function openSlideover() {
             <span>
                 <UAvatar
                     v-if="!hideAvatar"
-                    :src="
-                        person.hasAvatar ? `/api/people/${person.id}/avatar?dimension=64` : ''
-                    "
+                    :src="person.hasAvatar ? getAvatarLink(person.id, 64) : ''"
                     class="mr-3"
                     icon="i-lucide-user"
                     lazy

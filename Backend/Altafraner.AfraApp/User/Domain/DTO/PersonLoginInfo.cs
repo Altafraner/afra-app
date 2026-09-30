@@ -43,4 +43,9 @@ public record PersonLoginInfo
     ///     The URL for managing the user's account.
     /// </summary>
     public required string AccountManagementUrl { get; set; }
+
+    /// <summary>
+    ///     If true, the user should have an avatar
+    /// </summary>
+    public required bool HasAvatar { get; set; }
 }

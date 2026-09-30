@@ -20,4 +20,5 @@ export interface UserLoginInfo {
     berechtigungen: UserGlobalPermission[];
     impersonationId: string;
     accountManagementUrl: string;
+    hasAvatar: boolean;
 }
