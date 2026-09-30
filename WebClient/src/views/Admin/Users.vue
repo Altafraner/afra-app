@@ -26,12 +26,11 @@ await peopleStore.updatePersonen();
 const isAdmin = computed(() => user.loggedIn && user.isAdmin);
 
 const personen = computed<[string, UserInfoMinimal[]][]>(() => {
-    const sorted: UserInfoMinimal[] =
-        peopleStore.personen?.sort((a, b) => {
-            const A = (formatTutor(a) || '').toLowerCase();
-            const B = (formatTutor(b) || '').toLowerCase();
-            return A < B ? -1 : A > B ? 1 : 0;
-        }) ?? [];
+    const sorted: UserInfoMinimal[] = [...(peopleStore.personen ?? [])].sort((a, b) => {
+        const A = (formatTutor(a) || '').toLowerCase();
+        const B = (formatTutor(b) || '').toLowerCase();
+        return A < B ? -1 : A > B ? 1 : 0;
+    });
 
     const grouped = sorted.reduce<Record<string, UserInfoMinimal[]>>((acc, p) => {
         const key = p.gruppe && p.gruppe.trim() !== '' ? p.gruppe : p.rolle;

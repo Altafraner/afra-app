@@ -117,7 +117,7 @@ async function upload() {
 const columns: TableColumn<FileUpload>[] = [
     {
         id: 'avatar',
-        cell: ({ row }) => h(UAvatar, { src: row.original.url, size: 'xl' }),
+        cell: ({ row }) => h(UAvatar, { src: row.original.url, size: 'xl', lazy: true }),
     },
     {
         header: 'Dateiname',

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { formatStudent } from '@/helpers/formatters';
 import { UserInfoMinimal } from '@/models/user/user';
-import { shallowRef, useTemplateRef } from 'vue';
+import { shallowRef, useTemplateRef, watch } from 'vue';
 import { mande, MandeError } from 'mande';
 
 const props = defineProps<{
@@ -11,6 +11,13 @@ const props = defineProps<{
 const toast = useToast();
 const fileInput = useTemplateRef<HTMLInputElement>('fileInput');
 const hasAvatar = shallowRef(props.user.hasAvatar);
+
+watch(
+    () => props.user,
+    (newValue) => {
+        hasAvatar.value = newValue.hasAvatar;
+    },
+);
 
 function getAvatarLink(user: UserInfoMinimal, size: number | 'original' = 64) {
     return `/api/people/${user.id}/avatar?dimension=${size}`;
