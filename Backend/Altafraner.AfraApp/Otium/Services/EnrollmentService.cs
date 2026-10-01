@@ -557,7 +557,7 @@ internal class EnrollmentService
         foreach (var block in mandatoryBlocks)
         {
             var missingPersonsInBlock = await _dbContext.Personen
-                .Where(p => p.Rolle != Rolle.Tutor)
+                .Where(p => p.Rolle == Rolle.Mittelstufe && !p.Deleted)
                 .Where(p => !_dbContext.OtiaEinschreibungen
                     .Any(e => e.BetroffenePerson.Id == p.Id &&
                               e.BetroffenePerson.Rolle == Rolle.Mittelstufe &&
