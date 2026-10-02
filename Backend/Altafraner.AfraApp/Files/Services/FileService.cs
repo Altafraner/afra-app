@@ -86,6 +86,8 @@ public class FileService
     {
         var pathArray = path as string[] ?? path.ToArray();
         var finalPath = GetPathFromComponents(scope, pathArray);
+        var di = new DirectoryInfo(finalPath).Parent;
+        if (di is not null && !di.Exists) di.Create();
         await File.WriteAllBytesAsync(finalPath, content);
     }
 
