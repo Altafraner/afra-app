@@ -111,7 +111,11 @@ public class ImageService
 
         var newPath = GetResizedPath(scope, pathArray, nWidth, nHeight).ToArray();
 
-        if (_fileService.CheckExists(FileScope, newPath)) return newPath;
+        if (_fileService.CheckExists(FileScope, newPath))
+        {
+            _fileService.LinkFile(FileScope, newPath, $"{rWidth}x{rHeight}");
+            return newPath;
+        }
 
         using var cropped = CenterCropAndResize(image, nWidth, nHeight);
         using var newImage = _fileService.OpenFile("img",
