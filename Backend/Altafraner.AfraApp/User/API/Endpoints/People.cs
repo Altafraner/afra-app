@@ -2,6 +2,7 @@ using System.Net.Mime;
 using Altafraner.AfraApp.Attendance.AbsenceProviders.Cevex;
 using Altafraner.AfraApp.Attendance.Configuration;
 using Altafraner.AfraApp.Backbone.Auth;
+using Altafraner.AfraApp.Backbone.Caching;
 using Altafraner.AfraApp.User.Domain.DTO;
 using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.AfraApp.User.Services;
@@ -35,7 +36,8 @@ internal static class People
         app.MapDelete("/api/people/{userId:guid}", DeletePerson)
             .RequireAuthorization(AuthorizationPolicies.AdminOnly);
         app.MapGet("/api/people/{userId:guid}/avatar", GetAvatar)
-            .RequireAuthorization(AuthorizationPolicies.TeacherOrAdmin);
+            .RequireAuthorization(AuthorizationPolicies.TeacherOrAdmin)
+            .AddImageCachingHeaders();
         app.MapPost("/api/people/{userId:guid}/avatar", SetAvatar)
             .RequireAuthorization(AuthorizationPolicies.AdminOnly);
         app.MapDelete("/api/people/{userId:guid}/avatar", DeleteAvatar)

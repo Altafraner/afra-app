@@ -113,7 +113,7 @@ public class ImageService
 
         if (_fileService.CheckExists(FileScope, newPath)) return newPath;
 
-        var cropped = CenterCropAndResize(image, nWidth, nHeight);
+        using var cropped = CenterCropAndResize(image, nWidth, nHeight);
         using var newImage = _fileService.GetFile("img",
             GetResizedPath(scope, pathArray, nWidth, nHeight),
             FileMode.Create,

@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Altafraner.AfraApp.Backbone.Auth;
+using Altafraner.AfraApp.Backbone.Caching;
 using Altafraner.AfraApp.Domain.Configuration;
 using Altafraner.AfraApp.User.Domain.DTO;
 using Altafraner.AfraApp.User.Services;
@@ -57,7 +58,8 @@ public static class User
                     if (avatar is null) return (Results<NotFound, FileStreamHttpResult>)TypedResults.NotFound();
                     return TypedResults.Stream(avatar, AvatarService.ScaledMimeType);
                 })
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .AddImageCachingHeaders();
 
         app.MapGet("/api/user/{id:guid}/impersonate",
                 async (UserSigninService userSigninService,
