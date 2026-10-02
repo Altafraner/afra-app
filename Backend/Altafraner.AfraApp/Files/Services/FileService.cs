@@ -158,10 +158,18 @@ public class FileService
         if (pathComponents.Any(pathElement => !ValidatePathElement(pathElement)))
             throw new InsecurePathException("Insecure path element detected.");
 
-        var lastPath = Path.Combine(_config.Value.RootPath, scope);
+        var lastPath = _config.Value.RootPath;
         var lastDirectory = new DirectoryInfo(lastPath);
 
+        AddPathComponent(scope);
         foreach (var pathComponent in pathComponents)
+        {
+            AddPathComponent(pathComponent);
+        }
+
+        return lastPath;
+
+        void AddPathComponent(string pathComponent)
         {
             if (!ValidatePathElement(pathComponent)) throw new InsecurePathException("Insecure path element detected.");
             var currentPath = Path.Combine(lastPath, pathComponent);
@@ -173,10 +181,9 @@ public class FileService
             lastDirectory = currentDirectory;
         }
 
-        return lastPath;
-
         static bool ValidatePathElement(string pathElement)
         {
+            if (string.IsNullOrWhiteSpace(pathElement)) return false;
             return pathElement.All(ValidateChar);
         }
 
