@@ -32,7 +32,7 @@ public class ImageService
         var pathArray = path as string[] ?? path.ToArray();
         DeleteResizedImages(scope, pathArray);
 
-        await using var file = _fileService.GetFile(FileScope,
+        await using var file = _fileService.OpenFile(FileScope,
             GetOriginalPath(scope, pathArray),
             FileMode.Create,
             FileAccess.ReadWrite,
@@ -48,7 +48,7 @@ public class ImageService
     public Stream? GetOriginalImage(string scope, IEnumerable<string> path)
     {
         var pathArray = path as string[] ?? path.ToArray();
-        return _fileService.GetFile(FileScope, GetOriginalPath(scope, pathArray));
+        return _fileService.OpenFile(FileScope, GetOriginalPath(scope, pathArray));
     }
 
     /// <summary>
@@ -70,11 +70,11 @@ public class ImageService
     {
         var pathArray = path as string[] ?? path.ToArray();
         if (_fileService.CheckExists(FileScope, GetResizedPath(scope, pathArray, width, height)))
-            return _fileService.GetFile(FileScope, GetResizedPath(scope, pathArray, width, height));
+            return _fileService.OpenFile(FileScope, GetResizedPath(scope, pathArray, width, height));
 
         var newPath = ResizeImage(scope, pathArray, width, height);
         if (newPath is null) return null;
-        return _fileService.GetFile(FileScope, newPath);
+        return _fileService.OpenFile(FileScope, newPath);
     }
 
     /// <summary>
@@ -97,7 +97,7 @@ public class ImageService
     private string[]? ResizeImage(string scope, IEnumerable<string> path, int rWidth, int rHeight)
     {
         var pathArray = path as string[] ?? path.ToArray();
-        using var originalFile = _fileService.GetFile(FileScope, GetOriginalPath(scope, pathArray));
+        using var originalFile = _fileService.OpenFile(FileScope, GetOriginalPath(scope, pathArray));
         if (originalFile is null) return null;
         using var image = SKBitmap.Decode(originalFile);
 
@@ -114,7 +114,7 @@ public class ImageService
         if (_fileService.CheckExists(FileScope, newPath)) return newPath;
 
         using var cropped = CenterCropAndResize(image, nWidth, nHeight);
-        using var newImage = _fileService.GetFile("img",
+        using var newImage = _fileService.OpenFile("img",
             GetResizedPath(scope, pathArray, nWidth, nHeight),
             FileMode.Create,
             FileAccess.Write);

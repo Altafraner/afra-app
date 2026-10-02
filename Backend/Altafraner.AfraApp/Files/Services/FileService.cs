@@ -16,7 +16,7 @@ public class FileService
     }
 
     /// <summary>
-    ///     Reads a file from the filesystem
+    ///     Opens a file from in filesystem
     /// </summary>
     /// <param name="scope">The module requesting the file. Each module has it's isolated filespace</param>
     /// <param name="path">
@@ -28,7 +28,7 @@ public class FileService
     /// <param name="share">Can be used to place a lock on a file</param>
     /// <returns>Null, if a file is opened for read and not found</returns>
     /// <exception cref="InsecurePathException">The provided path contains possibly insecure elements</exception>
-    public FileStream? GetFile(string scope,
+    public FileStream? OpenFile(string scope,
         IEnumerable<string> path,
         FileMode mode = FileMode.Open,
         FileAccess access = FileAccess.Read,
