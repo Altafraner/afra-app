@@ -41,7 +41,10 @@ onUnmounted(() => {
 });
 
 function splitString(input: string): string[] {
-    return input.toLowerCase().split(/[, \.\-_]+/);
+    return input
+        .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+        .toLowerCase()
+        .split(/[, \.\-_]+/);
 }
 
 function handleFileChange(event: Event) {
