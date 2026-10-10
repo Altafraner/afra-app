@@ -66,7 +66,6 @@ internal static class People
         AvatarService avatarService,
         CancellationToken token)
     {
-        context.Request.EnableBuffering();
         const int boundaryLengthLimit = 70;
         var contentType = context.Request.ContentType;
         if (contentType is null) return TypedResults.BadRequest("Missing Content-Type header");

@@ -25,8 +25,11 @@ public class ImageService
     /// <param name="stream">The image to save</param>
     public async Task SaveImageAsync(string scope, IEnumerable<string> path, Stream stream)
     {
-        if (!stream.CanSeek) throw new ArgumentException("Stream must support Seeking", nameof(stream));
-        using var codec = SKCodec.Create(stream, out var result);
+        using var buffer = new MemoryStream();
+        await stream.CopyToAsync(buffer);
+        buffer.Position = 0;
+
+        using var codec = SKCodec.Create(buffer, out var result);
         if (codec is null || result != SKCodecResult.Success)
             throw new InvalidOperationException("Failed to create image codec.");
         var pathArray = path as string[] ?? path.ToArray();
@@ -38,8 +41,8 @@ public class ImageService
             FileAccess.ReadWrite,
             FileShare.None);
         if (file is null) throw new ArgumentNullException(nameof(file));
-        stream.Seek(0, SeekOrigin.Begin);
-        await stream.CopyToAsync(file);
+        buffer.Position = 0;
+        await buffer.CopyToAsync(file);
     }
 
     /// <summary>
