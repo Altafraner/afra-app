@@ -110,11 +110,14 @@ internal static class People
         {
             var stream = avatarService.GetOriginalAvatar(userId);
             if (stream is null) return TypedResults.NotFound();
+            using var buffer = new MemoryStream();
+            stream.CopyTo(buffer);
+            buffer.Position = 0;
+            stream.Position = 0;
 
             // Try to recover the mime type. Will return octet-stream if not possible, which will probably result in the browser discarding the image.
-            using var codec = SKCodec.Create(stream);
+            using var codec = SKCodec.Create(buffer);
             var mimeType = GetMimeType(codec.EncodedFormat);
-            stream.Seek(0, SeekOrigin.Begin);
 
             return TypedResults.Stream(stream, mimeType);
         }
