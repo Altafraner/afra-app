@@ -102,7 +102,7 @@ internal static class People
         return TypedResults.NoContent();
     }
 
-    private static Results<FileStreamHttpResult, BadRequest, NotFound> GetAvatar(Guid userId,
+    private static async Task<Results<FileStreamHttpResult, BadRequest, NotFound>> GetAvatar(Guid userId,
         AvatarService avatarService,
         string size)
     {
@@ -111,7 +111,7 @@ internal static class People
             var stream = avatarService.GetOriginalAvatar(userId);
             if (stream is null) return TypedResults.NotFound();
             using var buffer = new MemoryStream();
-            stream.CopyTo(buffer);
+            await stream.CopyToAsync(buffer);
             buffer.Position = 0;
             stream.Position = 0;
 
