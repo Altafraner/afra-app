@@ -1,4 +1,5 @@
 using System.Net.Mime;
+using System.Numerics;
 using Altafraner.AfraApp.Files.Services;
 
 namespace Altafraner.AfraApp.User.Services;
@@ -43,7 +44,7 @@ public class AvatarService
     /// <returns>Null, if no avatar for the given user was found</returns>
     public Stream? GetScaledImage(Guid userId, int dimension)
     {
-        var roundedDimension = dimension >= 1024 ? 1024 : dimension <= 16 ? 16 : RoundToMultiple(dimension, 16);
+        var roundedDimension = dimension >= 1024 ? 1024 : dimension <= 16 ? 16 : RoundToBase2(dimension);
         return _imageService.GetResizedImage(ImageScope, [userId.ToString()], roundedDimension, roundedDimension);
     }
 
@@ -71,9 +72,12 @@ public class AvatarService
         await _dbContext.SaveChangesAsync();
     }
 
-    private static int RoundToMultiple(int number, int factor)
+    private static int RoundToBase2(int number)
     {
-        var t = factor + number - 1;
-        return t - t % factor;
+        var uNum = (uint)number;
+        var next = BitOperations.RoundUpToPowerOf2(uNum);
+        var prev = next >> 1;
+
+        return (int)(uNum - prev < next - uNum ? prev : next);
     }
 }

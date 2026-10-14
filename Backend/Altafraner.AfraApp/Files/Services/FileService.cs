@@ -73,6 +73,22 @@ public class FileService
     }
 
     /// <summary>
+    ///     Creates a link with name <paramref name="link" /> to <paramref name="targetPath" /> in the same folder as
+    ///     <paramref name="targetPath" />
+    /// </summary>
+    public void LinkFile(string scope, IEnumerable<string> targetPath, string link)
+    {
+        var pathArray = targetPath as string[] ?? targetPath.ToArray();
+        var finalTargetPath = GetPathFromComponents(scope, pathArray);
+        var linkPath = GetPathFromComponents(scope, pathArray.Take(pathArray.Length - 1).Append(link).ToArray());
+        var originDi = new DirectoryInfo(finalTargetPath);
+        var linkDi = new DirectoryInfo(linkPath);
+        if (originDi.Parent?.FullName != linkDi.Parent?.FullName)
+            throw new InsecurePathException("The provided link is not in the same folder");
+        File.CreateSymbolicLink(linkPath, finalTargetPath);
+    }
+
+    /// <summary>
     ///     Creates or overwrites a file
     /// </summary>
     /// <param name="scope">The module requesting the file. Each module has it's isolated filespace</param>

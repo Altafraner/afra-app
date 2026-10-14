@@ -74,7 +74,10 @@ const userMenuItems: ComputedRef<DropdownMenuItem[][]> = computed(() => [
                 <UButton
                     :avatar="{
                         alt: `${user.user?.vorname} ${user.user?.nachname}`,
-                        src: (user.user?.hasAvatar ?? false) ? getOwnAvatarLink(64) : undefined,
+                        src:
+                            (user.user?.hasAvatar ?? false)
+                                ? getOwnAvatarLink(64, user.user?.id ?? 'unknown')
+                                : undefined,
                     }"
                     :label="
                         user.user ? `${user.user?.vorname} ${user.user?.nachname}` : 'Nutzer'
