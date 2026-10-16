@@ -132,7 +132,6 @@ internal class CevexDataParser
         var notify = new HashSet<Person>();
         foreach (var student in unknown.Where(e => !e.CevexSyncFailureTime.HasValue && !e.CevexIdManuallyEntered))
         {
-            if (student.CevexSyncFailureTime is null) continue;
             student.CevexSyncFailureTime = now;
             notify.Add(student);
         }
