@@ -1161,6 +1161,10 @@ namespace Altafraner.AfraApp.Migrations
                     b.HasKey("Id")
                         .HasName("pk_personen");
 
+                    b.HasIndex("LdapObjectId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_personen_ldap_object_id");
+
                     b.ToTable("personen");
                 });
 

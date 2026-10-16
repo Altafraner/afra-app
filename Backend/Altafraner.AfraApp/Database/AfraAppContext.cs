@@ -212,6 +212,10 @@ public class AfraAppContext : DbContext, IDataProtectionKeyContext, IScheduledEm
         modelBuilder.Entity<Person>()
             .PrimitiveCollection(p => p.GlobalPermissions);
 
+        modelBuilder.Entity<Person>()
+            .HasIndex(p => p.LdapObjectId)
+            .IsUnique();
+
         modelBuilder.Entity<MentorMenteeRelation>()
             .HasKey(r => new { r.MentorId, r.StudentId, r.Type });
 
