@@ -59,11 +59,12 @@ internal class CevexDataParser
     {
         var lastSync =
             await _cache.GetOrCreateAsync(CacheAgeLabel,
-                _ => ValueTask.FromResult(DateTime.MinValue),
-                tags: [CacheTag]);
+                _ => ValueTask.FromResult(DateTime.MinValue));
         var lastModified = File.GetLastWriteTime(_cevexConfig.FilePath);
-        await _cache.SetAsync(CacheAgeLabel, lastModified, tags: [CacheTag]);
-        if (lastSync < lastModified) await _cache.RemoveByTagAsync(CacheTag);
+
+        if (lastSync >= lastModified) return;
+        await _cache.RemoveByTagAsync(CacheTag);
+        await _cache.SetAsync(CacheAgeLabel, lastModified);
     }
 
     private ValueTask<Dictionary<Guid, Missing[]>> ReadMatchesFromCache()
