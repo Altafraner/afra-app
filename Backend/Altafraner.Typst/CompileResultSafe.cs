@@ -1,9 +1,10 @@
 using System.Runtime.InteropServices;
 using CsBindgen;
 
-internal class CompileResultSafe
+internal sealed class CompileResultSafe : IDisposable
 {
     private readonly CompileResult _inner;
+    private bool _disposed;
 
     internal CompileResultSafe(CompileResult x)
     {
@@ -14,6 +15,7 @@ internal class CompileResultSafe
     {
         get
         {
+            ObjectDisposedException.ThrowIf(_disposed, this);
             unsafe
             {
                 return _inner.error == null ? null : Marshal.PtrToStringUTF8((nint)_inner.error);
@@ -25,6 +27,7 @@ internal class CompileResultSafe
     {
         get
         {
+            ObjectDisposedException.ThrowIf(_disposed, this);
             unsafe
             {
                 var managedBuffers = new List<byte[]>((int)_inner.buffers_len);
@@ -41,13 +44,24 @@ internal class CompileResultSafe
 
                 return managedBuffers;
             }
-
-
         }
+    }
+
+    public void Dispose()
+    {
+        Free();
+        GC.SuppressFinalize(this);
     }
 
     ~CompileResultSafe()
     {
+        Free();
+    }
+
+    private void Free()
+    {
+        if (_disposed) return;
+        _disposed = true;
         NativeMethods.free_compile_result(_inner);
     }
 }
