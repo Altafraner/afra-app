@@ -626,6 +626,9 @@ public static class Management
         if (blockHelper.GetBlockStatus(termin.Block) is BlockHelper.BlockStatus.Done or BlockHelper.BlockStatus.Running)
             return Results.BadRequest("Der Block ist bereits abgeschlossen oder läuft.");
 
+        if (!await enrollmentService.IsEnrolledToAsync(otiumTerminId, personIdWrapper.Value))
+            return Results.BadRequest("Die Person ist nicht in diesem Termin eingeschrieben.");
+
         var student = await userService.GetUserByIdAsync(personIdWrapper.Value);
         await enrollmentService.UnenrollAsync(termin.Block.Id, student, true);
         return Results.Ok();
