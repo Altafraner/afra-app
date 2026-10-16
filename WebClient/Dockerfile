@@ -11,3 +11,4 @@ FROM docker.io/nginx:alpine
 
 COPY --from=build /app/dist /app
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY security-headers.conf /etc/nginx/security-headers.conf
