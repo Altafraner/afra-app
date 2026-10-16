@@ -71,10 +71,11 @@ internal sealed class CompilerSafe : IDisposable
     /// <returns> The binary pdf output </returns>
     public byte[] CompileWithInputs(string inputs)
     {
-        var cres = CompileWithInputsOrNull(inputs);
+        using var cres = CompileWithInputsOrNull(inputs);
 
-        if (cres.Error != null)
-            throw new InvalidOperationException(cres.Error);
+        var error = cres.Error;
+        if (error != null)
+            throw new InvalidOperationException(error);
 
         return cres.Buffers[0];
     }
