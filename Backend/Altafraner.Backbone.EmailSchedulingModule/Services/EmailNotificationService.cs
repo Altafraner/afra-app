@@ -36,12 +36,12 @@ internal class EmailNotificationService<TPerson> : INotificationService where TP
 
         await contextActions.SaveChangesAsync();
 
-        var key = new JobKey($"mail-flush-{recipientId}-{mailId}", "flush-email");
-
-        // Create a job to flush all notifications to this recipient after the deadline passes
+        var key = new JobKey($"mail-flush-{recipientId}", "flush-email");
         var job = JobBuilder.Create<BatchEmailsJob<TPerson>>()
             .WithIdentity(key)
             .UsingJobData("user_id", recipientId)
+            .DisallowConcurrentExecution()
+            .StoreDurably()
             .Build();
         var trigger = TriggerBuilder.Create()
             .ForJob(key)
@@ -50,6 +50,7 @@ internal class EmailNotificationService<TPerson> : INotificationService where TP
             .Build();
 
         var scheduler = await _schedulerFactory.GetScheduler();
-        await scheduler.ScheduleJob(job, trigger);
+        await scheduler.AddJob(job, AddJobOptions.Replacing);
+        await scheduler.ScheduleJob(trigger);
     }
 }
