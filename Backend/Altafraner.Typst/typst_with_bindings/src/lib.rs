@@ -133,29 +133,21 @@ pub extern "C" fn compile_with_inputs(ptr: *mut Compiler, inputs: *const c_char)
 
     match compile_inner(&mut world) {
         Ok(buffers) => {
-            let mut out: Vec<Buffer> = buffers
+            let out: Box<[Buffer]> = buffers
                 .into_iter()
-                .map(|mut v| {
-                    v.shrink_to_fit();
-                    let b = Buffer {
-                        ptr: v.as_mut_ptr(),
-                        len: v.len(),
-                    };
-                    std::mem::forget(v);
-                    b
+                .map(|v| {
+                    let len = v.len();
+                    let ptr = Box::into_raw(v.into_boxed_slice()) as *mut u8;
+                    Buffer { ptr, len }
                 })
                 .collect();
 
-            out.shrink_to_fit();
-
-            let result = CompileResult {
-                buffers: out.as_mut_ptr(),
-                buffers_len: out.len(),
-                error: std::ptr::null_mut(),
-            };
-
-            std::mem::forget(out);
-            result
+            let buffers_len = out.len();
+            CompileResult {
+                buffers: Box::into_raw(out) as *mut Buffer,
+                buffers_len,
+                error: ptr::null_mut(),
+            }
         }
         Err(err) => {
             let e = CString::new(err.to_string()).unwrap().into_raw();
@@ -171,11 +163,13 @@ pub extern "C" fn compile_with_inputs(ptr: *mut Compiler, inputs: *const c_char)
 pub extern "C" fn free_compile_result(result: CompileResult) {
     unsafe {
         if !result.buffers.is_null() {
-            let buffers =
-                Vec::from_raw_parts(result.buffers, result.buffers_len, result.buffers_len);
-            for b in buffers {
+            let buffers = Box::from_raw(ptr::slice_from_raw_parts_mut(
+                result.buffers,
+                result.buffers_len,
+            ));
+            for b in buffers.iter() {
                 if !b.ptr.is_null() {
-                    drop(Vec::from_raw_parts(b.ptr, b.len, b.len))
+                    drop(Box::from_raw(ptr::slice_from_raw_parts_mut(b.ptr, b.len)))
                 }
             }
         }
