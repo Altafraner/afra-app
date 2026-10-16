@@ -128,6 +128,7 @@ pub extern "C" fn compile_with_inputs(ptr: *mut Compiler, inputs: *const c_char)
     };
 
     let inputs = unsafe { cstr_to_str(inputs, "{}") };
+    world.reset_clock();
     world.set_inputs(inputs);
 
     match compile_inner(&mut world) {

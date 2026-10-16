@@ -132,6 +132,10 @@ impl TypstWorld {
         })
     }
 
+    pub fn reset_clock(&mut self) {
+        self.now = OnceLock::new();
+    }
+
     pub fn set_inputs(&self, inputs: &str) {
         let mut vf = self.virtual_files.lock().unwrap();
         vf.insert(VirtualPath::new("inputs.json"), inputs.as_bytes().to_vec());
@@ -226,8 +230,8 @@ impl SourceCache {
 
     fn compute(&mut self, id: FileId, resolver: &FileResolver) -> FileResult<Source> {
         if self.set {
-            if let Some(x) = &self.data {
-                return x.clone();
+            if let Some(Ok(x)) = &self.data {
+                return Ok(x.clone());
             }
         }
         self.set = true;
@@ -254,8 +258,18 @@ impl SourceCache {
             })
         });
 
-        self.data = Some(new.clone());
-        new
+        self.store(new)
+    }
+
+    fn store(&mut self, result: FileResult<Source>) -> FileResult<Source> {
+        if result.is_err() {
+            self.set = false;
+            self.fingerprint = 0;
+            self.data = None;
+        } else {
+            self.data = Some(result.clone());
+        }
+        result
     }
 }
 
@@ -276,8 +290,8 @@ impl BytesCache {
 
     fn compute(&mut self, id: FileId, resolver: &FileResolver) -> FileResult<Bytes> {
         if self.set {
-            if let Some(x) = &self.data {
-                return x.clone();
+            if let Some(Ok(x)) = &self.data {
+                return Ok(x.clone());
             }
         }
         self.set = true;
@@ -293,7 +307,13 @@ impl BytesCache {
         self.fingerprint = new_fp;
 
         let new = raw.and_then(|b| Ok(Bytes::new(b)));
-        self.data = Some(new.clone());
+        if new.is_err() {
+            self.set = false;
+            self.fingerprint = 0;
+            self.data = None;
+        } else {
+            self.data = Some(new.clone());
+        }
         new
     }
 }
