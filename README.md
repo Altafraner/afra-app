@@ -18,8 +18,7 @@ Zum Aufsetzen muss in den Ordner `/dev` navigiert und (z. B. mit dem WSL) das Sk
 
 Dieses erstellt Zertifikate zur Verschlüsselung und legt notwendige Ordner an.
 
-Mit `docker-compose up -d` bzw. `podman-compose up -d` kann eine Entwicklungsumgebung mit Postgres (Port 5432), Redis (
-Port 6379) und
+Mit `docker-compose up -d` bzw. `podman-compose up -d` kann eine Entwicklungsumgebung mit Postgres (Port 5432),
 Mailcatcher (Port 8090) und einem kleinen Service zum Testen der Emergency-Backups (Port 8000, Nutzername: admin,
 Passwort: admin) gestartet werden.
 
