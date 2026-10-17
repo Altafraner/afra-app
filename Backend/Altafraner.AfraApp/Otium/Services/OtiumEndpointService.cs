@@ -711,6 +711,20 @@ internal class OtiumEndpointService
     }
 
     /// <summary>
+    ///     Sets whether an Otium is hidden
+    /// </summary>
+    /// <param name="otiumId">The ID of the Otium to hide or unhide.</param>
+    /// <param name="hidden">Whether the Otium should be hidden</param>
+    public async Task OtiumSetHiddenAsync(Guid otiumId, bool hidden)
+    {
+        var otium = await _dbContext.Otia.FindAsync(otiumId);
+        if (otium is null) throw new ArgumentException("Kein Otium mit dieser Id existiert.");
+
+        otium.Hidden = hidden;
+        await _dbContext.SaveChangesAsync();
+    }
+
+    /// <summary>
     ///     Sets the grade limits of an Otium
     /// </summary>
     /// <param name="otiumId">The ID of the Otium to change the Bezeichnung of.</param>
