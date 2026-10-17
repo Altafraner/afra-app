@@ -23,6 +23,6 @@ internal static class Dev
             async (UserSigninService signinService, ValueWrapper<Guid> userId) =>
             {
                 await signinService.SignInAsync(userId.Value, false);
-            });
+            }).AllowAnonymous();
     }
 }

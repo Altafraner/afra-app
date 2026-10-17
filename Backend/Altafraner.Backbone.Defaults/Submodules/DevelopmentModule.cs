@@ -21,7 +21,7 @@ public class DevelopmentModule : IModule
     /// <inheritdoc />
     public void Configure(WebApplication app)
     {
-        app.MapOpenApi();
+        app.MapOpenApi().AllowAnonymous();
 
         if (!app.Environment.IsDevelopment()) return;
         app.UseSwagger();

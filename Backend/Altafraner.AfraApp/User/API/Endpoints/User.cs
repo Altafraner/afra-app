@@ -43,7 +43,7 @@ public static class User
                 {
                     return Results.Unauthorized();
                 }
-            });
+            }).AllowAnonymous();
 
         app.MapGet("/api/user/logout",
                 async (IAuthenticationLifetimeService authenticationLifetimeService) =>

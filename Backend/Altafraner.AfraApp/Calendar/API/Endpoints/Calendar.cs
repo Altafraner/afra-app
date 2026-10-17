@@ -18,7 +18,8 @@ public static class Calendar
         app.MapGet("/api/calendar", SubscribeCalendarAsync).RequireAuthorization();
         app.MapGet("/api/calendar/count", GetNumberOfSubscriptionsAsync).RequireAuthorization();
         app.MapDelete("/api/calendar", DeleteAllSubscriptionsAsync).RequireAuthorization();
-        app.MapGet("/api/calendar/{subId:guid}.ics", GetCalendarAsync);
+        app.MapGet("/api/calendar/{subId:guid}.ics", GetCalendarAsync)
+            .AllowAnonymous();
     }
 
     private static async Task<IResult> SubscribeCalendarAsync(UserAccessor userAccessor, CalendarService calendarService, IConfiguration configuration)

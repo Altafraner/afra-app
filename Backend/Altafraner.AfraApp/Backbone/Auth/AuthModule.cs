@@ -9,6 +9,7 @@ using Altafraner.Backbone.Utils;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
@@ -92,6 +93,9 @@ internal class AuthModule : IModule
                 });
 
         services.AddAuthorizationBuilder()
+            .SetFallbackPolicy(new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .Build())
             .AddPolicy(AuthorizationPolicies.StudentOnly,
                 policy => policy.RequireClaim(AfraAppClaimTypes.Role,
                     nameof(Rolle.Oberstufe),
@@ -183,7 +187,7 @@ internal class AuthModule : IModule
                     IsPersistent = staySignedIn,
                     ExpiresUtc = staySignedIn ? DateTimeOffset.UtcNow.Add(cookieSettings.Value.CookieTimeout) : null
                 },
-                [OpenIdConnectDefaults.AuthenticationScheme]));
+                [OpenIdConnectDefaults.AuthenticationScheme])).AllowAnonymous();
     }
 
     // Parts of this are from the .NET Source Code
