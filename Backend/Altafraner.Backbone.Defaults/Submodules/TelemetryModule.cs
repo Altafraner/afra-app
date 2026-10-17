@@ -57,6 +57,6 @@ public class TelemetryModule : IModule
     /// <inheritdoc />
     public void Configure(WebApplication app)
     {
-        app.MapPrometheusScrapingEndpoint();
+        app.MapPrometheusScrapingEndpoint().AllowAnonymous();
     }
 }
