@@ -1,7 +1,7 @@
 # AI Policy
 
-Definitions and notations from [DEFINITIONS.md](DEFINITIONS.md) are used in
-this document.
+Definitions and notations from [DEFINITIONS.md](DEFINITIONS.md) apply in this
+document.
 
 We recognize AI to be a powerfull tool that might enable you to do more tasks
 faster. For that reason we welcome you to use AI as a tool in creating your

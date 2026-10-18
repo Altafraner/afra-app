@@ -1,7 +1,7 @@
 # Security Policy
 
-Definitions and notations from [DEFINITIONS.md](DEFINITIONS.md) are used in
-this document.
+Definitions and notations from [DEFINITIONS.md](DEFINITIONS.md) apply in this
+document.
 
 ## Supported Versions
 
