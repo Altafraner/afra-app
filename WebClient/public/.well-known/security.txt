@@ -1,4 +1,4 @@
-# Contact: We recommend contacting all parties listed bellow.
+# We recommend contacting all parties listed below.
 Contact: mailto:mail@johann-hoepfner.de
 Encryption: https://keys.openpgp.org/search?q=FF87638F553F96A91D512A8588DD2BB2F6178E40
 

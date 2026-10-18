@@ -1,7 +1,7 @@
 # Definitions
 
-This document outlines notation and definitions used in other policy documents
-in this project
+This document outlines the notation and definitions used in other policy documents
+in this project.
 
 ## Requirements Notation and Conventions
 
