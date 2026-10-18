@@ -69,7 +69,7 @@ const pwaOptions: Partial<VitePWAOptions> = {
         ],
     },
     workbox: {
-        navigateFallbackDenylist: [/^\/api/],
+        navigateFallbackDenylist: [/^\/api/, /^\/\.well-known\//],
     },
 };
 
