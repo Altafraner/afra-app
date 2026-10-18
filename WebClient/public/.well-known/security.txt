@@ -1,4 +1,10 @@
+# Contact: We recommend contacting all parties listed bellow.
 Contact: mailto:mail@johann-hoepfner.de
+Encryption: https://keys.openpgp.org/search?q=FF87638F553F96A91D512A8588DD2BB2F6178E40
+
+Contact: mailto:r.schlossarek@verein-der-altafraner.de
+Encryption: https://keys.openpgp.org/search?q=6D9B89D76823736196F1D4DB4204A60CE7C54E5D
+
 Expires: 2027-10-01T00:00:00.000Z
 Preferred-Languages: en, de
 Policy: https://github.com/Altafraner/afra-app/blob/main/SECURITY.md

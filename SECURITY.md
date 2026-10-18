@@ -24,11 +24,13 @@ production environments.
 You MUST NOT report security vulnerabilities through public GitHub issues, pull
 requests or discussions.
 
-Instead, send an email to the security team. Encrypt your email using OpenPGP
-if possible:
+Instead, send an email to the security team. You SHOULD encrypt your email using
+OpenPGP if possible. You SHOULD send your E-Mail to all members listed bellow.
 
 - [mail@johann-hoepfner.de](mailto:mail@johann-hoepfner.de), public key:
   [FF87638F553F96A91D512A8588DD2BB2F6178E40](https://keys.openpgp.org/search?q=FF87638F553F96A91D512A8588DD2BB2F6178E40)
+- [r.schlossarek@verein-der-altafraner.de](mailto:r.schlossarek@verein-der-altafraner.de), public key:
+  [6D9B89D76823736196F1D4DB4204A60CE7C54E5D](https://keys.openpgp.org/search?q=6D9B89D76823736196F1D4DB4204A60CE7C54E5D)
 
 Reports SHOULD be submitted in either English or German.
 
