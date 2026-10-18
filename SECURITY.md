@@ -25,6 +25,7 @@ Reports in English or German are most apreciated.
 - do not access, modify or delete data belonging to others beyond what is
   strictly necessary to demonstrate the issue.
 - do not perform denial-of-service attacks, spam, or social engineering
+- Adhere to our [AI policy](AI_POLICY.md) also when sending security reports.
 
 We will not pursue legal action against researchers who act in good faith and
 follow these rules.
