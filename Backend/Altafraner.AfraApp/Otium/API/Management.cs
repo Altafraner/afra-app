@@ -30,7 +30,8 @@ public static class Management
             .RequireAuthorization(AuthorizationPolicies.Otiumsverantwortlich);
         group.MapDelete("/otium/{otiumId:guid}", DeleteOtium)
             .RequireAuthorization(AuthorizationPolicies.Otiumsverantwortlich);
-        group.MapPut("/otium/{otiumId:guid}/hidden", OtiumSetHidden);
+        group.MapPut("/otium/{otiumId:guid}/hidden", OtiumSetHidden)
+            .RequireAuthorization(AuthorizationPolicies.Otiumsverantwortlich);
         group.MapPatch("/otium/{otiumId:guid}/bezeichnung", OtiumSetBezeichnung);
         group.MapPatch("/otium/{otiumId:guid}/beschreibung", OtiumSetBeschreibung);
         group.MapPatch("/otium/{otiumId:guid}/kategorie", OtiumSetKategorie);
