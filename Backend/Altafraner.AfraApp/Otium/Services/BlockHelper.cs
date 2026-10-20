@@ -1,6 +1,8 @@
 using System.Diagnostics.Contracts;
+using System.Linq.Expressions;
 using Altafraner.AfraApp.Otium.Configuration;
 using Altafraner.AfraApp.Schuljahr.Domain.Models;
+using Altafraner.AfraApp.User.Domain.Models;
 using Microsoft.Extensions.Options;
 
 namespace Altafraner.AfraApp.Otium.Services;
@@ -98,4 +100,36 @@ public class BlockHelper
         Done
     }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+
+    /// <summary>
+    ///     Returns true if the user is required to attend a block of schema.
+    /// </summary>
+    public static bool IsRequiredToAttendBlock(BlockMetadata schema, Person user)
+    {
+        return IsRequiredToAttendBlock(schema.VerpflichteteGruppen, user.Gruppe);
+    }
+
+    /// <inheritdoc cref="IsRequiredToAttendBlock(BlockMetadata, Person)" />
+    /// <param name="gruppen">The groups required to attend the block</param>
+    /// <param name="gruppe">the group of the person attending</param>
+    public static bool IsRequiredToAttendBlock(string[] gruppen, string? gruppe)
+    {
+        return gruppe is not null && gruppen.Contains(gruppe);
+    }
+
+    /// <summary>
+    ///     Checks if a block has required attendees.
+    /// </summary>
+    public static bool HasRequiredAttendees(BlockMetadata schema)
+    {
+        return schema.VerpflichteteGruppen.Length != 0;
+    }
+
+    /// <summary>
+    ///     Provides an expression that can be used in queries for detecting if a student must attend a block
+    /// </summary>
+    public static Expression<Func<Person, bool>> IsRequiredToAttendBlockExp(BlockMetadata schema)
+    {
+        return user => user.Gruppe != null && schema.VerpflichteteGruppen.Contains(user.Gruppe);
+    }
 }

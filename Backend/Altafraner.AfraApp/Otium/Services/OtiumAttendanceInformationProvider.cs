@@ -104,11 +104,12 @@ internal sealed class OtiumAttendanceInformationProvider : IAttendanceInformatio
         attendances.AddRange(eventsWithoutEnrollments);
         var finalEvents = attendances.OrderBy(e => e.Location);
 
-        if (!schema.Verpflichtend) return finalEvents;
+        if (!BlockHelper.HasRequiredAttendees(schema)) return finalEvents;
 
         var attending = attendances.SelectMany(e => e.Enrollments);
         var nonAttending = await _dbContext.Personen
-            .Where(e => e.Rolle == Rolle.Mittelstufe && !attending.Contains(e) &&
+            .Where(BlockHelper.IsRequiredToAttendBlockExp(schema))
+            .Where(e => !attending.Contains(e) &&
                         DateOnly.FromDateTime(e.CreatedAt) <= block.SchultagKey && !e.Deleted)
             .ToListAsync();
         return finalEvents.Prepend(new EventWithEnrollments
@@ -178,12 +179,14 @@ internal sealed class OtiumAttendanceInformationProvider : IAttendanceInformatio
                 .ThenBy(e => e.FirstName)
                 .ToListAsync();
 
-        return await _dbContext.Personen.LeftJoin(
+        return await _dbContext.Personen
+            .Where(BlockHelper.IsRequiredToAttendBlockExp(schema))
+            .LeftJoin(
                 selectedEnrollments,
                 e => e.Id,
                 e => e.BetroffenePerson.Id,
                 (p, e) => new { Person = p, Einschreibung = e })
-            .Where(e => e.Einschreibung == null && e.Person.Rolle == Rolle.Mittelstufe &&
+            .Where(e => e.Einschreibung == null &&
                         DateOnly.FromDateTime(e.Person.CreatedAt) <= block.SchultagKey && !e.Person.Deleted)
             .Select(e => e.Person)
             .ToListAsync();
@@ -203,7 +206,7 @@ internal sealed class OtiumAttendanceInformationProvider : IAttendanceInformatio
             .OrderBy(e => e.Location)
             .ThenBy(e => e.Name)
             .ToListAsync();
-        if (!schema.Verpflichtend) return events;
+        if (!BlockHelper.HasRequiredAttendees(schema)) return events;
         return events.Prepend(new Event
         {
             EventId = Guid.Empty,
@@ -225,7 +228,8 @@ internal sealed class OtiumAttendanceInformationProvider : IAttendanceInformatio
             IsInPast = block.SchultagKey.ToDateTime(schema.Interval.End) < DateTime.Now,
             MoveNowIntervall = schema.Interval.ToDateTimeInterval(block.SchultagKey),
             MissingStudentsNotificationRecipients = _otiumConfiguration.MissingStudentsReport.Recipients,
-            MissingStudentsNotificationTime = _otiumConfiguration.MissingStudentsReport.Enabled && schema.Verpflichtend
+            MissingStudentsNotificationTime = _otiumConfiguration.MissingStudentsReport.Enabled &&
+                                              BlockHelper.HasRequiredAttendees(schema)
                 ? block.SchultagKey.ToDateTime(schema.Interval.Start.AddMinutes(30))
                 : null,
             StartDate = block.SchultagKey,

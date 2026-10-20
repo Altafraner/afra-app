@@ -187,7 +187,7 @@ startup();
             />
             <OtiumKategorySelector v-model="kategorie" :options="settings.kategorien" />
 
-            <template v-if="user.isStudent && user.user.rolle !== 'Oberstufe'">
+            <template v-if="user.isStudent">
                 <UAlert
                     v-if="hinweise.length === 0"
                     color="success"

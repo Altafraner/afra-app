@@ -20,9 +20,9 @@ public record BlockMetadata
     public TimeOnlyInterval Interval { get; init; }
 
     /// <summary>
-    ///     True, iff the block is mandatory for all students.
+    ///     Contains all groups of users that are required to attend.
     /// </summary>
-    public bool Verpflichtend { get; init; }
+    public required string[] VerpflichteteGruppen { get; init; }
 
     /// <summary>
     ///     The name of the block
@@ -32,7 +32,7 @@ public record BlockMetadata
     /// <summary>
     ///     The lesson number
     /// </summary>
-    public int Unterrichtsstunde { get; set; }
+    public int Unterrichtsstunde { get; init; }
 
     /// <summary>
     ///     The schema id of the block

@@ -6,6 +6,7 @@ import NavBreadcrumb from '@/components/NavBreadcrumb.vue';
 import { CalendarDate } from '@internationalized/date';
 import { FormError, FormSubmitEvent } from '@nuxt/ui';
 import { UserInfoMinimal } from '@/models/user/user';
+import { isStudent } from '@/helpers/user.ts';
 
 interface Option<T> {
     label: string;
@@ -283,10 +284,7 @@ function submit(event: FormSubmitEvent<FormSchema>) {
             >
                 <PersonSelector
                     v-model="state.person"
-                    :filter="
-                        (student: UserInfoMinimal) =>
-                            student.rolle == 'Mittelstufe' || student.rolle == 'Oberstufe'
-                    "
+                    :filter="(student: UserInfoMinimal) => isStudent(student)"
                     class="w-full"
                     placeholder="Schüler:in wählen"
                     size="lg"

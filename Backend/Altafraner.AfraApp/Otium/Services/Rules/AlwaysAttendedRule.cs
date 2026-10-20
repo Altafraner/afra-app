@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using Altafraner.AfraApp.Attendance.Domain.Contracts;
 using Altafraner.AfraApp.Attendance.Domain.Dto;
 using Altafraner.AfraApp.Attendance.Domain.Models;
 using Altafraner.AfraApp.Otium.Domain.Contracts.Rules;
@@ -14,14 +13,12 @@ namespace Altafraner.AfraApp.Otium.Services.Rules;
 /// </summary>
 public class AlwaysAttendedRule : IBlockRule
 {
-    private readonly IAttendanceService _attendanceService;
     private readonly BlockHelper _blockHelper;
 
     ///
-    public AlwaysAttendedRule(BlockHelper blockHelper, IAttendanceService attendanceService)
+    public AlwaysAttendedRule(BlockHelper blockHelper)
     {
         _blockHelper = blockHelper;
-        _attendanceService = attendanceService;
     }
 
     /// <inheritdoc />
@@ -32,7 +29,7 @@ public class AlwaysAttendedRule : IBlockRule
     {
         var blockSchema = _blockHelper.Get(block.SchemaId)!;
         if (_blockHelper.GetBlockStatus(block) is BlockHelper.BlockStatus.Running or BlockHelper.BlockStatus.Pending ||
-            (!blockSchema.Verpflichtend && !einschreibungen.Any()))
+            (!BlockHelper.IsRequiredToAttendBlock(blockSchema, person) && !einschreibungen.Any()))
             return new ValueTask<RuleStatus>(RuleStatus.Valid);
 
         return attendance.State switch

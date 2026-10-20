@@ -71,7 +71,7 @@ internal sealed class StudentMisbehaviourNotificationJob : IJob
             .ThenInclude(o => o.Kategorie)
             .GroupBy(e => e.BetroffenePerson.Id)
             .ToDictionaryAsync(e => e.Key, e => e.ToList());
-        var students = await _userService.GetUsersWithRoleAsync(Rolle.Mittelstufe);
+        var students = await _dbContext.Personen.Where(p => p.Rolle != Rolle.Tutor).ToArrayAsync();
 
         List<Schultag> schultageInWeek = [];
         Dictionary<Guid, List<OtiumEinschreibung>> weeksEnrollments = [];

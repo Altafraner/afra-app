@@ -135,7 +135,7 @@ internal class OtiumDashboardProvider : IDashboardProvider
             DateOnly monday,
             List<OtiumTermin> termine)
         {
-            if (mentee.Rolle != Rolle.Mittelstufe || DateOnly.FromDateTime(mentee.CreatedAt) > monday)
+            if (DateOnly.FromDateTime(mentee.CreatedAt) > monday)
                 return DashboardMenteeStatus.NotApplicable;
 
             var endOfWeek = monday.AddDays(7);
@@ -273,7 +273,7 @@ internal class OtiumDashboardProvider : IDashboardProvider
                         {
                             Started = isBlockDoneOrRunning
                         },
-                        Attendance = isBlockDoneOrRunning && schema.Verpflichtend
+                        Attendance = isBlockDoneOrRunning && BlockHelper.IsRequiredToAttendBlock(schema, student)
                             ? attendancesByBlock[block.Id].State
                             : null,
                         Location = null
@@ -308,7 +308,6 @@ internal class OtiumDashboardProvider : IDashboardProvider
 
         async Task PopulateMessages()
         {
-            if (student.Rolle != Rolle.Mittelstufe) return;
             var localEinschreibungen = einschreibungen.ToList();
             foreach (var week in schultageByWeek)
             {

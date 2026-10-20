@@ -72,7 +72,6 @@ const columns = computed<TableColumn<AttendanceStudentStatus>[]>(() => {
                         <UBadge
                             v-if="
                                 row.original.type == 'Automatic' &&
-                                row.original.student.rolle === 'Mittelstufe' &&
                                 (showAttendance || enableEdit)
                             "
                             color="secondary"
@@ -81,18 +80,10 @@ const columns = computed<TableColumn<AttendanceStudentStatus>[]>(() => {
                     </UTooltip>
                     <AttendanceButton
                         class="w-auto"
-                        v-if="
-                            row.original.student.rolle === 'Mittelstufe' &&
-                            (showAttendance || enableEdit)
-                        "
+                        v-if="showAttendance || enableEdit"
                         :mayEdit="enableEdit"
                         :status="row.original.status"
                         @update="(value) => emit('update', row.original.student, value)"
-                    />
-                    <UBadge
-                        v-else-if="showAttendance || enableEdit"
-                        color="secondary"
-                        label="N/A"
                     />
                 </div>
             </template>
