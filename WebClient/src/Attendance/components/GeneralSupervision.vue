@@ -13,6 +13,7 @@ import { useUser } from '@/stores/user';
 import EnrollmentTable from '@/Attendance/components/EnrollmentTable.vue';
 import type { UserInfoMinimal } from '@/models/user/user';
 import { formatStudent } from '@/helpers/formatters';
+import { isStudent } from '@/helpers/user.ts';
 
 const props = defineProps<{
     slot: AttendanceSlot;
@@ -110,7 +111,7 @@ watch(filteredAttendance, (newAttendance) => {
         <PersonSelector
             class="w-full"
             v-model="filterPerson"
-            :filter="(s: UserInfoMinimal) => s.rolle === 'Mittelstufe'"
+            :filter="(s: UserInfoMinimal) => isStudent(s)"
             hide-rolle
             placeholder="Schüler:in suchen"
         />

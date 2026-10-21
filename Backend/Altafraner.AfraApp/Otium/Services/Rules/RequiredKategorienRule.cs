@@ -36,6 +36,7 @@ public class RequiredKategorienRule : IWeekRule
         IEnumerable<OtiumEinschreibung> einschreibungen,
         Dictionary<Guid, AttendanceInformation> attendanceByBlock)
     {
+        if (person.Rolle != Rolle.Mittelstufe) return RuleStatus.Valid;
         var schultageArray = schultage as Schultag[] ?? schultage.ToArray();
         var wochentyp = GetWochentypForSchultage(schultageArray);
 

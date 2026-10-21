@@ -288,11 +288,10 @@ internal class EnrollmentService
     }
 
     /// <summary>
-    ///     Checks if a user may enroll in a termin for all subblocks in a termin.
+    ///     Gets basic personalized information concerning a termin.
     /// </summary>
     /// <param name="user">The user to check for</param>
     /// <param name="termin">The termin to check in</param>
-    /// <returns></returns>
     public async Task<EinschreibungsPreview> GetEnrolmentPreview(Models_Person user, Models_OtiumTermin termin)
     {
         var terminEinschreibungen = await _dbContext.OtiaEinschreibungen
@@ -544,10 +543,12 @@ internal class EnrollmentService
         var allBlocks = await _dbContext.Blocks
             .AsNoTracking()
             .Where(b => b.SchultagKey == date)
+            .AsAsyncEnumerable()
+            .Select(e => (Block: e, Metadata: _blockHelper.Get(e.SchemaId)!))
             .ToListAsync();
 
         var mandatoryBlocks = allBlocks
-            .Where(b => _blockHelper.Get(b.SchemaId)?.Verpflichtend ?? false)
+            .Where(b => BlockHelper.HasRequiredAttendees(b.Metadata))
             .ToList();
 
         if (mandatoryBlocks.Count == 0) return [];
@@ -557,11 +558,12 @@ internal class EnrollmentService
         foreach (var block in mandatoryBlocks)
         {
             var missingPersonsInBlock = await _dbContext.Personen
-                .Where(p => p.Rolle == Rolle.Mittelstufe && !p.Deleted)
+                .Where(BlockHelper.IsRequiredToAttendBlockExp(block.Metadata))
+                .Where(p => !p.Deleted)
                 .Where(p => !_dbContext.OtiaEinschreibungen
                     .Any(e => e.BetroffenePerson.Id == p.Id &&
                               e.BetroffenePerson.Rolle == Rolle.Mittelstufe &&
-                              e.Termin.Block.Id == block.Id))
+                              e.Termin.Block.Id == block.Block.Id))
                 .Select(p => new PersonInfoMinimal
                 {
                     Id = p.Id,

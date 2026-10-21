@@ -2,13 +2,13 @@ import { computed } from 'vue';
 import type { NavigationMenuItem } from '@nuxt/ui/components/NavigationMenu.d.vue.ts';
 import { useUser } from '@/stores/user';
 import { useProfundumEinwahl } from '@/Profundum/stores/profundumEinwahlStore';
+import { UserRolle } from '@/models/user/user.ts';
 
 export type GlobalPermissions = 'Otiumsverantwortlich' | 'Profundumsverantwortlich' | 'Admin';
-export type Role = 'Tutor' | 'Oberstufe' | 'Mittelstufe';
 
 export interface Conditions {
     permissions?: GlobalPermissions[] | undefined;
-    roles?: Role[] | undefined;
+    roles?: UserRolle[] | undefined;
     feature?: (() => boolean) | undefined;
 }
 

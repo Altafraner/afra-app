@@ -7,6 +7,7 @@ import {
     getDayOfWeek,
     ZonedDateTime,
 } from '@internationalized/date';
+import { isStudent } from '@/helpers/user.ts';
 
 const wochentage = [
     'Sonntag',
@@ -25,9 +26,7 @@ export const formatStudent = (student: UserInfoMinimal, noBreak: boolean = false
     student.vorname + (noBreak ? '\u00A0' : ' ') + student.nachname;
 
 export const formatPerson = (person: UserInfoMinimal) =>
-    person.rolle === 'Oberstufe' || person.rolle === 'Mittelstufe'
-        ? formatStudent(person)
-        : formatTutor(person);
+    isStudent(person) ? formatStudent(person) : formatTutor(person);
 
 const shortWochentage = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 export function formatCalendarDateTime(date: CalendarDateTime | ZonedDateTime) {

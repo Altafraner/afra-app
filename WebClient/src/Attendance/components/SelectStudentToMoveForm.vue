@@ -2,6 +2,7 @@
 import { reactive } from 'vue';
 import { FormError, FormSubmitEvent } from '@nuxt/ui';
 import { UserInfoMinimal } from '@/models/user/user';
+import { isStudent } from '@/helpers/user.ts';
 
 interface FormSchema {
     student: string | undefined;
@@ -52,7 +53,7 @@ const state = reactive<FormSchema>({ all: undefined, student: undefined });
                 <UFormField class="w-full" label="Schüler:in" name="student" required>
                     <PersonSelector
                         v-model="state.student"
-                        :filter="(student: UserInfoMinimal) => student.rolle === 'Mittelstufe'"
+                        :filter="(student: UserInfoMinimal) => isStudent(student)"
                         class="w-full"
                         hideRolle
                         placeholder="Schüler:in auswählen"

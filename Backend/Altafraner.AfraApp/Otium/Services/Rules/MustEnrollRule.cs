@@ -29,7 +29,7 @@ public class MustEnrollRule : IBlockRule
         if (attendance.State == AttendanceState.Entschuldigt) return new ValueTask<RuleStatus>(RuleStatus.Valid);
 
         var schema = _blockHelper.Get(block.SchemaId)!;
-        if (!schema.Verpflichtend) return new ValueTask<RuleStatus>(RuleStatus.Valid);
+        if (!BlockHelper.IsRequiredToAttendBlock(schema, person)) return new ValueTask<RuleStatus>(RuleStatus.Valid);
 
         var timeline = new Timeline<TimeOnly>();
         foreach (var einschreibung in einschreibungen) timeline.Add(einschreibung.Interval);
