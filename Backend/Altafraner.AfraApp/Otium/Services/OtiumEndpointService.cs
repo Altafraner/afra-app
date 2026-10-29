@@ -423,6 +423,7 @@ internal class OtiumEndpointService
             t.Otium.Id == otiumTermin.OtiumId &&
             t.Block.SchemaId == otiumTermin.Block &&
             t.Block.Schultag.Datum == otiumTermin.Datum &&
+            t.OverrideBezeichnung == otiumTermin.OverrideBezeichnung &&
             t.Tutor == tutor);
 
         if (conflict)
