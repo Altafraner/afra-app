@@ -33,7 +33,7 @@ public class OtiumTermin : OtiumInstanz, IHasTimestamps
     /// <summary>
     ///     A description for the Otium Instanz. Null to use the OtiumDefinitions Bezeichnung
     /// </summary>
-    [MaxLength(500)]
+    [MaxLength(2000)]
     public string? OverrideBeschreibung { get; set; }
 
     /// <summary>

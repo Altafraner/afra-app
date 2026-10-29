@@ -399,7 +399,7 @@ const accordionItems = [
                     <MarkdownEditor :model-value="otium.beschreibung" :editable="false" />
                 </template>
                 <template #edit>
-                    <MarkdownEditor v-model="beschreibung" :maxlength="500" />
+                    <MarkdownEditor v-model="beschreibung" :maxlength="2000" />
                 </template>
             </GridEditRow>
         </Grid>

@@ -162,8 +162,8 @@ namespace Altafraner.AfraApp.Migrations
 
                     b.Property<string>("Beschreibung")
                         .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
                         .HasColumnName("beschreibung");
 
                     b.Property<string>("Bezeichnung")
@@ -334,8 +334,8 @@ namespace Altafraner.AfraApp.Migrations
                         .HasColumnName("otium_id");
 
                     b.Property<string>("OverrideBeschreibung")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
                         .HasColumnName("override_beschreibung");
 
                     b.Property<string>("OverrideBezeichnung")

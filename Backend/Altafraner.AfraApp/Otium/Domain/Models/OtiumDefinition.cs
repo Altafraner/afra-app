@@ -23,7 +23,7 @@ public class OtiumDefinition : IHasTimestamps
     /// <summary>
     ///     A description for the Otium. May contain multiple lines.
     /// </summary>
-    [MaxLength(500)]
+    [MaxLength(2000)]
     public required string Beschreibung { get; set; }
 
     /// <summary>

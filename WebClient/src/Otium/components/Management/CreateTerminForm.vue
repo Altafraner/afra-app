@@ -50,10 +50,10 @@ function validate(state: Partial<FormSchema>): FormError[] {
         errors.push({ name: 'label', message: 'Bitte geben Sie maximal 70 Zeichen ein' });
     if (state.hasOverwriteDescription && (!state.description || state.description.length < 1))
         errors.push({ name: 'description', message: 'Bitte geben Sie eine Beschreibung ein' });
-    if (state.hasOverwriteDescription && state.description && state.description.length > 500)
+    if (state.hasOverwriteDescription && state.description && state.description.length > 2000)
         errors.push({
             name: 'description',
-            message: 'Bitte geben Sie maximal 500 Zeichen ein.',
+            message: 'Bitte geben Sie maximal 2000 Zeichen ein.',
         });
 
     return errors;
@@ -277,7 +277,7 @@ watch(
                 >
                     <MarkdownEditor
                         v-model="state.description"
-                        :maxlength="500"
+                        :maxlength="2000"
                         placeholder="Abweichende Beschreibung eingeben"
                     />
                 </UFormField>

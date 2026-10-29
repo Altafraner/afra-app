@@ -52,10 +52,10 @@ function validate(state: Partial<FormState>): FormError[] {
         });
     if (!state.description || state.description.length < 1)
         errors.push({ name: 'description', message: 'Es muss eine Beschreibung gesetzt sein' });
-    if (state.description && state.description.length > 500)
+    if (state.description && state.description.length > 2000)
         errors.push({
             name: 'description',
-            message: 'Die Beschreibung darf maximal 500 Zeichen lang sein',
+            message: 'Die Beschreibung darf maximal 2000 Zeichen lang sein',
         });
     if (!state.category)
         errors.push({ name: 'category', message: 'Es muss eine Kategorie ausgewählt sein' });
@@ -83,7 +83,7 @@ function validate(state: Partial<FormState>): FormError[] {
                 <UFormField label="Beschreibung" name="description" required>
                     <MarkdownEditor
                         v-model="state.description"
-                        :maxlength="500"
+                        :maxlength="2000"
                         placeholder="Beschreibung eingeben"
                     />
                 </UFormField>

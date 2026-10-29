@@ -322,7 +322,7 @@ await fetchData();
                     >
                         <MarkdownEditor
                             v-model="beschreibung"
-                            :maxlength="500"
+                            :maxlength="2000"
                             placeholder="Beschreibung eingeben"
                         />
                     </UFormField>
