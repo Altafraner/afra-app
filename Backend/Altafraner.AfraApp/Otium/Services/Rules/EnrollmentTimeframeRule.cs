@@ -23,8 +23,9 @@ public class EnrollmentTimeframeRule : IIndependentRule
         var block = _blockHelper.Get(termin.Block.SchemaId)!;
         var now = DateTime.Now;
         var today = DateOnly.FromDateTime(now);
-        var time = TimeOnly.FromDateTime(now);
-        if (today < termin.Block.SchultagKey || (today == termin.Block.SchultagKey && time < block.EinschreibenBis))
+        var enrollUntilTime = termin.Block.SchultagKey.ToDateTime(block.Interval.Start)
+            .Subtract(block.EinschreibeVorlauf);
+        if (now < enrollUntilTime)
             return new ValueTask<RuleStatus>(RuleStatus.Valid);
 
         return new ValueTask<RuleStatus>(today > termin.Block.SchultagKey

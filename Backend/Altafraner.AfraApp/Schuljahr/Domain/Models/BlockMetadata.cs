@@ -42,5 +42,5 @@ public record BlockMetadata
     /// <summary>
     ///     The latest time a student can enroll in this block.
     /// </summary>
-    public TimeOnly EinschreibenBis { get; init; }
+    public TimeSpan EinschreibeVorlauf { get; init; }
 }

@@ -9,8 +9,6 @@ using Altafraner.AfraApp.Otium.Domain.Contracts.Rules;
 using Altafraner.AfraApp.Otium.Domain.Contracts.Services;
 using Altafraner.AfraApp.Otium.Domain.DTO.Katalog;
 using Altafraner.AfraApp.Schuljahr.Domain.Models;
-using Altafraner.AfraApp.User.Domain.DTO;
-using Altafraner.AfraApp.User.Domain.Models;
 using Altafraner.AfraApp.User.Services;
 using Altafraner.Backbone.EmailSchedulingModule;
 using Altafraner.Backbone.Utils;
@@ -532,51 +530,16 @@ internal class EnrollmentService
 
     }
 
-
-    /// <summary>
-    ///     Gets a list of all persons that are not enrolled for a specific day.
-    /// </summary>
-    /// <param name="date">The date to get the Persons for</param>
-    /// <returns>A set containing all found persons.</returns>
-    public async Task<HashSet<PersonInfoMinimal>> GetNotEnrolledPersonsForDayAsync(DateOnly date)
+    public async Task<HashSet<Models_Person>> GetNotEnrolledPersonsForBlockAsync(Block block, BlockMetadata schema)
     {
-        var allBlocks = await _dbContext.Blocks
-            .AsNoTracking()
-            .Where(b => b.SchultagKey == date)
-            .AsAsyncEnumerable()
-            .Select(e => (Block: e, Metadata: _blockHelper.Get(e.SchemaId)!))
-            .ToListAsync();
-
-        var mandatoryBlocks = allBlocks
-            .Where(b => BlockHelper.HasRequiredAttendees(b.Metadata))
-            .ToList();
-
-        if (mandatoryBlocks.Count == 0) return [];
-
-        HashSet<PersonInfoMinimal> missingPersons = [];
-
-        foreach (var block in mandatoryBlocks)
-        {
-            var missingPersonsInBlock = await _dbContext.Personen
-                .Where(BlockHelper.IsRequiredToAttendBlockExp(block.Metadata))
-                .Where(p => !p.Deleted)
-                .Where(p => !_dbContext.OtiaEinschreibungen
-                    .Any(e => e.BetroffenePerson.Id == p.Id &&
-                              e.BetroffenePerson.Rolle == Rolle.Mittelstufe &&
-                              e.Termin.Block.Id == block.Block.Id))
-                .Select(p => new PersonInfoMinimal
-                {
-                    Id = p.Id,
-                    Vorname = p.FirstName,
-                    Nachname = p.LastName,
-                    Rolle = p.Rolle
-                })
-                .ToHashSetAsync();
-
-            missingPersons.UnionWith(missingPersonsInBlock);
-        }
-
-        return missingPersons;
+        var missingPersonsInBlock = await _dbContext.Personen
+            .Where(BlockHelper.IsRequiredToAttendBlockExp(schema))
+            .Where(p => !p.Deleted)
+            .Where(p => !_dbContext.OtiaEinschreibungen
+                .Any(e => e.BetroffenePerson.Id == p.Id &&
+                          e.Termin.Block.Id == block.Id))
+            .ToHashSetAsync();
+        return missingPersonsInBlock;
     }
 
     private async Task<RuleStatus> MayUnenroll(Models_Person user, Models_OtiumEinschreibung einschreibung)

@@ -173,6 +173,15 @@ public class SchuljahrService
     }
 
     /// <summary>
+    ///     Gets a block by day and schema
+    /// </summary>
+    public async Task<Block?> GetBlockAsync(DateOnly datum, char schemaId)
+    {
+        var block = await _dbContext.Blocks.SingleOrDefaultAsync(b => b.SchultagKey == datum && b.SchemaId == schemaId);
+        return block;
+    }
+
+    /// <summary>
     ///     Gets a schultag by its date.
     /// </summary>
     public async Task<Models_Schultag?> GetSchultagAsync(DateOnly datum)
