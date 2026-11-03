@@ -5,7 +5,14 @@ namespace Altafraner.AfraApp.User.Services;
 
 internal class DefaultUserEventHandler : IUserEventHandler
 {
-    public Task OnUserSoftDeletedAsync(Person user)
+    private readonly AvatarService _avatarService;
+
+    public DefaultUserEventHandler(AvatarService avatarService)
+    {
+        _avatarService = avatarService;
+    }
+
+    public async Task OnUserSoftDeletedAsync(Person user)
     {
         user.Deleted = true;
 
@@ -24,6 +31,6 @@ internal class DefaultUserEventHandler : IUserEventHandler
         user.GlobalPermissions = [];
         user.Gruppe = "0";
 
-        return Task.CompletedTask;
+        await _avatarService.DeleteImageAsync(user.Id);
     }
 }
