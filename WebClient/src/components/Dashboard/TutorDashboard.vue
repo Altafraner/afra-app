@@ -83,7 +83,7 @@ const eventColumns: TableColumn<ScopedDashboardTutorEventDescriptor>[] = [
                       class: 'w-full justify-center items-center',
                   })
                 : h(UBadge, {
-                      label: `${row.original.occupancy * 100} %`,
+                      label: `${Math.round(row.original.occupancy * 100)} %`,
                       color: chooseColor(row.original.occupancy * 100),
                       variant: 'soft',
                       class: 'w-full justify-center items-center',
