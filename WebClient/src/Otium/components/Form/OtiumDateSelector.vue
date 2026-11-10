@@ -25,7 +25,7 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(['dateChanged', 'today']);
+const emit = defineEmits(['today']);
 const emitToday = () => emit('today');
 
 const date = defineModel();
@@ -40,7 +40,6 @@ function change_date(next) {
             continue;
         }
         date.value = props.options[n].datum;
-        emit('dateChanged');
         return;
     }
 }

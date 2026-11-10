@@ -1,5 +1,5 @@
 <script setup>
-import { computed, h, shallowRef, watch } from 'vue';
+import { computed, h, ref, shallowRef, watch } from 'vue';
 import OtiumDateSelector from '@/Otium/components/Form/OtiumDateSelector.vue';
 import OtiumKategorySelector from '@/Otium/components/Form/OtiumKategorySelector.vue';
 import OtiumKatalog from '@/Otium/components/Katalog/OtiumKatalog.vue';
@@ -37,7 +37,7 @@ const datesAvailable = shallowRef([]);
 const dateDefault = shallowRef(null);
 const blocks = shallowRef([]);
 const hinweise = shallowRef([]);
-const date = shallowRef(null);
+const date = ref(null);
 const kategorie = shallowRef(null);
 
 const navItems = computed(() => {
@@ -81,7 +81,6 @@ async function startup() {
         } else {
             date.value = dateDefault.value.datum;
         }
-        await dateChanged();
         await kategoriesPromise;
     } catch (error) {
         console.error(error);
@@ -145,6 +144,7 @@ watch([date], () => {
                 datum: date.value,
             },
         });
+    dateChanged();
 });
 
 const blocksFiltered = computed(() => {
@@ -182,7 +182,6 @@ startup();
                 size="lg"
                 v-model="date"
                 :options="datesAvailable"
-                @dateChanged="dateChanged"
                 @today="selectToday"
             />
             <OtiumKategorySelector v-model="kategorie" :options="settings.kategorien" />
