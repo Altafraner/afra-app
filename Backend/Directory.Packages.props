@@ -31,7 +31,7 @@
     <PackageVersion Include="SkiaSharp" Version="4.154.0" />
     <PackageVersion Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="4.154.0" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.3.1" />
-    <PackageVersion Include="System.DirectoryServices.Protocols" Version="10.0.14" />
+    <PackageVersion Include="System.DirectoryServices.Protocols" Version="11.0.0" />
     <PackageVersion Include="Google.OrTools" Version="9.15.6755" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
     <PackageVersion Include="OpenTelemetry.Exporter.Prometheus.AspNetCore" Version="1.19.1-beta.1" />
