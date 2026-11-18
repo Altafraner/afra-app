@@ -13,34 +13,34 @@
         "format": "prettier --write src/"
     },
     "dependencies": {
-        "@iconify-json/lucide": "^1.2.149",
+        "@iconify-json/lucide": "^1.2.156",
         "@microsoft/signalr": "^10.0.11",
-        "@nuxt/ui": "^4.12.0",
-        "@tailwindcss/vite": "^4.3.3",
+        "@nuxt/ui": "^4.12.2",
+        "@tailwindcss/vite": "^4.3.5",
         "@vueuse/core": "^15.0.0",
         "@vueuse/integrations": "^15.0.0",
-        "dompurify": "^3.4.17",
+        "dompurify": "^3.4.18",
         "mande": "^2.0.10",
-        "marked": "^18.1.2",
+        "marked": "^18.2.1",
         "pinia": "^4.1.0",
         "sortablejs": "^1.15.7",
-        "tailwindcss": "^4.3.3",
-        "vue": "^3.5.44",
-        "vue-router": "^5.4.0"
+        "tailwindcss": "^4.3.5",
+        "vue": "^3.5.45",
+        "vue-router": "^5.5.1"
     },
     "devDependencies": {
         "@eslint/js": "^10.0.1",
         "@types/node": "^26.6.6",
-        "@vitejs/plugin-vue": "^6.0.10",
+        "@vitejs/plugin-vue": "^6.0.11",
         "@vue/tsconfig": "^0.9.1",
-        "eslint": "^10.13.0",
-        "eslint-plugin-vue": "^10.12.0",
+        "eslint": "^10.15.0",
+        "eslint-plugin-vue": "^10.12.1",
         "npm-run-all2": "^9.0.4",
-        "prettier": "^3.9.10",
-        "vite": "^8.3.5",
+        "prettier": "^3.10.1",
+        "vite": "^8.3.8",
         "vite-plugin-pwa": "^2.0.0",
         "vite-plugin-vue-devtools": "^8.2.1",
-        "vue-eslint-parser": "^10.4.1",
+        "vue-eslint-parser": "^10.4.2",
         "vue-tsc": "^3.3.14"
     }
 }
