@@ -40,16 +40,6 @@ async function editSupervisors(block) {
     await setup();
 }
 
-async function supervise(block) {
-    await router.push({
-        name: 'Aufsicht',
-        query: {
-            slotId: block.id,
-            scope: 'otium',
-        },
-    });
-}
-
 async function remove(block) {
     if (!(await requireConfirm('Wollen Sie den Schultag wirklich löschen?'))) return;
     const api = mande('/api/management/schuljahr/block/' + block.id);
@@ -96,7 +86,13 @@ const columns = [
                         icon: 'i-lucide-eye',
                         variant: 'ghost',
                         size: 'sm',
-                        onClick: () => supervise(row.original.original),
+                        to: {
+                            name: 'Aufsicht',
+                            query: {
+                                slotId: row.original.original.id,
+                                scope: 'otium',
+                            },
+                        },
                     }),
                 ),
                 h(UTooltip, { text: 'Aufsichten Bearbeiten' }, () =>

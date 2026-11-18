@@ -124,13 +124,6 @@ async function multiEnroll() {
     }
 }
 
-async function edit(termin) {
-    await router.push({
-        name: 'Verwaltung-Termin',
-        params: { terminId: termin.id },
-    });
-}
-
 async function cancel(termin) {
     const confirmed = await requireConfirm('Wollen Sie den Termin wirklich absagen?');
     if (!confirmed) return;
@@ -232,7 +225,10 @@ const description = computed(() => {
                                 icon="i-lucide-pencil"
                                 size="lg"
                                 variant="ghost"
-                                @click="() => edit(otium)"
+                                :to="{
+                                    name: 'Verwaltung-Termin',
+                                    params: { terminId: otium.id },
+                                }"
                             />
                         </UTooltip>
                         <UTooltip v-if="otium.status !== 'Done'" text="Absagen">
@@ -371,7 +367,10 @@ const description = computed(() => {
                         color="primary"
                         label="Bearbeiten"
                         icon="i-lucide-pencil"
-                        @click="() => edit(otium)"
+                        :to="{
+                            name: 'Verwaltung-Termin',
+                            params: { terminId: otium.id },
+                        }"
                     />
                     <UButton
                         v-if="otium.status !== 'Done'"
