@@ -31,14 +31,15 @@
     "devDependencies": {
         "@eslint/js": "^10.0.1",
         "@types/node": "^26.6.6",
+        "@unplugin-pwa/vite": "^0.0.7",
         "@vitejs/plugin-vue": "^6.0.11",
         "@vue/tsconfig": "^0.9.1",
         "eslint": "^10.15.0",
         "eslint-plugin-vue": "^10.12.1",
+        "magicast": "^0.5.5",
         "npm-run-all2": "^9.0.4",
         "prettier": "^3.10.1",
         "vite": "^8.3.8",
-        "vite-plugin-pwa": "^2.0.0",
         "vite-plugin-vue-devtools": "^8.2.1",
         "vue-eslint-parser": "^10.4.2",
         "vue-tsc": "^3.3.14"

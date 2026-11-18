@@ -1,7 +1,15 @@
 <script setup>
 import { useRegisterSW } from 'virtual:pwa-register/vue';
 
-const { needRefresh, updateServiceWorker } = useRegisterSW();
+const intervalMS = 30 * 60 * 1000;
+const { needRefresh, updateServiceWorker } = useRegisterSW({
+    onRegisteredSW: (_url, registration) => {
+        registration &&
+            setInterval(() => {
+                void registration.update();
+            }, intervalMS);
+    },
+});
 </script>
 
 <template>

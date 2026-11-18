@@ -5,6 +5,7 @@
             "@/*": ["./src/*"],
             "#build/ui": ["./node_modules/.nuxt-ui/ui"]
         },
+        "types": ["@unplugin-pwa/core/vue"],
         "verbatimModuleSyntax": false,
         "allowJs": true
     },

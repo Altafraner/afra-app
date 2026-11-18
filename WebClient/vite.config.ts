@@ -4,7 +4,7 @@ import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import vueDevTools from 'vite-plugin-vue-devtools';
 import tailwindcss from '@tailwindcss/vite';
-import { VitePWA, VitePWAOptions } from 'vite-plugin-pwa';
+import { VitePWA } from '@unplugin-pwa/vite';
 import ui, { NuxtUIOptions } from '@nuxt/ui/vite';
 
 const nuxtUiOptions: NuxtUIOptions = {
@@ -37,7 +37,7 @@ const nuxtUiOptions: NuxtUIOptions = {
     },
 };
 
-const pwaOptions: Partial<VitePWAOptions> = {
+const pwaPlugin = VitePWA({
     base: '/',
     registerType: 'prompt',
     manifest: {
@@ -68,15 +68,15 @@ const pwaOptions: Partial<VitePWAOptions> = {
             },
         ],
     },
-    workbox: {
+    generateSW: {
         navigateFallbackDenylist: [/^\/api/, /^\/\.well-known\//],
     },
-};
+});
 
 // https://vite.dev/config/
 export default defineConfig({
     base: '/',
-    plugins: [vue(), vueDevTools(), tailwindcss(), ui(nuxtUiOptions), VitePWA(pwaOptions)],
+    plugins: [vue(), vueDevTools(), tailwindcss(), ui(nuxtUiOptions), pwaPlugin],
     resolve: {
         alias: {
             '@': fileURLToPath(new URL('./src', import.meta.url)),
