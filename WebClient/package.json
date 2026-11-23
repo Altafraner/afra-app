@@ -14,7 +14,7 @@
     },
     "dependencies": {
         "@iconify-json/lucide": "^1.2.156",
-        "@microsoft/signalr": "^10.0.11",
+        "@microsoft/signalr": "^11.0.0",
         "@nuxt/ui": "^4.12.2",
         "@tailwindcss/vite": "^4.3.5",
         "@vueuse/core": "^15.0.0",
